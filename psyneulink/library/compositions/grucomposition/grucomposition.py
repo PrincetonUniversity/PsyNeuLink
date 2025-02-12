@@ -870,12 +870,16 @@ class GRUComposition(AutodiffComposition):
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
         """Infer the backpropagation learning pathways for the GRUComposition"""
         if execution_mode is ExecutionMode.PyTorch:
-            return [self._compositon.hidden_layer_node]
+            return [self._composition.hidden_layer_node]
         else:
             return super().infer_backpropagation_learning_pathways(execution_mode, context)
 
     def _get_pytorch_backprop_pathway(self, input_node)->list:
-        assert True
+        """Return the PyTorch backpropagation pathway for the GRUComposition"""
+        import torch as torch
+        self.torch_gru = torch.nn.GRU(input_size=self.input_size, hidden_size=self.hidden_size, bias=self.bias)
+        gru_mech = ProcessingMechanism(name='GRU_MECH', function=self.torch_gru)
+        return [gru_mech]
     #
     # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
