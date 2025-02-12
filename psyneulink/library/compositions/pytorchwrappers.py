@@ -665,7 +665,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                     # We need to add the batch dimension to default values.
                                     val = val[None, ...].expand(self._batch_size, *val.shape)
 
-                                    variable.append(torch.atleast_2d(torch.from_numpy(input_port.defaults.variable)))
+                                    variable.append(val)
 
                             # We now need to stack these so the batch dimension is first
                             try:
