@@ -53,11 +53,10 @@ def _get_pytorch_function(obj, device, context):
         return pytorch_fct(device, context)
 
 
-# # MODIFIED 7/29/24 OLD:
 class PytorchCompositionWrapper(torch.nn.Module):
-# # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
+# NEEDED FOR torch MPS SUPPORT
 # class PytorchCompositionWrapper(torch.jit.ScriptModule):
-# MODIFIED 7/29/24 END
+# END
     """Wrapper for a Composition as a Pytorch Module.
 
     Wraps an `AutodiffComposition` as a `PyTorch module
@@ -617,18 +616,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_rep, context=None)->dict:
+    def forward(self, inputs, optimization_num, context=None)->dict:
         """Forward method of the model for PyTorch and LLVM modes
-        Returns a dictionary {output_node:value} of output values for the model
+        Return a dictionary {output_node:value} of output values for the model
         """
-        outputs = {}  # dict for storing values of terminal (output) nodes
+        outputs = {}  # dict for storing values of terminal (output) nodes of the outermost Composition;
         for current_exec_set in self.execution_sets:
             for node in current_exec_set:
 
                 # If node is nested Composition (wrapped in PytorchCompositionWrapper),
-                #    calls its forward method recursively
+                #    call its forward method recursively; no need to manage outputs, as the Composition has been
+                #    "flattened" (i.e., its nodes have been moved up into the outer Composition of the PyTorch
+                #    representation) in _build_pytorch_representation), so its outputs will be "consumed" by the
+                #    MechanismWrappers' `aggregate_afferents()` method to which it projects in the outer Composition.
                 if isinstance(node, PytorchCompositionWrapper):
-                    node.forward(inputs=None, optimization_rep=optimization_rep, context=context)
+                    node.forward(inputs=None, optimization_num=optimization_num, context=context)
                     continue
 
                 elif node._is_input or node._is_bias:
@@ -681,9 +683,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
                              f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
 
-                # Execute the node using composition_wrapper_owner for Composition wrapper to which it belongs
-                # Note: this is to support overrides of execute_node method by subclasses (such as in EMComposition)
-                node._composition_wrapper_owner.execute_node(node, variable, optimization_rep, context)
+                # Execute the node (i.e., call its forward method) using composition_wrapper_owner for Composition
+                # wrapper to which it belongs; this is to support override of the execute_node method by subclasses of
+                # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
+                node._composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
 
                 # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
@@ -699,11 +702,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.log_weights()
         context.source = old_source
 
+        # Return outputs of the outermost Composition
         return outputs
 
     def execute_node(self, node, variable, optimization_num, context=None):
         """Execute node and store the result in the node's value attribute
-        Implemented as method (and includes optimization_rep and context as args)
+        Implemented as method (and includes optimization_num and context as args)
           so that it can be overridden by subclasses of PytorchCompositionWrapper
         """
         value = node.execute(variable, context)

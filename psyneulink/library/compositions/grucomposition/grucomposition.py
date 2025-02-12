@@ -466,6 +466,18 @@ class GRUComposition(AutodiffComposition):
                     :default value: True
                     :type: ``bool``
 
+                hidden_size
+                    see `hidden_size <GRUComposition.hidden_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
+                input_size
+                    see `input_size <GRUComposition.input_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
                 learning_rate
                     see `learning_results <GRUComposition.learning_rate>`
 
@@ -479,17 +491,31 @@ class GRUComposition(AutodiffComposition):
                     :type: ``numpy.random.RandomState``
 
         """
+        input_size = Parameter(1, structural=True)
+        hidden_size = Parameter(1, structural=True)
         bias = Parameter(False, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
+        def _validate_input_size(self, size):
+            if not (isinstance(size, np.ndarray) and isinstance(size.tolist(),int)):
+                return 'must be an integer'
+
+        def _validate_hidden_size(self, size):
+            if not (isinstance(size, np.ndarray) and isinstance(size.tolist(),int)):
+                return 'must be an integer'
+
+        def _validate_bool(self, bias):
+            if not isinstance(bias, bool):
+                return 'must be a boolean'
+
     @check_user_specified
     def __init__(self,
-                 input_size:int=1,
-                 hidden_size:int=1,
-                 bias:bool=False,
+                 input_size=None,
+                 hidden_size=None,
+                 bias=None,
                  # num_layers:int=1,
                  # batch_first:bool=False,
                  # dropout:float=0.0,
@@ -767,7 +793,6 @@ class GRUComposition(AutodiffComposition):
                                               f"does not match required shape ({b[PNL].get(context)[0].shape}).)")
                 b[PNL].set(b[TORCH], context)
 
-
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
         wts_iu = self.wts_iu.parameters.matrix.get(context)
@@ -819,6 +844,21 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
+    def _build_pytorch_representation(self, context=None, refresh=False):
+        """Builds a Pytorch representation of the GRUComposition"""
+        if self.parameters.pytorch_representation._get(context=context) is None or refresh:
+            module = self.pytorch_composition_wrapper_type(input_size=self.input_size,
+                                                           hidden_size=self.hidden_size,
+                                                           h0=self.hidden_layer_node.value,
+                                                           bias=self.bias,
+                                                           composition=self,
+                                                           device=self.device,
+                                                           outer_creator=self,
+                                                           context=context)
+            self.parameters.pytorch_representation._set(module, context, skip_history=True, skip_log=True)
+
+        return self.parameters.pytorch_representation._get(context)
+
     #
     # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
@@ -852,6 +892,7 @@ class GRUComposition(AutodiffComposition):
                            f"is neither True, False nor a list of bools as it should be.")
         super()._identify_target_nodes(context)
         return target_nodes
+
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
