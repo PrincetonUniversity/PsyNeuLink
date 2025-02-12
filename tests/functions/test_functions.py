@@ -60,7 +60,9 @@ def test_output_type_conversion_failure(output_type, variable):
 )
 def test_seed_setting_results(obj):
     obj = obj()
-    new_seed = pnl.core.components.functions.function.get_global_seed()
+
+    # A seed different from the one used by the instance
+    new_seed = obj.parameters.seed.get() + 1
 
     obj.parameters.seed.set(new_seed, context='c1')
 
@@ -81,20 +83,22 @@ def test_seed_setting_results(obj):
 # with different seeds, unlike those in test_seed_setting_results
 @pytest.mark.function
 @pytest.mark.parametrize(
-    "obj",
+    "config",
     [
-        pnl.DDM,
-        pnl.DriftDiffusionIntegrator,
-        pnl.DriftOnASphereIntegrator(dimension=3),
-        pnl.OrnsteinUhlenbeckIntegrator,
-        pnl.DictionaryMemory,
-        pnl.ContentAddressableMemory,
-    ]
+        (pnl.DDM, {}),
+        (pnl.DriftDiffusionIntegrator, {}),
+        (pnl.DriftOnASphereIntegrator, {"dimension":3}),
+        (pnl.OrnsteinUhlenbeckIntegrator, {}),
+        (pnl.DictionaryMemory, {}),
+        (pnl.ContentAddressableMemory, {}),
+    ],
+    ids=lambda x: x[0]
 )
-def test_seed_setting_params(obj):
-    if not isinstance(obj, pnl.Component):
-        obj = obj()
-    new_seed = pnl.core.components.functions.function.get_global_seed()
+def test_seed_setting_params(config):
+    obj_c, params = config
+    obj = obj_c(**params)
+
+    new_seed = obj.parameters.seed.get() + 1
 
     obj._initialize_from_context(pnl.Context(execution_id='c1'))
     obj._initialize_from_context(pnl.Context(execution_id='c2'), pnl.Context(execution_id='c1'))
