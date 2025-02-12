@@ -14,7 +14,7 @@ from psyneulink.library.compositions.grucomposition.grucomposition import GRUCom
 class TestExecution:
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
     @pytest.mark.composition
-    def test_pytorch_identicality(self, bias):
+    def test_pytorch_execution_identicality(self, bias):
 
         import torch
         inputs = [[1,2,3]]
