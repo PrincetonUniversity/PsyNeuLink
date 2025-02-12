@@ -103,7 +103,7 @@ runs:
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
         echo "wheel=$(ls dist/*.whl)" | tee -a "$GITHUB_OUTPUT"
-        echo "sdist=$(ls dist/*.sdist)" | tee -a "$GITHUB_OUTPUT"
+        echo "sdist=$(ls dist/*.tar.gz)" | tee -a "$GITHUB_OUTPUT"
 
     - name: Python dependencies
       shell: bash

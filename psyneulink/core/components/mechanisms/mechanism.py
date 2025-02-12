@@ -3243,6 +3243,9 @@ class Mechanism_Base(Mechanism):
 
             builder.call(reinit_func, [reinit_params, reinit_state, reinit_in, reinit_out])
 
+        # update output ports after getting the reinitialized value
+        builder = self._gen_llvm_output_ports(ctx, builder, reinit_out, m_base_params, m_state, m_arg_in, m_arg_out)
+
         return builder
 
     def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -3253,23 +3256,23 @@ class Mechanism_Base(Mechanism):
         on top of the variants supported by Component.
         """
 
-        # Call parent "_gen_llvm_function", this should result in calling
-        # "_gen_llvm_function_body" below
-        if "is_finished" not in tags:
-            return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx, tags=tags)
+        if "is_finished" in tags:
 
-        # Keep all 4 standard arguments to ease invocation
-        args = [ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_state_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_output_struct_type(self).as_pointer()]
+            # Keep all 4 standard arguments to ease invocation
+            args = [ctx.get_param_struct_type(self).as_pointer(),
+                    ctx.get_state_struct_type(self).as_pointer(),
+                    ctx.get_input_struct_type(self).as_pointer(),
+                    ctx.get_output_struct_type(self).as_pointer()]
 
-        builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
-                                           tags=tags)
-        params, state, inputs = builder.function.args[:3]
-        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state, inputs)
-        builder.ret(finished)
-        return builder.function
+            builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty, tags=tags)
+            params, state, inputs = builder.function.args[:3]
+            finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state, inputs)
+            builder.ret(finished)
+            return builder.function
+
+        # Call parent "_gen_llvm_function". This handles standard variants like
+        # no tags, or the "reset" tag.
+        return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx, tags=tags)
 
     def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
         """

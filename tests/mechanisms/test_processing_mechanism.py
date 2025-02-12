@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
@@ -343,3 +344,26 @@ class TestProcessingMechanismStandardOutputPorts:
         var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
         PM1.execute(var)
         np.testing.assert_allclose(PM1.output_ports[0].value, expected)
+
+@pytest.mark.mechanism
+@pytest.mark.parametrize("initializer_param", [{}, {pnl.INITIALIZER: 5.0}], ids=["default_initializer", "custom_initializer"])
+def test_processing_mechanism_reset(mech_mode, initializer_param):
+    T = pnl.ProcessingMechanism(function=pnl.AdaptiveIntegrator(**initializer_param, rate=0.5))
+
+    ex = pytest.helpers.get_mech_execution(T, mech_mode)
+    initializer_value = initializer_param.get(pnl.INITIALIZER, 0)
+
+    ex([1])
+    ex([2])
+    result = ex([3])
+    np.testing.assert_array_equal(result, [[2.125 + initializer_value / 8]])
+
+    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags=frozenset({"reset"}), member="reset")
+
+    reset_result = reset_ex(None if mech_mode == "Python" else [0])
+
+    # FIXME: Python returns 3d value with default initializer
+    if mech_mode == "Python" and pnl.INITIALIZER not in initializer_param:
+        reset_result = reset_result[0]
+
+    np.testing.assert_array_equal(reset_result, [[initializer_value]])
