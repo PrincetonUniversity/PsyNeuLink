@@ -57,6 +57,7 @@ Contents
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
+        • `Composition_Randomization`
         • `Composition_Compilation`
      - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
   * `Composition_Visualization`
@@ -1198,6 +1199,7 @@ Executing a Composition
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
+        • `Composition_Randomization`
         • `Composition_Compilation`
     - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
 
@@ -1651,6 +1653,7 @@ COMMENT
   • `Composition_Execution_Context`
   • `Composition_Timing`
   • `Composition_Reset`
+  • `Composition_Randomization`
   • `Composition_Compilation`
 
 
@@ -2020,6 +2023,29 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      case, the `Condition` specified by its own `reset_stateful_function_when <Component.reset_stateful_function_when>`
      parameter will be used.
 
+.. _Composition_Randomization:
+
+*Randomization*
+^^^^^^^^^^^^^^^
+
+**Global random seed.** Randomization can be controlled using the `set_global_seed <Utilities.set_global_seed>`
+function, which sets the seed for all calls to `numpy.random <https://numpy.org/doc/stable/reference/random/index.html>`_
+functions by all Components for which a seed has not been explicitly set. This can be used to ensure that the same
+sequence of random numbers is generated across all Components in a Composition each time it is constructed and executed.
+The call must be made before construction of a Composition to ensure consistency of randomization;  every Component
+that uses the `numpy.random <https://numpy.org/doc/stable/reference/random/index.html>`_ module will then be assigned
+the same random value(s) each time the Composition is constructed and executed.  THe `get_global_seed` function can be
+used to inspect the current global seed.
+
+**Local random seeds.** Individual `Mehanisms <Mechanism>` that use numpy-generated random values can be assigned their
+own seed. This can be done by specifying a seed in the **random_seed** argument of the Component's constructor, or by
+assigning a value to its `seed` `Parameter`.  Components assigned their own seed will not be affected by any calls to
+the `set_global_seed <Utilities.set_global_seed>` function.
+
+.. note::
+   The Python `random.seed(seed)` and numpy `np.random.RandomState([seed])` functions should **not** be used, as this
+   may interfere with the operation of the `set_global_seed <Utilities.set_global_seed>` function and/or assignment of
+   seeds to individual Components.
 
 .. _Composition_Compilation:
 
