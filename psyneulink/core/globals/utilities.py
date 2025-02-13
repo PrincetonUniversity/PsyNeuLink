@@ -93,7 +93,6 @@ CONTENTS
 * `ContentAddressableList`
 * `make_readonly_property`
 * `get_class_attributes`
-* `get_global_seed`
 * `set_global_seed`
 
 """
@@ -1718,7 +1717,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
-def get_global_seed(offset=1):
+def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
     _seed = (_seed + offset) % 2**31

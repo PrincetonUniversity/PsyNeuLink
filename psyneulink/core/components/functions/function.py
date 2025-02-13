@@ -171,7 +171,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
+    convert_all_elements_to_np_array, convert_to_np_array, _get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
     SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
     random_matrix, array_from_matrix_string
 )
@@ -357,7 +357,7 @@ def _seed_setter(value, owning_component, context, *, compilation_sync):
 
     value = try_extract_0d_array_item(value)
     if value is None or value == DEFAULT_SEED():
-        value = get_global_seed()
+        value = _get_global_seed()
 
     # Remove any old PRNG state
     owning_component.parameters.random_state.set(None, context=context)
