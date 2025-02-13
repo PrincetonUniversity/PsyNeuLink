@@ -641,7 +641,7 @@ class OptimizationFunction(Function_Base):
         # Run compiled mode if requested by parameter and everything is initialized
         if self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and \
           ContextFlags.PROCESSING in context.flags:
-            all_samples = [s for s in itertools.product(*self.search_space)]
+            all_samples = list(itertools.product(*self.search_space))
             all_values, num_evals = self._grid_evaluate(self.owner, context, fit_evaluate)
             assert len(all_values) == num_evals
             assert len(all_samples) == num_evals
@@ -846,7 +846,7 @@ class OptimizationFunction(Function_Base):
         """Reset iterators in `search_space <GridSearch.search_space>`"""
         for s in self.search_space:
             s.reset()
-        self.parameters.grid._set(itertools.product(*[s for s in self.search_space]), context)
+        self.parameters.grid._set((s for s in itertools.product(*[s for s in self.search_space])), context)
 
     def _traverse_grid(self, variable, sample_num, context=None):
         """Get next sample from grid.
