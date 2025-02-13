@@ -2028,14 +2028,30 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 *Randomization*
 ^^^^^^^^^^^^^^^
 
+COMMENT:
+FIX: FROM JAN; INCORPORATE BELOW
+Each PNL Component that needs randomness uses a private instance of PRNG. This makes random sequences of Components
+independent of each other, and independent of any random number generation used by 3rd parties.
+Each PNL Component that needs randomness has a "seed" parameter that can be used to explicitly seed its PRNG.
+If no "seed" parameter is provided, a Component will retrieve a seed from PNL global seed sequence.
+This provides each Component with a unique seed even if the user does not specify one.
+The starting value of PNL global seed sequence can be set by set_global_seed() function.
+
+User scripts and 3rd party modules can freely use np.random and python random modules, including seed
+manipulation.  The above mechanism exists to isolate PNL random sequences from such interference.
+
+.. technical note::
+   For the reasons above, np.random and python random should *NOT* be used inside PNL code.
+COMMENT
+
+
 **Global random seed.** Randomization can be controlled using the `set_global_seed <Utilities.set_global_seed>`
-function, which sets the seed for all calls to `numpy.random <https://numpy.org/doc/stable/reference/random/index.html>`_
-functions by all Components for which a seed has not been explicitly set. This can be used to ensure that the same
-sequence of random numbers is generated across all Components in a Composition each time it is constructed and executed.
-The call must be made before construction of a Composition to ensure consistency of randomization;  every Component
-that uses the `numpy.random <https://numpy.org/doc/stable/reference/random/index.html>`_ module will then be assigned
-the same random value(s) each time the Composition is constructed and executed.  THe `get_global_seed` function can be
-used to inspect the current global seed.
+function, which sets the seed for all randomization carried out by PsyNeuLink Components for which a seed has not been
+explicitly set. This can be used to ensure that the same sequence of random numbers is generated across all Components
+in a Composition each time it is constructed and executed. The call must be made before construction of a Composition
+to ensure consistency of randomization;  every Component that uses the `numpy.random
+<https://numpy.org/doc/stable/reference/random/index.html>`_ module will then be assigned the same random value(s)
+each time the Composition is constructed and executed.
 
 **Local random seeds.** Individual `Mehanisms <Mechanism>` that use numpy-generated random values can be assigned their
 own seed. This can be done by specifying a seed in the **random_seed** argument of the Component's constructor, or by
