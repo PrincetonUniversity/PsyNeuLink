@@ -1227,9 +1227,9 @@ class AutodiffComposition(Composition):
         return autodiff_input_dict
 
     def _get_autodiff_targets_values(self, input_dict):
-        """Return dict with values for TARGET Nodes
-        Get Inputs to TARGET Nodes used for computation of loss in autodiff_forward().
-        Uses input_dict to get values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
+        """Return dict with input values for TARGET Nodes
+        Get inputs to TARGET Nodes used for computation of loss in autodiff_forward().
+        Uses input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
         If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
         and the value is determined by searching recursively for the input Node that projects to the TARGET Node.
 

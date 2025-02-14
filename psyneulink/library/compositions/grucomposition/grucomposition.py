@@ -195,17 +195,18 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import (
-    PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper)
+from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GRU_NODE_NAME, TARGET_NODE_NAME
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import ExecutionMode
+
 
 
 __all__ = ['GRUComposition', 'GRUCompositionError']
@@ -857,37 +858,75 @@ class GRUComposition(AutodiffComposition):
 
     #endregion
 
+    # @handle_external_context()
+    # def _build_pytorch_representation(self, context=None, refresh=False):
+    #     """Override to assign PyTorch GRU module to the GRUComposition's `gru_mech` node"""
+    #     if torch_available:
+    #         import torch
+    #     else:
+    #         raise GRUCompositionError(f"PyTorch is not available.")
+    #
+    #     if self.parameters.pytorch_representation._get(context=context) is None or refresh:
+    #         self.gru_mech.function = torch.nn.GRU(input_size=self.parameters.input_size.get(),
+    #                                               hidden_size=self.parameters.hidden_size.get(),
+    #                                               bias=self.bias)
+    #         self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value,device=self.device), context)
+    #
+    #     super()._build_pytorch_representation(context=context, refresh=refresh)
+
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None, refresh=False):
-        """Override to assign PyTorch GRU module to the GRUComposition's `gru_mech` node"""
-        if torch_available:
-            import torch
-        else:
-            raise GRUCompositionError(f"PyTorch is not available.")
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
+        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+            raise GRUCompositionError(f"Learning in {self.componentCategory} "
+                                      f"is not supported for {execution_mode.name}.")
 
-        if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            mechanism = self.gru_mech # Use this, since it is the critical node in the GRUComposition
-            self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value,device=self.device), context)
-            mechanism.function = torch.nn.GRU(input_size=self.parameters.input_size.get(),
-                                              hidden_size=self.parameters.hidden_size.get(),
-                                              bias=self.bias)
+        if self.gru_mech:
+            return [self.target_node]
 
-        super()._build_pytorch_representation(context=context, refresh=refresh)
+        import torch
+        input_size = self.parameters.input_size.get()
+        hidden_size = self.parameters.hidden_size.get()
+        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
+                                            input_shapes=self.input_size,
+                                            # # This is used to shape the value of the Mechanism
+                                            # #  since the GRU module cannot be used to do so
+                                            # function=MatrixTransform(matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,
+                                            #                                            input_size,
+                                            #                                            hidden_size))
+                                            )
+        self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
+        self.gru_mech.function = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=self.bias)
+        self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value.astype(np.float32),
+                                                       device=self.device), context)
 
-    def _get_pytorch_backprop_pathways(self)->list:
-        """Return the pathway with one Node as placemarker for GRU module"""
-        if not self.gru_mech:
-            self.gru_mech = ProcessingMechanism(name='GRU MECH',
-                                                input_shapes=self.input_size,
-                                                function=MatrixTransform(
-                                                    default_variable=np.zeros(self.input_size),
-                                                    matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,
-                                                                      self.input_size,
-                                                                      self.hidden_size)))
-        return [[self.gru_mech]]
+        target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
+                                               name= TARGET_NODE_NAME)
+        # Suppress warnings about role assignments
+        # context = Context(source=ContextFlags.METHOD)
+        # self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        # self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+        # for output_port in target_mech.output_ports:
+        #     output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.targets_from_outputs_map = {target_mech: self.gru_mech}
+        self.outputs_to_targets_map = {self.gru_mech: target_mech}
+        # self.target_mech = target_mech
 
-    def _identify_target_nodes(self, context)->list:
-        return [self.gru_mech]
+        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+        for output_port in target_mech.output_ports:
+            output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.target_node = target_mech
+
+        return [target_mech]
+
+    # def _get_autodiff_targets_values(self, input_dict):
+    #     # return {self.targets_from_outputs_map[target_mech]: target_mech.parameters.value.get() for target_mech in input_dict}
+    #     if self.target_mech in input_dict:
+    #         return {self.target_mech: input_dict[self.target_mech]}
+    #     else:
+    #         raise GRUCompositionError(f"Target values for '{self.gru_mech.name}' must be provided "
+    #                                   f"in the learn method of '{self.name}'.")
+
 
     # ******aa***********************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
