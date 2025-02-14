@@ -3851,7 +3851,7 @@ class TestBatching:
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
 
-
+@pytest.mark.pytorch
 def test_training_xor_with_batching():
     """
     This test actually trains an equivalent model in pytorch and compares the losses with the ones from the
