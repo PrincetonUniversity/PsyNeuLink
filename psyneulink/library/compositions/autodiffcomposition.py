@@ -1373,6 +1373,11 @@ class AutodiffComposition(Composition):
                                               retain_torch_losses,
                                               **kwargs))
 
+        if execution_mode == pnlvm.ExecutionMode.PyTorch and not torch_available:
+            raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
+                                           f"but Pytorch module ('torch') is not installed. "
+                                           f"Please install it with `pip install torch` or `pip3 install torch`")
+
         return super().learn(*args,
                              synch_with_pnl_options=synch_with_pnl_options,
                              retain_in_pnl_options=retain_in_pnl_options,
