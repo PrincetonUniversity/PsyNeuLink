@@ -13724,9 +13724,22 @@ _
 
     @property
     def feedback_projections(self):
-        return ContentAddressableList(component_type=Projection,
-                                      list=[p.component for p in self.graph.vertices
-                                            if p.feedback is EdgeType.FEEDBACK])
+        projs = []
+        # EdgeType.FLEXIBLE projections are only determined to be
+        # FEEDBACK or NON_FEEDBACK in graph_processing
+        for receiver_mech_vert in self.graph_processing.vertices:
+            receiver = receiver_mech_vert.component
+            for sender_mech_vert, edge_type in receiver_mech_vert.source_types.items():
+                if edge_type is not EdgeType.FEEDBACK:
+                    continue
+                sender = sender_mech_vert.component
+                # need to get by component because each Graph has
+                # different Vertex instances
+                for proj_vert in self.graph.get_children_from_component(sender):
+                    if self.graph.comp_to_vertex[receiver] in proj_vert.children:
+                        projs.append(proj_vert.component)
+
+        return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def is_nested(self):
