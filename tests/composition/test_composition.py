@@ -8038,6 +8038,83 @@ class TestNodeRoles:
         assert comp.nodes_to_roles[C] == {NodeRole.OUTPUT, NodeRole.ORIGIN}
 
 
+# based on tests in TestNodeRoles
+@pytest.mark.composition
+class TestFeedbackProjections:
+    @staticmethod
+    def _gen_mechs(n):
+        return [ProcessingMechanism() for _ in range(n)]
+
+    def test_two_node_cycle(self):
+        A, B = self._gen_mechs(2)
+        comp = Composition(pathways=[A, B, A])
+        assert comp.feedback_projections == []
+
+    def test_three_node_cycle(self):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        assert comp.feedback_projections == []
+
+    def test_three_node_cycle_with_FEEDBACK(self):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+        exp_feedback = [eff for eff in C.efferents if eff.receiver.owner is A]
+        assert comp.feedback_projections == exp_feedback
+
+    def test_branch(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_bypass(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c, d], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_chain(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, c], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_convergent(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, e], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_two_pathway_cycle(self):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(pathways=[[a, b, a], [a, c, a]])
+        assert comp.feedback_projections == []
+
+    def test_two_pathway_cycle_feedback(self):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(
+            pathways=[
+                [a, b, (MappingProjection, True), a],
+                [a, c, (MappingProjection, True), a],
+            ]
+        )
+        exp_feedback = [
+            eff for eff in b.efferents + c.efferents if eff.receiver.owner is a
+        ]
+        assert comp.feedback_projections == exp_feedback
+
+    def test_extended_loop(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(pathways=[[a, b, c, d], [e, c, f, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_extended_loop_feedback(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, True), d]]
+        )
+        exp_feedback = [eff for eff in b.efferents if eff.receiver.owner is d]
+        assert comp.feedback_projections == exp_feedback
+
+
 class TestMisc:
 
     @pytest.mark.skip(reason="This test is hanging on MacOS for some reason.")
