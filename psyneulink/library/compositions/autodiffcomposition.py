@@ -1737,7 +1737,7 @@ class AutodiffComposition(Composition):
         return path
 
     @handle_external_context(fallback_most_recent=True)
-    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
+    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None, weights_only:bool=False):
         """Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
@@ -1769,7 +1769,7 @@ class AutodiffComposition(Composition):
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}'{error_msg}")
         try:
-            state = torch.load(path)
+            state = torch.load(path, weights_only=weights_only)
         except FileNotFoundError:
             raise AutodiffCompositionError(f"'{path}'{error_msg}")
 
