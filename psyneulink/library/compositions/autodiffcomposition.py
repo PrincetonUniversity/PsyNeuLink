@@ -1172,7 +1172,7 @@ class AutodiffComposition(Composition):
         # Turn into a numpy array, possibly ragged
         try:
             all_output_values = np.array(all_output_values)
-        except ValueError:
+        except (ValueError, np.VisibleDeprecationWarning):
             all_output_values = np.array(all_output_values, dtype=object)
 
         # Swap the first two dimensions (output_port, batch) to (batch, output_port)
