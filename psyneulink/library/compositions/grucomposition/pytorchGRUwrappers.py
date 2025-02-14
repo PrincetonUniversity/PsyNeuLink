@@ -41,7 +41,19 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _instantiate_pytorch_projection_wrappers(self, composition, device, context):
         """Assign PytorchProjectionWrapper's parameters to those of GRU Node"""
-        self.parameters = self.wrapped_nodes[0].function.function.parameters
+        if len(self.wrapped_nodes) == 1:
+            self.parameters = self.wrapped_nodes[0].function.function.parameters
+        else:
+            if not len(self.wrapped_nodes):
+                assert False, \
+                    (f"PROGRAM ERROR: PytorchGRUCompositionWrapper has no wrapped nodes; should have one for "
+                     f"'PYTORCH GRU NODE'.")
+            else:
+                extra_nodes = [node for node in self.wrapped_nodes
+                               if node.name != 'PytorchMechanismWrapper[PYTORCH GRU NODE]']
+                assert False, \
+                    (f"PROGRAM ERROR: Somehow an extra node or more snuck into PytorchGRUCompositionWrapper; "
+                     f"should only have one for 'PYTORCH GRU NODE', but also has: {extra_nodes}.")
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
