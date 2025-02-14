@@ -1964,7 +1964,7 @@ class EMComposition(AutodiffComposition):
             # memory_template specifies a single entry
             if num_entries == 1:
                 memory_capacity = memory_capacity or self.defaults.memory_capacity
-                if np.array([np.nonzero(field) for field in memory_template],dtype=object).any():
+                if any([np.array(field).any() for field in memory_template]):
                     memory_fill = None
                 # Otherwise, use memory_fill
                 memory = _construct_entries(memory_template, memory_capacity, memory_fill)
