@@ -1525,6 +1525,7 @@ class AutodiffComposition(Composition):
 
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
+                self.most_recent_context = context
                 return all_output_values
 
         # Call Composition execute in Python mode
