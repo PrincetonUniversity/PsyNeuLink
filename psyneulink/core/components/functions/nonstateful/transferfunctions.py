@@ -3152,13 +3152,17 @@ class SoftMax(TransferFunction):
 
         # Modulate input_value by gain
         v = gain * input_value
-        # Shift by max to avoid extreme values:
+        # Shift by max to avoid extreme values making everything negative
         v = v - np.max(v)
+
+        if mask_threshold is not None:
+            # Everything that is between threshold and min + threshold is
+            # set to min (remember we shifted by max)
+            v = np.where(v > np.min(v) + mask_threshold, v, np.min(v))
+
         # Exponentiate
         v = np.exp(v)
-        # Threshold if specified:
-        if mask_threshold:
-            v = v * np.where(input_value > mask_threshold, v, 0)
+
         # Normalize (to sum to 1)
         if not any(v):
             # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
@@ -3472,12 +3476,16 @@ class SoftMax(TransferFunction):
         if isinstance(gain, str) and gain == ADAPTIVE:
             return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, -1))
 
-        elif mask_threshold:
+        elif mask_threshold is not None:
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
                 # Mask elements of input below threshold
-                _mask = (torch.abs(_input) > mask_threshold)
-                # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
-                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, -1, keepdim=True)[0]))
+                _v = gain * _input
+                _v = _v - torch.max(_v, -1, keepdim=True).values
+                _min = torch.min(_v, -1, keepdim=True).values
+
+                masked_v = torch.where(_v > _min + mask_threshold, _v, _min)
+                # Exponentiate
+                masked_exp = torch.exp(masked_v)
                 if (masked_exp == 0).all():
                     return masked_exp
                 return masked_exp / torch.sum(masked_exp, -1, keepdim=True)
