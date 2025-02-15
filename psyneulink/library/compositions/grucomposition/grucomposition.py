@@ -861,14 +861,14 @@ class GRUComposition(AutodiffComposition):
                      f"({b[FROM_ARG].shape}) does not match required shape ({b[PNL].get(context)[0].shape}).")
                 b[PNL].set(b[FROM_ARG], context)
 
-    def set_wts_from_torch_gru(self, torch_gru, context=None):
+    def set_weights_from_torch_gru(self, torch_gru, context=None):
         """Copy weights from PyTorch GRU module to the GRUComposition's Projections."""
         from psyneulink.library.compositions.grucomposition import GRUCompositionError
 
-        weights, biases = self.get_weights_from_torch(torch_gru)
+        weights, biases = self.get_weights_from_torch_gru(torch_gru)
         self.set_weights(weights, biases, context)
 
-    def get_weights_from_torch(self, torch_gru):
+    def get_weights_from_torch_gru(self, torch_gru):
         """Convert weights from a PyTorch GRU module to the format for GRUComposition's Projections."""
         torch_gru_weights = torch_gru.state_dict()
         wts_ih = torch_gru_weights['weight_ih_l0']

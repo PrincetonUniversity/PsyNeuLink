@@ -88,7 +88,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             projection.parameters.matrix._set(matrix, context)
             projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
-
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
             proj_wrapper.log_matrix()

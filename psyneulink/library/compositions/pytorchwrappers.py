@@ -191,11 +191,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Assign attributes
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
-        self._composition = composition
         self.device = device
         self.optimizer = None # This gets assigned by self._composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
 
+        self._composition = composition
         self._wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass

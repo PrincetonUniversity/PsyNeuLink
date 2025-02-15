@@ -29,7 +29,7 @@ class TestExecution:
         torch_results.append(result.detach().numpy())
 
         gru = GRUComposition(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
-        gru.set_wts_from_torch_gru(torch_gru)
+        gru.set_weights_from_torch_gru(torch_gru)
         gru.run(inputs={gru.input_node:inputs}, num_trials=2)
 
         np.testing.assert_allclose(torch_results, gru.results, atol=1e-6)
