@@ -225,14 +225,17 @@ class TestConstruction:
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
     @pytest.mark.parametrize("softmax_choice, expected",
-                             [(pnl.WEIGHTED_AVG, [[0.93016008, 0.1, 0.16983992]]),
+                             [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),
                               (pnl.ARG_MAX, [[1, .1, .1]]),
                               (pnl.PROBABILISTIC, [[1, .1, .1]]), # NOTE: actual stochasticity not tested here
                              ])
     def test_softmax_choice(self, softmax_choice, expected):
         em = EMComposition(memory_template=[[[1,.1,.1]], [[1,.1,.1]], [[.1,.1,1]]],
                            softmax_choice=softmax_choice,
-                           enable_learning=False)
+                           enable_learning=False,
+                           softmax_threshold=None,
+                           memory_decay_rate=0,
+                           normalize_memories=False)
         result = em.run(inputs={em.query_input_nodes[0]:[[1,0,0]]})
 
         np.testing.assert_allclose(result, expected)
