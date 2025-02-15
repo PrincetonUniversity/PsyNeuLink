@@ -498,7 +498,9 @@ class AutodiffComposition(Composition):
     Attributes
     ----------
 
-    pytorch_representation = None
+    pytorch_representation : PytorchCompositionWrapper : default None
+        represents the PyTorch model of the AutodiffComposition, which is created when the AutodiffComposition is
+        run in `PyTorch mode <AutodiffComposition_PyTorch>`.
 
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**

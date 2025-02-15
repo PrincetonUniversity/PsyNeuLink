@@ -18,7 +18,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import ALL, INPUTS, OUTPUTS
+from psyneulink.core.globals.keywords import ALL, CONTEXT, INPUTS, OUTPUTS
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
 
@@ -30,26 +30,37 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
     and the Pytorch GRU Module's parameters, and return its output value.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.node_variables_hook_handle = None
+        self.node_values_hook_handle = None
+        # Set hooks here if they will always be in use
+        if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
+            self.node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
+        if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
+            self.node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
+
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
         node = composition.gru_mech
         pytorch_node = PytorchGRUMechanismWrapper(node, self, 0, device, context)
-        self.nodes_map[node] = pytorch_node
-        self.wrapped_nodes.append(pytorch_node)
+        self._nodes_map[node] = pytorch_node
+        self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
 
     def _instantiate_pytorch_projection_wrappers(self, composition, device, context):
         """Assign PytorchProjectionWrapper's parameters to those of GRU Node"""
-        if len(self.wrapped_nodes) == 1:
-            self.parameters = self.wrapped_nodes[0].function.function.parameters
+        if len(self._wrapped_nodes) == 1:
+            self.parameters = self._wrapped_nodes[0].function.function.parameters
         else:
-            if not len(self.wrapped_nodes):
+            if not len(self._wrapped_nodes):
                 assert False, \
                     (f"PROGRAM ERROR: PytorchGRUCompositionWrapper has no wrapped nodes; should have one for "
                      f"'PYTORCH GRU NODE'.")
             else:
-                extra_nodes = [node for node in self.wrapped_nodes
+                extra_nodes = [node for node in self._wrapped_nodes
                                if node.name != 'PytorchMechanismWrapper[PYTORCH GRU NODE]']
                 assert False, \
                     (f"PROGRAM ERROR: Somehow an extra node or more snuck into PytorchGRUCompositionWrapper; "
@@ -65,29 +76,30 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Reshape iput for GRU module (from float64 to float32
         inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(np.float32))
         hidden_state = self._composition.hidden_state
-        gru_node = self._composition.gru_mech
-        output, self.hidden_state = gru_node.function(inputs, hidden_state)
+        output, self.hidden_state = self._composition.gru_mech.function(inputs, hidden_state)
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         return {self._composition.output_node: output}
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self.projections_map.items():
+        for projection, pytorch_rep in self._projection_map.items():
             matrix = pytorch_rep.matrix.detach().cpu().numpy()
             projection.parameters.matrix._set(matrix, context)
             projection.parameters.matrix._set(matrix, context)
             projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
+
     def log_weights(self):
-        for proj_wrapper in self.projection_wrappers:
+        for proj_wrapper in self._projection_wrappers:
             proj_wrapper.log_matrix()
 
+    # FIX ALONG LINES OF _copy_internal_nodes_values_to_pnl
     def copy_node_variables_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, INPUTS]]]=ALL, context=None):
         """Copy input to Pytorch nodes to variable of AutodiffComposition nodes.
         IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
         """
         if nodes == ALL:
-            nodes = self.nodes_map.items()
+            nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
             # First get variable in numpy format
             if isinstance(pytorch_node.input, list):
@@ -97,54 +109,90 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             # Set pnl_node's value to value
             pnl_node.parameters.variable._set(variable, context)
 
-    def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
-        """Copy output of Pytorch nodes to value of AutodiffComposition nodes.
-        IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
-        """
-        if nodes == ALL:
-            nodes = self.nodes_map.items()
-        # elif nodes == OUTPUTS:
-        #     nodes = [(node, self.nodes_map[node]) for node in self._composition.get_output_nodes()]
+    def _copy_internal_nodes_values_to_pnl(self, nodes, context):
+        assert len(nodes) == 1, \
+            (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, but has {len(nodes)}:"
+             f"{[node.name for node in nodes]}")
+        pnl_node = list(nodes)[0][0]
+        pytorch_node = list(nodes)[0][1]
 
-        def update_autodiff_all_output_values():
-            """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
-            if self.all_output_values:
-                self._composition.output_CIM.execute(self.all_output_values, context=context)
+        #-----------------
 
-        # Allow selective updating of just autodiff.output_values if specified
-        if nodes == OUTPUTS:
-            update_autodiff_all_output_values()
-            return
-
-        for pnl_node, pytorch_node in nodes:
-            # Update each node's value with the output of the corresponding wrappter in the PyTorch representation
-            if pytorch_node.output is None:
-                assert pytorch_node.exclude_from_gradient_calc, \
-                    (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
-                     f"but it is not excluded from gradient calculation.")
-                continue
-            # First get value in numpy format
-            if isinstance(pytorch_node.output, list):
-                value = np.array([val.detach().cpu().numpy() for val in pytorch_node.output], dtype=object)
+        def hook_activities(module, input, output):
+            ih = module.weight_ih_l0
+            hh = module.weight_hh_l0
+            if module.bias:
+                b_ih = module.bias_ih_l0
+                b_hh = module.bias_hh_l0
             else:
-                value = pytorch_node.output.detach().cpu().numpy()
+                b_ih = torch.tensor(np.array([0] * 3 * module.hidden_size))
+                b_hh = torch.tensor(np.array([0] * 3 * module.hidden_size))
 
-            # Set pnl_node's value to value
-            pnl_node.parameters.value._set(value, context)
+            w_ir = ih[:5].T
+            w_iz = ih[5:10].T
+            w_in = ih[10:].T
+            w_hr = hh[:5].T
+            w_hz = hh[5:10].T
+            w_hn = hh[10:].T
 
-            # If pnl_node's function is Stateful, assign value to its previous_value parameter
-            #   so that if Python implementation is run it picks up where PyTorch execution left off
-            if isinstance(pnl_node.function, StatefulFunction):
-                pnl_node.function.parameters.previous_value._set(value, context)
-            # Do same for integrator_function of TransferMechanism if it is in integrator_mode
-            if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
-                pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
-                                                                            context)
-        # Finally, update the output_values of the autodiff Composition by executing its output_CIM
-        update_autodiff_all_output_values()
+            b_ir = b_ih[:5]
+            b_iz = b_ih[5:10]
+            b_in = b_ih[10:]
+            b_hr = b_hh[:5]
+            b_hz = b_hh[5:10]
+            b_hn = b_hh[10:]
+
+            x = input[0]
+            h = input[1] if len(input) > 1 else h0
+
+            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+            print("Reset gate r_t:  ", [float(f"{value:.4f}") for value in r_t.flatten()])
+
+            # Extract the update gate z_t
+            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+            print("Update gate z_t: ", [float(f"{value:.4f}") for value in z_t.flatten()])
+
+            # Extract the new gate n_t
+            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+            print("New gate n_t:    ", [float(f"{value:.4f}") for value in n_t.flatten()])
+
+            # Extract hidden state
+            h_t = (1 - z_t) * n_t + z_t * h
+            print("Hidden state h:  ", [float(f"{value:.4f}") for value in h_t.flatten()])
+
+        # Register the hook
+        torch_gru.register_forward_hook(hook_activities)
+
+        #-----------------
+
+
+
+
+        # Update  node's value with the output of the corresponding wrapper in the PyTorch representation
+        if pytorch_node.output is None:
+            assert pytorch_node.exclude_from_gradient_calc, \
+                (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
+                 f"but it is not excluded from gradient calculation.")
+        # First get value in numpy format
+        if isinstance(pytorch_node.output, list):
+            value = np.array([val.detach().cpu().numpy() for val in pytorch_node.output], dtype=object)
+        else:
+            value = pytorch_node.output.detach().cpu().numpy()
+
+        # Set pnl_node's value to value
+        pnl_node.parameters.value._set(value, context)
+
+        # If pnl_node's function is Stateful, assign value to its previous_value parameter
+        #   so that if Python implementation is run it picks up where PyTorch execution left off
+        if isinstance(pnl_node.function, StatefulFunction):
+            pnl_node.function.parameters.previous_value._set(value, context)
+        # Do same for integrator_function of TransferMechanism if it is in integrator_mode
+        if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
+            pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
+                                                                        context)
 
     def log_values(self):
-        for node_wrapper in [n for n in self.wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
+        for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
 
 

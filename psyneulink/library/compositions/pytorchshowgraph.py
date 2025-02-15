@@ -99,7 +99,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            nodes = list(self.pytorch_rep.nodes_map.keys())
+            nodes = list(self.pytorch_rep._nodes_map.keys())
             return nodes
         else:
             return super()._get_nodes(composition, context)
@@ -107,7 +107,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_projections(self, composition, context):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            projections = list(self.pytorch_rep.projections_map.keys())
+            projections = list(self.pytorch_rep._projection_map.keys())
             # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
             # Add any Projections to TARGET nodes
             projections += [afferent
@@ -155,7 +155,7 @@ class PytorchShowGraph(ShowGraph):
     def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
         if self.show_pytorch:
-            if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
+            if self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
             g.node(*args, **kwargs)
@@ -170,12 +170,12 @@ class PytorchShowGraph(ShowGraph):
 
             modulatory_node = None
             if proj.parameter_ports[0].mod_afferents:
-                modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                modulatory_node = self.pytorch_rep._nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
 
-            if proj in self.pytorch_rep.projections_map:
+            if proj in self.pytorch_rep._projection_map:
 
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
-                if proj.learnable or self.pytorch_rep.projections_map[proj].matrix.requires_grad:
+                if proj.learnable or self.pytorch_rep._projection_map[proj].matrix.requires_grad:
                     kwargs['color'] = self.learning_color
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
@@ -183,7 +183,7 @@ class PytorchShowGraph(ShowGraph):
                     kwargs['color'] = self.exclude_from_gradient_calc_color
                     kwargs['style'] = self.exclude_from_gradient_calc_line_style
 
-            elif self._proj_in_composition(proj, self.pytorch_rep.projections_map, context) and proj.learnable:
+            elif self._proj_in_composition(proj, self.pytorch_rep._projection_map, context) and proj.learnable:
                 kwargs['color'] = self.learning_color
 
             graph.edge(*args, **kwargs)
