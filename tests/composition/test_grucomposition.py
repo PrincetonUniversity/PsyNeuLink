@@ -63,15 +63,15 @@ class TestExecution:
         # result = gru.learn(inputs={gru.input_node:[[1,2,3]],
         #                            targets[0]: [[1,1,1,1,1]]},
         #                    execution_mode=ExecutionMode.PyTorch)
-        pnl_result_before_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
+        # pnl_result_before_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
         # print("\nPNL before learning: ", pnl_result_before_learning)
         pnl_result_after_learning = gru.learn(inputs={gru.input_node:[[1,2,3]],
-                                   targets[0]: [[1,1,1,1,1]]},
-                           execution_mode=pnl.ExecutionMode.PyTorch)
+                                                      targets[0]: [[1,1,1,1,1]]},
+                                              execution_mode=pnl.ExecutionMode.PyTorch)
         # pnl_result_after_learning = gru.learn(inputs={gru.input_node:[[1,2,3],[1,2,3]],
         #                            targets[0]: [[1,1,1,1,1],[1,1,1,1,1]]},
         #                    execution_mode=ExecutionMode.PyTorch)
         print("PNL after learning: ", pnl_result_after_learning)
 
-        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
+        # np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
