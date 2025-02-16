@@ -3484,7 +3484,6 @@ class SoftMax(TransferFunction):
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
                 v = gain * _input
 
-
                 # Apply threshold-based masking
                 if mask_threshold is not None:
                     if torch.any(_input < 0):
@@ -3492,14 +3491,17 @@ class SoftMax(TransferFunction):
                                       f"but input contains negative values. "
                                       f"Masking will be applied to the magnitude of the input.")
 
-                    # Mask values below threshold
-                    v = torch.where(torch.abs(v) > mask_threshold, v, float('-inf'))
-                if torch.all(v == float('-inf')):
-                    return torch.zeros_like(v)
+                    # Create a mask where values below threshold are set to -inf
+                    mask = torch.abs(v) > mask_threshold
+                    v = v.masked_fill(~mask, float('-inf'))  # More stable than torch.where()
+
+                # Handle case where all values are masked (return tensor with gradient support)
+                if torch.all(~mask):
+                    return torch.full_like(v, 0.0, requires_grad=True)
 
                 # Make numerically stable by shifting max value
-                max_v = torch.max(v)
-                v -= max_v
+                max_v = torch.max(v[mask])  # Avoid computing max over -inf
+                v = v - max_v
 
                 # Compute softmax (PyTorch handles -inf correctly)
                 exp_v = torch.exp(v)

@@ -742,11 +742,12 @@ class TestExecution:
 
         em = pnl.EMComposition(memory_template=memory_template,
                                memory_capacity=4,
-                               memory_decay_rate= 0,
-                               learn_field_weights = False,
+                               memory_decay_rate=0,
+                               learn_field_weights=False,
                                softmax_choice=softmax_choice,
                                field_weights=field_weights,
-                               field_names=['A','B','C'])
+                               field_names=['A', 'B', 'C'],
+                               )
         # Confirm initial weight assignments (that favor A)
         assert em.nodes['A [WEIGHT]'].input_port.defaults.variable == [.75]
         assert em.nodes['B [WEIGHT]'].input_port.defaults.variable == [.25]
@@ -777,9 +778,9 @@ class TestExecution:
         # Note: field_weights favors A
         if softmax_choice == pnl.MAX_VAL:
             if operation == pnl.L0:
-                expected = [[1.70381182], [0.], [3.40762364]]
+                expected = [[1.703812], [0.], [3.407624]]
             else:
-                expected = [[1.56081243, 0.0], [0.0, 1.56081243], [3.12162487, 3.12162487]]
+                expected = [[1.419423, 0.0], [0.0, 1.419423], [2.838846, 2.838846]]
         else:
             expected = memory_template[0]
         np.testing.assert_allclose(result, expected)
@@ -902,7 +903,7 @@ class TestExecution:
                            memory_capacity=50,
                            memory_decay_rate=0,
                            softmax_gain=10,
-                           softmax_threshold=.001,
+                           softmax_threshold=0.001,
                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
                                                pnl.LEARN_FIELD_WEIGHT: False,
                                                pnl.TARGET_FIELD: True},
@@ -1029,12 +1030,16 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
         result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
-        expected = [[ 0.00000000e+00,  1.35476414e-03,  1.13669378e-03,  2.20434260e-03,  6.61008388e-04, 9.88672202e-01,
-                      6.52088276e-04,  1.74149507e-03,  1.09769133e-03,  2.47971436e-03,  0.00000000e+00],
-                    [ 0.00000000e+00, -6.75284069e-02, -1.28930436e-03, -2.10726610e-01, -1.41050716e-03, -5.92286989e-01,
-                     -2.75196416e-03, -2.21010605e-03, -7.14369243e-03, -2.05167374e-02,  0.00000000e+00],
-                    [ 0.00000000e+00,  1.18578255e-03,  1.29393181e-03,  1.35476414e-03,  1.13669378e-03, 2.20434260e-03,
-                      6.61008388e-04,  9.88672202e-01,  6.52088276e-04,  2.83918640e-03,  0.00000000e+00]]
+        expected = [
+            [0.00000000e+00, 1.35933540e-03, 1.13114366e-03, 2.20590015e-03,
+             1.09314885e-03, 9.87722281e-01, 1.10371450e-03, 1.72925210e-03,
+             1.17352360e-03, 2.48170027e-03, 0.00000000e+00],
+            [0.00000000e+00, -6.54396065e-02,  1.41905061e-03, -2.08500295e-01,
+             -5.03985394e-05, -5.90196484e-01, -5.33017075e-03, -2.33024404e-03,
+             -2.02730870e-02, -1.58091223e-02,  0.00000000e+00],
+            [0.00000000e+00, 1.19576382e-03, 1.28593645e-03, 1.35933540e-03,
+             1.13114366e-03, 2.20590015e-03, 1.09314885e-03, 9.87722281e-01,
+             1.10371450e-03, 2.90277570e-03, 0.00000000e+00]]
         np.testing.assert_allclose(result, expected)
 
         # Plot (for during debugging):
