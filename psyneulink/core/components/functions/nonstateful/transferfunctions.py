@@ -3154,7 +3154,7 @@ class SoftMax(TransferFunction):
 
         # Mask threshold
         if mask_threshold is not None:
-            if np.any(input_value < 0):
+            if np.any(v < 0):
                 warnings.warn(f"SoftMax function: mask_threshold is set "
                               f"to {mask_threshold} but input_value contains negative values."
                               f"Masking will be applied to the magnitude of the input.")
@@ -3169,11 +3169,11 @@ class SoftMax(TransferFunction):
         v = np.exp(v)
 
         # Normalize (to sum to 1)
-        if not any(v):
+        if not np.any(v):
             # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
             sm = v
         else:
-            sm = v / np.sum(v, axis=0)
+            sm = v / np.sum(v)
 
         # Generate one-hot encoding based on selected output_type
         if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
