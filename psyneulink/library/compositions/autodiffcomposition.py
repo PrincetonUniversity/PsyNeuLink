@@ -1262,21 +1262,12 @@ class AutodiffComposition(Composition):
             return get_target_value(target)
 
         for target in self.targets_from_outputs_map:
-            # # MODIFIED 2/16/25 OLD:
-            # target_values[target] = np.atleast_1d(get_target_value(target))
-            # # MODIFIED 2/16/25 NEW:
-            # if torch_available:
-            #     target_values[target] = torch.tensor(np.atleast_1d(get_target_value(target)),
-            #                                          dtype=self.torch_dtype,
-            #                                          device=self.device)
-            # MODIFIED 2/16/25 NEWER:
             if torch_available:
                 target_values[target] = [torch.tensor(np.atleast_1d(targ_val),
                                                      dtype=self.torch_dtype,
                                                      device=self.device) for targ_val in get_target_value(target)]
             else:
                 target_values[target] = np.atleast_1d(get_target_value(target))
-            # MODIFIED 2/16/25 END
         return target_values
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):

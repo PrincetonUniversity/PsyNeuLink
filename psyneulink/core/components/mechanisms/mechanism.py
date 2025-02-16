@@ -1148,7 +1148,7 @@ class Mechanism_Base(Mechanism):
     """
     Mechanism_Base(             \
         default_variable=None,  \
-        input_shapes=None,              \
+        input_shapes=None,      \
         input_ports,            \
         function,               \
         output_ports,           \

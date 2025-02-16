@@ -795,21 +795,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # elif nodes == OUTPUTS:
         #     nodes = [(node, self._nodes_map[node]) for node in self._composition.get_output_nodes()]
 
-        def update_autodiff_all_output_values():
+        def update_autodiff_all_output_values(context):
             """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
             if self.all_output_values:
                 self._composition.output_CIM.execute(self.all_output_values, context=context)
 
         # Allow selective updating of just autodiff.output_values if specified
         if nodes == OUTPUTS:
-            update_autodiff_all_output_values()
+            update_autodiff_all_output_values(context)
             return
 
         # Copy all remaining node values
         self._copy_internal_nodes_values_to_pnl(nodes, context)
 
         # Finally, update the output_values of the autodiff Composition by executing its output_CIM
-        update_autodiff_all_output_values()
+        update_autodiff_all_output_values(context)
 
     def _copy_internal_nodes_values_to_pnl(self, nodes, context):
         for pnl_node, pytorch_node in nodes:

@@ -153,6 +153,13 @@ and `value_input_nodes <GRUComposition.value_input_nodes>` attributes, respectiv
 Execution
 ---------
 
+.. technical_note::
+    The `full Composition <GRUComposition_Structure>` is executed when its `run <Composition.run>` method is called
+    with **execution_mode** set to ExecutionMode.Python`, or if torch_available is False.  Otherwise, and always in
+    a call to `learn <AutodiffComposition.learn>`, the Composition is executed using the torch.nn.GRU module
+    <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>, with values of the individual computations copied
+    back to Nodes of the full GRUComposition at times determined by the value of the `synch_node_values_with_torch
+    <AutodiffComposition.synch_node_values_with_torch>` option.
 
 .. _GRUComposition_Processing:
 
@@ -240,9 +247,15 @@ class GRUComposition(AutodiffComposition):
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
 
-    Note: all exposed methods, attributes and `Parameters <Parameter>`) are PsyNeuLink elements;
-          all PyTorch-specific elements belong to `pytorch_representation <AutodiffComposition.pytorch_representation>`
-          which, for a GRUComposition, is of class `PytorchGRUCompositionWrapper`.
+    See `GRUComposition_Structure` and technical_note under under `GRUComposition_Execution`
+    for a description of when the full Composition is constructed and used for execution
+    vs. when the `PyTorch GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+    module is used.
+
+    Note: all exposed methods, attributes and `Parameters <Parameter>`) of the GRUComposition are
+          PsyNeuLink elements; all PyTorch-specific elements belong to `pytorch_representation
+          <AutodiffComposition.pytorch_representation>` which, for a GRUComposition, is of class
+          `PytorchGRUCompositionWrapper`.
 
     Constructor takes the following arguments in addition to those of `AutodiffComposition`:
 
