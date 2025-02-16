@@ -832,8 +832,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pnl_node.function.parameters.previous_value._set(value, context)
             # Do same for integrator_function of TransferMechanism if it is in integrator_mode
             if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
-                pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
-                                                                            context)
+                pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,                                                                            context)
 
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:

@@ -842,7 +842,7 @@ class GRUComposition(AutodiffComposition):
                             self.bias_hr.parameters.matrix,
                             self.bias_hu.parameters.matrix,
                             self.bias_hn.parameters.matrix]):
-                assert b[FROM_ARG].shape == b[PNL]._get(context)[0].shape, \
+                assert b[FROM_ARG].shape == b[PNL]._get(context).shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
                      f"({b[FROM_ARG].shape}) does not match required shape ({b[PNL].get(context)[0].shape}).")
                 b[PNL]._set(b[FROM_ARG], context)
@@ -858,9 +858,17 @@ class GRUComposition(AutodiffComposition):
             biases = tuple([bias.numpy() for bias in biases])
         self.set_weights(weights, biases, context)
 
-    def get_weights_from_torch_gru(self, torch_gru):
-        """Convert weights from a PyTorch GRU module to the format for GRUComposition's Projections."""
-        in_len = self.input_size
+    if torch_available:
+        import torch # Needed for type hint below
+    def get_weights_from_torch_gru(self, torch_gru)->tuple[torch.Tensor]:
+        """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
+        Format tensors:
+          - transpose all weight and bias tensors;
+          - reformat biases as 2d
+        Return formatted tensors, which are used:
+         - in set_weights_from_torch_gru(), where they are converted to numpy arrays
+         - for or forward computation in pytorchGRUwrappers._copy_internal_nodes_values_to_pnl()
+        """
         hid_len = self.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
@@ -874,31 +882,23 @@ class GRUComposition(AutodiffComposition):
         wts_hr = wts_hh[:z_idx].T
         wts_hu = wts_hh[z_idx:n_idx].T
         wts_hn = wts_hh[n_idx:].T
-        # weights = (wts_in, wts_ir, wts_iu, wts_hr, wts_hu, wts_hn)
         weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
+
         biases = None
         if torch_gru.bias:
             import torch
             assert self.bias, f"PROGRAM ERROR: '{GRU_NODE_NAME}' has bias=True but {self.name}.bias=False. "
+            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
             b_ih = torch_gru_weights['bias_ih_l0']
-            # Transpose single dimension Tensors using permute (per PyTorch warning)
-            b_ir = b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))
-            b_iu = b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))
-            b_in = b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))
+            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
+            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
+            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
             b_hh = torch_gru_weights['bias_hh_l0']
-            b_hr = b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))
-            b_hu = b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))
-            b_hn = b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))
+            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
+            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
+            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
             biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
-
-    # def _get_autodiff_targets_values(self, input_dict):
-    #     # return {self.targets_from_outputs_map[target_mech]: target_mech.parameters.value.get() for target_mech in input_dict}
-    #     if self.target_mech in input_dict:
-    #         return {self.target_mech: input_dict[self.target_mech]}
-    #     else:
-    #         raise GRUCompositionError(f"Target values for '{self.gru_mech.name}' must be provided "
-    #                                   f"in the learn method of '{self.name}'.")
 
 
     # *****************************************************************************************************************
@@ -938,6 +938,4 @@ class GRUComposition(AutodiffComposition):
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
         pass
-
     #endregion
-

@@ -147,14 +147,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
         h_t = (1 - z_t) * n_t + z_t * h
 
-        # FIX: KEEP FOR DEBUGGING
-        result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
+        # KEEP FOR FUTURE DEBUGGING
+        # result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
 
-        # Set pnl_node values
-        self._composition.reset_node.parameters.value._set(r_t.detach().numpy(), context)
-        self._composition.update_node.parameters.value._set(z_t.detach().numpy(), context)
-        self._composition.new_node.parameters.value._set(n_t.detach().numpy(), context)
-        self._composition.hidden_layer_node.parameters.value._set(h_t.detach().numpy(), context)
+        # Set pnl_node's value to value
+        for pnl_node in self._composition.nodes:
+            pnl_node.parameters.value._set(torch_gru_output, context)
 
         # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
         # # If pnl_node's function is Stateful, assign value to its previous_value parameter
