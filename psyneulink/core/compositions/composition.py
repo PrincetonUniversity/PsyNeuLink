@@ -12756,6 +12756,8 @@ _
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
+            self.most_recent_context = context
+
             # Extract result here
             if execution_mode.is_compiled():
                 assert execution_mode & pnlvm.ExecutionMode._PerNode

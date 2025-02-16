@@ -8437,6 +8437,48 @@ class TestMisc:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
         assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
 
+    # empty pathway bypasses call to .execute, but most_recent_context
+    # should still be set
+    @pytest.mark.parametrize(
+        'inner_pathway',
+        [
+            pytest.param([ProcessingMechanism()], id='1_mech'),
+            pytest.param([], id='empty'),
+        ]
+    )
+    def test_most_recent_context_nested(self, inner_pathway):
+        inner = pnl.Composition(name='inner', pathways=inner_pathway)
+        outer = pnl.Composition(name='outer')
+        outer.add_node(inner)
+
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id is None
+
+        inner.run()
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id == inner.name
+
+        if len(inner_pathway) == 0:
+            with pytest.raises(
+                pnl.MechanismError,
+                match=r'Number of inputs \(1\) to inner Output_CIM does not match its number of input_ports \(0\)'
+            ) as e:
+                outer.run()
+            if e:
+                pytest.xfail(
+                    reason='running outer comp with empty inner comp fails validation'
+                )
+        else:
+            outer.run()
+            assert outer.most_recent_context.execution_id == outer.name
+            assert inner.most_recent_context.execution_id == outer.name
+
+        # COMMAND_LINE to bypass check for input passed to nested comp
+        c = pnl.Context(source=pnl.ContextFlags.COMMAND_LINE)
+        inner.run(context=c)
+        assert outer.most_recent_context.execution_id == outer.name
+        assert inner.most_recent_context.execution_id == c.execution_id
+
 
 class TestInputSpecsDocumentationExamples:
 
