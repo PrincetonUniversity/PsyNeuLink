@@ -1090,7 +1090,11 @@ class AutodiffComposition(Composition):
         # Get value of INPUT nodes for current trial
         curr_tensors_for_inputs = {}
         for component in inputs.keys():
+            # # MODIFIED 2/16/25 OLD:
+            # curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            # MODIFIED 2/16/25 NEW:
             curr_tensors_for_inputs[component] = inputs[component]
+            # MODIFIED 2/16/25 END
 
         # Get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
@@ -1231,13 +1235,9 @@ class AutodiffComposition(Composition):
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
                 # (those are handled separately in _get_autodiff_targets_values)
-                # # MODIFIED 2/16/25 OLD:
-                # autodiff_input_dict[node] = [value values
-                # MODIFIED 2/16/25 NEW:
                 if torch_available:
-                    values = [torch.tensor(value, dtype=self.torch_dtype, device=self.device) for value in values]
+                    values = torch.tensor(values, dtype=self.torch_dtype, device=self.device)
                 autodiff_input_dict[node] = values
-                # MODIFIED 2/16/25 END
         return autodiff_input_dict
 
     def _get_autodiff_targets_values(self, input_dict):
@@ -1264,11 +1264,16 @@ class AutodiffComposition(Composition):
         for target in self.targets_from_outputs_map:
             # # MODIFIED 2/16/25 OLD:
             # target_values[target] = np.atleast_1d(get_target_value(target))
-            # MODIFIED 2/16/25 NEW:
+            # # MODIFIED 2/16/25 NEW:
+            # if torch_available:
+            #     target_values[target] = torch.tensor(np.atleast_1d(get_target_value(target)),
+            #                                          dtype=self.torch_dtype,
+            #                                          device=self.device)
+            # MODIFIED 2/16/25 NEWER:
             if torch_available:
-                target_values[target] = torch.tensor(np.atleast_1d(get_target_value(target)),
+                target_values[target] = [torch.tensor(np.atleast_1d(targ_val),
                                                      dtype=self.torch_dtype,
-                                                     device=self.device)
+                                                     device=self.device) for targ_val in get_target_value(target)]
             else:
                 target_values[target] = np.atleast_1d(get_target_value(target))
             # MODIFIED 2/16/25 END
