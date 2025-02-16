@@ -3149,16 +3149,20 @@ class SoftMax(TransferFunction):
         return np.asarray(variable)
 
     def apply_softmax(self, input_value, gain, mask_threshold, output_type):
-
         # Modulate input_value by gain
         v = gain * input_value
-        # Shift by max to avoid extreme values making everything negative
-        v = v - np.max(v)
 
+        # Mask threshold
         if mask_threshold is not None:
-            # Everything that is between threshold and min + threshold is
-            # set to min (remember we shifted by max)
-            v = np.where(v > np.min(v) + mask_threshold, v, np.min(v))
+            if np.any(input_value < 0):
+                warnings.warn(f"SoftMax function: mask_threshold is set "
+                              f"to {mask_threshold} but input_value contains negative values."
+                              f"Masking will be applied to the magnitude of the input.")
+
+            v = np.where(np.abs(v) > mask_threshold, v, -np.inf)
+
+        # Make numerically stable by shifting by max value
+        v = v - np.max(v)
 
         # Exponentiate
         v = np.exp(v)
@@ -3478,17 +3482,30 @@ class SoftMax(TransferFunction):
 
         elif mask_threshold is not None:
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
-                # Mask elements of input below threshold
-                _v = gain * _input
-                _v = _v - torch.max(_v, -1, keepdim=True).values
-                _min = torch.min(_v, -1, keepdim=True).values
+                v = gain * _input
 
-                masked_v = torch.where(_v > _min + mask_threshold, _v, _min)
-                # Exponentiate
-                masked_exp = torch.exp(masked_v)
-                if (masked_exp == 0).all():
-                    return masked_exp
-                return masked_exp / torch.sum(masked_exp, -1, keepdim=True)
+
+                # Apply threshold-based masking
+                if mask_threshold is not None:
+                    if torch.any(_input < 0):
+                        warnings.warn(f"SoftMax function: mask_threshold is set to {mask_threshold}, "
+                                      f"but input contains negative values. "
+                                      f"Masking will be applied to the magnitude of the input.")
+
+                    # Mask values below threshold
+                    v = torch.where(torch.abs(v) > mask_threshold, v, float('-inf'))
+                if torch.all(v == float('-inf')):
+                    return torch.zeros_like(v)
+
+                # Make numerically stable by shifting max value
+                max_v = torch.max(v)
+                v -= max_v
+
+                # Compute softmax (PyTorch handles -inf correctly)
+                exp_v = torch.exp(v)
+                sm = exp_v / torch.sum(exp_v, dim=-1, keepdim=True)
+
+                return sm
             # Return the function
             return pytorch_thresholded_softmax
 
