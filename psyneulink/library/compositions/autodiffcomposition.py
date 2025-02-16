@@ -757,8 +757,10 @@ class AutodiffComposition(Composition):
                 self.device = torch.device('cuda:' + str(cuda_index))
         elif torch_available:
             self.device = torch.device('cpu')
+            self.torch_dtype = self.pytorch_composition_wrapper_type.torch_dtype
         else:
             self.device = device
+            self.torch_dtype = None
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         #  FIX: ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
         # if device is None:
@@ -1088,7 +1090,7 @@ class AutodiffComposition(Composition):
         # Get value of INPUT nodes for current trial
         curr_tensors_for_inputs = {}
         for component in inputs.keys():
-            curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            curr_tensors_for_inputs[component] = inputs[component]
 
         # Get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
@@ -1102,9 +1104,13 @@ class AutodiffComposition(Composition):
         # Get value of TARGET nodes for current trial
         curr_tensors_for_targets = {}
         for component in targets.keys():
-            curr_tensors_for_targets[component] = [torch.tensor(np.atleast_1d(target),
-                                                           device=self.device).double()
-                                              for target in targets[component]]
+            # MODIFIED 2/16/25 OLD:
+            # curr_tensors_for_targets[component] = [torch.tensor(np.atleast_1d(target),
+            #                                                device=self.device).double()
+            #                                   for target in targets[component]]
+            # MODIFIED 2/16/25 NEW:
+            curr_tensors_for_targets[component] = targets[component]
+            # MODIFIED 2/16/25 END
 
         # Get value of TARGET nodes for trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1225,7 +1231,13 @@ class AutodiffComposition(Composition):
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
                 # (those are handled separately in _get_autodiff_targets_values)
+                # # MODIFIED 2/16/25 OLD:
+                # autodiff_input_dict[node] = [value values
+                # MODIFIED 2/16/25 NEW:
+                if torch_available:
+                    values = [torch.tensor(value, dtype=self.torch_dtype, device=self.device) for value in values]
                 autodiff_input_dict[node] = values
+                # MODIFIED 2/16/25 END
         return autodiff_input_dict
 
     def _get_autodiff_targets_values(self, input_dict):
@@ -1250,7 +1262,16 @@ class AutodiffComposition(Composition):
             return get_target_value(target)
 
         for target in self.targets_from_outputs_map:
-            target_values[target] = get_target_value(target)
+            # # MODIFIED 2/16/25 OLD:
+            # target_values[target] = np.atleast_1d(get_target_value(target))
+            # MODIFIED 2/16/25 NEW:
+            if torch_available:
+                target_values[target] = torch.tensor(np.atleast_1d(get_target_value(target)),
+                                                     dtype=self.torch_dtype,
+                                                     device=self.device)
+            else:
+                target_values[target] = np.atleast_1d(get_target_value(target))
+            # MODIFIED 2/16/25 END
         return target_values
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
@@ -1493,7 +1514,6 @@ class AutodiffComposition(Composition):
                 # TBI: How are we supposed to use base_context and statefulness here?
                 # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
                 # model may be modified between runs?
-
 
                 autodiff_inputs = self._get_autodiff_inputs_values(inputs)
                 autodiff_targets = self._get_autodiff_targets_values(inputs)

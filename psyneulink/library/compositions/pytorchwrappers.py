@@ -181,6 +181,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         losses per batch, epoch or run accumulated over a call to learn()
     """
 
+    torch_dtype = torch.float64
+
     def __init__(self,
                  composition,
                  device,

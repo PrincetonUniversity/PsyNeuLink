@@ -34,17 +34,19 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     and the Pytorch GRU Module's parameters, and return its output value.
     """
 
+    torch_dtype = torch.float32
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._torch_gru = self._composition.gru_mech.function
         # self._torch_gru.register_forward_hook(self._node_values_hook)
-        self._node_variables_hook_handle = None
-        self._node_values_hook_handle = None
-        # Set hooks here if they will always be in use
-        if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
-            self._node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
-        if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
-            self._node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
+        # self._node_variables_hook_handle = None
+        # self._node_values_hook_handle = None
+        # # Set hooks here if they will always be in use
+        # if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
+        #     self._node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
+        # if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
+        #     self._node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -84,6 +86,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         output, self.hidden_state = self._wrapped_nodes[0].execute([inputs, hidden_state], context)
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
+        self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
         return {self._composition.output_node: output}
 
     def copy_weights_to_psyneulink(self, context=None):

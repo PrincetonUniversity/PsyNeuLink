@@ -563,7 +563,6 @@ class GRUComposition(AutodiffComposition):
                          seed = seed,
                          **kwargs
                          )
-
         self._construct_composition(input_size, hidden_size)
 
     # *****************************************************************************************************************
@@ -812,8 +811,10 @@ class GRUComposition(AutodiffComposition):
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.targets_from_outputs_map = {target_mech: self.gru_mech}
-        self.outputs_to_targets_map = {self.gru_mech: target_mech}
+        # self.targets_from_outputs_map = {target_mech: self.gru_mech}
+        # self.outputs_to_targets_map = {self.gru_mech: target_mech}
+        self.targets_from_outputs_map = {target_mech: self.output_node}
+        self.outputs_to_targets_map = {self.output_node: target_mech}
         self.target_node = target_mech
 
         return [target_mech]
@@ -934,8 +935,7 @@ class GRUComposition(AutodiffComposition):
     #     super()._identify_target_nodes(context)
     #     return target_nodes
 
-
-    def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
-        # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
-        pass
+    # def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
+    #     # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
+    #     pass
     #endregion
