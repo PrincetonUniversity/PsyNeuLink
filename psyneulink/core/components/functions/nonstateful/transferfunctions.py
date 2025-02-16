@@ -3162,7 +3162,8 @@ class SoftMax(TransferFunction):
             v = np.where(np.abs(v) > mask_threshold, v, -np.inf)
 
         # Make numerically stable by shifting by max value
-        v = v - np.max(v)
+        if np.any(v != -np.inf):
+            v = v - np.max(v)
 
         # Exponentiate
         v = np.exp(v)

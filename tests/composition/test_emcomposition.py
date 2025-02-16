@@ -778,7 +778,7 @@ class TestExecution:
         # Note: field_weights favors A
         if softmax_choice == pnl.MAX_VAL:
             if operation == pnl.L0:
-                expected = [[1.703812], [0.], [3.407624]]
+                expected = [[1.467373], [0.], [2.934746]]
             else:
                 expected = [[1.419423, 0.0], [0.0, 1.419423], [2.838846, 2.838846]]
         else:
