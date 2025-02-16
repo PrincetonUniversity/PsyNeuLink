@@ -2828,9 +2828,10 @@ class SoftMax(TransferFunction):
     <SoftMax.gain>` parametrically based on the `variable <SoftMax.variable>`:
 
     - *mask_threshold* -- setting the **mask_threshold** argument to a scalar value causes the `variable
-      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; any elements of
-      `variable <SoftMax.variable>` with an absolute value below the threshold are set to 0; all others are scaled
-      by the specified `gain <SoftMax.gain>` and then passed through the SoftMax function.  This only applies if the
+      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; Each element in
+      variable <SoftMax.variable> is first scaled by gain <SoftMax.gain>. Then, any elements with an absolute
+      value below *mask_threshold* are set to negative infinity (``-inf``), effectively masking them since
+      ``exp(-inf) = 0``. The remaining values are then passed through the SoftMax function. This only applies if the
       **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the **mask_threshold**
       argument is ignored.
 
@@ -2920,10 +2921,11 @@ class SoftMax(TransferFunction):
 
     mask_threshold : scalar or None
         determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
-        if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
-        value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
-        parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
-        scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+        if it is a scalar, each elements of `variable <SoftMax.variable>` is first scaled by `<SoftMax.gain>`. Then,
+        only elements with an absolute value greater than *mask_threshold* are considered when applying the SoftMax
+        function, while all other elements are set to ``-inf`` effectively masking them since ``exp(-inf) = 0``.
+        This only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar
         determines the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
