@@ -25,6 +25,9 @@ __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
 GRU_NODE_NAME = 'PYTORCH GRU NODE'
 TARGET_NODE_NAME = 'GRU TARGET NODE'
 
+# Dict that captures internal computations of GRU node in _node_values_hook
+node_values = {}
+
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for GRUComposition as a Pytorch Module
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
@@ -33,13 +36,15 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.node_variables_hook_handle = None
-        self.node_values_hook_handle = None
+        self._torch_gru = self._composition.gru_mech.function
+        # self._torch_gru.register_forward_hook(self._node_values_hook)
+        self._node_variables_hook_handle = None
+        self._node_values_hook_handle = None
         # Set hooks here if they will always be in use
         if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
-            self.node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
+            self._node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
         if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
-            self.node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
+            self._node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -76,17 +81,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Reshape iput for GRU module (from float64 to float32
         inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(np.float32))
         hidden_state = self._composition.hidden_state
-        output, self.hidden_state = self._composition.gru_mech.function(inputs, hidden_state)
+        output, self.hidden_state = self._wrapped_nodes[0].execute([inputs, hidden_state], context)
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         return {self._composition.output_node: output}
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self._projection_map.items():
-            matrix = pytorch_rep.matrix.detach().cpu().numpy()
-            projection.parameters.matrix._set(matrix, context)
-            projection.parameters.matrix._set(matrix, context)
-            projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+        self._composition.set_weights_from_torch_gru(self._torch_gru, context)
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -109,86 +110,105 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             pnl_node.parameters.variable._set(variable, context)
 
     def _copy_internal_nodes_values_to_pnl(self, nodes, context):
-        assert len(nodes) == 1, \
-            (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, but has {len(nodes)}:"
-             f"{[node.name for node in nodes]}")
         pnl_node = list(nodes)[0][0]
         pytorch_node = list(nodes)[0][1]
 
-        #-----------------
-
-        def hook_activities(module, input, output):
-            ih = module.weight_ih_l0
-            hh = module.weight_hh_l0
-            if module.bias:
-                b_ih = module.bias_ih_l0
-                b_hh = module.bias_hh_l0
-            else:
-                b_ih = torch.tensor(np.array([0] * 3 * module.hidden_size))
-                b_hh = torch.tensor(np.array([0] * 3 * module.hidden_size))
-
-            w_ir = ih[:5].T
-            w_iz = ih[5:10].T
-            w_in = ih[10:].T
-            w_hr = hh[:5].T
-            w_hz = hh[5:10].T
-            w_hn = hh[10:].T
-
-            b_ir = b_ih[:5]
-            b_iz = b_ih[5:10]
-            b_in = b_ih[10:]
-            b_hr = b_hh[:5]
-            b_hz = b_hh[5:10]
-            b_hn = b_hh[10:]
-
-            x = input[0]
-            h = input[1] if len(input) > 1 else h0
-
-            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-            print("Reset gate r_t:  ", [float(f"{value:.4f}") for value in r_t.flatten()])
-
-            # Extract the update gate z_t
-            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-            print("Update gate z_t: ", [float(f"{value:.4f}") for value in z_t.flatten()])
-
-            # Extract the new gate n_t
-            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-            print("New gate n_t:    ", [float(f"{value:.4f}") for value in n_t.flatten()])
-
-            # Extract hidden state
-            h_t = (1 - z_t) * n_t + z_t * h
-            print("Hidden state h:  ", [float(f"{value:.4f}") for value in h_t.flatten()])
-
-        # Register the hook
-        torch_gru.register_forward_hook(hook_activities)
-
-        #-----------------
-
-
-
+        assert len(nodes) == 1, \
+            (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
+             f"but has {len(nodes)}: {[node.name for node in nodes]}")
+        assert pnl_node == self._composition.gru_mech, \
+            f"PROGRAM ERROR: Bad mechanism passed ({pnl_node}); should be: {pnl_node.name}."
+        assert pytorch_node == self._wrapped_nodes[0], \
+            f"PROGRAM ERROR: Bad PyTorchMechanismWrapper passed ({pytorch_node}); should be: {pytorch_node.name}."
 
         # Update  node's value with the output of the corresponding wrapper in the PyTorch representation
         if pytorch_node.output is None:
             assert pytorch_node.exclude_from_gradient_calc, \
-                (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
+                (f"PROGRAM ERROR: Value of PyTorch wrapper for '{pnl_node.name}' is None during forward pass, "
                  f"but it is not excluded from gradient calculation.")
-        # First get value in numpy format
-        if isinstance(pytorch_node.output, list):
-            value = np.array([val.detach().cpu().numpy() for val in pytorch_node.output], dtype=object)
+        torch_gru_output = pytorch_node.output[0].detach().cpu().numpy()
+        h = pytorch_node.output[1][0].detach()
+
+        # FIX: TEST WHICH IS FASTER:
+        torch_gru_parameters = self._composition.get_weights_from_torch_gru(self._torch_gru)
+        w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_gru_parameters[0]
+        if self._composition.bias:
+            assert len(torch_gru_parameters) > 1, \
+                (f"PROGRAM ERROR: '{self._composition.name}' has bias set to True, "
+                 f"but no bias weights were returned for torch_gru_parameters.")
+            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
         else:
-            value = pytorch_node.output.detach().cpu().numpy()
+            b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
 
-        # Set pnl_node's value to value
-        pnl_node.parameters.value._set(value, context)
+        x = self._wrapped_nodes[0].input[0][0]
 
-        # If pnl_node's function is Stateful, assign value to its previous_value parameter
-        #   so that if Python implementation is run it picks up where PyTorch execution left off
-        if isinstance(pnl_node.function, StatefulFunction):
-            pnl_node.function.parameters.previous_value._set(value, context)
-        # Do same for integrator_function of TransferMechanism if it is in integrator_mode
-        if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
-            pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
-                                                                        context)
+        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+        h_t = (1 - z_t) * n_t + z_t * h
+
+        # FIX: KEEP FOR DEBUGGING
+        result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
+
+        # Set pnl_node values
+        self._composition.reset_node.parameters.value._set(r_t.detach().numpy(), context)
+        self._composition.update_node.parameters.value._set(z_t.detach().numpy(), context)
+        self._composition.new_node.parameters.value._set(n_t.detach().numpy(), context)
+        self._composition.hidden_layer_node.parameters.value._set(h_t.detach().numpy(), context)
+
+        # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
+        # # If pnl_node's function is Stateful, assign value to its previous_value parameter
+        # #   so that if Python implementation is run it picks up where PyTorch execution left off
+        # if isinstance(pnl_node.function, StatefulFunction):
+        #     pnl_node.function.parameters.previous_value._set(torch_gru_output, context)
+
+
+
+    def _node_values_hook(module, input, output):
+        in_len = module.input_size
+        hid_len = module.hidden_size
+        z_idx = hid_len
+        n_idx = 2 * hid_len
+
+        ih = module.weight_ih_l0
+        hh = module.weight_hh_l0
+        if module.bias:
+            b_ih = module.bias_ih_l0
+            b_hh = module.bias_hh_l0
+        else:
+            b_ih = torch.tensor(np.array([0] * 3 * hid_len))
+            b_hh = torch.tensor(np.array([0] * 3 * hid_len))
+
+        w_ir = ih[:z_idx].T
+        w_iz = ih[z_idx:n_idx].T
+        w_in = ih[n_idx:].T
+        w_hr = hh[:z_idx].T
+        w_hz = hh[z_idx:n_idx].T
+        w_hn = hh[n_idx:].T
+
+        b_ir = b_ih[:z_idx]
+        b_iz = b_ih[z_idx:n_idx]
+        b_in = b_ih[n_idx:]
+        b_hr = b_hh[:z_idx]
+        b_hz = b_hh[z_idx:n_idx]
+        b_hn = b_hh[n_idx:]
+
+        assert len(input) > 1, f"PROGRAM ERROR: PytorchGRUCompositionWrapper hook received only one input: {input}"
+        x = input[0]
+        # h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=torch.float32)
+        h = input[1]
+
+        # Reproduce GRU forward calculations
+        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+        h_t = (1 - z_t) * n_t + z_t * h
+
+        # Put internal calculations in dict with corresponding node names as keys
+        node_values[RESET_NODE_NAME] = r_t.detach()
+        node_values[UPDATE_NODE_NAME] = z_t.detach()
+        node_values[NEW_NODE_NAME] = n_t.detach()
+        node_values[HIDDEN_LAYER_NODE_NAME] = h_t.detach()
 
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
@@ -205,42 +225,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                             for input_port in mechanism.input_ports]
 
     def execute(self, variable, context):
-        """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.output
+        """Execute GRU Node with input variable and return output value
         """
-        def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
-            If fct_has_mult_args is True, treat each item in variable as an arg to the function
-            If False, compute function for each item in variable and return results in a list
-            """
-            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-            if fct_has_mult_args:
-                res = function(*variable)
-            # variable is ragged
-            elif isinstance(variable, list):
-                res = [function(variable[i]) for i in range(len(variable))]
-            else:
-                res = function(variable)
-            # TransformFunction can reduce output to single item from
-            # multi-item input
-            if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(0)
-            return res
-
-        # If mechanism has an integrator_function and integrator_mode is True,
-        #   execute it first and use result as input to the main function;
-        #   assumes that if PyTorch node has been assigned an integrator_function then _mechanism has an integrator_mode
-        if hasattr(self, 'integrator_function') and self._mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function,
-                                        [self.integrator_previous_value, variable],
-                                        fct_has_mult_args=True)
-            # Keep track of previous value in Pytorch node for use in next forward pass
-            self.integrator_previous_value = variable
-
         self.input = variable
-
-        # Compute main function of mechanism and return result
-        self.output = execute_function(self.function, variable)
+        self.output = self.function(*variable)
         return self.output
 
     def log_value(self):
@@ -249,10 +237,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             detached_value = self.output.detach().cpu().numpy()
             self._mechanism.output_port.parameters.value._set(detached_value, self._context)
             self._mechanism.parameters.value._set(detached_value, self._context)
-
-    def execute(self, variable):
-        # return torch.matmul(variable, self.matrix)
-        return self.function(variable, self.matrix)
 
     def log_matrix(self):
         if self._projection.parameters.matrix.log_condition != LogCondition.OFF:
