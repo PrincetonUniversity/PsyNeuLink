@@ -53,7 +53,8 @@ class TestExecution:
         torch_result_before_learning, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),h0)
         # print("\nTORCH before learning:         ",
         #       [float(f"{value:.4f}") for value in torch_result_before_learning.flatten()])
-        torch_result_before_learning.backward(torch.tensor([[1,1,1,1,1]], dtype=torch.float32),retain_graph=True)
+        loss = torch_result_before_learning.backward(torch.tensor([[1,1,1,1,1]], dtype=torch.float32),
+                                                     retain_graph=True)
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),hn)
         # torch_result_after_learning.backward(torch.tensor([[1,1,1,1,1]], dtype=torch.float32))
         # print("TORCH after learning:         ",
