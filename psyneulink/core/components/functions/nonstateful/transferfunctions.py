@@ -3250,7 +3250,6 @@ class SoftMax(TransferFunction):
                              -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
         return gain
 
-
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
