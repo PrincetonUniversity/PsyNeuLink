@@ -8,95 +8,94 @@
 #
 # *************************************************  Utilities *********************************************************
 
-"""Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific
-
-   That is:
-       do not require any information about PsyNeuLink objects
-       are not constrained to be used by PsyNeuLink objects
-
-************************************************* UTILITIES ************************************************************
-
-
-CONTENTS
---------
-
-* `deprecation_warning`
-
-*TYPE CHECKING VALUE COMPARISON*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note::
-   PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
-
-* `parameter_spec`
-* `optional_parameter_spec`
-* `all_within_range`
-* `is_matrix
-* `is_matrix_spec`
-* `is_numeric`
-* `is_numeric_or_none`
-* `is_iterable`
-* `iscompatible`
-* `is_value_spec`
-* `is_unit_interval`
-* `is_same_function_spec`
-* `is_component`
-* `is_comparison_operator`
-
-*ENUM*
-~~~~~~
-
-* `Autonumber`
-* `Modulation`
-* `get_modulationOperation_name`
-
-*KVO*
-~~~~~
-
-.. note::
-   This is for potential future use;  not currently used by PsyNeuLink objects
-
-* observe_value_at_keypath
-
-*MATHEMATICAL*
-~~~~~~~~~~~~~~
-
-* norm
-* sinusoid
-* scalar_distance
-* powerset
-* tensor_power
-
-*LIST MANAGEMENT*
-~~~~~~~~~~~~~~~~~
-
-* `insert_list`
-* `convert_to_list`
-* `flatten_list`
-* `nesting_depth`
-
-
-*OTHER*
-~~~~~~~
-
-* `get_args`
-* `recursive_update`
-* `multi_getattr`
-* `np_array_less_that_2d`
-* `convert_to_np_array`
-* `type_match`
-* `get_value_from_array`
-* `is_matrix`
-* `underscore_to_camelCase`
-* `append_type_to_name`
-* `ReadOnlyOrderedDict`
-* `ContentAddressableList`
-* `make_readonly_property`
-* `get_class_attributes`
-* `get_global_seed`
-* `set_global_seed`
-
-"""
+# Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific
+#
+#    That is:
+#        * do not require any information about PsyNeuLink objects
+#        * are not constrained to be used by PsyNeuLink objects
+#
+# ************************************************* UTILITIES ************************************************************
+#
+#
+# CONTENTS
+# --------
+#
+# * `deprecation_warning`
+#
+# *TYPE CHECKING VALUE COMPARISON*
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# .. note::
+#    PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
+#
+# * `parameter_spec`
+# * `optional_parameter_spec`
+# * `all_within_range`
+# * `is_matrix
+# * `is_matrix_spec`
+# * `is_numeric`
+# * `is_numeric_or_none`
+# * `is_iterable`
+# * `iscompatible`
+# * `is_value_spec`
+# * `is_unit_interval`
+# * `is_same_function_spec`
+# * `is_component`
+# * `is_comparison_operator`
+#
+# *ENUM*
+# ~~~~~~
+#
+# * `Autonumber`
+# * `Modulation`
+# * `get_modulationOperation_name`
+#
+# *KVO*
+# ~~~~~
+#
+# .. note::
+#    This is for potential future use;  not currently used by PsyNeuLink objects
+#
+# * observe_value_at_keypath
+#
+# *MATHEMATICAL*
+# ~~~~~~~~~~~~~~
+#
+# * norm
+# * sinusoid
+# * scalar_distance
+# * powerset
+# * tensor_power
+#
+# *LIST MANAGEMENT*
+# ~~~~~~~~~~~~~~~~~
+#
+# * `insert_list`
+# * `convert_to_list`
+# * `flatten_list`
+# * `nesting_depth`
+#
+#
+# *OTHER*
+# ~~~~~~~
+#
+# * `get_args`
+# * `recursive_update`
+# * `multi_getattr`
+# * `np_array_less_that_2d`
+# * `convert_to_np_array`
+# * `type_match`
+# * `get_value_from_array`
+# * `is_matrix`
+# * `underscore_to_camelCase`
+# * `append_type_to_name`
+# * `ReadOnlyOrderedDict`
+# * `ContentAddressableList`
+# * `make_readonly_property`
+# * `get_class_attributes`
+# * `get_global_seed`
+# * `set_global_seed`
+#
 
 import collections
 import copy
@@ -1725,6 +1724,7 @@ def get_global_seed(offset=1):
 
 def set_global_seed(new_seed):
     """Set global randomization seed for all Components for which a local seed has not been specified.
+
     Arguments
     ---------
     new_seed : int

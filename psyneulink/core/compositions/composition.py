@@ -2028,39 +2028,37 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 *Randomization*
 ^^^^^^^^^^^^^^^
 
-Each PNL Component that relies on randomization uses a private instance of a `pseudorandom number generator
+Each PsyNeuLink Component that relies on randomization uses a private instance of a `pseudorandom number generator
 <https://en.wikipedia.org/wiki/Pseudorandom_number_generator#:~:text=A%20pseudorandom%20number%20generator%20(PRNG,
 of%20sequences%20of%20random%20numbers>`_ (PRNG). This makes random sequences within each Component independent of
-one another, and independent of any random number generation used in any imported modules. Each PNL Component that
-relies on randomization has a `seed` `Parameter`, that can be used to explicitly seed its PRNG.  If no "seed"
-parameter is provided, the Component will get a seed from the PNL global seed sequence. This provides each Component
-with a unique seed even if the user does not specify one. The starting value of PNL global seed sequence can be set
-by the `set_global_seed() function <Composition_Global_Random_Seed>`; the seed of individual Components can be set to a
-specific value by specifying a value for the `seed` argument of the Component's constructor, or by assigning a value
-to its `seed` `Parameter`.  If a seed is not specified, the Component will use the seed of the global seed sequence.
-Scripts imported modules can use calls to python and numpy random modules, including seed manipulation without any
-impact on the behavior described above, which isolates PNL random sequences from any  interference by such calls.
-Additional details about setting global vs. local seeds follows:
+one another, and independent of any random number generation used in the script from which PsyNeuLink is run and/or any
+imported modules in that script. Each PsyNeuLink Component that relies on randomization has its won `seed` `Parameter`
+that can be used to explicitly seed its PRNG (see `below <Composition_Local_Random_Seed>`).  If no seed is specified for
+a Component, it gets its seed from the PsyNeuLink `global seed <Composition_Global_Random_Seed>`. Because PsyNeuLink
+handles randomization internally in this way, the behavior of a Composition is reproducible, and is isolated from any
+calls to python and/or numpy random modules from the script in which the Composition is run, and/or any imported
+modules. Below are details about setting PsyNeuLink global and local seeds.
 
-.. technical note::
-   np.random and python random should *NOT* be used *inside PNL code*, to avoid interfering with the effects of global
-   and local seeds described above; instead, XXX
+.. technical_note::
+   To avoid interfering with the internal handling of randomization, `np.random` and python `random` should *NOT*
+   be called inside PsyNeulink code itself.  Rather, a Component's `random_state` `Parameter` should be used, which
+   provides a `numpy.random.RandomState <https://numpy.org/doc/2.2/reference/random/legacy.html>`_ object that is
+   initialized with the seed assigned to the Component; that can then be used to call the desired numpy function
+   (e.g., ``<component>.random_state.normal()`` or ``<component>.random_state.uniform()``) to get a random value.
 
 .. _Composition_Global_Random_Seed:
 
-**Global random seed.** Calling `set_global_seed <Utilities.set_global_seed>` sets the seed for all randomization
-carried out by PsyNeuLink Components for which a `local seed <Composition_Globa_Random_Seed>` has not been specified.
-This can be used to ensure that the same sequence of random numbers is generated for all Components in a Composition
-each time it is constructed and executed. The call must be made before construction of a Composition to ensure
-consistency of randomization; every Component that uses randomization will then be assigned the same random value(s)
-each time the Composition is constructed and executed.
+**Global random seed.** Calling `set_global_seed()` sets the seed for all Components for which a `local seed
+<Composition_Local_Random_Seed>` has not been specified. This can be used to ensure that, each time the Composition
+is constructed and executed, its Components are assigned the same sequence of random numbers, and therefore any
+results affected by randomization will be the exact same across executions. The call to `set_global_seed()` must be
+made before construction of a Composition to ensure consistency of randomization.
 
 .. _Composition_Local_Random_Seed:
 
-**Local random seeds.** Individual `Mechanisms <Mechanism>` that use random values can be assigned their own seed,
-by specifying a seed in the **random_seed** argument of the Component's constructor, or by assigning a value to its
-`seed` `Parameter`.  Components assigned their own seed will not be affected by any calls to the `set_global_seed
-<Utilities.set_global_seed>` function.
+**Local random seeds.** Individual Components that use random values can be assigned their own seed, by specifying
+it in the **random_seed** argument of the Component's constructor, or by assigning a value to its `seed` `Parameter`.
+Components assigned their own seed will not be affected by any calls to the `set_global_seed` function.
 
 .. _Composition_Compilation:
 
