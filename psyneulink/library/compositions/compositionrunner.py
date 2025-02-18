@@ -360,10 +360,14 @@ class CompositionRunner():
             skip_initialization = True
 
             if execution_mode is ExecutionMode.PyTorch:
-                pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
-                               copy_weights_to_psyneulink(context))
+                # MODIFIED 2/16/25 OLD:
+                # pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
+                #                copy_weights_to_psyneulink(context))
+                # MODIFIED 2/16/25 NEW:
+                pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
                 if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
                     pytorch_rep.copy_weights_to_psyneulink(context)
+                # MODIFIED 2/16/25 END
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
         # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
