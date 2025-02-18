@@ -191,7 +191,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         # Update  node's value with the output of the corresponding wrapper in the PyTorch representation
         if pytorch_node.output is None:
-            assert pytorch_node.exclude_from_gradient_calc, \
+            assert pytorch_node.cexclude_from_gradient_calc, \
                 (f"PROGRAM ERROR: Value of PyTorch wrapper for '{pnl_node.name}' is None during forward pass, "
                  f"but it is not excluded from gradient calculation.")
         torch_gru_output = pytorch_node.output[0].detach().cpu().numpy()
