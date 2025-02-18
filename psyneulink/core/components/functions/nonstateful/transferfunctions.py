@@ -2828,9 +2828,10 @@ class SoftMax(TransferFunction):
     <SoftMax.gain>` parametrically based on the `variable <SoftMax.variable>`:
 
     - *mask_threshold* -- setting the **mask_threshold** argument to a scalar value causes the `variable
-      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; any elements of
-      `variable <SoftMax.variable>` with an absolute value below the threshold are set to 0; all others are scaled
-      by the specified `gain <SoftMax.gain>` and then passed through the SoftMax function.  This only applies if the
+      <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; Each element in
+      variable <SoftMax.variable> is first scaled by gain <SoftMax.gain>. Then, any elements with an absolute
+      value below *mask_threshold* are set to negative infinity (``-inf``), effectively masking them since
+      ``exp(-inf) = 0``. The remaining values are then passed through the SoftMax function. This only applies if the
       **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the **mask_threshold**
       argument is ignored.
 
@@ -2920,10 +2921,11 @@ class SoftMax(TransferFunction):
 
     mask_threshold : scalar or None
         determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
-        if it is a scalar, only elements of `variable <SoftMax.variable>` with an absolute value greater than that
-        value are considered when applying the SoftMax function (which are then scaled by the `gain <SoftMax.gain>`
-        parameter; all other elements are assigned 0.  This only applies if `gain <SoftMax.gain>` is specified as a
-        scalar;  otherwise it is ignored (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
+        if it is a scalar, each elements of `variable <SoftMax.variable>` is first scaled by `<SoftMax.gain>`. Then,
+        only elements with an absolute value greater than *mask_threshold* are considered when applying the SoftMax
+        function, while all other elements are set to ``-inf`` effectively masking them since ``exp(-inf) = 0``.
+        This only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
+        (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
 
     adapt_scale : scalar
         determines the *scale* parameter using by the `adapt_gain <SoftMax.adapt_gain>` method (see method for details).
@@ -3149,22 +3151,31 @@ class SoftMax(TransferFunction):
         return np.asarray(variable)
 
     def apply_softmax(self, input_value, gain, mask_threshold, output_type):
-
         # Modulate input_value by gain
         v = gain * input_value
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
+
+        # Mask threshold
+        if mask_threshold is not None:
+            if np.any(v < 0):
+                warnings.warn(f"SoftMax function: mask_threshold is set "
+                              f"to {mask_threshold} but input_value contains negative values."
+                              f"Masking will be applied to the magnitude of the input.")
+
+            v = np.where(np.abs(v) > mask_threshold, v, -np.inf)
+
+        # Make numerically stable by shifting by max value
+        if np.any(v != -np.inf):
+            v = v - np.max(v)
+
         # Exponentiate
         v = np.exp(v)
-        # Threshold if specified:
-        if mask_threshold:
-            v = v * np.where(input_value > mask_threshold, v, 0)
+
         # Normalize (to sum to 1)
-        if not any(v):
+        if not np.any(v):
             # If v is all zeros, avoid divide by zero in normalize and return all zeros for softmax
             sm = v
         else:
-            sm = v / np.sum(v, axis=0)
+            sm = v / np.sum(v)
 
         # Generate one-hot encoding based on selected output_type
         if output_type in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}:
@@ -3472,15 +3483,34 @@ class SoftMax(TransferFunction):
         if isinstance(gain, str) and gain == ADAPTIVE:
             return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, -1))
 
-        elif mask_threshold:
+        elif mask_threshold is not None:
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
-                # Mask elements of input below threshold
-                _mask = (torch.abs(_input) > mask_threshold)
-                # Subtract off the max value in the input to eliminate extreme values, exponentiate, and apply mask
-                masked_exp = _mask * torch.exp(gain * (_input - torch.max(_input, -1, keepdim=True)[0]))
-                if (masked_exp == 0).all():
-                    return masked_exp
-                return masked_exp / torch.sum(masked_exp, -1, keepdim=True)
+                v = gain * _input
+
+                # Apply threshold-based masking
+                if mask_threshold is not None:
+                    if torch.any(_input < 0):
+                        warnings.warn(f"Softmax function: mask_threshold is set to {mask_threshold}, "
+                                      f"but input contains negative values. "
+                                      f"Masking will be applied to the magnitude of the input.")
+
+                    # Create a mask where values below threshold are set to -inf
+                    mask = torch.abs(v) > mask_threshold
+                    v = v.masked_fill(~mask, float('-inf'))  # More stable than torch.where()
+
+                # Handle case where all values are masked (return tensor with gradient support)
+                if torch.all(~mask):
+                    return torch.full_like(v, 0.0, requires_grad=True)
+
+                # Make numerically stable by shifting max value
+                max_v = torch.max(v[mask])  # Avoid computing max over -inf
+                v = v - max_v
+
+                # Compute softmax (PyTorch handles -inf correctly)
+                exp_v = torch.exp(v)
+                sm = exp_v / torch.sum(exp_v, dim=-1, keepdim=True)
+
+                return sm
             # Return the function
             return pytorch_thresholded_softmax
 

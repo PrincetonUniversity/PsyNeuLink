@@ -23,6 +23,17 @@ softmax_helper  = softmax_helper - np.max(softmax_helper)
 softmax_helper  = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 softmax_helper2 = np.array((softmax_helper, softmax_helper)).reshape(2, -1)
 
+# Here, we use RAND1 * .5 as threshold so that the expected inputs to be masked is 50%.
+softmax_threshold_helper = RAND1 * test_var
+softmax_threshold_helper = np.where(np.abs(softmax_threshold_helper) > RAND1 * .5, softmax_threshold_helper, -np.inf)
+if np.any(softmax_threshold_helper != -np.inf):
+    softmax_threshold_helper = softmax_threshold_helper - np.max(softmax_threshold_helper)
+softmax_threshold_helper = np.exp(softmax_threshold_helper)
+if np.any(softmax_threshold_helper):
+    softmax_threshold_helper = softmax_threshold_helper / np.sum(softmax_threshold_helper)
+softmax_threshold_helper2 = np.array((softmax_threshold_helper, softmax_threshold_helper)).reshape(2, -1)
+
+
 tanh_helper = (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = np.tanh(tanh_helper)
 
@@ -105,6 +116,77 @@ test_data = [
                  np.where(softmax_helper2 == np.max(softmax_helper2), softmax_helper2, 0), id="SOFT_MAX MAX_VAL PER_ITEM"),
     pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM: True},
                  np.where(softmax_helper2 == np.max(softmax_helper2), 1, 0), id="SOFT_MAX MAX_INDICATOR PER_ITEM"),
+
+    # SoftMax with mask_threshold 1D input
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.PER_ITEM:False},
+                 softmax_threshold_helper, id="SOFT_MAX MASK_THRESHOLD ALL",
+                 marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:False},
+                 np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), softmax_threshold_helper, 0),
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:False},
+                 np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), 1, 0),
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX_INDICATOR", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:False},
+                 np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), softmax_threshold_helper, 0),
+                 id="SOFT_MAX MASK_THRESHOLD MAX_VAL", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:False},
+                 np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), 1, 0),
+                 id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, test_var,
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:False},
+                 [0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0],
+                 id="SOFT_MAX MASK_THRESHOLD PROB", marks=pytest.mark.llvm_not_implemented),
+    #
+    # # SoftMax 2D threshold testing per-item
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.PER_ITEM:True}, [softmax_threshold_helper],
+                 id="SOFT_MAX MASK_THRESHOLD ALL 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
+                 [np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), softmax_threshold_helper, 0)],
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
+                 [np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), 1, 0)],
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+                 [np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), softmax_threshold_helper, 0)],
+                 id="SOFT_MAX MASK_THRESHOLD MAX_VAL 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+                 [np.where(softmax_threshold_helper == np.max(softmax_threshold_helper), 1, 0)],
+                 id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.PROB, kw.PER_ITEM:True},
+                 [[0.0, 0.0, 0.0, test_var[3], test_var[4], 0.0, 0.0, 0.0, 0.0, 0.0]],
+                 id="SOFT_MAX MASK_THRESHOLD PROB 2D", marks=pytest.mark.llvm_not_implemented),
+
+    # SoftMax threshold per-item with 2 elements in input
+    pytest.param(pnl.SoftMax, [test_var, test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.PER_ITEM:True}, softmax_threshold_helper2,
+                 id="SOFT_MAX MASK_THRESHOLD ALL 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var, test_var], {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX, kw.PER_ITEM:True},
+                 np.where(softmax_threshold_helper2 == np.max(softmax_threshold_helper2), softmax_threshold_helper2, 0),
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var, test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:pnl.ARG_MAX_INDICATOR, kw.PER_ITEM:True},
+                 np.where(softmax_threshold_helper2 == np.max(softmax_threshold_helper2), 1, 0),
+                 id="SOFT_MAX MASK_THRESHOLD ARG_MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var, test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_VAL, kw.PER_ITEM:True},
+                 np.where(softmax_threshold_helper == np.max(softmax_threshold_helper2), softmax_threshold_helper2, 0),
+                 id="SOFT_MAX MASK_THRESHOLD MAX_VAL 2D", marks=pytest.mark.llvm_not_implemented),
+    pytest.param(pnl.SoftMax, [test_var, test_var],
+                 {kw.GAIN:RAND1, 'mask_threshold': RAND1 * .5, kw.OUTPUT_TYPE:kw.MAX_INDICATOR, kw.PER_ITEM:True},
+                 np.where(softmax_threshold_helper2 == np.max(softmax_threshold_helper2), 1, 0),
+                 id="SOFT_MAX MASK_THRESHOLD MAX_INDICATOR 2D", marks=pytest.mark.llvm_not_implemented),
 
     # Linear Matrix
     pytest.param(pnl.MatrixTransform, test_var, {kw.MATRIX:test_matrix}, np.dot(test_var, test_matrix), id="LINEAR_MATRIX SQUARE"),
