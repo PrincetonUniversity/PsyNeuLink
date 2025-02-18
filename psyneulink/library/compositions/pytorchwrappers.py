@@ -764,7 +764,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for projection, pytorch_rep in self._projection_map.items():
             matrix = pytorch_rep.matrix.detach().cpu().numpy()
             projection.parameters.matrix._set(matrix, context)
-            projection.parameters.matrix._set(matrix, context)
             projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def log_weights(self):

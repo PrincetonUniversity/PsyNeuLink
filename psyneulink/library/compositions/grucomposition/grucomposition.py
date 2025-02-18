@@ -838,24 +838,26 @@ class GRUComposition(AutodiffComposition):
         FROM_ARG = 0
         PNL = 1
         for wts in zip(weights,
-                       [self.wts_ir.parameters.matrix,
-                        self.wts_iu.parameters.matrix,
-                        self.wts_in.parameters.matrix,
-                        self.wts_hr.parameters.matrix,
-                        self.wts_hu.parameters.matrix,
-                        self.wts_hn.parameters.matrix]):
+                       [self.wts_ir.parameters,
+                        self.wts_iu.parameters,
+                        self.wts_in.parameters,
+                        self.wts_hr.parameters,
+                        self.wts_hu.parameters,
+                        self.wts_hn.parameters]):
             assert wts[FROM_ARG].shape == wts[PNL]._get(context).shape, \
                 (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
                  f"({wts[FROM_ARG].shape}) does not match required shape ({wts[PNL].shape}).)")
-            wts[PNL]._set(wts[FROM_ARG], context)
+            wts[PNL].matrix._set(wts[FROM_ARG], context)
+            wts[PNL].parameter_ports['matrix'].parameters.value._set(wts[FROM_ARG], context)
+
         if biases:
             for b in zip(biases,
-                           [self.bias_ir.parameters.matrix,
-                            self.bias_iu.parameters.matrix,
-                            self.bias_in.parameters.matrix,
-                            self.bias_hr.parameters.matrix,
-                            self.bias_hu.parameters.matrix,
-                            self.bias_hn.parameters.matrix]):
+                           [self.bias_ir.parameters,
+                            self.bias_iu.parameters,
+                            self.bias_in.parameters,
+                            self.bias_hr.parameters,
+                            self.bias_hu.parameters,
+                            self.bias_hn.parameters]):
                 assert b[FROM_ARG].shape == b[PNL]._get(context).shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
                      f"({b[FROM_ARG].shape}) does not match required shape ({b[PNL].get(context)[0].shape}).")

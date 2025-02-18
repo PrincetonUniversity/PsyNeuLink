@@ -1209,6 +1209,7 @@ class AutodiffComposition(Composition):
         minibatch_loss.backward(retain_graph=not self.force_no_retain_graph)
         # Update weights and copy to PNL
         optimizer.step()
+        assert True
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
