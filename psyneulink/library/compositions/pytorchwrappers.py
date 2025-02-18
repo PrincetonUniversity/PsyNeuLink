@@ -761,8 +761,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_results_to_psyneulink(current_condition, context)
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self._projection_map.items():
-            matrix = pytorch_rep.matrix.detach().cpu().numpy()
+        for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
+            matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
             projection.parameters.matrix._set(matrix, context)
             projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 

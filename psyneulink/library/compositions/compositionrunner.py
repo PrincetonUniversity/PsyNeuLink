@@ -346,7 +346,7 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
-            # IMPLEMENTATION NOTE: for autodiff composition, the following executes an MINIBATCH's worth of training
+            # IMPLEMENTATION NOTE: for autodiff composition, the following executes a MINIBATCH's worth of training
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,

@@ -351,13 +351,47 @@ class GRUComposition(AutodiffComposition):
         <GRUComposition.hidden_layer_node>`; corresponds to result of the `PyTorch
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
 
+    learnable_projections : List[MappingProjection]
+        list of the `MappingProjections <MappingProjection>` in the GRUComposition that have
+        `matrix <MappingProjection.matrix>` parameters that can be learned; these correspond to the learnable
+        parameters of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
     wts_in : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
-        from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`.
+        from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`; corresponds to
+        :math:`W_{in}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
+    wts_iu : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`; corresponds
+        to :math:`W_{iz}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
+    wts_ir : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds
+        to :math:`W_{ir}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     wts_nh : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `new_node <GRUComposition.new_node>` to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+
+    wts_hr : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`;
+        corresponds to :math:`W_{hr}` in the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
+    wts_hu : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
+        that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `update_node
+        <GRUComposition.update_node>`; corresponds to :math:`W_{hz}` in the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
+    wts_hn : MappingProjection
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
+        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`;
+        corresponds to :math:`W_{hn}` in the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     wts_hh : MappingProjection
         `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects
@@ -366,14 +400,6 @@ class GRUComposition(AutodiffComposition):
     wts_ho : MappingProjection
         `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects from
         the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `output_node <GRUComposition.output_node>`.
-
-    wts_iu : MappingProjection
-        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
-        from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`.
-
-    wts_ir : MappingProjection
-        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
-        from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`.
 
     reset_gate : GatingProjection
         `GatingProjection` that gates the input to the `new_node <GRUComposition.new_node>` from the `input_node
@@ -400,10 +426,9 @@ class GRUComposition(AutodiffComposition):
         `reset_node <GRUComposition.reset_node>`.
 
     bias_iu_node : ProcessingMechanism
-        `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_iu <GRUComposition.bias_iu>`) provides the
-        the bias to weights (`wts_iu <GRUComposition.wts_iu>`) from the `input_node <GRUComposition.input_node>` to the
-        `update_node <GRUComposition.update_node>` (corresponds to the :math:`b_iz` term in the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation).
+        `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_iu <GRUComposition.bias_iu>`) provides
+        the the bias to weights (`wts_iu <GRUComposition.wts_iu>`) from the `input_node <GRUComposition.input_node>`
+        to the `update_node <GRUComposition.update_node>`.
 
     bias_in_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_in <GRUComposition.bias_in>`) provides the
@@ -418,53 +443,56 @@ class GRUComposition(AutodiffComposition):
     bias_hu_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_hu <GRUComposition.bias_hu>`) provides the
         the bias to weights (`wts_hu <GRUComposition.wts_hu>`) from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`; (corresponds to the
-        :math:`b_hz` term in the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation).
+        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`.
 
     bias_hn_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_hn <GRUComposition.bias_hn>`) provides the
         the bias to weights (`wts_hn <GRUComposition.wts_hn>`) from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`.
 
+    biases : List[MappingProjection]
+        list of the `MappingProjections <MappingProjection>` from the `BIAS <NodeRole.BIAS>` `Nodes of
+        the GRUComposition, all of which have `matrix <MappingProjection.matrix>` parameters if `bias
+        <GRUComposition.bias>` is True; these correspond to the learnable biases of the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+
     bias_ir : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_ir <GRUComposition.wts_ir>`, from the `input_node <GRUComposition.input_node>`
         to the `reset_node <GRUComposition.reset_node>`; corresponds to the :math:`b_ir` bias parameter of the
-        `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     bias_iu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_iu <GRUComposition.wts_iu>`, from the `input_node <GRUComposition.input_node>`
         to the `update_node <GRUComposition.update_node>`; corresponds to the :math:`b_iz` bias parameter of the
-        `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     bias_in : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_in <GRUComposition.wts_in>`, from the `input_node <GRUComposition.input_node>`
         to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_in` bias parameter of the
-        `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     bias_hr : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hr <GRUComposition.wts_hr>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds to the
-        :math:`b_hr` bias parameter of the `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation.
+        :math:`b_hr` bias parameter of the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     bias_hu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hu <GRUComposition.wts_hu>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`; corresponds to the
-        :math:`b_hz` bias parameter of the `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation.
+        :math:`b_hz` bias parameter of the PyTorch `GRU module
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
 
     bias_hn : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hn <GRUComposition.wts_hn>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_hn`
-        bias parameter of the `PyTorch<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
-
+        bias parameter of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
     """
 
     componentCategory = GRU_COMPOSITION
@@ -708,6 +736,9 @@ class GRUComposition(AutodiffComposition):
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
+        self.learnable_projections = [self.wts_in, self.wts_iu, self.wts_ir,
+                                      self.wts_hn, self.wts_hr, self.wts_hu]
+
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh,
                               self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho])
 
@@ -755,8 +786,9 @@ class GRUComposition(AutodiffComposition):
                             (self.bias_hu_node, NodeRole.BIAS),
                             (self.bias_hn_node, NodeRole.BIAS)])
 
-            self.add_projections([self.bias_ir, self.bias_iu, self.bias_in,
-                                  self.bias_hr, self.bias_hu, self.bias_hn])
+            self.biases = [self.bias_ir, self.bias_iu, self.bias_in,
+                                  self.bias_hr, self.bias_hu, self.bias_hn]
+            self.add_projections(self.biases)
 
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
