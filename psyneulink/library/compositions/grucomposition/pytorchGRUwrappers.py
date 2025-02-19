@@ -146,13 +146,14 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             pnl_node.parameters.variable._set(variable, context)
 
     def _copy_internal_nodes_values_to_pnl(self, nodes, context):
+        pnl_comp = self._composition
         pnl_node = list(nodes)[0][0]
         pytorch_node = list(nodes)[0][1]
 
         assert len(nodes) == 1, \
             (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
              f"but has {len(nodes)}: {[node.name for node in nodes]}")
-        assert pnl_node == self._composition.gru_mech, \
+        assert pnl_node == pnl_comp.gru_mech, \
             f"PROGRAM ERROR: Bad mechanism passed ({pnl_node}); should be: {pnl_node.name}."
         assert pytorch_node == self._wrapped_nodes[0], \
             f"PROGRAM ERROR: Bad PyTorchMechanismWrapper passed ({pytorch_node}); should be: {pytorch_node.name}."
@@ -166,11 +167,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         h = pytorch_node.output[1][0].detach()
 
         # FIX: TEST WHICH IS FASTER:
-        torch_gru_parameters = self._composition.get_weights_from_torch_gru(self._torch_gru)
+        torch_gru_parameters = pnl_comp.get_weights_from_torch_gru(self._torch_gru)
         w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_gru_parameters[0]
-        if self._composition.bias:
+        if pnl_comp.bias:
             assert len(torch_gru_parameters) > 1, \
-                (f"PROGRAM ERROR: '{self._composition.name}' has bias set to True, "
+                (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
                  f"but no bias weights were returned for torch_gru_parameters.")
             b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
         else:
@@ -183,12 +184,15 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
         h_t = (1 - z_t) * n_t + z_t * h
 
+        # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+        pnl_comp.reset_node.parameters.value._set(r_t.detach().cpu().numpy(), context)
+        pnl_comp.update_node.parameters.value._set(z_t.detach().cpu().numpy(), context)
+        pnl_comp.new_node.parameters.value._set(n_t.detach().cpu().numpy(), context)
+        pnl_comp.hidden_layer_node.parameters.value._set(h_t.detach().cpu().numpy(), context)
+        pnl_comp.output_node.parameters.value._set(h_t.detach().cpu().numpy(), context)
+
         # KEEP FOR FUTURE DEBUGGING
         # result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
-
-        # Set pnl_node's value to value
-        for pnl_node in self._composition.nodes:
-            pnl_node.parameters.value._set(torch_gru_output, context)
 
         # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
         # # If pnl_node's function is Stateful, assign value to its previous_value parameter
