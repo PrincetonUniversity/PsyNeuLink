@@ -13,12 +13,10 @@ import torch
 import numpy as np
 from typing import Union, Optional, Literal
 
-from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
-from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import ALL, CONTEXT, INPUTS, OUTPUTS
+from psyneulink.core.globals.keywords import ALL, INPUTS
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
 
@@ -39,15 +37,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._torch_gru = self._composition.gru_mech.function
-
-        # self._torch_gru.register_forward_hook(self._node_values_hook)
-        # self._node_variables_hook_handle = None
-        # self._node_values_hook_handle = None
-        # # Set hooks here if they will always be in use
-        # if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
-        #     self._node_variables_hook_handle = self._add_pytorch_hook(self.copy_node_variables_to_psyneulink)
-        # if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
-        #     self._node_values_hook_handle = self._add_pytorch_hook(self._copy_internal_nodes_values_to_pnl)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""

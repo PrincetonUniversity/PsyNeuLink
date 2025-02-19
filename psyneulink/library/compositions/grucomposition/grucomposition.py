@@ -963,26 +963,3 @@ class GRUComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
-
-    # def _identify_target_nodes(self, context)->list:
-    #     """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
-    #     target_fields = self.target_fields
-    #     if target_fields is False:
-    #         if self.enable_learning:
-    #             warnings.warn(f"The 'enable_learning' arg for {self.name} is True "
-    #                           f"but its 'target_fields' is False, so enable_learning will have no effect.")
-    #         target_nodes = []
-    #     elif target_fields is True:
-    #         target_nodes = [node for node in self.retrieved_nodes]
-    #     elif isinstance(target_fields, list):
-    #         target_nodes = [node for node in self.retrieved_nodes if target_fields[self.retrieved_nodes.index(node)]]
-    #     else:
-    #         assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
-    #                        f"is neither True, False nor a list of bools as it should be.")
-    #     super()._identify_target_nodes(context)
-    #     return target_nodes
-
-    # def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
-    #     # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
-    #     pass
-    #endregion
