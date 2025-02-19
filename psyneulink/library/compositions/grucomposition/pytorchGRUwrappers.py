@@ -133,8 +133,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
         return {self._composition.output_node: output}
 
-    def copy_weights_to_psyneulink(self, context=None):
-        self._composition.set_weights_from_torch_gru(self._torch_gru, context)
+    # def copy_weights_to_psyneulink(self, context=None):
+    #     self._composition.set_weights_from_torch_gru(self._torch_gru, context)
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:

@@ -45,15 +45,17 @@ class TestExecution:
         # Set up models
         # PNL:
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=BIAS)
-        wts_hh = torch_gru.state_dict()['weight_hh_l0'].data.detach().clone()
-        wts_ih = torch_gru.state_dict()['weight_ih_l0'].data.detach().clone()
-        bias_hh = torch_gru.state_dict()['bias_hh_l0'].data.detach().clone()
-        bias_ih = torch_gru.state_dict()['bias_ih_l0'].data.detach().clone()
         gru = GRUComposition(input_size=3, hidden_size=5, bias=True)
         gru.set_weights_from_torch_gru(torch_gru)
-        # target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         torch_optimizer = torch.optim.SGD(lr=gru.learning_rate, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
+
+        # Save weights of torch GRU before learning, to initialize PNL GRU with same weights below
+        torch_weights_before_learning = {'wts_hh': torch_gru.weight_hh_l0.data.detach().clone(),
+                                        'wts_ih': torch_gru.weight_ih_l0.data.detach().clone(),
+                                        'bias_hh': torch_gru.bias_hh_l0.data.detach().clone(),
+                                        'bias_ih': torch_gru.bias_ih_l0.data.detach().clone()}
 
         # Execute Torch GRU Node
         h0 = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
@@ -65,31 +67,16 @@ class TestExecution:
         torch_loss.backward()
         torch_optimizer.step()  # backprop to update context module weights.
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),hn)
-        # torch_result_after_learning.backward(torch.tensor([[1,1,1,1,1]], dtype=torch.float32))
-        # print("TORCH after learning:         ",
-        #       [float(f"{value:.4f}") for value in torch_result_after_learning.flatten()])
 
-        # Execute PNL GRUComposition
-        # result = gru.learn(inputs={gru.input_node:[[1,2,3]],
-        #                            target_node[0]: [[1,1,1,1,1]]},
-        #                    execution_mode=ExecutionMode.PyTorch)
-        # pnl_result_before_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
-        # gru.infer_backpropagation_learning_pathways(execution_mode=pnl.ExecutionMode.PyTorch)
-        # gru.pytorch_representation.parameters = torch_gru_parameters
-        # print("\nPNL before learning: ", pnl_result_before_learning)
+        gru.gru_mech.function.weight_hh_l0.data.copy_(torch_weights_before_learning['wts_hh'])
+        gru.gru_mech.function.weight_ih_l0.data.copy_(torch_weights_before_learning['wts_ih'])
+        gru.gru_mech.function.bias_hh_l0.data.copy_(torch_weights_before_learning['bias_hh'])
+        gru.gru_mech.function.bias_ih_l0.data.copy_(torch_weights_before_learning['bias_ih'])
 
-        gru.gru_mech.function.weight_hh_l0.data.copy_(wts_hh)
-        gru.gru_mech.function.weight_ih_l0.data.copy_(wts_ih)
-        gru.gru_mech.function.bias_hh_l0.data.copy_(bias_hh)
-        gru.gru_mech.function.bias_ih_l0.data.copy_(bias_ih)
-        pnl_result_after_learning = gru.learn(inputs={gru.input_node:[[1,2,3]],
-                                                      target_node[0]: [[1,1,1,1,1]]},
-                                              execution_mode=pnl.ExecutionMode.PyTorch)
-        # pnl_result_after_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
-        # pnl_result_after_learning = gru.learn(inputs={gru.input_node:[[1,2,3],[1,2,3]],
-        #                            target_node[0]: [[1,1,1,1,1],[1,1,1,1,1]]},
-        #                    execution_mode=ExecutionMode.PyTorch)
-        # print("PNL after learning: ", pnl_result_after_learning)
+        pnl_result_before_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
+        x = gru.learn(inputs={gru.input_node:[[1,2,3]], target_node[0]: [[1,1,1,1,1]]},
+                  execution_mode=pnl.ExecutionMode.PyTorch)
+        pnl_result_after_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
 
-        # np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
