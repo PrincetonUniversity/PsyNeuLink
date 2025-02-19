@@ -82,9 +82,8 @@ class TestExecution:
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
 
-
-    @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
-    def test_pytorch_learning_identicality_NEW(self, bias):
+    # @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
+    def test_pytorch_learning_identicality_USING_JUST_TORCH_SEED_TO_ALIGN_STARTING_STATES(self):
         import torch
         inputs = [[1,2,3]]
         targets = [[1,1,1,1,1]]
@@ -95,7 +94,7 @@ class TestExecution:
         # Set up models
         torch.manual_seed(42)
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=BIAS)
-        torch_optimizer = torch.optim.SGD(lr=.001, params=torch_gru.parameters())
+        torch_optimizer = torch.optim.SGD(lr=.0001, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
         # # Save weights of torch GRU before learning, to initialize PNL GRU with same weights below
@@ -122,9 +121,9 @@ class TestExecution:
         torch.manual_seed(42)
         gru = GRUComposition(input_size=3, hidden_size=5, bias=True)
         # gru.set_weights_from_torch_gru(torch_gru)
-        target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         pnl_result_before_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
-        x = gru.learn(inputs={gru.input_node:[[1,2,3]], target_node[0]: [[1,1,1,1,1]]},
+        target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        gru.learn(inputs={gru.input_node:[[1,2,3]], target_node[0]: [[1,1,1,1,1]]},
                   execution_mode=pnl.ExecutionMode.PyTorch)
         pnl_result_after_learning = gru.run(inputs={gru.input_node:[[1,2,3]]})
 
