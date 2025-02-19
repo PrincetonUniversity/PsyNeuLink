@@ -190,6 +190,7 @@ Class Reference
 """
 import numpy as np
 import warnings
+from typing import Union
 # from sympy.stats import Logistic
 
 import psyneulink.core.scheduling.condition as conditions
@@ -833,39 +834,7 @@ class GRUComposition(AutodiffComposition):
     #endregion
 
     @handle_external_context()
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
-        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
-            raise GRUCompositionError(f"Learning in {self.componentCategory} "
-                                      f"is not supported for {execution_mode.name}.")
-        if self.gru_mech:
-            return [self.target_node]
-
-        import torch
-
-        input_size = self.parameters.input_size.get()
-        hidden_size = self.parameters.hidden_size.get()
-        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME, input_shapes=self.input_size)
-        self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
-        self.gru_mech.function = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=self.bias)
-        self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value.astype(np.float32),
-                                                       device=self.device), context)
-
-        target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
-        context = Context(source=ContextFlags.METHOD)
-        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
-        self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
-        for output_port in target_mech.output_ports:
-            output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # self.targets_from_outputs_map = {target_mech: self.gru_mech}
-        # self.outputs_to_targets_map = {self.gru_mech: target_mech}
-        self.targets_from_outputs_map = {target_mech: self.output_node}
-        self.outputs_to_targets_map = {self.output_node: target_mech}
-        self.target_node = target_mech
-
-        return [target_mech]
-
-    @handle_external_context()
-    def set_weights(self, weights, biases, context=None):
+    def set_weights(self, weights:Union[list, np.ndarray], biases:Union[list, np.ndarray], context=None):
         """Set weights for Projections to input_node and hidden_layer_node."""
         FROM_ARG = 0
         PNL = 1
@@ -896,57 +865,60 @@ class GRUComposition(AutodiffComposition):
                 b[PNL]._set(b[FROM_ARG], context)
 
     @handle_external_context()
-    def set_weights_from_torch_gru(self, torch_gru, context=None):
-        """Copy weights from PyTorch GRU module to the GRUComposition's Projections."""
-        from psyneulink.library.compositions.grucomposition import GRUCompositionError
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
+        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+            raise GRUCompositionError(f"Learning in {self.componentCategory} "
+                                      f"is not supported for {execution_mode.name}.")
+        if self.gru_mech:
+            return [self.target_node]
 
-        weights, biases = self.get_weights_from_torch_gru(torch_gru)
-        weights = tuple([weight.numpy() for weight in weights])
-        if torch_gru.bias:
-            biases = tuple([bias.numpy() for bias in biases])
-        self.set_weights(weights, biases, context)
+        input_size = self.parameters.input_size.get()
+        hidden_size = self.parameters.hidden_size.get()
+        # MODIFIED 2/16/25 OLD:
+        # self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME, input_shapes=self.input_size)
+        # MODIFIED 2/16/25 END
+        # Note:  function is a placeholder, to induce proper variable and value dimensions;
+        #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
+        # self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
+        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
+                                            input_shapes=input_size,
+                                            function=MatrixTransform(
+                                                default_variable=np.zeros(input_size),
+                                                matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
+        # MODIFIED 2/16/25 OLD:
+        self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
+        # self.gru_mech.function = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=self.bias)
+        # MODIFIED 2/16/25 END
 
-    if torch_available:
-        import torch # Needed for type hint below
-    def get_weights_from_torch_gru(self, torch_gru)->tuple[torch.Tensor]:
-        """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
-        Format tensors:
-          - transpose all weight and bias tensors;
-          - reformat biases as 2d
-        Return formatted tensors, which are used:
-         - in set_weights_from_torch_gru(), where they are converted to numpy arrays
-         - for or forward computation in pytorchGRUwrappers._copy_internal_nodes_values_to_pnl()
-        """
-        hid_len = self.hidden_size
-        z_idx = hid_len
-        n_idx = 2 * hid_len
+        # # FIX: 2/16/25 IS THIS CORRECT:
+        # self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value.astype(np.float32),
+        #                                                device=self.device), context)
 
-        torch_gru_weights = torch_gru.state_dict()
-        wts_ih = torch_gru_weights['weight_ih_l0']
-        wts_ir = wts_ih[:z_idx].T
-        wts_iu = wts_ih[z_idx:n_idx].T
-        wts_in = wts_ih[n_idx:].T
-        wts_hh = torch_gru_weights['weight_hh_l0']
-        wts_hr = wts_hh[:z_idx].T
-        wts_hu = wts_hh[z_idx:n_idx].T
-        wts_hn = wts_hh[n_idx:].T
-        weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
+        target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
+        context = Context(source=ContextFlags.METHOD)
+        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+        for output_port in target_mech.output_ports:
+            output_port.parameters.require_projection_in_composition.set(False, override=True)
+        # self.targets_from_outputs_map = {target_mech: self.gru_mech}
+        # self.outputs_to_targets_map = {self.gru_mech: target_mech}
+        self.targets_from_outputs_map = {target_mech: self.output_node}
+        self.outputs_to_targets_map = {self.output_node: target_mech}
+        self.target_node = target_mech
 
-        biases = None
-        if torch_gru.bias:
-            import torch
-            assert self.bias, f"PROGRAM ERROR: '{GRU_NODE_NAME}' has bias=True but {self.name}.bias=False. "
-            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-            b_ih = torch_gru_weights['bias_ih_l0']
-            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-            b_hh = torch_gru_weights['bias_hh_l0']
-            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
-        return weights, biases
+        return [target_mech]
+
+    # @handle_external_context()
+    # def set_weights_from_torch_gru(self, torch_gru, context=None):
+    #     """Copy weights from PyTorch GRU module to the GRUComposition's Projections."""
+    #     from psyneulink.library.compositions.grucomposition import GRUCompositionError
+    #     from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
+    #
+    #     weights, biases = PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
+    #     weights = tuple([weight.numpy() for weight in weights])
+    #     if torch_gru.bias:
+    #         biases = tuple([bias.numpy() for bias in biases])
+    #     self.set_weights(weights, biases, context)
 
 
     # *****************************************************************************************************************

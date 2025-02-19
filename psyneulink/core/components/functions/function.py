@@ -1313,7 +1313,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Specification (validated in _validate_params):
         + single number (used to fill self.matrix)
         + matrix keyword:
-            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
+            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, otherwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
             + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
             + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
