@@ -1,5 +1,6 @@
 from . import context
 from . import defaults
+from . import graph
 from . import mdf
 from . import keywords
 from . import kvo
@@ -13,6 +14,7 @@ from . import warnings
 
 from .context import *
 from .defaults import *
+from .graph import *   # noqa: F401, F403
 from .keywords import *
 from .kvo import *
 from .log import *
@@ -26,6 +28,7 @@ from .warnings import *
 
 __all__ = list(context.__all__)
 __all__.extend(defaults.__all__)
+__all__.extend(graph.__all__)
 __all__.extend(keywords.__all__)
 __all__.extend(kvo.__all__)
 __all__.extend(log.__all__)
