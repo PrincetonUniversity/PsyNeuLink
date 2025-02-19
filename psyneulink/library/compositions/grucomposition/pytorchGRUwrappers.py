@@ -39,6 +39,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._torch_gru = self._composition.gru_mech.function
+
         # self._torch_gru.register_forward_hook(self._node_values_hook)
         # self._node_variables_hook_handle = None
         # self._node_values_hook_handle = None
@@ -56,11 +57,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
+        self._instantiate_pytorch_projection_wrappers(composition, device, context)
 
     def _instantiate_pytorch_projection_wrappers(self, composition, device, context):
         """Assign PytorchProjectionWrapper's matrix parameter to relevant parameter of torch GRU node"""
         if len(self._wrapped_nodes) == 1:
-            self.parameters = self._wrapped_nodes[0].function.function.parameters
+            self.torch_parameters = self._wrapped_nodes[0].function.function.parameters
         else:
             if not len(self._wrapped_nodes):
                 assert False, \
@@ -73,70 +75,47 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                     (f"PROGRAM ERROR: Somehow an extra node or more snuck into PytorchGRUCompositionWrapper; "
                      f"should only have one for 'PYTORCH GRU NODE', but also has: {extra_nodes}.")
 
-        # self._projection_map[projection] = pytorch_proj_wrapper
-        # GRUprojection, _projection_wrapper <- {Projection: PytorchProjectionWrapper}
-        hid_len = self.hidden_size
+        pnl = self._composition
+        torch_gru = pnl.gru_mech.function
+
+        # Pytorch parameter info
+        torch_params = torch_gru.state_dict()
+        hid_len = pnl.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
 
-        torch_gru_weights = self._torch_gru.state_dict()
+        # Pytorch Weight matrices
+        torch_input_params = torch_params['weight_ih_l0']
+        torch_ir = torch_input_params[:z_idx].T
+        torch_iz = torch_input_params[z_idx:n_idx].T
+        torch_in = torch_input_params[n_idx:].T
+        torch_hidden_params = torch_params['weight_hh_l0']
+        torch_hr = torch_hidden_params[:z_idx].T
+        torch_hu = torch_hidden_params[z_idx:n_idx].T
+        torch_hn = torch_hidden_params[n_idx:].T
+
         proj_map = self._projection_map
-        comp = self._composition
+        for pnl_proj, torch_matrix in zip([pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
+                                          [torch_ir, torch_iz, torch_in, torch_hr, torch_hu, torch_hn]):
+            proj_map[pnl_proj] = PytorchGRUProjectionWrapper(pnl_proj, torch_matrix, device, context)
 
-        for proj in comp.learnable_projections:
-            CREATE A PytorchGRUProjectionWrapper FOR EACH PROJECTION, WITH matrix assigned to relevant Pytorch parameter
-            if proj.sender == comp.input_node:
-                torch_gru_weights['weight_ih_l0'] = proj.parameters.matrix._get(context)
-            elif proj.sender == comp.gru_mech:
-                torch_gru_weights['weight_hh_l0'] = proj.parameters.matrix._get(context)
-        proj_map[comp.wts_ir] = torch_gru_weights['weight_ih_l0'][:z_idx].T
-        proj_map[comp.wts_iu] = torch_gru_weights['weight_ih_l0'][z_idx:n_idx].T
+        if pnl.bias:
+            assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE_NAME}.bias=False. "
 
-
-
-         self.wts.ir.parameters,
-         self.wts_iu.parameters,
-         self.wts_in.parameters,
-         self.wts_hr.parameters,
-         self.wts_hu.parameters,
-         self.wts_hn.parameters]):
-
-
-
-
-
-
-        self._projection_map[wts_ih = torch_gru_weights['weight_ih_l0']
-        wts_ir = wts_ih[:z_idx].T
-        wts_iu = wts_ih[z_idx:n_idx].T
-        wts_in = wts_ih[n_idx:].T
-        wts_hh = torch_gru_weights['weight_hh_l0']
-        wts_hr = wts_hh[:z_idx].T
-        wts_hu = wts_hh[z_idx:n_idx].T
-        wts_hn = wts_hh[n_idx:].T
-
-        biases = None
-        if torch_gru.bias:
-            import torch
-            assert self.bias, f"PROGRAM ERROR: '{GRU_NODE_NAME}' has bias=True but {self.name}.bias=False. "
             # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-            b_ih = torch_gru_weights['bias_ih_l0']
+            b_ih = torch_params['bias_ih_l0']
             b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
             b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
             b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-            b_hh = torch_gru_weights['bias_hh_l0']
+            b_hh = torch_params['bias_hh_l0']
             b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
             b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
             b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
-        return weights, biases
 
-
-        self._projection_map[projection] = pytorch_proj_wrapper
-        self._projection_wrappers.append(pytorch_proj_wrapper)
-
-
-        #
+            for pnl_bias_proj, torch_bias in zip([pnl.bias_ir, pnl.bias_iu, pnl.bias_in,
+                                                  pnl.bias_hr, pnl.bias_hu, pnl.bias_hn],
+                                              [b_ir, b_iu, b_in, b_hr, b_hu, b_hn]):
+                proj_map[pnl_bias_proj] = PytorchGRUProjectionWrapper(pnl_bias_proj, torch_bias, device, context)
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
@@ -229,51 +208,51 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         #     pnl_node.function.parameters.previous_value._set(torch_gru_output, context)
 
     # FIX: 2/18/25 REMOVE
-    def _node_values_hook(module, input, output):
-        in_len = module.input_size
-        hid_len = module.hidden_size
-        z_idx = hid_len
-        n_idx = 2 * hid_len
-
-        ih = module.weight_ih_l0
-        hh = module.weight_hh_l0
-        if module.bias:
-            b_ih = module.bias_ih_l0
-            b_hh = module.bias_hh_l0
-        else:
-            b_ih = torch.tensor(np.array([0] * 3 * hid_len))
-            b_hh = torch.tensor(np.array([0] * 3 * hid_len))
-
-        w_ir = ih[:z_idx].T
-        w_iz = ih[z_idx:n_idx].T
-        w_in = ih[n_idx:].T
-        w_hr = hh[:z_idx].T
-        w_hz = hh[z_idx:n_idx].T
-        w_hn = hh[n_idx:].T
-
-        b_ir = b_ih[:z_idx]
-        b_iz = b_ih[z_idx:n_idx]
-        b_in = b_ih[n_idx:]
-        b_hr = b_hh[:z_idx]
-        b_hz = b_hh[z_idx:n_idx]
-        b_hn = b_hh[n_idx:]
-
-        assert len(input) > 1, f"PROGRAM ERROR: PytorchGRUCompositionWrapper hook received only one input: {input}"
-        x = input[0]
-        # h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=torch.float32)
-        h = input[1]
-
-        # Reproduce GRU forward calculations
-        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-        h_t = (1 - z_t) * n_t + z_t * h
-
-        # Put internal calculations in dict with corresponding node names as keys
-        node_values[RESET_NODE_NAME] = r_t.detach()
-        node_values[UPDATE_NODE_NAME] = z_t.detach()
-        node_values[NEW_NODE_NAME] = n_t.detach()
-        node_values[HIDDEN_LAYER_NODE_NAME] = h_t.detach()
+    # def _node_values_hook(module, input, output):
+    #     in_len = module.input_size
+    #     hid_len = module.hidden_size
+    #     z_idx = hid_len
+    #     n_idx = 2 * hid_len
+    #
+    #     ih = module.weight_ih_l0
+    #     hh = module.weight_hh_l0
+    #     if module.bias:
+    #         b_ih = module.bias_ih_l0
+    #         b_hh = module.bias_hh_l0
+    #     else:
+    #         b_ih = torch.tensor(np.array([0] * 3 * hid_len))
+    #         b_hh = torch.tensor(np.array([0] * 3 * hid_len))
+    #
+    #     w_ir = ih[:z_idx].T
+    #     w_iz = ih[z_idx:n_idx].T
+    #     w_in = ih[n_idx:].T
+    #     w_hr = hh[:z_idx].T
+    #     w_hz = hh[z_idx:n_idx].T
+    #     w_hn = hh[n_idx:].T
+    #
+    #     b_ir = b_ih[:z_idx]
+    #     b_iz = b_ih[z_idx:n_idx]
+    #     b_in = b_ih[n_idx:]
+    #     b_hr = b_hh[:z_idx]
+    #     b_hz = b_hh[z_idx:n_idx]
+    #     b_hn = b_hh[n_idx:]
+    #
+    #     assert len(input) > 1, f"PROGRAM ERROR: PytorchGRUCompositionWrapper hook received only one input: {input}"
+    #     x = input[0]
+    #     # h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=torch.float32)
+    #     h = input[1]
+    #
+    #     # Reproduce GRU forward calculations
+    #     r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+    #     z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+    #     n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+    #     h_t = (1 - z_t) * n_t + z_t * h
+    #
+    #     # Put internal calculations in dict with corresponding node names as keys
+    #     node_values[RESET_NODE_NAME] = r_t.detach()
+    #     node_values[UPDATE_NODE_NAME] = z_t.detach()
+    #     node_values[NEW_NODE_NAME] = n_t.detach()
+    #     node_values[HIDDEN_LAYER_NODE_NAME] = h_t.detach()
 
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
@@ -310,27 +289,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
 class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
-    def __init__(self,
-                 projection,
-                 pnl_proj,
-                 component_idx,
-                 port_idx, device,
-                 sender=None,
-                 receiver=None,
-                 context=None):
+    def __init__(self, projection, torch_parameter, device, context=None):
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
-        self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
-        self._idx = component_idx     # Index of Projection in Composition's list of projections
-        self._port_idx = port_idx     # Index of sender's port (used by LLVM)
-        self._value_idx = 0           # Index of value in sender's value (used in aggregate_afferents)
-        self._curr_sender_value = None
-
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
-        self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
-        self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
-        self._context = context
-
-
+        self.matrix = torch_parameter
+        if projection.learnable is False:
+            self.matrix.requires_grad = False
 
     def log_matrix(self):
         if self._projection.parameters.matrix.log_condition != LogCondition.OFF:

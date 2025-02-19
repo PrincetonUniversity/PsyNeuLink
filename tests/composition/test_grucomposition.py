@@ -45,13 +45,13 @@ class TestExecution:
         # Set up models
         # PNL:
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=BIAS)
-        wts_hh = torch_gru.weight_hh_ld0.data.detach().clone()
-        wts_ih = torch_gru.weight_ih_l0.data.detach().clone()
-        bias_hh = torch_gru.bias_hh_l0.data.detach().clone()
-        bias_ih = torch_gru.bias_ih_l0.data.detach().clone()
+        wts_hh = torch_gru.state_dict()['weight_hh_l0'].data.detach().clone()
+        wts_ih = torch_gru.state_dict()['weight_ih_l0'].data.detach().clone()
+        bias_hh = torch_gru.state_dict()['bias_hh_l0'].data.detach().clone()
+        bias_ih = torch_gru.state_dict()['bias_ih_l0'].data.detach().clone()
         gru = GRUComposition(input_size=3, hidden_size=5, bias=True)
         gru.set_weights_from_torch_gru(torch_gru)
-        target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        # target_node = gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         torch_optimizer = torch.optim.SGD(lr=gru.learning_rate, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
@@ -78,10 +78,10 @@ class TestExecution:
         # gru.pytorch_representation.parameters = torch_gru_parameters
         # print("\nPNL before learning: ", pnl_result_before_learning)
 
-        gru.gru_mech.function.weight_hh_l0.data._copy(wts_hh)
-        gru.gru_mech.function.weight_ih_l0.data._copy(wts_ih)
-        gru.gru_mech.function.bias_hh_l0.data._copy(bias_hh)
-        gru.gru_mech.function.bias_ih_l0.data._copy(bias_ih)
+        gru.gru_mech.function.weight_hh_l0.data.copy_(wts_hh)
+        gru.gru_mech.function.weight_ih_l0.data.copy_(wts_ih)
+        gru.gru_mech.function.bias_hh_l0.data.copy_(bias_hh)
+        gru.gru_mech.function.bias_ih_l0.data.copy_(bias_ih)
         pnl_result_after_learning = gru.learn(inputs={gru.input_node:[[1,2,3]],
                                                       target_node[0]: [[1,1,1,1,1]]},
                                               execution_mode=pnl.ExecutionMode.PyTorch)

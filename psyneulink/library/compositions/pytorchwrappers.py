@@ -20,6 +20,7 @@ from enum import Enum, auto
 from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -1207,12 +1208,13 @@ class PytorchProjectionWrapper():
     """
 
     def __init__(self,
-                 projection,
-                 pnl_proj,
-                 component_idx,
-                 port_idx, device,
-                 sender=None,
-                 receiver=None,
+                 projection:Projection,
+                 pnl_proj:Projection,
+                 component_idx:int,
+                 port_idx:int,
+                 device:str,
+                 sender:PytorchMechanismWrapper=None,
+                 receiver:PytorchMechanismWrapper=None,
                  context=None):
         self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
@@ -1246,6 +1248,7 @@ class PytorchProjectionWrapper():
         matrix = projection.parameters.matrix.get(context=context)
         if matrix is None:
             matrix = projection.parameters.matrix.get(context=None)
+        # Create a Pytorch Parameter for the matrix
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
@@ -1253,7 +1256,6 @@ class PytorchProjectionWrapper():
             self.matrix.requires_grad = False
 
         self.function = projection.function._gen_pytorch_fct(device, context)
-
 
     def execute(self, variable):
         # return torch.matmul(variable, self.matrix)
