@@ -129,27 +129,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # FIX: operator.itemgetter(*indices)(a)
         # Pytorch Weight matrices
         torch_input_params = torch_params['weight_ih_l0']
-        torch_ir = torch_input_params[:z_idx]
-        torch_iz = torch_input_params[z_idx:n_idx]
-        torch_in = torch_input_params[n_idx:]
+        w_ir = (torch_input_params, slice(None, z_idx))
+        w_iz = (torch_input_params, slice(z_idx, n_idx))
+        w_in = (torch_input_params, slice(n_idx, None))
         torch_hidden_params = torch_params['weight_hh_l0']
-        torch_hr = torch_hidden_params[:z_idx]
-        torch_hu = torch_hidden_params[z_idx:n_idx]
-        torch_hn = torch_hidden_params[n_idx:]
+        w_hr = (torch_hidden_params, slice(None, z_idx))
+        w_hu = (torch_hidden_params, slice(z_idx, n_idx))
+        w_hn = (torch_hidden_params, slice(n_idx, None))
 
         # FIX: NEED TO IMPLEMENT "requires_grad" AT LEVEL OF PARAMETER.
 
-        parameters = [(torch_input_params, slice(None, z_idx)),
-                      (torch_input_params, slice(z_idx, n_idx)),
-                      (torch_input_params, slice(n_idx, None)),
-                      (torch_hidden_params, slice(None, z_idx)),
-                      (torch_hidden_params, slice(z_idx, n_idx)),
-                      (torch_hidden_params, slice(n_idx, None))]
-
-
-
         for pnl_proj, torch_matrix in zip([pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
-                                          [torch_ir, torch_iz, torch_in, torch_hr, torch_hu, torch_hn]):
+                                          [w_ir, w_iz, w_in, w_hr, w_hu, w_hn]):
             self._proj_map[pnl_proj] = PytorchGRUProjectionWrapper(pnl_proj, torch_matrix, device, context)
 
         if pnl.bias:
@@ -157,13 +148,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
             # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
             b_ih = torch_params['bias_ih_l0']
-            b_ir = b_ih[:z_idx]
-            b_iu = b_ih[z_idx:n_idx]
-            b_in = b_ih[n_idx:]
+            b_ir = (b_ih, slice(None, z_idx))
+            b_iu = (b_ih, slice(z_idx, n_idx))
+            b_in = (b_ih, slice(n_idx, None))
             b_hh = torch_params['bias_hh_l0']
-            b_hr = b_hh[:z_idx]
-            b_hu = b_hh[z_idx:n_idx]
-            b_hn = b_hh[n_idx:]
+            b_hr = (b_hh, slice(None, z_idx))
+            b_hu = (b_hh, slice(z_idx, n_idx))
+            b_hn = (b_hh, slice(n_idx, None))
 
             for pnl_bias_proj, torch_bias in zip([pnl.bias_ir, pnl.bias_iu, pnl.bias_in,
                                                   pnl.bias_hr, pnl.bias_hu, pnl.bias_hn],
