@@ -3882,9 +3882,9 @@ def test_training_xor_with_batching():
 
     # Copy the initial weights and biases. Make sure to copy the data, not just the reference.
     weights1 = linear1.weight.detach().numpy().copy()
-    bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
     weights2 = linear2.weight.detach().numpy().copy()
-    bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
+    # bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
+    # bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
 
     # define cost/loss & optimizer
     # criterion = nn.BCELoss().to(device)

@@ -510,7 +510,7 @@ class EMStorage(LearningFunction):
             # If the batch_size is not equal to one then we need to raise an exception.
             if len(entry_to_store.shape) > 2:
                 if entry_to_store.shape[0] != 1:
-                    raise NotImplemented("EMSStorage has not been implemented for batch sizes greater than 1")
+                    raise NotImplementedError("EMSStorage has not been implemented for batch sizes greater than 1")
                 else:
                     # Drop the singleton batch dimension
                     entry_to_store = entry_to_store[0]
