@@ -124,41 +124,27 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         hid_len = pnl.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
-
-        # FIX: THIS IS NO GOOD;  NEED TO PASS ACTUAL PARAMETER AND ITS INDICES TO PytorchGRUProjectionWrapper
-        # FIX: operator.itemgetter(*indices)(a)
-        # Pytorch Weight matrices
-        torch_input_params = torch_params['weight_ih_l0']
-        w_ir = (torch_input_params, slice(None, z_idx))
-        w_iz = (torch_input_params, slice(z_idx, n_idx))
-        w_in = (torch_input_params, slice(n_idx, None))
-        torch_hidden_params = torch_params['weight_hh_l0']
-        w_hr = (torch_hidden_params, slice(None, z_idx))
-        w_hu = (torch_hidden_params, slice(z_idx, n_idx))
-        w_hn = (torch_hidden_params, slice(n_idx, None))
+        w_ih = torch_params['weight_ih_l0']
+        w_hh = torch_params['weight_hh_l0']
 
         # FIX: NEED TO IMPLEMENT "requires_grad" AT LEVEL OF PARAMETER.
 
-        for pnl_proj, torch_matrix in zip([pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
-                                          [w_ir, w_iz, w_in, w_hr, w_hu, w_hn]):
+
+        for pnl_proj, torch_matrix in zip(
+                [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
+                [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
+                 (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]):
             self._proj_map[pnl_proj] = PytorchGRUProjectionWrapper(pnl_proj, torch_matrix, device, context)
 
         if pnl.bias:
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE_NAME}.bias=False. "
-
-            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
             b_ih = torch_params['bias_ih_l0']
-            b_ir = (b_ih, slice(None, z_idx))
-            b_iu = (b_ih, slice(z_idx, n_idx))
-            b_in = (b_ih, slice(n_idx, None))
             b_hh = torch_params['bias_hh_l0']
-            b_hr = (b_hh, slice(None, z_idx))
-            b_hu = (b_hh, slice(z_idx, n_idx))
-            b_hn = (b_hh, slice(n_idx, None))
 
-            for pnl_bias_proj, torch_bias in zip([pnl.bias_ir, pnl.bias_iu, pnl.bias_in,
-                                                  pnl.bias_hr, pnl.bias_hu, pnl.bias_hn],
-                                              [b_ir, b_iu, b_in, b_hr, b_hu, b_hn]):
+            for pnl_bias_proj, torch_bias in zip(
+                    [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn],
+                    [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
+                     (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]):
                 self._proj_map[pnl_bias_proj] = PytorchGRUProjectionWrapper(pnl_bias_proj, torch_bias,
                                                                             device, context)
         # MODIFIED 2/16/25 END
@@ -429,8 +415,9 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         matrix = projection.parameters.matrix._get(context).T
         # FIX: THIS NEEDS TO DO SOMETHING ALONG THE LINES OF THE FOLLOWING:
         #      pnl_gru.gru_mech.function.weight_hh_l0.data.copy_(torch_weights_before_learning['wts_hh'])
-        #      - SO, NAME THE TORCH GRU PARAMETER (IH OR HH) AND THE PARTICULAR INDICS WILL NEED TO BE PASSED IN
+        #      - SO, NAME THE TORCH GRU PARAMETER (IH OR HH) AND THE PARTICULAR INDICES WILL NEED TO BE PASSED IN
         #      - MOVE THIS TO A HELPER METHOD, THAT CAN BE CALLED BY GRUComposition.set_weights()
+        #      NEED TO TRANSPOSE THE WEIGHTS HERE
         torch_parameter = torch.atleast_2d(torch.tensor(matrix, dtype=torch.float32))
         assert True
         # MODIFIED 2/16/25 END
