@@ -506,6 +506,15 @@ class EMStorage(LearningFunction):
                  decay_rate,
                  random_state)->torch.tensor:
             """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
+
+            # If the batch_size is not equal to one then we need to raise an exception.
+            if len(entry_to_store.shape) > 2:
+                if entry_to_store.shape[0] != 1:
+                    raise NotImplemented("EMSStorage has not been implemented for batch sizes greater than 1")
+                else:
+                    # Drop the singleton batch dimension
+                    entry_to_store = entry_to_store[0]
+
             if random_state.uniform(0, 1) < storage_prob:
                 if decay_rate:
                     memory_matrix *= torch.tensor(decay_rate)
@@ -515,9 +524,9 @@ class EMStorage(LearningFunction):
                     # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
                     idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
                 if axis == 0:
-                    memory_matrix[:,idx_of_min] = entry_to_store
+                    memory_matrix[:,idx_of_min] = entry_to_store[0]
                 elif axis == 1:
-                    memory_matrix[idx_of_min,:] = entry_to_store
+                    memory_matrix[idx_of_min,:] = entry_to_store[0]
             return memory_matrix
         return func
 
