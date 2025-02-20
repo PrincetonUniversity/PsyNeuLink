@@ -694,7 +694,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(val)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.aggregate_afferents(batch_size=self._batch_size, port=i))
+                                variable.append(node.collect_afferents(batch_size=self._batch_size, port=i))
 
                         # We now need to stack these so the batch dimension is first
                         try:
@@ -706,7 +706,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             variable = [[inp[b] for inp in variable] for b in range(batch_size)]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.aggregate_afferents(batch_size=self._batch_size)
+                    variable = node.collect_afferents(batch_size=self._batch_size)
                 variable = node.execute_input_ports(variable)
 
                 if node.exclude_from_gradient_calc:
@@ -1002,15 +1002,21 @@ class PytorchMechanismWrapper():
 
     def add_afferent(self, afferent):
         """Add ProjectionWrapper for afferent to MechanismWrapper.
-        For use in call to aggregate_afferents
+        For use in call to collect_afferents
         """
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
-    def aggregate_afferents(self, batch_size, port=None):
-        """Return weight-multiplied sum of afferent projections for input_port(s) of the Mechanism
+    def collect_afferents(self, batch_size, port=None):
+        """
+        Return afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
-        If there are multiple input_ports, return an array with the sum for each input_port
+        If there are multiple input_ports, return a tensor (or list of tensors if input ports are ragged) of shape:
+
+        (batch, input_port, projection, ...)
+
+        Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.
+
         FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
         assert self.afferents,\
@@ -1098,7 +1104,7 @@ class PytorchMechanismWrapper():
                 # Add input port dimension back to account for input port dimension reduction, we should have shape
                 # (batch, input_port, ... variable dimensions ) or
                 # (batch, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
-                # after aggregate_afferents.
+                # after collect_afferents.
                 if len(v.shape) == 2:
                     v = v[:, None, ...]
 
@@ -1280,7 +1286,7 @@ class PytorchProjectionWrapper():
         self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
-        self._value_idx = 0           # Index of value in sender's value (used in aggregate_afferents)
+        self._value_idx = 0           # Index of value in sender's value (used in collect_afferents)
         self._curr_sender_value = None
 
         self.name = f"PytorchProjectionWrapper[{projection.name}]"

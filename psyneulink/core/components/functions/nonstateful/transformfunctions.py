@@ -1593,6 +1593,7 @@ class LinearCombination(
         weights = self._get_pytorch_fct_param_value('weights', device, context)
         if weights is not None:
             weights = torch.tensor(weights, device=device).double()
+        # Note: the first dimension of x is batch, aggregate over the second dimension
         if self.operation == SUM:
             if weights is not None:
                 return lambda x: torch.sum(x * weights, 1)

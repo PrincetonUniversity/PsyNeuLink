@@ -1067,9 +1067,9 @@ class AutodiffComposition(Composition):
     def autodiff_forward(self, inputs, targets,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
-        """Perform forward pass of model and compute loss for a single trial (i.e., a single input) in Pytorch mode.
-        Losses are accumulated in pytorch_rep.track_losses, over calls to this method within a minibatch;
-          at the end of a minibatch, they are averaged and backpropagated by compositionrunner.run_learning()
+        """
+        Perform forward pass of model and compute loss for a batch of trials in Pytorch mode.
+        Losses are then accumulated, error is backpropagated by compositionrunner.run_learning()
           before the next time it calls run(), in a call to backward() by do_gradient_optimization()
           in _batch_inputs() or _batch_function_inputs(),
         """

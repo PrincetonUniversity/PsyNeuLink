@@ -103,11 +103,16 @@ class CompositionRunner():
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None)->GeneratorType:
-        """Execute inputs and update pytorch parameters for one minibatch at a time.
+        """
+        Execute inputs and update pytorch parameters for one minibatch at a time.
         Partition inputs dict into ones of length minibatch_size (or, for the last set, the remainder)
         Execute all inputs in that dict and then update weights (parameters), and repeat for all batches
         within an epoch Synchronize weights, values and results with PsyNeuLink as specified in
         synch_with_pnl_options and retain_in_pnl_options dicts.
+
+        The generator should always yield a dict containing torch.Tensors or lists of torch.Tensores (when ragged).
+        Each torch.Tensor or list should have its minibatch_size as the first dimension, even if minibatch_size=1.
+
         """
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -203,7 +208,6 @@ class CompositionRunner():
             # Synchronize specified outcomes at end of learning run
             pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
 
-    # 8/8/24 - FIX: THIS NEEDS TO BE BROUGHT INTO ALINGMENT WITH REFACTORING OF _batch_inputs ABOVE
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,
