@@ -3963,6 +3963,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
+        self._update_feedback_specifications()
         self._determine_node_roles(context=context)
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
@@ -4992,6 +4993,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if context.flags & ContextFlags.PREPARING:
                 self.controller._validate_monitor_for_control(self._get_all_nodes())
                 self._instantiate_control_projections(context=context)
+
+    def _update_feedback_specifications(self):
+        changed = False
+        for proj in self.projections:
+            if proj.feedback is not None:
+                self.graph.comp_to_vertex[proj].feedback = proj.feedback
+                changed = True
+
+        if changed:
+            self.needs_update_graph_processing = True
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -6361,8 +6372,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             projection.is_processing = False
 
-            if projection._feedback is not None:
-                feedback = projection._feedback
+            if projection.feedback is not None:
+                feedback = projection.feedback
 
             # Also check for required role specification of feedback projections
             for node, role in self.required_node_roles:
