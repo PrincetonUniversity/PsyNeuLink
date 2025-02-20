@@ -100,9 +100,11 @@ CONTENTS
 import collections
 import copy
 import functools
+import importlib
 import inspect
 import itertools
 import logging
+import os
 import psyneulink
 import re
 import time
@@ -114,7 +116,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple, Iterable
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -159,7 +161,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
 ]
 
 logger = logging.getLogger(__name__)
@@ -2419,5 +2421,62 @@ def safe_create_np_array(value):
                 return convert_all_elements_to_np_array(value)
             else:
                 raise
+
+
+def get_module_file_prefix(module: Union[str, types.ModuleType]) -> str:
+    """
+    Gets the file prefix of **module**, which may be used with
+    `get_stacklevel_skip_file_prefixes` or the `skip_file_prefixes`
+    argument of :func:`warnings.warn` (python 3.12+)
+
+    Args:
+        module (Union[str, types.ModuleType]): a python module or a name
+        of a module
+
+    Returns:
+        str: the file path of **module**, excluding __init__.py
+    """
+    try:
+        module = importlib.import_module(module)
+    except AttributeError:
+        # ModuleType
+        pass
+
+    module = inspect.getfile(module)
+
+    if module.endswith('__init__.py'):
+        module = os.path.dirname(module)
+
+    return module
+
+
+def get_stacklevel_skip_file_prefixes(
+    modules: Iterable[Union[str, types.ModuleType]]
+) -> int:
+    """
+    Gets a value for the `stacklevel` argument of :func:`warnings.warn`
+    or :func:`logging.log` that corresponds to the outermost stack frame
+    that does not belong to any of **modules** as determined by their
+    file paths. Functions similarly to the `skip_file_prefixes` argument
+    of :func:`warnings.warn` (python 3.12+).
+
+    Args:
+        modules (Iterable[Union[str, types.ModuleType]]): python modules
+        or names of modules to skip
+
+    Returns:
+        int: the outermost stacklevel that excludes **modules**
+    """
+    prefixes = [get_module_file_prefix(p) for p in modules]
+
+    res = 1
+    # skip this function
+    for i, frame_info in enumerate(inspect.stack()[1:]):
+        for p in prefixes:
+            if frame_info.frame.f_code.co_filename.startswith(p):
+                break
+        else:
+            return i + 1
+    return res
 
 #endregion
