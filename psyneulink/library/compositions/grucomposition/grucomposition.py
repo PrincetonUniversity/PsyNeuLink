@@ -795,14 +795,22 @@ class GRUComposition(AutodiffComposition):
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
         self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
 
+        self._set_learning_attributes()
+
         self._analyze_graph()
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        for projection in self.projections:
 
-            projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
+        # MODIFIED 2/16/25 NEW:
+        # FIX: ENSURE HERE THAT LEARNABILITY IS SAME FOR ALL PROJECTIONS CORRESPONDING
+        #      TO IH AND HH PARAMAETERS OF TORCH GRU MODULE
+        #      ADD COMPOSITOIN ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
+        # FIX: FOR NOW, JUST USE THIS:
+        learning_rate = self.enable_learning
+
+        for projection in self.learnable_projections:
 
             if self.enable_learning is False:
                 projection.learnable = False
@@ -836,6 +844,10 @@ class GRUComposition(AutodiffComposition):
     @handle_external_context()
     def set_weights(self, weights:Union[list, np.ndarray], biases:Union[list, np.ndarray], context=None):
         """Set weights for Projections to input_node and hidden_layer_node."""
+
+        # MODIFIED 2/16/25 NEW:
+        # FIX: CHECK IF TORCH GRU EXISTS YET (CHECK FOR pytorch_representation != None); I.E., LEARNING HAS OCCURRED
+        #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
         FROM_ARG = 0
         PNL = 1
         for wts in zip(weights,

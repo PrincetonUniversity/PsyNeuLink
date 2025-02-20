@@ -97,6 +97,7 @@ class TestExecution:
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=BIAS)
         torch_optimizer = torch.optim.SGD(lr=.0001, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
+        h0 = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
 
         # # Save weights of torch GRU before learning, to initialize PNL GRU with same weights below
         # torch_weights_before_learning = {'wts_hh': torch_gru.weight_hh_l0.data.detach().clone(),
@@ -105,7 +106,6 @@ class TestExecution:
         #                                 'bias_ih': torch_gru.bias_ih_l0.data.detach().clone()}
 
         # Execute Torch GRU Node
-        h0 = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
         torch_result_before_learning, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),h0)
         torch_optimizer.zero_grad()  # Zero the gradients before each optimization step.
         torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float32))

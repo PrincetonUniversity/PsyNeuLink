@@ -966,6 +966,7 @@ class PytorchMechanismWrapper():
         self._assign_pytorch_function(mechanism, device, context)
 
 
+
     def _assign_pytorch_function(self, mechanism, device, context):
         self.function = PytorchFunctionWrapper(mechanism.function, device, context)
 
