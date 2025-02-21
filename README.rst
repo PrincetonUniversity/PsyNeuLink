@@ -89,7 +89,7 @@ it is presently less well suited to efforts involving massively large computatio
 
 Other packages currently better suited to such applications are:
 `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ for biologically-inspired neural network models
-`Pytorch <https://pytorch.org>`_ and `TensorFlow <https://www.tensorflow.org>`_ (for deep learning models);
+`Pytorch <pytorch_>`_ and `TensorFlow <https://www.tensorflow.org>`_ (for deep learning models);
 `HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
 `ACT-R <http://act-r.psy.cmu.edu>`_ (for production system models);
 `Genesis <http://www.genesis-sim.org>`_,
@@ -106,7 +106,7 @@ That said, priorities for ongoing development of PsyNeuLink are:
     i) acceleration, using just-in-time compilation methods and parallelization
        (see `Compilation`, and `Vesely et al., 2022 <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_);
     ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
-        environment (examples currently exist for `Pytorch <https://pytorch.org>`_ ) and translating into a standard
+        environment (examples currently exist for `Pytorch <pytorch_>`_) and translating into a standard
         `Model Description Format (MDF) <https://github.com/ModECI/MDF>`_;
     iii) integration of tools for parameter estimation, model comparison and data fitting
          (see `ParameterEstimationComposition`); and
@@ -258,3 +258,5 @@ License
     Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
     on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and limitations under the License.
+
+.. _pytorch: https://pytorch.org
