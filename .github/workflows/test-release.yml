@@ -25,14 +25,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install setup dependencies
+      shell: bash
+      run: pip install build twine
+
     - name: Create Python Dist files
       id: create_dist
       shell: bash
       run: |
         # We don't care about the python version used.
-        pip install setuptools wheel
-        python setup.py sdist
-        python setup.py bdist_wheel
+        python -m build -v
         cd dist
         echo "sdist=$(ls *.tar.gz)" >> $GITHUB_OUTPUT
         echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
@@ -51,9 +53,6 @@ jobs:
     - name: Upload dist files to test PyPI
       shell: bash
       run: |
-        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
-        pip install setuptools setuptools-rust wheel
-        pip install twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
@@ -150,6 +149,10 @@ jobs:
         name: Python-dist-files
         path: dist/
 
+    - name: Install setup dependencies
+      shell: bash
+      run: pip install twine
+
     - name: Validate dist files
       shell: bash
       run: twine check --strict dist/*
@@ -157,9 +160,6 @@ jobs:
     - name: Upload dist files to PyPI
       shell: bash
       run: |
-        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
-        pip3 install --user setuptools setuptools-rust wheel
-        pip3 install --user twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
