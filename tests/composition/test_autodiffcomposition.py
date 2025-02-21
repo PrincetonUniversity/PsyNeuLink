@@ -3852,7 +3852,9 @@ class TestBatching:
         np.testing.assert_allclose(ce_numpy, ce_torch)
 
 @pytest.mark.pytorch
-def test_training_xor_with_batching():
+@pytest.mark.parametrize('batch_size', [1, 2, 4])
+@pytest.mark.parametrize('batched_results', [False, True])
+def test_training_xor_with_batching(batch_size, batched_results):
     """
     This test actually trains an equivalent model in pytorch and compares the losses with the ones from the
     AutodiffComposition learn.
@@ -3869,7 +3871,7 @@ def test_training_xor_with_batching():
     HIDDEN_SIZE = 5
     LEARNING_RATE = 0.1
     WEIGHT_DECAY = 0
-    NSTEPS = 3
+    NUM_EPOCHS = 2
 
     X = torch.FloatTensor([[0, 0], [0, 1], [1, 0], [1, 1]]).to(device)
     Y = torch.FloatTensor([[0], [1], [1], [0]]).to(device)
@@ -3891,19 +3893,27 @@ def test_training_xor_with_batching():
     criterion = nn.MSELoss().to(device)
     optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
+    # A generator to generate batches of X with batch_size, batches will be of shape
+    # (batch_size, 1, 2)
+    def batcher(x, y):
+        for i in range(0, len(x), batch_size):
+            yield x[i:i + batch_size].unsqueeze(1), y[i:i + batch_size].unsqueeze(1)
+
     torch_losses = []
-    for step in range(NSTEPS):
-        pred = model(X)
-        loss = criterion(pred, Y)
-            # cost/loss function
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    torch_results = []
+    for n in range(NUM_EPOCHS):
+        data_loader = batcher(X, Y)
 
-        torch_losses.append(loss.item())
+        for step, (x, y) in enumerate(data_loader):
+            pred = model(x)
+            loss = criterion(pred, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            torch_losses.append(loss.item())
+            torch_results.append(pred)
 
-        if step % 1000 == 0:
-            print('step:', step, 'loss:', loss.item())
+    torch_results = torch.stack(torch_results).detach().numpy()
 
     autodiff_mode = pnl.ExecutionMode.PyTorch
 
@@ -3939,8 +3949,15 @@ def test_training_xor_with_batching():
 
     xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                       "targets": {xor_out: xor_targets}},
-              epochs=NSTEPS,
-              minibatch_size=4,
-              execution_mode=autodiff_mode)
+              epochs=NUM_EPOCHS,
+              minibatch_size=batch_size,
+              execution_mode=autodiff_mode,
+              batched_results=batched_results)
 
     np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
+
+    if batched_results:
+        np.testing.assert_allclose(torch_results, xor.results, rtol=1e-5)
+    else:
+        torch_results_unbatched = torch_results.reshape( (NUM_EPOCHS * (len(X)//batch_size) * batch_size, 1, 1) )
+        np.testing.assert_allclose(torch_results_unbatched, xor.results, rtol=1e-5)
