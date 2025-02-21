@@ -44,6 +44,10 @@ jobs:
         path: dist/
         retention-days: 1
 
+    - name: Validate dist files
+      shell: bash
+      run: twine check --strict dist/*
+
     - name: Upload dist files to test PyPI
       shell: bash
       run: |
@@ -145,6 +149,10 @@ jobs:
       with:
         name: Python-dist-files
         path: dist/
+
+    - name: Validate dist files
+      shell: bash
+      run: twine check --strict dist/*
 
     - name: Upload dist files to PyPI
       shell: bash
