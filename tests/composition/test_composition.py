@@ -8102,10 +8102,11 @@ class TestFeedbackProjections:
         comp.add_projection(sender=C, receiver=A)
         assert comp.feedback_projections == []
 
-    def test_three_node_cycle_with_FEEDBACK(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_three_node_cycle_with_FEEDBACK(self, feedback):
         A, B, C = self._gen_mechs(3)
         comp = Composition(pathways=[A, B, C])
-        comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp.add_projection(sender=C, receiver=A, feedback=feedback)
         assert comp.feedback_projections == A.get_afferents(C)
 
     def test_branch(self):
@@ -8133,12 +8134,13 @@ class TestFeedbackProjections:
         comp = Composition(pathways=[[a, b, a], [a, c, a]])
         assert comp.feedback_projections == []
 
-    def test_two_pathway_cycle_feedback(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_two_pathway_cycle_feedback(self, feedback):
         a, b, c = self._gen_mechs(3)
         comp = Composition(
             pathways=[
-                [a, b, (MappingProjection, True), a],
-                [a, c, (MappingProjection, True), a],
+                [a, b, (MappingProjection, feedback), a],
+                [a, c, (MappingProjection, feedback), a],
             ]
         )
         assert comp.feedback_projections == b.get_efferents(a) + c.get_efferents(a)
@@ -8148,10 +8150,11 @@ class TestFeedbackProjections:
         comp = Composition(pathways=[[a, b, c, d], [e, c, f, b, d]])
         assert comp.feedback_projections == []
 
-    def test_extended_loop_feedback(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True])
+    def test_extended_loop_feedback(self, feedback):
         a, b, c, d, e, f = self._gen_mechs(6)
         comp = Composition(
-            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, True), d]]
+            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, feedback), d]]
         )
         assert comp.feedback_projections == b.get_efferents(d)
 
