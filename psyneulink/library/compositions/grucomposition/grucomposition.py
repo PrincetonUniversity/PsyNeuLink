@@ -239,11 +239,17 @@ class GRUCompositionError(CompositionError):
 
 class GRUComposition(AutodiffComposition):
     """
-    GRUComposition(             \
-        name="GRU_Composition"  \
-        input_size=1,           \
-        hidden_size=1,          \
-        bias=False              \
+    GRUComposition(                     \
+        name="GRU_Composition"          \
+        input_size=1,                   \
+        hidden_size=1,                  \
+        bias=False                      \
+        learning_rate=.01               \
+        enable_learning=True            \
+        input_weights_learnable=True    \
+        input_biases_learnable=True     \
+        hidden_weights_learnable=True   \
+        hidden_biases_learnable=True    \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
@@ -288,7 +294,24 @@ class GRUComposition(AutodiffComposition):
 
     enable_learning : bool : default True
         specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
-        for additional details)
+        for additional details).
+
+    input_weights_learnable : bool : default True
+        specifies whether learning is enabled specifically for the input weights of the GRUComposition'
+        (see `input_weights_learnable <GRUComposition.input_weights_learnable>` for additional details).
+
+    input_biases_learnable : bool : default True
+        specifies whether learning is enabled specifically for the input biases of the GRUComposition:
+        (see `input_biases_learnable <GRUComposition.input_biases_learnable>` for additional details).
+
+    hidden_weights_learnable : bool : default True
+        specifies whether learning is enabled specifically for the hidden weights of the GRUComposition:
+        `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`
+        (see `hidden_weights_learnable <GRUComposition.hidden_weights_learnable>` for additional details). 
+
+    hidden_biases_learnable : bool : default True
+        specifies whether learning is enabled specifically for the input biases of the GRUComposition:
+        (see `hidden_biases_learnable <GRUComposition.hidden_biases_learnable>` for additional details).
 
 
     Attributes
@@ -320,6 +343,22 @@ class GRUComposition(AutodiffComposition):
     enable_learning : bool
         determines whether learning is enabled for the GRUComposition
         (see `Learning <GRUComposition_Learning>` for additional details).
+        
+    input_weights_learnable : bool
+        determines whether learning is enabled specifically for the input weights of the GRUComposition:
+        `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`.
+
+    input_biases_learnable : bool
+        determines whether learning is enabled specifically for the input biases of the GRUComposition:
+        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, and `bias_in <GRUComposition.bias_in>`.
+
+    hidden_weights_learnable : bool
+        determines whether learning is enabled specifically for the hidden weights of the GRUComposition:
+        `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`. 
+
+    hidden_biases_learnable : bool
+        determines whether learning is enabled specifically for the hidden biases of the GRUComposition:
+        `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`.
 
     input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
@@ -526,17 +565,41 @@ class GRUComposition(AutodiffComposition):
                     :default value: None
                     :type: ``ProcessingMechanism``
 
+                hidden_biases_learnable
+                    see `hidden_biases_learnable <GRUComposition.hidden_biases_learnable>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 hidden_size
                     see `hidden_size <GRUComposition.hidden_size>`
 
                     :default value: 1
                     :type: ``int``
 
+                hidden_weights_learnable
+                    see `hidden_weights_learnable <GRUComposition.hidden_weights_learnable>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                input_biases_learnable
+                    see `input_biases_learnable <GRUComposition.input_weights_learnable>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 input_size
                     see `input_size <GRUComposition.input_size>`
 
                     :default value: 1
                     :type: ``int``
+
+                input_weights_learnable
+                    see `input_weights_learnable <GRUComposition.input_weights_learnable>`
+
+                    :default value: True
+                    :type: ``bool``
 
                 learning_rate
                     see `learning_results <GRUComposition.learning_rate>`
@@ -558,6 +621,10 @@ class GRUComposition(AutodiffComposition):
         hidden_state = Parameter(None, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
+        input_weights_learnable = Parameter(True, structural=True)
+        input_biases_learnable = Parameter(True, structural=True)
+        hidden_weights_learnable = Parameter(True, structural=True)
+        hidden_biases_learnable = Parameter(True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
@@ -569,7 +636,7 @@ class GRUComposition(AutodiffComposition):
             if not (isinstance(size, np.ndarray) and isinstance(size.tolist(),int)):
                 return 'must be an integer'
 
-        def _validate_bool(self, bias):
+        def _validate_bias(self, bias):
             if not isinstance(bias, bool):
                 return 'must be a boolean'
 
@@ -584,6 +651,10 @@ class GRUComposition(AutodiffComposition):
                  # bidirectional:bool=False,
                  learning_rate:float=None,
                  enable_learning:bool=True,
+                 input_weights_learnable:bool=True,
+                 input_biases_learnable:bool=True,
+                 hidden_weights_learnable:bool=True,
+                 hidden_biases_learnable:bool=True,
                  random_state=None,
                  seed=None,
                  name="GRU Composition",
@@ -599,8 +670,12 @@ class GRUComposition(AutodiffComposition):
                          # batch_first=batch_first,
                          # dropout=dropout,
                          # bidirectional=bidirectional,
-                         learning_rate = learning_rate,
-                         enable_learning = enable_learning,
+                         learning_rate=learning_rate,
+                         enable_learning=enable_learning,
+                         input_weights_learnable=True,
+                         input_biases_learnable=True,
+                         hidden_weights_learnable=True,
+                         hidden_biases_learnable=True,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
