@@ -91,16 +91,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         w_ih = torch_params['weight_ih_l0']
         w_hh = torch_params['weight_hh_l0']
 
+        # 2/16/25 - FIX: DEAL WITH THE FOLLOWING:
+        #                MOVE TO RELEVANT OTHER PLACE OR ASSIGN LEARNING RATES BASED ON COMPOSITION.learning_rate
         if composition.enable_learning:
-            if composition.input_weights_learnable:
+            if composition.input_weights_learning_rate:
                 w_ih.requires_grad = True
                 assert True
-                # FIX DEAL WITH THE FOLLOWING:
                 # optimizer.add_param_group({'params': w_ih, 'lr': composition.input_weights_learning_rate})
-            if composition.hidden_weights_learnable:
+            if composition.hidden_weights_learning_rate:
                 w_hh.requires_grad = True
                 assert True
-                # FIX DEAL WITH THE FOLLOWING:
                 # optimizer.add_param_group({'params': w_hh, 'lr': composition.hidden_weights_learning_rate})
 
         for pnl_proj, torch_matrix in zip(
@@ -114,13 +114,15 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             b_ih = torch_params['bias_ih_l0']
             b_hh = torch_params['bias_hh_l0']
 
+            # 2/16/25 - FIX: DEAL WITH THE FOLLOWING:
+            #                MOVE TO RELEVANT OTHER PLACE OR ASSIGN LEARNING RATES BASED ON COMPOSITION.learning_rate
             if composition.enable_learning:
-                if composition.input_biases_learnable:
+                if composition.input_biases_learning_rate:
                     b_ih.requires_grad = True
                     assert True
                     # FIX DEAL WITH THE FOLLOWING:
                     # optimizer.add_param_group({'params': b_ih, 'lr': composition.input_biases_learning_rate})
-                if composition.hidden_biases_learnable:
+                if composition.hidden_biases_learning_rate:
                     b_hh.requires_grad = True
                     assert True
                     # FIX DEAL WITH THE FOLLOWING:

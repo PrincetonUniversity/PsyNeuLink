@@ -36,7 +36,7 @@ class TestExecution:
         np.testing.assert_allclose(torch_results, gru.results, atol=1e-6)
 
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
-    def test_pytorch_learning_identicality_2(self, bias):
+    def test_pytorch_learning_identicality(self, bias):
         import torch
         inputs = [[1,2,3]]
         targets = [[1,1,1,1,1]]

@@ -113,6 +113,11 @@ An GRUComposition is created by calling its constructor.  There are four major e
 *Learning*
 ~~~~~~~~~~
 
+**Learning Rates**
+        If it is an int or a float, it will be used as the learning rate for all input weights if `enable_learning
+        <GRUComposition.enable_learning>` is True, irrespective of the GRUComposition's `learning_rate
+        <GRUComposition.learning_rate>`. If it is True
+
 
 .. _GRUComposition_Structure:
 
@@ -239,17 +244,17 @@ class GRUCompositionError(CompositionError):
 
 class GRUComposition(AutodiffComposition):
     """
-    GRUComposition(                     \
-        name="GRU_Composition"          \
-        input_size=1,                   \
-        hidden_size=1,                  \
-        bias=False                      \
-        learning_rate=.01               \
-        enable_learning=True            \
-        input_weights_learnable=True    \
-        input_biases_learnable=True     \
-        hidden_weights_learnable=True   \
-        hidden_biases_learnable=True    \
+    GRUComposition(                         \
+        name="GRU_Composition"              \
+        input_size=1,                       \
+        hidden_size=1,                      \
+        bias=False                          \
+        learning_rate=.01                   \
+        enable_learning=True                \
+        input_weights_learning_rate=True    \
+        input_biases_learning_rate=True     \
+        hidden_weights_learning_rate=True   \
+        hidden_biases_learning_rate=True    \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
@@ -296,22 +301,21 @@ class GRUComposition(AutodiffComposition):
         specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
         for additional details).
 
-    input_weights_learnable : bool : default True
-        specifies whether learning is enabled specifically for the input weights of the GRUComposition'
-        (see `input_weights_learnable <GRUComposition.input_weights_learnable>` for additional details).
+    input_weights_learning_rate : int, float or bool : default True
+        specifies the learning_rate specifically for the input weights of the GRUComposition'
+        (see `input_weights_learning_rate <GRUComposition.input_weights_learning_rate>` for additional details).
 
-    input_biases_learnable : bool : default True
-        specifies whether learning is enabled specifically for the input biases of the GRUComposition:
-        (see `input_biases_learnable <GRUComposition.input_biases_learnable>` for additional details).
+    input_biases_learning_rate : int, float or bool : default True
+        specifies the learning_rate specifically for the input biases of the GRUComposition'
+        (see `input_biases_learning_rate <GRUComposition.input_biases_learning_rate>` for additional details).
 
-    hidden_weights_learnable : bool : default True
-        specifies whether learning is enabled specifically for the hidden weights of the GRUComposition:
-        `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`
-        (see `hidden_weights_learnable <GRUComposition.hidden_weights_learnable>` for additional details). 
+    hidden_weights_learning_rate :
+        specifies the learning_rate specifically for the hidden weights of the GRUComposition'
+        (see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>` for additional details).
 
-    hidden_biases_learnable : bool : default True
-        specifies whether learning is enabled specifically for the input biases of the GRUComposition:
-        (see `hidden_biases_learnable <GRUComposition.hidden_biases_learnable>` for additional details).
+    hidden_biases_learning_rate : int, float or bool : default True
+        specifies the learning_rate specifically for the hidden biases of the GRUComposition'
+
 
 
     Attributes
@@ -344,21 +348,29 @@ class GRUComposition(AutodiffComposition):
         determines whether learning is enabled for the GRUComposition
         (see `Learning <GRUComposition_Learning>` for additional details).
         
-    input_weights_learnable : bool
-        determines whether learning is enabled specifically for the input weights of the GRUComposition:
-        `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`.
+    input_weights_learning_rate : int, flot or bool
+        determines the learning rate specifically for the weights of the `efferent projections
+        <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>`
+        of the GRUComposition: `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`,
+        and `wts_ir <GRUComposition.wts_ir>` (see `GRUComposition_Learning` for additional details).
 
-    input_biases_learnable : bool
-        determines whether learning is enabled specifically for the input biases of the GRUComposition:
-        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, and `bias_in <GRUComposition.bias_in>`.
+    input_biases_learning_rate : int, float or bool
+        determines the learning rate specifically for the biases influencing the `efferent projections
+        <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>` of the GRUComposition:
+        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`
+        (see `GRUComposition_Learning` for additional details).
 
-    hidden_weights_learnable : bool
-        determines whether learning is enabled specifically for the hidden weights of the GRUComposition:
-        `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`. 
+    hidden_weights_learning_rate : int, float or bool
+        determines the learning rate specifically for the weights of the `efferent projections
+        <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>`
+        of the GRUComposition: `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`,
+        `wts_hr <GRUComposition.wts_hr>` (see `GRUComposition_Learning` for additional details).
 
-    hidden_biases_learnable : bool
-        determines whether learning is enabled specifically for the hidden biases of the GRUComposition:
-        `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`.
+    hidden_biases_learning_rate : int, float or bool
+        determines the learning rate specifically for the biases influencing the `efferent projections
+        <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of
+        the GRUComposition: `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`,
+        `bias_hn <GRUComposition.bias_hn>` (see `GRUComposition_Learning` for additional details).
 
     input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
@@ -565,8 +577,8 @@ class GRUComposition(AutodiffComposition):
                     :default value: None
                     :type: ``ProcessingMechanism``
 
-                hidden_biases_learnable
-                    see `hidden_biases_learnable <GRUComposition.hidden_biases_learnable>`
+                hidden_biases_learning_rate
+                    see `hidden_biases_learning_rate <GRUComposition.hidden_biases_learning_rate>`
 
                     :default value: True
                     :type: ``bool``
@@ -577,14 +589,14 @@ class GRUComposition(AutodiffComposition):
                     :default value: 1
                     :type: ``int``
 
-                hidden_weights_learnable
-                    see `hidden_weights_learnable <GRUComposition.hidden_weights_learnable>`
+                hidden_weights_learning_rate
+                    see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>`
 
                     :default value: True
                     :type: ``bool``
 
-                input_biases_learnable
-                    see `input_biases_learnable <GRUComposition.input_weights_learnable>`
+                input_biases_learning_rate
+                    see `input_biases_learning_rate <GRUComposition.input_weights_learning_rate>`
 
                     :default value: True
                     :type: ``bool``
@@ -595,8 +607,8 @@ class GRUComposition(AutodiffComposition):
                     :default value: 1
                     :type: ``int``
 
-                input_weights_learnable
-                    see `input_weights_learnable <GRUComposition.input_weights_learnable>`
+                input_weights_learning_rate
+                    see `input_weights_learning_rate <GRUComposition.input_weights_learning_rate>`
 
                     :default value: True
                     :type: ``bool``
@@ -621,10 +633,10 @@ class GRUComposition(AutodiffComposition):
         hidden_state = Parameter(None, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
-        input_weights_learnable = Parameter(True, structural=True)
-        input_biases_learnable = Parameter(True, structural=True)
-        hidden_weights_learnable = Parameter(True, structural=True)
-        hidden_biases_learnable = Parameter(True, structural=True)
+        input_weights_learning_rate = Parameter(True, structural=True)
+        input_biases_learning_rate = Parameter(True, structural=True)
+        hidden_weights_learning_rate = Parameter(True, structural=True)
+        hidden_biases_learning_rate = Parameter(True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
@@ -651,10 +663,10 @@ class GRUComposition(AutodiffComposition):
                  # bidirectional:bool=False,
                  learning_rate:float=None,
                  enable_learning:bool=True,
-                 input_weights_learnable:bool=True,
-                 input_biases_learnable:bool=True,
-                 hidden_weights_learnable:bool=True,
-                 hidden_biases_learnable:bool=True,
+                 input_weights_learning_rate:bool=True,
+                 input_biases_learning_rate:bool=True,
+                 hidden_weights_learning_rate:bool=True,
+                 hidden_biases_learning_rate:bool=True,
                  random_state=None,
                  seed=None,
                  name="GRU Composition",
@@ -672,10 +684,10 @@ class GRUComposition(AutodiffComposition):
                          # bidirectional=bidirectional,
                          learning_rate=learning_rate,
                          enable_learning=enable_learning,
-                         input_weights_learnable=True,
-                         input_biases_learnable=True,
-                         hidden_weights_learnable=True,
-                         hidden_biases_learnable=True,
+                         input_weights_learning_rate=True,
+                         input_biases_learning_rate=True,
+                         hidden_weights_learning_rate=True,
+                         hidden_biases_learning_rate=True,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
