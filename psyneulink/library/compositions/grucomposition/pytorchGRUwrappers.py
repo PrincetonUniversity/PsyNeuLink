@@ -129,7 +129,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         # FIX: NEED TO IMPLEMENT "requires_grad" AT LEVEL OF PARAMETER.
 
-
         for pnl_proj, torch_matrix in zip(
                 [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
                 [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
@@ -321,6 +320,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         biases = None
         if torch_gru.bias:
+            # MODIFIED 2/16/25 OLD:
+            # FIX: CONSIDER TRANSPOSING AFTER CONVERTING TO NUMPY?
             # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
             b_ih = torch_gru_weights['bias_ih_l0']
             b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy(
