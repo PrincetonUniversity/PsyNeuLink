@@ -553,6 +553,9 @@ class UserDefinedFunction(Function_Base):
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
 
+        if custom_function is None:
+            raise FunctionError('custom_function cannot be None')
+
         cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
 
         # If params is specified as arg in custom function's definition, move it to params in UDF's constructor
