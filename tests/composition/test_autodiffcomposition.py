@@ -3959,5 +3959,5 @@ def test_training_xor_with_batching(batch_size, batched_results):
     if batched_results:
         np.testing.assert_allclose(torch_results, xor.results, rtol=1e-5)
     else:
-        torch_results_unbatched = torch_results.reshape( (NUM_EPOCHS * (len(X)//batch_size) * batch_size, 1, 1) )
+        torch_results_unbatched = torch_results.reshape( (NUM_EPOCHS * (len(X) // batch_size) * batch_size, 1, 1) )
         np.testing.assert_allclose(torch_results_unbatched, xor.results, rtol=1e-5)
