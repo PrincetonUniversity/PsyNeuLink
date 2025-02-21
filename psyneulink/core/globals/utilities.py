@@ -1928,7 +1928,7 @@ def parse_string_to_psyneulink_object_string(string):
     def is_pnl_obj(string):
         try:
             # remove parens to get rid of class instantiations
-            string = re.sub(r'\(.*?\)', '', string)
+            string = re.sub(r'\(.*\)', '', string)
             attr_sequence = string.split('.')
             obj = getattr(psyneulink, attr_sequence[0])
 
