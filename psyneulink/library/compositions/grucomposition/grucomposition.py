@@ -916,8 +916,9 @@ class GRUComposition(AutodiffComposition):
         # MODIFIED 2/16/25 NEW:
         # FIX: ENSURE HERE THAT LEARNABILITY IS SAME FOR ALL PROJECTIONS CORRESPONDING
         #      TO IH AND HH PARAMAETERS OF TORCH GRU MODULE
-        #      ADD COMPOSITOIN ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
+        #      ADD COMPOSITION ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
         # FIX: FOR NOW, JUST USE THIS:
+        # FIX: DEAL WITH INDIVIDUAL LEARNING RATES
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:
