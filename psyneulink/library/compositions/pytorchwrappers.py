@@ -1206,6 +1206,9 @@ class PytorchProjectionWrapper():
     function : _gen_pytorch_fct
         Pytorch version of the Projection's function assigned in its __init__.
 
+    matrix : torch.nn.Parameter
+        Pytorch parameter for the matrix of the Projection.
+
     """
 
     def __init__(self,

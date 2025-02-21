@@ -13,17 +13,14 @@ Contents
 --------
 
   * `GRUComposition_Overview`
-     - `Organization <GRUComposition_Organization>`
-     - `Operation <GRUComposition_Operation>`
   * `GRUComposition_Creation`
-     - `Learning <GRUComposition_Learning>`
   * `GRUComposition_Structure`
      - `Input <GRUComposition_Input>`
      - `Hidden Layer <GRUComposition_Hidden_Layer>`
      - `Output <GRUComposition_Output>`
   * `GRUComposition_Execution`
      - `Processing <GRUComposition_Processing>`
-     - `Learning <GRUComposition_Training>`
+     - `Learning <GRUComposition_Learning>`
   * `GRUComposition_Examples`
   * `GRUComposition_Class_Reference`
 
@@ -60,12 +57,42 @@ where :math:`\\cdot` is the dot product, :math:`\\odot` is the Hadamard product,
 current execution of the Composition *(t)* except for hidden, which uses the value from the prior execution *(t-1)*
 (see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
 
-.. _GRUComposition_Organization:
 
-**Organization**
+.. _GRUComposition_Creation:
+
+Creation
+--------
+
+An GRUComposition is created by calling its constructor.
+Creates a PytyorchGRUCompositionWrapper that implements the GRUComposition using the PyTorch `GRU module
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>` that is trained using PyTorch.
+
+FIX: ARGUMENTS TO CONSTRUCTOR
+
+
+**Learning Rates**
+        If it is an int or a float, it will be used as the learning rate for all input weights if `enable_learning
+        <GRUComposition.enable_learning>` is True, irrespective of the GRUComposition's `learning_rate
+        <GRUComposition.learning_rate>`. If it is True
+
+
+.. _GRUComposition_Structure:
+
+Structure
+---------
+
+.. figure:: _static/GRUComposition_fig.svg
+   :alt: GRU Composition
+   :width: 400
+   :align: center
+
+   **Structure of a GRUComposition** -- can be seen in more detail using the Composition's s `show_graph
+   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``.
 
 
 COMMENT:
+FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
+
 `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
 `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
 `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
@@ -95,46 +122,11 @@ where:
     b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
 COMMENT
 
-.. _GRUComposition_Operation:
-
-**Operation**
-
-
-.. _GRUComposition_Creation:
-
-Creation
---------
-
-An GRUComposition is created by calling its constructor.  There are four major elements that can be configured:
-
-
-.. _GRUComposition_Learning:
-
-*Learning*
-~~~~~~~~~~
-
-
-.. _GRUComposition_Structure:
-
-Structure
----------
-
-.. figure:: _static/GRUComposition_fig.svg
-   :alt: GRU Composition
-   :width: 400
-   :align: center
-
-   **Structure of a GRUComposition** -- can be seen in more detail using the Composition's s `show_graph
-   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``.
-
 .. _GRUComposition_Input:
 
 *Input*
 ~~~~~~~
 
-The inputs corresponding to each key and value field are represented as `INPUT <NodeRole.INPUT>` `Nodes
-<Composition_Nodes>` of the GRUComposition, listed in its `query_input_nodes <GRUComposition.query_input_nodes>`
-and `value_input_nodes <GRUComposition.value_input_nodes>` attributes, respectively,
 
 .. _GRUComposition_Hidden_Layer:
 
@@ -167,7 +159,7 @@ Execution
 ~~~~~~~~~~~~
 
 
-.. _GRUComposition_Training:
+.. _GRUComposition_Learning:
 
 *Training*
 ~~~~~~~~~~
@@ -216,7 +208,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import ExecutionMode
 
 
-
 __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE_NAME', 'HIDDEN_LAYER_NODE_NAME', 'RESET_NODE_NAME',
            'UPDATE_NODE_NAME', 'NEW_NODE_NAME', 'OUTPUT_NODE_NAME']
@@ -239,11 +230,17 @@ class GRUCompositionError(CompositionError):
 
 class GRUComposition(AutodiffComposition):
     """
-    GRUComposition(             \
-        name="GRU_Composition"  \
-        input_size=1,           \
-        hidden_size=1,          \
-        bias=False              \
+    GRUComposition(                         \
+        name="GRU_Composition"              \
+        input_size=1,                       \
+        hidden_size=1,                      \
+        bias=False                          \
+        enable_learning=True                \
+        learning_rate=.01                   \
+        input_weights_learning_rate=True    \
+        hidden_weights_learning_rate=True   \
+        input_biases_learning_rate=True     \
+        hidden_biases_learning_rate=True    \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
@@ -281,14 +278,30 @@ class GRUComposition(AutodiffComposition):
      bidirectional : bool : default False
     COMMENT
 
+    enable_learning : bool : default True
+        specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
+        for additional details).
+
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <GRUComposition.field_weights>` not
         specified in `learn_field_weights <GRUComposition.learn_field_weights>` (see `learning_rate
         <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    enable_learning : bool : default True
-        specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
-        for additional details)
+    input_weights_learning_rate : float or bool : default True
+        specifies the learning_rate specifically for the input weights of the GRUComposition'
+        (see `input_weights_learning_rate <GRUComposition.input_weights_learning_rate>` for additional details).
+
+    hidden_weights_learning_rate : float or bool : default True
+        specifies the learning_rate specifically for the hidden weights of the GRUComposition'
+        (see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>` for additional details).
+
+    input_biases_learning_rate : float or bool : default True
+        specifies the learning_rate specifically for the input biases of the GRUComposition'
+        (see `input_biases_learning_rate <GRUComposition.input_biases_learning_rate>` for additional details).
+
+    hidden_biases_learning_rate : float or bool : default True
+        specifies the learning_rate specifically for the hidden biases of the GRUComposition'
+        (see `input_biases_learning_rate <GRUComposition.input_biases_learning_rate>` for additional details).
 
 
     Attributes
@@ -312,14 +325,38 @@ class GRUComposition(AutodiffComposition):
      bidirectional : bool : default False
     COMMENT
 
+    enable_learning : bool
+        determines whether learning is enabled for the GRUComposition
+        (see `Learning <GRUComposition_Learning>` for additional details).
+        
     learning_rate : float
         determines the default learning_rate for `field_weights <GRUComposition.field_weights>`
         not specified in `learn_field_weights <GRUComposition.learn_field_weights>`
         (see `learning_rate <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    enable_learning : bool
-        determines whether learning is enabled for the GRUComposition
-        (see `Learning <GRUComposition_Learning>` for additional details).
+    input_weights_learning_rate : flot or bool
+        determines the learning rate specifically for the weights of the `efferent projections
+        <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>`
+        of the GRUComposition: `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`,
+        and `wts_ir <GRUComposition.wts_ir>` (see `GRUComposition_Learning` for additional details).
+
+    hidden_weights_learning_rate : float or bool
+        determines the learning rate specifically for the weights of the `efferent projections
+        <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>`
+        of the GRUComposition: `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`,
+        `wts_hr <GRUComposition.wts_hr>` (see `GRUComposition_Learning` for additional details).
+
+    input_biases_learning_rate : float or bool
+        determines the learning rate specifically for the biases influencing the `efferent projections
+        <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>` of the GRUComposition:
+        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`
+        (see `GRUComposition_Learning` for additional details).
+
+    hidden_biases_learning_rate : float or bool
+        determines the learning rate specifically for the biases influencing the `efferent projections
+        <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of
+        the GRUComposition: `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`,
+        `bias_hn <GRUComposition.bias_hn>` (see `GRUComposition_Learning` for additional details).
 
     input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
@@ -360,52 +397,62 @@ class GRUComposition(AutodiffComposition):
     wts_in : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`; corresponds to
-        :math:`W_{in}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        :math:`W_{in}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     wts_iu : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`; corresponds
         to :math:`W_{iz}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_ir : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds
         to :math:`W_{ir}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_nh : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `new_node <GRUComposition.new_node>` to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_hr : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`;
         corresponds to :math:`W_{hr}` in the PyTorch `GRU module
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_hu : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
         that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `update_node
         <GRUComposition.update_node>`; corresponds to :math:`W_{hz}` in the PyTorch `GRU module
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_hn : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`;
         corresponds to :math:`W_{hn}` in the PyTorch `GRU module
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        (see `GRUComposition_Structure` for additional information).
 
     wts_hh : MappingProjection
         `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to itself (i.e., the recurrent Projection).
+        (see `GRUComposition_Structure` for additional information).
 
     wts_ho : MappingProjection
         `MappingProjection` with fixed `matrix <MappingProjection.matrix>` ("connection weights") that projects from
         the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `output_node <GRUComposition.output_node>`.
+        (see `GRUComposition_Structure` for additional information).
 
     reset_gate : GatingProjection
         `GatingProjection` that gates the input to the `new_node <GRUComposition.new_node>` from the `input_node
         <GRUComposition.input_node>`; its `value <GatingProjection.value>` is used in the Hadamard product with
         the input to produce the new (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`.
+        (see `GRUComposition_Structure` for additional information).
 
     new_gate : GatingProjection
         `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the
@@ -413,43 +460,48 @@ class GRUComposition(AutodiffComposition):
         with the (external) input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from the `new_node
         <GRUComposition.new_node>`, which determines how much of the `hidden_layer_node
         <GRUComposition.hidden_layer_node>`\\'s new state is determined by the external input vs. its prior state.
+        (see `GRUComposition_Structure` for additional information).
 
     recurrent_gate : GatingProjection
         `GatingProjection` that gates the input to the `hidden_layer_node <GRUComposition.hidden_layer_node>` from its
         recurrent projection (`wts_hh <GRUComposition.wts_hh>`); its `value <GatingProjection.value>` is used in the
         in the Hadamard product with the recurrent input to the `hidden_layer_node <GRUComposition.hidden_layer_node>`,
         which determines how much of the `hidden_layer_node <GRUComposition.hidden_layer_node>`\\'s
-        new state is determined by its prior state vs.its external input.
+        new state is determined by its prior state vs.its external input
+        (see `GRUComposition_Structure` for additional information).
 
     bias_ir_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_ir <GRUComposition.bias_ir>`) provides the
         the bias to weights (`wts_ir <GRUComposition.wts_ir>`) from the `input_node <GRUComposition.input_node>` to the
-        `reset_node <GRUComposition.reset_node>`.
+        `reset_node <GRUComposition.reset_node>` (see `GRUComposition_Structure` for additional information).
 
     bias_iu_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_iu <GRUComposition.bias_iu>`) provides
         the the bias to weights (`wts_iu <GRUComposition.wts_iu>`) from the `input_node <GRUComposition.input_node>`
-        to the `update_node <GRUComposition.update_node>`.
+        to the `update_node <GRUComposition.update_node>` (see `GRUComposition_Structure` for additional information).
 
     bias_in_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_in <GRUComposition.bias_in>`) provides the
         the bias to weights (`wts_in <GRUComposition.wts_in>`) from the `input_node <GRUComposition.input_node>` to the
-        `new_node <GRUComposition.new_node>`.
+        `new_node <GRUComposition.new_node>` (see `GRUComposition_Structure` for additional information).
 
     bias_hr_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_hr <GRUComposition.bias_hr>`) provides the
         the bias to weights (`wts_hr <GRUComposition.wts_hr>`) from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`.
+        <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`
+        (see `GRUComposition_Structure` for additional information).
 
     bias_hu_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_hu <GRUComposition.bias_hu>`) provides the
         the bias to weights (`wts_hu <GRUComposition.wts_hu>`) from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`.
+        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`
+        (see `GRUComposition_Structure` for additional information).
 
     bias_hn_node : ProcessingMechanism
         `BIAS` `Node <Composition_Nodes>`, the Projection from which (`bias_hn <GRUComposition.bias_hn>`) provides the
         the bias to weights (`wts_hn <GRUComposition.wts_hn>`) from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`.
+        <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`
+        (see `GRUComposition_Structure` for additional information).
 
     biases : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>` from the `BIAS <NodeRole.BIAS>` `Nodes of
@@ -461,39 +513,45 @@ class GRUComposition(AutodiffComposition):
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_ir <GRUComposition.wts_ir>`, from the `input_node <GRUComposition.input_node>`
         to the `reset_node <GRUComposition.reset_node>`; corresponds to the :math:`b_ir` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     bias_iu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_iu <GRUComposition.wts_iu>`, from the `input_node <GRUComposition.input_node>`
         to the `update_node <GRUComposition.update_node>`; corresponds to the :math:`b_iz` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     bias_in : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_in <GRUComposition.wts_in>`, from the `input_node <GRUComposition.input_node>`
         to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_in` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     bias_hr : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hr <GRUComposition.wts_hr>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds to the
         :math:`b_hr` bias parameter of the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     bias_hu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hu <GRUComposition.wts_hu>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`; corresponds to the
         :math:`b_hz` bias parameter of the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
 
     bias_hn : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hn <GRUComposition.wts_hn>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_hn`
-        bias parameter of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        bias parameter of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        (see `GRUComposition_Structure` for additional information).
     """
 
     componentCategory = GRU_COMPOSITION
@@ -526,17 +584,41 @@ class GRUComposition(AutodiffComposition):
                     :default value: None
                     :type: ``ProcessingMechanism``
 
+                hidden_biases_learning_rate
+                    see `hidden_biases_learning_rate <GRUComposition.hidden_biases_learning_rate>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 hidden_size
                     see `hidden_size <GRUComposition.hidden_size>`
 
                     :default value: 1
                     :type: ``int``
 
+                hidden_weights_learning_rate
+                    see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>`
+
+                    :default value: True
+                    :type: ``bool``
+
+                input_biases_learning_rate
+                    see `input_biases_learning_rate <GRUComposition.input_weights_learning_rate>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 input_size
                     see `input_size <GRUComposition.input_size>`
 
                     :default value: 1
                     :type: ``int``
+
+                input_weights_learning_rate
+                    see `input_weights_learning_rate <GRUComposition.input_weights_learning_rate>`
+
+                    :default value: True
+                    :type: ``bool``
 
                 learning_rate
                     see `learning_results <GRUComposition.learning_rate>`
@@ -558,6 +640,10 @@ class GRUComposition(AutodiffComposition):
         hidden_state = Parameter(None, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
+        input_weights_learning_rate = Parameter(True, structural=True)
+        hidden_weights_learning_rate = Parameter(True, structural=True)
+        input_biases_learning_rate = Parameter(True, structural=True)
+        hidden_biases_learning_rate = Parameter(True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
 
@@ -569,9 +655,25 @@ class GRUComposition(AutodiffComposition):
             if not (isinstance(size, np.ndarray) and isinstance(size.tolist(),int)):
                 return 'must be an integer'
 
-        def _validate_bool(self, bias):
+        def _validate_bias(self, bias):
             if not isinstance(bias, bool):
                 return 'must be a boolean'
+
+        def _validate_input_weights_learning_rate(self, rate):
+            if not isinstance(rate, (float, bool)):
+                return 'must be a float or a boolean'
+
+        def _validate_hidden_weights_learning_rate(self, rate):
+            if not isinstance(rate, (float, bool)):
+                return 'must be a float or a boolean'
+
+        def _validate_input_biases_learning_rate(self, rate):
+            if not isinstance(rate, (float, bool)):
+                return 'must be a float or a boolean'
+
+        def _validate_hidden_biases_learning_rate(self, rate):
+            if not isinstance(rate, (float, bool)):
+                return 'must be a float or a boolean'
 
     @check_user_specified
     def __init__(self,
@@ -584,6 +686,10 @@ class GRUComposition(AutodiffComposition):
                  # bidirectional:bool=False,
                  learning_rate:float=None,
                  enable_learning:bool=True,
+                 input_weights_learning_rate:bool=True,
+                 hidden_weights_learning_rate:bool=True,
+                 input_biases_learning_rate:bool=True,
+                 hidden_biases_learning_rate:bool=True,
                  random_state=None,
                  seed=None,
                  name="GRU Composition",
@@ -599,8 +705,12 @@ class GRUComposition(AutodiffComposition):
                          # batch_first=batch_first,
                          # dropout=dropout,
                          # bidirectional=bidirectional,
-                         learning_rate = learning_rate,
-                         enable_learning = enable_learning,
+                         learning_rate=learning_rate,
+                         enable_learning=enable_learning,
+                         input_weights_learning_rate=input_weights_learning_rate,
+                         hidden_weights_learning_rate=hidden_weights_learning_rate,
+                         input_biases_learning_rate=input_biases_learning_rate,
+                         hidden_biases_learning_rate=hidden_biases_learning_rate,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
@@ -806,8 +916,9 @@ class GRUComposition(AutodiffComposition):
         # MODIFIED 2/16/25 NEW:
         # FIX: ENSURE HERE THAT LEARNABILITY IS SAME FOR ALL PROJECTIONS CORRESPONDING
         #      TO IH AND HH PARAMAETERS OF TORCH GRU MODULE
-        #      ADD COMPOSITOIN ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
+        #      ADD COMPOSITION ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
         # FIX: FOR NOW, JUST USE THIS:
+        # FIX: DEAL WITH INDIVIDUAL LEARNING RATES
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:
