@@ -1778,4 +1778,4 @@ class AutodiffComposition(Composition):
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
-        self._show_graph.show_graph(*args, **kwargs)
+        return self._show_graph.show_graph(*args, **kwargs)
