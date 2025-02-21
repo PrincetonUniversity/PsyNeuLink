@@ -30,6 +30,7 @@ setup(
 
     description='A block modeling system for cognitive neuroscience',
     long_description=long_description,
+    long_description_content_type='text/x-rst',
 
     # Github address.
     url='https://github.com/PrincetonUniversity/PsyNeuLink',
