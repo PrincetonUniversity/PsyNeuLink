@@ -919,6 +919,30 @@ class GRUComposition(AutodiffComposition):
         #      ADD COMPOSITION ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
         # FIX: FOR NOW, JUST USE THIS:
         # FIX: DEAL WITH INDIVIDUAL LEARNING RATES
+        # # MODIFIED 2/16/25 OLD:
+        # learning_rate = self.enable_learning
+        #
+        # for projection in self.learnable_projections:
+        #
+        #     if self.enable_learning is False:
+        #         projection.learnable = False
+        #         continue
+        #
+        #     if learning_rate is False:
+        #         projection.learnable = False
+        #         continue
+        #
+        #     elif learning_rate is True:
+        #         # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
+        #         learning_rate = self.learning_rate
+        #
+        #     assert isinstance(learning_rate, (int, float)), \
+        #         (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
+        #
+        #     projection.learnable = True
+        #     if projection.learning_mechanism:
+        #         projection.learning_mechanism.learning_rate = learning_rate
+        # MODIFIED 2/16/25 NEW:
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:
@@ -941,6 +965,7 @@ class GRUComposition(AutodiffComposition):
             projection.learnable = True
             if projection.learning_mechanism:
                 projection.learning_mechanism.learning_rate = learning_rate
+        # MODIFIED 2/16/25 END
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
@@ -957,17 +982,13 @@ class GRUComposition(AutodiffComposition):
         """Set weights for Projections to input_node and hidden_layer_node."""
 
         # MODIFIED 2/16/25 NEW:
-        # FIX: CHECK IF TORCH GRU EXISTS YET (CHECK FOR pytorch_representation != None); I.E., LEARNING HAS OCCURRED
+        # FIX: CHECK IF TORCH GRU EXISTS YET (CHECK FOR pytorch_representation != None; i.e., LEARNING HAS OCCURRED;
         #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
         FROM_ARG = 0
         PNL = 1
         for wts in zip(weights,
-                       [self.wts_ir.parameters.matrix,
-                        self.wts_iu.parameters.matrix,
-                        self.wts_in.parameters.matrix,
-                        self.wts_hr.parameters.matrix,
-                        self.wts_hu.parameters.matrix,
-                        self.wts_hn.parameters.matrix]):
+                       [self.wts_ir.parameters.matrix, self.wts_iu.parameters.matrix, self.wts_in.parameters.matrix,
+                        self.wts_hr.parameters.matrix, self.wts_hu.parameters.matrix, self.wts_hn.parameters.matrix]):
             assert wts[FROM_ARG].shape == wts[PNL]._get(context).shape, \
                 (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
                  f"({wts[FROM_ARG].shape}) does not match required shape ({wts[PNL].shape}).)")
@@ -975,13 +996,12 @@ class GRUComposition(AutodiffComposition):
             # wts[PNL].parameter_ports['matrix'].parameters.value._set(wts[FROM_ARG], context)
 
         if biases:
-            for b in zip(biases,
-                           [self.bias_ir.parameters.matrix,
-                            self.bias_iu.parameters.matrix,
-                            self.bias_in.parameters.matrix,
-                            self.bias_hr.parameters.matrix,
-                            self.bias_hu.parameters.matrix,
-                            self.bias_hn.parameters.matrix]):
+            for b in zip(biases, [self.bias_ir.parameters.matrix,
+                                  self.bias_iu.parameters.matrix,
+                                  self.bias_in.parameters.matrix,
+                                  self.bias_hr.parameters.matrix,
+                                  self.bias_hu.parameters.matrix,
+                                  self.bias_hn.parameters.matrix]):
                 assert b[FROM_ARG].shape == b[PNL]._get(context).shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
                      f"({b[FROM_ARG].shape}) does not match required shape ({b[PNL].get(context)[0].shape}).")
@@ -997,9 +1017,8 @@ class GRUComposition(AutodiffComposition):
 
         input_size = self.parameters.input_size.get()
         hidden_size = self.parameters.hidden_size.get()
-        # MODIFIED 2/16/25 OLD:
-        # self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME, input_shapes=self.input_size)
-        # MODIFIED 2/16/25 END
+
+        # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
         # self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
@@ -1008,41 +1027,20 @@ class GRUComposition(AutodiffComposition):
                                             function=MatrixTransform(
                                                 default_variable=np.zeros(input_size),
                                                 matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-        # MODIFIED 2/16/25 OLD:
-        self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
-        # self.gru_mech.function = torch.nn.GRU(input_size=input_size, hidden_size=hidden_size, bias=self.bias)
-        # MODIFIED 2/16/25 END
-
-        # # FIX: 2/16/25 IS THIS CORRECT:
-        # self.parameters.hidden_state._set(torch.tensor(self.hidden_layer_node.value.astype(np.float32),
-        #                                                device=self.device), context)
 
         target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
+
+        # Add nodes to GRUComposition
         context = Context(source=ContextFlags.METHOD)
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # self.targets_from_outputs_map = {target_mech: self.gru_mech}
-        # self.outputs_to_targets_map = {self.gru_mech: target_mech}
         self.targets_from_outputs_map = {target_mech: self.output_node}
         self.outputs_to_targets_map = {self.output_node: target_mech}
         self.target_node = target_mech
 
         return [target_mech]
-
-    # @handle_external_context()
-    # def set_weights_from_torch_gru(self, torch_gru, context=None):
-    #     """Copy weights from PyTorch GRU module to the GRUComposition's Projections."""
-    #     from psyneulink.library.compositions.grucomposition import GRUCompositionError
-    #     from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
-    #
-    #     weights, biases = PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
-    #     weights = tuple([weight.numpy() for weight in weights])
-    #     if torch_gru.bias:
-    #         biases = tuple([bias.numpy() for bias in biases])
-    #     self.set_weights(weights, biases, context)
-
 
     # *****************************************************************************************************************
     # *********************************** Execution Methods  **********************************************************

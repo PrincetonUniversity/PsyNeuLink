@@ -60,28 +60,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_parameters = torch_gru.parameters
         self._projection_map = {}
 
-        # MODIFIED 2/16/25 OLD:
-        # # Pytorch Weight matrices
-        # torch_input_params = torch_params['weight_ih_l0']
-        # torch_ir = torch_input_params[:z_idx].T
-        # torch_iz = torch_input_params[z_idx:n_idx].T
-        # torch_in = torch_input_params[n_idx:].T
-        # torch_hidden_params = torch_params['weight_hh_l0']
-        # torch_hr = torch_hidden_params[:z_idx].T
-        # torch_hu = torch_hidden_params[z_idx:n_idx].T
-        # torch_hn = torch_hidden_params[n_idx:].T
-        #
-        #     # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-        #     b_ih = torch_params['bias_ih_l0']
-        #     b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-        #     b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-        #     b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1)))
-        #     b_hh = torch_params['bias_hh_l0']
-        #     b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-        #     b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-        #     b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1)))
-        # MODIFIED 2/16/25 NEW
-
         # Pytorch parameter info
         torch_params = torch_gru.state_dict()
         hid_len = pnl.hidden_size
@@ -92,7 +70,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         w_hh = torch_params['weight_hh_l0']
 
         # 2/16/25 - FIX: DEAL WITH THE FOLLOWING:
-        #                MOVE TO RELEVANT OTHER PLACE OR ASSIGN LEARNING RATES BASED ON COMPOSITION.learning_rate
+        #                MOVE TO GRU OR AT LEAST COORDINATE WITH GRUComposition._set_learning_attributes
         if composition.enable_learning:
             if composition.input_weights_learning_rate:
                 w_ih.requires_grad = True
@@ -114,8 +92,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             b_ih = torch_params['bias_ih_l0']
             b_hh = torch_params['bias_hh_l0']
 
-            # 2/16/25 - FIX: DEAL WITH THE FOLLOWING:
-            #                MOVE TO RELEVANT OTHER PLACE OR ASSIGN LEARNING RATES BASED ON COMPOSITION.learning_rate
             if composition.enable_learning:
                 if composition.input_biases_learning_rate:
                     b_ih.requires_grad = True
