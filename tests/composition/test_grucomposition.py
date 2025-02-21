@@ -22,19 +22,21 @@ class TestExecution:
 
         h0 = torch.tensor(np.array([[0,0,0,0,0]]).astype(np.float32))
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
         result, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),h0)
         torch_results = [result.detach().numpy()]
         result, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),hn)
         torch_results.append(result.detach().numpy())
 
         gru = GRUComposition(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
-        gru.set_weights_from_torch_gru(torch_gru)
+        # gru.set_weights_from_torch_gru(torch_gru)
+        gru.set_weights(*torch_gru_initial_weights)
         gru.run(inputs={gru.input_node:inputs}, num_trials=2)
 
         np.testing.assert_allclose(torch_results, gru.results, atol=1e-6)
 
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
-    def test_pytorch_learning_identicality(self, bias):
+    def test_pytorch_learning_identicality_2(self, bias):
         import torch
         inputs = [[1,2,3]]
         targets = [[1,1,1,1,1]]
@@ -74,5 +76,3 @@ class TestExecution:
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         # Compare results from after learning:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
-
-
