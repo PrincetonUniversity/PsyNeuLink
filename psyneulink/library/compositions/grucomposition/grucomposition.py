@@ -142,7 +142,7 @@ from the `new_node <GRUComposition.new_node>` (current input) and the prior stat
 <GRUComposition.hidden_layer_node>` (i.e., the input it receives from its recurrent Projection).  The `output_node
 <GRUComposition.output_node>` receives the output of current state of the `hidden_layer_node
 <GRUComposition.hidden_layer_node>` that is provided as the output of the GRUComposition.  The `reset_gate
-<GRUComposition.reset_gate>` and `update_gate <GRUComposition.update_gate>` are `GatingMechanisms <GatingMechanism>`,
+<GRUComposition.reset_gate>` and `update_node <GRUComposition.update_node>` are `GatingMechanisms <GatingMechanism>`,
 while the other nodes are all `Processing Mechanisms <ProcessingMechanism>`.
 
 .. note::
@@ -161,18 +161,16 @@ Execution
 ~~~~~~~~~~~~
 
 The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
-<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
-`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
+<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden_layer <GRUComposition.hidden_layer_node>`
+`Nodes <Composition_Nodes>` when it is executed, corresponding to the terms of the function in the PyTorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
 
-
-FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
 `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
 `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
 `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
 `bias_hr <GRUComposition.bias_hr>`
 
-`update <GRUComposition.update_gate>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
+`update <GRUComposition.update_node>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
 `input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
 `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
 
@@ -181,21 +179,25 @@ FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
 `reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
 `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)
 
-`hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_gate>`\\(t)) *
-`new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_gate>`\\(t) * `hidden_layer
+`hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_node>`\\(t)) *
+`new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_node>`\\(t) * `hidden_layer
 <GRUComposition.hidden_layer_node>`\\(t-1)
 
 
 where:
     r(t) = reset gate
+
     z(t) = update gate
+
     n(t) = new gate
+
     h(t) = hidden layer
+
     x(t) = input
+
     W_ir, W_iz, W_in, W_hr, W_hz, W_hn = input, update, and reset weights
+
     b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
-
-
 
 
 
@@ -216,8 +218,8 @@ current execution of the Composition *(t)* except for hidden, which uses the val
 
 .. technical_note::
     The `full Composition <GRUComposition_Structure>` is executed when its `run <Composition.run>` method is
-    called with **execution_mode** set to ExecutionMode.Python`, or if torch_available is False.  Otherwise, and
-    always in a call to `learn <AutodiffComposition.learn>`, the Composition is executed using the PyTorch `GRU
+    called with **execution_mode** set to `ExecutionMode.Python`, or if ``torch_available`` is False.  Otherwise, and
+    always in a call to `learn <AutodiffComposition.learn>`, the GRUComposition is executed using the PyTorch `GRU
     <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module with values of the individual
     computations copied back to Nodes of the full GRUComposition at times determined by the value of the
     `synch_node_values_with_torch <AutodiffComposition.synch_node_values_with_torch>` option.
@@ -241,14 +243,15 @@ occur the following conditions must obtain:
 
   .. note:: Because a GRUComposition uses the PyTorch `GRU
      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module to implement its computations during
-     learning, its `learn <AutodiffComposition.learn>` method can only be called with the **execution_mode** argument
-     set to `ExecutionMode.PyTorch` (the default).
+     learning, its `learn <AutodiffComposition.learn>` method can only be called with the **execution_mode**
+     argument set to `ExecutionMode.PyTorch` (the default).
 
-The GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module to
-implement its computations during learning. After learning, the values of the module's parameters are copied to the
-weight `matrices <MappingProjection.matrix>` of the corresponding `MappingProjections <MappingProjection>`, and results
-of computations are copied to the `values <Mechanism_Base.value>` of the corresponding `Nodes <Composition_Nodes>` in
-the GRUComposition.
+The GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
+to implement its computations during learning. After learning, the values of the module's parameters are copied
+to the weight `matrices <MappingProjection.matrix>` of the corresponding `MappingProjections <MappingProjection>`,
+and results of computations are copied to the `values <Mechanism_Base.value>` of the corresponding `Nodes
+<Composition_Nodes>` in the GRUComposition at times determined by the value of the `synch_node_values_with_torch
+<AutodiffComposition.synch_node_values_with_torch>` option.
 
 COMMENT:
 .. _GRUComposition_Examples:
