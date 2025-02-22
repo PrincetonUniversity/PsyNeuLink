@@ -18,6 +18,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import ALL, INPUTS
+from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
 
@@ -47,7 +48,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
-        self._instantiate_pytorch_projection_wrappers(composition, device, context)
 
     def _instantiate_pytorch_projection_wrappers(self, composition, device, context):
         """Create PytorchGRUProjectionWrappers for each learnable Projection of GRUComposition
@@ -68,62 +68,24 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         w_ih = torch_params['weight_ih_l0']
         w_hh = torch_params['weight_hh_l0']
-
-        # 2/16/25 - FIX: DEAL WITH THE FOLLOWING:
-        #                MOVE TO GRU OR AT LEAST COORDINATE WITH GRUComposition._set_learning_attributes
-        if composition.enable_learning:
-            if composition.input_weights_learning_rate:
-                w_ih.requires_grad = True
-                assert True
-                # optimizer.add_param_group({'params': w_ih, 'lr': composition.input_weights_learning_rate})
-            if composition.hidden_weights_learning_rate:
-                w_hh.requires_grad = True
-                assert True
-                # optimizer.add_param_group({'params': w_hh, 'lr': composition.hidden_weights_learning_rate})
-
-        for pnl_proj, torch_matrix in zip(
-                [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn],
-                [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
-                 (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]):
+        torch_gru_wts_indices = [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
+                                 (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]
+        pnl_proj_wts = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
+        for pnl_proj, torch_matrix in zip(pnl_proj_wts, torch_gru_wts_indices):
             self._projection_map[pnl_proj] = PytorchGRUProjectionWrapper(pnl_proj, torch_matrix, device, context)
+        self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
 
         if pnl.bias:
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE_NAME}.bias=False. "
             b_ih = torch_params['bias_ih_l0']
             b_hh = torch_params['bias_hh_l0']
-
-            if composition.enable_learning:
-                if composition.input_biases_learning_rate:
-                    b_ih.requires_grad = True
-                    assert True
-                    # FIX DEAL WITH THE FOLLOWING:
-                    # optimizer.add_param_group({'params': b_ih, 'lr': composition.input_biases_learning_rate})
-                if composition.hidden_biases_learning_rate:
-                    b_hh.requires_grad = True
-                    assert True
-                    # FIX DEAL WITH THE FOLLOWING:
-                    # optimizer.add_param_group({'params': b_hh, 'lr': composition.hidden_biases_learning_rate})
-
-            for pnl_bias_proj, torch_bias in zip(
-                    [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn],
-                    [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
-                     (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]):
+            torch_gru_bias_indices = [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
+                                      (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]
+            pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
+            for pnl_bias_proj, torch_bias in zip(pnl_biases, torch_gru_bias_indices):
                 self._projection_map[pnl_bias_proj] = PytorchGRUProjectionWrapper(pnl_bias_proj, torch_bias,
                                                                                   device, context)
-
-        # # 2/16/25 - FIX: ??INCORPORATE: (NORMALLY DONE IN PytorchProjectionWrapper)
-        # #                IS THIS THE SAME AS copy_weights_to_torch_gru()?
-        # matrix = projection.parameters.matrix.get(context=context)
-        # if matrix is None:
-        #     matrix = projection.parameters.matrix.get(context=None)
-        # # Create a Pytorch Parameter for the matrix
-        # self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
-        #                                  device=device,
-        #                                  dtype=torch.double))
-        #
-        # self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
-        #                                  device=device,
-        #                                  dtype=torch.double))
+            self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
 
         self.copy_weights_to_torch_gru(context)
 
@@ -351,19 +313,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         mechanism.function = function_wrapper.function
 
         # MODIFIED 2/16/25 NEW:
-        # FIX: FROM SCRIPT;  SHOULD ALWAYS DO THIS:  COPY PNL WEIGHTS TO TORCH PARAMETERS OF GRU NODE
-        #                    THAT WAY, grucomposition.set_weights() can be used to initialize model's weights
-        #                              that will be transferred to torch GRU module when it is created
-        #                    ALSO, set_weights should check if torch GRU module has been created, and if so,
-        #                    transfer the weights to it
-        #                    (THEN, IN SCRIPT, USE gru.set_weights() to assign from torch to pnl)
-        # # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
-        # pnl_gru.gru_mech.function.weight_hh_l0.data.copy_(torch_weights_before_learning['wts_hh'])
-        # pnl_gru.gru_mech.function.weight_ih_l0.data.copy_(torch_weights_before_learning['wts_ih'])
-        # if bias:
-        #     pnl_gru.gru_mech.function.bias_hh_l0.data.copy_(torch_weights_before_learning['bias_hh'])
-        #     pnl_gru.gru_mech.function.bias_ih_l0.data.copy_(torch_weights_before_learning['bias_ih'])
-
+        # FIX: ARE WEIGHTS BEING COPIED FROM PNL TO TORCH GRU MODULE?  IF SO, WHERE? IF NOT, SHOULD DO IT HERE
+        #      RELATIONSHIP TO _regenerate_paramlist
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)
@@ -416,16 +367,12 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     """
     def __init__(self, projection:MappingProjection, torch_parameter:tuple, device:str, context=None):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
+        # GRUComposition Projection being wrapped:
         self._projection = projection # PNL Projection being wrapped
+        # Assign parameter and tensor indices of Pytorch GRU module parameter corresponding to the Projection's matrix:
         self.torch_parameter, self.matrix_indices = torch_parameter
+        # Projections for GRUComposition are not included in autodiff; matrices are set directly in Pytorch GRU module:
         self._projection.exclude_in_autodiff = True
-
-    # 2/16/25  FIX: IS THIS NEEDED, SINCE PARAMETERS ALREADY EXIST ON GRU AND MATRICES ARE BEING ADDED DIRECTLY TO THAT?
-    def _regenerate_paramlist(self):
-        """Add Projection matrices to Pytorch Module's parameter list"""
-        self.params = torch.nn.ParameterList()
-        # for proj_wrapper in [p for p in self._projection_wrappers if not p._projection.exclude_in_autodiff]:
-        #     self.params.append(proj_wrapper.matrix)
 
     def set_torch_gru_parameter(self, context):
         """Set relevant part of tensor for parameter of Pytorch GRU module from GRUComposition's Projections."""
