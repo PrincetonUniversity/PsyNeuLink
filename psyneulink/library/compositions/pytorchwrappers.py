@@ -197,6 +197,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self._composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
+        self._optimizer_param_groups = []
 
         self._composition = composition
         self._wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
@@ -205,8 +206,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._projection_wrappers = [] # PytorchProjectionWrappers
         self._projection_map = {}  # maps Projections -> PytorchProjectionWrappers
-
         self.params = nn.ParameterList()
+        self._pnl_refs_to_torch_params_map = {} # API for PNL refs to PyTorch params (used by _parse_optimizer_params)
 
         self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.minibatch_loss_count = 0  # Count of losses within batch
@@ -376,6 +377,33 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_rcvr.add_afferent(pytorch_proj_wrapper)
             self._projection_map[projection] = pytorch_proj_wrapper
             self._projection_wrappers.append(pytorch_proj_wrapper)
+
+    def _parse_optimizer_params(self, context):
+        """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
+        composition = self._composition
+
+        # Replace pnl names with actual torch params as keys in optimizer_params
+        optimizer_params = self._composition._optimizer_params
+        for param_name in optimizer_params.copy():
+            param = self._pnl_refs_to_torch_params_map.get(param_name, None)
+            if param:
+                optimizer_params[param] = optimizer_params.pop(param_name)
+
+        # Parse learning rate specs in optimizer_params
+        for param, learning_rate in optimizer_params.items():
+            assert any(param is state_param for state_param in self.state_dict().values()), \
+                f"PROGRAM ERROR: {param} not in state_dict for '{self.name}'"
+            if composition.enable_learning is False:
+                param.requires_grad = False
+                param.requires_grad = False
+                param.requires_grad = False
+                param.requires_grad = False
+            else:
+                if learning_rate is not False:
+                    # If input_weights_learning_rate is True, use composition.learning_rate, else specified value
+                    lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
+                    param.requires_grad = True
+                    self._optimizer_param_groups.append({'params': param, 'lr': lr})
 
     def _instantiate_execution_sets(self, composition, execution_context, base_context):
         try:
@@ -1256,10 +1284,15 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
+        # 2/16/25 - FIX: USE Projection ITSELF AS KEY RATHER THAN ITS NAME?
+        self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
+        # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
+        #           cf _parse_optimizer_params():
         if projection.learnable is False:
             self.matrix.requires_grad = False
 
         self.function = projection.function._gen_pytorch_fct(device, context)
+
 
     def execute(self, variable):
         # return torch.matmul(variable, self.matrix)

@@ -105,6 +105,11 @@ Thus, when constructing the PyTorch version of an AutodiffComposition, the `bias
 <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of any PyTorch modules are set to False.
 However, biases can be implemented using `Composition_Bias_Nodes`.
 
+COMMENT:
+FIX: 2/16/25 - NEEDS TEXT
+.. _AutodiffComposition_Optimizer_Parameters:
+COMMENT
+
 
 .. _AutodiffComposition_Nesting:
 
@@ -403,6 +408,7 @@ class AutodiffComposition(Composition):
         loss_spec=Loss.MSE,
         weight_decay=0,
         learning_rate=0.001,
+        optimizer_params=None,
         disable_learning=False,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
@@ -434,6 +440,10 @@ class AutodiffComposition(Composition):
         specifies the learning rate passed to the optimizer if none is specified in the `learn
         <AutdodiffComposition.learn>` method of the AutodiffComposition;
         see `learning_rate <AutodiffComposition.learning_rate>` for additional details.
+
+    optimizer_params : Dict[str: value]
+        specifies parameters for the optimizer used for learning by the GRUComposition
+        (see `AutodiffComposition_Optimizer_Parameters` for details of specification.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -689,8 +699,9 @@ class AutodiffComposition(Composition):
                  pathways=None,
                  optimizer_type='sgd',
                  loss_spec=Loss.MSE,
-                 learning_rate=None,
                  weight_decay=0,
+                 learning_rate=None,
+                 optimizer_params:dict=None,
                  disable_learning=False,
                  force_no_retain_graph=False,
                  refresh_losses=False,
@@ -718,8 +729,8 @@ class AutodiffComposition(Composition):
             pathways=pathways,
             optimizer_type = optimizer_type,
             loss_spec = loss_spec,
-            learning_rate = learning_rate,
             weight_decay = weight_decay,
+            learning_rate = learning_rate,
             synch_projection_matrices_with_torch = synch_projection_matrices_with_torch,
             synch_node_variables_with_torch = synch_node_variables_with_torch,
             synch_node_values_with_torch = synch_node_values_with_torch,
@@ -733,6 +744,7 @@ class AutodiffComposition(Composition):
         self.targets_from_outputs_map = {} # Map from TARGETS nodes to any OUTPUT nodes from which they receive input
         self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
         self.optimizer_type = optimizer_type
+        self._optimizer_params = optimizer_params or {}
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
@@ -994,7 +1006,6 @@ class AutodiffComposition(Composition):
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
                     for pathway in _get_pytorch_backprop_pathway(self, node)]
 
-
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None, refresh=False)->PytorchCompositionWrapper:
@@ -1008,12 +1019,10 @@ class AutodiffComposition(Composition):
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
-        old_opt = self.parameters.optimizer._get(context)
         learning_rate = self._runtime_learning_rate or self.learning_rate
+        old_opt = self.parameters.optimizer._get(context)
         if old_opt is None or refresh:
-            opt = self._make_optimizer(self.optimizer_type, learning_rate, self.weight_decay, context)
-            self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
-            self.parameters.pytorch_representation._get(context).optimizer = opt
+            self._instantiate_optimizer(refresh, learning_rate, context)
 
         # Set up loss function
         if self.loss_function is not None:
@@ -1026,18 +1035,28 @@ class AutodiffComposition(Composition):
 
         return self.parameters.pytorch_representation._get(context)
 
-    def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, context):
+    def _instantiate_optimizer(self, refresh, learning_rate, context):
         if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
-        if optimizer_type not in ['sgd', 'adam']:
+        if self.optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
-        params = self.parameters.pytorch_representation._get(context).parameters()
-        if optimizer_type == 'sgd':
-            return optim.SGD(params, lr=learning_rate, weight_decay=weight_decay)
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        params = pytorch_rep.parameters()
+        if self.optimizer_type == 'sgd':
+            opt = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
-            return optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
+            opt = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
+
+        pytorch_rep._parse_optimizer_params(context)
+        for param_group in pytorch_rep._optimizer_param_groups:
+            opt.add_param_group(param_group)
+
+        # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
+        self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
+        # FIX: WHY NOT USE _set() HERE?
+        pytorch_rep.optimizer = opt
 
     def _get_loss(self, loss_spec):
         if not isinstance(self.loss_spec, (str, Loss)):

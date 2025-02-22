@@ -237,10 +237,7 @@ class GRUComposition(AutodiffComposition):
         bias=False                          \
         enable_learning=True                \
         learning_rate=.01                   \
-        input_weights_learning_rate=True    \
-        hidden_weights_learning_rate=True   \
-        input_biases_learning_rate=True     \
-        hidden_biases_learning_rate=True    \
+        optimizer_params=None               \
         )
 
     Subclass of `AutodiffComposition` that implements a single-layered gated recurrent network.
@@ -287,22 +284,9 @@ class GRUComposition(AutodiffComposition):
         specified in `learn_field_weights <GRUComposition.learn_field_weights>` (see `learning_rate
         <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    input_weights_learning_rate : float or bool : default True
-        specifies the learning_rate specifically for the input weights of the GRUComposition'
-        (see `input_weights_learning_rate <GRUComposition.input_weights_learning_rate>` for additional details).
-
-    hidden_weights_learning_rate : float or bool : default True
-        specifies the learning_rate specifically for the hidden weights of the GRUComposition'
-        (see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>` for additional details).
-
-    input_biases_learning_rate : float or bool : default True
-        specifies the learning_rate specifically for the input biases of the GRUComposition'
-        (see `input_biases_learning_rate <GRUComposition.input_biases_learning_rate>` for additional details).
-
-    hidden_biases_learning_rate : float or bool : default True
-        specifies the learning_rate specifically for the hidden biases of the GRUComposition'
-        (see `input_biases_learning_rate <GRUComposition.input_biases_learning_rate>` for additional details).
-
+    optimizer_params : Dict[str: value]
+        specifies parameters for the optimizer used for learning by the GRUComposition
+        (see `GRUComposition_Learning` for details of specification.
 
     Attributes
     ----------
@@ -334,29 +318,36 @@ class GRUComposition(AutodiffComposition):
         not specified in `learn_field_weights <GRUComposition.learn_field_weights>`
         (see `learning_rate <GRUComposition_Field_Weights_Learning>` for additional details).
 
-    input_weights_learning_rate : flot or bool
+    w_ih_learning_rate : flot or bool
         determines the learning rate specifically for the weights of the `efferent projections
         <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>`
         of the GRUComposition: `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`,
-        and `wts_ir <GRUComposition.wts_ir>` (see `GRUComposition_Learning` for additional details).
+        and `wts_ir <GRUComposition.wts_ir>`; corresponds to the 'weight_ih_l0' parameter of the
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+         (see `GRUComposition_Learning` for additional details).
 
-    hidden_weights_learning_rate : float or bool
+    w_hh_learning_rate : float or bool
         determines the learning rate specifically for the weights of the `efferent projections
         <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>`
         of the GRUComposition: `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`,
-        `wts_hr <GRUComposition.wts_hr>` (see `GRUComposition_Learning` for additional details).
+        `wts_hr <GRUComposition.wts_hr>`; corresponds to the 'weight_hh_l0' parameter of the
+        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+         (see `GRUComposition_Learning` for additional details).
 
-    input_biases_learning_rate : float or bool
+    b_ih_learning_rate : float or bool
         determines the learning rate specifically for the biases influencing the `efferent projections
         <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>` of the GRUComposition:
-        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`
-        (see `GRUComposition_Learning` for additional details).
+        `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`;
+        corresponds to the 'bias_ih_l0' parameter of the PyTorch `GRU module (see `GRUComposition_Learning` for
+        additional details).
 
-    hidden_biases_learning_rate : float or bool
+    b_hh_learning_rate : float or bool
         determines the learning rate specifically for the biases influencing the `efferent projections
         <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of
         the GRUComposition: `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`,
-        `bias_hn <GRUComposition.bias_hn>` (see `GRUComposition_Learning` for additional details).
+        `bias_hn <GRUComposition.bias_hn>`; corresponds to the 'bias_hh_l0' parameter of the PyTorch
+        `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ (see
+        `GRUComposition_Learning` for additional details).
 
     input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
@@ -684,12 +675,9 @@ class GRUComposition(AutodiffComposition):
                  # batch_first:bool=False,
                  # dropout:float=0.0,
                  # bidirectional:bool=False,
-                 learning_rate:float=None,
                  enable_learning:bool=True,
-                 input_weights_learning_rate:bool=True,
-                 hidden_weights_learning_rate:bool=True,
-                 input_biases_learning_rate:bool=True,
-                 hidden_biases_learning_rate:bool=True,
+                 learning_rate:float=None,
+                 optimizer_params:dict=None,
                  random_state=None,
                  seed=None,
                  name="GRU Composition",
@@ -705,12 +693,9 @@ class GRUComposition(AutodiffComposition):
                          # batch_first=batch_first,
                          # dropout=dropout,
                          # bidirectional=bidirectional,
-                         learning_rate=learning_rate,
                          enable_learning=enable_learning,
-                         input_weights_learning_rate=input_weights_learning_rate,
-                         hidden_weights_learning_rate=hidden_weights_learning_rate,
-                         input_biases_learning_rate=input_biases_learning_rate,
-                         hidden_biases_learning_rate=hidden_biases_learning_rate,
+                         learning_rate=learning_rate,
+                         optimizer_params=optimizer_params,
                          random_state = random_state,
                          seed = seed,
                          **kwargs
@@ -942,7 +927,7 @@ class GRUComposition(AutodiffComposition):
         #     projection.learnable = True
         #     if projection.learning_mechanism:
         #         projection.learning_mechanism.learning_rate = learning_rate
-        # MODIFIED 2/16/25 NEW:
+        # MODIFIED 2/16/25 NEW: FIX: IS THIS STILL NEEDED?
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:
