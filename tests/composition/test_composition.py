@@ -8106,8 +8106,7 @@ class TestFeedbackProjections:
         A, B, C = self._gen_mechs(3)
         comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
-        exp_feedback = [eff for eff in C.efferents if eff.receiver.owner is A]
-        assert comp.feedback_projections == exp_feedback
+        assert comp.feedback_projections == A.get_afferents(C)
 
     def test_branch(self):
         a, b, c, d = self._gen_mechs(4)
@@ -8142,10 +8141,7 @@ class TestFeedbackProjections:
                 [a, c, (MappingProjection, True), a],
             ]
         )
-        exp_feedback = [
-            eff for eff in b.efferents + c.efferents if eff.receiver.owner is a
-        ]
-        assert comp.feedback_projections == exp_feedback
+        assert comp.feedback_projections == b.get_efferents(a) + c.get_efferents(a)
 
     def test_extended_loop(self):
         a, b, c, d, e, f = self._gen_mechs(6)
@@ -8157,8 +8153,7 @@ class TestFeedbackProjections:
         comp = Composition(
             pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, True), d]]
         )
-        exp_feedback = [eff for eff in b.efferents if eff.receiver.owner is d]
-        assert comp.feedback_projections == exp_feedback
+        assert comp.feedback_projections == b.get_efferents(d)
 
 
 class TestMisc:
