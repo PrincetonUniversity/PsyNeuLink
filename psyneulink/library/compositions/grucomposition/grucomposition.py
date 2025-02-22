@@ -35,10 +35,6 @@ through its `hidden_layer_node <GRUComposition.hidden_layer_node>`. This impleme
 a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement
 it when its `learn <GRUComposition.learn>` method is called.
 
-.. note:: Because a GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-   module to implement its computations during learning, its `learn <AutodiffComposition.learn>` method can only be
-   called with the **execution_mode** argument set to `ExecutionMode.PyTorch` (the default).
-
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
@@ -91,16 +87,52 @@ FIX: MOVE TO AUTODIFFCOMPOSITION:
 Structure
 ---------
 
+The GRUComposition assigns a node to each of the computations of the PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, and a Projetion to each of
+its weight and bias parameters, as shown in the figure below:
+
 .. figure:: _static/GRUComposition_fig.svg
    :alt: GRU Composition
    :width: 400
    :align: center
 
    **Structure of a GRUComposition** -- can be seen in more detail using the Composition's s `show_graph
-   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``.
+   <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``;
+   can also be seen with biases added by setting the **show_bias** argument to ``True`` in the constructor.
 
-COMMENT:
-FIX: LIMITED TO ONE LAYER AT PRESENT
+The `input_node <GRUComposition.input_node>` receives the input to the GRUComposition, and passes it to the
+`hidden_layer_node <GRUComposition.hidden_layer_node>`, that implements the recurrence and integration function of
+a GRU.  The `reset_node <GRUComposition.reset_node>` gates the input to the `new_node<GRUComposition.new_node>`. The
+`update_node <GRUComposition.update_node>` gates the input to the `hidden_layer_node<GRUComposition.hidden_layer_node>`
+from the `new_node <GRUComposition.new_node>` (current input) and the prior state of the `hidden_layer_node
+<GRUComposition.hidden_layer_node>` (i.e., the input it receives from its recurrent Projection).  The `output_node
+<GRUComposition.output_node>` receives the output of current state of the `hidden_layer_node
+<GRUComposition.hidden_layer_node>` that is provided as the output of the GRUComposition.  The `reset_gate
+<GRUComposition.reset_gate>` and `update_gate <GRUComposition.update_gate>` are `GatingMechanisms <GatingMechanism>`,
+while the other nodes are all `Processing Mechanisms <ProcessingMechanism>`.
+
+.. note::
+   The GRUComposition is limited to a single layer GRU at present, thus its ``num_layers`` argument is not
+   implemented.  Similarly, ``dropout`` and ``bidirectional`` arguments are not yet implemented.  These will
+   be added in a future version.
+
+
+Execution
+---------
+
+.. _GRUComposition_Processing:
+
+*Processing*
+~~~~~~~~~~~~
+
+The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
+<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
+`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
+
+
+
+
 
 FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
 `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
@@ -130,35 +162,10 @@ where:
     x(t) = input
     W_ir, W_iz, W_in, W_hr, W_hz, W_hn = input, update, and reset weights
     b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
-COMMENT
-
-.. _GRUComposition_Input:
-
-*Input*
-~~~~~~~
 
 
-.. _GRUComposition_Hidden_Layer:
-
-*Hidden Layer*
-~~~~~~~~~~~~~~
 
 
-.. _GRUComposition_Output:
-
-*Output*
-~~~~~~~~
-
-
-.. _GRUComposition_Execution:
-
-Execution
----------
-
-The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
-<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
-`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
 
 .. math::
 
@@ -183,17 +190,11 @@ current execution of the Composition *(t)* except for hidden, which uses the val
     computations copied back to Nodes of the full GRUComposition at times determined by the value of the
     `synch_node_values_with_torch <AutodiffComposition.synch_node_values_with_torch>` option.
 
-.. _GRUComposition_Processing:
-
-*Processing*
-~~~~~~~~~~~~
-
 
 .. _GRUComposition_Learning:
 
 *Learning*
 ~~~~~~~~~~
-
 
 If `learn <Composition.learn>` is called, `enable_learning <GRUComposition.enable_learning>` is True, then errors
 will be computed for
@@ -244,6 +245,10 @@ GRUComposition's `learning_rate <GRUComposition.learning_rate>`. If it is True, 
 `learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights. If it is False,
 the GRUComposition's `learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights.
 COMMENT
+
+.. note:: Because a GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+   module to implement its computations during learning, its `learn <AutodiffComposition.learn>` method can only be
+   called with the **execution_mode** argument set to `ExecutionMode.PyTorch` (the default).
 
 .. _GRUComposition_Examples:
 
