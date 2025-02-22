@@ -30,50 +30,60 @@ Overview
 --------
 
 The GRUComposition a subclass of `AutodiffComposition` that implements a single-layered gated recurrent network,
-which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
-the flow of information through the RecurrentTransferMechanism.  This corresponds to the PyTorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement it when its `learn
-<GRUComposition.learn>` method is called with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
+which uses a set of `GatingMechanisms <GatingMechanism>` to implement gates that  modulate the flow of information
+through its `hidden_layer_node <GRUComposition.hidden_layer_node>`. This implements the exact same computations as
+a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement
+it when its `learn <GRUComposition.learn>` method is called.
+
+.. note:: Because a GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+   module to implement its computations during learning, its `learn <AutodiffComposition.learn>` method can only be
+   called with the **execution_mode** argument set to `ExecutionMode.PyTorch` (the default).
 
 COMMENT:
 FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
-The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
-<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
-`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
-
-.. math::
-
-   &reset = Logistic(wts\\_ir \\cdot input + bias\\_ir + wts\\_hr \\cdot hidden + bias\\_hr)
-
-   &update = Logistic(wts\\_iu \\cdot input + bias\\_iu + wts\\_hu \\cdot hidden + bias\\_hu)
-
-   &new = Tanh(wts\\_in \\cdot input + bias\\_in + reset \\cdot (wts\\_hn \\cdot hidden + bias\\_hn))
-
-   &hidden = (1 - update) \\odot new + update \\odot hidden
-
-where :math:`\\cdot` is the dot product, :math:`\\odot` is the Hadamard product, and all values are for the
-current execution of the Composition *(t)* except for hidden, which uses the value from the prior execution *(t-1)*
-(see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
-
 
 .. _GRUComposition_Creation:
 
 Creation
 --------
 
-An GRUComposition is created by calling its constructor.
-Creates a PytyorchGRUCompositionWrapper that implements the GRUComposition using the PyTorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>` module that is trained using PyTorch.
+An GRUComposition is created by calling its constructor.  When it's `learn <AutoDiffComposition.learn>`
+method is called, it automatically creates a PytorchGRUCompositionWrapper that implements the GRUComposition
+using the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>` module, that is trained
+using PyTorch. Its constructor takes the following arguments that are in addition to or handled differently
+than `AutodiffComposition`:
 
-FIX: ARGUMENTS TO CONSTRUCTOR
+**input_size** (int):  specifies the length of the input array to the GRUComposition, and the size
+of the `input_node <GRUComposition.input_node>`, which can be different than **hidden_size**.
+
+**hidden_size** (int): specifies the length of the internal ("hidden") state of the GRUComposition,
+and the size of the `hidden_layer_node <GRUComposition.hidden_layer_node>` and all nodes other
+than the `input_node<GRUComposition.input_node>`, which can be different than **input_size**.
+
+**bias** (bool): specifies whether the GRUComposition includes `BIAS <NodeRole.BIAS>` `Nodes <Composition_Nodes>`
+and the corresponding `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module uses
+bias vectors in its computations.
+
+**enable_learning** (bool): specifies whether learning is enabled for the GRUComposition
+(see `Learning <GRUComposition_Learning>`).
+
+**learning_rate** (bool or float): specifies the default learning_rate for the parameters of the Pytorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified for individual
+parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its
+`learn <AutodiffComposition.learn>` method. If it is an int or a float, that is used as the default learning rate
+for parameters
 
 
-**Learning Rates**
-        If it is an int or a float, it will be used as the learning rate for all input weights if `enable_learning
         <GRUComposition.enable_learning>` is True, irrespective of the GRUComposition's `learning_rate
         <GRUComposition.learning_rate>`. If it is True
+
+**optimizer_params**: specifies parameters for the optimizer used for learning by the GRUComposition
+(see `GRUComposition_Learning` for details of specification).
+
+
+FIX: MOVE TO AUTODIFFCOMPOSITION:
+**Learning Rates**
 
 
 .. _GRUComposition_Structure:
@@ -144,6 +154,26 @@ COMMENT
 
 Execution
 ---------
+
+The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
+<GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
+`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
+
+.. math::
+
+   &reset = Logistic(wts\\_ir \\cdot input + bias\\_ir + wts\\_hr \\cdot hidden + bias\\_hr)
+
+   &update = Logistic(wts\\_iu \\cdot input + bias\\_iu + wts\\_hu \\cdot hidden + bias\\_hu)
+
+   &new = Tanh(wts\\_in \\cdot input + bias\\_in + reset \\cdot (wts\\_hn \\cdot hidden + bias\\_hn))
+
+   &hidden = (1 - update) \\odot new + update \\odot hidden
+
+where :math:`\\cdot` is the dot product, :math:`\\odot` is the Hadamard product, and all values are for the
+current execution of the Composition *(t)* except for hidden, which uses the value from the prior execution *(t-1)*
+(see `Cycles <Composition_Cycle>` for handling of recurrence and cycles).
+
 
 .. technical_note::
     The `full Composition <GRUComposition_Structure>` is executed when its `run <Composition.run>` method is
