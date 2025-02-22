@@ -162,28 +162,27 @@ Execution
 
 The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
 <GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden_layer <GRUComposition.hidden_layer_node>`
-`Nodes <Composition_Nodes>` when it is executed, corresponding to the terms of the function in the PyTorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
+`Nodes <Composition_Nodes>` when it is executed:
 
-`reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
-`input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
-`wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
-`bias_hr <GRUComposition.bias_hr>`
+    `reset <GRUComposition.reset_gate>`\\(t) = `Logistic`\\[(`wts_ir <GRUComposition.wts_ir>` *
+    `input <GRUComposition.input_node>`) + `bias_ir <GRUComposition.bias_ir>` +
+    (`wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1)) +
+    `bias_hr <GRUComposition.bias_hr>`)]
 
-`update <GRUComposition.update_node>`\\(t) = `Logistic`(`wts_iu <GRUComposition.wts_iu>` *
-`input <GRUComposition.input_node>` + `bias_iu <GRUComposition.bias_iu>` + `wts_hu <GRUComposition.wts_hu>` *
-`hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hu <GRUComposition.bias_hu>`
+    `update <GRUComposition.update_node>`\\(t) = `Logistic`\\[(`wts_iu <GRUComposition.wts_iu>` *
+    `input <GRUComposition.input_node>`) + `bias_iu <GRUComposition.bias_iu>` + (`wts_hu <GRUComposition.wts_hu>` *
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1)) + `bias_hu <GRUComposition.bias_hu>`]
 
-`new <GRUComposition.new_node>`\\(t) = :math:`tanh`(`wts_in <GRUComposition.wts_in>` *
-`input <GRUComposition.input_node>` + `bias_in <GRUComposition.bias_in>` +
-`reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
-`hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)
+    `new <GRUComposition.new_node>`\\(t) = :math:`tanh`\\[(`wts_in <GRUComposition.wts_in>` *
+    `input <GRUComposition.input_node>`) + `bias_in <GRUComposition.bias_in>` +
+    (`reset <GRUComposition.reset_gate>`\\(t) * (`wts_hn <GRUComposition.wts_hn>` *
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t-1) + `bias_hn <GRUComposition.bias_hn>`)]
 
-`hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = (1 - `update <GRUComposition.update_node>`\\(t)) *
-`new <GRUComposition.new_node>`\\(t) + `update <GRUComposition.update_node>`\\(t) * `hidden_layer
-<GRUComposition.hidden_layer_node>`\\(t-1)
+    `hidden_layer <GRUComposition.hidden_layer_node>`\\(t) = [(1 - `update <GRUComposition.update_node>`\\(t)) *
+    `new <GRUComposition.new_node>`\\(t)] + [`update <GRUComposition.update_node>`\\(t) * `hidden_layer
+    <GRUComposition.hidden_layer_node>`\\(t-1)]
 
-
+COMMENT:
 where:
     r(t) = reset gate
 
@@ -198,8 +197,9 @@ where:
     W_ir, W_iz, W_in, W_hr, W_hz, W_hn = input, update, and reset weights
 
     b_ir, b_iz, b_in, b_hr, b_hz, b_hn = input, update, and reset biases
+COMMENT
 
-
+This corresponds to the computations of the `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
 
 .. math::
 
