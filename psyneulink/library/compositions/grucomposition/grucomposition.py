@@ -33,11 +33,11 @@ The GRUComposition a subclass of `AutodiffComposition` that implements a single-
 which uses a set of `GatingMechanisms <GatingMechanism>` to implement gates that  modulate the flow of information
 through its `hidden_layer_node <GRUComposition.hidden_layer_node>`. This implements the exact same computations as
 a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement
-it when its `learn <GRUComposition.learn>` method is called.
-
-COMMENT:
-FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
-COMMENT
+it when its `learn <GRUComposition.learn>` method is called.  When it is executed in Python model, it functions
+in the same way as a `GRUCell <https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html>`_ module, processing
+its input one stimulus at a time.  However, when used for `learning <GRUComposition_Learning>`, it is executed as
+a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, so that it can used to
+process an entire sequence of stimuli at once, and learn to predict the next stimulus in the sequence.
 
 .. _GRUComposition_Creation:
 
@@ -50,36 +50,74 @@ using the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.h
 using PyTorch. Its constructor takes the following arguments that are in addition to or handled differently
 than `AutodiffComposition`:
 
-**input_size** (int):  specifies the length of the input array to the GRUComposition, and the size
+**input_size** (int) specifies the length of the input array to the GRUComposition, and the size
 of the `input_node <GRUComposition.input_node>`, which can be different than **hidden_size**.
 
-**hidden_size** (int): specifies the length of the internal ("hidden") state of the GRUComposition,
+**hidden_size** (int) specifies the length of the internal ("hidden") state of the GRUComposition,
 and the size of the `hidden_layer_node <GRUComposition.hidden_layer_node>` and all nodes other
 than the `input_node<GRUComposition.input_node>`, which can be different than **input_size**.
 
-**bias** (bool): specifies whether the GRUComposition includes `BIAS <NodeRole.BIAS>` `Nodes <Composition_Nodes>`
+**bias** (bool) specifies whether the GRUComposition includes `BIAS <NodeRole.BIAS>` `Nodes <Composition_Nodes>`
 and the corresponding `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module uses
 bias vectors in its computations.
 
-**enable_learning** (bool): specifies whether learning is enabled for the GRUComposition
-(see `Learning <GRUComposition_Learning>`).
+.. _GRUComposition_Learning:
+
+**enable_learning** (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
+no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called.
 
 **learning_rate** (bool or float): specifies the default learning_rate for the parameters of the Pytorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified for individual
-parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its
-`learn <AutodiffComposition.learn>` method. If it is an int or a float, that is used as the default learning rate
-for parameters
+parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its `learn
+<AutodiffComposition.learn>` method. If it is an int or a float, that is used as the default learning rate for the
+GRUComposition; if it is None or True, the GRUComposition's default `learning_rate <GRUComposition.learning_rate>`
+(.001) is used; if it is False, then learning will occur only for parameters for which an explicit learning_rate
+has been specified in the **optimizer_params** argument of the GRUComposition's constructor
+COMMENT: FIX CORRECT?
+or in the call to its `learn <AutodiffComposition.learn>` method
+COMMENT
+.
 
+.. _GRUComposition_Individual_Learning_Rates:
 
-        <GRUComposition.enable_learning>` is True, irrespective of the GRUComposition's `learning_rate
-        <GRUComposition.learning_rate>`. If it is True
+**optimizer_params** (dict): used to specify parameter-specific learning rates, which supercede the value of the
+GRUCompositon's `learning_rate <GRUComposition.learning_rate>`. Keys of the dict must reference parameters of the
+`GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, and values their learning_rates,
+as described below.
 
-**optimizer_params**: specifies parameters for the optimizer used for learning by the GRUComposition
-(see `GRUComposition_Learning` for details of specification).
+  **Keys** for specifying individual parameters in the **optimizer_params** dict:
 
+    - *`w_ih`*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
+      <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
+      is stored in the `w_ih_learning_rate <GRUComposition.w_ih_learning_rate>` attribute of the GRUComposition;
 
-FIX: MOVE TO AUTODIFFCOMPOSITION:
-**Learning Rates**
+    - *`w_hh`*: learning rate for the ``weight_hh_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+      `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`; its
+      value is stored in the `w_hh_learning_rate <GRUComposition.w_hh_learning_rate>` attribute of the GRUComposition;
+
+    - *`b_ih`*: learning rate for the ``bias_ih_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `bias_ir
+      <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`; its value
+      is stored in the `b_ih_learning_rate <GRUComposition.b_ih_learning_rate>` attribute of the GRUComposition;
+
+    - *`b_hh`*: learning rate for the ``bias_hh_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+      `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`; its
+      value is stored in the `b_hh_learning_rate <GRUComposition.b_hh_learning_rate>` attribute of theGRUComposition.
+
+  **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
+
+    - *int or float*: the value is used as the learning_rate;
+
+    - *True or None*: the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>` is used;
+
+    - *False*: the parameter is not learned.
 
 
 .. _GRUComposition_Structure:
@@ -116,7 +154,6 @@ while the other nodes are all `Processing Mechanisms <ProcessingMechanism>`.
    implemented.  Similarly, ``dropout`` and ``bidirectional`` arguments are not yet implemented.  These will
    be added in a future version.
 
-
 Execution
 ---------
 
@@ -129,9 +166,6 @@ The GRUComposition implements the following computations by its `reset <GRUCompo
 <GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
 `Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
-
-
-
 
 
 FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
@@ -196,55 +230,28 @@ current execution of the Composition *(t)* except for hidden, which uses the val
 *Learning*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called, `enable_learning <GRUComposition.enable_learning>` is True, then errors
-will be computed for
+Learning is executed using the `learn` method in same way as a standard `AutodiffComposition`.  For learning to
+occur, the GRUComposition's `enable_learning <GRUComposition.enable_learning>` attribute must be `True` (its default),
+the GRUCompositions's `learning_rate <GRUComposition.learning_rate>` and/or the `learning_rate individual
+parameters <GRUComposition_Individual_Learning_Rates>` must not all be False.
 
-COMMENT:
-FIX: SEE `AutodiffComposition_Learning_Rates` FOR DETAILS OF LEARNING_RATE OF COMPOSITION
-FIX: RELATIONSHIP TO ENABLE_LEARNING
-COMMENT
-*Learning Rates*.   If the **learning_rate** argument of the GRUComposition's constructor is specified,
-it will be  used as the default learning rate for the parameters of the Pytorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module. This can be overridden by specifying a learning
-rate in the call to the GRUComposition's `learn <AutodiffComposition.learn>` method. The learning rate for individual
-parameters can also be specified in the **optimizer_params** argument of the GRUComposition's constructor, that
-overrides any learning rate specified for the GRUComposition itself. The following keys can be used in the
-**optimizer_params** dict to specify learning rates for individual parameters:
 
-    - *`w_ih`*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
-      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
-      <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
-      is stored in the `w_ih_learning_rate <GRUComposition.w_ih_learning_rate>` attribute of the GRUComposition.
 
-    - *`w_hh`*: learning rate for the ``weight_hh_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
-      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
-      `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`; its
-      value is stored in the `w_hh_learning_rate <GRUComposition.w_hh_learning_rate>` attribute of the GRUComposition.
+, and the **optimizer_params** argument of the GRUComposition's constructor
 
-    - *`b_ih`*: learning rate for the ``bias_ih_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
-      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `bias_ir
-      <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`; its value
-      is stored in the `b_ih_learning_rate <GRUComposition.b_ih_learning_rate>` attribute of the GRUComposition.
+`False` and/or individual
+learning
 
-    - *`b_hh`*: learning rate for the ``bias_hh_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
-      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
-      `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`; its
-      value is stored in the `b_hh_learning_rate <GRUComposition.b_hh_learning_rate>` attribute of theGRUComposition.
 
-COMMENT:
-learning_rate <GRUComposition.learning_rate>` is specified, it will be used as the learning
-rate for all input weights if `enable_learning <GRUComposition.enable_learning>` is True, irrespective of the
-GRUComposition's `learning_rate <GRUComposition.learning_rate>`. If it is an int or a float, it will be used as the
-learning rate for all input weights if `enable_learning <GRUComposition.enable_learning>` is True, irrespective of the
-GRUComposition's `learning_rate <GRUComposition.learning_rate>`. If it is True, the GRUComposition's `learning_rate
-<GRUComposition.learning_rate>` will be used as the learning rate for all input weights. If it is False, the GRUComposition's
-`learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights. If it is False,
-the GRUComposition's `learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights.
-COMMENT
+and the **execution_mode** argument of the `learn` method must be set to `ExecutionMode.PyTorch` (the default). The
+GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module to
+implement its computations during learning.
+
+
+
+learning rates are determined by default, constructoin, and individual params (see XXX)
+
+After learning, values and weights and are copied back to the full Composition (see XXX)
 
 .. note:: Because a GRUComposition uses the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
    module to implement its computations during learning, its `learn <AutodiffComposition.learn>` method can only be
@@ -362,7 +369,7 @@ class GRUComposition(AutodiffComposition):
         specifies whether learning is enabled for the GRUComposition (see `Learning <GRUComposition_Learning>`
         for additional details).
 
-    learning_rate : float : default .01
+    learning_rate : float : default .001
         specifies the default learning_rate for `field_weights <GRUComposition.field_weights>` not
         specified in `learn_field_weights <GRUComposition.learn_field_weights>` (see `learning_rate
         <GRUComposition_Field_Weights_Learning>` for additional details).
