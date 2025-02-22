@@ -52,17 +52,18 @@ class CompositionRunner():
         """Convert a list of numpy arrays to a list of PyTorch tensors"""
 
         import torch
+        torch_dtype = self._composition.torch_dtype if hasattr(self._composition, 'torch_dtype') else torch.float64
 
         # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
         # converting directly to tensors for lists of np.ndarrays is slow.
         if type(v[0]) == np.ndarray:
-            t = torch.from_numpy(np.array(v))
+            t = torch.tensor(torch.from_numpy(np.array(v)), dtype=torch_dtype)
         else:
             try:
-                t = torch.tensor(v)
+                t = torch.tensor(v, dtype=torch_dtype)
             except ValueError:
                 # We probably have a ragged array, so we need to convert to a list of tensors
-                t = [[torch.tensor(y).double() for y in x] for x in v]
+                t = [[torch.tensor(y, dtype=torch_dtype) for y in x] for x in v]
 
         # Assume that the input port dimension is singleton and add it for 2D inputs
         if isinstance(t, torch.Tensor) and t.ndim < 3:

@@ -1297,6 +1297,7 @@ class AutodiffComposition(Composition):
                 # Pass along inputs to all INPUT Nodes except TARGETS
                 # (those are handled separately in _get_autodiff_targets_values)
                 if torch_available:
+                    # Convert to torch tensor of type expected by PytorchCompositionWrapper
                     values = torch.tensor(values, dtype=self.torch_dtype, device=self.device)
                 autodiff_input_dict[node] = values
         return autodiff_input_dict
@@ -1316,6 +1317,15 @@ class AutodiffComposition(Composition):
         def get_target_value(target):
             if target in self.get_nodes_by_role(NodeRole.INPUT):
                 return input_dict[target]
+                # value = input_dict[target]
+                # if torch_available and self.torch_dtype:
+                #     # Convert to torch tensor of type expected by PytorchCompositionWrapper
+                #     if isinstance(value, list):
+                #         for i, val in enumerate(value):
+                #             value[i] = torch.tensor(val, dtype=self.torch_dtype, device=self.device)
+                #     else:
+                #         value = torch.tensor(value, dtype=self.torch_dtype, device=self.device)
+                # return value
             if len(target.path_afferents) > 1:
                 raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}')"
                                                f"cannot have more than one afferent projection.")
@@ -1323,12 +1333,6 @@ class AutodiffComposition(Composition):
             return get_target_value(target)
 
         for target in self.targets_from_outputs_map:
-            # if torch_available:
-            #     target_values[target] = [torch.tensor(np.atleast_1d(targ_val),
-            #                                          dtype=self.torch_dtype,
-            #                                          device=self.device) for targ_val in get_target_value(target)]
-            # else:
-            #     target_values[target] = np.atleast_1d(get_target_value(target))
             target_values[target] = get_target_value(target)
         return target_values
 

@@ -96,7 +96,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         standalone Composition; otherwise, those will be ignored and the outputs will be used by the aggregate_afferents
         method(s) of the other node(s) that receive Projections from the GRUComposition.
         """
-        # Reshape iput for GRU module (from float64 to float32
+        # Reshape input for GRU module (from float64 to float32)
         inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(np.float32))
         hidden_state = self._composition.hidden_state
         output, self.hidden_state = self._wrapped_nodes[0].execute([inputs, hidden_state], context)
