@@ -141,6 +141,8 @@ except ImportError:
 from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR,
                                               MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
+
+
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',

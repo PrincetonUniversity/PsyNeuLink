@@ -2665,7 +2665,6 @@ class Mechanism_Base(Mechanism):
         for input_item, input_port in zip(input, self.input_ports):
             if input_port.default_input_shape.size == np.array(input_item).size:
                 from psyneulink.core.compositions.composition import RunError
-
                 # Assign input_item as input_port.variable
                 input_port.parameters.variable._set(np.atleast_2d(input_item), context)
 
