@@ -3298,7 +3298,11 @@ class Graph(object):
         # For now, just prune the first flexible edge each time. Maybe
         # look for "best" edges to prune in future by frequency in
         # cycles, if that occurs
-        for parent, child in flexible_edges:
+        try:
+            flexible_edges_iter = sorted(flexible_edges)
+        except TypeError:
+            flexible_edges_iter = flexible_edges
+        for parent, child in flexible_edges_iter:
             cycles = [c for c in connected_components if len(c) > 1]
 
             if len(cycles) == 0:
