@@ -6600,6 +6600,52 @@ class TestInputSpecifications:
                 num_trials = 2
             len(ocomp.results)==num_trials
 
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize(
+        'merge_targets_1', [True, False], ids=['merge_targets_1', 'separate_targets_1'],
+    )
+    @pytest.mark.parametrize(
+        'merge_targets_2', [True, False], ids=['merge_targets_2', 'separate_targets_2'],
+    )
+    def test_targets_order(self, merge_targets_1, merge_targets_2):
+        in_1 = pnl.TransferMechanism(name='in_1', input_shapes=1)
+        in_2 = pnl.TransferMechanism(name='in_2', input_shapes=2)
+        out_1 = pnl.TransferMechanism(name='out_1', input_shapes=1)
+        out_2 = pnl.TransferMechanism(name='out_2', input_shapes=2)
+
+        comp = pnl.AutodiffComposition(
+            name='comp',
+            pathways=[
+                [in_1, out_1],
+                [in_1, out_2],
+                [in_2, out_1],
+                [in_2, out_2],
+            ],
+        )
+
+        in_1_train = [0, 0, 0, 1, 1, 1]
+        in_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+        out_1_train = [0, 0, 0, 1, 1, 1]
+        out_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+
+        inp_1 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_1: out_1_train, out_2: out_2_train},
+        }
+        inp_2 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_2: out_2_train, out_1: out_1_train},
+        }
+        if merge_targets_1:
+            inp_1 = {'inputs': inp_1}
+        if merge_targets_2:
+            inp_2 = {'inputs': inp_2}
+
+        res_1 = comp.learn(**inp_1, execution_mode=pnl.ExecutionMode.PyTorch, context=1)
+        res_2 = comp.learn(**inp_2, execution_mode=pnl.ExecutionMode.PyTorch, context=2)
+
+        np.testing.assert_array_equal(res_1, res_2)
+
 
 class TestProperties:
 
