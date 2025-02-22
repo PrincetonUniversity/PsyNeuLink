@@ -862,8 +862,7 @@ class TestExecution:
                            [[25., 50., 75.], [27.75, 55.5,  83.25]]]
 
         input_nodes = em.query_input_nodes + em.value_input_nodes
-        inputs = {input_nodes[i]:inputs[i] for
-                  i in range(len(input_nodes))}
+        inputs = {input_nodes[i]: inputs[i] for i in range(len(input_nodes))}
         em.run(inputs=inputs, execution_mode=exec_mode)
         np.testing.assert_equal(em.memory, expected_memory)
 
