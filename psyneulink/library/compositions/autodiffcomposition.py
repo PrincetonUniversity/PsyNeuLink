@@ -19,6 +19,7 @@ Contents
           - `AutodiffComposition_Modulatory_Mechanisms`
           - `AutodiffComposition_Bias_Parameters`
           - `AutodiffComposition_Nesting`
+          - `AutodiffComposition_Learning_Rates`
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
           - `AutodiffComposition_PyTorch`
@@ -105,12 +106,6 @@ Thus, when constructing the PyTorch version of an AutodiffComposition, the `bias
 <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>`_ parameter of any PyTorch modules are set to False.
 However, biases can be implemented using `Composition_Bias_Nodes`.
 
-COMMENT:
-FIX: 2/16/25 - NEEDS TEXT
-.. _AutodiffComposition_Optimizer_Parameters:
-COMMENT
-
-
 .. _AutodiffComposition_Nesting:
 
 *Nesting*
@@ -134,13 +129,30 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
    cause an error if the `learn <AutodiffComposition.learn>` method of an AutodiffComposition is executed in
    `Python mode <AutodiffComposition_Python>` or `LLVM mode <AutodiffComposition_LLVM>`.
 
+.. _AutodiffComposition_Learning_Rates:
+
+*Learning Rates and Optimizer Params*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The **optimizer_params** argument of the constructor can be used to specify parameters for the optimizer used for
+learning by the AutodiffComposition. At present, this is restricted to overriding the `learning_rate
+<AutodiffComposition.learning_rate>` Parameter of the Composition (used as the default by the `optimizer
+<AutodiffComposition.optimizer>`) to assign individual learning_rates to specific Projections. This is done by
+specifying **optimizer_params** as a dict, each key of which is a reference to a learnable `MappingProjection`
+in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition
+may involve different forms of specification and/or support other parameters for the optimizer.  Any Projections
+for which there is no entry in **optimizer_params** use, in order of precedence: the `learning_rate 
+<AutodiffComposition.learning_rate>` specified in the call to the AutodiffComposition's `learn
+<AutodiffComposition.learn>` method, the **learning_rate** argument of its constructor, or the default value for the
+AutodiffComposition.
+
 .. _AutodiffComposition_Post_Construction_Modification:
 
 *No Post-construction Modification*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
-IS THIS STILL TRUE?
+IS THIS STILL TRUE?  TEST?
 COMMENT
 Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
 been executed. Unlike an ordinary Composition, AutodiffComposition does not support this functionality.
@@ -443,7 +455,7 @@ class AutodiffComposition(Composition):
 
     optimizer_params : Dict[str: value]
         specifies parameters for the optimizer used for learning by the GRUComposition
-        (see `AutodiffComposition_Optimizer_Parameters` for details of specification.
+        (see `AutodiffComposition_Learning_Rates` for details of specification.
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -519,21 +531,20 @@ class AutodiffComposition(Composition):
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
-    learning_rate : float
-        determines the learning_rate passed the optimizer, and is applied to all `Projection`\\s in the
-        AutodiffComposition that are `learnable <MappingProjection.learnable>`.
+    learning_rate : float or bool
+        determines the default learning_rate passed the optimizer, that is applied to all `Projections <Projection>`
+        in the AutodiffComposition that are `learnable <MappingProjection.learnable>`, and for which individual rates
+        have not been specified (for how to do the latter, see `AutodiffComposition_Learning_Rates`).
 
         .. note::
-           At present, the same learning rate is applied to all Components of an AutodiffComposition, irrespective
-           of the `learning_rate <`learning_rate <LearningMechanism.learning_rate>` that may be specified for any
-           individual Mechanisms or any `nested Compositions <AutodiffComposition_Nesting>`; in the case of the
-           latter, the `learning_rate <AutodiffComposition.learning_rate>` of the outermost AutodiffComposition is
-           used, whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its
-           constructor, or its default value is being used.
+           At present, an outermost Compositon's learning rate is applied to any `nested Compositions
+           <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
+           <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
 
         .. hint::
-           To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify the
-           **learnable** parameter of its constructor as `False`; this applies to MappingProjections at any
+           To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify either the
+           **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
+           argument of the AutodiffComposition's constructor to False; this applies to MappingProjections at any
            level of `nesting <AutodiffComposition_Nesting>`.
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN

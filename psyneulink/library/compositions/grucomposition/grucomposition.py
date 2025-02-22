@@ -31,8 +31,8 @@ Overview
 
 The GRUComposition a subclass of `AutodiffComposition` that implements a single-layered gated recurrent network,
 which combines a `RecurrentTransferMechanism` with a set of `GatingMechanisms <GatingMechanism>` that modulate
-the flow of information through the RecurrentTransferMechanism.  This corresponds to the `PyTorch GRUNetwork
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_, which is used to implement it when its `learn
+the flow of information through the RecurrentTransferMechanism.  This corresponds to the PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement it when its `learn
 <GRUComposition.learn>` method is called with `execution_mode <GRUComposition.execution_mode>` set to *PyTorch*
 
 COMMENT:
@@ -40,7 +40,7 @@ FIX: ADD EXPLANATION OF ITS RELATIONSHIP TO PyTorch GRUCell
 COMMENT
 The GRUComposition implements the following computations by its `reset <GRUComposition.reset_node>`, `update
 <GRUComposition.update_node>`, `new <GRUComposition.new_node>`, and `hidden <GRUComposition.hidden_layer_node>`
-`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the `PyTorch
+`Nodes <Composition_Nodes>`, corresponding to the terms of the function in the PyTorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module:
 
 .. math::
@@ -64,8 +64,8 @@ Creation
 --------
 
 An GRUComposition is created by calling its constructor.
-Creates a PytyorchGRUCompositionWrapper that implements the GRUComposition using the PyTorch `GRU module
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>` that is trained using PyTorch.
+Creates a PytyorchGRUCompositionWrapper that implements the GRUComposition using the PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>` module that is trained using PyTorch.
 
 FIX: ARGUMENTS TO CONSTRUCTOR
 
@@ -89,10 +89,10 @@ Structure
    **Structure of a GRUComposition** -- can be seen in more detail using the Composition's s `show_graph
    <ShowGraph.show_graph>` method with its **show_node_structure** argument set to ``True`` or ``ALL``.
 
-
 COMMENT:
-FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
+FIX: LIMITED TO ONE LAYER AT PRESENT
 
+FIX: EXPLAIN WHAT EACH NODE AND PROJECTION DOES.
 `reset <GRUComposition.reset_gate>` = `Logistic`\\(`wts_ir <GRUComposition.wts_ir>` *
 `input <GRUComposition.input_node>` + `bias_ir <GRUComposition.bias_ir>` + `bias_ir <GRUComposition.bias_ir>` +
 `wts_hr <GRUComposition.wts_hr>` * `hidden_layer <GRUComposition.hidden_layer_node>` +
@@ -146,12 +146,12 @@ Execution
 ---------
 
 .. technical_note::
-    The `full Composition <GRUComposition_Structure>` is executed when its `run <Composition.run>` method is called
-    with **execution_mode** set to ExecutionMode.Python`, or if torch_available is False.  Otherwise, and always in
-    a call to `learn <AutodiffComposition.learn>`, the Composition is executed using the torch.nn.GRU module
-    <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>, with values of the individual computations copied
-    back to Nodes of the full GRUComposition at times determined by the value of the `synch_node_values_with_torch
-    <AutodiffComposition.synch_node_values_with_torch>` option.
+    The `full Composition <GRUComposition_Structure>` is executed when its `run <Composition.run>` method is
+    called with **execution_mode** set to ExecutionMode.Python`, or if torch_available is False.  Otherwise, and
+    always in a call to `learn <AutodiffComposition.learn>`, the Composition is executed using the PyTorch `GRU
+    <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module with values of the individual
+    computations copied back to Nodes of the full GRUComposition at times determined by the value of the
+    `synch_node_values_with_torch <AutodiffComposition.synch_node_values_with_torch>` option.
 
 .. _GRUComposition_Processing:
 
@@ -161,11 +161,59 @@ Execution
 
 .. _GRUComposition_Learning:
 
-*Training*
+*Learning*
 ~~~~~~~~~~
+
 
 If `learn <Composition.learn>` is called, `enable_learning <GRUComposition.enable_learning>` is True, then errors
 will be computed for
+
+COMMENT:
+FIX: SEE `AutodiffComposition_Learning_Rates` FOR DETAILS OF LEARNING_RATE OF COMPOSITION
+FIX: RELATIONSHIP TO ENABLE_LEARNING
+COMMENT
+*Learning Rates*.   If the **learning_rate** argument of the GRUComposition's constructor is specified,
+it will be  used as the default learning rate for the parameters of the Pytorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module. This can be overridden by specifying a learning
+rate in the call to the GRUComposition's `learn <AutodiffComposition.learn>` method. The learning rate for individual
+parameters can also be specified in the **optimizer_params** argument of the GRUComposition's constructor, that
+overrides any learning rate specified for the GRUComposition itself. The following keys can be used in the
+**optimizer_params** dict to specify learning rates for individual parameters:
+
+    - *`w_ih`*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
+      <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
+      is stored in the `w_ih_learning_rate <GRUComposition.w_ih_learning_rate>` attribute of the GRUComposition.
+
+    - *`w_hh`*: learning rate for the ``weight_hh_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+      `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`; its
+      value is stored in the `w_hh_learning_rate <GRUComposition.w_hh_learning_rate>` attribute of the GRUComposition.
+
+    - *`b_ih`*: learning rate for the ``bias_ih_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `bias_ir
+      <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`; its value
+      is stored in the `b_ih_learning_rate <GRUComposition.b_ih_learning_rate>` attribute of the GRUComposition.
+
+    - *`b_hh`*: learning rate for the ``bias_hh_l0`` parameter of the PyTorch `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+      `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`; its
+      value is stored in the `b_hh_learning_rate <GRUComposition.b_hh_learning_rate>` attribute of theGRUComposition.
+
+COMMENT:
+learning_rate <GRUComposition.learning_rate>` is specified, it will be used as the learning
+rate for all input weights if `enable_learning <GRUComposition.enable_learning>` is True, irrespective of the
+GRUComposition's `learning_rate <GRUComposition.learning_rate>`. If it is an int or a float, it will be used as the
+learning rate for all input weights if `enable_learning <GRUComposition.enable_learning>` is True, irrespective of the
+GRUComposition's `learning_rate <GRUComposition.learning_rate>`. If it is True, the GRUComposition's `learning_rate
+<GRUComposition.learning_rate>` will be used as the learning rate for all input weights. If it is False, the GRUComposition's
+`learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights. If it is False,
+the GRUComposition's `learning_rate <GRUComposition.learning_rate>` will be used as the learning rate for all input weights.
+COMMENT
 
 .. _GRUComposition_Examples:
 
@@ -244,7 +292,7 @@ class GRUComposition(AutodiffComposition):
 
     See `GRUComposition_Structure` and technical_note under under `GRUComposition_Execution`
     for a description of when the full Composition is constructed and used for execution
-    vs. when the `PyTorch GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+    vs. when the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
     module is used.
 
     Note: all exposed methods, attributes and `Parameters <Parameter>`) of the GRUComposition are
@@ -286,7 +334,7 @@ class GRUComposition(AutodiffComposition):
 
     optimizer_params : Dict[str: value]
         specifies parameters for the optimizer used for learning by the GRUComposition
-        (see `GRUComposition_Learning` for details of specification.
+        (see `GRUComposition_Learning` for details of specification).
 
     Attributes
     ----------
@@ -314,94 +362,95 @@ class GRUComposition(AutodiffComposition):
         (see `Learning <GRUComposition_Learning>` for additional details).
         
     learning_rate : float
-        determines the default learning_rate for `field_weights <GRUComposition.field_weights>`
-        not specified in `learn_field_weights <GRUComposition.learn_field_weights>`
-        (see `learning_rate <GRUComposition_Field_Weights_Learning>` for additional details).
+        determines the default learning_rate for the parameters of the Pytorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified
+        for individual parameters in the **optimizer_params** argument of the AutodiffComposition's
+        constructor in the call to its `learn <GRUComposition.learn>` method (see `learning_rate
+        <GRUComposition_Field_Weights_Learning>` for additional details).
 
     w_ih_learning_rate : flot or bool
         determines the learning rate specifically for the weights of the `efferent projections
         <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>`
         of the GRUComposition: `wts_in <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`,
-        and `wts_ir <GRUComposition.wts_ir>`; corresponds to the 'weight_ih_l0' parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-         (see `GRUComposition_Learning` for additional details).
+        and `wts_ir <GRUComposition.wts_ir>`; corresponds to the ``weight_ih_l0`` parameter of the
+        PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
+        (see `GRUComposition_Learning` for additional details).
 
     w_hh_learning_rate : float or bool
         determines the learning rate specifically for the weights of the `efferent projections
         <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>`
         of the GRUComposition: `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`,
-        `wts_hr <GRUComposition.wts_hr>`; corresponds to the 'weight_hh_l0' parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        `wts_hr <GRUComposition.wts_hr>`; corresponds to the ``weight_hh_l0`` parameter of the
+        PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
          (see `GRUComposition_Learning` for additional details).
 
     b_ih_learning_rate : float or bool
         determines the learning rate specifically for the biases influencing the `efferent projections
         <Mechanism_Base.efferents>` from the `input_node <GRUComposition.input_node>` of the GRUComposition:
         `bias_ir <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`;
-        corresponds to the 'bias_ih_l0' parameter of the PyTorch `GRU module (see `GRUComposition_Learning` for
+        corresponds to the ``bias_ih_l0`` parameter of the PyTorch `GRU module (see `GRUComposition_Learning` for
         additional details).
 
     b_hh_learning_rate : float or bool
         determines the learning rate specifically for the biases influencing the `efferent projections
         <Mechanism_Base.efferents>` from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of
         the GRUComposition: `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`,
-        `bias_hn <GRUComposition.bias_hn>`; corresponds to the 'bias_hh_l0' parameter of the PyTorch
-        `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ (see
+        `bias_hn <GRUComposition.bias_hn>`; corresponds to the ``bias_hh_l0`` parameter of the PyTorch
+        `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module (see
         `GRUComposition_Learning` for additional details).
 
     input_node : ProcessingMechanism
         `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the input to the GRUComposition and passes
-        it to the `hidden_layer_node <GRUComposition.hidden_layer_node>`; corresponds to input *(i)* of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        it to the `hidden_layer_node <GRUComposition.hidden_layer_node>`; corresponds to input *(i)* of the PyTorch
+        `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     new_node : ProcessingMechanism
-        `ProcessingMechanism` that provides the `hidden_layer_node <GRUComposition.hidden_layer_node>` with the input
-        from the `input_node <GRUComposition.input_node>`, gated by the `reset_node <GRUComposition.reset_node>`;
-        corresponds to new gate *(n)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation.
+        `ProcessingMechanism` that provides the `hidden_layer_node <GRUComposition.hidden_layer_node>`
+        with the input from the `input_node <GRUComposition.input_node>`, gated by the `reset_node
+        <GRUComposition.reset_node>`; corresponds to new gate *(n)* of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     hidden_layer_node : ProcessingMechanism
         `ProcessingMechanism` that implements the recurrent layer of the GRUComposition; corresponds to
-        hidden layer *(h)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        implementation.
+        hidden layer *(h)* of the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     reset_node : GatingMechanism
         `GatingMechanism` that that gates the input to the `new_node <GRUComposition.new_node>`; corresponds to reset
-        gate *(r)* of the `PyTorch <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        gate *(r)* of the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     update_node : GatingMechanism
         `GatingMechanism` that gates the inputs to the hidden layer from the `new_node <GRUComposition.new_node>`
         and the prior state of the `hidden_layer_node <GRUComposition.hidden_layer_node>` itself (i.e., the input
-        it receives from its recurrent Projection); corresponds to update gate *(z)* of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        it receives from its recurrent Projection); corresponds to update gate *(z)* of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     output_node : ProcessingMechanism
         `OUTPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` that receives the output of the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>`; corresponds to result of the `PyTorch
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ implementation.
+        <GRUComposition.hidden_layer_node>`; corresponds to result of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     learnable_projections : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>` in the GRUComposition that have
         `matrix <MappingProjection.matrix>` parameters that can be learned; these correspond to the learnable
-        parameters of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        parameters of the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module.
 
     wts_in : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `new_node <GRUComposition.new_node>`; corresponds to
-        :math:`W_{in}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
-        (see `GRUComposition_Structure` for additional information).
+        :math:`W_{in}` term in the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module's
+        computation (see `GRUComposition_Structure` for additional information).
 
     wts_iu : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `update_node <GRUComposition.update_node>`; corresponds
-        to :math:`W_{iz}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
-        (see `GRUComposition_Structure` for additional information).
+        to :math:`W_{iz}` term in the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        module's computation (see `GRUComposition_Structure` for additional information).
 
     wts_ir : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
         from the `input_node <GRUComposition.input_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds
-        to :math:`W_{ir}` in the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
-        (see `GRUComposition_Structure` for additional information).
+        to :math:`W_{ir}` term in the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        module's computation (see `GRUComposition_Structure` for additional information).
 
     wts_nh : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
@@ -409,24 +458,24 @@ class GRUComposition(AutodiffComposition):
         (see `GRUComposition_Structure` for additional information).
 
     wts_hr : MappingProjection
-        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
-        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`;
-        corresponds to :math:`W_{hr}` in the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
+        that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the
+        `reset_node <GRUComposition.reset_node>`; corresponds to :math:`W_{hr}` term in the PyTorch
+        `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module's computation
         (see `GRUComposition_Structure` for additional information).
 
     wts_hu : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
-        that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `update_node
-        <GRUComposition.update_node>`; corresponds to :math:`W_{hz}` in the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the
+        `update_node <GRUComposition.update_node>`; corresponds to :math:`W_{hz}` in the PyTorch
+        `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module's computation
         (see `GRUComposition_Structure` for additional information).
 
     wts_hn : MappingProjection
-        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that projects
-        from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`;
-        corresponds to :math:`W_{hn}` in the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
+        that projects from the `hidden_layer_node <GRUComposition.hidden_layer_node>` to the `new_node
+        <GRUComposition.new_node>`; corresponds to :math:`W_{hn}` in the PyTorch
+        `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module's computation
         (see `GRUComposition_Structure` for additional information).
 
     wts_hh : MappingProjection
@@ -497,51 +546,52 @@ class GRUComposition(AutodiffComposition):
     biases : List[MappingProjection]
         list of the `MappingProjections <MappingProjection>` from the `BIAS <NodeRole.BIAS>` `Nodes of
         the GRUComposition, all of which have `matrix <MappingProjection.matrix>` parameters if `bias
-        <GRUComposition.bias>` is True; these correspond to the learnable biases of the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_.
+        <GRUComposition.bias>` is True; these correspond to the learnable biases of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
+        (see `GRUComposition_Structure` for additional information).
 
     bias_ir : MappingProjection
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_ir <GRUComposition.wts_ir>`, from the `input_node <GRUComposition.input_node>`
         to the `reset_node <GRUComposition.reset_node>`; corresponds to the :math:`b_ir` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
 
     bias_iu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_iu <GRUComposition.wts_iu>`, from the `input_node <GRUComposition.input_node>`
         to the `update_node <GRUComposition.update_node>`; corresponds to the :math:`b_iz` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
 
     bias_in : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_in <GRUComposition.wts_in>`, from the `input_node <GRUComposition.input_node>`
         to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_in` bias parameter of the
-        PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
 
     bias_hr : ProcessingMechanism
-        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
-        the bias to the weights, `wts_hr <GRUComposition.wts_hr>`, from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`; corresponds to the
-        :math:`b_hr` bias parameter of the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights")
+        that provides the bias to the weights, `wts_hr <GRUComposition.wts_hr>`, from the `hidden_layer_node
+        <GRUComposition.hidden_layer_node>` to the `reset_node <GRUComposition.reset_node>`;
+        corresponds to the :math:`b_hr` bias parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
 
     bias_hu : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hu <GRUComposition.wts_hu>`, from the `hidden_layer_node
-        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`; corresponds to the
-        :math:`b_hz` bias parameter of the PyTorch `GRU module
-        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        <GRUComposition.hidden_layer_node>` to the `update_node <GRUComposition.update_node>`;
+        corresponds to the :math:`b_hz` bias parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
 
     bias_hn : ProcessingMechanism
         `MappingProjection` with learnable `matrix <MappingProjection.matrix>` ("connection weights") that provides
         the bias to the weights, `wts_hn <GRUComposition.wts_hn>`, from the `hidden_layer_node
         <GRUComposition.hidden_layer_node>` to the `new_node <GRUComposition.new_node>`; corresponds to the :math:`b_hn`
-        bias parameter of the PyTorch `GRU module <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_
+        bias parameter of the PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module
         (see `GRUComposition_Structure` for additional information).
     """
 
@@ -897,7 +947,6 @@ class GRUComposition(AutodiffComposition):
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-
         # MODIFIED 2/16/25 NEW:
         # FIX: ENSURE HERE THAT LEARNABILITY IS SAME FOR ALL PROJECTIONS CORRESPONDING
         #      TO IH AND HH PARAMAETERS OF TORCH GRU MODULE
