@@ -5,7 +5,8 @@ import typing
 
 import networkx
 
-from psyneulink.core.globals.keywords import FEEDBACK, MAYBE
+from psyneulink._typing import Union
+from psyneulink.core.globals.keywords import MAYBE
 
 __all__ = [
     'EdgeType', 'GraphError'
@@ -31,9 +32,42 @@ class EdgeType(enum.Enum):
             FLEXIBLE
                 An edge that will be pruned only if it exists in a cycle
     """
-    NON_FEEDBACK = 0
-    FEEDBACK = 1
-    FLEXIBLE = 2
+    NON_FEEDBACK = False
+    FEEDBACK = True
+    FLEXIBLE = MAYBE
+
+    @classmethod
+    def from_any(cls, value) -> 'EdgeType':
+        """
+        Returns:
+            EdgeType: an `EdgeType` corresponding to **value** if it
+            exists
+        """
+        try:
+            value = value.upper()
+        except AttributeError:
+            # not a string
+            pass
+
+        try:
+            return cls[value]
+        except KeyError:
+            # allow ValueError to raise
+            return cls(value)
+
+    @classmethod
+    def has(cls, value) -> bool:
+        """
+        Returns:
+            bool: True if **value** corresponds to an `EdgeType`, or
+            False otherwise
+        """
+        try:
+            cls.from_any(value)
+        except ValueError:
+            return False
+        else:
+            return True
 
 
 class Vertex(object):
@@ -91,17 +125,11 @@ class Vertex(object):
         return self._feedback
 
     @feedback.setter
-    def feedback(self, value: EdgeType):
-        mapping = {
-            False: EdgeType.NON_FEEDBACK,
-            True: EdgeType.FEEDBACK,
-            FEEDBACK: EdgeType.FEEDBACK,
-            MAYBE: EdgeType.FLEXIBLE
-        }
-        try:
-            self._feedback = mapping[value]
-        except KeyError:
-            self._feedback = value
+    def feedback(self, value: Union[bool, EdgeType]):
+        if value is None:
+            self._feedback = None
+        else:
+            self._feedback = EdgeType.from_any(value)
 
 
 class Graph(object):
