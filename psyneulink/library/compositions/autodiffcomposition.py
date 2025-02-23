@@ -1317,15 +1317,6 @@ class AutodiffComposition(Composition):
         def get_target_value(target):
             if target in self.get_nodes_by_role(NodeRole.INPUT):
                 return input_dict[target]
-                # value = input_dict[target]
-                # if torch_available and self.torch_dtype:
-                #     # Convert to torch tensor of type expected by PytorchCompositionWrapper
-                #     if isinstance(value, list):
-                #         for i, val in enumerate(value):
-                #             value[i] = torch.tensor(val, dtype=self.torch_dtype, device=self.device)
-                #     else:
-                #         value = torch.tensor(value, dtype=self.torch_dtype, device=self.device)
-                # return value
             if len(target.path_afferents) > 1:
                 raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}')"
                                                f"cannot have more than one afferent projection.")
