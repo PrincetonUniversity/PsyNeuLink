@@ -150,6 +150,14 @@ while the other nodes are all `Processing Mechanisms <ProcessingMechanism>`.
    implemented.  Similarly, ``dropout`` and ``bidirectional`` arguments are not yet implemented.  These will
    be added in a future version.
 
+COMMENT:
+FIX: ADD EXPLANATION OF THE FOLLOWING
+.. technical_note::
+   gru_mech
+   target_node
+   PytorchGRUProjectionWrappers for nested case
+COMMENT
+
 .. _GRUComposition_Execution:
 
 Execution
@@ -788,7 +796,20 @@ class GRUComposition(AutodiffComposition):
                          seed = seed,
                          **kwargs
                          )
+
         self._construct_composition(input_size, hidden_size)
+
+        # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
+        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
+                                            input_shapes=input_size,
+                                            function=MatrixTransform(
+                                                default_variable=np.zeros(input_size),
+                                                matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
+
+        self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
+                                               name= TARGET_NODE_NAME)
+
+
 
     # *****************************************************************************************************************
     # ******************************  Nodes and Pathway Construction Methods  *****************************************
@@ -1084,23 +1105,28 @@ class GRUComposition(AutodiffComposition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
-        if self.gru_mech:
-            return [self.target_node]
+        # if self.gru_mech:
+        #     return [self.target_node]
 
-        input_size = self.parameters.input_size.get()
-        hidden_size = self.parameters.hidden_size.get()
+        # MODIFIED 2/16/25 OLD:
+        # input_size = self.parameters.input_size.get()
+        # hidden_size = self.parameters.hidden_size.get()
+        # MODIFIED 2/16/25 END
 
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
-        # self.gru_mech.parameters.value._set(np.zeros(hidden_size), context, override=True)
-        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
-                                            input_shapes=input_size,
-                                            function=MatrixTransform(
-                                                default_variable=np.zeros(input_size),
-                                                matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-
-        target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
+        # MODIFIED 2/16/25 OLD:
+        # self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
+        #                                     input_shapes=input_size,
+        #                                     function=MatrixTransform(
+        #                                         default_variable=np.zeros(input_size),
+        #                                         matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
+        #
+        # target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
+        # MODIFIED 2/16/25 NEW:
+        target_mech = self.target_node
+        # MODIFIED 2/16/25 END
 
         # Add nodes to GRUComposition
         context = Context(source=ContextFlags.METHOD)
@@ -1110,9 +1136,14 @@ class GRUComposition(AutodiffComposition):
             output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.targets_from_outputs_map = {target_mech: self.output_node}
         self.outputs_to_targets_map = {self.output_node: target_mech}
-        self.target_node = target_mech
+        # MODIFIED 2/16/25 OLD:
+        # self.target_node = target_mech
+        # MODIFIED 2/16/25 END
 
         return [target_mech]
+
+    def _get_pytorch_backprop_pathway(self, input_node)->list:
+        return [[self.gru_mech]]
 
     # *****************************************************************************************************************
     # *********************************** Execution Methods  **********************************************************
@@ -1128,3 +1159,6 @@ class GRUComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def _identify_target_nodes(self, context):
+        return [self.gru_mech]
