@@ -355,6 +355,7 @@ from psyneulink._typing import Mapping, Optional
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
@@ -961,13 +962,17 @@ class AutodiffComposition(Composition):
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
                         # FIX: 9/17/23:
-                        #FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
+                        #  FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
                         for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                 f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                            # Check if direct Projection already exists between the two nodes and, if not, create one
+                            #     but don't add to Composition (its just so show_graph(show_pytorch=True) can show it)
+                            if not any(proj.sender.owner is node for proj in rcvr.afferents):
+                                MappingProjection(sender=node, receiver=rcvr)
                             prev[rcvr] = efferent_proj
                             prev[efferent_proj] = node
                             queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
@@ -985,7 +990,7 @@ class AutodiffComposition(Composition):
                         # Get all Node(s) in outer Composition to which node projects (via output_CIM)
                         receivers = rcvr._get_destination_info_for_output_CIM(output_CIM_output_port)
                         # Replace efferent_proj(s) with one(s) from output_CIM to rcvr(s) in outer Composition,
-                        #   since that(those) is(are the one(s) that should be learned in PyTorch mode
+                        #   since that(those) is(are) the one(s) that should be learned in PyTorch mode
                         # Note:  _get_destination_info_for_output_CIM returns list of destinations
                         #        in order of output_CIM.output_port.efferents
                         if receivers:

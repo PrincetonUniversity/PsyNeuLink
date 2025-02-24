@@ -76,9 +76,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     Two main responsibilities:
 
-    1) Set up functions and parameters of PyTorch module required for it forward computation:
-        Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-        Deal with Projections into and/or out of a nested Composition as shown in figure below:
+    1) Set up functions and parameters of PyTorch module required for its forward computation:
+       - Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
+       - Deal with Projections into and/or out of a nested Composition as shown in figure below:
             (note: Projections in outer Composition to/from a nested Composition's CIMs are learnable,
                    and ones in a nested Composition from/to its CIMs are not)
          [      OUTER     ][                            NESTED                               ][     OUTER      ]
@@ -1045,8 +1045,6 @@ class PytorchMechanismWrapper():
         self.efferents = []
 
         self._assign_pytorch_function(mechanism, device, context)
-
-
 
     def _assign_pytorch_function(self, mechanism, device, context):
         self.function = PytorchFunctionWrapper(mechanism.function, device, context)

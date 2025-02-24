@@ -120,13 +120,20 @@ class PytorchShowGraph(ShowGraph):
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
         """Override to include direct Projections from outer to nested comps in Pytorch mode"""
+        sndr = proj.sender.owner
+        rcvr = proj.receiver.owner
+        # MODIFIED 2/16/25 NEW:
+        # if isinstance(rcvr, CompositionInterfaceMechanism):
+        #     # If receiver is an input_CIM, get the node in the inner Composition to which it projects
+        #     #   as it may be specified as dependent on the sender in the autodiff processing_graph
+        #     rcvr = rcvr._get_destination_info_from_input_CIM(proj.receiver)[1]
+        # MODIFIED 2/16/25 END
         if self.show_pytorch:
             processing_graph = self._get_processing_graph(self.composition, context)
             if proj in composition_projections:
                 return True
-            # If proj is betw. a sender and receiver specified in the processing_graphl, then it is in the autodiffcomp
-            elif (proj.receiver.owner in processing_graph
-                  and proj.sender.owner in processing_graph[proj.receiver.owner]):
+            # Include if proj is betw. a sender and receiver specified as dependent on it in processing_graph
+            elif (rcvr in processing_graph and sndr in processing_graph[rcvr]):
                 return True
             else:
                 return False

@@ -244,8 +244,6 @@ def construct_model(model_name:str=model_params['name'],
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
 
-
-
     em = EMComposition(name=em_name,
                        memory_template=[[0] * state_size,   # state
                                         [0] * state_size,   # previous state
@@ -282,8 +280,8 @@ def construct_model(model_name:str=model_params['name'],
                        #                context_retrieval_weight,
                        #                state_retrieval_weight,
                        #                ),
-                       normalize_field_weights=normalize_field_weights,
-                       normalize_memories=normalize_memories,
+                       # normalize_field_weights=normalize_field_weights,
+                       # normalize_memories=normalize_memories,
                        concatenate_queries=concatenate_queries,
                        enable_learning=enable_learning,
                        learning_rate=learning_rate,
@@ -297,7 +295,6 @@ def construct_model(model_name:str=model_params['name'],
     #           em.nodes['STATE [VALUE]']: [[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]]}
     # em.learn(inputs=inputs, execution_mode=ExecutionMode.Python)
     # em.show_graph(show_learning=True)
-
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
