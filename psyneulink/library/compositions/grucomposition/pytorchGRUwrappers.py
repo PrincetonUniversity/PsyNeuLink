@@ -45,6 +45,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         pytorch_node = PytorchGRUMechanismWrapper(node, self, 0, device, context)
         self.torch_gru = pytorch_node.function.function
         self._nodes_map[node] = pytorch_node
+        # MODIFIED 2/22/25 NEW:
+        # Assign map from input_node and output_node to GRU Node, since it serves their functions in pytorch graph
+        #   (for use by show_graph(show_pytorch=True)
+        self._nodes_map[composition.input_node] = pytorch_node
+        self._nodes_map[composition.output_node] = pytorch_node
+        # MODIFIED 2/22/25 END
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
@@ -126,11 +132,14 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             pnl_node.parameters.variable._set(variable, context)
 
     def _copy_internal_nodes_values_to_pnl(self, nodes, context):
+        # FIX: 2/22/25: FLESH THIS OUT TO BE SURE ONLY NODES ARE GRU, INPUT AND OUTPUT
+        #               AND EXPLICITY ASSIGN pnl_node TO ONE IN MAP
+        node_map = list(nodes)
         pnl_comp = self._composition
         pnl_node = list(nodes)[0][0]
         pytorch_node = list(nodes)[0][1]
 
-        assert len(nodes) == 1, \
+        assert len(nodes) == 3, \
             (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
              f"but has {len(nodes)}: {[node.name for node in nodes]}")
         assert pnl_node == pnl_comp.gru_mech, \
@@ -146,7 +155,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         torch_gru_output = pytorch_node.output[0].detach().cpu().numpy()
         h = pytorch_node.output[1][0].detach()
 
-        # FIX: TEST WHICH IS FASTER:
         torch_gru_parameters = self.__class__.get_weights_from_torch_gru(self.torch_gru)
         torch_weights = torch_gru_parameters[0]
         torch_weights = list(torch_weights)
