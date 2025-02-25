@@ -16,7 +16,7 @@ from typing import Union, Optional, Literal
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper
-from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.keywords import ALL, INPUTS
 from psyneulink.core.globals.log import LogCondition
 
@@ -94,6 +94,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
 
         self.copy_weights_to_torch_gru(context)
+
+    # # MODIFIED 2/22/25 OLD:
+    # def _get_nodes_map(self, context):
+    #     """Return only Node for gru_mech in _nodes_map"""
+    #     gru_mech = self._composition.gru_mech
+    #     if context.flags & ContextFlags.DISPLAYING:
+    #         return {gru_mech: self._nodes_map[gru_mech]}
+    #     else:
+    #         return self._nodes_map
+    # # MODIFIED 2/22/25 END
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:

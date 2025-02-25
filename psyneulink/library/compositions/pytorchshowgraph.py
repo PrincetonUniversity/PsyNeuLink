@@ -14,15 +14,10 @@ from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.projections.projection import Projection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import BOLD, INSET, NESTED, PNL
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.keywords import PNL
 
 __all__ = ['SHOW_PYTORCH']
 
@@ -96,11 +91,20 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_processing_graph(composition, context)
 
+    # @property
+    # def _nodes_map(self):
+    #     """Get _nodes_map from AutodiffComposition's PytorchCompositionWrapper"""
+    #     return self.pytorch_rep._get_nodes_map(context=Context(execution_phase=ContextFlags.DISPLAYING))
+    #
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
+            # MODIFIED 2/22/26 OLD:
             nodes = list(self.pytorch_rep._nodes_map.keys())
             return nodes
+            # MODIFIED 2/22/26 NEW:
+            # MODIFIED 2/22/26 END
+            # return list(self._nodes_map.keys())
         else:
             return super()._get_nodes(composition, context)
 
@@ -122,7 +126,7 @@ class PytorchShowGraph(ShowGraph):
         """Override to include direct Projections from outer to nested comps in Pytorch mode"""
         sndr = proj.sender.owner
         rcvr = proj.receiver.owner
-        # MODIFIED 2/16/25 NEW:
+        # # MODIFIED 2/16/25 NEW:
         # if isinstance(rcvr, CompositionInterfaceMechanism):
         #     # If receiver is an input_CIM, get the node in the inner Composition to which it projects
         #     #   as it may be specified as dependent on the sender in the autodiff processing_graph
@@ -162,7 +166,16 @@ class PytorchShowGraph(ShowGraph):
     def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
         if self.show_pytorch:
+            # MODIFIED 2/22/25 NEW:
+            if hasattr(rcvr, 'exclude_from_show_graph'):
+                # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
+                return
+            # # MODIFIED 2/22/25 END
+            # MODIFIED 2/22/25 OLD:
             if self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
+            # # MODIFIED 2/22/25 NEW:
+            # if self._nodes_map[rcvr].exclude_from_gradient_calc:
+            # MODIFIED 2/22/25 END
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
             g.node(*args, **kwargs)
@@ -177,7 +190,11 @@ class PytorchShowGraph(ShowGraph):
 
             modulatory_node = None
             if proj.parameter_ports[0].mod_afferents:
+                # MODIFIED 2/22/25 OLD:
                 modulatory_node = self.pytorch_rep._nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                # # MODIFIED 2/22/25 NEW:
+                # modulatory_node = self._nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                # # MODIFIED 2/22/25 END
 
             if proj in self.pytorch_rep._projection_map:
 

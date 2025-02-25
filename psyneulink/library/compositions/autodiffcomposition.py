@@ -904,11 +904,16 @@ class AutodiffComposition(Composition):
         #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
         #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
         #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
-        def create_pathway(node)->list:
+        def create_pathway(current_comp, node)->list:
             """Create pathway starting with node (presumably an output NODE) and working backward via prev"""
             pathway = []
             entry = node
             while entry in prev:
+                # MODIFIED 2/22/25 NEW:
+                # Prevent cycle from recurrent pathway
+                if entry in pathway:
+                    break
+                # MODIFIED 2/22/25 END
                 pathway.insert(0, entry)
                 entry = prev[entry]
             pathway.insert(0, entry)
@@ -923,6 +928,12 @@ class AutodiffComposition(Composition):
         # breadth-first search starting with input node
         while len(queue) > 0:
             node, input_port, current_comp = queue.popleft()
+
+            # # MODIFIED 2/22/25 NEW:
+            # # Prevent cycle from recurrent pathway
+            # if any([node is n and input_port is i for n, i, c in queue]):
+            #     break
+            # MODIFIED 2/22/25 END
 
             # node is nested Composition that is an INPUT node of the immediate outer Composition
             if (isinstance(node, Composition) and node is not self
@@ -940,7 +951,7 @@ class AutodiffComposition(Composition):
 
             # End of pathway: OUTPUT Node of outer Composition
             if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
-                pathways.append(create_pathway(node))
+                pathways.append(create_pathway(current_comp, node))
                 continue
 
             # Consider all efferent Projections of node
@@ -969,10 +980,12 @@ class AutodiffComposition(Composition):
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                 f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            # Check if direct Projection already exists between the two nodes and, if not, create one
-                            #     but don't add to Composition (its just so show_graph(show_pytorch=True) can show it)
-                            if not any(proj.sender.owner is node for proj in rcvr.afferents):
-                                MappingProjection(sender=node, receiver=rcvr)
+                            # MODIFIED 2/22/25 NEW:
+                            # # Check if direct Projection already exists between the two nodes and, if not, create one
+                            # #     but don't add to Composition (its just so show_graph(show_pytorch=True) can show it)
+                            # if not any(proj.sender.owner is node for proj in rcvr.afferents):
+                            #     MappingProjection(sender=node, receiver=rcvr)
+                            # MODIFIED 2/22/25 END
                             prev[rcvr] = efferent_proj
                             prev[efferent_proj] = node
                             queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
@@ -1003,7 +1016,7 @@ class AutodiffComposition(Composition):
                                 prev[efferent_proj] = node
                                 queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
                         else:
-                            pathways.append(create_pathway(node))
+                            pathways.append(create_pathway(current_comp, node))
 
                     # rcvr is Outermost Composition output_CIM:
                     # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
@@ -1011,7 +1024,7 @@ class AutodiffComposition(Composition):
                         # Assign node that projects to current node as OUTPUT Node for pathway
                         node_output_port = efferent_proj.sender
                         _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
-                        pathway = create_pathway(node)
+                        pathway = create_pathway(current_comp, node)
                         if pathway:
                             queue.popleft()
                             pathways.append(pathway)

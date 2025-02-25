@@ -798,6 +798,7 @@ class GRUComposition(AutodiffComposition):
                          )
 
         self._construct_composition(input_size, hidden_size)
+        self._assign_gru_specific_attributes()
 
         # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
         self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
@@ -1002,6 +1003,10 @@ class GRUComposition(AutodiffComposition):
         self._set_learning_attributes()
 
         self._analyze_graph()
+
+    def _assign_gru_specific_attributes(self):
+        for node in self.nodes:
+            node.exclude_from_show_graph = True
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections

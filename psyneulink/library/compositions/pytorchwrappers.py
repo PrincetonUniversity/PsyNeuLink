@@ -17,18 +17,18 @@ import numpy as np
 
 from enum import Enum, auto
 
-from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.projections.projection import Projection
+from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import NodeRole, CompositionInterfaceMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (ADD, AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
-                                              LEARNING_SCALE_LITERALS, Loss, LOSSES, MATRIX_WEIGHTS,
+from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
+                                              LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
                                               NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
-                                              TARGETS, TARGET_MECHANISM, )
+                                              TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -138,7 +138,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         `PytorchShowGraph` for additional information).
 
     _nodes_map : Dict[Node: PytorchMechanismWrapper or PytorchCompositionWrapper]
-        maps psyneulink `Nodes <Composition_Nodes>` to PytorchCompositionWrapper nodes.
+        maps PsyNeuLink `Nodes <Composition_Nodes>` to PytorchCompositionWrapper nodes.
 
     _projection_wrappers = List[PytorchProjectionWrapper]
         list of PytorchCompositionWrappers in the PytorchCompositionWrapper, each of which wraps a `Projection`
@@ -240,9 +240,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
                 self._projection_map.update(node_wrapper._projection_map)
                 # Not sure if this is needed, but just to be safe
+                # MODIFIED 2/22/25 OLD:
                 self._nodes_map.update(node_wrapper._nodes_map)
+                # # MODIFIED 2/22/25 NEW:
+                # # self._nodes_map.update(node_wrapper._get_nodes_map())
+                # # MODIFIED 2/22/25 END
         # Purge _nodes_map of entries for nested Compositions (their nodes are now in self._nodes_map)
-        self._nodes_map = {k: v for k, v in self._nodes_map.items() if not isinstance(v, PytorchCompositionWrapper)}
+        # MODIFIED 2/22/25 OLD:
+        self._nodes_map = {k: v for k, v in self._nodes_map.items()
+                           if not isinstance(v, PytorchCompositionWrapper)}
+        # # # MODIFIED 2/22/25 NEW:
+        # self._nodes_map = {k: v for k, v in self._get_nodes_map(context).items()
+        #                    if not isinstance(v, PytorchCompositionWrapper)}
+        # MODIFIED 2/22/25 END
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
         #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
@@ -313,6 +323,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
 
+            # Rule out that Composition has parameter_CIM,
+            #    since autodiff does not (yet) support those and they are not (yet) handled by flattening below
+            assert not hasattr(self, '_parameter_CIM'),\
+                (f"PROGRAM ERROR: {self} has a parameter_CIM which is not should not currently be the case "
+                 f"and is not handled by flatterning in {self.__class__.__name__}.")
+
             # Projection within composition
             if all(sndr_and_recvr in self._nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
                 proj_sndr = self._nodes_map[sndr_mech]
@@ -326,32 +342,67 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # See figure in docstring above for explanation of the following:
 
             # ENTRY:
-            # Projection to input_CIM of a nested Composition: needed for learning, so create map for Projection
+            # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
+            #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS INTO IT AS IT SEES FIT
+            # input_cim of nested Composition:
+            #    - projection is to input_CIM that is not in current Composition so must be to a nested one;
+            #    - needed for learning, so create map for Projection
             elif (isinstance(rcvr_mech, CompositionInterfaceMechanism)
-                  and rcvr_mech is not self._composition.output_CIM):
+                  and rcvr_mech.composition is not self
+                  and rcvr_mech is rcvr_mech.composition.input_CIM):
                 proj_sndr = self._nodes_map[sndr_mech]
                 # Replace rcvr_mech (input_CIM) with the node in the nested Composition that receives the projection
                 nested_rcvr_port, nested_rcvr_mech, _ = \
                     rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
                 nested_pytorch_comp = self._nodes_map[rcvr_mech.composition]
+                # MODIFIED 2/22/25 OLD:
                 proj_rcvr = nested_pytorch_comp._nodes_map[nested_rcvr_mech]
+                # # MODIFIED 2/22/25 NEW:
+                # proj_rcvr = nested_pytorch_comp._get_nodes_map()[nested_rcvr_mech]
+                # MODIFIED 2/22/25 END
                 # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
                 pnl_proj = projection.receiver.owner.port_map[nested_rcvr_port][1].efferents[0]
                 assert pnl_proj == nested_rcvr_port.path_afferents[0], \
                     (f"PROGRAM ERROR: First afferent Projection to '{nested_rcvr_port.owner.name}' "
                      f"(which should be from '{nested_rcvr_port.path_afferents[0].sender.owner.name}') is "
                      f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
+                # If direct Projection does not exist between the sender from the outer comp
+                #   and the node in the nested comp, create one, but don't add to Composition
+                #   (its just so it can be displayed in show_graph(show_pytorch=True)
+                destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
+                destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
+                # This is in case receiver in PNL comp has been mapped to a diff node in pytorchCompositionwrapper
+                mapped_rcvr_mech = nested_pytorch_comp._nodes_map[nested_rcvr_mech]._mechanism
+                # Get the port of the original receiver to use for the mapped receiver
+                port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
+                try:
+                    # FIX: ASSIGN LEARNABLE STATUS BASED ON PROJECTION FROM OUTER NODE TO INPUT_CIM
+                    MappingProjection(sender=projection.sender,
+                                      receiver=mapped_rcvr_mech.input_ports[port_idx],
+                                      learnable=projection.learnable)
+                except DuplicateProjectionError:
+                    pass
+                # FIX: TRY PUTTING THIS (AND THE ONE FROM THE OUTPUT NODE TO THE OUTPUT_CIM) IN THE _PROJECTIONS_MAP
 
             # EXIT
-            # Projection from output_CIM of a nested Composition: needed for learning, so create map for Projection
+            # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
+            #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS OUT OF IT AS IT SEES FIT
+            # output_cim of nested Composition:
+            #    - projection is from output_CIM that is not in current Composition so must be from a nested one;
+            #    - needed for learning, so create map for Projection
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism)
-                  and sndr_mech is not self._composition.input_CIM):
+                  and sndr_mech.composition is not self
+                  and sndr_mech is sndr_mech.composition.output_CIM):
                 proj_rcvr = self._nodes_map[rcvr_mech]
                 # Replace sndr_mech (output_CIM) with the node in the nested Composition that sends the projection
                 nested_sndr_port, nested_sndr_mech, _ = \
                     sndr_mech._get_source_info_from_output_CIM(projection.sender)
                 nested_pytorch_comp = self._nodes_map[sndr_mech.composition]
+                # MODIFIED 2/22/25 OLD:
                 proj_sndr = nested_pytorch_comp._nodes_map[nested_sndr_mech]
+                # MODIFIED 2/22/25 NEW:
+                # proj_sndr = nested_pytorch_comp._get_nodes_map()[nested_sndr_mech]
+                # MODIFIED 2/22/25 END
 
                 # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
                 pnl_proj = projection.sender.owner.port_map[nested_sndr_port][0].path_afferents[0]
@@ -446,6 +497,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.params = nn.ParameterList()
         for proj_wrapper in [p for p in self._projection_wrappers if not p._projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
+
+    # # MODIFIED 2/22/25 NEW:
+    # def _get_nodes_map(self, context):
+    #     """Return _nodes_map
+    #     Implemented so subclasses can override to filter nodes to return
+    #     """
+    #     return self._nodes_map
+    # MODIFIED 2/22/25 END
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):

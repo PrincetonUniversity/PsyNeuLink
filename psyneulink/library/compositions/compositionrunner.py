@@ -57,7 +57,8 @@ class CompositionRunner():
         # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
         # converting directly to tensors for lists of np.ndarrays is slow.
         if type(v[0]) == np.ndarray:
-            t = torch.tensor(torch.from_numpy(np.array(v)), dtype=torch_dtype)
+            # t = torch.tensor(torch.from_numpy(np.array(v)), dtype=torch_dtype)
+            t = torch.from_numpy(np.array(v)).to(dtype=torch_dtype)
         else:
             try:
                 t = torch.tensor(v, dtype=torch_dtype)
