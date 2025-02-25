@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.16.1.0+7.g1025c7e4f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+7
                 </div>
               
             
@@ -572,7 +572,8 @@ describe these in greater detail, and how they are used to implement various for
 <p>The structure of a Composition is a computational graph, the <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> of which are <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and/or <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition(s)</span></a> that carry out computations; and the edges of which
 can be thought of as Composition’s <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, that transmit the computational results from one Node
 to another Node (though see <a class="reference internal" href="#composition-projections"><span class="std std-ref">below</span></a> for a fuller description). The information about a
-Composition’s structure is stored in its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a> attribute, that is a <a class="reference internal" href="#psyneulink.core.compositions.composition.Graph" title="psyneulink.core.compositions.composition.Graph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object describing
+Composition’s structure is stored in its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>
+attribute, that is a <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> object describing
 its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be <a class="reference internal" href="#composition-acyclic-cyclic"><span class="std std-ref">acyclic or cyclic</span></a>, and/or hierarchical (i.e., contain one or more
 <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a>) as described below. A Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a> can be
@@ -780,9 +781,9 @@ define the connections and therefore dependencies among the Composition’s Node
 graph.  Subsets of Nodes connected by Projections can be defined as a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> as decribed under
 <a class="reference internal" href="#composition-pathways"><span class="std std-ref">Pathways</span></a> below).</p>
 <div class="technical-note docutils container" id="composition-graph-projection-vertices">
-<p>Because Projections are not strictly edges, they are assigned to <a class="reference internal" href="#psyneulink.core.compositions.composition.Graph.vertices" title="psyneulink.core.compositions.composition.Graph.vertices"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">vertices</span></code></a> in the Composition’s
+<p>Because Projections are not strictly edges, they are assigned to <code class="xref any docutils literal notranslate"><span class="pre">vertices</span></code> in the Composition’s
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>, along with its Nodes.  The actual edges are implicit in the dependencies determined
-by the Projections, and listed in the graph’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Graph.dependency_dict" title="psyneulink.core.compositions.composition.Graph.dependency_dict"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dependency_dict</span></code></a>.</p>
+by the Projections, and listed in the graph’s <code class="xref any docutils literal notranslate"><span class="pre">dependency_dict</span></code>.</p>
 </div>
 <p>Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local <a class="reference internal" href="#composition-cycle"><span class="std std-ref">cycle</span></a>), and the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> class of Projection can even
@@ -2882,11 +2883,13 @@ method is called or <strong>animate</strong> is specified in a call to its <a cl
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.graph">
 <span class="sig-name descname"><span class="pre">graph</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>the full <a class="reference internal" href="#psyneulink.core.compositions.composition.Graph" title="psyneulink.core.compositions.composition.Graph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> associated with the Composition. Contains both <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>
+<dd><p>the full <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>
+associated with the Composition.
+Contains both <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>
 (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or <a class="reference internal" href="#"><span class="doc">Compositions</span></a>) and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.compositions.composition.Graph" title="psyneulink.core.compositions.composition.Graph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3622,7 +3625,8 @@ when it is <a class="reference internal" href="#composition-execution"><span cla
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._analyze_graph">
 <span class="sig-name descname"><span class="pre">_analyze_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._analyze_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assigns <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> to nodes based on the structure of the <a class="reference internal" href="#psyneulink.core.compositions.composition.Graph" title="psyneulink.core.compositions.composition.Graph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a>.</p>
+<dd><p>Assigns <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> to nodes based on the structure
+of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>.</p>
 <p>By default, if _analyze_graph determines that a Node is <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a>, it is also given the role
 <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>. Similarly, if _analyze_graph determines that a Node is <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a>, it is also given the role <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a>.</p>
 <p>However, if the <strong>required_roles</strong> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_node" title="psyneulink.core.compositions.composition.Composition.add_node"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_node</span></code></a> is used to set any Node in the
@@ -5859,115 +5863,6 @@ belong to a <a class="reference internal" href="Pathway.html"><span class="doc">
 Nodes in a flattened cycle will be either all TERMINAL or all
 not TERMINAL.
 This role cannot be modified programmatically.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.composition.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Graph of vertices and edges.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.comp_to_vertex">
-<span class="sig-name descname"><span class="pre">comp_to_vertex</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.comp_to_vertex" title="Permalink to this definition">¶</a></dt>
-<dd><p>maps <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> in the graph to the <code class="xref any docutils literal notranslate"><span class="pre">Vertices</span></code> that represent them.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[<a class="reference internal" href="Component.html"><span class="doc">Component</span></a> : <code class="xref any docutils literal notranslate"><span class="pre">Vertex</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.vertices">
-<span class="sig-name descname"><span class="pre">vertices</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.vertices" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">Vertices</span></code> contained in this Graph;  each can be a <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> or a
-<code class="xref any docutils literal notranslate"><span class="pre">Projection</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[Vertex]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.dependency_dict">
-<span class="sig-name descname"><span class="pre">dependency_dict</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.dependency_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>maps each of the graph’s Components to the others from which it receives input
-(i.e., their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>).  For a <code class="xref any docutils literal notranslate"><span class="pre">Node</span></code>, this is one or more
-<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>;  for a Projection, it is a single Node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[<a class="reference internal" href="Component.html"><span class="doc">Component</span></a> : Set(<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>)]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.copy" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>A copy of the Graph. <code class="xref any docutils literal notranslate"><span class="pre">Vertices</span></code> are distinct from their originals, and point to the same</p></li>
-<li><p><strong>`Component &lt;Component&gt;` object</strong> (<a class="reference internal" href="#psyneulink.core.compositions.composition.Graph" title="psyneulink.core.compositions.composition.Graph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a>)</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.get_parents_from_component">
-<span class="sig-name descname"><span class="pre">get_parents_from_component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.get_parents_from_component" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – the Component whose parents will be returned</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of the parent <code class="xref any docutils literal notranslate"><span class="pre">Vertices</span></code> of the Vertex associated with <strong>component</strong>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list[<code class="xref any docutils literal notranslate"><span class="pre">Vertex</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.get_children_from_component">
-<span class="sig-name descname"><span class="pre">get_children_from_component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.get_children_from_component" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – the Component whose children will be returned</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of the child <code class="xref any docutils literal notranslate"><span class="pre">Vertices</span></code> of the Vertex associated with <strong>component</strong>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list[<code class="xref any docutils literal notranslate"><span class="pre">Vertex</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Graph.prune_feedback_edges">
-<span class="sig-name descname"><span class="pre">prune_feedback_edges</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Graph.prune_feedback_edges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Produces an acyclic graph from this Graph. <code class="xref any docutils literal notranslate"><span class="pre">Feedback</span></code> edges are pruned, as well as
-any edges that are <code class="xref any docutils literal notranslate"><span class="pre">potentially</span> <span class="pre">feedback</span></code> that are in cycles. After these edges are
-removed, if cycles still remain, they are “flattened.” That is, each edge in the cycle is pruned, and
-each the dependencies of each Node in the cycle are set to the pre-flattened union of all cyclic nodes’
-parents that are themselves not in a cycle.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple containing
-- the acyclic dependency dictionary produced from this
-Graph
-- a dependency dictionary containing only the edges
-removed to create the acyclic graph
-- the unmodified cyclic dependency dictionary of this
-Graph</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>

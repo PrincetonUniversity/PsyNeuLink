@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.16.1.0+7.g1025c7e4f documentation</title>
+  <title>Graph &mdash; PsyNeuLink 0.16.1.0+7.g1025c7e4f documentation</title>
   
 
   
@@ -32,9 +32,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Mechanisms" href="Mechanisms.html" />
-    <link rel="prev" title="Library" href="Library.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -128,12 +126,12 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
 
@@ -176,9 +174,7 @@
       </li>
 
         
-          <li><a href="Library.html">Library</a> &gt;</li>
-        
-      <li>Components</li>
+      <li>Graph</li>
     
   </ul>
 
@@ -201,41 +197,64 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <section id="components">
-<h1>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h1>
-<p>Subclasses of <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that implement specialized operations
-used by <a class="reference internal" href="Compositions.html"><span class="doc">Compositions</span></a> in the <a class="reference internal" href="Library.html"><span class="doc">Library</span></a>.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="TransferMechanisms.html">Transfer Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanisms.html">Objective Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="LeabraMechanism.html">LeabraMechanism</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ModulatoryMechanisms.html">Modulatory Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanisms.html">ControlMechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="LearningMechanisms.html">Learning Mechanisms</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Projections.html">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="PathwayProjections.html">PathwayProjections</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ModulatoryProjections.html">Modulatory Projections</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="LearningProjections.html">Learning Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlProjections.html">Control Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="GatingProjections.html">GatingProjections</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
+  <section id="module-psyneulink.core.globals.graph">
+<span id="graph"></span><h1>Graph<a class="headerlink" href="#module-psyneulink.core.globals.graph" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">EdgeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK">
+<span class="sig-name descname"><span class="pre">NON_FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK" title="Permalink to this definition">¶</a></dt>
+<dd><p>A standard edge that if it exists in a cycle will only be flattened, not pruned</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.FEEDBACK">
+<span class="sig-name descname"><span class="pre">FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FEEDBACK" title="Permalink to this definition">¶</a></dt>
+<dd><p>A “feedbacK” edge that will be immediately pruned to create an acyclic graph</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.FLEXIBLE">
+<span class="sig-name descname"><span class="pre">FLEXIBLE</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FLEXIBLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>An edge that will be pruned only if it exists in a cycle</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.from_any">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_any</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.from_any" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>an <a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EdgeType</span></code></a> corresponding to <strong>value</strong> if it
+exists</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType">EdgeType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.has">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">has</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.has" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if <strong>value</strong> corresponds to an <a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EdgeType</span></code></a>, or
+False otherwise</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.core.globals.graph.GraphError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">GraphError</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.GraphError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </section>
 
 
@@ -243,15 +262,6 @@ used by <a class="reference internal" href="Compositions.html"><span class="doc"
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Mechanisms.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="Library.html" class="btn btn-neutral" title="Library" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -281,7 +291,7 @@ used by <a class="reference internal" href="Compositions.html"><span class="doc"
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Components</a></li>
+<li><a class="reference internal" href="#">Graph</a></li>
 </ul>
 
             </div>
