@@ -1091,7 +1091,6 @@ class AutodiffComposition(Composition):
 
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
         self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
-        # FIX: WHY NOT USE _set() HERE?
         pytorch_rep.optimizer = opt
 
     def _get_loss(self, loss_spec):
