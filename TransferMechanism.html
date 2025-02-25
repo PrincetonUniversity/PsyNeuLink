@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.16.0.0 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.16.1.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0
+                  0.16.1.0
                 </div>
               
             
@@ -597,7 +597,7 @@ when used in a list, functions must be instances, as shown below:</p>
 <p>Notice that since noise is a <a class="reference internal" href="ParameterPort.html#parameterport-modulable-parameters"><span class="std std-ref">modulable Parameter</span></a>, assigning it a value
 after the TransferMechanism has been constructed must be done to its base value (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>
 for additional information).</p>
-<p>Finally, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clipping</span></code></a> can also be used to cap the result to within specified bounds:</p>
+<p>Finally, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clipping</span></code></a> can also be used to cap the result to within specified range:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="p">(</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[1.2, 1.2, 1.2]])</span>
@@ -607,7 +607,7 @@ for additional information).</p>
 <span class="go">array([[0.5       , 1.01316799, 1.2       ]])</span>
 </pre></div>
 </div>
-<p>Note that the bounds specified in <strong>clip</strong> apply to all elements of the result if it is an array.</p>
+<p>Note that the range specified in <strong>clip</strong> applies to all elements of the result if it is an array.</p>
 </section>
 <section id="with-integration">
 <span id="transfermechanism-examples-execution-with-integration"></span><h4><strong>With Integration</strong><a class="headerlink" href="#with-integration" title="Permalink to this headline">¶</a></h4>
@@ -929,7 +929,7 @@ its <a class="reference internal" href="Mechanism.html#psyneulink.core.component
 (see <a class="reference internal" href="#transfermechanism-execution"><span class="std std-ref">Execution</span></a> for additional details).</p></li>
 <li><p><strong>integrator_function</strong> (<em>IntegratorFunction : default AdaptiveIntegrator</em>) – specifies <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> to use when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True (see
 <a class="reference internal" href="#transfermechanism-examples-execution-with-integration"><span class="std std-ref">Execution with Integration</span></a> for additional details).</p></li>
-<li><p><strong>initial_value</strong> (<em>value</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for integration when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is
+<li><p><strong>initial_value</strong> (<em>value</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : 0</em>) – specifies the starting value for integration when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is
 True; must be the same length <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (see
 <a class="reference internal" href="#transfermechanism-execution-integration-initialization"><span class="std std-ref">Initialization, Resetting and Resuming Integration</span></a> for additional details).</p></li>
 <li><p><strong>integration_rate</strong> (<em>float : default 0.5</em>) – specifies the rate of integration of when the TransferMechanism when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True (see <a class="reference internal" href="#transfermechanism-execution-integration"><span class="std std-ref">Integration</span></a> for additional
@@ -990,9 +990,9 @@ determines the maximum allowable value; any element of the result that exceeds t
 maximum value is set to the value of clip that it exceeds.  If either item is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, no clipping is
 performed for that item.  If the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> returns an array, the clip is applied
 elementwise (i.e., the clip is applied to each element of the array independently). If either item is outside
-the interval of the function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.bounds" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.bounds"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bounds</span></code></a> after its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.scale" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.scale"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scale</span></code></a> and
-<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.offset" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> have been applied (i.e., <span class="math notranslate nohighlight">\(function.bounds(lower,upper) * scale +
-offset\)</span>), a warning is issued and that item of the clip is ignored.</p>
+the interval of the function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.range" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction.range"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">range</span></code></a> Parameter after its <code class="xref any docutils literal notranslate"><span class="pre">scale</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code> Parameters have been applied (i.e.,
+<span class="math notranslate nohighlight">\(function.range(lower,upper) * scale + offset\)</span>), a warning is issued and the corresponding items of
+clip are ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>tuple(float, float)</p>
