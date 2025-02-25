@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compilation &mdash; PsyNeuLink 0.15.3.0+7.g5c8168fb8 documentation</title>
+  <title>Compilation &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.15.3.0+7
+                  0.16.0.0+6
                 </div>
               
             
@@ -234,8 +234,8 @@ for additional information about the approach taken to compilation, and
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a>: Normal python execution</p></li>
-<li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVM</span></code></a>: Compile and execute individual nodes. The scheduling loop still runs in Python. If any of the nodes fails to compile, an error is raised. <em>NOTE:</em> Schedules that require access to node data will not work correctly.</p></li>
-<li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMExec" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMExec"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMExec</span></code></a>: Execution of <code class="xref any docutils literal notranslate"><span class="pre">Composition.exec</span></code> is replaced by a compiled equivalent. If the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> fails to compile, an error is raised.</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">ExecutionMode._LLVMPerNode</span></code>: Compile and execute individual nodes. The scheduling loop still runs in Python. If any of the nodes fails to compile, an error is raised. <em>NOTE:</em> Schedules that require access to node data will not work correctly.</p></li>
+<li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec" title="psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode._LLVMExec</span></code></a>: Execution of <code class="xref any docutils literal notranslate"><span class="pre">Composition.exec</span></code> is replaced by a compiled equivalent. If the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> fails to compile, an error is raised.</p></li>
 <li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a>: Execution of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a> is replaced by a compiled equivalent. If the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> fails to compile, an error is raised.</p></li>
 <li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Auto" title="psyneulink.core.llvm.__init__.ExecutionMode.Auto"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Auto</span></code></a>: This option attempts all three above mentioned granularities, and gracefully falls back to lower granularity. Warnings are raised in place of errors. This is the recommended way to invoke compiled execution as the final fallback is the Python baseline.</p></li>
 </ul>
