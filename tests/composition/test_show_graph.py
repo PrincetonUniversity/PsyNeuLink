@@ -132,7 +132,7 @@ class TestNested:
     # Run version:
     expected_output_for_nested_autodiff = 'digraph "Outer Comp" {\n\tgraph [label="Outer Comp" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"Outer Mech 1" [color=green penwidth=3 rank=source shape=oval]\n\t"Inner Mech 2" -> "Outer Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"Inner Mech 1" [color=black penwidth=1 rank=same shape=oval]\n\t"Outer Mech 1" -> "Inner Mech 1" [label="" arrowhead=normal color=orange penwidth=1]\n\t"Inner Mech 2" [color=black penwidth=1 rank=same shape=oval]\n\t"Inner Mech 1" -> "Inner Mech 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"Outer Mech 2" [color=red penwidth=3 rank=max shape=oval]\n}'
     @pytest.mark.pytorch
-    def test_nested_autodiff_showgraph(self):
+    def test_nested_autodiff_pytorch_rep(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         inner_mech_1 = ProcessingMechanism(name='Inner Mech 1', input_shapes=3)
         inner_mech_2 = ProcessingMechanism(name='Inner Mech 2', input_shapes=3)
