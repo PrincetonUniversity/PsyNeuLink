@@ -8142,10 +8142,20 @@ class TestFeedbackProjections:
         comp.add_projection(sender=C, receiver=A)
         assert comp.feedback_projections == []
 
-    def test_three_node_cycle_with_FEEDBACK(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_three_node_cycle_with_FEEDBACK(self, feedback):
         A, B, C = self._gen_mechs(3)
         comp = Composition(pathways=[A, B, C])
-        comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp.add_projection(sender=C, receiver=A, feedback=feedback)
+        assert comp.feedback_projections == A.get_afferents(C)
+
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_three_node_cycle_with_FEEDBACK_attr(self, feedback):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        p = MappingProjection(sender=C, receiver=A)
+        p.feedback = feedback
+        comp.add_projection(p)
         exp_feedback = [eff for eff in C.efferents if eff.receiver.owner is A]
         assert comp.feedback_projections == exp_feedback
 
@@ -8174,31 +8184,70 @@ class TestFeedbackProjections:
         comp = Composition(pathways=[[a, b, a], [a, c, a]])
         assert comp.feedback_projections == []
 
-    def test_two_pathway_cycle_feedback(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_two_pathway_cycle_feedback(self, feedback):
         a, b, c = self._gen_mechs(3)
         comp = Composition(
             pathways=[
-                [a, b, (MappingProjection, True), a],
-                [a, c, (MappingProjection, True), a],
+                [a, b, (MappingProjection, feedback), a],
+                [a, c, (MappingProjection, feedback), a],
             ]
         )
-        exp_feedback = [
-            eff for eff in b.efferents + c.efferents if eff.receiver.owner is a
-        ]
-        assert comp.feedback_projections == exp_feedback
+        assert comp.feedback_projections == b.get_efferents(a) + c.get_efferents(a)
 
     def test_extended_loop(self):
         a, b, c, d, e, f = self._gen_mechs(6)
         comp = Composition(pathways=[[a, b, c, d], [e, c, f, b, d]])
         assert comp.feedback_projections == []
 
-    def test_extended_loop_feedback(self):
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True])
+    def test_extended_loop_feedback(self, feedback):
         a, b, c, d, e, f = self._gen_mechs(6)
         comp = Composition(
-            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, True), d]]
+            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, feedback), d]]
         )
-        exp_feedback = [eff for eff in b.efferents if eff.receiver.owner is d]
-        assert comp.feedback_projections == exp_feedback
+        assert comp.feedback_projections == b.get_efferents(d)
+
+    def test_extended_loop_feedback_attr_two_flexible(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.FLEXIBLE
+        comp._analyze_graph()
+        assert comp.feedback_projections == c.get_efferents(f)
+
+    def test_extended_loop_feedback_attr_unneeded_flexible(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.FEEDBACK
+        comp._analyze_graph()
+        assert comp.feedback_projections == f.get_efferents(b)
+
+    def test_extended_loop_feedback_attr_both_non_feedback(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.NON_FEEDBACK
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.NON_FEEDBACK
+        comp._analyze_graph()
+        assert comp.feedback_projections == []
+
+    def test_extended_loop_feedback_attr_extraneous(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        # not in a cycle
+        c.get_efferents(d)[0].feedback = pnl.EdgeType.FLEXIBLE
+        comp._analyze_graph()
+        assert comp.feedback_projections == c.get_efferents(f)
 
 
 class TestMisc:

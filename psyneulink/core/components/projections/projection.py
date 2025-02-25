@@ -414,6 +414,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FEEDBACK, FUNCTION_PARAMS, \
@@ -724,7 +725,7 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self.exclude_in_autodiff = exclude_in_autodiff
-        self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
+        self.feedback = feedback  # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
@@ -1139,6 +1140,17 @@ class Projection_Base(Projection):
             super()._dependent_components,
             self.parameter_ports,
         ))
+
+    @property
+    def feedback(self):
+        return self._feedback
+
+    @feedback.setter
+    def feedback(self, value: Union[bool, EdgeType]):
+        if value is None:
+            self._feedback = None
+        else:
+            self._feedback = EdgeType.from_any(value)
 
     @property
     def _model_spec_parameter_blacklist(self):

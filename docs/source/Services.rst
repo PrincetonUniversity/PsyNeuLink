@@ -10,3 +10,4 @@ Services
    Preferences
    json
    Compilation
+   Graph

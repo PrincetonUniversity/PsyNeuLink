@@ -488,7 +488,7 @@ ANY = 'any'
 ONLY = 'only'
 EITHER = 'either'
 BOTH = 'both'
-MAYBE = 0.5
+MAYBE = 'MAYBE'
 
 SEPARATOR_BAR = ' | '
 PROGRESS_BAR_CHAR = '.'
