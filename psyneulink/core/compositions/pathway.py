@@ -353,8 +353,9 @@ from psyneulink._typing import Literal
 
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import \
-    ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.utilities import is_matrix
 from psyneulink.core.globals.registry import register_category
 
@@ -383,7 +384,8 @@ def _is_pathway_entry_spec(entry, desired_type: Literal['NODE', 'Projection', 'a
         is_proj = (_is_projection_spec(entry)
                    or (isinstance(entry, tuple)
                        and _is_projection_spec(entry[0])
-                       and entry[1] in {True, FEEDBACK, False, MAYBE})
+                       and EdgeType.has(entry[1])
+                       )
                    or (isinstance(entry, (set,list))
                    # or (isinstance(entry, set)
                        and all(_is_projection_spec(item) for item in entry)))

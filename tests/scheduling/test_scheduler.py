@@ -11,7 +11,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, EdgeType
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import VALUE
 from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never, graph_structure_conditions_available, gsc_unavailable_message
 from psyneulink.core.scheduling.scheduler import Scheduler
