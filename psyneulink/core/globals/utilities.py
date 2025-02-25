@@ -93,7 +93,6 @@ CONTENTS
 * `ContentAddressableList`
 * `make_readonly_property`
 * `get_class_attributes`
-* `get_global_seed`
 * `set_global_seed`
 
 """
@@ -101,9 +100,11 @@ CONTENTS
 import collections
 import copy
 import functools
+import importlib
 import inspect
 import itertools
 import logging
+import os
 import psyneulink
 import re
 import time
@@ -115,7 +116,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple, Iterable
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -125,6 +126,12 @@ from itertools import chain, combinations
 import numpy as np
 from numpy.typing import DTypeLike
 
+try:
+    from numpy import exceptions as np_exceptions
+except ImportError:
+    # Numpy exceptions is only available in Numpy 1.25+
+    np_exceptions = np
+
 # Conditionally import torch
 try:
     import torch
@@ -133,6 +140,8 @@ except ImportError:
 
 from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR,
                                               MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
+
+
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
@@ -152,7 +161,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1644,13 +1653,15 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         subarr = [recurse(x) for x in arr]
 
         with warnings.catch_warnings():
-            warnings.filterwarnings('error', message='.*ragged.*', category=np.VisibleDeprecationWarning)
+            warnings.filterwarnings('error', message='.*ragged.*', category=np_exceptions.VisibleDeprecationWarning)
             try:
                 # the elements are all uniform in shape, so we can use numpy's standard behavior
                 return np.asarray(subarr)
-            except np.VisibleDeprecationWarning:
+            except np_exceptions.VisibleDeprecationWarning:
                 pass
             except ValueError as e:
+                # Numpy 1.24+ switch jagged array from warning to ValueError.
+                # Note that the below call can still raise other ValueErrors.
                 if 'The requested array has an inhomogeneous shape' not in str(e):
                     raise
 
@@ -1708,7 +1719,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
-def get_global_seed(offset=1):
+def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
     _seed = (_seed + offset) % 2**31
@@ -2385,18 +2396,15 @@ def safe_create_np_array(value):
         if torch and torch.is_tensor(value):
             return value
 
-        warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
-        # NOTE: this will raise a ValueError in the future.
-        # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        warnings.filterwarnings('error', category=np_exceptions.VisibleDeprecationWarning)
         try:
             try:
                 return np.asarray(value)
-            except np.VisibleDeprecationWarning:
+            except np_exceptions.VisibleDeprecationWarning:
                 return np.asarray(value, dtype=object)
             except ValueError as e:
-                # numpy 1.24 removed the above deprecation and raises
-                # ValueError instead. Note that the below call can still
-                # raise other ValueErrors
+                # Numpy 1.24+ switch jagged array from warning to ValueError.
+                # Note that the below call can still raise other ValueErrors.
                 if 'The requested array has an inhomogeneous shape' in str(e):
                     return np.asarray(value, dtype=object)
                 raise
@@ -2413,5 +2421,62 @@ def safe_create_np_array(value):
                 return convert_all_elements_to_np_array(value)
             else:
                 raise
+
+
+def get_module_file_prefix(module: Union[str, types.ModuleType]) -> str:
+    """
+    Gets the file prefix of **module**, which may be used with
+    `get_stacklevel_skip_file_prefixes` or the `skip_file_prefixes`
+    argument of :func:`warnings.warn` (python 3.12+)
+
+    Args:
+        module (Union[str, types.ModuleType]): a python module or a name
+        of a module
+
+    Returns:
+        str: the file path of **module**, excluding __init__.py
+    """
+    try:
+        module = importlib.import_module(module)
+    except AttributeError:
+        # ModuleType
+        pass
+
+    module = inspect.getfile(module)
+
+    if module.endswith('__init__.py'):
+        module = os.path.dirname(module)
+
+    return module
+
+
+def get_stacklevel_skip_file_prefixes(
+    modules: Iterable[Union[str, types.ModuleType]]
+) -> int:
+    """
+    Gets a value for the `stacklevel` argument of :func:`warnings.warn`
+    or :func:`logging.log` that corresponds to the outermost stack frame
+    that does not belong to any of **modules** as determined by their
+    file paths. Functions similarly to the `skip_file_prefixes` argument
+    of :func:`warnings.warn` (python 3.12+).
+
+    Args:
+        modules (Iterable[Union[str, types.ModuleType]]): python modules
+        or names of modules to skip
+
+    Returns:
+        int: the outermost stacklevel that excludes **modules**
+    """
+    prefixes = [get_module_file_prefix(p) for p in modules]
+
+    res = 1
+    # skip this function
+    for i, frame_info in enumerate(inspect.stack()[1:]):
+        for p in prefixes:
+            if frame_info.frame.f_code.co_filename.startswith(p):
+                break
+        else:
+            return i + 1
+    return res
 
 #endregion

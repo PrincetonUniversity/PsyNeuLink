@@ -289,7 +289,7 @@ class TestResetValues:
         np.testing.assert_allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
         np.testing.assert_allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])
 
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_reset_integrator_function(self, comp_mode):
         """This test checks that the Mechanism.integrator_function is reset when the mechanism is"""
 

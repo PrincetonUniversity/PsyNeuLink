@@ -3764,8 +3764,8 @@ class TestRun:
         np.testing.assert_allclose(np.array([[75.]]), output)
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3864,8 +3864,8 @@ class TestRun:
                 and "that is in deferred init" in str(error_text.value))
 
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
                                      ])
     def test_execute_no_inputs(self, mode):
         m_inner = ProcessingMechanism(input_shapes=2)
@@ -4274,7 +4274,7 @@ class TestRun:
             comp.run()
 
     def _check_comp_ex(self, comp, comparison, comp_mode, struct_name, context=None, is_not=False):
-        if comp_mode == pnl.ExecutionMode.Python:
+        if comp_mode is pnl.ExecutionMode.Python:
             return
 
         if context is None:
@@ -4423,8 +4423,8 @@ class TestRun:
         self._check_comp_ex(comp, None, comp_mode, struct_name, is_not=True)
         self._check_comp_ex(comp, orig_comp_ex, comp_mode, struct_name, is_not=True)
 
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode.LLVM])
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
+    @pytest.mark.parametrize("comp_mode2", [m for m in pytest.helpers.get_comp_execution_modes() if m.values[0] is not pnl.ExecutionMode._LLVMPerNode])
     def test_execution_after_cleanup_enum_param(self, comp_mode, comp_mode2):
         """
         This test checks that compiled sync works for Parameters with Enum values.
@@ -6600,6 +6600,52 @@ class TestInputSpecifications:
                 num_trials = 2
             len(ocomp.results)==num_trials
 
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize(
+        'merge_targets_1', [True, False], ids=['merge_targets_1', 'separate_targets_1'],
+    )
+    @pytest.mark.parametrize(
+        'merge_targets_2', [True, False], ids=['merge_targets_2', 'separate_targets_2'],
+    )
+    def test_targets_order(self, merge_targets_1, merge_targets_2):
+        in_1 = pnl.TransferMechanism(name='in_1', input_shapes=1)
+        in_2 = pnl.TransferMechanism(name='in_2', input_shapes=2)
+        out_1 = pnl.TransferMechanism(name='out_1', input_shapes=1)
+        out_2 = pnl.TransferMechanism(name='out_2', input_shapes=2)
+
+        comp = pnl.AutodiffComposition(
+            name='comp',
+            pathways=[
+                [in_1, out_1],
+                [in_1, out_2],
+                [in_2, out_1],
+                [in_2, out_2],
+            ],
+        )
+
+        in_1_train = [0, 0, 0, 1, 1, 1]
+        in_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+        out_1_train = [0, 0, 0, 1, 1, 1]
+        out_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+
+        inp_1 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_1: out_1_train, out_2: out_2_train},
+        }
+        inp_2 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_2: out_2_train, out_1: out_1_train},
+        }
+        if merge_targets_1:
+            inp_1 = {'inputs': inp_1}
+        if merge_targets_2:
+            inp_2 = {'inputs': inp_2}
+
+        res_1 = comp.learn(**inp_1, execution_mode=pnl.ExecutionMode.PyTorch, context=1)
+        res_2 = comp.learn(**inp_2, execution_mode=pnl.ExecutionMode.PyTorch, context=2)
+
+        np.testing.assert_array_equal(res_1, res_2)
+
 
 class TestProperties:
 
@@ -6607,8 +6653,8 @@ class TestProperties:
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Auto, pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVM, marks=[_fallback_xfail, pytest.mark.llvm]),
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode._LLVMPerNode, marks=[_fallback_xfail, pytest.mark.llvm]),
+                                      pytest.param(pnl.ExecutionMode._LLVMExec, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.LLVMRun, marks=[_fallback_xfail, pytest.mark.llvm]),
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[_fallback_xfail, pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
@@ -8038,6 +8084,83 @@ class TestNodeRoles:
         assert comp.nodes_to_roles[C] == {NodeRole.OUTPUT, NodeRole.ORIGIN}
 
 
+# based on tests in TestNodeRoles
+@pytest.mark.composition
+class TestFeedbackProjections:
+    @staticmethod
+    def _gen_mechs(n):
+        return [ProcessingMechanism() for _ in range(n)]
+
+    def test_two_node_cycle(self):
+        A, B = self._gen_mechs(2)
+        comp = Composition(pathways=[A, B, A])
+        assert comp.feedback_projections == []
+
+    def test_three_node_cycle(self):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        assert comp.feedback_projections == []
+
+    def test_three_node_cycle_with_FEEDBACK(self):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+        exp_feedback = [eff for eff in C.efferents if eff.receiver.owner is A]
+        assert comp.feedback_projections == exp_feedback
+
+    def test_branch(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_bypass(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c, d], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_chain(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, c], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_convergent(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, e], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_two_pathway_cycle(self):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(pathways=[[a, b, a], [a, c, a]])
+        assert comp.feedback_projections == []
+
+    def test_two_pathway_cycle_feedback(self):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(
+            pathways=[
+                [a, b, (MappingProjection, True), a],
+                [a, c, (MappingProjection, True), a],
+            ]
+        )
+        exp_feedback = [
+            eff for eff in b.efferents + c.efferents if eff.receiver.owner is a
+        ]
+        assert comp.feedback_projections == exp_feedback
+
+    def test_extended_loop(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(pathways=[[a, b, c, d], [e, c, f, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_extended_loop_feedback(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, True), d]]
+        )
+        exp_feedback = [eff for eff in b.efferents if eff.receiver.owner is d]
+        assert comp.feedback_projections == exp_feedback
+
+
 class TestMisc:
 
     @pytest.mark.skip(reason="This test is hanging on MacOS for some reason.")
@@ -8319,6 +8442,48 @@ class TestMisc:
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
         assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
+
+    # empty pathway bypasses call to .execute, but most_recent_context
+    # should still be set
+    @pytest.mark.parametrize(
+        'inner_pathway',
+        [
+            pytest.param([ProcessingMechanism()], id='1_mech'),
+            pytest.param([], id='empty'),
+        ]
+    )
+    def test_most_recent_context_nested(self, inner_pathway):
+        inner = pnl.Composition(name='inner', pathways=inner_pathway)
+        outer = pnl.Composition(name='outer')
+        outer.add_node(inner)
+
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id is None
+
+        inner.run()
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id == inner.name
+
+        if len(inner_pathway) == 0:
+            with pytest.raises(
+                pnl.MechanismError,
+                match=r'Number of inputs \(1\) to inner Output_CIM does not match its number of input_ports \(0\)'
+            ) as e:
+                outer.run()
+            if e:
+                pytest.xfail(
+                    reason='running outer comp with empty inner comp fails validation'
+                )
+        else:
+            outer.run()
+            assert outer.most_recent_context.execution_id == outer.name
+            assert inner.most_recent_context.execution_id == outer.name
+
+        # COMMAND_LINE to bypass check for input passed to nested comp
+        c = pnl.Context(source=pnl.ContextFlags.COMMAND_LINE)
+        inner.run(context=c)
+        assert outer.most_recent_context.execution_id == outer.name
+        assert inner.most_recent_context.execution_id == c.execution_id
 
 
 class TestInputSpecsDocumentationExamples:

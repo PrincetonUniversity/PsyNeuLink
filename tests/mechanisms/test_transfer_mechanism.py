@@ -1,3 +1,4 @@
+import contextlib
 import numpy as np
 import pytest
 
@@ -1650,9 +1651,9 @@ class TestOnResumeIntegratorMode:
 
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # '_LLVMPerNode' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.usefixtures("comp_mode_no_per_node")
     def test_termination_measures(self, comp_mode):
         stim_input = ProcessingMechanism(input_shapes=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', input_shapes=2, function=Logistic)
@@ -1719,33 +1720,37 @@ class TestClip:
         # test_for           clip       scale offset input   expected     warning_msg
         ["no clip",          None,        2,     1,   1.5,  2.63514895,   None],
         ["ok clip",        (1.0, 3.0),    2,     1,   1.5,  2.63514895,   None],
-        ["clip lower",     (1.0, 3.0),    2,    -1,   1.5,  1.0,          None],
-        ["clip upper",     (1.0, 3.0),    2,     2,   1.5,  3.0,          None],
-        ["warning lower",   (-1.0, 2.0),  2,     0,   1.5,  1.63514895,  ("The lower value of clip for 'MECH' (-1.0) "
-                                                                           "is below its function's lower bound (0), "
+        ["clip lower",     (1.0, 3.0),    2,    -1,   1.5,  1.0,          (r"The upper value of clip for '.*' \(3.0\) "
+                                                                           r"is above its function's upper bound \(1\), "
                                                                            "so it will not have an effect.")],
-        ["warning upper",  (-1.0, 3.0),   2,    -1,   1.5,  0.63514895, ("The upper value of clip for 'MECH' (3.0) "
-                                                                          "is above its function's upper bound (1), "
-                                                                          "so it will not have an effect.")],
-        ["warning both",  (1.0, 5.0),     2,     2,   1.5,  3.63514895,  ("The lower value of clip for 'MECH' (1.0) "
-                                                                           "is below its function's lower bound (2) "
-                                                                           "and its upper value (5.0) is above the "
-                                                                           "function's upper bound (4), so clip will "
+        ["clip upper",     (1.0, 3.0),    2,     2,   1.5,  3.0,          (r"The lower value of clip for '.*' \(1.0\) "
+                                                                           r"is below its function's lower bound \(2\), "
+                                                                           "so it will not have an effect.")],
+        ["warning lower",  (-1.0, 2.0),   2,     0,   1.5,  1.63514895,   (r"The lower value of clip for '.*' \(-1.0\) "
+                                                                           r"is below its function's lower bound \(0\), "
+                                                                           "so it will not have an effect.")],
+        ["warning upper",  (-1.0, 3.0),   2,    -1,   1.5,  0.63514895,   (r"The upper value of clip for '.*' \(3.0\) "
+                                                                           r"is above its function's upper bound \(1\), "
+                                                                           "so it will not have an effect.")],
+        ["warning both",   (1.0, 5.0),    2,     2,   1.5,  3.63514895,   (r"The lower value of clip for '.*' \(1.0\) "
+                                                                           r"is below its function's lower bound \(2\) "
+                                                                           r"and its upper value \(5.0\) is above the "
+                                                                           r"function's upper bound \(4\), so clip will "
                                                                            "not have an effect.")],
         ]
-    arg_names = "test_for, clip, scale, offset, input, expected, warning"
+    arg_names = "test_for, clip, scale, offset, variable, expected, warning"
 
     @pytest.mark.parametrize(arg_names, test_params, ids=[x[0] for x in test_params])
-    def test_clip_with_respect_to_fct_bounds(self, test_for, clip, scale, offset, input, expected, warning):
+    def test_clip_with_respect_to_fct_bounds(self, test_for, clip, scale, offset, variable, expected, warning):
         """Test for clip that falls outside range of function"""
-        if warning:
-            with pytest.warns(UserWarning) as warnings:
-                mech = TransferMechanism(name='MECH', clip=clip, function=Logistic(scale=scale, offset=offset))
-                assert warning in str(warnings.list[0].message)
-        else:
+
+        context = pytest.warns(UserWarning, match=warning) if warning is not None else contextlib.nullcontext()
+
+        with context:
             mech = TransferMechanism(clip=clip, function=Logistic(scale=scale, offset=offset))
+
         assert mech.clip == clip
-        np.testing.assert_allclose(mech.execute(input), expected)
+        np.testing.assert_allclose(mech.execute(variable), expected)
 
 
 class TestOutputPorts:
@@ -1788,3 +1793,55 @@ class TestOutputPorts:
         # np.testing.assert_allclose(T.output_ports[1].value, [2.0])
         # np.testing.assert_allclose(T.output_ports[2].value, [3.0])
         # np.testing.assert_allclose(T.output_ports[3].value, [4.0])
+
+@pytest.mark.mechanism
+@pytest.mark.parametrize("initializer_param", [{}, {pnl.INITIALIZER: 5.0}], ids=["default_initializer", "custom_initializer"])
+def test_integrator_mode_reset(mech_mode, initializer_param):
+    T = pnl.TransferMechanism(integrator_mode=True,
+                              integrator_function=pnl.AdaptiveIntegrator(**initializer_param))
+
+    ex = pytest.helpers.get_mech_execution(T, mech_mode)
+    initializer_value = initializer_param.get(pnl.INITIALIZER, 0)
+
+    ex([1])
+    ex([2])
+    result = ex([3])
+    np.testing.assert_array_equal(result, [[2.125 + initializer_value / 8]])
+
+    reset_ex = pytest.helpers.get_mech_execution(T, mech_mode, tags=frozenset({"reset"}), member="reset")
+
+    reset_result = reset_ex(None if mech_mode == "Python" else [0])
+    np.testing.assert_array_equal(reset_result, [[initializer_value]])
+
+@pytest.mark.composition
+@pytest.mark.usefixtures("comp_mode_no_per_node")
+def test_integrator_mode_reset_in_composition(comp_mode):
+
+    # Note, input_mech is scheduled to only execute on pass 5!
+    input_mech = pnl.TransferMechanism(
+        input_shapes=2,
+        integrator_mode=True,
+        integration_rate=1,
+        reset_stateful_function_when=pnl.AtTrialStart()
+    )
+
+    lca = pnl.LCAMechanism(
+        input_shapes=2,
+        termination_threshold=10,
+        termination_measure=pnl.TimeScale.TRIAL,
+        execute_until_finished=False
+    )
+
+    gate = pnl.ProcessingMechanism(input_shapes=2)
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([input_mech, lca, gate])
+
+    comp.scheduler.add_condition(input_mech, pnl.AtPass(5))
+
+    comp.scheduler.add_condition(lca, pnl.Always())
+
+    comp.scheduler.add_condition(gate, pnl.WhenFinished(lca))
+
+    comp.run([[1, 0], [0, 1]], execution_mode=comp_mode)
+    np.testing.assert_allclose(comp.results, [[[0.52293998, 0.40526519]], [[0.4336115, 0.46026939]]])

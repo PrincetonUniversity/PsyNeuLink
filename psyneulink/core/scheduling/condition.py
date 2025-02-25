@@ -11,6 +11,7 @@
 import collections
 import inspect
 import numbers
+import re
 import warnings
 
 import dill
@@ -21,7 +22,11 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
-from psyneulink.core.globals.utilities import parse_valid_identifier, toposort_key
+from psyneulink.core.globals.utilities import (
+    get_stacklevel_skip_file_prefixes,
+    parse_valid_identifier,
+    toposort_key,
+)
 
 
 __all__ = [  # noqa: F822  (dynamically generated)
@@ -369,3 +374,35 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
 
 
 When = Condition
+
+if graph_structure_conditions_available:
+    def _pnl__GSCWithOperations_str(self):
+        return '{0}({1})'.format(
+            type(self).__name__, graph_scheduler.condition._get_condition_args_str(self.nodes)
+        )
+    pnl_conditions_module['_GSCWithOperations'].__str__ = _pnl__GSCWithOperations_str
+
+    orig__validate_graph = pnl_conditions_module['_GSCReposition']._validate_graph
+
+    def _pnl__GSCReposition__validate_graph(self, graph):
+        new_warning = None
+        with warnings.catch_warnings(record=True):
+            warnings.filterwarnings('error', r'.*is already.*in graph.*')
+            try:
+                orig__validate_graph(self, graph)
+            except UserWarning as w:
+                new_warning = re.sub(
+                    r'(.*in graph).*?(\..*)$',
+                    r'\1\2',
+                    # currently warning produces newlines in graph string
+                    str(w).replace('\n', ' '),
+                )
+        if new_warning is not None:
+            warnings.warn(
+                new_warning,
+                stacklevel=get_stacklevel_skip_file_prefixes(
+                    ('psyneulink.core.scheduling', graph_scheduler)
+                )
+            )
+
+    pnl_conditions_module['_GSCReposition']._validate_graph = _pnl__GSCReposition__validate_graph

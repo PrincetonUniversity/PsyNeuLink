@@ -1593,16 +1593,17 @@ class LinearCombination(
         weights = self._get_pytorch_fct_param_value('weights', device, context)
         if weights is not None:
             weights = torch.tensor(weights, device=device).double()
+        # Note: the first dimension of x is batch, aggregate over the second dimension
         if self.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 0)
+                return lambda x: torch.sum(x * weights, 1)
             else:
-                return lambda x: torch.sum(x, 0)
+                return lambda x: torch.sum(x, 1)
         elif self.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights, 0)
+                return lambda x: torch.prod(x * weights, 1)
             else:
-                return lambda x: torch.prod(x, 0)
+                return lambda x: torch.prod(x, 1)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -1735,8 +1736,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         be used if `variable <MatrixTransform.variable>` is a scalar (i.e., has only one element), and **operation**
         is set to *L0* (since it is not needed, and can produce a divide by zero error).
 
-    bounds : None
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1823,7 +1822,6 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
         normalize = Parameter(False)
-        bounds = None
 
     @check_user_specified
     @beartype

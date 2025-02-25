@@ -49,7 +49,7 @@ class ExecutionMode(enum.Flag):
     LLVM
       compile and run Composition `Nodes <Composition_Nodes>` and `Projections <Projection>` individually.
 
-    LLVMExec
+    _LLVMExec
       compile and run each `TRIAL <TimeScale.TRIAL>` individually.
 
     LLVMRun
@@ -74,19 +74,41 @@ class ExecutionMode(enum.Flag):
       compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s using CUDA for GPU.
    """
 
-    Python   = 0
-    PyTorch = enum.auto()
-    LLVM     = enum.auto()
-    PTX      = enum.auto()
-    _Run      = enum.auto()
+    Python    = 0
+    PyTorch   = enum.auto()
+    _LLVM     = enum.auto()
+    _PTX      = enum.auto()
+    _PerNode  = enum.auto()
     _Exec     = enum.auto()
+    _Run      = enum.auto()
     _Fallback = enum.auto()
 
-    Auto = _Fallback | _Run | _Exec | LLVM
-    LLVMRun = LLVM | _Run
-    LLVMExec = LLVM | _Exec
-    PTXRun = PTX | _Run
-    COMPILED = ~ (Python | PyTorch)
+    Auto = _Fallback | _Run | _Exec | _LLVM
+    PTXRun = _PTX | _Run
+    LLVMRun = _LLVM | _Run
+    _LLVMExec = _LLVM | _Exec
+    _LLVMPerNode = _LLVM | _PerNode
+
+    def is_cpu_compiled(self):
+        is_cpu_compiled = self & self._LLVM
+
+        # assert that only on of CPU and GPU compiled modes is enabled
+        if is_cpu_compiled:
+            assert not self & self._PTX
+
+        return is_cpu_compiled
+
+    def is_gpu_compiled(self):
+        is_gpu_compiled = self & self._PTX
+
+        # assert that only on of CPU and GPU compiled modes is enabled
+        if is_gpu_compiled:
+            assert not self & self._LLVM
+
+        return is_gpu_compiled
+
+    def is_compiled(self):
+        return self.is_cpu_compiled() or self.is_gpu_compiled()
 
 
 _binary_generation = 0

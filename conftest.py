@@ -71,8 +71,7 @@ def pytest_runtest_setup(item):
 def pytest_generate_tests(metafunc):
     mech_and_func_modes = ['Python',
                            pytest.param('LLVM', marks=pytest.mark.llvm),
-                           pytest.param('PTX', marks=[pytest.mark.llvm,
-                                                      pytest.mark.cuda])
+                           pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
                           ]
 
     if "func_mode" in metafunc.fixturenames:
@@ -81,9 +80,9 @@ def pytest_generate_tests(metafunc):
     if "mech_mode" in metafunc.fixturenames:
         metafunc.parametrize("mech_mode", mech_and_func_modes)
 
-    if "comp_mode_no_llvm" in metafunc.fixturenames:
+    if "comp_mode_no_per_node" in metafunc.fixturenames:
         modes = [m for m in get_comp_execution_modes()
-                 if m.values[0] is not pnlvm.ExecutionMode.LLVM]
+                 if m.values[0] is not pnlvm.ExecutionMode._LLVMPerNode]
         metafunc.parametrize("comp_mode", modes)
 
     elif "comp_mode" in metafunc.fixturenames:
@@ -151,7 +150,7 @@ def pytest_runtest_teardown(item):
     pnlvm.cleanup("llvm" in item.keywords and not skip_cleanup_check)
 
 @pytest.fixture
-def comp_mode_no_llvm():
+def comp_mode_no_per_node():
     # dummy fixture to allow 'comp_mode' filtering
     pass
 
@@ -187,8 +186,8 @@ def llvm_current_fp_precision():
 @pytest.helpers.register
 def get_comp_execution_modes():
     return [pytest.param(pnlvm.ExecutionMode.Python),
-            pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
-            pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode._LLVMPerNode, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode._LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
@@ -208,29 +207,29 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
-def get_func_execution(func, func_mode):
+def get_func_execution(func, func_mode, *, tags:frozenset=frozenset(), member='function'):
     if func_mode == 'LLVM':
-        return pnlvm.execution.FuncExecution(func).execute
+        return pnlvm.execution.FuncExecution(func, tags=tags).execute
 
     elif func_mode == 'PTX':
-        return pnlvm.execution.FuncExecution(func).cuda_execute
+        return pnlvm.execution.FuncExecution(func, tags=tags).cuda_execute
 
     elif func_mode == 'Python':
-        return func.function
+        return getattr(func, member)
     else:
         assert False, "Unknown function mode: {}".format(func_mode)
 
 @pytest.helpers.register
-def get_mech_execution(mech, mech_mode):
+def get_mech_execution(mech, mech_mode, *, tags:frozenset=frozenset(), member='execute'):
     if mech_mode == 'LLVM':
-        return pnlvm.execution.MechExecution(mech).execute
+        return pnlvm.execution.MechExecution(mech, tags=tags).execute
 
     elif mech_mode == 'PTX':
-        return pnlvm.execution.MechExecution(mech).cuda_execute
+        return pnlvm.execution.MechExecution(mech, tags=tags).cuda_execute
 
     elif mech_mode == 'Python':
         def mech_wrapper(x):
-            mech.execute(x)
+            getattr(mech, member)(x)
             return mech.output_values
 
         return mech_wrapper

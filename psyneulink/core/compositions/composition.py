@@ -1122,7 +1122,7 @@ that execution only.
       an AutodffComposition to be run in any mode (e.g., for comparison and/or compatibility purposes).
 
   .. warning::
-    * `ExecutionMode.LLVM` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
+    * `ExecutionMode.LLVMRun` and `ExecutionMode.PyTorch` can only be used in the `learn <AutodiffComposition.learn>`
       method of an `AutodiffComposition`;  specifying them in the `learn <Composition.learn>`()` method of a standard
       `Composition` causes an error.
 
@@ -2060,21 +2060,22 @@ in order of their power, are:
 
 .. _Composition_Compilation_Modes:
 
-    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
-      but more forgiving modes, in the order listed below, for each that fails;
+    * *True* -- try to use the one that yields the greatest improvement, progressively reverting to less powerful
+      but more forgiving modes, trying LLVMRun, _LLVMExec, and Python.
 
     * `ExecutionMode.LLVMRun` - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
       the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
       using the Python interpreter;
 
-    * `ExecutionMode.LLVMExec` -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
+    * `ExecutionMode._LLVMExec` -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter
       to iterate over them; if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically
       equivalent the execution of the `execute <Composition.execute>` method using the Python interpreter;
+      This mode does not support Trial scope scheduling rules and should not be used outside of development or testing.
 
-    * `ExecutionMode.LLVM` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
+    * `ExecutionMode._LLVMPerNode` -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections
       <Projection>`, using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`,
       execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on Node `Parameters` is not supported;
+      `Conditions <Condition>` that rely on Node `Parameters` are not supported;
 
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
@@ -2087,7 +2088,7 @@ in order of their power, are:
          using it with a standard `Composition` is possible, but it will **not** have the expected effect of
          executing its `learn <Composition.learn>` method using PyTorch.
 
-    * `ExecutionMode.PTXrun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
+    * `ExecutionMode.PTXRun` -- compile multiple `TRIAL <TimeScale.TRIAL>`\\s  for execution on GPU
       (see `below <Composition_Compilation_PTX>` for additional details).
 
 .. _Composition_Compilation_PyTorch:
@@ -10057,7 +10058,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {target: value for target, value in zip(self.targets_from_outputs_map.keys(), targets.values())}
+            return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
 
         ret = {}
         for node, values in targets.items():
@@ -10280,14 +10281,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
-
-        # If Composition is in learning mode, not called from COMMAND_LINE, and not still preparing,
-        #   presumably inputs have already been parsed so shouldn't do it again
-        # FIX: 11/3/23 - NOTE: This circumvents parsing of inputs when they are a func and called from autodiff_forward
-        if (context and (context.runmode & ContextFlags.LEARNING_MODE)
-                and (context.source & ContextFlags.COMPOSITION)
-                and not (context.execution_phase & ContextFlags.PREPARING)):
-            return inputs, 1
 
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
@@ -11430,9 +11423,9 @@ _
                 try:
                     comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
                     _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
-                    if execution_mode & pnlvm.ExecutionMode.LLVM:
+                    if execution_mode.is_cpu_compiled():
                         results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                    elif execution_mode & pnlvm.ExecutionMode.PTX:
+                    elif execution_mode.is_gpu_compiled():
                         results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
                     else:
                         assert False, "Unknown execution mode: {}".format(execution_mode)
@@ -11510,8 +11503,18 @@ _
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 if input_nodes:
                     try:
+
                         # IMPLEMENTATION NOTE: for autdoiff, the following includes backward pass after forward pass
-                        execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+
+                        # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
+                        # need to call _parse_trial_inputs, as the inputs are already in the correct format
+                        # from the call to _parse_learning_spec
+                        if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
+                                                    'CompositionRunner._batch_function_inputs' in str(inputs)):
+                            execution_stimuli = next(inputs)
+                        else:
+                            execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
+
                     except StopIteration:
                         break
                 else:
@@ -11835,14 +11838,16 @@ _
                            context=context,
                            node=self.controller)
 
-                if self.controller and not execution_mode & pnlvm.ExecutionMode.COMPILED:
+                if self.controller and not execution_mode.is_compiled():
+
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
                 else:
-                    assert (execution_mode == pnlvm.ExecutionMode.LLVM
-                            or execution_mode & pnlvm.ExecutionMode._Fallback),\
+                    assert execution_mode & pnlvm.ExecutionMode._PerNode
+                    assert execution_mode.is_cpu_compiled(), \
                         f"PROGRAM ERROR: Unrecognized compiled execution_mode: '{execution_mode}'."
+
                     _comp_ex.freeze_values()
                     _comp_ex.execute_node(self.controller)
 
@@ -12054,30 +12059,27 @@ _
                     self._initialize_from_context(context, base_context, override=False)
                     context.composition = self
 
-            # Run compiled execution (if compiled execution was requested
+            # Try compiled execution (if compiled execution was requested)
             # NOTE: This should be as high up as possible,
             # but still after the context has been initialized
-            if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                is_simulation = (context is not None and
-                                 ContextFlags.SIMULATION_MODE in context.runmode)
-                # Try running in Exec mode first
-                if (execution_mode & pnlvm.ExecutionMode._Exec):
-                    # There's no mode to execute simulations.
+            if execution_mode.is_compiled():
+
+                assert execution_mode.is_cpu_compiled(), "Unsupported execution mode: {}".format(execution_mode)
+
+                is_simulation = (context is not None and ContextFlags.SIMULATION_MODE in context.runmode)
+
+                _comp_ex = pnlvm.CompExecution.get(self, context)
+
+                if execution_mode & pnlvm.ExecutionMode._Exec:
+                    # There's no mode to execute compiled simulations.
                     # Simulations are run as part of the controller node wrapper.
                     assert not is_simulation
+
                     try:
                         llvm_inputs = self._validate_execution_inputs(inputs)
-                        _comp_ex = pnlvm.CompExecution.get(self, context)
-                        if execution_mode & pnlvm.ExecutionMode.LLVM:
-                            _comp_ex.execute(llvm_inputs)
-                        else:
-                            assert False, "Unknown execution mode: {}".format(execution_mode)
+                        _comp_ex.execute(llvm_inputs)
 
-                        report(self,
-                               PROGRESS_REPORT,
-                               report_num=report_num,
-                               content='trial_end',
-                               context=context)
+                        report(self, PROGRESS_REPORT, report_num=report_num, content='trial_end', context=context)
 
                         self._propagate_most_recent_context(context)
                         return _comp_ex.extract_node_output(self.output_CIM)
@@ -12086,27 +12088,18 @@ _
                         if not execution_mode & pnlvm.ExecutionMode._Fallback:
                             raise e from None
 
-                        warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
+                        warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(self.name, self.name, str(e)))
+                        execution_mode = pnlvm.ExecutionMode.Python
 
-                # Exec failed for some reason, we can still try node level execution_mode
-                # Filter out nested compositions. They are not executed in this mode
-                # Filter out controller if running simulation.
-                mechanisms = (n for n in self._all_nodes
-                              if isinstance(n, Mechanism) and
-                                 (n is not self.controller or not is_simulation))
+                elif execution_mode & pnlvm.ExecutionMode._PerNode:
 
-                assert execution_mode & pnlvm.ExecutionMode.LLVM
-                try:
-                    _comp_ex = pnlvm.CompExecution.get(self, context)
                     # Compile all mechanism wrappers
-                    for m in mechanisms:
-                        _comp_ex._set_bin_node(m)
-                except Exception as e:
-                    if not execution_mode & pnlvm.ExecutionMode._Fallback:
-                        raise e from None
+                    for m in self._all_nodes:
+                        if isinstance(m, Mechanism) and not (m is self.controller and is_simulation):
+                            _comp_ex._set_bin_node(m)
 
-                    warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                    execution_mode = pnlvm.ExecutionMode.Python
+                else:
+                    assert False, "Unsupported execution mode: {}".format(execution_mode)
 
 
             # Generate first frame of animation without any active_items
@@ -12171,12 +12164,15 @@ _
                 inputs = self._validate_execution_inputs(inputs)
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
-            if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.execute_node(self.input_CIM, inputs)
+            if execution_mode.is_compiled():
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
                 assert not self.is_nested or len(self.parameter_CIM.afferents) == 0
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
+                assert execution_mode.is_cpu_compiled()
+
+                _comp_ex.execute_node(self.input_CIM, inputs)
 
             elif self.is_nested:
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
@@ -12375,7 +12371,10 @@ _
                 # This ensures that the order in which nodes execute does not affect the results of this timestep
                 frozen_values = {}
                 new_values = {}
-                if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                if execution_mode.is_compiled():
+                    assert execution_mode & pnlvm.ExecutionMode._PerNode
+                    assert execution_mode.is_cpu_compiled()
+
                     _comp_ex.freeze_values()
 
                 # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
@@ -12458,8 +12457,12 @@ _
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
-                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                        if execution_mode.is_compiled():
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
+                            assert execution_mode.is_cpu_compiled()
+
                             _comp_ex.execute_node(node)
+
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -12485,7 +12488,10 @@ _
 
                     elif isinstance(node, Composition):
 
-                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                        if execution_mode.is_compiled():
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
+                            assert execution_mode.is_cpu_compiled()
+
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
                             srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
@@ -12518,15 +12524,18 @@ _
 
                         # Run node-level compiled nested composition
                         # only if there are no control projections
-                        if execution_mode == pnlvm.ExecutionMode.LLVM and len(node.parameter_CIM.afferents) != 0:
+                        if execution_mode.is_compiled() and len(node.parameter_CIM.afferents) != 0:
                             nested_execution_mode = pnlvm.ExecutionMode.Python
                         else:
                             nested_execution_mode = execution_mode
-                        ret = node.execute(context=context,
-                                           execution_mode=nested_execution_mode)
+
+                        ret = node.execute(context=context, execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
-                        if execution_mode & pnlvm.ExecutionMode.COMPILED:
+                        if execution_mode.is_compiled():
+                            assert execution_mode & pnlvm.ExecutionMode._PerNode
+                            assert execution_mode.is_cpu_compiled()
+
                             # Update result in binary data structure
                             _comp_ex.insert_node_output(node, ret)
 
@@ -12624,7 +12633,17 @@ _
 
             # Reset context flags
             context.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(context=context)
+
+            if execution_mode.is_compiled():
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
+                assert execution_mode.is_cpu_compiled()
+
+                _comp_ex.freeze_values()
+                _comp_ex.execute_node(self.output_CIM)
+
+            else:
+                self.output_CIM.execute(context=context)
+
             context.execution_phase = ContextFlags.IDLE
 
             # Animate output_CIM
@@ -12668,22 +12687,21 @@ _
                        content='execute_end',
                        context=context)
 
-            # Extract result here
-            if execution_mode & pnlvm.ExecutionMode.COMPILED:
-                _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM)
-                report(self,
-                       PROGRESS_REPORT,
-                       report_num=report_num,
-                       content='trial_end',
-                       context=context)
-                return _comp_ex.extract_node_output(self.output_CIM)
-
             # UPDATE TIME and RETURN ***********************************************************************************
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            return self.get_output_values(context)
+            self.most_recent_context = context
+
+            # Extract result here
+            if execution_mode.is_compiled():
+                assert execution_mode & pnlvm.ExecutionMode._PerNode
+                assert execution_mode.is_cpu_compiled()
+
+                return _comp_ex.extract_node_output(self.output_CIM)
+
+            else:
+                return self.get_output_values(context)
 
     def __call__(self, *args, **kwargs):
         """Execute Composition if any args are provided; else simply return results of last execution.
@@ -13708,9 +13726,22 @@ _
 
     @property
     def feedback_projections(self):
-        return ContentAddressableList(component_type=Projection,
-                                      list=[p.component for p in self.graph.vertices
-                                            if p.feedback is EdgeType.FEEDBACK])
+        projs = []
+        # EdgeType.FLEXIBLE projections are only determined to be
+        # FEEDBACK or NON_FEEDBACK in graph_processing
+        for receiver_mech_vert in self.graph_processing.vertices:
+            receiver = receiver_mech_vert.component
+            for sender_mech_vert, edge_type in receiver_mech_vert.source_types.items():
+                if edge_type is not EdgeType.FEEDBACK:
+                    continue
+                sender = sender_mech_vert.component
+                # need to get by component because each Graph has
+                # different Vertex instances
+                for proj_vert in self.graph.get_children_from_component(sender):
+                    if self.graph.comp_to_vertex[receiver] in proj_vert.children:
+                        projs.append(proj_vert.component)
+
+        return ContentAddressableList(component_type=Projection, list=projs)
 
     @property
     def is_nested(self):
