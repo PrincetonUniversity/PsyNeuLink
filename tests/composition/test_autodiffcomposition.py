@@ -3883,8 +3883,8 @@ def test_training_xor_with_batching(batch_size, batched_results):
     model = nn.Sequential(linear1, sigmoid, linear2, sigmoid).to(device) # MLP model
 
     # Copy the initial weights and biases. Make sure to copy the data, not just the reference.
-    weights1 = linear1.weight.detach().numpy().copy()
-    weights2 = linear2.weight.detach().numpy().copy()
+    weights1 = linear1.weight.detach().cpu().numpy().copy()
+    weights2 = linear2.weight.detach().cpu().numpy().copy()
     # bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
     # bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
 
@@ -3913,7 +3913,7 @@ def test_training_xor_with_batching(batch_size, batched_results):
             torch_losses.append(loss.item())
             torch_results.append(pred)
 
-    torch_results = torch.stack(torch_results).detach().numpy()
+    torch_results = torch.stack(torch_results).detach().cpu().numpy()
 
     autodiff_mode = pnl.ExecutionMode.PyTorch
 
