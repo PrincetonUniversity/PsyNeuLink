@@ -538,7 +538,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = nn.ParameterList()
-        for proj_wrapper in [p for p in self._projection_wrappers if not p._projection.exclude_in_autodiff]:
+        for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
 
     # # MODIFIED 2/22/25 NEW:
@@ -1405,7 +1405,7 @@ class PytorchMechanismWrapper():
 class PytorchProjectionWrapper():
     """Wrapper for Projection in a PytorchCompositionWrapper
 
-    The matrix of the wrapped `_projection <PytorchProjectionWrapper._projection>` is assigned as a parameter of
+    The matrix of the wrapped `projection <PytorchProjectionWrapper.projection>` is assigned as a parameter of
     (set of connection weights in ) the PyTorch Module that, coupled with a corresponding input and `torch.matmul
     <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, provide the input to the Pytorch
     function associated with the `Node <Composition_Node>` of the AutdiffComposition that is the `receiver
@@ -1425,8 +1425,11 @@ class PytorchProjectionWrapper():
     Attributes
     ----------
 
-    _projection : Projection
+    projection : Projection
         PsyNeuLink `Projection` being wrapped.
+
+    matrix : torch.nn.Parameter
+        Pytorch parameter for the matrix of the Projection.
 
     sender : PytorchMechanismWrapper
         the PytorchMechanismWrapper node from which the PytorchProjectionWrapper receives its variable.
@@ -1437,9 +1440,19 @@ class PytorchProjectionWrapper():
     function : _gen_pytorch_fct
         Pytorch version of the Projection's function assigned in its __init__.
 
-    matrix : torch.nn.Parameter
-        Pytorch parameter for the matrix of the Projection.
-
+    _use : str[LEARNING, CACHE, DISPLAY]
+        the use of the Projection; the following keywords designate the use of the PytorchProjectionWrapper: 
+        
+        * *LEARNING*: attributes of its `projection <PytorchProjectionWrapper.projection>` (e.g., its `learnable
+          <MappingProjection.learnable>` and `function <MappingProjection.function>` Parameters) are used for execution
+          of the corresponding Pytorch Module.
+        
+        * *CACHE*: used to store values for transfer between the `matrix
+          <MappingProjection.matrix>` Parameter of its PsyNeuLink `projection <PytorchProjectionWrapper.projection>` 
+          and the corresponding parameters of a Pytorch module being used for learning;
+          
+        * *DISPLAY*: used by the `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method to 
+          display its `pytorch_representation <AutodiffComposition.pytorch_representation>`. 
     """
 
     def __init__(self,
@@ -1451,7 +1464,7 @@ class PytorchProjectionWrapper():
                  sender:PytorchMechanismWrapper=None,
                  receiver:PytorchMechanismWrapper=None,
                  context=None):
-        self._projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
+        self.projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
@@ -1502,10 +1515,10 @@ class PytorchProjectionWrapper():
         return self.function(variable, self.matrix)
 
     def log_matrix(self):
-        if self._projection.parameters.matrix.log_condition != LogCondition.OFF:
+        if self.projection.parameters.matrix.log_condition != LogCondition.OFF:
             detached_matrix = self.matrix.detach().cpu().numpy()
-            self._projection.parameters.matrix._set(detached_matrix, context=self._context)
-            self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
+            self.projection.parameters.matrix._set(detached_matrix, context=self._context)
+            self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
     def _extract_llvm_matrix(self, ctx, builder, state, params):
         proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(self._idx)])
@@ -1514,14 +1527,14 @@ class PytorchProjectionWrapper():
         dim_x, dim_y = self.matrix.detach().numpy().shape
 
         func_p, func_s = ctx.get_param_or_state_ptr(builder,
-                                                    self._projection,
-                                                    self._projection.parameters.function,
+                                                    self.projection,
+                                                    self.projection.parameters.function,
                                                     param_struct_ptr=proj_params,
                                                     state_struct_ptr=proj_state)
 
         proj_matrix = ctx.get_param_or_state_ptr(builder,
-                                                 self._projection.function,
-                                                 self._projection.function.parameters.matrix,
+                                                 self.projection.function,
+                                                 self.projection.function.parameters.matrix,
                                                  param_struct_ptr=func_p,
                                                  state_struct_ptr=func_s)
 
@@ -1559,7 +1572,7 @@ class PytorchProjectionWrapper():
         return output_vec
 
     def __repr__(self):
-        return "PytorchWrapper for: " +self._projection.__repr__()
+        return "PytorchWrapper for: " +self.projection.__repr__()
 
 
 class PytorchFunctionWrapper():

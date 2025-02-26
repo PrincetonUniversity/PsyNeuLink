@@ -384,10 +384,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             self._mechanism.parameters.value._set(detached_value, self._context)
 
     def log_matrix(self):
-        if self._projection.parameters.matrix.log_condition != LogCondition.OFF:
+        if self.projection.parameters.matrix.log_condition != LogCondition.OFF:
             detached_matrix = self.matrix.detach().cpu().numpy()
-            self._projection.parameters.matrix._set(detached_matrix, context=self._context)
-            self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
+            self.projection.parameters.matrix._set(detached_matrix, context=self._context)
+            self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
 
 class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
@@ -404,7 +404,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
 
     Attributes
     ----------
-    _projection:  MappingProjection
+    projection:  MappingProjection
         the Projection of the GRUComposition being wrapped
 
     torch_parameter: Pytorch parameter
@@ -417,23 +417,23 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     def __init__(self, projection:MappingProjection, torch_parameter:tuple, device:str, context=None):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
         # GRUComposition Projection being wrapped:
-        self._projection = projection # PNL Projection being wrapped
+        self.projection = projection # PNL Projection being wrapped
         # Assign parameter and tensor indices of Pytorch GRU module parameter corresponding to the Projection's matrix:
         self.torch_parameter, self.matrix_indices = torch_parameter
         # Projections for GRUComposition are not included in autodiff; matrices are set directly in Pytorch GRU module:
-        self._projection.exclude_in_autodiff = True
+        self.projection.exclude_in_autodiff = True
 
     def set_torch_gru_parameter(self, context):
         """Set relevant part of tensor for parameter of Pytorch GRU module from GRUComposition's Projections."""
-        matrix = self._projection.parameters.matrix._get(context).T
+        matrix = self.projection.parameters.matrix._get(context).T
         proj_matrix_as_tensor =  torch.tensor(matrix.squeeze(), dtype=torch.float32)
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
 
     def log_matrix(self):
-        if self._projection.parameters.matrix.log_condition != LogCondition.OFF:
+        if self.projection.parameters.matrix.log_condition != LogCondition.OFF:
             detached_matrix = self.matrix.detach().cpu().numpy()
-            self._projection.parameters.matrix._set(detached_matrix, context=self._context)
-            self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
+            self.projection.parameters.matrix._set(detached_matrix, context=self._context)
+            self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
 
 class PytorchGRUFunctionWrapper(PytorchFunctionWrapper):
