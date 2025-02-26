@@ -188,5 +188,7 @@ jobs:
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
-        path: ${{ steps.install.outputs.wheel }} ${{ steps.install.outputs.sdist }}
+        path: |
+          ${{ steps.install.outputs.wheel }}
+          ${{ steps.install.outputs.sdist }}
         retention-days: 2
