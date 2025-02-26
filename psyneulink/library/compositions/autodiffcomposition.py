@@ -1737,7 +1737,6 @@ class AutodiffComposition(Composition):
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
-
     @handle_external_context(fallback_most_recent=True)
     def save(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
         """Saves all weight matrices for all MappingProjections in the AutodiffComposition

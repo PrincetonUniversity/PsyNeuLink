@@ -197,9 +197,19 @@ class PytorchShowGraph(ShowGraph):
                 # # MODIFIED 2/22/25 END
 
             if proj in self.pytorch_rep._projection_map:
+                # # MODIFIED 2/25/25 NEW:
+                # if ((hasattr(proj, 'learnable') and proj.learnable)
+                #         or (proj in self.pytorch_rep._projection_map and
+                #             self.pytorch_rep._projection_map[proj].matrix.requires_grad)):
+                #     proj_is_learnable = True
+                # # MODIFIED 2/25/25 END
 
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
+                # # MODIFIED 2/25/25 OLD:
                 if proj.learnable or self.pytorch_rep._projection_map[proj].matrix.requires_grad:
+                # # MODIFIED 2/25/25 NEW:
+                # if proj_is_learnable:
+                # # MODIFIED 2/25/25 END
                     kwargs['color'] = self.learning_color
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style

@@ -15,7 +15,7 @@ from typing import Union, Optional, Literal
 
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
-    PytorchProjectionWrapper, PytorchFunctionWrapper
+    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.keywords import ALL, INPUTS
 from psyneulink.core.globals.log import LogCondition
@@ -94,6 +94,37 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
 
         self.copy_weights_to_torch_gru(context)
+
+    def _flatten_for_pytorch(self,
+                             pnl_proj,
+                             sndr_mech, rcvr_mech,
+                             nested_port, nested_mech, access, context)->tuple:
+        """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
+        Replace GRUCompositon's nodes with gru_mech and projections to and from it."""
+
+        sndr_mech_wrapper = None
+        rcvr_mech_wrapper = None
+
+        if access == ENTER_NESTED:
+            rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+            direct_proj = MappingProjection(name="Projection to GRU COMP",
+                                         sender=pnl_proj.sender,
+                                         receiver=self._composition.gru_mech,
+                                         learnable=pnl_proj.learnable)
+
+        elif access == EXIT_NESTED:
+            sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+            direct_proj = MappingProjection(name="Projection from GRU COMP",
+                                            sender=self._composition.gru_mech,
+                                            receiver=pnl_proj.receiver,
+                                            learnable=pnl_proj.learnable)
+
+        else:
+            assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
+
+        self._composition._show_graph_projections = direct_proj
+
+        return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
 
     # # MODIFIED 2/22/25 OLD:
     # def _get_nodes_map(self, context):

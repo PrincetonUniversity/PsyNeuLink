@@ -34,10 +34,11 @@ from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_arr
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
-__all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper']
+__all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
+           'ENTER_NESTED', 'EXIT_NESTED']
 
-ENTRY = 0
-EXIT = 1
+ENTER_NESTED = 0
+EXIT_NESTED = 1
 
 class DataTypeEnum(Enum):
 
@@ -90,7 +91,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr
                 ^--projection-->^                                                     ^---projection-->^
                 ^----PytorchProjectionWrapper---->^                  ^----PytorchProjectionWrapper---->^
-                         ENTRY                                                       EXIT
+                          ENTER_NESTED                                            EXIT_NESTED
 
     2) Handle coordination of passing data and outcomes back to PsyNeuLink objects, handled by two main methods:
 
@@ -241,6 +242,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node_wrapper in self._wrapped_nodes:
             if isinstance(node_wrapper, PytorchCompositionWrapper):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
+                # 2/25/25 - FIX: FILTER BASED ON LEARNING OR RUNNING; OR CONSTRUCT SEPARATE_SHOW_GRAPH_PROJECTIONS HERE
                 self._projection_map.update(node_wrapper._projection_map)
                 # Not sure if this is needed, but just to be safe
                 # MODIFIED 2/22/25 OLD:
@@ -319,6 +321,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Assign Projections for outermost Composition (including any that are nested within it at any level)
         Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
         so if any nested Compositions have Projections to/from them, they are assigned to the outermost Composition
+        See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.
         """
 
         # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
@@ -332,97 +335,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 (f"PROGRAM ERROR: {self} has a parameter_CIM which is not should not currently be the case "
                  f"and is not handled by flatterning in {self.__class__.__name__}.")
 
-            # Projection within composition
-            if all(sndr_and_recvr in self._nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
-                proj_sndr = self._nodes_map[sndr_mech]
-                proj_rcvr = self._nodes_map[rcvr_mech]
-                pnl_proj = projection
-
-            # Ignore CIMs within the same Composition (they are not learnable; see figure in docstring)
-            elif sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
+            # Ignore input_CIM and output_CIM within the same Composition (they are not learnable)
+            if sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
 
-            # # MODIFIED 2/22/26 OLD:
-            # # See figure in docstring above for explanation of the following:
-            #
-            # # ENTRY:
-            # # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
-            # #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS INTO IT AS IT SEES FIT
-            # # input_cim of nested Composition:
-            # #    - projection is to input_CIM that is not in current Composition so must be to a nested one;
-            # #    - needed for learning, so create map for Projection
-            # elif (isinstance(rcvr_mech, CompositionInterfaceMechanism)
-            #       and rcvr_mech.composition is not self
-            #       and rcvr_mech is rcvr_mech.composition.input_CIM):
-            #     proj_sndr = self._nodes_map[sndr_mech]
-            #     # Replace rcvr_mech (input_CIM) with the node in the nested Composition that receives the projection
-            #     nested_rcvr_port, nested_rcvr_mech, _ = \
-            #         rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
-            #     nested_pytorch_comp = self._nodes_map[rcvr_mech.composition]
-            #     # MODIFIED 2/22/25 OLD:
-            #     proj_rcvr = nested_pytorch_comp._nodes_map[nested_rcvr_mech]
-            #     # # MODIFIED 2/22/25 NEW:
-            #     # proj_rcvr = nested_pytorch_comp._get_nodes_map()[nested_rcvr_mech]
-            #     # MODIFIED 2/22/25 END
-            #     # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
-            #     pnl_proj = projection.receiver.owner.port_map[nested_rcvr_port][1].efferents[0]
-            #     assert pnl_proj == nested_rcvr_port.path_afferents[0], \
-            #         (f"PROGRAM ERROR: First afferent Projection to '{nested_rcvr_port.owner.name}' "
-            #          f"(which should be from '{nested_rcvr_port.path_afferents[0].sender.owner.name}') is "
-            #          f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
-            #     # If direct Projection does not exist between the sender from the outer comp
-            #     #   and the node in the nested comp, create one, but don't add to Composition
-            #     #   (its just so it can be displayed in show_graph(show_pytorch=True)
-            #     destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
-            #     destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
-            #     # This is in case receiver in PNL comp has been mapped to a diff node in pytorchCompositionwrapper
-            #     mapped_rcvr_mech = nested_pytorch_comp._nodes_map[nested_rcvr_mech]._mechanism
-            #     # Get the port of the original receiver to use for the mapped receiver
-            #     port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
-            #     try:
-            #         # FIX: ASSIGN LEARNABLE STATUS BASED ON PROJECTION FROM OUTER NODE TO INPUT_CIM
-            #         MappingProjection(sender=projection.sender,
-            #                           receiver=mapped_rcvr_mech.input_ports[port_idx],
-            #                           learnable=projection.learnable)
-            #     except DuplicateProjectionError:
-            #         pass
-            #     # FIX: TRY PUTTING THIS (AND THE ONE FROM THE OUTPUT NODE TO THE OUTPUT_CIM) IN THE _PROJECTIONS_MAP
-            #
-            # # EXIT
-            # # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
-            # #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS OUT OF IT AS IT SEES FIT
-            # # output_cim of nested Composition:
-            # #    - projection is from output_CIM that is not in current Composition so must be from a nested one;
-            # #    - needed for learning, so create map for Projection
-            # elif (isinstance(sndr_mech, CompositionInterfaceMechanism)
-            #       and sndr_mech.composition is not self
-            #       and sndr_mech is sndr_mech.composition.output_CIM):
-            #     proj_rcvr = self._nodes_map[rcvr_mech]
-            #     # Replace sndr_mech (output_CIM) with the node in the nested Composition that sends the projection
-            #     nested_sndr_port, nested_sndr_mech, _ = \
-            #         sndr_mech._get_source_info_from_output_CIM(projection.sender)
-            #     nested_pytorch_comp = self._nodes_map[sndr_mech.composition]
-            #     # MODIFIED 2/22/25 OLD:
-            #     proj_sndr = nested_pytorch_comp._nodes_map[nested_sndr_mech]
-            #     # MODIFIED 2/22/25 NEW:
-            #     # proj_sndr = nested_pytorch_comp._get_nodes_map()[nested_sndr_mech]
-            #     # MODIFIED 2/22/25 END
-            #
-            #     # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-            #     pnl_proj = projection.sender.owner.port_map[nested_sndr_port][0].path_afferents[0]
-            #     assert pnl_proj == nested_sndr_port.efferents[0], \
-            #         (f"PROGRAM ERROR: First efferent Projection from '{nested_sndr_port.owner.name}' "
-            #          f"(to '{nested_sndr_port.efferents[0].receiver.owner.name}') is not the same as its "
-            #          f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
-            #     pnl_proj = projection
-            # else:
-            #     continue
-
-            # MODIFIED 2/22/25 NEW:
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
                 pnl_proj, proj_sndr, proj_rcvr = self._handle_nested_comp(projection, device, context)
+
+            # Projection within composition
+            elif all(sndr_and_recvr in self._nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
+                proj_sndr = self._nodes_map[sndr_mech]
+                proj_rcvr = self._nodes_map[rcvr_mech]
+                pnl_proj = projection
 
             else:
                 continue
@@ -443,18 +369,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._projection_map[projection] = pytorch_proj_wrapper
             self._projection_wrappers.append(pytorch_proj_wrapper)
 
-    # MODIFIED 2/22/25 NEW:
     def _handle_nested_comp(self, projection:MappingProjection, device:str, context:Context)->tuple:
         """Flatten nested Composition and assign Projections to/from it to outermost Composition
-        See figure in module docstring for explanation of how Projections to/from nested Compositions are handled;
         This method is called when a Projection is to/from a CIM in a nested Composition that is not in the current
         Composition, and is needed for learning.
         It may be overridden by a subclass (grucomposition) to handle flattening differently.
+        See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.
         """
         sndr_mech = projection.sender.owner
         rcvr_mech = projection.receiver.owner
 
-        # ENTRY:
+        # ENTER_NESTED:
         # input_cim of nested Composition:
         #    - projection is to input_CIM that is not in current Composition so must be to a nested one;
         #    - needed for learning, so create map for Projection
@@ -466,11 +391,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[rcvr_mech.composition]
-            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection, sndr_mech, rcvr_mech,
-                                                                                      nested_rcvr_port, nested_rcvr_mech, ENTRY, context)
+            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection,
+                                                                                      sndr_mech, rcvr_mech,
+                                                                                      nested_rcvr_port,
+                                                                                      nested_rcvr_mech,
+                                                                                      ENTER_NESTED, context)
             proj_sndr = self._nodes_map[sndr_mech]
 
-        # EXIT
+        # EXIT_NESTED
         # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
         #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS OUT OF IT AS IT SEES FIT
         # output_cim of nested Composition:
@@ -484,30 +412,30 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 sndr_mech._get_source_info_from_output_CIM(projection.sender)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[sndr_mech.composition]
-            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection, sndr_mech, rcvr_mech,
-                                                                                      nested_sndr_port, nested_sndr_mech, EXIT, context)
+            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection,
+                                                                                      sndr_mech, rcvr_mech,
+                                                                                      nested_sndr_port,
+                                                                                      nested_sndr_mech,
+                                                                                      EXIT_NESTED, context)
             proj_rcvr = self._nodes_map[rcvr_mech]
         return pnl_proj, proj_sndr, proj_rcvr
-    # MODIFIED 2/22/25 END
 
-    def _flatten_for_pytorch(self, projection, sndr_mech, rcvr_mech,
+    def _flatten_for_pytorch(self,
+                             projection,
+                             sndr_mech, rcvr_mech,
                              nested_port, nested_mech, access, context)->tuple:
 
-        if access == ENTRY:
-            # FIX:
-            # ENTRY CASE -------------------------------------------------------------------------------
+        if access == ENTER_NESTED:
             proj_sndr = None
-            # MODIFIED 2/22/25 OLD:
             proj_rcvr = self._nodes_map[nested_mech]
-            # # MODIFIED 2/22/25 NEW:
-            # proj_rcvr = nested_pytorch_comp._get_nodes_map()[nested_rcvr_mech]
-            # MODIFIED 2/22/25 END
+
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
             pnl_proj = projection.receiver.owner.port_map[nested_port][1].efferents[0]
             assert pnl_proj == nested_port.path_afferents[0], \
                 (f"PROGRAM ERROR: First afferent Projection to '{nested_port.owner.name}' "
                  f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
                  f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
+
             # If direct Projection does not exist between the sender from the outer comp
             #   and the node in the nested comp, create one, but don't add to Composition
             #   (its just so it can be displayed in show_graph(show_pytorch=True)
@@ -525,14 +453,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pass
             # FIX: TRY PUTTING THIS (AND THE ONE FROM THE OUTPUT NODE TO THE OUTPUT_CIM) IN THE _PROJECTIONS_MAP
 
-        elif access == EXIT:
+        elif access == EXIT_NESTED:
             # FIX:
-            # EXIT CASE -------------------------------------------------------------------------------
+            # EXIT_NESTED CASE -------------------------------------------------------------------------------
             proj_rcvr = None
             proj_sndr = self._nodes_map[nested_mech]
-            # MODIFIED 2/22/25 NEW:
-            # proj_sndr = self._get_nodes_map()[nested_sndr_mech]
-            # MODIFIED 2/22/25 END
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
             pnl_proj = projection.sender.owner.port_map[nested_port][0].path_afferents[0]
@@ -543,7 +468,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             pnl_proj = projection
 
         else:
-            assert False, f"PROGRAM ERROR: access must be ENTRY or EXIT, not {access}"
+            assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr, proj_rcvr
 
