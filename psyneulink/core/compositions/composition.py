@@ -8262,6 +8262,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
+    def get_targets(self):
+        return self.get_nodes_by_role(NodeRole.TARGET)
+
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
         # unpack processing components and add to composition
         if len(processing_pathway) == 3 and isinstance(processing_pathway[1], MappingProjection):
@@ -8354,7 +8357,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                         learning_update)
 
         elif is_function_type(learning_function):
-            target_mechanism = ProcessingMechanism(name='Target')
+            # target_mechanism = ProcessingMechanism(name='Target')
+            target_mechanism = ProcessingMechanism(name=self._get_target_name(output_source_input_port.owner))
             objective_mechanism = ComparatorMechanism(name='Comparator',
                                                       sample={NAME: SAMPLE,
                                                               VARIABLE: [0.], WEIGHT: -1},
@@ -8446,7 +8450,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate,
                                       learning_update):
 
-        target_mechanism = ProcessingMechanism(name='Target')
+        # target_mechanism = ProcessingMechanism(name='Target')
+        target_mechanism = ProcessingMechanism(name=self._get_target_name(output_source))
 
         objective_mechanism = ComparatorMechanism(name='Comparator',
                                                   sample={NAME: SAMPLE,
@@ -8482,7 +8487,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       learning_rate,
                                       learning_update):
 
-        target_mechanism = ProcessingMechanism(name='Target',
+        # target_mechanism = ProcessingMechanism(name="Target",
+        target_mechanism = ProcessingMechanism(name=self._get_target_name(output_source),
                                                default_variable=output_source.defaults.value)
 
         objective_mechanism = PredictionErrorMechanism(name='PredictionError',
@@ -8743,7 +8749,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Otherwise, create new ones
         except KeyError:
-            target_mechanism = ProcessingMechanism(name='Target',
+            target_mechanism = ProcessingMechanism(name=self._get_target_name(output_source),
                                                    default_variable=output_source.output_ports[0].value)
             # Base for object_mechanism output_ports:
             sample={NAME: SAMPLE,
@@ -9059,6 +9065,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - error_projections (for an existing learning_mechanism),
         #     so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
+
+    def _get_target_name(self, output_source:ProcessingMechanism)->str:
+        return f"{TARGET} for {output_source.name}"
 
     def _add_error_projection_to_dependent_learning_mechs(self, source_learning_mech, context=None):
 
