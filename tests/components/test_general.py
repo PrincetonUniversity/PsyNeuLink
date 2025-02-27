@@ -8,21 +8,11 @@ from psyneulink.core.components.projections.modulatory.modulatoryprojection impo
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 
 # gather all Component classes (a set to ensure no duplicates)
-component_classes = []
-component_class_constructor_arguments = {}
-for item in pnl.__all__:
-    evaled = eval(f'pnl.{item}')
-
-    if isinstance(
-        evaled,
-        pnl.core.components.component.ComponentsMeta
-    ):
-        component_classes.append(evaled)
-        component_class_constructor_arguments[evaled] = inspect.signature(
-            evaled.__init__
-        ).parameters
-
-component_classes.sort(key=lambda x: x.__name__)
+component_classes = pytest.helpers.get_all_subclasses()
+component_class_constructor_arguments = {
+    cls_: inspect.signature(cls_.__init__).parameters
+    for cls_ in component_classes
+}
 
 
 @pytest.mark.parametrize(
