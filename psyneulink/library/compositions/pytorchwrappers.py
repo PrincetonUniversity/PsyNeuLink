@@ -1138,6 +1138,7 @@ class PytorchMechanismWrapper():
                  composition_wrapper,  # Composition wrapper to which node belongs (for executing nested Compositions)
                  component_idx,        # index of the Mechanism in the Composition
                  device,               # needed for Pytorch
+                 use:list=None,        # specifies use of the Mechanism
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
@@ -1148,6 +1149,7 @@ class PytorchMechanismWrapper():
         self._context = context
         self._is_input = False
         self._is_bias = False
+        self._use = use or [LEARNING, SYNCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
         self._composition_wrapper_owner = composition_wrapper
