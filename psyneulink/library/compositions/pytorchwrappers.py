@@ -18,6 +18,7 @@ import numpy as np
 from enum import Enum, auto
 
 from psyneulink.core.components.functions.stateful import StatefulFunction
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -291,10 +292,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pytorch_node = node.pytorch_composition_wrapper_type(node, device, outer_creator=self, context=context)
             # Wrap Mechanism
             else:
-                pytorch_node = PytorchMechanismWrapper(node,
-                                                       self,
-                                                       self._composition._get_node_index(node),
-                                                       device,
+                pytorch_node = PytorchMechanismWrapper(mechanism=node,
+                                                       composition_wrapper=self,
+                                                       component_idx=self._composition._get_node_index(node),
+                                                       use=[LEARNING, SYNCH],
+                                                       device=device,
                                                        context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
@@ -354,13 +356,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             # MODIFIED 2/22/25 END
 
+            component_idx = list(self._composition._inner_projections).index(projection)
             port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(
-                projection,
-                pnl_proj,
-                list(self._composition._inner_projections).index(projection),
-                port_idx,
-                device,
+                projection=projection,
+                pnl_proj=pnl_proj,
+                component_idx=component_idx,
+                port_idx=port_idx,
+                use=[LEARNING, SYNCH],
+                device=device,
                 sender=proj_sndr,
                 receiver=proj_rcvr,
                 context=context)
@@ -1134,11 +1138,11 @@ class PytorchMechanismWrapper():
     """
 
     def __init__(self,
-                 mechanism,            # Mechanism to be wrapped
-                 composition_wrapper,  # Composition wrapper to which node belongs (for executing nested Compositions)
-                 component_idx,        # index of the Mechanism in the Composition
-                 device,               # needed for Pytorch
-                 use:list=None,        # specifies use of the Mechanism
+                 mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
+                 composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
+                 component_idx:int,                             # index of the Mechanism in the Composition
+                 use:Union[list, Literal[LEARNING, SYNCH]],     # use wrapper for learning for synching of values
+                 device:str,                                    # needed for Pytorch
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
@@ -1476,18 +1480,19 @@ class PytorchProjectionWrapper():
     """
 
     def __init__(self,
-                 projection:Projection,
-                 pnl_proj:Projection,
-                 component_idx:int,
-                 port_idx:int,
+                 projection:Projection,                      # Projection to be wrapped
+                 pnl_proj:Projection,                        # one that directly projects to/from sender/receiver
+                 component_idx:int,                          # index of the Projection in the Composition
+                 port_idx:int,                               # index of the Port in the sender's Mechanism
+                 use:Union[list, Literal[LEARNING, SYNCH]],  # specifies use of the Mechanism
                  device:str,
                  sender:PytorchMechanismWrapper=None,
                  receiver:PytorchMechanismWrapper=None,
-                 use:list=None,
                  context=None):
-        self.projection = projection # Projection being wrapped (may *not* be the one being learned; see note above)
-        self._pnl_proj = pnl_proj     # Projection that directly projects to/from sender/receiver (see above)
-        self._use = use or [LEARNING, SYNCH] 
+
+        self.projection = projection  # Projection being wrapped (may *not* be the one being learned; see note above)
+        self._pnl_proj = pnl_proj     # Projection to/from CIM that actually projects to/from sender/receiver
+        self._use = use or [LEARNING, SYNCH]  # use of wrapper for learning and/or synching of connection weights
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._port_idx = port_idx     # Index of sender's port (used by LLVM)
         self._value_idx = 0           # Index of value in sender's value (used in collect_afferents)
