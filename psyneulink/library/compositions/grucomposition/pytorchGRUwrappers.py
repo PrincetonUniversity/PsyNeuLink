@@ -83,7 +83,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                  (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]
         pnl_proj_wts = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
         for pnl_proj, torch_matrix in zip(pnl_proj_wts, torch_gru_wts_indices):
-            self._projection_map[pnl_proj] = PytorchGRUProjectionWrapper(pnl_proj, torch_matrix, SYNCH, device, context)
+            self._projection_map[pnl_proj] = PytorchGRUProjectionWrapper(projection=pnl_proj,
+                                                                         torch_parameter=torch_matrix,
+                                                                         use=SYNCH,
+                                                                         device=device)
         self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
 
         if pnl.bias:
@@ -94,8 +97,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                       (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
             for pnl_bias_proj, torch_bias in zip(pnl_biases, torch_gru_bias_indices):
-                self._projection_map[pnl_bias_proj] = PytorchGRUProjectionWrapper(pnl_bias_proj, torch_bias,
-                                                                                  SYNCH, device, context)
+                self._projection_map[pnl_bias_proj] = PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
+                                                                                  torch_parameter=torch_bias,
+                                                                                  use=SYNCH,
+                                                                                  device=device)
             self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
 
         self.copy_weights_to_torch_gru(context)
@@ -127,8 +132,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
-        #2/25/25 - FIX: ?OK:
-        component_idx = list(self._composition.projections).index(pnl_proj)
+        # FIX: SHOULD EITHER:
+        #    USE projection_wrappers FOR THIS, SINCE CIM<->GRU PROJECTIONS ARE NOT IN comp.projections
+        #    OR JUST PASS None or 0 for component_idx and port_idx
+        component_idx = list(self._projection_wrappers.projections).index(pnl_proj)
         port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
         proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                 pnl_proj=pnl_proj,
@@ -377,8 +384,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
                  projection:MappingProjection,
                  torch_parameter:tuple,
                  use:Union[list, Literal[LEARNING, SYNCH]],
-                 device:str,
-                 context=None):
+                 device:str):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
         # GRUComposition Projection being wrapped:
         self.projection = projection # PNL Projection being wrapped

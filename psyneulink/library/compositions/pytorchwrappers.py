@@ -294,7 +294,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 pytorch_node = PytorchMechanismWrapper(mechanism=node,
                                                        composition_wrapper=self,
-                                                       component_idx=self._composition._get_node_index(node),
+                                                       # component_idx=self._composition._get_node_index(node),
+                                                       component_idx=None,
                                                        use=[LEARNING, SYNCH],
                                                        device=device,
                                                        context=context)
@@ -356,13 +357,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             # MODIFIED 2/22/25 END
 
-            component_idx = list(self._composition._inner_projections).index(projection)
-            port_idx = projection.sender.owner.output_ports.index(projection.sender)
+            # component_idx = list(self._composition._inner_projections).index(projection)
+            # port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(
                 projection=projection,
                 pnl_proj=pnl_proj,
-                component_idx=component_idx,
-                port_idx=port_idx,
+                # component_idx=component_idx,
+                # port_idx=port_idx,
+                component_idx=None,
+                port_idx=None,
                 use=[LEARNING, SYNCH],
                 device=device,
                 sender=proj_sndr,
@@ -1140,7 +1143,7 @@ class PytorchMechanismWrapper():
     def __init__(self,
                  mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
                  composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
-                 component_idx:int,                             # index of the Mechanism in the Composition
+                 component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH]],     # use wrapper for learning for synching of values
                  device:str,                                    # needed for Pytorch
                  context=None):
@@ -1482,8 +1485,8 @@ class PytorchProjectionWrapper():
     def __init__(self,
                  projection:Projection,                      # Projection to be wrapped
                  pnl_proj:Projection,                        # one that directly projects to/from sender/receiver
-                 component_idx:int,                          # index of the Projection in the Composition
-                 port_idx:int,                               # index of the Port in the sender's Mechanism
+                 component_idx:Optional[int],                # index of the Projection in the Composition
+                 port_idx:Optional[int],                     # index of the Port in the sender's Mechanism
                  use:Union[list, Literal[LEARNING, SYNCH]],  # specifies use of the Mechanism
                  device:str,
                  sender:PytorchMechanismWrapper=None,
