@@ -29,7 +29,7 @@ from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYL
 from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
                                               LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
                                               NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
-                                              SYNCH, TARGET_MECHANISM, )
+                                              SHOW_GRAPH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, get_deepcopy_with_shared
 from psyneulink.core.globals.log import LogCondition
@@ -243,26 +243,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node_wrapper in self._wrapped_nodes:
             if isinstance(node_wrapper, PytorchCompositionWrapper):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
-                # 2/25/25 - FIX: FILTER BASED ON LEARNING OR RUNNING; OR CONSTRUCT SEPARATE_SHOW_GRAPH_PROJECTIONS HERE
                 self._projection_map.update(node_wrapper._projection_map)
                 # Not sure if this is needed, but just to be safe
-                # MODIFIED 2/22/25 OLD:
                 self._nodes_map.update(node_wrapper._nodes_map)
-                # # MODIFIED 2/22/25 NEW:
-                # # self._nodes_map.update(node_wrapper._get_nodes_map())
-                # # MODIFIED 2/22/25 END
         # Purge _nodes_map of entries for nested Compositions (their nodes are now in self._nodes_map)
-        # MODIFIED 2/22/25 OLD:
         self._nodes_map = {k: v for k, v in self._nodes_map.items()
                            if not isinstance(v, PytorchCompositionWrapper)}
-        # # # MODIFIED 2/22/25 NEW:
-        # self._nodes_map = {k: v for k, v in self._get_nodes_map(context).items()
-        #                    if not isinstance(v, PytorchCompositionWrapper)}
-        # MODIFIED 2/22/25 END
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
         #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
-        # FIX: MAYBE SHOULD DO THIS AS LIST IS CREATED ABOVE?
         self._projection_wrappers = list(self._projection_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
@@ -296,7 +285,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        composition_wrapper=self,
                                                        # component_idx=self._composition._get_node_index(node),
                                                        component_idx=None,
-                                                       use=[LEARNING, SYNCH],
+                                                       use=[LEARNING, SYNCH, SHOW_GRAPH],
                                                        device=device,
                                                        context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
@@ -346,31 +335,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
                 pnl_proj, proj_sndr, proj_rcvr = self._handle_nested_comp(projection, device, context)
+                # use = [LEARNING, SYNCH, SHOW_GRAPH]
+                use = [LEARNING, SYNCH]
 
             # Projection within composition
             elif all(sndr_and_recvr in self._nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
                 proj_sndr = self._nodes_map[sndr_mech]
                 proj_rcvr = self._nodes_map[rcvr_mech]
                 pnl_proj = projection
+                use = [LEARNING, SYNCH, SHOW_GRAPH]
 
             else:
                 continue
             # MODIFIED 2/22/25 END
 
-            # component_idx = list(self._composition._inner_projections).index(projection)
-            # port_idx = projection.sender.owner.output_ports.index(projection.sender)
-            pytorch_proj_wrapper = PytorchProjectionWrapper(
-                projection=projection,
-                pnl_proj=pnl_proj,
-                # component_idx=component_idx,
-                # port_idx=port_idx,
-                component_idx=None,
-                port_idx=None,
-                use=[LEARNING, SYNCH],
-                device=device,
-                sender=proj_sndr,
-                receiver=proj_rcvr,
-                context=context)
+            component_idx = list(self._composition._inner_projections).index(projection)
+            sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
+            pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
+                                                            pnl_proj=pnl_proj,
+                                                            component_idx=component_idx,
+                                                            sender_port_idx=sender_port_idx,
+                                                            use=use,
+                                                            device=device,
+                                                            sender_wrapper=proj_sndr,
+                                                            receiver_wrapper=proj_rcvr,
+                                                            context=context)
             proj_sndr.add_efferent(pytorch_proj_wrapper)
             proj_rcvr.add_afferent(pytorch_proj_wrapper)
             self._projection_map[projection] = pytorch_proj_wrapper
@@ -391,19 +380,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
         #    - projection is to input_CIM that is not in current Composition so must be to a nested one;
         #    - needed for learning, so create map for Projection
         if (isinstance(rcvr_mech, CompositionInterfaceMechanism)
-              and rcvr_mech.composition is not self
-              and rcvr_mech is rcvr_mech.composition.input_CIM):
+                and rcvr_mech.composition is not self
+                and rcvr_mech is rcvr_mech.composition.input_CIM):
             # Replace rcvr_mech (input_CIM) with the node in the nested Composition that receives the projection
             nested_rcvr_port, nested_rcvr_mech, _ = \
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[rcvr_mech.composition]
-            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection,
-                                                                                      sndr_mech, rcvr_mech,
-                                                                                      nested_rcvr_port,
-                                                                                      nested_rcvr_mech,
-                                                                                      ENTER_NESTED, context)
-            proj_sndr = self._nodes_map[sndr_mech]
+            proj, proj_sndr_wrapper, proj_rcvr_wrapper = (
+                nested_pytorch_comp._flatten_for_pytorch(projection,
+                                                         sndr_mech, rcvr_mech,
+                                                         nested_rcvr_port,
+                                                         nested_rcvr_mech,
+                                                         self._composition,
+                                                         ENTER_NESTED,
+                                                         context))
+            assert proj_sndr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for ENTER_NESTED"
+            proj_sndr_wrapper = self._nodes_map[sndr_mech]
 
         # EXIT_NESTED
         # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
@@ -419,23 +412,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 sndr_mech._get_source_info_from_output_CIM(projection.sender)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[sndr_mech.composition]
-            pnl_proj, proj_sndr, proj_rcvr = nested_pytorch_comp._flatten_for_pytorch(projection,
-                                                                                      sndr_mech, rcvr_mech,
-                                                                                      nested_sndr_port,
-                                                                                      nested_sndr_mech,
-                                                                                      EXIT_NESTED, context)
-            proj_rcvr = self._nodes_map[rcvr_mech]
-        return pnl_proj, proj_sndr, proj_rcvr
+            proj, proj_sndr_wrapper, proj_rcvr_wrapper = (
+                nested_pytorch_comp._flatten_for_pytorch(projection,
+                                                         sndr_mech, rcvr_mech,
+                                                         nested_sndr_port,
+                                                         nested_sndr_mech,
+                                                         self._composition,
+                                                         EXIT_NESTED,
+                                                         context))
+            assert proj_rcvr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for EXIT_NESTED"
+            proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
+        return proj, proj_sndr_wrapper, proj_rcvr_wrapper
 
     def _flatten_for_pytorch(self,
                              projection,
-                             sndr_mech, rcvr_mech,
-                             nested_port, nested_mech, access, context)->tuple:
+                             sndr_mech,
+                             rcvr_mech,
+                             nested_port,
+                             nested_mech,
+                             composition,
+                             access,
+                             context)->tuple:
 
         if access == ENTER_NESTED:
-            proj_sndr = None
-            proj_rcvr = self._nodes_map[nested_mech]
-
+            proj_sndr_wrapper = None
+            proj_rcvr_wrapper = self._nodes_map[nested_mech]
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
             pnl_proj = projection.receiver.owner.port_map[nested_port][1].efferents[0]
             assert pnl_proj == nested_port.path_afferents[0], \
@@ -448,23 +449,40 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   (its just so it can be displayed in show_graph(show_pytorch=True)
             destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
             destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
-            # This is in case receiver in PNL comp has been mapped to a diff node in pytorchCompositionwrapper
+            # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
             mapped_rcvr_mech = self._nodes_map[nested_mech].mechanism
             # Get the port of the original receiver to use for the mapped receiver
             port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
             try:
-                MappingProjection(sender=projection.sender,
-                                  receiver=mapped_rcvr_mech.input_ports[port_idx],
-                                  learnable=projection.learnable)
+                direct_proj = MappingProjection(name=f"Projection from {projection.sender.owner.name} "
+                                                     f"to {mapped_rcvr_mech.name}",
+                                                sender=projection.sender,
+                                                receiver=mapped_rcvr_mech.input_ports[port_idx],
+                                                learnable=projection.learnable)
             except DuplicateProjectionError:
                 pass
+            # MODIFIED 2/28/25 NEW:
+            # component_idx = list(composition._inner_projections).index(direct_proj)
+            proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+                                                    pnl_proj=pnl_proj,
+                                                    # component_idx=component_idx,
+                                                    # port_idx=port_idx,
+                                                    component_idx=None,
+                                                    sender_port_idx=None,
+                                                    use=[SHOW_GRAPH],
+                                                    device=self.device,
+                                                    sender_wrapper=proj_sndr_wrapper,
+                                                    receiver_wrapper=proj_rcvr_wrapper,
+                                                    context=context)
+            self._projection_wrappers.append(proj_wrapper)
+            self._projection_map[direct_proj] = proj_wrapper
+            # MODIFIED 2/28/25 END
+
             # FIX: TRY PUTTING THIS (AND THE ONE FROM THE OUTPUT NODE TO THE OUTPUT_CIM) IN THE _PROJECTIONS_MAP
 
         elif access == EXIT_NESTED:
-            # FIX:
-            # EXIT_NESTED CASE -------------------------------------------------------------------------------
-            proj_rcvr = None
-            proj_sndr = self._nodes_map[nested_mech]
+            proj_rcvr_wrapper = None
+            proj_sndr_wrapper = self._nodes_map[nested_mech]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
             pnl_proj = projection.sender.owner.port_map[nested_port][0].path_afferents[0]
@@ -477,7 +495,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
-        return pnl_proj, proj_sndr, proj_rcvr
+        return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper
 
 
     def _parse_optimizer_params(self, context):
@@ -940,6 +958,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_results_to_psyneulink(current_condition, context)
 
     def copy_weights_to_psyneulink(self, context=None):
+        # 2/25/25 - FIX: FILTER FOR SYNCH:
         for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
             matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
             projection.parameters.matrix._set(matrix, context)
@@ -1127,24 +1146,26 @@ class PytorchMechanismWrapper():
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords:
 
-        * *LEARNING*: its inputs and `function <Mechanism_Base.function>` Parameters) are used
-          for actual execution of the corresponding Pytorch Module; its `mechanism
-          <PytorchProjectionWrapper.mechanism>` is included when the `AutoDiffComposition`\\s `show_graph
-          <AutoDiffComposition.show_graph>` method to used with the ``show_pytorch`` option to display its
-          `pytorch_representation <AutodiffComposition.pytorch_representation>`.
+        * *LEARNING*: inputs and `function <Mechanism_Base.function>` Parameters) are used
+          for actual execution of the corresponding Pytorch Module;
 
-        * *SYNCH*: used only to store values, for transferring the results of executing a Pytorch module
-          to the `value <Mechanism_Base.value>` Parameter of the PytorchMechanismWrapper\\s `mechanism
-          <PytorchProjectionWrapper.mechanism>`;  the `mechanism <PytorchProjectionWrapper.mechanism>` is not
-          displayed when the `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method is used
-          with the ``show_pytorch`` option.
+        * *SYNCH*: used to store results of executing a Pytorch module that are then transferred to
+          the `value <Mechanism_Base.value>` Parameter of the PytorchMechanismWrapper\\s `mechanism
+          <PytorchMechanismWrapper.mechanism>`;
+
+        * *SHOW_GRAPH*:  `Mechanism <PytorchProjectionWrapper.projection>` is included when the
+          `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method to used with the
+          ``show_pytorch`` option to display its `pytorch_representation <AutodiffComposition.pytorch_representation>`;
+          if it is not specified, the `Mechanism <PytorchProjectionWrapper.projection>` is not displayed when the
+          `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method is called, even if the
+          ``show_pytorch`` option is specified.
     """
 
     def __init__(self,
                  mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
                  composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
-                 use:Union[list, Literal[LEARNING, SYNCH]],     # use wrapper for learning for synching of values
+                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_GRAPH]], # learning, synching of values and/or display
                  device:str,                                    # needed for Pytorch
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
@@ -1156,7 +1177,7 @@ class PytorchMechanismWrapper():
         self._context = context
         self._is_input = False
         self._is_bias = False
-        self._use = use or [LEARNING, SYNCH]
+        self._use = use or [LEARNING, SYNCH, SHOW_GRAPH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
         self._composition_wrapper_owner = composition_wrapper
@@ -1234,7 +1255,7 @@ class PytorchMechanismWrapper():
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
 
         # Specific port is specified
-        # FIX: USING _port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
+        # FIX: USING _sender_port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
         #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
             res = [
@@ -1465,45 +1486,46 @@ class PytorchProjectionWrapper():
     function : _gen_pytorch_fct
         Pytorch version of the Projection's function assigned in its __init__.
 
-    _use : list[LEARNING, SYNCH]
+    _use : list[LEARNING, SYNCH, SHOW_GRAPH]
         designates the uses of the Projection, specified by the following keywords:
-        
-        * *LEARNING*: its inputs and `function <MappingProjection.function>` Parameters) are used
-          for actual execution of the corresponding Pytorch Module; its `projection
-          <PytorchProjectionWrapper.projection>` is included when the `AutoDiffComposition`\\s `show_graph
-          <AutoDiffComposition.show_graph>` method to used with the ``show_pytorch`` option to display its
-          `pytorch_representation <AutodiffComposition.pytorch_representation>`.
-        
-        * *SYNCH*: used only to store connection weights, for synching them between the `matrix
-          <MappingProjection.matrix>` Parameter of its PsyNeuLink `projection <PytorchProjectionWrapper.projection>` 
-          and the corresponding parameters of a Pytorch module being used for learning, but not for execution of the
-          Pytorch Module itself (see `GRUComposition` for an example);  its `projection
-          <PytorchProjectionWrapper.projection>` is not displayed when the `AutoDiffComposition`\\s `show_graph
-          <AutoDiffComposition.show_graph>` method is used with the ``show_pytorch`` option.
+
+        * *LEARNING*: inputs and `function <MappingProjection.function>` Parameters) are used for actual execution of
+          the corresponding Pytorch Module;
+
+        * *SYNCH*: store connection weights, for synching them between the `matrix
+          <MappingProjection.matrix>` Parameter of its PsyNeuLink `projection <PytorchProjectionWrapper.projection>`
+          and the corresponding parameters of a Pytorch module being used for learning;
+
+        * *SHOW_GRAPH*:  `projection <PytorchProjectionWrapper.projection>` is included when the
+          `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method to used with the
+          ``show_pytorch`` option to display its `pytorch_representation <AutodiffComposition.pytorch_representation>`;
+          if it is not specified, the `Projection <PytorchProjectionWrapper.projection>` is not displayed when the
+          `AutoDiffComposition`\\s `show_graph <AutoDiffComposition.show_graph>` method is called, even if the
+          ``show_pytorch`` option is specified.
     """
 
     def __init__(self,
                  projection:Projection,                      # Projection to be wrapped
                  pnl_proj:Projection,                        # one that directly projects to/from sender/receiver
                  component_idx:Optional[int],                # index of the Projection in the Composition
-                 port_idx:Optional[int],                     # index of the Port in the sender's Mechanism
-                 use:Union[list, Literal[LEARNING, SYNCH]],  # specifies use of the Mechanism
+                 sender_port_idx:Optional[int],                     # index in the sender's Mechanism.output_ports
+                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_GRAPH]],  # specifies use of the Projection (see below)
                  device:str,
-                 sender:PytorchMechanismWrapper=None,
-                 receiver:PytorchMechanismWrapper=None,
+                 sender_wrapper:PytorchMechanismWrapper=None,
+                 receiver_wrapper:PytorchMechanismWrapper=None,
                  context=None):
 
         self.projection = projection  # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj     # Projection to/from CIM that actually projects to/from sender/receiver
-        self._use = use or [LEARNING, SYNCH]  # use of wrapper for learning and/or synching of connection weights
+        self._use = list(use) or [LEARNING, SYNCH, SHOW_GRAPH]  # learn, synch, and/or display connection weights
         self._idx = component_idx     # Index of Projection in Composition's list of projections
-        self._port_idx = port_idx     # Index of sender's port (used by LLVM)
+        self._sender_port_idx = sender_port_idx  # Index of sender output_ports for which Projection is an efferent
         self._value_idx = 0           # Index of value in sender's value (used in collect_afferents)
         self._curr_sender_value = None
 
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
-        self.sender = sender          # PytorchMechanismWrapper to which Projection's sender is mapped
-        self.receiver = receiver      # PytorchMechanismWrapper to which Projection's receiver is mapped
+        self.sender_wrapper = sender_wrapper          # PytorchMechanismWrapper to which Projection's sender is mapped
+        self.receiver_wrapper = receiver_wrapper      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
         if projection.parameters.has_initializers._get(context) and projection.parameters.value.initializer:
@@ -1511,12 +1533,11 @@ class PytorchProjectionWrapper():
         else:
             self.default_value = projection.defaults.value
 
-
         # Get item of value corresponding to OutputPort that is Projection's sender
-        # Note: this may not be the same as _port_idx if the sender Mechanism has OutputPorts for Projections
+        # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
         if context._composition:
-            for i, output_port in enumerate(self.sender.mechanism.output_ports):
+            for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
                 if all(p in context._composition.projections for p in output_port.efferents):
                     if self._pnl_proj in output_port.efferents:
                         self._value_idx = i
@@ -1578,25 +1599,28 @@ class PytorchProjectionWrapper():
 
         input_vec = builder.gep(data, [ctx.int32_ty(0),
                                        ctx.int32_ty(0),
-                                       ctx.int32_ty(self.sender._idx),
-                                       ctx.int32_ty(self._port_idx)])
+                                       ctx.int32_ty(self.sender_wrapper._idx),
+                                       ctx.int32_ty(self._sender_port_idx)])
 
         output_vec = gen_inject_vxm(ctx, builder, input_vec, proj_matrix)
 
         pnlvm.helpers.printf_float_array(ctx,
                                          builder,
                                          input_vec,
-                                         prefix=f"{self.sender.mechanism} -> {self.receiver.mechanism} input:\n",
+                                         prefix=f"{self.sender_wrapper.mechanism} "
+                                                f"-> {self.receiver_wrapper.mechanism} input:\n",
                                          tags={"torch"})
         pnlvm.helpers.printf_float_matrix(ctx,
                                           builder,
                                           proj_matrix,
-                                          prefix=f"{self.sender.mechanism} -> {self.receiver.mechanism} mat:\n",
+                                          prefix=f"{self.sender_wrapper.mechanism} "
+                                                 f"-> {self.receiver_wrapper.mechanism} mat:\n",
                                           tags={"torch"})
         pnlvm.helpers.printf_float_array(ctx,
                                          builder,
                                          output_vec,
-                                         prefix=f"{self.sender.mechanism} -> {self.receiver.mechanism} output:\n",
+                                         prefix=f"{self.sender_wrapper.mechanism} "
+                                                f"-> {self.receiver_wrapper.mechanism} output:\n",
                                          tags={"torch"})
 
         return output_vec

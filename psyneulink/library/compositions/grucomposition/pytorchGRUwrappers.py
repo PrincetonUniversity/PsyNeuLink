@@ -17,7 +17,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
-from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SYNCH
+from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
@@ -45,16 +45,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         pytorch_node = PytorchGRUMechanismWrapper(mechanism=node,
                                                   composition_wrapper=self,
                                                   component_idx=0,
-                                                  use=[LEARNING],
+                                                  use=[LEARNING, SHOW_GRAPH],
                                                   device=device,
                                                   context=context)
         self.torch_gru = pytorch_node.function.function
         self._nodes_map[node] = pytorch_node
         # MODIFIED 2/22/25 NEW:
-        # Assign map from input_node and output_node to GRU Node, since it serves their functions in pytorch graph
-        #   (for use by show_graph(show_pytorch=True)
-        self._nodes_map[composition.input_node] = pytorch_node
-        self._nodes_map[composition.output_node] = pytorch_node
+        # # Assign map from input_node and output_node to GRU Node, since it serves their functions in pytorch graph
+        # #   (for use by show_graph(show_pytorch=True)
+        # self._nodes_map[composition.input_node] = pytorch_node
+        # self._nodes_map[composition.output_node] = pytorch_node
         # MODIFIED 2/22/25 END
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
@@ -107,8 +107,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _flatten_for_pytorch(self,
                              pnl_proj,
-                             sndr_mech, rcvr_mech,
-                             nested_port, nested_mech, access, context)->tuple:
+                             sndr_mech,
+                             rcvr_mech,
+                             nested_port,
+                             nested_mech,
+                             composition,
+                             access,
+                             context)->tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
         Replace GRUCompositon's nodes with gru_mech and projections to and from it."""
 
@@ -121,6 +126,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                          sender=pnl_proj.sender,
                                          receiver=self._composition.gru_mech,
                                          learnable=pnl_proj.learnable)
+            # Index of input_CIM.output_ports for which pnl_proj is an efferent
+            sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
@@ -128,26 +135,27 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                             sender=self._composition.gru_mech,
                                             receiver=pnl_proj.receiver,
                                             learnable=pnl_proj.learnable)
+            # gru_mech has only one output_port
+            sender_port_idx = 0
 
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
-        # FIX: SHOULD EITHER:
-        #    USE projection_wrappers FOR THIS, SINCE CIM<->GRU PROJECTIONS ARE NOT IN comp.projections
-        #    OR JUST PASS None or 0 for component_idx and port_idx
-        component_idx = list(self._projection_wrappers.projections).index(pnl_proj)
-        port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
+        component_idx = list(composition._inner_projections).index(pnl_proj)
         proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                 pnl_proj=pnl_proj,
                                                 component_idx=component_idx,
-                                                port_idx=port_idx,
-                                                use=[LEARNING, SYNCH],
+                                                sender_port_idx=sender_port_idx,
+                                                use=[LEARNING, SHOW_GRAPH],
                                                 device=self.device,
-                                                sender=sndr_mech,
-                                                receiver=rcvr_mech,
+                                                sender_wrapper=sndr_mech_wrapper,
+                                                receiver_wrapper=rcvr_mech_wrapper,
                                                 context=context)
+        self._projection_wrappers.append(proj_wrapper)
+        self._projection_map[direct_proj] = proj_wrapper
 
-        return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+        # return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+        return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
@@ -193,7 +201,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         pnl_node = list(nodes)[0][0]
         pytorch_node = list(nodes)[0][1]
 
-        assert len(nodes) == 3, \
+        assert len(nodes) == 1, \
             (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
              f"but has {len(nodes)}: {[node.name for node in nodes]}")
         assert pnl_node == pnl_comp.gru_mech, \
@@ -251,6 +259,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             node_wrapper.log_value()
 
     def copy_weights_to_psyneulink(self, context=None):
+    # 2/25/25 - FIX: FILTER FOR SYNCH
         for projection, proj_wrapper in self._projection_map.items():
             torch_parameter = proj_wrapper.torch_parameter
             torch_indices = proj_wrapper.matrix_indices
@@ -259,6 +268,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def copy_weights_to_torch_gru(self, context=None):
+        # 2/25/25 - FIX: FILTER FOR SYNCH
         for projection, proj_wrapper in self._projection_map.items():
             proj_wrapper.set_torch_gru_parameter(context)
 
@@ -383,7 +393,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     def __init__(self,
                  projection:MappingProjection,
                  torch_parameter:tuple,
-                 use:Union[list, Literal[LEARNING, SYNCH]],
+                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_GRAPH]],
                  device:str):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
         # GRUComposition Projection being wrapped:
@@ -392,7 +402,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         self.torch_parameter, self.matrix_indices = torch_parameter
         # Projections for GRUComposition are not included in autodiff; matrices are set directly in Pytorch GRU module:
         self.projection.exclude_in_autodiff = True
-        self._use = use
+        self._use = list(use)
         self.device = device
 
     def set_torch_gru_parameter(self, context):

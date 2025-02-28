@@ -17,7 +17,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import PNL
+from psyneulink.core.globals.keywords import SHOW_GRAPH, PNL
 
 __all__ = ['SHOW_PYTORCH']
 
@@ -99,19 +99,18 @@ class PytorchShowGraph(ShowGraph):
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            # MODIFIED 2/22/26 OLD:
-            nodes = list(self.pytorch_rep._nodes_map.keys())
+            nodes = [node for node in self.pytorch_rep._nodes_map
+                           if SHOW_GRAPH in self.pytorch_rep._nodes_map[node]._use]
             return nodes
-            # MODIFIED 2/22/26 NEW:
-            # MODIFIED 2/22/26 END
-            # return list(self._nodes_map.keys())
         else:
             return super()._get_nodes(composition, context)
 
     def _get_projections(self, composition, context):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            projections = list(self.pytorch_rep._projection_map.keys())
+            # projections = list(self.pytorch_rep._projection_map.keys())
+            projections = [proj for proj in self.pytorch_rep._projection_map
+                           if SHOW_GRAPH in self.pytorch_rep._projection_map[proj]._use]
             # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
             # Add any Projections to TARGET nodes
             projections += [afferent
