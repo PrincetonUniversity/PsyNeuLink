@@ -50,12 +50,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   context=context)
         self.torch_gru = pytorch_node.function.function
         self._nodes_map[node] = pytorch_node
-        # MODIFIED 2/22/25 NEW:
-        # # Assign map from input_node and output_node to GRU Node, since it serves their functions in pytorch graph
-        # #   (for use by show_graph(show_pytorch=True)
-        # self._nodes_map[composition.input_node] = pytorch_node
-        # self._nodes_map[composition.output_node] = pytorch_node
-        # MODIFIED 2/22/25 END
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
@@ -259,18 +253,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             node_wrapper.log_value()
 
     def copy_weights_to_psyneulink(self, context=None):
-    # 2/25/25 - FIX: FILTER FOR SYNCH
         for projection, proj_wrapper in self._projection_map.items():
-            torch_parameter = proj_wrapper.torch_parameter
-            torch_indices = proj_wrapper.matrix_indices
-            matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
-            projection.parameters.matrix._set(matrix, context)
-            projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+            if SYNCH in proj_wrapper._use:
+                torch_parameter = proj_wrapper.torch_parameter
+                torch_indices = proj_wrapper.matrix_indices
+                matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
+                projection.parameters.matrix._set(matrix, context)
+                projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def copy_weights_to_torch_gru(self, context=None):
-        # 2/25/25 - FIX: FILTER FOR SYNCH
         for projection, proj_wrapper in self._projection_map.items():
-            proj_wrapper.set_torch_gru_parameter(context)
+            if SYNCH in proj_wrapper._use:
+                proj_wrapper.set_torch_gru_parameter(context)
 
     def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
@@ -336,10 +330,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                                                                     bias=bias), device, context)
         self.function = function_wrapper
         mechanism.function = function_wrapper.function
-
-        # MODIFIED 2/16/25 NEW:
-        # FIX: ARE WEIGHTS BEING COPIED FROM PNL TO TORCH GRU MODULE?  IF SO, WHERE? IF NOT, SHOULD DO IT HERE
-        #      RELATIONSHIP TO _regenerate_paramlist
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)

@@ -347,7 +347,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             else:
                 continue
-            # MODIFIED 2/22/25 END
 
             component_idx = list(self._composition._inner_projections).index(projection)
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
@@ -399,8 +398,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_sndr_wrapper = self._nodes_map[sndr_mech]
 
         # EXIT_NESTED
-        # 2/22/26 - FIX: TRY LETTING THIS BE HANDLED BY THE NESTED COMP,
-        #                WHICH CAN THEN OVERRIDE IT TO HANDLE PROJECTIONS OUT OF IT AS IT SEES FIT
         # output_cim of nested Composition:
         #    - projection is from output_CIM that is not in current Composition so must be from a nested one;
         #    - needed for learning, so create map for Projection
@@ -450,24 +447,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
             destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
             destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
-            # 2/25/25 - FIX: BELOW??
-            # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
-            mapped_rcvr_mech = self._nodes_map[nested_mech].mechanism
-            # Get the port of the original receiver to use for the mapped receiver
-            port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
-                                                     f"to {mapped_rcvr_mech.name}",
+                                                     f"to {destination_rcvr_mech.name}",
                                                 sender=projection.sender,
-                                                receiver=mapped_rcvr_mech.input_ports[port_idx],
+                                                receiver=destination_rcvr_port,
                                                 learnable=projection.learnable)
-                # component_idx = list(composition._inner_projections).index(direct_proj)
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
-                                                        # component_idx=component_idx,
-                                                        # port_idx=port_idx,
-                                                        component_idx=None,
-                                                        sender_port_idx=None,
+                                                        component_idx=None,    # These are not needed since the wrapper
+                                                        sender_port_idx=None,  # is only being used for SHOW_GRAPH
                                                         use=[SHOW_GRAPH],
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
@@ -495,25 +484,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
             source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
             source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
-            # 2/25/25 - FIX: BELOW??
-            # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
-            # FIX: NEED TO GET SPECIFIC OUTPUT FOR mapped_sndr_mech HERE:
-            mapped_sndr_mech = self._nodes_map[nested_mech].mechanism
-            # Get the port of the original receiver to use for the mapped receiver
-            # port_idx = source_sndr_mech.input_ports.index(source_sndr_port)
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
                                                      f"to {rcvr_mech.name}",
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
                                                 learnable=projection.learnable)
-                # component_idx = list(composition._inner_projections).index(direct_proj)
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
-                                                        # component_idx=component_idx,
-                                                        # port_idx=port_idx,
-                                                        component_idx=None,
-                                                        sender_port_idx=None,
+                                                        component_idx=None,    # These are not needed since the wrapper
+                                                        sender_port_idx=None,  # is only being used for SHOW_GRAPH
                                                         use=[SHOW_GRAPH],
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
@@ -598,14 +578,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.params = nn.ParameterList()
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
-
-    # # MODIFIED 2/22/25 NEW:
-    # def _get_nodes_map(self, context):
-    #     """Return _nodes_map
-    #     Implemented so subclasses can override to filter nodes to return
-    #     """
-    #     return self._nodes_map
-    # MODIFIED 2/22/25 END
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -991,11 +963,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_results_to_psyneulink(current_condition, context)
 
     def copy_weights_to_psyneulink(self, context=None):
-        # 2/25/25 - FIX: FILTER FOR SYNCH:
         for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
-            matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
-            projection.parameters.matrix._set(matrix, context)
-            projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+            if SYNCH in pytorch_rep_proj_wrapper._use:
+                matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
+                projection.parameters.matrix._set(matrix, context)
+                projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -1008,13 +980,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if nodes == ALL:
             nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
-            # First get variable in numpy format
-            if isinstance(pytorch_node.input, list):
-                variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
-            else:
-                variable = pytorch_node.input.detach().cpu().numpy()
-            # Set pnl_node's value to value
-            pnl_node.parameters.variable._set(variable, context)
+            if SYNCH in pytorch_node._use:
+                # First get variable in numpy format
+                if isinstance(pytorch_node.input, list):
+                    variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
+                else:
+                    variable = pytorch_node.input.detach().cpu().numpy()
+                # Set pnl_node's value to value
+                pnl_node.parameters.variable._set(variable, context)
 
     def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
         """Copy output of Pytorch nodes to value of AutodiffComposition nodes.
@@ -1073,10 +1046,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
                 pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
                                                                             context)
-        # MODIFIED 2/22/25 OLD:
-        # # Finally, update the output_values of the autodiff Composition by executing its output_CIM
-        # update_autodiff_all_output_values()
-        # MODIFIED 2/22/25 END
 
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
@@ -1084,7 +1053,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_results_to_psyneulink(self, current_condition, context=None):
         """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
-        # IMPLEMENTATION NOTE: no need to do amything for TRIAL or MINIBATCH,
+        # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
         if current_condition in {EPOCH, RUN}:
             self._composition.parameters.results._set(convert_to_np_array(self.retained_results), context)

@@ -720,7 +720,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         assert l.name == 'L'
         assert l.input == F
         assert l.output == G
-        assert l.target == c.nodes['Target']
+        assert l.target == c.nodes['TARGET for G']
         assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
                c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
         assert l.learning_objective == c.nodes['Comparator']
@@ -1649,7 +1649,7 @@ class TestCompositionPathwaysArg:
         assert set(c.get_nodes_by_role(NodeRole.OUTPUT)) == {B, D}
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
-        assert c.pathways['P2'].target == c.nodes['Target']
+        assert c.pathways['P2'].target == c.nodes['TARGET for D']
         assert set(c.pathways['P1'].roles) == {PathwayRole.ORIGIN,
                                                PathwayRole.INPUT,
                                                PathwayRole.OUTPUT,
@@ -1682,7 +1682,7 @@ class TestCompositionPathwaysArg:
         c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, ([C,D], pnl.BackPropagation)])
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
         assert c.pathways['P1'].name == 'P1'
-        assert c.pathways['P1'].target == c.nodes['Target']
+        assert c.pathways['P1'].target == c.nodes['TARGET for B']
 
     def test_composition_pathways_bad_arg_error(self):
         I = InputPort(name='I')
