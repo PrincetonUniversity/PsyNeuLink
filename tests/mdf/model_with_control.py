@@ -65,7 +65,7 @@ comp.add_controller(
             },
             {
                 pnl.PROJECTIONS: (pnl.THRESHOLD, Decision),
-                pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3),
+                pnl.ALLOCATION_SAMPLES: (0.1, 0.4, 0.7000000000000001, 1.0000000000000002),
             },
         ],
     )

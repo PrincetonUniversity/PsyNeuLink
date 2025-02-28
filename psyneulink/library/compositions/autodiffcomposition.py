@@ -349,7 +349,7 @@ from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, E
                                               Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES, NODE_VARIABLES,
                                               OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP,
                                               TARGETS, TRAINED_OUTPUTS, TRIAL)
-from psyneulink.core.globals.utilities import is_numeric_scalar
+from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1170,10 +1170,7 @@ class AutodiffComposition(Composition):
             all_output_values += [output]
 
         # Turn into a numpy array, possibly ragged
-        try:
-            all_output_values = np.array(all_output_values)
-        except (ValueError, np.VisibleDeprecationWarning):
-            all_output_values = np.array(all_output_values, dtype=object)
+        all_output_values = convert_to_np_array(all_output_values)
 
         # Swap the first two dimensions (output_port, batch) to (batch, output_port)
         all_output_values = all_output_values.swapaxes(0, 1)

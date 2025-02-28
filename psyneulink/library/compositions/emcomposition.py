@@ -2132,13 +2132,19 @@ class EMComposition(AutodiffComposition):
             if self.num_keys == 1:
                 error_msg = f"there is only one key"
                 correction_msg = ""
-            elif not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
+
+            elif not all(np.all(keys_weight == keys_weights[0]) for keys_weight in keys_weights):
                 error_msg = f" field weights ({field_weights}) are not all equal"
                 correction_msg = (f" To use concatenation, remove `field_weights` "
-                                     f"specification or make them all the same.")
+                                  f"specification or make them all the same.")
+
             elif not normalize_memories:
                 error_msg = f" normalize_memories is False"
                 correction_msg = f" To use concatenation, set normalize_memories to True."
+
+            else:
+                assert False, "Unknown error"
+
             warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
                           f"concatenation will be ignored.{correction_msg}")
 

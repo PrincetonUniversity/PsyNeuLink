@@ -1,11 +1,11 @@
 import numpy as np
-import psyneulink.core.components.functions as Functions
+import psyneulink as pnl
 import psyneulink.core.globals.keywords as kw
 import pytest
 
 SIZE=1000
 # Some metrics (CROSS_ENTROPY) don't like 0s
-test_var = np.random.rand(2, SIZE) + Functions.EPSILON
+test_var = np.random.rand(2, SIZE) + pnl.EPSILON
 v1 = test_var[0]
 v2 = test_var[1]
 norm = len(test_var[0])
@@ -45,13 +45,14 @@ test_data = [
 def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
 
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    f = pnl.Distance(default_variable=variable, metric=metric, normalize=normalize)
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(EX, variable)
 
-    # FIXME: Python calculation of COSINE using fp32 inputs are not accurate.
+    # FIXME: Python calculation using fp32 inputs are not accurate.
     #        LLVM calculations of most metrics using fp32 are not accurate.
-    tol = {'rtol':1e-5, 'atol':1e-8} if metric == kw.COSINE or pytest.helpers.llvm_current_fp_precision() == 'fp32' else {}
+    is_fp32 = np.asarray(variable).dtype == np.float32 or pytest.helpers.llvm_current_fp_precision() == 'fp32'
+    tol = {'rtol':1e-5, 'atol':1e-8} if is_fp32 else {}
     np.testing.assert_allclose(res, expected, **tol)
     assert np.isscalar(res) or res.ndim == 0 or len(res) == 1
