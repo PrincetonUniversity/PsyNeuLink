@@ -810,6 +810,11 @@ class GRUComposition(AutodiffComposition):
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= TARGET_NODE_NAME)
 
+        # # MODIFIED 2/28/25 NEW:
+        # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
+        # self.add_node(self.target_node, required_roles=[NodeRole.TARGET, NodeRole.LEARNING])
+        # self.exclude_node_roles(self.target_node, NodeRole.OUTPUT)
+        # MODIFIED 2/28/25 END
 
 
     # *****************************************************************************************************************
@@ -1135,8 +1140,12 @@ class GRUComposition(AutodiffComposition):
 
         # Add nodes to GRUComposition
         context = Context(source=ContextFlags.METHOD)
+        # MODIFIED 2/28/25 NEW:
+        self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
+        # MODIFIED 2/16/25 OLD:
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.targets_from_outputs_map = {target_mech: self.output_node}
@@ -1147,7 +1156,7 @@ class GRUComposition(AutodiffComposition):
 
         return [target_mech]
 
-    def _get_pytorch_backprop_pathway(self, input_node)->list:
+    def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         return [[self.gru_mech]]
 
     # *****************************************************************************************************************
