@@ -447,16 +447,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
             destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
             destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
+            # MODIFIED 3/1/25 OLD:
+            # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
+            mapped_rcvr_mech = self._nodes_map[nested_mech].mechanism
+            # Get the port of the original receiver to use for the mapped receiver
+            port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
-                                                     f"to {destination_rcvr_mech.name}",
+                                                     f"to {mapped_rcvr_mech.name}",
                                                 sender=projection.sender,
-                                                receiver=destination_rcvr_port,
+                                                receiver=mapped_rcvr_mech.input_ports[port_idx],
                                                 learnable=projection.learnable)
+                # component_idx = list(composition._inner_projections).index(direct_proj)
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
-                                                        component_idx=None,    # These are not needed since the wrapper
-                                                        sender_port_idx=None,  # is only being used for SHOW_GRAPH
+                                                        # component_idx=component_idx,
+                                                        # port_idx=port_idx,
+                                                        component_idx=None,
+                                                        sender_port_idx=None,
                                                         use=[SHOW_GRAPH],
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
@@ -464,6 +472,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 self._projection_wrappers.append(proj_wrapper)
                 self._projection_map[direct_proj] = proj_wrapper
+            # # MODIFIED 3/1/25 NEW:
+            # try:
+            #     direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
+            #                                          f"to {destination_rcvr_mech.name}",
+            #                                     sender=projection.sender,
+            #                                     receiver=destination_rcvr_port,
+            #                                     learnable=projection.learnable)
+            #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+            #                                             pnl_proj=pnl_proj,
+            #                                             component_idx=None,    # These are not needed since the wrapper
+            #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
+            #                                             use=[SHOW_GRAPH],
+            #                                             device=self.device,
+            #                                             sender_wrapper=proj_sndr_wrapper,
+            #                                             receiver_wrapper=proj_rcvr_wrapper,
+            #                                             context=context)
+            #     self._projection_wrappers.append(proj_wrapper)
+            #     self._projection_map[direct_proj] = proj_wrapper
+            # # MODIFIED 3/1/25 END
 
             except DuplicateProjectionError:
                 pass
@@ -484,16 +511,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
             source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
             source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
+            # MODIFIED 3/1/25 OLD:
+            mapped_sndr_mech = self._nodes_map[nested_mech].mechanism
+            # Get the port of the original receiver to use for the mapped receiver
+            # port_idx = source_sndr_mech.input_ports.index(source_sndr_port)
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
                                                      f"to {rcvr_mech.name}",
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
                                                 learnable=projection.learnable)
+                # component_idx = list(composition._inner_projections).index(direct_proj)
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
-                                                        component_idx=None,    # These are not needed since the wrapper
-                                                        sender_port_idx=None,  # is only being used for SHOW_GRAPH
+                                                        # component_idx=component_idx,
+                                                        # port_idx=port_idx,
+                                                        component_idx=None,
+                                                        sender_port_idx=None,
                                                         use=[SHOW_GRAPH],
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
@@ -501,6 +535,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 self._projection_wrappers.append(proj_wrapper)
                 self._projection_map[direct_proj] = proj_wrapper
+            # # MODIFIED 3/1/25 NEW:
+            # try:
+            #     direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
+            #                                          f"to {rcvr_mech.name}",
+            #                                     sender=source_sndr_port,
+            #                                     receiver=projection.receiver,
+            #                                     learnable=projection.learnable)
+            #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+            #                                             pnl_proj=pnl_proj,
+            #                                             component_idx=None,    # These are not needed since the wrapper
+            #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
+            #                                             use=[SHOW_GRAPH],
+            #                                             device=self.device,
+            #                                             sender_wrapper=proj_sndr_wrapper,
+            #                                             receiver_wrapper=proj_rcvr_wrapper,
+            #                                             context=context)
+            #     self._projection_wrappers.append(proj_wrapper)
+            #     self._projection_map[direct_proj] = proj_wrapper
+            # # MODIFIED 3/1/25 END
 
             except DuplicateProjectionError:
                 pass
@@ -964,7 +1017,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
-            if SYNCH in pytorch_rep_proj_wrapper._use:
+            # # MODIFIED 3/1/25 NEW:
+            # if SYNCH in pytorch_rep_proj_wrapper._use:
+            # MODIFIED 3/1/25 END
                 matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
                 projection.parameters.matrix._set(matrix, context)
                 projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
@@ -980,7 +1035,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if nodes == ALL:
             nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
-            if SYNCH in pytorch_node._use:
+            # # MODIFIED 3/1/28 NEW:
+            # if SYNCH in pytorch_node._use:
+            # MODIFIED 3/1/28 END
                 # First get variable in numpy format
                 if isinstance(pytorch_node.input, list):
                     variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)

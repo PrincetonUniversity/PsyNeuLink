@@ -836,7 +836,7 @@ class AutodiffComposition(Composition):
         """
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
-        pathways = self._get_pytorch_backprop_pathways()
+        pathways = self._get_pytorch_backprop_pathways(context)
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
@@ -876,15 +876,15 @@ class AutodiffComposition(Composition):
         self._analyze_graph()
         return self.learning_components
 
-    def _get_pytorch_backprop_pathways(self)->list:
+    def _get_pytorch_backprop_pathways(self, context)->list:
 
         self._analyze_graph()
         return [pathway
                     for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
                     if node not in self.get_nodes_by_role(NodeRole.TARGET)
-                    for pathway in self._get_pytorch_backprop_pathway(node)]
+                    for pathway in self._get_pytorch_backprop_pathway(node, context)]
 
-    def _get_pytorch_backprop_pathway(self, input_node)->list:
+    def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         """Breadth-first search from input_node to find all input -> output pathways
         Uses queue(node, input_port, composition) to traverse all nodes in the graph
         IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
@@ -972,20 +972,24 @@ class AutodiffComposition(Composition):
                     if rcvr == rcvr.composition.input_CIM:
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
-                        # FIX: 9/17/23:
-                        #  FIX: NEED TO BRANCH NOT ON EFFERENTS FROM input_CIM BUT RATHER FROM ITS AFFERENT(S) NODE(S)
+                        # # MODIFIED 3/1/25 NEW:
+                        # # Handle sublcasses of AutodiffComposition that use custom PyTorchCompositionWrapper
+                        # node_map = []
+                        # if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
+                        #     rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+                        #     rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
+                        #     node_map = rcvr_pytorch_rep._nodes_map
+                        # # MODIFIED 3/1/25 END
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
                         for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                            # # MODIFIED 3/1/25 NEW:
+                            # if node_map and rcvr not in node_map:
+                            #     continue
+                            # # MODIFIED 3/1/25 END
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                 f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            # MODIFIED 2/22/25 NEW:
-                            # # Check if direct Projection already exists between the two nodes and, if not, create one
-                            # #     but don't add to Composition (its just so show_graph(show_pytorch=True) can show it)
-                            # if not any(proj.sender.owner is node for proj in rcvr.afferents):
-                            #     MappingProjection(sender=node, receiver=rcvr)
-                            # MODIFIED 2/22/25 END
                             prev[rcvr] = efferent_proj
                             prev[efferent_proj] = node
                             queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
