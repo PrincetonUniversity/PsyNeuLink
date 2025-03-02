@@ -100,6 +100,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self.copy_weights_to_torch_gru(context)
 
+    # MODIFIED 3/1/25 OLD:
     def _flatten_for_pytorch(self,
                              pnl_proj,
                              sndr_mech,
@@ -114,51 +115,104 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         sndr_mech_wrapper = None
         rcvr_mech_wrapper = None
-        direct_proj = None
 
         if access == ENTER_NESTED:
             rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection to GRU COMP",
-                                             sender=pnl_proj.sender,
-                                             receiver=self._composition.gru_mech,
-                                             learnable=pnl_proj.learnable)
-            except DuplicateProjectionError:
-                pass
+            direct_proj = MappingProjection(name="Projection to GRU COMP",
+                                         sender=pnl_proj.sender,
+                                         receiver=self._composition.gru_mech,
+                                         learnable=pnl_proj.learnable)
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection from GRU COMP",
-                                                sender=self._composition.gru_mech,
-                                                receiver=pnl_proj.receiver,
-                                                learnable=pnl_proj.learnable)
-            except DuplicateProjectionError:
-                pass
+            direct_proj = MappingProjection(name="Projection from GRU COMP",
+                                            sender=self._composition.gru_mech,
+                                            receiver=pnl_proj.receiver,
+                                            learnable=pnl_proj.learnable)
             # gru_mech has only one output_port
             sender_port_idx = 0
 
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
-        if direct_proj:
-            component_idx = list(composition._inner_projections).index(pnl_proj)
-            proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
-                                                    pnl_proj=pnl_proj,
-                                                    component_idx=component_idx,
-                                                    sender_port_idx=sender_port_idx,
-                                                    use=[LEARNING, SHOW_GRAPH],
-                                                    device=self.device,
-                                                    sender_wrapper=sndr_mech_wrapper,
-                                                    receiver_wrapper=rcvr_mech_wrapper,
-                                                    context=context)
-            self._projection_wrappers.append(proj_wrapper)
-            self._projection_map[direct_proj] = proj_wrapper
+        component_idx = list(composition._inner_projections).index(pnl_proj)
+        proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+                                                pnl_proj=pnl_proj,
+                                                component_idx=component_idx,
+                                                sender_port_idx=sender_port_idx,
+                                                use=[LEARNING, SHOW_GRAPH],
+                                                device=self.device,
+                                                sender_wrapper=sndr_mech_wrapper,
+                                                receiver_wrapper=rcvr_mech_wrapper,
+                                                context=context)
+        self._projection_wrappers.append(proj_wrapper)
+        self._projection_map[direct_proj] = proj_wrapper
 
         # return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+# # MODIFIED 3/1/25 NEW:
+    # def _flatten_for_pytorch(self,
+    #                          pnl_proj,
+    #                          sndr_mech,
+    #                          rcvr_mech,
+    #                          nested_port,
+    #                          nested_mech,
+    #                          composition,
+    #                          access,
+    #                          context)->tuple:
+    #     """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
+    #     Replace GRUCompositon's nodes with gru_mech and projections to and from it."""
+    #
+    #     sndr_mech_wrapper = None
+    #     rcvr_mech_wrapper = None
+    #     direct_proj = None
+    #
+    #     if access == ENTER_NESTED:
+    #         rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+    #         try:
+    #             direct_proj = MappingProjection(name="Projection to GRU COMP",
+    #                                          sender=pnl_proj.sender,
+    #                                          receiver=self._composition.gru_mech,
+    #                                          learnable=pnl_proj.learnable)
+    #         except DuplicateProjectionError:
+    #             pass
+    #         # Index of input_CIM.output_ports for which pnl_proj is an efferent
+    #         sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
+    #
+    #     elif access == EXIT_NESTED:
+    #         sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+    #         try:
+    #             direct_proj = MappingProjection(name="Projection from GRU COMP",
+    #                                             sender=self._composition.gru_mech,
+    #                                             receiver=pnl_proj.receiver,
+    #                                             learnable=pnl_proj.learnable)
+    #         except DuplicateProjectionError:
+    #             pass
+    #         # gru_mech has only one output_port
+    #         sender_port_idx = 0
+    #
+    #     else:
+    #         assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
+    #
+    #     if direct_proj:
+    #         component_idx = list(composition._inner_projections).index(pnl_proj)
+    #         proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+    #                                                 pnl_proj=pnl_proj,
+    #                                                 component_idx=component_idx,
+    #                                                 sender_port_idx=sender_port_idx,
+    #                                                 use=[LEARNING, SHOW_GRAPH],
+    #                                                 device=self.device,
+    #                                                 sender_wrapper=sndr_mech_wrapper,
+    #                                                 receiver_wrapper=rcvr_mech_wrapper,
+    #                                                 context=context)
+    #         self._projection_wrappers.append(proj_wrapper)
+    #         self._projection_map[direct_proj] = proj_wrapper
+    #
+    #     # return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+    #     return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+    # # MODIFIED 3/1/25 END
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
@@ -263,8 +317,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            # MODIFIED 3/1/25 NEW:
-            if SYNCH in proj_wrapper._use:
+            # # MODIFIED 3/1/25 NEW:
+            # if SYNCH in proj_wrapper._use:
             # MODIFIED 3/1/25 END
                 torch_parameter = proj_wrapper.torch_parameter
                 torch_indices = proj_wrapper.matrix_indices
@@ -275,9 +329,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
             # MODIFIED 3/1/25 NEW:
-            if SYNCH in proj_wrapper._use:
-                proj_wrapper.set_torch_gru_parameter(context)
+            # THIS MADE THE DIFFERENCE 3/2/25
+            # if SYNCH in proj_wrapper._use:
             # MODIFIED 3/1/25
+                proj_wrapper.set_torch_gru_parameter(context)
 
     def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.

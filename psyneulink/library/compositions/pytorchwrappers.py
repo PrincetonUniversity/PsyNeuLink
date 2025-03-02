@@ -421,6 +421,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
         return proj, proj_sndr_wrapper, proj_rcvr_wrapper
 
+    # MODIFIED 3/1/25 OLD:
     def _flatten_for_pytorch(self,
                              projection,
                              sndr_mech,
@@ -430,10 +431,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              composition,
                              access,
                              context)->tuple:
-        proj_sndr_wrapper = None
-        proj_rcvr_wrapper = None
 
         if access == ENTER_NESTED:
+            proj_sndr_wrapper = None
             proj_rcvr_wrapper = self._nodes_map[nested_mech]
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
             pnl_proj = projection.receiver.owner.port_map[nested_port][1].efferents[0]
@@ -442,60 +442,44 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
                  f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
 
-            # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
-            #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_GRAPH,
-            #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
+            # If direct Projection does not exist between the sender from the outer comp
+            #   and the node in the nested comp, create one, but don't add to Composition
+            #   (its just so it can be displayed in show_graph(show_pytorch=True)
             destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
             destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
-            # MODIFIED 3/1/25 OLD:
             # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
             mapped_rcvr_mech = self._nodes_map[nested_mech].mechanism
             # Get the port of the original receiver to use for the mapped receiver
             port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
             try:
-                direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
+                direct_proj = MappingProjection(name=f"Projection from {projection.sender.owner.name} "
                                                      f"to {mapped_rcvr_mech.name}",
                                                 sender=projection.sender,
                                                 receiver=mapped_rcvr_mech.input_ports[port_idx],
                                                 learnable=projection.learnable)
-                # component_idx = list(composition._inner_projections).index(direct_proj)
-                proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
-                                                        pnl_proj=pnl_proj,
-                                                        # component_idx=component_idx,
-                                                        # port_idx=port_idx,
-                                                        component_idx=None,
-                                                        sender_port_idx=None,
-                                                        use=[SHOW_GRAPH],
-                                                        device=self.device,
-                                                        sender_wrapper=proj_sndr_wrapper,
-                                                        receiver_wrapper=proj_rcvr_wrapper,
-                                                        context=context)
-                self._projection_wrappers.append(proj_wrapper)
-                self._projection_map[direct_proj] = proj_wrapper
-            # # MODIFIED 3/1/25 NEW:
-            # try:
-            #     direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
-            #                                          f"to {destination_rcvr_mech.name}",
-            #                                     sender=projection.sender,
-            #                                     receiver=destination_rcvr_port,
-            #                                     learnable=projection.learnable)
-            #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
-            #                                             pnl_proj=pnl_proj,
-            #                                             component_idx=None,    # These are not needed since the wrapper
-            #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
-            #                                             use=[SHOW_GRAPH],
-            #                                             device=self.device,
-            #                                             sender_wrapper=proj_sndr_wrapper,
-            #                                             receiver_wrapper=proj_rcvr_wrapper,
-            #                                             context=context)
-            #     self._projection_wrappers.append(proj_wrapper)
-            #     self._projection_map[direct_proj] = proj_wrapper
-            # # MODIFIED 3/1/25 END
-
             except DuplicateProjectionError:
                 pass
+            # MODIFIED 2/28/25 NEW:
+            # component_idx = list(composition._inner_projections).index(direct_proj)
+            proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+                                                    pnl_proj=pnl_proj,
+                                                    # component_idx=component_idx,
+                                                    # port_idx=port_idx,
+                                                    component_idx=None,
+                                                    sender_port_idx=None,
+                                                    use=[SHOW_GRAPH],
+                                                    device=self.device,
+                                                    sender_wrapper=proj_sndr_wrapper,
+                                                    receiver_wrapper=proj_rcvr_wrapper,
+                                                    context=context)
+            self._projection_wrappers.append(proj_wrapper)
+            self._projection_map[direct_proj] = proj_wrapper
+            # MODIFIED 2/28/25 END
+
+            # FIX: TRY PUTTING THIS (AND THE ONE FROM THE OUTPUT NODE TO THE OUTPUT_CIM) IN THE _PROJECTIONS_MAP
 
         elif access == EXIT_NESTED:
+            proj_rcvr_wrapper = None
             proj_sndr_wrapper = self._nodes_map[nested_mech]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
@@ -506,63 +490,153 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
             pnl_proj = projection
 
-            # Construct direct Projection from sender in nested Composition to receiver in outer Composition,
-            #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_GRAPH,
-            #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
-            source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
-            source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
-            # MODIFIED 3/1/25 OLD:
-            mapped_sndr_mech = self._nodes_map[nested_mech].mechanism
-            # Get the port of the original receiver to use for the mapped receiver
-            # port_idx = source_sndr_mech.input_ports.index(source_sndr_port)
-            try:
-                direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
-                                                     f"to {rcvr_mech.name}",
-                                                sender=source_sndr_port,
-                                                receiver=projection.receiver,
-                                                learnable=projection.learnable)
-                # component_idx = list(composition._inner_projections).index(direct_proj)
-                proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
-                                                        pnl_proj=pnl_proj,
-                                                        # component_idx=component_idx,
-                                                        # port_idx=port_idx,
-                                                        component_idx=None,
-                                                        sender_port_idx=None,
-                                                        use=[SHOW_GRAPH],
-                                                        device=self.device,
-                                                        sender_wrapper=proj_sndr_wrapper,
-                                                        receiver_wrapper=proj_rcvr_wrapper,
-                                                        context=context)
-                self._projection_wrappers.append(proj_wrapper)
-                self._projection_map[direct_proj] = proj_wrapper
-            # # MODIFIED 3/1/25 NEW:
-            # try:
-            #     direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
-            #                                          f"to {rcvr_mech.name}",
-            #                                     sender=source_sndr_port,
-            #                                     receiver=projection.receiver,
-            #                                     learnable=projection.learnable)
-            #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
-            #                                             pnl_proj=pnl_proj,
-            #                                             component_idx=None,    # These are not needed since the wrapper
-            #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
-            #                                             use=[SHOW_GRAPH],
-            #                                             device=self.device,
-            #                                             sender_wrapper=proj_sndr_wrapper,
-            #                                             receiver_wrapper=proj_rcvr_wrapper,
-            #                                             context=context)
-            #     self._projection_wrappers.append(proj_wrapper)
-            #     self._projection_map[direct_proj] = proj_wrapper
-            # # MODIFIED 3/1/25 END
-
-            except DuplicateProjectionError:
-                pass
-
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper
-
+    # MODIFIED 3/1/25 NEW:
+    # def _flatten_for_pytorch(self,
+    #                          projection,
+    #                          sndr_mech,
+    #                          rcvr_mech,
+    #                          nested_port,
+    #                          nested_mech,
+    #                          composition,
+    #                          access,
+    #                          context)->tuple:
+    #     proj_sndr_wrapper = None
+    #     proj_rcvr_wrapper = None
+    #
+    #     if access == ENTER_NESTED:
+    #         proj_rcvr_wrapper = self._nodes_map[nested_mech]
+    #         # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
+    #         pnl_proj = projection.receiver.owner.port_map[nested_port][1].efferents[0]
+    #         assert pnl_proj == nested_port.path_afferents[0], \
+    #             (f"PROGRAM ERROR: First afferent Projection to '{nested_port.owner.name}' "
+    #              f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
+    #              f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
+    #
+    #         # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
+    #         #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_GRAPH,
+    #         #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
+    #         destination_rcvr_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
+    #         destination_rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
+    #         # MODIFIED 3/1/25 OLD:
+    #         # This is in case receiver in PNL comp has been mapped to a diff node in PytorchCompositionWrapper
+    #         mapped_rcvr_mech = self._nodes_map[nested_mech].mechanism
+    #         # Get the port of the original receiver to use for the mapped receiver
+    #         port_idx = destination_rcvr_mech.input_ports.index(destination_rcvr_port)
+    #         try:
+    #             direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
+    #                                                  f"to {mapped_rcvr_mech.name}",
+    #                                             sender=projection.sender,
+    #                                             receiver=mapped_rcvr_mech.input_ports[port_idx],
+    #                                             learnable=projection.learnable)
+    #             # component_idx = list(composition._inner_projections).index(direct_proj)
+    #             proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+    #                                                     pnl_proj=pnl_proj,
+    #                                                     # component_idx=component_idx,
+    #                                                     # port_idx=port_idx,
+    #                                                     component_idx=None,
+    #                                                     sender_port_idx=None,
+    #                                                     use=[SHOW_GRAPH],
+    #                                                     device=self.device,
+    #                                                     sender_wrapper=proj_sndr_wrapper,
+    #                                                     receiver_wrapper=proj_rcvr_wrapper,
+    #                                                     context=context)
+    #             self._projection_wrappers.append(proj_wrapper)
+    #             self._projection_map[direct_proj] = proj_wrapper
+    #         # # MODIFIED 3/1/25 NEW:
+    #         # try:
+    #         #     direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
+    #         #                                          f"to {destination_rcvr_mech.name}",
+    #         #                                     sender=projection.sender,
+    #         #                                     receiver=destination_rcvr_port,
+    #         #                                     learnable=projection.learnable)
+    #         #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+    #         #                                             pnl_proj=pnl_proj,
+    #         #                                             component_idx=None,    # These are not needed since the wrapper
+    #         #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
+    #         #                                             use=[SHOW_GRAPH],
+    #         #                                             device=self.device,
+    #         #                                             sender_wrapper=proj_sndr_wrapper,
+    #         #                                             receiver_wrapper=proj_rcvr_wrapper,
+    #         #                                             context=context)
+    #         #     self._projection_wrappers.append(proj_wrapper)
+    #         #     self._projection_map[direct_proj] = proj_wrapper
+    #         # # MODIFIED 3/1/25 END
+    #
+    #         except DuplicateProjectionError:
+    #             pass
+    #
+    #     elif access == EXIT_NESTED:
+    #         proj_sndr_wrapper = self._nodes_map[nested_mech]
+    #
+    #         # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
+    #         pnl_proj = projection.sender.owner.port_map[nested_port][0].path_afferents[0]
+    #         assert pnl_proj == nested_port.efferents[0], \
+    #             (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
+    #              f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
+    #              f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
+    #         pnl_proj = projection
+    #
+    #         # Construct direct Projection from sender in nested Composition to receiver in outer Composition,
+    #         #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_GRAPH,
+    #         #   but don't add to either Composition as it is just used for show_graph(show_pytorch=True)
+    #         source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
+    #         source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
+    #         # MODIFIED 3/1/25 OLD:
+    #         mapped_sndr_mech = self._nodes_map[nested_mech].mechanism
+    #         # Get the port of the original receiver to use for the mapped receiver
+    #         # port_idx = source_sndr_mech.input_ports.index(source_sndr_port)
+    #         try:
+    #             direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
+    #                                                  f"to {rcvr_mech.name}",
+    #                                             sender=source_sndr_port,
+    #                                             receiver=projection.receiver,
+    #                                             learnable=projection.learnable)
+    #             # component_idx = list(composition._inner_projections).index(direct_proj)
+    #             proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+    #                                                     pnl_proj=pnl_proj,
+    #                                                     # component_idx=component_idx,
+    #                                                     # port_idx=port_idx,
+    #                                                     component_idx=None,
+    #                                                     sender_port_idx=None,
+    #                                                     use=[SHOW_GRAPH],
+    #                                                     device=self.device,
+    #                                                     sender_wrapper=proj_sndr_wrapper,
+    #                                                     receiver_wrapper=proj_rcvr_wrapper,
+    #                                                     context=context)
+    #             self._projection_wrappers.append(proj_wrapper)
+    #             self._projection_map[direct_proj] = proj_wrapper
+    #         # # MODIFIED 3/1/25 NEW:
+    #         # try:
+    #         #     direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
+    #         #                                          f"to {rcvr_mech.name}",
+    #         #                                     sender=source_sndr_port,
+    #         #                                     receiver=projection.receiver,
+    #         #                                     learnable=projection.learnable)
+    #         #     proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
+    #         #                                             pnl_proj=pnl_proj,
+    #         #                                             component_idx=None,    # These are not needed since the wrapper
+    #         #                                             sender_port_idx=None,  # is only being used for SHOW_GRAPH
+    #         #                                             use=[SHOW_GRAPH],
+    #         #                                             device=self.device,
+    #         #                                             sender_wrapper=proj_sndr_wrapper,
+    #         #                                             receiver_wrapper=proj_rcvr_wrapper,
+    #         #                                             context=context)
+    #         #     self._projection_wrappers.append(proj_wrapper)
+    #         #     self._projection_map[direct_proj] = proj_wrapper
+    #         # # MODIFIED 3/1/25 END
+    #
+    #         except DuplicateProjectionError:
+    #             pass
+    #
+    #     else:
+    #         assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
+    #
+    #     return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper
+    # MODIFIED 3/1/25 END
 
     def _parse_optimizer_params(self, context):
         """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
@@ -1595,7 +1669,11 @@ class PytorchProjectionWrapper():
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
-        if context._composition and LEARNING in self._use:
+        # MODIFIED 3/1/25 OLD:
+        if context._composition:
+        # # MODIFIED 3/1/25 NEW:
+        # if context._composition and LEARNING in self._use:
+        # MODIFIED 3/1/25 END
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
                 if all(p in context._composition.projections for p in output_port.efferents):
                     if self._pnl_proj in output_port.efferents:
