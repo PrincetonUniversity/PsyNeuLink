@@ -963,8 +963,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
-            # # MODIFIED 3/1/25 NEW:
-            # if SYNCH in pytorch_rep_proj_wrapper._use:
+            # MODIFIED 3/1/25 NEW:
+            if SYNCH in pytorch_rep_proj_wrapper._use:
             # MODIFIED 3/1/25 END
                 matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
                 projection.parameters.matrix._set(matrix, context)
@@ -981,9 +981,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if nodes == ALL:
             nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
-            # # MODIFIED 3/1/28 NEW:
-            # if SYNCH in pytorch_node._use:
-            # MODIFIED 3/1/28 END
+            # # MODIFIED 3/1/25 NEW:
+            if SYNCH in pytorch_node._use:
+            # MODIFIED 3/1/25 END
                 # First get variable in numpy format
                 if isinstance(pytorch_node.input, list):
                     variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
