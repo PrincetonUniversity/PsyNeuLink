@@ -972,20 +972,20 @@ class AutodiffComposition(Composition):
                     if rcvr == rcvr.composition.input_CIM:
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
-                        # # MODIFIED 3/1/25 NEW:
-                        # # Handle sublcasses of AutodiffComposition that use custom PyTorchCompositionWrapper
-                        # node_map = []
-                        # if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
-                        #     rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
-                        #     rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
-                        #     node_map = rcvr_pytorch_rep._nodes_map
+                        # MODIFIED 3/1/25 NEW:
+                        # Handle sublcasses of AutodiffComposition that use custom PyTorchCompositionWrapper
+                        node_map = []
+                        if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
+                            rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
+                            rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
+                            node_map = rcvr_pytorch_rep._nodes_map
                         # # MODIFIED 3/1/25 END
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
                         for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
                             # # MODIFIED 3/1/25 NEW:
-                            # if node_map and rcvr not in node_map:
-                            #     continue
+                            if node_map and rcvr not in node_map:
+                                continue
                             # # MODIFIED 3/1/25 END
                             # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
                             assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
