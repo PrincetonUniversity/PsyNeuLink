@@ -174,7 +174,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
-        return {self._composition.output_node: output}
+        # # MODIFIED 3/2/25 OLD:
+        # return {self._composition.output_node: output}
+        # MODIFIED 3/2/25 NEW: test_grucomposition
+        return {self._composition.gru_mech: output}
+        # MODIFIED 3/2/25 END
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -263,7 +267,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            # # MODIFIED 3/1/25 NEW:
+            # MODIFIED 3/2/25 NEW:
             # if SYNCH in proj_wrapper._use:
             # MODIFIED 3/1/25 END
                 torch_parameter = proj_wrapper.torch_parameter
@@ -274,8 +278,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            # MODIFIED 3/1/25 NEW:
-            # THIS MADE THE DIFFERENCE 3/2/25
+            # MODIFIED 3/2/25 NEW:
+            # THIS MADE THE DIFFERENCE for test_grucomposition 3/2/25
             # if SYNCH in proj_wrapper._use:
             # MODIFIED 3/1/25
                 proj_wrapper.set_torch_gru_parameter(context)
