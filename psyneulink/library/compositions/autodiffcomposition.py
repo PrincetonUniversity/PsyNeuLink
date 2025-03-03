@@ -1200,7 +1200,29 @@ class AutodiffComposition(Composition):
 
         # --------- Return the values of OUTPUT of trained nodes and all nodes  ---------------------------------------
 
+        # MODIFIED 3/2/25 OLD:
+        # # Get values of trained OUTPUT nodes
+        # trained_output_values = []
+        # trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
+        #                                  if port.path_afferents[0].sender.owner in self.targets_from_outputs_map.values()]
+        # for input_port in trained_outputs_CIM_input_ports:
+        #     assert (len(input_port.all_afferents) == 1), \
+        #         f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
+        #     port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
+        #     idx = source.output_ports.index(port)
+        #     outputs = curr_tensors_for_trained_outputs[source]
+        #     if type(outputs) is torch.Tensor:
+        #         output = outputs[:, idx, ...]
+        #     else:
+        #         output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+        #
+        #     output = output.detach().cpu().numpy().copy().tolist()
+        #     trained_output_values += [output]
+        # MODIFIED 3/2/25 NEW:
+        # FIX: REFACTORED TO USE  self.outputs_to_targets_map instead of output_CIM.input_ports
         # Get values of trained OUTPUT nodes
+        output_nodes = list(self.outputs_to_targets_map.keys())
+        trained_output_nodes = [node for node in output_nodes if node in self.targets_from_outputs_map.values()]
         trained_output_values = []
         trained_outputs_CIM_input_ports = [port for port in self.output_CIM.input_ports
                                          if port.path_afferents[0].sender.owner in self.targets_from_outputs_map.values()]
@@ -1217,25 +1239,26 @@ class AutodiffComposition(Composition):
 
             output = output.detach().cpu().numpy().copy().tolist()
             trained_output_values += [output]
+        # MODIFIED 3/2/25 END
 
 
-        # FIX: 3/2/25 - GO THROUGH curr_tensors_for_outputs OR self.outputs_to_targets_map.keys() INSTEAD OF output_CIM
-        # # MODIFIED 3/2/25 OLD:
-        # Get values of all OUTPUT nodes
-        all_output_values_OLD = []
-        for input_port in self.output_CIM.input_ports:
-            assert (len(input_port.all_afferents) == 1), \
-                f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
-            port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
-            idx = component.output_ports.index(port)
-            outputs = curr_tensors_for_outputs[component]
-            if type(outputs) is torch.Tensor:
-                output = outputs[:, idx, ...]
-            else:
-                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
-
-            output = output.detach().cpu().numpy().copy().tolist()
-            all_output_values_OLD += [output]
+        # # FIX: 3/2/25 - GO THROUGH curr_tensors_for_outputs OR self.outputs_to_targets_map.keys() INSTEAD OF output_CIM
+        # # # MODIFIED 3/2/25 OLD:
+        # # Get values of all OUTPUT nodes
+        # all_output_values_OLD = []
+        # for input_port in self.output_CIM.input_ports:
+        #     assert (len(input_port.all_afferents) == 1), \
+        #         f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
+        #     port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
+        #     idx = component.output_ports.index(port)
+        #     outputs = curr_tensors_for_outputs[component]
+        #     if type(outputs) is torch.Tensor:
+        #         output = outputs[:, idx, ...]
+        #     else:
+        #         output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+        #
+        #     output = output.detach().cpu().numpy().copy().tolist()
+        #     all_output_values_OLD += [output]
         # MODIFIED 3/2/25 NEW:
         #  FIX: test_gru_composition WORKS!
         #       BUT test_1_direct_and_1_ordinary_output_from_nested DOES NOT; MISSING BATCH DIMENSION ON all_output_values
@@ -1246,7 +1269,7 @@ class AutodiffComposition(Composition):
         all_output_values = []
         # for output_mech in list(self.outputs_to_targets_map.keys()):
         #     outputs = curr_tensors_for_outputs[component]
-        for component in list(self.outputs_to_targets_map.keys()):
+        for component in output_nodes:
             outputs = curr_tensors_for_outputs[component]
             for idx, output_port in enumerate(component.output_ports):
                 if type(outputs) is torch.Tensor:
@@ -1256,8 +1279,8 @@ class AutodiffComposition(Composition):
                 output = output.detach().cpu().numpy().copy().tolist()
                 all_output_values += [output]
         # MODIFIED 3/2/25 END
-        [[input_port.value] for input_port in self.output_CIM.input_ports]
-        np.testing.assert_allclose(all_output_values, all_output_values_OLD)
+        # [[input_port.value] for input_port in self.output_CIM.input_ports]
+        # np.testing.assert_allclose(all_output_values, all_output_values_OLD)
 
 
         # Turn into a numpy array, possibly ragged
