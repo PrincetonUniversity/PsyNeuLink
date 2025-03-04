@@ -952,13 +952,18 @@ class AutodiffComposition(Composition):
                                f"without detecting OUTPUT NODE at end of pathway")
 
             # End of pathway: OUTPUT Node of outer Composition
+            # MODIFIED 3/4/25 OLD:
+            if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                pathways.append(create_pathway(current_comp, node))
+                continue
             # MODIFIED 3/4/25 NEW:
             # FIX: ADD GRU AS NodeRole.OUTPUT, or check FOR _trained_comp_nodes_to_pytorch_nodes_map FOR ONES MAPPED TO AN OUTPUT
+            # if (current_comp == self
+            #         and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+            #              or (any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+            #                   for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items())))):
             # MODIFIED 3/4/25 END
-            if (current_comp == self
-                    and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
-                         or (any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
-                              for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items())))):
+
                 pathways.append(create_pathway(current_comp, node))
                 continue
 
