@@ -952,22 +952,37 @@ class AutodiffComposition(Composition):
                                f"without detecting OUTPUT NODE at end of pathway")
 
             # End of pathway: OUTPUT Node of outer Composition
-            # MODIFIED 3/4/25 OLD:
-            if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
-                pathways.append(create_pathway(current_comp, node))
-                continue
-            # MODIFIED 3/4/25 NEW:
-            # FIX: ADD GRU AS NodeRole.OUTPUT, or check FOR _trained_comp_nodes_to_pytorch_nodes_map FOR ONES MAPPED TO AN OUTPUT
-            # if (current_comp == self
-            #         and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
-            #              or (any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
-            #                   for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items())))):
+            # MODIFIED 3/4/25 OLD: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
+            # if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+            #     pathways.append(create_pathway(current_comp, node))
+            #     continue
+            # # MODIFIED 3/4/25 NEW: THIS WORKS (GENERATES PATHWAY WITH TARGET NODE) BUT NOT SURE IF IT IS CORRECT
+            # # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
+            # #    otherwise, check that it is mapped to one in the nested Composition
+            # if ((current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT))
+            #              or (current_comp._trained_comp_nodes_to_pytorch_nodes_map
+            #                  and any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+            #                            for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items()))):
+            #     pathways.append(create_pathway(current_comp, node))
+            #     continue
+            # MODIFIED 3/4/25 NEWER: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
+            if self == current_comp:
+                output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
+                for output_node in output_nodes.copy():
+                    if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
+                        mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
+                        output_nodes.remove(output_node)
+                        output_nodes.append(mapped_output_node)
+                if node in output_nodes:
+                    pathways.append(create_pathway(current_comp, node))
+                    continue
             # MODIFIED 3/4/25 END
 
-                pathways.append(create_pathway(current_comp, node))
-                continue
-
             # Consider all efferent Projections of node
+            # MODIFIED 3/4/25 NEW:
+            # FIX: SHOULD GRU_NODE HAVE EFFERENT PROJECTION? IN PYTORCHCOMPOSITIONWRAPPER?
+            #      HOW IS THIS HANDLED IN EMCOMPOSITION?
+            # MODIFIED 3/4/25 END
             for efferent_proj, rcvr in [(p, p.receiver.owner)
                                         for p in node.efferents
                                         if p in current_comp.projections]:
