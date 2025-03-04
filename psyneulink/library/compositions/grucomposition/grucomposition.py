@@ -809,6 +809,7 @@ class GRUComposition(AutodiffComposition):
 
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= TARGET_NODE_NAME)
+        self._trained_comp_nodes_to_pytorch_nodes = {self.output_node: self.gru_mech}
 
         # # MODIFIED 3/1/25 NEW:
         # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
