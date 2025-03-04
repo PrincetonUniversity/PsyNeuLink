@@ -755,7 +755,7 @@ class AutodiffComposition(Composition):
         self._built_pathways = False
         self.targets_from_outputs_map = {} # Map from TARGETS nodes to any OUTPUT nodes from which they receive input
         self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
-        self._trained_comp_nodes_to_pytorch_nodes = None # Set by subclasses that replace trainiable nodes
+        self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trainiable nodes
         self.optimizer_type = optimizer_type
         self._optimizer_params = optimizer_params or {}
         self.loss_spec = loss_spec
@@ -1216,8 +1216,8 @@ class AutodiffComposition(Composition):
         all_output_values = []
         for item in outputs_idx_port_node_comp:
             idx, port, node, comp = item
-            if self._trained_comp_nodes_to_pytorch_nodes:
-                node = self._trained_comp_nodes_to_pytorch_nodes[node]
+            if self._trained_comp_nodes_to_pytorch_nodes_map:
+                node = self._trained_comp_nodes_to_pytorch_nodes_map[node]
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
                 output = outputs[:, idx, ...]
