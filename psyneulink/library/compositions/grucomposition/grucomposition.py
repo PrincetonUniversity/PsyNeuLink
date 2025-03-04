@@ -1119,47 +1119,20 @@ class GRUComposition(AutodiffComposition):
         # if self.gru_mech:
         #     return [self.target_node]
 
-        # MODIFIED 2/16/25 OLD:
-        # input_size = self.parameters.input_size.get()
-        # hidden_size = self.parameters.hidden_size.get()
-        # MODIFIED 2/16/25 END
-
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
-        # MODIFIED 2/16/25 OLD:
-        # self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
-        #                                     input_shapes=input_size,
-        #                                     function=MatrixTransform(
-        #                                         default_variable=np.zeros(input_size),
-        #                                         matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-        #
-        # target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
-        # MODIFIED 2/16/25 NEW:
         target_mech = self.target_node
-        # MODIFIED 2/16/25 END
 
-        # Add nodes to GRUComposition
+        # Add target Node to GRUComposition
         context = Context(source=ContextFlags.METHOD)
-        # # MODIFIED 3/1/25 NEW:
-        # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
-        # # MODIFIED 2/16/25 OLD:
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # # # # MODIFIED 3/2/25 OLD:
-        # self.targets_from_outputs_map = {target_mech: self.output_node}
-        # self.outputs_to_targets_map = {self.output_node: target_mech}
-        # MODIFIED 3/2/25 NEW:
-        # # # THIS BREAKS test_grucomposition
         self.targets_from_outputs_map = {target_mech: self.gru_mech}
         self.outputs_to_targets_map = {self.gru_mech: target_mech}
-        # MODIFIED 3/2/25 END
-        # MODIFIED 2/16/25 OLD:
-        # self.target_node = target_mech
-        # MODIFIED 2/16/25 END
 
         return [target_mech]
 
