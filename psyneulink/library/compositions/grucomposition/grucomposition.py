@@ -1149,11 +1149,11 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # # MODIFIED 3/2/25 OLD:
+        # # # # MODIFIED 3/2/25 OLD:
         # self.targets_from_outputs_map = {target_mech: self.output_node}
         # self.outputs_to_targets_map = {self.output_node: target_mech}
         # MODIFIED 3/2/25 NEW:
-        # THIS BREAKS test_grucomposition
+        # # # THIS BREAKS test_grucomposition
         self.targets_from_outputs_map = {target_mech: self.gru_mech}
         self.outputs_to_targets_map = {self.gru_mech: target_mech}
         # MODIFIED 3/2/25 END

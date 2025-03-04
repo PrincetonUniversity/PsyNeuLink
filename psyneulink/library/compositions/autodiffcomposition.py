@@ -1206,7 +1206,7 @@ class AutodiffComposition(Composition):
         # Get output Nodes, their out_ports and corresponding indices
         #     in order of outermost AutodiffComposition's output_CIM Ports
         outputs_idx_port_node_comp = []
-        for IDX, port in enumerate(self.output_CIM.input_ports):
+        for port in self.output_CIM.input_ports:
             source_info = self.output_CIM._get_source_info_from_output_CIM(port)
             source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
             outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
