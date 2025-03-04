@@ -15,6 +15,7 @@ from psyneulink.library.compositions.grucomposition.grucomposition import GRUCom
 class TestExecution:
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
     def test_pytorch_execution_identicality_with_pytorch(self, bias):
+        # Test identicality of learning results of PyTorch GRU against native Pytorch GRU
         import torch
         inputs = [[1,2,3]]
         INPUT_SIZE = 3
@@ -37,6 +38,7 @@ class TestExecution:
 
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
     def test_pytorch_learning_identicality_with_pytorch(self, bias):
+        # Test identicality of learning results of GRUComposition against native Pytorch GRU
         import torch
         inputs = [[1,2,3]]
         targets = [[1,1,1,1,1]]
@@ -76,3 +78,25 @@ class TestExecution:
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         # Compare results from after learning:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
+
+
+    def test_nested_gru_composition_learning(self):
+        # Test identicality of results of nested and non-nested learning of GRUComposition
+
+        # Nested pathway version:
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH')
+        gru = GRUComposition(name='GRU COMP',
+                             input_size=3, hidden_size=5, bias=True)
+        comp = pnl.AutodiffComposition(name='OUTER COMP',
+                                   pathways=[input_mech,
+                                             # MappingProjection(sender=input_mech,
+                                             #                   receiver=gru.input_node.input_ports[0]),
+                                             gru,
+                                             output_mech])
+        targets = comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        # inputs = {gru.input_node:[[1,2,3]]}
+        result = comp.learn(inputs={input_mech:[[1,2,3]],
+                                   targets[0]: [[1,1,1,1,1]]
+                                    },
+                           execution_mode=pnl.ExecutionMode.PyTorch)

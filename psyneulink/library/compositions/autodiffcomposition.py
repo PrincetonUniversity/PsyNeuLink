@@ -755,7 +755,8 @@ class AutodiffComposition(Composition):
         self._built_pathways = False
         self.targets_from_outputs_map = {} # Map from TARGETS nodes to any OUTPUT nodes from which they receive input
         self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
-        self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trainiable nodes
+        self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
+        self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self.optimizer_type = optimizer_type
         self._optimizer_params = optimizer_params or {}
         self.loss_spec = loss_spec
@@ -887,7 +888,7 @@ class AutodiffComposition(Composition):
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         """Breadth-first search from input_node to find all input -> output pathways
-        Uses queue(node, input_port, composition) to traverse all nodes in the graph
+        Uses queue(node, composition) to traverse all nodes in the graph
         IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
         Return a list of all pathways from input_node -> output node
         """
@@ -898,7 +899,7 @@ class AutodiffComposition(Composition):
 
         pathways = []  # List of all feedforward pathways from INPUT Node to OUTPUT Node
         prev = {}      # Dictionary of previous component for each component in every pathway
-        queue = collections.deque([(input_node, None, self)])  # Queue of nodes to visit in breadth-first search
+        queue = collections.deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
         # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
         #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
@@ -928,11 +929,11 @@ class AutodiffComposition(Composition):
 
         # breadth-first search starting with input node
         while len(queue) > 0:
-            node, input_port, current_comp = queue.popleft()
+            node, current_comp = queue.popleft()
 
             # # MODIFIED 2/22/25 NEW:
             # # Prevent cycle from recurrent pathway
-            # if any([node is n and input_port is i for n, i, c in queue]):
+            # if any([node is n for n, c in queue]):
             #     break
             # MODIFIED 2/22/25 END
 
@@ -942,7 +943,7 @@ class AutodiffComposition(Composition):
                             for proj in node.afferents)):
                 for output_port in node.input_CIM.output_ports:
                     for proj in output_port.efferents:
-                        queue.append((proj.receiver.owner, proj.receiver, node))
+                        queue.append((proj.receiver.owner, node))
                 continue
 
             # node is output_CIM of outer Composition (i.e., end of pathway)
@@ -951,7 +952,13 @@ class AutodiffComposition(Composition):
                                f"without detecting OUTPUT NODE at end of pathway")
 
             # End of pathway: OUTPUT Node of outer Composition
-            if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+            # MODIFIED 3/4/25 NEW:
+            # FIX: ADD GRU AS NodeRole.OUTPUT, or check FOR _trained_comp_nodes_to_pytorch_nodes_map FOR ONES MAPPED TO AN OUTPUT
+            # MODIFIED 3/4/25 END
+            if (current_comp == self
+                    and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+                         or (any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+                              for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items())))):
                 pathways.append(create_pathway(current_comp, node))
                 continue
 
@@ -974,26 +981,33 @@ class AutodiffComposition(Composition):
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
                         # MODIFIED 3/1/25 NEW:
-                        # Handle sublcasses of AutodiffComposition that use custom PyTorchCompositionWrapper
-                        node_map = []
+                        # Handle subclasses of AutodiffComposition that use custom PyTorchCompositionWrapper
                         if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
                             rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
                             rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
-                            node_map = rcvr_pytorch_rep._nodes_map
+                            # node_map = rcvr_pytorch_rep._nodes_map
+                        # else:
+                        #     node_map = []
                         # # MODIFIED 3/1/25 END
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
-                        for _, rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
+                        for _, nested_rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
                             # # MODIFIED 3/1/25 NEW:
-                            if node_map and rcvr not in node_map:
-                                continue
-                            # # MODIFIED 3/1/25 END
-                            # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            assert rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
-                                f"PROGRAM ERROR: '{rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            prev[rcvr] = efferent_proj
-                            prev[efferent_proj] = node
-                            queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+                            if rcvr_comp._input_comp_nodes_to_pytorch_nodes_map:
+                                # If nested comp has _input_comp_nodes_to_pytorch_nodes_map, get nested_rcvr from it
+                                nested_rcvr = rcvr_comp._input_comp_nodes_to_pytorch_nodes_map[nested_rcvr]
+                                # efferent_proj = rcvr_comp.pytorch_representation._nodes_map[nested_rcvr].afferents
+                                prev[nested_rcvr] = efferent_proj
+                                prev[efferent_proj] = nested_rcvr
+                            else:
+                                # Otherwise, ensure that nested_rcvr is an INPUT Node of rcvr_comp
+                                assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
+                                    f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
+                                # # MODIFIED 3/1/25 END
+                                # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
+                                prev[nested_rcvr] = efferent_proj
+                                prev[efferent_proj] = node
+                            queue.append((nested_rcvr, rcvr_comp))
 
                     # rcvr is Nested Composition output_CIM:
                     # Projection is to output_CIM, possibly exiting from a nested Composition
@@ -1019,7 +1033,7 @@ class AutodiffComposition(Composition):
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
                                 prev[rcvr] = efferent_proj
                                 prev[efferent_proj] = node
-                                queue.append((rcvr, efferent_proj.receiver, rcvr_comp))
+                                queue.append((rcvr, rcvr_comp))
                         else:
                             pathways.append(create_pathway(current_comp, node))
 
@@ -1040,7 +1054,7 @@ class AutodiffComposition(Composition):
                 else:
                     prev[rcvr] = efferent_proj
                     prev[efferent_proj] = node
-                    queue.append((rcvr, efferent_proj.receiver, current_comp))
+                    queue.append((rcvr, current_comp))
                     continue
 
         return pathways
