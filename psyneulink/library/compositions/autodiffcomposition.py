@@ -901,9 +901,11 @@ class AutodiffComposition(Composition):
         prev = {}      # Dictionary of previous component for each component in every pathway
         queue = collections.deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
-        # MODIFIED 3/4/25 NEW:
+        # MODIFIED 3/5/25 NEW:
+        # FIX:  NEEDED FOR GRUComposition,
+        #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
         # self._build_pytorch_representation(context)
-        # MODIFIED 3/4/25 END
+        # MODIFIED 3/5/25 END
 
         # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
         #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
@@ -984,19 +986,29 @@ class AutodiffComposition(Composition):
 
             # Consider all efferent Projections of node,
             #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
-            for efferent_proj, rcvr in [(p, p.receiver.owner)
-                                        for p in node.efferents
-                                        if p in current_comp.projections]:
-                                            # MODIFIED 3/4/25 NEW:
-                                            # FIX:  NEEDED FOR GRUComposition,
-                                            #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-                                            #  BECAUSE IT HAS ENTRIES IN _nodes_map
-                                            #  NEED SOME OTHER WAY TO DISTINGUISH GRU NODE FROM THOSE
-                                            # or (current_comp.pytorch_representation
-                                            #     and current_comp.pytorch_representation._nodes_map and
-                                            #     node in current_comp.pytorch_representation._nodes_map))]:
-                                            # MODIFIED 3/4/25 END
-
+            # MODIFIED 3/5/25 OLD:
+            # for efferent_proj, rcvr in [(p, p.receiver.owner)
+            #                             for p in node.efferents
+            #                             if p in current_comp.projections]:
+            #                                 # MODIFIED 3/4/25 NEW:
+            #                                 # FIX:  NEEDED FOR GRUComposition,
+            #                                 #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
+            #                                 #  BECAUSE IT HAS ENTRIES IN _nodes_map
+            #                                 #  NEED SOME OTHER WAY TO DISTINGUISH GRU NODE FROM THOSE
+            #                                 # or (current_comp.pytorch_representation
+            #                                 #     and current_comp.pytorch_representation._nodes_map and
+            #                                 #     node in current_comp.pytorch_representation._nodes_map))]:
+            #                                 # MODIFIED 3/4/25 END
+            # # MODIFIED 3/5/25 NEW
+            efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
+            if not efferent_projs:
+                efferent_projs = [(p, p.receiver.owner) for p in node.efferents
+                                  if current_comp.pytorch_representation
+                                  and current_comp.pytorch_representation._nodes_map and
+                                  node in current_comp.pytorch_representation._nodes_map]
+            # # MODIFIED 3/5/25 OLD
+            # 3/5/25 FIX: NEED TO ASSIGN OUT_MECH TO OUTER COMPOSITION BELOW IF THIS IS FOR GRU NODE
+            for efferent_proj, rcvr in efferent_projs:
                 # Ignore efferent Projections that do not have a learnable attribute
                 #   or are ModulatoryProjections (i.e., including LearningProjections)
                 # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
@@ -1013,6 +1025,7 @@ class AutodiffComposition(Composition):
                         # MODIFIED 3/1/25 NEW:
                         # Handle subclasses of AutodiffComposition that use custom PyTorchCompositionWrapper
                         if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
+                            # FIX: 3//25 - THIS NEEDS TO CALL _flatten_for_pytorch ON pytorchGRUWrappers:
                             rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
                             rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
                             # node_map = rcvr_pytorch_rep._nodes_map
