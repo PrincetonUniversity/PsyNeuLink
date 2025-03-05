@@ -1009,8 +1009,10 @@ class AutodiffComposition(Composition):
                         # else:
                         #     node_map = []
                         # # MODIFIED 3/1/25 END
+                        # FIX: 3/4/25 - RECEIVERS NEEDS TO BE GRU_MECH, NOT INPUT NODE OF GRUCOMPOSITION
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
+                        # USE INPUT MAPPING HERE
                         for _, nested_rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
                             # # MODIFIED 3/1/25 NEW:
                             if rcvr_comp._input_comp_nodes_to_pytorch_nodes_map:
