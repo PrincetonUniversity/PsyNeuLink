@@ -79,13 +79,13 @@ class TestExecution:
         # Compare results from after learning:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
 
-
     def test_nested_gru_composition_learning(self):
         # Test identicality of results of nested and non-nested learning of GRUComposition
 
         # Nested pathway version:
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
-        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH')
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH',
+                                              input_shapes=5)
         gru = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=True)
         comp = pnl.AutodiffComposition(name='OUTER COMP',

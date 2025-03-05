@@ -110,7 +110,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              access,
                              context)->tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
-        Replace GRUCompositon's nodes with gru_mech and projections to and from it."""
+        Replace GRUComposition's nodes with gru_mech and projections to and from it."""
 
         sndr_mech_wrapper = None
         rcvr_mech_wrapper = None
