@@ -988,6 +988,10 @@ class AutodiffComposition(Composition):
                                         for p in node.efferents
                                         if p in current_comp.projections]:
                                             # MODIFIED 3/4/25 NEW:
+                                            # FIX:  NEEDED FOR GRUComposition,
+                                            #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
+                                            #  BECAUSE IT HAS ENTRIES IN _nodes_map
+                                            #  NEED SOME OTHER WAY TO DISTINGUISH GRU NODE FROM THOSE
                                             # or (current_comp.pytorch_representation
                                             #     and current_comp.pytorch_representation._nodes_map and
                                             #     node in current_comp.pytorch_representation._nodes_map))]:
