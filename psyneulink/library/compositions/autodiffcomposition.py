@@ -901,6 +901,8 @@ class AutodiffComposition(Composition):
         prev = {}      # Dictionary of previous component for each component in every pathway
         queue = collections.deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
+        self._build_pytorch_representation(context)
+
         # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
         #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
         #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
@@ -985,7 +987,8 @@ class AutodiffComposition(Composition):
             # MODIFIED 3/4/25 END
             for efferent_proj, rcvr in [(p, p.receiver.owner)
                                         for p in node.efferents
-                                        if p in current_comp.projections]:
+                                        if (p in current_comp.projections
+                                        or node in current_comp.pytorch_representation._nodes_map)]:
 
                 # Ignore efferent Projections that do not have a learnable attribute
                 #   or are ModulatoryProjections (i.e., including LearningProjections)
@@ -1003,16 +1006,14 @@ class AutodiffComposition(Composition):
                         # MODIFIED 3/1/25 NEW:
                         # Handle subclasses of AutodiffComposition that use custom PyTorchCompositionWrapper
                         if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
-                            rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
                             rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
+                            rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
                             # node_map = rcvr_pytorch_rep._nodes_map
                         # else:
                         #     node_map = []
                         # # MODIFIED 3/1/25 END
-                        # FIX: 3/4/25 - RECEIVERS NEEDS TO BE GRU_MECH, NOT INPUT NODE OF GRUCOMPOSITION
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
-                        # USE INPUT MAPPING HERE
                         for _, nested_rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
                             # # MODIFIED 3/1/25 NEW:
                             if rcvr_comp._input_comp_nodes_to_pytorch_nodes_map:
@@ -1080,7 +1081,6 @@ class AutodiffComposition(Composition):
                     continue
 
         return pathways
-
 
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
