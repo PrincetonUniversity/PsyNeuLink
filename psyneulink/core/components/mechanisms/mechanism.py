@@ -4234,6 +4234,7 @@ class Mechanism_Base(Mechanism):
 
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
+        from psyneulink.core.globals.mdf import _get_id_for_mdf_port
 
         model = mdf.Node(
             id=parse_valid_identifier(self.name),
@@ -4243,26 +4244,42 @@ class Mechanism_Base(Mechanism):
         for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
             model.parameters.append(mdf.Parameter(id=name, value=val))
 
-        for ip in self.input_ports:
+        if (
+            self.input_ports is None
+            and self.initialization_status is ContextFlags.DEFERRED_INIT
+        ):
+            input_ports = []
+            primary_input_port = None
+        else:
+            input_ports = self.input_ports
+            primary_input_port = self.input_ports[0]
+
+        primary_function_input_ids = []
+        for ip in input_ports:
+            ip_id = _get_id_for_mdf_port(ip)
             if len(ip.path_afferents) > 1:
+                ip_afferent_mdf_ips = []
+
                 for aff in ip.path_afferents:
                     ip_model = mdf.InputPort(
-                        id=parse_valid_identifier(f'{self.name}_input_port_{aff.name}'),
+                        id=_get_id_for_mdf_port(ip, afferent=aff),
                         shape=str(aff.defaults.value.shape),
                         type=str(aff.defaults.value.dtype)
                     )
+                    ip_afferent_mdf_ips.append(ip_model.id)
                     model.input_ports.append(ip_model)
 
                 # create combination function
+                combination_function_input_data_id = f'{ip_id}_combination_function_input_data'
                 model.parameters.append(
                     mdf.Parameter(
-                        id='combination_function_input_data',
-                        value=f"[{', '.join(f'{mip.id}' for mip in model.input_ports)}]"
+                        id=combination_function_input_data_id,
+                        value=f"[{', '.join(f'{mip}' for mip in ip_afferent_mdf_ips)}]"
                     )
                 )
-                combination_function_id = f'{parse_valid_identifier(self.name)}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
+                combination_function_id = f'{ip_id}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
                 combination_function_args = {
-                    'data': "combination_function_input_data",
+                    'data': combination_function_input_data_id,
                     'axes': 0
                 }
                 model.functions.append(
@@ -4273,10 +4290,11 @@ class Mechanism_Base(Mechanism):
                     )
                 )
                 combination_function_dimreduce_id = f'{combination_function_id}_dimreduce'
+                primary_function_input_ids.append(combination_function_dimreduce_id)
                 model.functions.append(
                     mdf.Function(
                         id=combination_function_dimreduce_id,
-                        value=f'{MODEL_SPEC_ID_MDF_VARIABLE}[0][0]',
+                        value=f'{MODEL_SPEC_ID_MDF_VARIABLE}[0]',
                         args={
                             MODEL_SPEC_ID_MDF_VARIABLE: combination_function_id,
                         }
@@ -4287,19 +4305,34 @@ class Mechanism_Base(Mechanism):
                 ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
 
                 model.input_ports.append(ip_model)
+                primary_function_input_ids.append(ip_model.id)
 
-        for op in self.output_ports:
+        output_ports = self.output_ports
+        if (
+            output_ports is None
+            and self.initialization_status is ContextFlags.DEFERRED_INIT
+        ):
+            output_ports = []
+
+        for op in output_ports:
             op_model = op.as_mdf_model()
             op_model.id = f'{parse_valid_identifier(self.name)}_{op_model.id}'
 
             model.output_ports.append(op_model)
 
-        if len(ip.path_afferents) > 1:
-            primary_function_input_name = combination_function_dimreduce_id
+        # from deferred init above
+        if primary_input_port is None:
+            primary_function_input_id = ''
+        elif len(primary_function_input_ids) == 1:
+            primary_function_input_id = primary_function_input_ids[0]
         else:
-            primary_function_input_name = model.input_ports[0].id
+            primary_function_input_id = f"numpy.array([{', '.join(primary_function_input_ids)}])"
 
-        self.function._assign_to_mdf_model(model, primary_function_input_name)
+        if (
+            self.function is not None
+            or self.initialization_status is not ContextFlags.DEFERRED_INIT
+        ):
+            self.function._assign_to_mdf_model(model, primary_function_input_id)
 
         return model
 

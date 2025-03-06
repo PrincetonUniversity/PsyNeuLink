@@ -1166,10 +1166,11 @@ class Projection_Base(Projection):
         import modeci_mdf.mdf as mdf
 
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        from psyneulink.core.globals.mdf import _get_id_for_mdf_port
 
         # these may occur during deferred init
-        if not isinstance(self.sender, type):
-            sender_name = parse_valid_identifier(self.sender.name)
+        if hasattr(self, 'sender') and not isinstance(self.sender, type):
+            sender_name = _get_id_for_mdf_port(self.sender)
             if isinstance(self.sender.owner, CompositionInterfaceMechanism):
                 sender_mech = parse_valid_identifier(self.sender.owner.composition.name)
             else:
@@ -1178,7 +1179,7 @@ class Projection_Base(Projection):
             sender_name = ''
             sender_mech = ''
 
-        if not isinstance(self.receiver, type):
+        if hasattr(self, 'receiver') and not isinstance(self.receiver, type):
             try:
                 num_path_afferents = len(self.receiver.path_afferents)
             except PortError:
@@ -1186,9 +1187,10 @@ class Projection_Base(Projection):
                 num_path_afferents = 0
 
             if num_path_afferents > 1:
-                receiver_name = parse_valid_identifier(f'input_port_{self.name}')
+                afferent = self
             else:
-                receiver_name = parse_valid_identifier(self.receiver.name)
+                afferent = None
+            receiver_name = _get_id_for_mdf_port(self.receiver, afferent=afferent)
 
             if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
                 receiver_mech = parse_valid_identifier(self.receiver.owner.composition.name)
@@ -1199,8 +1201,8 @@ class Projection_Base(Projection):
             receiver_mech = ''
 
         socket_dict = {
-            MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
-            MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+            MODEL_SPEC_ID_SENDER_PORT: sender_name,
+            MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
             MODEL_SPEC_ID_SENDER_MECH: sender_mech,
             MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
         }
@@ -1209,7 +1211,11 @@ class Projection_Base(Projection):
         if self.defaults.weight is None:
             parameters[self._model_spec_id_parameters]['weight'] = 1
 
-        if simple_edge_format and not self.function._is_identity(defaults=True):
+        if (
+            simple_edge_format
+            and self.function is not None
+            and not self.function._is_identity(defaults=True)
+        ):
             edge_node = ProcessingMechanism(
                 name=f'{self.name}_dummy_node',
                 default_variable=self.defaults.variable,
@@ -1231,7 +1237,7 @@ class Projection_Base(Projection):
                     self._model_spec_id_parameters: {
                         'weight': parameters[self._model_spec_id_parameters]['weight']
                     },
-                    MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+                    MODEL_SPEC_ID_SENDER_PORT: sender_name,
                     MODEL_SPEC_ID_RECEIVER_PORT: edge_node.input_ports[0].id,
                     MODEL_SPEC_ID_SENDER_MECH: sender_mech,
                     MODEL_SPEC_ID_RECEIVER_MECH: edge_node.id
@@ -1247,7 +1253,7 @@ class Projection_Base(Projection):
                 id=parse_valid_identifier(f'{self.name}_dummy_post_edge'),
                 **{
                     MODEL_SPEC_ID_SENDER_PORT: edge_node.output_ports[0].id,
-                    MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+                    MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
                     MODEL_SPEC_ID_SENDER_MECH: edge_node.id,
                     MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
                 }
