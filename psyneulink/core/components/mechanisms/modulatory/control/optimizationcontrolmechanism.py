@@ -2966,7 +2966,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 seed = self.initial_seed
 
-            randomization_seed_mod_values = SampleSpec(start=seed, stop=seed+num_estimates-1, step=1)
+            randomization_seed_mod_values = SampleSpec(start=seed, stop=seed + num_estimates - 1, step=1)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
