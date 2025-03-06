@@ -1077,6 +1077,7 @@ Class Reference
 ---------------
 
 """
+import sys
 import ast
 import copy
 import warnings
@@ -2958,7 +2959,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if num_estimates:
             # must be SampleSpec in allocation_samples arg
-            randomization_seed_mod_values = SampleSpec(start=1, stop=num_estimates, step=1)
+
+            if self.initial_seed is None:
+                rng = np.random.default_rng()
+                seed = int(rng.integers(sys.maxsize))
+            else:
+                seed = self.initial_seed
+
+            randomization_seed_mod_values = SampleSpec(start=seed, stop=seed+num_estimates-1, step=1)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,

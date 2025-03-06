@@ -460,6 +460,12 @@ class PECOptimizationFunction(OptimizationFunction):
             fit_evaluate=True,
         )
 
+        # Change randomization for next sample if specified (relies on randomization being last dimension)
+        if (self.owner and not self.owner.parameters.same_seed_for_all_allocations._get(context) and
+                self.parameters.randomization_dimension._get(context)):
+            self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
+            self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
+
         # We need to swap the simulation (randomization dimension) with the output dimension so things
         # are in the right order passing to the objective_function call signature.
         all_values = np.transpose(all_values, (0, 2, 1))
