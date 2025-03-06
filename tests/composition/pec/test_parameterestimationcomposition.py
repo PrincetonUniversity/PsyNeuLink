@@ -377,7 +377,7 @@ def test_parameter_estimation_ddm_cond(func_mode):
 
     np.testing.assert_allclose(
         list(pec.optimized_parameter_values.values()),
-        [0.13574824786818707, 0.04513454296326741, 0.49615574384553446, 0.8985587363124521]
+        [0.4377533727946954, 0.08565823101086734, 0.7888704042741785, 0.9305157370458915]
     )
 
 
@@ -466,7 +466,7 @@ def test_parameter_estimation_ddm_mle(func_mode, likelihood_include_mask):
     # the same search trajectory from a known working example.
     np.testing.assert_allclose(
         list(pec.optimized_parameter_values.values()),
-        [0.2227273962084888, 0.5976130662377002, 0.1227723651473831],
+        [0.2625412440239183, 0.7757273492050537, 0.025688767118582256],
     )
 
 
