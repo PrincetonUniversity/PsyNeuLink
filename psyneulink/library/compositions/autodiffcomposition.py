@@ -904,7 +904,7 @@ class AutodiffComposition(Composition):
         # MODIFIED 3/5/25 NEW:
         # FIX:  NEEDED FOR GRUComposition,
         #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-        self._build_pytorch_representation(context)
+        # self._build_pytorch_representation(context)
         # MODIFIED 3/5/25 END
 
         # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
@@ -943,7 +943,8 @@ class AutodiffComposition(Composition):
             #     break
             # MODIFIED 2/22/25 END
 
-            # node is nested Composition that is an INPUT node of the immediate outer Composition
+            # node is nested Composition that is an INPUT node of the immediate outer Composition,
+            #   so put that in queue for procsssing in next pass through while loop
             if (isinstance(node, Composition) and node is not self
                     and any(isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                             for proj in node.afferents)):
@@ -952,17 +953,18 @@ class AutodiffComposition(Composition):
                         queue.append((proj.receiver.owner, node))
                 continue
 
-            # node is output_CIM of outer Composition (i.e., end of pathway)
+            # node is output_CIM of outer Composition (i.e., end of pathway) which shouldn't happen yet
             if isinstance(node, CompositionInterfaceMechanism) and node is self.output_CIM:
                 assert False, (f"PROGRAM ERROR: 'Got to output_CIM of outermost Composition '({self.name})' "
                                f"without detecting OUTPUT NODE at end of pathway")
 
-            # End of pathway: OUTPUT Node of outer Composition
             # MODIFIED 3/4/25 OLD: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
-            # if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
-            #     pathways.append(create_pathway(current_comp, node))
-            #     continue
+            # End of pathway: OUTPUT Node of outer Composition
+            if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+                pathways.append(create_pathway(current_comp, node))
+                continue
             # # MODIFIED 3/4/25 NEW: THIS WORKS (GENERATES PATHWAY WITH TARGET NODE) BUT NOT SURE IF IT IS CORRECT
+            # # End of pathway: OUTPUT Node of outer Composition
             # # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
             # #    otherwise, check that it is mapped to one in the nested Composition
             # if ((current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT))
@@ -972,16 +974,50 @@ class AutodiffComposition(Composition):
             #     pathways.append(create_pathway(current_comp, node))
             #     continue
             # MODIFIED 3/4/25 NEWER: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
+            # End of pathway: OUTPUT Node of outer Composition
+            # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
+            #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
+            # if self == current_comp:
+            #     output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
+            #     for output_node in output_nodes.copy():
+            #         if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
+            #             # Replace any nodes in output_nodes in the nested Composition
+            #             #    that have been remapped to other ones in its Pytorch version
+            #             mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
+            #             output_nodes.remove(output_node)
+            #             output_nodes.append(mapped_output_node)
+            #     if node in output_nodes:
+            #         if current_comp.output_CIM._get_destination_info_for_output_CIM(port) is self.output_CIM:
+            #             # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
+            #             pathways.append(create_pathway(current_comp, node))
+            #             continue
+            # # MODIFIED 3/7/25 NEWEST FAILS
+            # End of pathway: OUTPUT Node of outer Composition
+            # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
+            #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
             if self == current_comp:
                 output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
                 for output_node in output_nodes.copy():
                     if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
+                        # Replace any nodes in output_nodes in the nested Composition
+                        #    that have been remapped to other ones in its Pytorch version
                         mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
                         output_nodes.remove(output_node)
                         output_nodes.append(mapped_output_node)
                 if node in output_nodes:
-                    pathways.append(create_pathway(current_comp, node))
-                    continue
+                    # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
+                    for output_port in node.output_ports:
+                        all_output_projections_are_terminal = True
+                        for proj in output_port.efferents:
+                            if (current_comp.output_CIM._get_destination_info_for_output_CIM(proj.receiver)
+                                    is self.output_CIM):
+                                # node projects directly to output_CIM of outermmost Composition,
+                                #     so it is the end of a pathway
+                                pathways.append(create_pathway(current_comp, node))
+                            else:
+                                all_output_projections_are_terminal = False
+                    if all_output_projections_are_terminal is True:
+                        continue
             # MODIFIED 3/4/25 END
 
             # Consider all efferent Projections of node,
@@ -1086,8 +1122,12 @@ class AutodiffComposition(Composition):
                     # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
                     elif rcvr is self.output_CIM:
                         # Assign node that projects to current node as OUTPUT Node for pathway
+                        # MODIFIED 3/7/25 OLD:
                         node_output_port = efferent_proj.sender
                         _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
+                        # # MODIFIED 3/7/25 NEW:
+                        # _, sender, _ = rcvr._get_source_info_from_output_CIM(efferent_proj.receiver)
+                        # MODIFIED 3/7/25 END
                         pathway = create_pathway(current_comp, node)
                         if pathway:
                             queue.popleft()
