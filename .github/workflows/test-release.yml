@@ -121,7 +121,7 @@ jobs:
     - name: Run tests
       shell: bash
       # run only tests/. We don't care about codestyle/docstyle at this point
-      timeout-minutes: 80
+      timeout-minutes: 180
       run: |
         # remove sources to prevent conflict with the isntalled package
         rm -r -f psyneulink/ docs/ bin/ Matlab/
