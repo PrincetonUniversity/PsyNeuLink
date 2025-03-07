@@ -2962,7 +2962,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             if self.initial_seed is None:
                 rng = np.random.default_rng()
-                seed = int(rng.integers(sys.maxsize))
+                seed = int(rng.integers(2**32 - 1)) # Max size for mt19937 seed
             else:
                 seed = self.initial_seed
 
