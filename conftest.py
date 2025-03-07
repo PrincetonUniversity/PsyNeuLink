@@ -1,5 +1,6 @@
 import contextlib
 import doctest
+import inspect
 import io
 import itertools
 import numpy as np
@@ -310,3 +311,27 @@ def pytest_configure(config):
     psyneulink._called_from_pytest = True
 
     patch_parameter_set_value_numeric_check()
+
+
+@pytest.helpers.register
+def get_all_subclasses(
+    type_=psyneulink.core.components.component.ComponentsMeta,
+    module=psyneulink,
+    include_abstract=True,
+    sort=True,
+):
+    classes = []
+
+    for item in module.__all__:
+        cls_ = getattr(module, item)
+
+        if (
+            isinstance(cls_, type_)
+            and (include_abstract or not inspect.isabstract(cls_))
+        ):
+            classes.append(cls_)
+
+    if sort:
+        classes.sort(key=lambda x: x.__name__)
+
+    return classes
