@@ -904,7 +904,7 @@ class AutodiffComposition(Composition):
         # MODIFIED 3/5/25 NEW:
         # FIX:  NEEDED FOR GRUComposition,
         #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-        # self._build_pytorch_representation(context)
+        self._build_pytorch_representation(context)
         # MODIFIED 3/5/25 END
 
         # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
@@ -1018,7 +1018,9 @@ class AutodiffComposition(Composition):
                 # Deal with Projections to/from CIMs since nested comps can be learned in PyTorch mode
                 if isinstance(rcvr, CompositionInterfaceMechanism):
 
-                    # Projection to input_CIM, possibly entering a nested Composition
+                    # FIX: 3/5/25 - IMPLEMENT _handle_nested_comp_pathway FOR PATHWAYS IN NESTED COMP FROM HERE XXX:
+                    #               USE / INTEGRATE WITH / POSSIBLY OVERRIDE create_pathway()
+                    # Projection to input_CIM of a nested Composition
                     if rcvr == rcvr.composition.input_CIM:
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
@@ -1053,8 +1055,7 @@ class AutodiffComposition(Composition):
                             queue.append((nested_rcvr, rcvr_comp))
 
                     # rcvr is Nested Composition output_CIM:
-                    # Projection is to output_CIM, possibly exiting from a nested Composition
-                    # FIX: 10/1/23 - REVERSE THIS AND NEXT elif?
+                    # Projection is to output_CIM exiting from a nested Composition
                     elif rcvr == current_comp.output_CIM and current_comp is not self:
 
                         # Get output_CIM info for current efferent_proj
@@ -1079,6 +1080,7 @@ class AutodiffComposition(Composition):
                                 queue.append((rcvr, rcvr_comp))
                         else:
                             pathways.append(create_pathway(current_comp, node))
+                    # FIX: 3/5/25 - IMPLEMENT _handle_nested_comp_pathway() FOR PATHWAYS IN NESTED COMP UP TO HERE XXX
 
                     # rcvr is Outermost Composition output_CIM:
                     # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
