@@ -992,32 +992,32 @@ class AutodiffComposition(Composition):
             #             pathways.append(create_pathway(current_comp, node))
             #             continue
             # # MODIFIED 3/7/25 NEWEST FAILS
-            # End of pathway: OUTPUT Node of outer Composition
-            # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
-            #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
-            if self == current_comp:
-                output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
-                for output_node in output_nodes.copy():
-                    if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
-                        # Replace any nodes in output_nodes in the nested Composition
-                        #    that have been remapped to other ones in its Pytorch version
-                        mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
-                        output_nodes.remove(output_node)
-                        output_nodes.append(mapped_output_node)
-                if node in output_nodes:
-                    # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
-                    for output_port in node.output_ports:
-                        all_output_projections_are_terminal = True
-                        for proj in output_port.efferents:
-                            if (current_comp.output_CIM._get_destination_info_for_output_CIM(proj.receiver)
-                                    is self.output_CIM):
-                                # node projects directly to output_CIM of outermmost Composition,
-                                #     so it is the end of a pathway
-                                pathways.append(create_pathway(current_comp, node))
-                            else:
-                                all_output_projections_are_terminal = False
-                    if all_output_projections_are_terminal is True:
-                        continue
+            # # End of pathway: OUTPUT Node of outer Composition
+            # # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
+            # #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
+            # if self == current_comp:
+            #     output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
+            #     for output_node in output_nodes.copy():
+            #         if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
+            #             # Replace any nodes in output_nodes in the nested Composition
+            #             #    that have been remapped to other ones in its Pytorch version
+            #             mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
+            #             output_nodes.remove(output_node)
+            #             output_nodes.append(mapped_output_node)
+            #     if node in output_nodes:
+            #         # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
+            #         for output_port in node.output_ports:
+            #             all_output_projections_are_terminal = True
+            #             for proj in output_port.efferents:
+            #                 if (current_comp.output_CIM._get_destination_info_for_output_CIM(proj.receiver)
+            #                         is self.output_CIM):
+            #                     # node projects directly to output_CIM of outermmost Composition,
+            #                     #     so it is the end of a pathway
+            #                     pathways.append(create_pathway(current_comp, node))
+            #                 else:
+            #                     all_output_projections_are_terminal = False
+            #         if all_output_projections_are_terminal is True:
+            #             continue
             # MODIFIED 3/4/25 END
 
             # Consider all efferent Projections of node,
