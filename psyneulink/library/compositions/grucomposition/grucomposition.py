@@ -295,6 +295,7 @@ from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GR
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -1016,6 +1017,7 @@ class GRUComposition(AutodiffComposition):
     def _assign_gru_specific_attributes(self):
         for node in self.nodes:
             node.exclude_from_show_graph = True
+        self.pytorch_projections = []
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -1166,17 +1168,24 @@ class GRUComposition(AutodiffComposition):
                                          comp:AutodiffComposition):
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         """
-        # dependency[receiver] = projection
-        # dependency[projection] = sender
-        # queue.append((receiver, self))
-        proj_in = MappingProjection(name="Projection to GRU COMP",
-                                    sender=sender,
-                                    receiver=self.gru_mech,
-                                    learnable=projection.learnable)
-        proj_out = MappingProjection(name="Projection from GRU COMP",
-                                     sender=self.gru_mech,
-                                     receiver=self.output_CIM,
-                                     learnable=False)
+        # if not self.pytorch_projections:
+        try:
+            direct_proj_in = MappingProjection(name="Projection to GRU COMP",
+                                               sender=sender,
+                                               receiver=self.gru_mech,
+                                               learnable=projection.learnable)
+        except DuplicateProjectionError:
+            direct_proj_in = self.gru_mech.afferents[0]
+
+        try:
+            direct_proj_out = MappingProjection(name="Projection from GRU COMP",
+                                                sender=self.gru_mech,
+                                                receiver=self.output_CIM,
+                                                # receiver=self.output_CIM.input_ports[0],
+                                                learnable=False)
+            self.pytorch_projections = [direct_proj_in, direct_proj_out]
+        except DuplicateProjectionError:
+            direct_proj_out = self.gru_mech.efferents[0]
 
         # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
@@ -1184,15 +1193,16 @@ class GRUComposition(AutodiffComposition):
         output_node = self.output_CIM
 
         # GRU pathway:
-        dependency_dict[proj_in]=sender
-        dependency_dict[self.gru_mech]=proj_in
-        dependency_dict[proj_out]=self.gru_mech
-        dependency_dict[output_node]=proj_out
+        dependency_dict[direct_proj_in]=sender
+        dependency_dict[self.gru_mech]=direct_proj_in
+        dependency_dict[direct_proj_out]=self.gru_mech
+        dependency_dict[output_node]=direct_proj_out
 
         # FIX : ADD ALL EFFERENTS OF OUTPUT NODE HERE:
-        # queue.append((self.gru_mech, self))
-        # FIX: SHOULD REPLACE SELF WITH OUTER COMPOSITION HERE:
-        queue.append((output_node, comp))
+        queue.append((self.gru_mech, self))
+        # queue.append((output_node, comp))
+        # queue.append((output_node, self))
+        assert True
 
     def _identify_target_nodes(self, context):
         return [self.gru_mech]

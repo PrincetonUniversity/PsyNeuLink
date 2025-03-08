@@ -464,7 +464,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 self._projection_wrappers.append(proj_wrapper)
                 self._projection_map[direct_proj] = proj_wrapper
-
+                if hasattr(self._composition, 'pytorch_projections'):
+                    self._composition.pytorch_projections.append(direct_proj)
+                else:
+                    self._composition.pytorch_projections = direct_proj
             except DuplicateProjectionError:
                 pass
 
