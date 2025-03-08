@@ -44,7 +44,7 @@ jobs:
       with:
         name: Python-dist-files
         path: dist/
-        retention-days: 1
+        retention-days: 30
 
     - name: Validate dist files
       shell: bash
