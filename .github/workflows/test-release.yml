@@ -194,4 +194,4 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         previous_release=$(gh --repo ${{ github.repository }} release list | head -n 1 | awk '{print $1}')
-        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref }} dist/*
+        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref_name }} dist/*
