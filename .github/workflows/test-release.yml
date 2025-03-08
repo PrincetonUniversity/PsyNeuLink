@@ -42,7 +42,7 @@ jobs:
     - name: Upload Python dist files
       uses: actions/upload-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
         retention-days: 30
 
@@ -83,7 +83,7 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
 
     - name: Set up Python ${{ matrix.python-version }}
@@ -146,7 +146,7 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
 
     - name: Install setup dependencies
@@ -185,7 +185,7 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
 
     - name: Upload dist files to release
