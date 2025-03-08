@@ -279,6 +279,7 @@ import numpy as np
 import warnings
 from typing import Union
 # from sympy.stats import Logistic
+from collections import deque
 
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -306,6 +307,8 @@ from psyneulink.core.llvm import ExecutionMode
 __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE_NAME', 'HIDDEN_LAYER_NODE_NAME', 'RESET_NODE_NAME',
            'UPDATE_NODE_NAME', 'NEW_NODE_NAME', 'OUTPUT_NODE_NAME']
+
+from sympy.printing.cxx import CXX17CodePrinter
 
 # Node names
 INPUT_NODE_NAME = 'INPUT'
@@ -1153,6 +1156,43 @@ class GRUComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def _add_pathway_dependency_to_queue(self,
+                                         sender:ProcessingMechanism,
+                                         projection:MappingProjection,
+                                         receiver:ProcessingMechanism,
+                                         dependency_dict:dict,
+                                         queue:deque,
+                                         comp:AutodiffComposition):
+        """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
+        """
+        # dependency[receiver] = projection
+        # dependency[projection] = sender
+        # queue.append((receiver, self))
+        proj_in = MappingProjection(name="Projection to GRU COMP",
+                                    sender=sender,
+                                    receiver=self.gru_mech,
+                                    learnable=projection.learnable)
+        proj_out = MappingProjection(name="Projection from GRU COMP",
+                                     sender=self.gru_mech,
+                                     receiver=self.output_CIM,
+                                     learnable=False)
+
+        # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
+        # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
+        # output_node = self.output_CIM.output_port
+        output_node = self.output_CIM
+
+        # GRU pathway:
+        dependency_dict[proj_in]=sender
+        dependency_dict[self.gru_mech]=proj_in
+        dependency_dict[proj_out]=self.gru_mech
+        dependency_dict[output_node]=proj_out
+
+        # FIX : ADD ALL EFFERENTS OF OUTPUT NODE HERE:
+        # queue.append((self.gru_mech, self))
+        # FIX: SHOULD REPLACE SELF WITH OUTER COMPOSITION HERE:
+        queue.append((output_node, comp))
 
     def _identify_target_nodes(self, context):
         return [self.gru_mech]
