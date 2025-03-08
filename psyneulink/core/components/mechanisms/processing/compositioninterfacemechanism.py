@@ -344,9 +344,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         input_ports = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
         assert len(input_ports)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(input_ports)}."
-        assert len([proj for proj in input_ports[0].path_afferents if proj in self.composition.projections])==1, (
-            f"PROGRAM ERROR: Port ({input_ports[0].name}) expected to have "
-            f"just one path_afferent; has {len(input_ports[0].path_afferents)}: {input_ports[0].path_afferents}.")
+        num_proj = len([proj for proj in input_ports[0].path_afferents if proj in comp.projections])
+        assert num_proj==1, (f"PROGRAM ERROR: Port ({input_ports[0].name}) expected to have just one path_afferent "
+                             f"in '{comp.name}'; has {num_proj}: {input_ports[0].path_afferents}.")
         sender = input_ports[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp
