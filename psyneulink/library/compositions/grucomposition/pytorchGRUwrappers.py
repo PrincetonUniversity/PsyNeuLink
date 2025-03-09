@@ -163,7 +163,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                              receiver=self._composition.gru_mech,
                                              learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
-                pass
+                direct_proj = self._composition.gru_mech.afferents[0]
+                sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
@@ -175,7 +176,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 receiver=pnl_proj.receiver,
                                                 learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
-                pass
+                direct_proj = self._composition.gru_mech.efferents[0]
+                rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             # gru_mech has only one output_port
             sender_port_idx = 0
 
@@ -395,12 +397,18 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, context):
         """Execute GRU Node with input variable and return output value
         """
+        # FIX: 3/9/25: THIS NEEDS TO BE CLEANED UP
         self.input = variable
-        variable = variable.type(PytorchGRUCompositionWrapper.torch_dtype)
-        output, hidden = self.function(*variable)
-        output = output.type(PytorchCompositionWrapper.torch_dtype)
-        self.output = output
-        return self.output
+        if isinstance(variable, list): # FIX NON-NESTED (CALLED FROM GRUComposition; NUMERICALLY VALIDATED)
+            self.output = self.function(*variable)
+            return self.output
+        else:  # FIX: NESTED (CALLED FROM AutodiffComposition); NOT NUMERICALLY VALIDATED, MAY NOT HHANDLE hidden
+            variable = variable.type(PytorchGRUCompositionWrapper.torch_dtype)
+            output, hidden = self.function(*variable)
+            output = output.type(PytorchCompositionWrapper.torch_dtype)
+            hidden = hidden.type(PytorchCompositionWrapper.torch_dtype)
+            self.output = output
+            return output, hidden
 
     def collect_afferents(self, batch_size, port=None):
         """

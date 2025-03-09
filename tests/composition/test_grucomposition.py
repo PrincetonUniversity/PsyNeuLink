@@ -37,7 +37,7 @@ class TestExecution:
         np.testing.assert_allclose(torch_results, gru.results, atol=1e-6)
 
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
-    def test_pytorch_learning_identicality_with_pytorch(self, bias):
+    def test_pytorch_unnested_learning_identicality_with_pytorch(self, bias):
         # Test identicality of learning results of GRUComposition against native Pytorch GRU
         import torch
         inputs = [[1,2,3]]
@@ -82,14 +82,11 @@ class TestExecution:
     def test_nested_gru_composition_learning(self):
         # Test identicality of results of nested and non-nested learning of GRUComposition
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
-        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH',
-                                              input_shapes=5)
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
         gru = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=True)
         comp = pnl.AutodiffComposition(name='OUTER COMP',
-                                   pathways=[input_mech,
-                                             gru,
-                                             output_mech])
+                                   pathways=[input_mech, gru, output_mech])
         targets = comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         nested_result = comp.learn(inputs={input_mech:[[1,2,3]],
                                            targets[0]: [[1,1,1,1,1]]},

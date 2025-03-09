@@ -1017,7 +1017,6 @@ class GRUComposition(AutodiffComposition):
     def _assign_gru_specific_attributes(self):
         for node in self.nodes:
             node.exclude_from_show_graph = True
-        self.pytorch_projections = []
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
@@ -1168,7 +1167,8 @@ class GRUComposition(AutodiffComposition):
                                          comp:AutodiffComposition):
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         """
-        # if not self.pytorch_projections:
+        # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW
+        # if not self._pytorch_projections:
         try:
             direct_proj_in = MappingProjection(name="Projection to GRU COMP",
                                                sender=sender,
@@ -1183,9 +1183,11 @@ class GRUComposition(AutodiffComposition):
                                                 receiver=self.output_CIM,
                                                 # receiver=self.output_CIM.input_ports[0],
                                                 learnable=False)
-            self.pytorch_projections = [direct_proj_in, direct_proj_out]
+            # self._pytorch_projections = [direct_proj_in, direct_proj_out]
         except DuplicateProjectionError:
             direct_proj_out = self.gru_mech.efferents[0]
+
+        self._pytorch_projections = [direct_proj_in, direct_proj_out]
 
         # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner

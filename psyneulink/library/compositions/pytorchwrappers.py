@@ -394,8 +394,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                          self._composition,
                                                          ENTER_NESTED,
                                                          context))
-            assert proj_sndr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for ENTER_NESTED"
-            proj_sndr_wrapper = self._nodes_map[sndr_mech]
+            # MODIFIED 3/9/25 OLD:
+            # assert proj_sndr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for ENTER_NESTED"
+            # proj_sndr_wrapper = self._nodes_map[sndr_mech]
+            # MODIFIED 3/9/25 NEW:
+            if proj_sndr_wrapper is None:
+                proj_sndr_wrapper = self._nodes_map[sndr_mech]
+            # MODIFIED 3/9/25 END
 
         # EXIT_NESTED
         # output_cim of nested Composition:
@@ -417,8 +422,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                          self._composition,
                                                          EXIT_NESTED,
                                                          context))
-            assert proj_rcvr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for EXIT_NESTED"
-            proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
+            # MODIFIED 3/9/25 OLD:
+            # assert proj_rcvr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for EXIT_NESTED"
+            # proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
+            # MODIFIED 3/9/25 NEW:
+            if proj_rcvr_wrapper is None:
+                proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
+            # MODIFIED 3/9/25 END
         return proj, proj_sndr_wrapper, proj_rcvr_wrapper
 
     def _flatten_for_pytorch(self,
@@ -464,10 +474,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 self._projection_wrappers.append(proj_wrapper)
                 self._projection_map[direct_proj] = proj_wrapper
-                if hasattr(self._composition, 'pytorch_projections'):
-                    self._composition.pytorch_projections.append(direct_proj)
-                else:
-                    self._composition.pytorch_projections = [direct_proj]
+                self._composition._pytorch_projections.append(direct_proj)
             except DuplicateProjectionError:
                 pass
 

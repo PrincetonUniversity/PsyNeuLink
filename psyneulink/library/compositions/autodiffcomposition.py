@@ -757,6 +757,7 @@ class AutodiffComposition(Composition):
         self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
+        self._pytorch_projections = []
         self.optimizer_type = optimizer_type
         self._optimizer_params = optimizer_params or {}
         self.loss_spec = loss_spec
@@ -1086,10 +1087,10 @@ class AutodiffComposition(Composition):
             # # Get all efferent Projections of node,
             # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
             efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
-            # efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in self.projections]
-            if not efferent_projs and hasattr(current_comp, 'pytorch_projections'):
+            if not efferent_projs and hasattr(current_comp, '_pytorch_projections'):
+            # if not efferent_projs:
                 efferent_projs = [(p, p.receiver.owner) for p in node.efferents
-                                  if p in current_comp.pytorch_projections]
+                                  if p in current_comp._pytorch_projections]
             # # 3/5/25 FIX: NEED TO ASSIGN OUT_MECH TO OUTER COMPOSITION BELOW IF THIS IS FOR GRU NODE
             # Follow efferent Projection to next Node in pathway
             for efferent_proj, rcvr in efferent_projs:
@@ -1171,7 +1172,7 @@ class AutodiffComposition(Composition):
                         # Get port of output_CIM that efferent_proj sends to, for use in findings its receiver(s) below
                         if efferent_proj in current_comp.projections:
                             output_CIM_output_port = output_CIM.port_map[efferent_proj.sender][1]
-                        elif efferent_proj in current_comp.pytorch_projections:
+                        elif efferent_proj in current_comp._pytorch_projections:
                             # FIX: 3/8/25 - THERE MUST BE AN EASIER WAY TO GET THIS MORE DIRECTLY
                             output_CIM_output_port = \
                                 (output_CIM.port_map)[efferent_proj.receiver.path_afferents[0].sender][1]
