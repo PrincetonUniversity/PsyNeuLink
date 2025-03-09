@@ -11,14 +11,18 @@
 
 import torch
 import numpy as np
+import graph_scheduler
+
 from typing import Union, Optional, Literal
 
+from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
-from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH
+from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH, \
+    MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
@@ -49,6 +53,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   use=[LEARNING, SHOW_GRAPH],
                                                   device=device,
                                                   context=context)
+        self.gru_pytorch_node = pytorch_node
         self.torch_gru = pytorch_node.function.function
         self._nodes_map[node] = pytorch_node
         self._wrapped_nodes.append(pytorch_node)
@@ -100,6 +105,40 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self.copy_weights_to_torch_gru(context)
 
+    def _instantiate_execution_sets(self, composition, execution_context, base_context):
+    #     try:
+    #         composition.scheduler._init_counts(execution_id=execution_context.execution_id,
+    #                                            base_execution_id=base_context.execution_id)
+    #     except graph_scheduler.SchedulerError:
+    #         # called from LLVM, no base context is provided
+    #         composition.scheduler._init_counts(execution_id=execution_context.execution_id)
+    #
+    #     # Setup execution sets
+    #     # 1) Remove all learning-specific nodes
+    #     self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING))
+    #                            for x in composition.scheduler.run(context=execution_context)]
+    #     # 2) Convert to pytorchcomponent representation
+    #     self.execution_sets = [{self._nodes_map[comp] for comp in s if comp in self._nodes_map}
+    #                            for s in self.execution_sets]
+    #     # 3) Remove empty execution sets
+    #     self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
+    #
+    #     # Flattening for forward() and AutodiffComposition.do_gradient_optimization
+    #
+    #     # Flatten nested execution sets:
+    #     nested_execution_sets = {}
+    #     for exec_set in self.execution_sets:
+    #         for node in exec_set:
+    #             if isinstance(node, PytorchCompositionWrapper):
+    #                 nested_execution_sets[node] = node.execution_sets
+    #     for node, exec_sets in nested_execution_sets.items():
+    #         index = self.execution_sets.index({node})
+    #         # Remove nested Composition from execution sets
+    #         self.execution_sets.remove({node})
+    #         # Insert nested execution sets in place of nested Composition
+    #         self.execution_sets[index:index] = exec_sets
+        self.execution_sets = [{self.gru_pytorch_node}]
+
     def _flatten_for_pytorch(self,
                              pnl_proj,
                              sndr_mech,
@@ -110,7 +149,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              access,
                              context)->tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
-        Replace GRUCompositon's nodes with gru_mech and projections to and from it."""
+        Replace GRUComposition's nodes with gru_mech and projections to and from it."""
 
         sndr_mech_wrapper = None
         rcvr_mech_wrapper = None
@@ -170,11 +209,15 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Reshape input for GRU module (from float64 to float32)
         inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(np.float32))
         hidden_state = self._composition.hidden_state
-        output, self.hidden_state = self._wrapped_nodes[0].execute([inputs, hidden_state], context)
+        output, self.hidden_state = self.gru_pytorch_node.execute([inputs, hidden_state], context)
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
-        return {self._composition.output_node: output}
+        # # MODIFIED 3/2/25 OLD:
+        # return {self._composition.output_node: output}
+        # MODIFIED 3/2/25 NEW: test_grucomposition
+        return {self._composition.gru_mech: output}
+        # MODIFIED 3/2/25 END
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -234,7 +277,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         else:
             b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
 
-        x = self._wrapped_nodes[0].input[0][0]
+        x = self.gru_pytorch_node.input[0][0]
 
         r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
         z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
@@ -263,7 +306,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            if SYNCH in proj_wrapper._use:
+            # MODIFIED 3/2/25 NEW:
+            # if SYNCH in proj_wrapper._use:
+            # MODIFIED 3/1/25 END
                 torch_parameter = proj_wrapper.torch_parameter
                 torch_indices = proj_wrapper.matrix_indices
                 matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
@@ -272,7 +317,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            if SYNCH in proj_wrapper._use:
+            # MODIFIED 3/2/25 NEW:
+            # THIS MADE THE DIFFERENCE for test_grucomposition 3/2/25
+            # if SYNCH in proj_wrapper._use:
+            # MODIFIED 3/1/25
                 proj_wrapper.set_torch_gru_parameter(context)
 
     def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
@@ -348,8 +396,94 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """Execute GRU Node with input variable and return output value
         """
         self.input = variable
-        self.output = self.function(*variable)
+        variable = variable.type(PytorchGRUCompositionWrapper.torch_dtype)
+        output, hidden = self.function(*variable)
+        output = output.type(PytorchCompositionWrapper.torch_dtype)
+        self.output = output
         return self.output
+
+    def collect_afferents(self, batch_size, port=None):
+        """
+        Return afferent projections for input_port(s) of the Mechanism
+        If there is only one input_port, return the sum of its afferents (for those in Composition)
+        If there are multiple input_ports, return a tensor (or list of tensors if input ports are ragged) of shape:
+
+        (batch, input_port, projection, ...)
+
+        Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.
+
+        FIX: AUGMENT THIS TO SUPPORT InputPort's function
+        """
+        assert self.afferents,\
+            f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
+
+        proj_wrapper = self.afferents[0]
+        curr_val = proj_wrapper.sender_wrapper.output
+        if curr_val is not None:
+            # proj_wrapper._curr_sender_value = proj_wrapper.sender_wrapper.output[proj_wrapper._value_idx]
+            if type(curr_val) == torch.Tensor:
+                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+            else:
+                val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                val = torch.stack(val)
+                proj_wrapper._curr_sender_value = val
+        else:
+            val = torch.tensor(proj_wrapper.default_value)
+
+            # We need to add the batch dimension to default values.
+            val = val[None, ...].expand(batch_size, *val.shape)
+
+            proj_wrapper._curr_sender_value = val
+
+        proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+
+        res = []
+        input_port = self.mechanism.input_port
+        ip_res = [proj_wrapper.execute(proj_wrapper._curr_sender_value)]
+
+        # Stack the results for this input port on the second dimension, we want to preserve
+        # the first dimension as the batch
+        ip_res = torch.stack(ip_res, dim=1)
+        res.append(ip_res)
+
+        try:
+            # Now stack the results for all input ports on the second dimension again, this keeps batch
+            # first again. We should now have a 4D tensor; (batch, input_port, projection, values)
+            res = torch.stack(res, dim=1)
+        except (RuntimeError, TypeError):
+            # is ragged, will handle ports individually during execute
+            # We still need to reshape things so batch size is first dimension.
+            batch_size = res[0].shape[0]
+            res = [[inp[b] for inp in res] for b in range(batch_size)]
+
+        return res
+
+    def execute_input_ports(self, variable):
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+        assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
+                                                f"should be a torch.Tensor, but is {type(variable)}.")
+
+        # must iterate over at least 1d input per port
+        variable = torch.atleast_2d(variable)
+
+        # MODIFIED 3/9/25 OLD:
+        # res = []
+        # for i in range(len(self.input_ports)):
+        #     v = variable[:, i, ...] # Get the input for the port for all items in the batch
+        #     res.append(v)
+        # MODIFIED 3/9/25 NEW:
+        res = [variable[:, 0, ...]] # Get the input for the port for all items in the batch
+        # MODIFIED 3/9/25 END
+
+        try:
+            res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
+        except (RuntimeError, TypeError):
+            # is ragged, need to reshape things so batch size is first dimension.
+            batch_size = res[0].shape[0]
+            res = [[inp[b] for inp in res] for b in range(batch_size)]
+        return res
+
 
     def log_value(self):
         # FIX: LOG HIDDEN STATE OF COMPOSITION MECHANISM

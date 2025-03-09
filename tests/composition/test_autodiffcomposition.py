@@ -2265,7 +2265,7 @@ class TestNestedLearning:
                                         pathways=[pathway_a, pathway_b],
                                         inputs=inputs)
 
-        # np.testing.assert_allclose(comp_results, autodiff_results)
+        np.testing.assert_allclose(comp_results, autodiff_results)
 
     def test_nested_autodiff_learning_with_input_func(self):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""

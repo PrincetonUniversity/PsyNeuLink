@@ -59,7 +59,7 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
-        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
+        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)

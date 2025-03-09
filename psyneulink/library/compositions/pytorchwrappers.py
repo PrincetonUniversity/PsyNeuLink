@@ -464,7 +464,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 self._projection_wrappers.append(proj_wrapper)
                 self._projection_map[direct_proj] = proj_wrapper
-
+                if hasattr(self._composition, 'pytorch_projections'):
+                    self._composition.pytorch_projections.append(direct_proj)
+                else:
+                    self._composition.pytorch_projections = [direct_proj]
             except DuplicateProjectionError:
                 pass
 
@@ -509,7 +512,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper
-
 
     def _parse_optimizer_params(self, context):
         """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
@@ -570,6 +572,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.execution_sets.remove({node})
             # Insert nested execution sets in place of nested Composition
             self.execution_sets[index:index] = exec_sets
+        assert True
 
     __deepcopy__ = get_deepcopy_with_shared()
 
@@ -964,7 +967,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
+            # MODIFIED 3/1/25 NEW:
             if SYNCH in pytorch_rep_proj_wrapper._use:
+            # MODIFIED 3/1/25 END
                 matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
                 projection.parameters.matrix._set(matrix, context)
                 projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
@@ -980,7 +985,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if nodes == ALL:
             nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
+            # # MODIFIED 3/1/25 NEW:
             if SYNCH in pytorch_node._use:
+            # MODIFIED 3/1/25 END
                 # First get variable in numpy format
                 if isinstance(pytorch_node.input, list):
                     variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
@@ -1270,6 +1277,7 @@ class PytorchMechanismWrapper():
             for input_port in self.mechanism.input_ports:
                 ip_res = []
                 for proj_wrapper in self.afferents:
+                    # 3/8/25 - FIX FOR GRU:
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
 
@@ -1538,7 +1546,11 @@ class PytorchProjectionWrapper():
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
+        # MODIFIED 3/4/25 OLD:
         if context._composition and LEARNING in self._use:
+        # # MODIFIED 3/4/25 NEW:
+        # if context._composition and LEARNING in self._use and self.sender_wrapper:
+        # MODIFIED 3/4/25 END
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
                 if all(p in context._composition.projections for p in output_port.efferents):
                     if self._pnl_proj in output_port.efferents:

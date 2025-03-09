@@ -5753,10 +5753,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #  so remove the input_port for it on the OutputCIM and the corresponding Projection
         defunct_input_ports = set()
         for input_port in self.output_CIM.input_ports:
-            # First ensure that the input_port under consideration has only one afferent to it
-            assert len(input_port.path_afferents) == 1, \
-                (f"PROGRAM ERROR: '{input_port}' of '{self.name}.output_CIM' has more than one afferent"
-                 f"(that come from: {' ,'.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
+            # First ensure that input_port under consideration has only one afferent belonging to the Composition
+            assert len([proj for proj in input_port.path_afferents if proj in self.projections]) == 1, \
+                (f"PROGRAM ERROR: '{input_port.full_name}' has more than one afferent (coming from: "
+                 f"{', '.join([proj.sender.owner.name for proj in input_port.path_afferents])}).")
             # Then, get that Projection
             proj = input_port.path_afferents[0]
             node = proj.sender.owner
@@ -13234,7 +13234,7 @@ _
         graph = mdf.Graph(
             id=self_identifier,
             conditions=self.scheduler.as_mdf_model(),
-            **self._mdf_model_parameters[self._model_spec_id_parameters],
+            **self._mdf_model_parameters,
             **metadata
         )
 
