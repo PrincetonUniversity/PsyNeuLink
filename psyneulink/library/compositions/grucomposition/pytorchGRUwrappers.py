@@ -21,7 +21,8 @@ from psyneulink.core.components.projections.projection import DuplicateProjectio
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
-from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH
+from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH, \
+    MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
@@ -395,7 +396,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """Execute GRU Node with input variable and return output value
         """
         self.input = variable
-        self.output = self.function(*variable)
+        variable = torch.tensor(variable, dtype=PytorchGRUCompositionWrapper.torch_dtype)
+        value = self.function(*variable)
+        value = torch.tensor(variable, dtype=PytorchCompositionWrapper.torch_dtype)
+        self.output = value
         return self.output
 
     def collect_afferents(self, batch_size, port=None):
@@ -452,6 +456,32 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             batch_size = res[0].shape[0]
             res = [[inp[b] for inp in res] for b in range(batch_size)]
 
+        return res
+
+    def execute_input_ports(self, variable):
+        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+        assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
+                                                f"should be a torch.Tensor, but is {type(variable)}.")
+
+        # must iterate over at least 1d input per port
+        variable = torch.atleast_2d(variable)
+
+        # MODIFIED 3/9/25 OLD:
+        # res = []
+        # for i in range(len(self.input_ports)):
+        #     v = variable[:, i, ...] # Get the input for the port for all items in the batch
+        #     res.append(v)
+        # MODIFIED 3/9/25 NEW:
+        res = [variable[:, 0, ...]] # Get the input for the port for all items in the batch
+        # MODIFIED 3/9/25 END
+
+        try:
+            res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
+        except (RuntimeError, TypeError):
+            # is ragged, need to reshape things so batch size is first dimension.
+            batch_size = res[0].shape[0]
+            res = [[inp[b] for inp in res] for b in range(batch_size)]
         return res
 
 
