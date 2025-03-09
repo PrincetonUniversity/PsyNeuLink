@@ -1519,7 +1519,8 @@ class AutodiffComposition(Composition):
                 # (those are handled separately in _get_autodiff_targets_values)
                 if torch_available:
                     # Convert to torch tensor of type expected by PytorchCompositionWrapper
-                    values = torch.tensor(values, dtype=self.torch_dtype, device=self.device)
+                    # values = torch.tensor(values, dtype=self.torch_dtype, device=self.device)
+                    values = values.type(self.torch_dtype)
                 autodiff_input_dict[node] = values
         return autodiff_input_dict
 

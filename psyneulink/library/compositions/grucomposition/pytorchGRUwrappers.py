@@ -396,9 +396,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """Execute GRU Node with input variable and return output value
         """
         self.input = variable
-        variable = torch.tensor(variable, dtype=PytorchGRUCompositionWrapper.torch_dtype)
+        variable = variable.type(PytorchGRUCompositionWrapper.torch_dtype)
         output, hidden = self.function(*variable)
-        output = torch.tensor(output, dtype=PytorchCompositionWrapper.torch_dtype)
+        output = output.type(PytorchCompositionWrapper.torch_dtype)
         self.output = output
         return self.output
 
