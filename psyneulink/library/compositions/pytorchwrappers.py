@@ -572,6 +572,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.execution_sets.remove({node})
             # Insert nested execution sets in place of nested Composition
             self.execution_sets[index:index] = exec_sets
+        assert True
 
     __deepcopy__ = get_deepcopy_with_shared()
 
@@ -1276,6 +1277,7 @@ class PytorchMechanismWrapper():
             for input_port in self.mechanism.input_ports:
                 ip_res = []
                 for proj_wrapper in self.afferents:
+                    # 3/8/25 - FIX FOR GRU:
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
 
