@@ -279,6 +279,7 @@ import numpy as np
 import warnings
 from typing import Union
 # from sympy.stats import Logistic
+from collections import deque
 
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
@@ -294,6 +295,7 @@ from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GR
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -306,6 +308,8 @@ from psyneulink.core.llvm import ExecutionMode
 __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE_NAME', 'HIDDEN_LAYER_NODE_NAME', 'RESET_NODE_NAME',
            'UPDATE_NODE_NAME', 'NEW_NODE_NAME', 'OUTPUT_NODE_NAME']
+
+from sympy.printing.cxx import CXX17CodePrinter
 
 # Node names
 INPUT_NODE_NAME = 'INPUT'
@@ -806,15 +810,16 @@ class GRUComposition(AutodiffComposition):
                                             function=MatrixTransform(
                                                 default_variable=np.zeros(input_size),
                                                 matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-
+        self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node: self.gru_mech}
+        self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= TARGET_NODE_NAME)
 
-        # # MODIFIED 2/28/25 NEW:
+        # # MODIFIED 3/1/25 NEW:
         # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
         # self.add_node(self.target_node, required_roles=[NodeRole.TARGET, NodeRole.LEARNING])
         # self.exclude_node_roles(self.target_node, NodeRole.OUTPUT)
-        # MODIFIED 2/28/25 END
+        # MODIFIED 3/1/25 END
 
 
     # *****************************************************************************************************************
@@ -1118,41 +1123,20 @@ class GRUComposition(AutodiffComposition):
         # if self.gru_mech:
         #     return [self.target_node]
 
-        # MODIFIED 2/16/25 OLD:
-        # input_size = self.parameters.input_size.get()
-        # hidden_size = self.parameters.hidden_size.get()
-        # MODIFIED 2/16/25 END
-
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
-        # MODIFIED 2/16/25 OLD:
-        # self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
-        #                                     input_shapes=input_size,
-        #                                     function=MatrixTransform(
-        #                                         default_variable=np.zeros(input_size),
-        #                                         matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-        #
-        # target_mech = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value), name= TARGET_NODE_NAME)
-        # MODIFIED 2/16/25 NEW:
         target_mech = self.target_node
-        # MODIFIED 2/16/25 END
 
-        # Add nodes to GRUComposition
+        # Add target Node to GRUComposition
         context = Context(source=ContextFlags.METHOD)
-        # MODIFIED 2/28/25 NEW:
-        self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
-        # MODIFIED 2/16/25 OLD:
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.targets_from_outputs_map = {target_mech: self.output_node}
-        self.outputs_to_targets_map = {self.output_node: target_mech}
-        # MODIFIED 2/16/25 OLD:
-        # self.target_node = target_mech
-        # MODIFIED 2/16/25 END
+        self.targets_from_outputs_map = {target_mech: self.gru_mech}
+        self.outputs_to_targets_map = {self.gru_mech: target_mech}
 
         return [target_mech]
 
@@ -1173,6 +1157,54 @@ class GRUComposition(AutodiffComposition):
                 self.execution_mode_warned_about_default = True
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
+
+    def _add_pathway_dependency_to_queue(self,
+                                         sender:ProcessingMechanism,
+                                         projection:MappingProjection,
+                                         receiver:ProcessingMechanism,
+                                         dependency_dict:dict,
+                                         queue:deque,
+                                         comp:AutodiffComposition):
+        """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
+        """
+        # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW
+        # if not self._pytorch_projections:
+        try:
+            direct_proj_in = MappingProjection(name="Projection to GRU COMP",
+                                               sender=sender,
+                                               receiver=self.gru_mech,
+                                               learnable=projection.learnable)
+        except DuplicateProjectionError:
+            direct_proj_in = self.gru_mech.afferents[0]
+
+        try:
+            direct_proj_out = MappingProjection(name="Projection from GRU COMP",
+                                                sender=self.gru_mech,
+                                                receiver=self.output_CIM,
+                                                # receiver=self.output_CIM.input_ports[0],
+                                                learnable=False)
+            # self._pytorch_projections = [direct_proj_in, direct_proj_out]
+        except DuplicateProjectionError:
+            direct_proj_out = self.gru_mech.efferents[0]
+
+        self._pytorch_projections = [direct_proj_in, direct_proj_out]
+
+        # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
+        # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
+        # output_node = self.output_CIM.output_port
+        output_node = self.output_CIM
+
+        # GRU pathway:
+        dependency_dict[direct_proj_in]=sender
+        dependency_dict[self.gru_mech]=direct_proj_in
+        dependency_dict[direct_proj_out]=self.gru_mech
+        dependency_dict[output_node]=direct_proj_out
+
+        # FIX : ADD ALL EFFERENTS OF OUTPUT NODE HERE:
+        queue.append((self.gru_mech, self))
+        # queue.append((output_node, comp))
+        # queue.append((output_node, self))
+        assert True
 
     def _identify_target_nodes(self, context):
         return [self.gru_mech]

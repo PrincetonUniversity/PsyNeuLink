@@ -72,7 +72,7 @@ class PytorchShowGraph(ShowGraph):
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
-            # 7/9/24 FIX: COULD DO THIS BY ITERATING OVER PROJECTIONS INSTEAD OF NODES
+            # MODIFIED 3/9/25 OLD:
             for node in self._get_nodes(composition, context):
                 dependencies = set()
                 for projection in projections:
@@ -80,10 +80,22 @@ class PytorchShowGraph(ShowGraph):
                         dependencies.add(projection.sender.owner)
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                     elif (isinstance(projection.receiver.owner, CompositionInterfaceMechanism) and
-                          projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
+                          # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
+                          projection.receiver.owner._get_source_info_from_output_CIM(projection.receiver)[1]
                           is node):
                         dependencies.add(projection.sender.owner)
                 processing_graph[node] = dependencies
+            assert True
+            # MODIFIED 3/9/25 NEW:
+            # for projection in projections:
+            #     if projection.sender.owner not in processing_graph:
+            #         # Ensure that INPUT Nodes get included in processing_graph
+            #         processing_graph[projection.sender.owner] = {}
+            #     if projection.receiver.owner in processing_graph:
+            #         processing_graph[projection.receiver.owner].add(projection.sender.owner)
+            #     else:
+            #         processing_graph[projection.receiver.owner] = {projection.sender.owner}
+            # MODIFIED 3/9/25 END
             # Add TARGET nodes
             for node in self.composition.learning_components:
                 processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
@@ -118,6 +130,7 @@ class PytorchShowGraph(ShowGraph):
                             for afferent in node.path_afferents
                             if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
             return projections
+            assert True
         else:
             return super()._get_projections(composition, context)
 
@@ -170,11 +183,13 @@ class PytorchShowGraph(ShowGraph):
                 # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
                 return
             # # MODIFIED 2/22/25 END
-            # MODIFIED 2/22/25 OLD:
-            if self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
-            # # MODIFIED 2/22/25 NEW:
-            # if self._nodes_map[rcvr].exclude_from_gradient_calc:
-            # MODIFIED 2/22/25 END
+            # # MODIFIED 3/9/25 OLD:
+            # if self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
+            # MODIFIED 3/9/25 NEW:
+            # node = self._get_processing_graph(self, context)[rcvr]
+            # if node and self.pytorch_rep._nodes_map[node].exclude_from_gradient_calc:
+            if rcvr in self.pytorch_rep._nodes_map and self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
+            # MODIFIED 3/9/25 END
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
             g.node(*args, **kwargs)
