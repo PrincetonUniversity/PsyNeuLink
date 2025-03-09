@@ -269,6 +269,28 @@ def _get_parameters_from_mdf_base_object(model, pnl_type):
     return parameters
 
 
+def _get_id_for_mdf_port(port, owner=None, afferent=None):
+    if owner is None:
+        try:
+            owner = port.owner
+        except AttributeError:
+            # handle owner as str
+            pass
+    if owner is NotImplemented:
+        owner = None
+    owner = getattr(owner, 'name', owner)
+    port = getattr(port, 'name', port)
+    afferent = getattr(afferent, 'name', afferent)
+
+    res = port
+    if owner is not None:
+        res = f'{owner}_{res}'
+    if afferent is not None:
+        res = f'{res}_input_port_from_{afferent}'
+
+    return parse_valid_identifier(res)
+
+
 def _parse_component_type(model_obj):
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
@@ -1063,7 +1085,7 @@ def _generate_composition_string(graph, component_identifiers):
                     raise MDFError(f'Dummy node {node.id} for projection has no receiver in projections list')
 
                 main_proj = mdf.Edge(
-                    id=node.id.rstrip('_dummy_node'),
+                    id=node.id.replace('_dummy_node', ''),
                     sender=sender,
                     receiver=receiver,
                     sender_port=sender_port,
@@ -1263,6 +1285,24 @@ def _generate_composition_string(graph, component_identifiers):
         except (AttributeError, KeyError):
             projection_type = default_edge_type
 
+        receiver = parse_valid_identifier(proj.receiver)
+        receiver_port = parse_valid_identifier(proj.receiver_port)
+
+        # original InputPort has multiple afferents, so maps to multiple
+        # MDF input ports with this id form
+        multi_afferent_pat = rf'^{receiver}_(.*){_get_id_for_mdf_port("", afferent=proj.id)}$'
+
+        as_multi_afferent = re.match(multi_afferent_pat, proj.receiver_port)
+        if as_multi_afferent:
+            receiver_port = as_multi_afferent.group(1)
+
+        receiver_port = re.sub(rf'({receiver}_)?(.*)', r'\2', receiver_port)
+        # undo parse_valid_identifier to PNL default naming scheme if applicable
+        receiver_port = re.sub(r'(InputPort)_(.*)', r'\1-\2', receiver_port)
+        # make receiver point to a specific port if not default
+        if receiver_port != 'InputPort-0':
+            receiver = f'{receiver}.input_ports["{receiver_port}"]'
+
         if (
             not issubclass(projection_type, implicit_types)
             and proj.sender not in implicit_names
@@ -1277,7 +1317,7 @@ def _generate_composition_string(graph, component_identifiers):
                         default_type=default_edge_type
                     ),
                     parse_valid_identifier(proj.sender),
-                    parse_valid_identifier(proj.receiver),
+                    receiver,
                 )
             )
 

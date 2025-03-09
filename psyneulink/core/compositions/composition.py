@@ -13234,7 +13234,7 @@ _
         graph = mdf.Graph(
             id=self_identifier,
             conditions=self.scheduler.as_mdf_model(),
-            **self._mdf_model_parameters[self._model_spec_id_parameters],
+            **self._mdf_model_parameters,
             **metadata
         )
 
