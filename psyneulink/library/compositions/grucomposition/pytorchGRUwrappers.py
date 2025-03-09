@@ -397,9 +397,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """
         self.input = variable
         variable = torch.tensor(variable, dtype=PytorchGRUCompositionWrapper.torch_dtype)
-        value = self.function(*variable)
-        value = torch.tensor(variable, dtype=PytorchCompositionWrapper.torch_dtype)
-        self.output = value
+        output, hidden = self.function(*variable)
+        output = torch.tensor(output, dtype=PytorchCompositionWrapper.torch_dtype)
+        self.output = output
         return self.output
 
     def collect_afferents(self, batch_size, port=None):
