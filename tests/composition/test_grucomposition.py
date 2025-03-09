@@ -81,8 +81,6 @@ class TestExecution:
 
     def test_nested_gru_composition_learning(self):
         # Test identicality of results of nested and non-nested learning of GRUComposition
-
-        # Nested pathway version:
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH',
                                               input_shapes=5)
@@ -90,13 +88,10 @@ class TestExecution:
                              input_size=3, hidden_size=5, bias=True)
         comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech,
-                                             # MappingProjection(sender=input_mech,
-                                             #                   receiver=gru.input_node.input_ports[0]),
                                              gru,
                                              output_mech])
         targets = comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        # inputs = {gru.input_node:[[1,2,3]]}
-        result = comp.learn(inputs={input_mech:[[1,2,3]],
-                                   targets[0]: [[1,1,1,1,1]]
-                                    },
-                           execution_mode=pnl.ExecutionMode.PyTorch)
+        nested_result = comp.learn(inputs={input_mech:[[1,2,3]],
+                                           targets[0]: [[1,1,1,1,1]]},
+                                   execution_mode=pnl.ExecutionMode.PyTorch)
+        print("STILL NEEDS NUMERICAL VALIDATION")
