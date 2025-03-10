@@ -13537,10 +13537,18 @@ _
                    show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
-                   context=None):
+                   context=None,
+                   **kwargs):
         """Patch to ShowGraph method
         IMPLEMENTATION NOTE: arguments are listed explicitly so they show up in IDEs that support argument completion
         """
+        from psyneulink.library.compositions.pytorchshowgraph import SHOW_PYTORCH
+        if kwargs.pop(SHOW_PYTORCH, None):
+            raise CompositionError(f"Use of '{SHOW_PYTORCH}' argument not supported for show_graph() method "
+                                   f"of '{self.name}' since it is not an `AutodiffComposition.")
+        if kwargs:
+            raise CompositionError(f"Unrecognized arguments passed to show_graph method of '{self.name}': {kwargs}.")
+
         return self._show_graph(show_all=show_all,
                                 show_node_structure=show_node_structure,
                                 show_nested=show_nested,
