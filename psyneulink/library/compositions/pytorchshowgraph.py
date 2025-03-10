@@ -72,30 +72,27 @@ class PytorchShowGraph(ShowGraph):
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
-            # MODIFIED 3/9/25 OLD:
-            for node in self._get_nodes(composition, context):
+            nodes = self._get_nodes(composition, context)
+            for node in nodes:
                 dependencies = set()
                 for projection in projections:
-                    if node is projection.receiver.owner:
-                        dependencies.add(projection.sender.owner)
+                    sender = projection.sender.owner
+                    receiver = projection.receiver.owner
+                    if node is receiver:
+                        dependencies.add(sender)
+                    # FIX: 3/9/25 - HANDLE NOTED THAT PROJECTS TO OUPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-                    elif (isinstance(projection.receiver.owner, CompositionInterfaceMechanism) and
+                    elif (isinstance(receiver, CompositionInterfaceMechanism) and
                           # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
-                          projection.receiver.owner._get_source_info_from_output_CIM(projection.receiver)[1]
-                          is node):
-                        dependencies.add(projection.sender.owner)
+                          # FIX: SUPPOSED TO RETIREVE GRU NODE HERE, BUT NEED TO DEAL WITH INTERFERNING PROJECTION FROM
+                          #  OUTPUT NODE
+                          receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
+                        dependencies.add(sender)
+                    else:
+                        for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
+                            dependencies.add(proj.sender.owner)
                 processing_graph[node] = dependencies
-            assert True
-            # MODIFIED 3/9/25 NEW:
-            # for projection in projections:
-            #     if projection.sender.owner not in processing_graph:
-            #         # Ensure that INPUT Nodes get included in processing_graph
-            #         processing_graph[projection.sender.owner] = {}
-            #     if projection.receiver.owner in processing_graph:
-            #         processing_graph[projection.receiver.owner].add(projection.sender.owner)
-            #     else:
-            #         processing_graph[projection.receiver.owner] = {projection.sender.owner}
-            # MODIFIED 3/9/25 END
+
             # Add TARGET nodes
             for node in self.composition.learning_components:
                 processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
@@ -130,7 +127,6 @@ class PytorchShowGraph(ShowGraph):
                             for afferent in node.path_afferents
                             if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
             return projections
-            assert True
         else:
             return super()._get_projections(composition, context)
 

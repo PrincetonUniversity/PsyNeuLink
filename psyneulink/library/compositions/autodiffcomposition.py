@@ -938,14 +938,6 @@ class AutodiffComposition(Composition):
         while len(queue) > 0:
             node, current_comp = queue.popleft()
 
-            # # MODIFIED 2/22/25 NEW:
-            # # Prevent cycle from recurrent pathway
-            # if any([node is n for n, c in queue]):
-            #     break
-            # MODIFIED 2/22/25 END
-
-            assert True
-
             # node is nested Composition that is an INPUT node of the immediate outer Composition,
             #   so put that in queue for procsssing in next pass through while loop
             if (isinstance(node, Composition) and node is not self
@@ -961,137 +953,18 @@ class AutodiffComposition(Composition):
                 assert False, (f"PROGRAM ERROR: 'Got to output_CIM of outermost Composition '({self.name})' "
                                f"without detecting OUTPUT NODE at end of pathway")
 
-            # MODIFIED 3/4/25 OLD: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
             # End of pathway: OUTPUT Node of outer Composition
             if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
                 pathways.append(create_pathway(current_comp, node))
                 continue
-            # # MODIFIED 3/4/25 NEW: THIS WORKS (GENERATES PATHWAY WITH TARGET NODE) BUT NOT SURE IF IT IS CORRECT
-            # # End of pathway: OUTPUT Node of outer Composition
-            # # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
-            # #    otherwise, check that it is mapped to one in the nested Composition
-            # if ((current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT))
-            #              or (current_comp._trained_comp_nodes_to_pytorch_nodes_map
-            #                  and any(node is v and k in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
-            #                            for k, v in current_comp._trained_comp_nodes_to_pytorch_nodes_map.items()))):
-            #     pathways.append(create_pathway(current_comp, node))
-            #     continue
-            # MODIFIED 3/4/25 NEWER: FAILS TO GENERATE TARGET NODE IN LEARNED_COMPONENTS
-            # End of pathway: OUTPUT Node of outer Composition
-            # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
-            #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
-            # if self == current_comp:
-            #     output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
-            #     for output_node in output_nodes.copy():
-            #         if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
-            #             # Replace any nodes in output_nodes in the nested Composition
-            #             #    that have been remapped to other ones in its Pytorch version
-            #             mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
-            #             output_nodes.remove(output_node)
-            #             output_nodes.append(mapped_output_node)
-            #     if node in output_nodes:
-            #         if current_comp.output_CIM._get_destination_info_for_output_CIM(port) is self.output_CIM:
-            #             # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
-            #             pathways.append(create_pathway(current_comp, node))
-            #             continue
-            # # MODIFIED 3/7/25 NEWEST FAILS
-            # # End of pathway: OUTPUT Node of outer Composition
-            # # if current_comp is self (outer Composition_, check that node is an OUTPUT Node
-            # #    otherwise, if it is a nested Composition, check that node maps to OUTPUT Node in outer Composition.
-            # if self == current_comp:
-            #     output_nodes = current_comp.get_nested_nodes_by_roles_at_any_level(current_comp, NodeRole.OUTPUT)
-            #     for output_node in output_nodes.copy():
-            #         if current_comp._trained_comp_nodes_to_pytorch_nodes_map:
-            #             # Replace any nodes in output_nodes in the nested Composition
-            #             #    that have been remapped to other ones in its Pytorch version
-            #             mapped_output_node = current_comp._trained_comp_nodes_to_pytorch_nodes_map.get(output_node, None)
-            #             output_nodes.remove(output_node)
-            #             output_nodes.append(mapped_output_node)
-            #     if node in output_nodes:
-            #         # FIX: 3/7/25 - NEED TO DO THIS for ports in output_ports and proj in output_port.efferents:
-            #         for output_port in node.output_ports:
-            #             all_output_projections_are_terminal = True
-            #             for proj in output_port.efferents:
-            #                 if (current_comp.output_CIM._get_destination_info_for_output_CIM(proj.receiver)
-            #                         is self.output_CIM):
-            #                     # node projects directly to output_CIM of outermmost Composition,
-            #                     #     so it is the end of a pathway
-            #                     pathways.append(create_pathway(current_comp, node))
-            #                 else:
-            #                     all_output_projections_are_terminal = False
-            #         if all_output_projections_are_terminal is True:
-            #             continue
-            # MODIFIED 3/4/25 END
 
-            # # # MODIFIED 3/8/25 OLD:
-            # # Consider all efferent Projections of node
-            # for efferent_proj, rcvr in [(p, p.receiver.owner)
-            #                             for p in node.efferents
-            #                             if p in current_comp.projections]:
-            #
-            #     # Ignore efferent Projections that do not have a learnable attribute
-            #     #   or are ModulatoryProjections (i.e., including LearningProjections)
-            #     # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
-            #     if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
-            #         continue
-            #
-            # # MODIFIED 3/8/25 NEW:
-            # # Get all efferent Projections of node,
-            # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
-            # for efferent_proj, rcvr in [(p, p.receiver.owner)
-            #                             for p in node.efferents
-            #                             if p in current_comp.projections]:
-            #                                 # MODIFIED 3/4/25 NEW:
-            #                                 # FIX:  NEEDED FOR GRUComposition,
-            #                                 #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-            #                                 #  BECAUSE IT HAS ENTRIES IN _nodes_map
-            #                                 #  NEED SOME OTHER WAY TO DISTINGUISH GRU NODE FROM THOSE
-            #                                 # or (current_comp.pytorch_representation
-            #                                 #     and current_comp.pytorch_representation._nodes_map and
-            #                                 #     node in current_comp.pytorch_representation._nodes_map))]:
-            #                                 # MODIFIED 3/4/25 END
-            # efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
-            # if not efferent_projs:
-            #     efferent_projs = [(p, p.receiver.owner) for p in node.efferents
-            #                       if current_comp.pytorch_representation
-            #                       and current_comp.pytorch_representation._nodes_map and
-            #                       node in current_comp.pytorch_representation._nodes_map]
-            # # Follow efferent Projection to next Node in pathway
-            # for efferent_proj, rcvr in efferent_projs:
-            #     # Ignore efferent Projections that do not have a learnable attribute
-            #     #   or are ModulatoryProjections (i.e., including LearningProjections)
-            #     # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
-            #     if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
-            # #         continue
-            #
-            # # # MODIFIED 3/8/25 NEWER:
-            # # # Get all efferent Projections of node,
-            # # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
-            # efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
-            # # efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in self.projections]
-            # if not efferent_projs:
-            #     # current_comp._build_pytorch_representation(context)
-            #     efferent_projs = [(p, p.receiver.owner) for p in node.efferents
-            #                       if current_comp.pytorch_representation
-            #                       and current_comp.pytorch_representation._nodes_map and
-            #                       node in current_comp.pytorch_representation._nodes_map]
-            # # # 3/5/25 FIX: NEED TO ASSIGN OUT_MECH TO OUTER COMPOSITION BELOW IF THIS IS FOR GRU NODE
-            # # Follow efferent Projection to next Node in pathway
-            # for efferent_proj, rcvr in efferent_projs:
-            #     # Ignore efferent Projections that do not have a learnable attribute
-            #     #   or are ModulatoryProjections (i.e., including LearningProjections)
-            #     # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
-            #     if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
-            #         continue
-            # # MODIFIED 3/8/25 NEWEST:
             # # Get all efferent Projections of node,
             # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
             efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
-            if not efferent_projs and hasattr(current_comp, '_pytorch_projections'):
-            # if not efferent_projs:
+            if not efferent_projs:
                 efferent_projs = [(p, p.receiver.owner) for p in node.efferents
                                   if p in current_comp._pytorch_projections]
-            # # 3/5/25 FIX: NEED TO ASSIGN OUT_MECH TO OUTER COMPOSITION BELOW IF THIS IS FOR GRU NODE
+
             # Follow efferent Projection to next Node in pathway
             for efferent_proj, rcvr in efferent_projs:
                 # Ignore efferent Projections that do not have a learnable attribute
@@ -1099,73 +972,32 @@ class AutodiffComposition(Composition):
                 # Note: if learnable==False, it will be passed along to PyTorch in PytorchProjectionWrapper
                 if not hasattr(efferent_proj,'learnable') or isinstance(efferent_proj,ModulatoryProjection_Base):
                     continue
-            # MODIFIED 3/8/25 END
 
                 # Deal with Projections to/from CIMs since nested comps can be learned in PyTorch mode
                 if isinstance(rcvr, CompositionInterfaceMechanism):
 
-                    # FIX: 3/5/25 - IMPLEMENT _get_nested_comp_pytorch_pathway FOR PATHWAYS IN NESTED COMP FROM HERE XXX:
-                    #               USE / INTEGRATE WITH / POSSIBLY OVERRIDE create_pathway()
                     # Projection to input_CIM of a nested Composition
                     if rcvr == rcvr.composition.input_CIM:
                         assert rcvr.composition is not current_comp
                         rcvr_comp = rcvr.composition
-                        # MODIFIED 3/1/25 NEW:
-                        # # FIX: 3/8/25 - STILL NEEDED? ZZZ
-                        # # Handle subclasses of AutodiffComposition that use custom PyTorchCompositionWrapper
-                        # if rcvr_comp.pytorch_composition_wrapper_type is not self.pytorch_composition_wrapper_type:
-                        #     # FIX: 3//25 - THIS NEEDS TO CALL _flatten_for_pytorch ON pytorchGRUWrappers:
-                        #     rcvr_pytorch_rep = rcvr_comp._build_pytorch_representation(context)
-                        #     rcvr_comp.infer_backpropagation_learning_pathways(execution_mode=pnlvm.ExecutionMode.PyTorch)
-                        #     # node_map = rcvr_pytorch_rep._nodes_map
-                        # # else:
-                        # #     node_map = []
-                        # # MODIFIED 3/1/25 END
                         # Get Node(s) in inner Composition to which Node projects (via input_CIM)
                         receivers = rcvr._get_destination_info_from_input_CIM(efferent_proj.receiver)
                         for _, nested_rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
-                            # # MODIFIED 3/1/25 OLD:
-                            # assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
-                            #     f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            # # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            # prev[nested_rcvr] = efferent_proj
-                            # prev[efferent_proj] = node
-                            # queue.append((nested_rcvr, rcvr_comp))
-                            # # MODIFIED 3/1/25 NEW:
                             if rcvr_comp._input_comp_nodes_to_pytorch_nodes_map:
                                 # If nested comp has _input_comp_nodes_to_pytorch_nodes_map, get nested_rcvr from it
                                 nested_rcvr = rcvr_comp._input_comp_nodes_to_pytorch_nodes_map[nested_rcvr]
-                                # efferent_proj = rcvr_comp.pytorch_representation._nodes_map[nested_rcvr].afferents
-                                prev[nested_rcvr] = efferent_proj
-                                prev[efferent_proj] = nested_rcvr
                             else:
                                 # Otherwise, ensure that nested_rcvr is an INPUT Node of rcvr_comp
                                 assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                     f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
                                 # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                                prev[nested_rcvr] = efferent_proj
-                                prev[efferent_proj] = node
-                            # queue.append((nested_rcvr, rcvr_comp))
                             rcvr_comp._add_pathway_dependency_to_queue(node, efferent_proj, nested_rcvr,
                                                                        prev, queue, rcvr_comp)
-                            # # # # MODIFIED 3/7/25 NEWEST:
-                            # assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
-                            #     f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
-                            # # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            # rcvr_comp._add_pathway_dependency_to_queue(node, efferent_proj, nested_rcvr,
-                            #                                            prev, queue, rcvr_comp)
-                            # # MODIFIED 3/1/25 END
 
                     # rcvr is Nested Composition output_CIM:
                     # Projection is to output_CIM exiting from a nested Composition
                     elif rcvr == current_comp.output_CIM and current_comp is not self:
 
-                        # # MODIFIED 3/8/25 OLD:
-                        # # Get output_CIM info for current efferent_proj
-                        # output_CIM_input_port = efferent_proj.receiver
-                        # output_CIM = output_CIM_input_port.owner
-                        # output_CIM_output_port = output_CIM.port_map[efferent_proj.sender][1]
-                        # MODIFIED 3/8/25 NEW:
                         # Get output_CIM info for current efferent_proj
                         output_CIM_input_port = efferent_proj.receiver
                         output_CIM = output_CIM_input_port.owner
@@ -1176,7 +1008,6 @@ class AutodiffComposition(Composition):
                             # FIX: 3/8/25 - THERE MUST BE AN EASIER WAY TO GET THIS MORE DIRECTLY
                             output_CIM_output_port = \
                                 (output_CIM.port_map)[efferent_proj.receiver.path_afferents[0].sender][1]
-                        # MODIFIED 3/8/25 END
 
                         # Get all Node(s) in outer Composition to which node projects (via output_CIM)
                         receivers = rcvr._get_destination_info_for_output_CIM(output_CIM_output_port)
@@ -1190,29 +1021,17 @@ class AutodiffComposition(Composition):
                                     _, rcvr, rcvr_comp = receiver
                                     assert rcvr_comp is not current_comp
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                                # # MODIFIED 3/7/25 OLD:
-                                # prev[rcvr] = efferent_proj
-                                # prev[efferent_proj] = node
-                                # queue.append((rcvr, rcvr_comp))
-                                # # MODIFIED 3/7/25 NEW:
                                 rcvr_comp._add_pathway_dependency_to_queue(node, efferent_proj, rcvr,
                                                                            prev, queue, rcvr_comp)
-                                assert True
-                                # MODIFIED 3/7/25 END
                         else:
                             pathways.append(create_pathway(current_comp, node))
-                    # FIX: 3/5/25 - IMPLEMENT _get_nested_comp_pytorch_pathway FOR PATHWAYS IN NESTED COMP FROM HERE XXX:
 
                     # rcvr is Outermost Composition output_CIM:
                     # End of pathway: Direct projection from output_CIM of nested comp to outer comp's output_CIM
                     elif rcvr is self.output_CIM:
                         # Assign node that projects to current node as OUTPUT Node for pathway
-                        # MODIFIED 3/7/25 OLD:
                         node_output_port = efferent_proj.sender
                         _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
-                        # # MODIFIED 3/7/25 NEW:
-                        # _, sender, _ = rcvr._get_source_info_from_output_CIM(efferent_proj.receiver)
-                        # MODIFIED 3/7/25 END
                         pathway = create_pathway(current_comp, node)
                         if pathway:
                             queue.popleft()
@@ -1222,13 +1041,17 @@ class AutodiffComposition(Composition):
                         assert False, f"PROGRAM ERROR:  Unrecognized CompositionInterfaceMechanism: {rcvr}"
 
                 else:
-                    # MODIFIED 3/7/25 OLD:
-                    # prev[rcvr] = efferent_proj
-                    # prev[efferent_proj] = node
-                    # queue.append((rcvr, current_comp))
-                    # MODIFIED 3/7/25 NEW:
-                    current_comp._add_pathway_dependency_to_queue(node, efferent_proj, rcvr, prev, queue, current_comp)
-                    continue
+                    if rcvr in current_comp.nodes:
+                        # rcvr is still in nested Composition, so keep traversing that
+                        current_comp._add_pathway_dependency_to_queue(node, efferent_proj, rcvr, prev, queue, current_comp)
+                        continue
+                    elif rcvr in self.nodes:
+                        # rcvr is in outer Composition (presumably a direct Pytorch Projection out of nested comp)
+                        self._add_pathway_dependency_to_queue(node, efferent_proj, rcvr, prev, queue, self)
+                        continue
+                    else:
+                        assert False, \
+                            (f"PROGRAM ERROR:  Unrecognized receiver ('{rcvr.name}') of Projection from '{node.name}'.")
 
         return pathways
 
@@ -1247,7 +1070,6 @@ class AutodiffComposition(Composition):
         dependency_dict[receiver] = projection
         dependency_dict[projection] = sender
         queue.append((receiver, comp))
-        assert True
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()

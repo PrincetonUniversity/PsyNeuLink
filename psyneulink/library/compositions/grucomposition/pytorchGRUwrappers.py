@@ -198,6 +198,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             self._projection_wrappers.append(proj_wrapper)
             self._projection_map[direct_proj] = proj_wrapper
 
+        if direct_proj not in self._composition._pytorch_projections:
+            self._composition._pytorch_projections.append(direct_proj)
         # return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper
 

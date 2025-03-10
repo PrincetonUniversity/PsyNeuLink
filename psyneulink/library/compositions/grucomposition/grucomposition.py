@@ -1167,27 +1167,29 @@ class GRUComposition(AutodiffComposition):
                                          comp:AutodiffComposition):
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         """
-        # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW
-        # if not self._pytorch_projections:
-        try:
-            direct_proj_in = MappingProjection(name="Projection to GRU COMP",
-                                               sender=sender,
-                                               receiver=self.gru_mech,
-                                               learnable=projection.learnable)
-        except DuplicateProjectionError:
-            direct_proj_in = self.gru_mech.afferents[0]
+        # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:
+        if self._pytorch_projections:
+            direct_proj_in = self._pytorch_projections[0]
+            direct_proj_out = self._pytorch_projections[1]
+        else:
+            try:
+                direct_proj_in = MappingProjection(name="Projection to GRU COMP",
+                                                   sender=sender,
+                                                   receiver=self.gru_mech,
+                                                   learnable=projection.learnable)
+                self._pytorch_projections.append(direct_proj_in)
+            except DuplicateProjectionError:
+                assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
 
-        try:
-            direct_proj_out = MappingProjection(name="Projection from GRU COMP",
-                                                sender=self.gru_mech,
-                                                receiver=self.output_CIM,
-                                                # receiver=self.output_CIM.input_ports[0],
-                                                learnable=False)
-            # self._pytorch_projections = [direct_proj_in, direct_proj_out]
-        except DuplicateProjectionError:
-            direct_proj_out = self.gru_mech.efferents[0]
-
-        self._pytorch_projections = [direct_proj_in, direct_proj_out]
+            try:
+                direct_proj_out = MappingProjection(name="Projection from GRU COMP",
+                                                    sender=self.gru_mech,
+                                                    receiver=self.output_CIM,
+                                                    # receiver=self.output_CIM.input_ports[0],
+                                                    learnable=False)
+                self._pytorch_projections.append(direct_proj_out)
+            except DuplicateProjectionError:
+                assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
 
         # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
@@ -1202,9 +1204,6 @@ class GRUComposition(AutodiffComposition):
 
         # FIX : ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, self))
-        # queue.append((output_node, comp))
-        # queue.append((output_node, self))
-        assert True
 
     def _identify_target_nodes(self, context):
         return [self.gru_mech]
