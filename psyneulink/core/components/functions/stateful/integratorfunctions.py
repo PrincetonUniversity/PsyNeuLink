@@ -2070,7 +2070,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         if RATE in request_set and request_set[RATE] is not None:
             rate = request_set[RATE]
-            if np.isscalar(rate):
+            if is_numeric_scalar(rate):
                 rate = [rate]
             if not all_within_range(rate, 0, 1):
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".
@@ -2078,7 +2078,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         if DECAY in request_set and request_set[DECAY] is not None:
             decay = request_set[DECAY]
-            if np.isscalar(decay):
+            if is_numeric_scalar(decay):
                 decay = [decay]
             if not all(0.0 <= d <= 1.0 for d in decay):
                 raise FunctionError("Value(s) specified for {} argument of {} ({}) must be in interval [0,1]".

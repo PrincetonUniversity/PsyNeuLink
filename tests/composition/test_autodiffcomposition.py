@@ -2139,8 +2139,8 @@ class TestNestedLearning:
 
         nested = AutodiffComposition(nodes=[hidden_nodes[0],hidden_node_x],name='nested')
 
-        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
-                  hidden_node_x.input_ports[0]:[[1], [1], [0], [0]]}
+        inputs = {input_nodes[0]: np.array([[0, 0], [0, 1], [1, 0], [1, 1]]),
+                  hidden_node_x.input_ports[0]: [[1], [1], [0], [0]]}
 
         direct_1 = [(nested, pnl.NodeRole.INPUT),
                   MappingProjection(hidden_nodes[0], output_nodes[0]),
@@ -3498,7 +3498,9 @@ def test_autodiff_saveload(tmp_path):
 @pytest.mark.pytorch
 @pytest.mark.aclogging
 class TestACLogging:
-    def test_autodiff_logging(self):
+
+    @pytest.mark.parametrize('minibatch_size', [1, 2])
+    def test_autodiff_logging(self, minibatch_size):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -3549,7 +3551,8 @@ class TestACLogging:
                   synch_projection_matrices_with_torch=pnl.MINIBATCH,
                   synch_results_with_torch=pnl.MINIBATCH,
                   # synch_results_with_torch=pnl.RUN,
-                  execution_mode=pnl.ExecutionMode.PyTorch)
+                  execution_mode=pnl.ExecutionMode.PyTorch,
+                  minibatch_size=minibatch_size)
 
         exec_id = xor.default_execution_id
 
@@ -3566,21 +3569,26 @@ class TestACLogging:
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
-        expected_length = len(xor_inputs) * num_epochs
+        expected_length = int(len(xor_inputs) * num_epochs / minibatch_size)
 
-        np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs)
+
+        if minibatch_size == 1:
+            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, :, :])
+        elif minibatch_size == 4:
+            np.testing.assert_equal(in_np_vals[0:2][:, :, :], in_np_dict_vals)
+
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, 1, xor_in.input_shapes)
+        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_in.input_shapes)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.input_shapes, xor_hid.input_shapes)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, 1, xor_hid.input_shapes)
+        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_hid.input_shapes)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.input_shapes, xor_out.input_shapes)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, 1, xor_out.input_shapes)
+        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_out.input_shapes)
 
         xor_out.log.print_entries()
 
@@ -3842,3 +3850,114 @@ class TestBatching:
         ce_torch = adc.loss_function(output, target).detach().numpy()
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
+
+@pytest.mark.pytorch
+@pytest.mark.parametrize('batch_size', [1, 2, 4])
+@pytest.mark.parametrize('batched_results', [False, True])
+def test_training_xor_with_batching(batch_size, batched_results):
+    """
+    This test actually trains an equivalent model in pytorch and compares the losses with the ones from the
+    AutodiffComposition learn.
+    """
+
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+
+    torch.manual_seed(0)
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    HIDDEN_SIZE = 5
+    LEARNING_RATE = 0.1
+    WEIGHT_DECAY = 0
+    NUM_EPOCHS = 2
+
+    X = torch.FloatTensor([[0, 0], [0, 1], [1, 0], [1, 1]]).to(device)
+    Y = torch.FloatTensor([[0], [1], [1], [0]]).to(device)
+
+    linear1 = nn.Linear(2, HIDDEN_SIZE, bias=False)
+    linear2 = nn.Linear(HIDDEN_SIZE, 1, bias=False)
+    sigmoid = nn.Sigmoid()
+
+    model = nn.Sequential(linear1, sigmoid, linear2, sigmoid).to(device) # MLP model
+
+    # Copy the initial weights and biases. Make sure to copy the data, not just the reference.
+    weights1 = linear1.weight.detach().cpu().numpy().copy()
+    weights2 = linear2.weight.detach().cpu().numpy().copy()
+    # bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
+    # bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
+
+    # define cost/loss & optimizer
+    # criterion = nn.BCELoss().to(device)
+    criterion = nn.MSELoss().to(device)
+    optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    # A generator to generate batches of X with batch_size, batches will be of shape
+    # (batch_size, 1, 2)
+    def batcher(x, y):
+        for i in range(0, len(x), batch_size):
+            yield x[i:i + batch_size].unsqueeze(1), y[i:i + batch_size].unsqueeze(1)
+
+    torch_losses = []
+    torch_results = []
+    for n in range(NUM_EPOCHS):
+        data_loader = batcher(X, Y)
+
+        for step, (x, y) in enumerate(data_loader):
+            pred = model(x)
+            loss = criterion(pred, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            torch_losses.append(loss.item())
+            torch_results.append(pred)
+
+    torch_results = torch.stack(torch_results).detach().cpu().numpy()
+
+    autodiff_mode = pnl.ExecutionMode.PyTorch
+
+    xor_in = TransferMechanism(name='xor_in',
+                               default_variable=np.zeros(2))
+
+    xor_hid = TransferMechanism(name='xor_hid',
+                                default_variable=np.zeros(HIDDEN_SIZE),
+                                function=Logistic())
+
+    xor_out = TransferMechanism(name='xor_out',
+                                default_variable=np.zeros(1),
+                                function=Logistic())
+
+    hid_map = MappingProjection(matrix=weights1.T)
+    out_map = MappingProjection(matrix=weights2.T)
+
+    xor = AutodiffComposition(loss_spec=pnl.Loss.MSE, learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    xor.add_node(xor_in)
+    xor.add_node(xor_hid)
+    xor.add_node(xor_out)
+
+    xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+    xor_inputs = np.array([[0.0, 0.0],
+                           [0.0, 1.0],
+                           [1.0, 0.0],
+                           [1.0, 1.0]])
+
+    xor_targets = np.array([[0.0], [1.0], [1.0], [0.0]])
+
+    xor.learn(inputs={"inputs": {xor_in: xor_inputs},
+                      "targets": {xor_out: xor_targets}},
+              epochs=NUM_EPOCHS,
+              minibatch_size=batch_size,
+              execution_mode=autodiff_mode,
+              batched_results=batched_results)
+
+    np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
+
+    if batched_results:
+        np.testing.assert_allclose(torch_results, xor.results, rtol=1e-5)
+    else:
+        torch_results_unbatched = torch_results.reshape( (NUM_EPOCHS * (len(X) // batch_size) * batch_size, 1, 1) )
+        np.testing.assert_allclose(torch_results_unbatched, xor.results, rtol=1e-5)

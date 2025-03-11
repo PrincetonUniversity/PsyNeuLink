@@ -96,4 +96,4 @@ Core
    - `Report`
    - `Log`
    - `mdf`
-   - `Utilities`
+   - :py:module:`Graph`

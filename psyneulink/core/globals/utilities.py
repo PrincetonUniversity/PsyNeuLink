@@ -5,108 +5,106 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 #
-"""
-Functions usable by all Components, that are not PsyNeuLink-specific.
-"""
-
-
+#
 # *************************************************  Utilities *********************************************************
 
-# Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific
-#
-#    That is:
-#        * do not require any information about PsyNeuLink objects
-#        * are not constrained to be used by PsyNeuLink objects
-#
-# ************************************************* UTILITIES ************************************************************
-#
-#
-# CONTENTS
-# --------
-#
-# * `deprecation_warning`
-#
-# *TYPE CHECKING VALUE COMPARISON*
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# .. note::
-#    PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
-#
-# * `parameter_spec`
-# * `optional_parameter_spec`
-# * `all_within_range`
-# * `is_matrix
-# * `is_matrix_spec`
-# * `is_numeric`
-# * `is_numeric_or_none`
-# * `is_iterable`
-# * `iscompatible`
-# * `is_value_spec`
-# * `is_unit_interval`
-# * `is_same_function_spec`
-# * `is_component`
-# * `is_comparison_operator`
-#
-# *ENUM*
-# ~~~~~~
-#
-# * `Autonumber`
-# * `Modulation`
-# * `get_modulationOperation_name`
-#
-# *KVO*
-# ~~~~~
-#
-# .. note::
-#    This is for potential future use;  not currently used by PsyNeuLink objects
-#
-# * observe_value_at_keypath
-#
-# *MATHEMATICAL*
-# ~~~~~~~~~~~~~~
-#
-# * norm
-# * sinusoid
-# * scalar_distance
-# * powerset
-# * tensor_power
-#
-# *LIST MANAGEMENT*
-# ~~~~~~~~~~~~~~~~~
-#
-# * `insert_list`
-# * `convert_to_list`
-# * `flatten_list`
-# * `nesting_depth`
-#
-#
-# *OTHER*
-# ~~~~~~~
-#
-# * `get_args`
-# * `recursive_update`
-# * `multi_getattr`
-# * `np_array_less_that_2d`
-# * `convert_to_np_array`
-# * `type_match`
-# * `get_value_from_array`
-# * `is_matrix`
-# * `underscore_to_camelCase`
-# * `append_type_to_name`
-# * `ReadOnlyOrderedDict`
-# * `ContentAddressableList`
-# * `make_readonly_property`
-# * `get_class_attributes`
-# * `get_global_seed`
-# * `set_global_seed`
-#
+"""Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific
+
+   That is:
+       do not require any information about PsyNeuLink objects
+       are not constrained to be used by PsyNeuLink objects
+
+************************************************* UTILITIES ************************************************************
+
+
+CONTENTS
+--------
+
+* `deprecation_warning`
+
+*TYPE CHECKING VALUE COMPARISON*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+   PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
+
+* `parameter_spec`
+* `optional_parameter_spec`
+* `all_within_range`
+* `is_matrix
+* `is_matrix_spec`
+* `is_numeric`
+* `is_numeric_or_none`
+* `is_iterable`
+* `iscompatible`
+* `is_value_spec`
+* `is_unit_interval`
+* `is_same_function_spec`
+* `is_component`
+* `is_comparison_operator`
+
+*ENUM*
+~~~~~~
+
+* `Autonumber`
+* `Modulation`
+* `get_modulationOperation_name`
+
+*KVO*
+~~~~~
+
+.. note::
+   This is for potential future use;  not currently used by PsyNeuLink objects
+
+* observe_value_at_keypath
+
+*MATHEMATICAL*
+~~~~~~~~~~~~~~
+
+* norm
+* sinusoid
+* scalar_distance
+* powerset
+* tensor_power
+
+*LIST MANAGEMENT*
+~~~~~~~~~~~~~~~~~
+
+* `insert_list`
+* `convert_to_list`
+* `flatten_list`
+* `nesting_depth`
+
+
+*OTHER*
+~~~~~~~
+
+* `get_args`
+* `recursive_update`
+* `multi_getattr`
+* `np_array_less_that_2d`
+* `convert_to_np_array`
+* `type_match`
+* `get_value_from_array`
+* `is_matrix`
+* `underscore_to_camelCase`
+* `append_type_to_name`
+* `ReadOnlyOrderedDict`
+* `ContentAddressableList`
+* `make_readonly_property`
+* `get_class_attributes`
+* `set_global_seed`
+
+"""
 
 import collections
 import copy
 import functools
+import importlib
 import inspect
 import itertools
 import logging
+import os
 import psyneulink
 import re
 import time
@@ -118,7 +116,7 @@ import typing
 from beartype import beartype
 
 from numbers import Number
-from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple
+from psyneulink._typing import Any, Callable, Optional, Union, Literal, Type, List, Tuple, Iterable
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
@@ -143,6 +141,8 @@ except ImportError:
 from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR,
                                               MATRIX_KEYWORD_VALUES, MPS, NAME, SINUSOID, VALUE)
 
+
+
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
     'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal', 'flatten_list',
@@ -161,7 +161,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string',
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1719,7 +1719,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
-def get_global_seed(offset=1):
+def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
     _seed = (_seed + offset) % 2**31
@@ -1935,7 +1935,7 @@ def parse_string_to_psyneulink_object_string(string):
     def is_pnl_obj(string):
         try:
             # remove parens to get rid of class instantiations
-            string = re.sub(r'\(.*?\)', '', string)
+            string = re.sub(r'\(.*\)', '', string)
             attr_sequence = string.split('.')
             obj = getattr(psyneulink, attr_sequence[0])
 
@@ -2428,5 +2428,62 @@ def safe_create_np_array(value):
                 return convert_all_elements_to_np_array(value)
             else:
                 raise
+
+
+def get_module_file_prefix(module: Union[str, types.ModuleType]) -> str:
+    """
+    Gets the file prefix of **module**, which may be used with
+    `get_stacklevel_skip_file_prefixes` or the `skip_file_prefixes`
+    argument of :func:`warnings.warn` (python 3.12+)
+
+    Args:
+        module (Union[str, types.ModuleType]): a python module or a name
+        of a module
+
+    Returns:
+        str: the file path of **module**, excluding __init__.py
+    """
+    try:
+        module = importlib.import_module(module)
+    except AttributeError:
+        # ModuleType
+        pass
+
+    module = inspect.getfile(module)
+
+    if module.endswith('__init__.py'):
+        module = os.path.dirname(module)
+
+    return module
+
+
+def get_stacklevel_skip_file_prefixes(
+    modules: Iterable[Union[str, types.ModuleType]]
+) -> int:
+    """
+    Gets a value for the `stacklevel` argument of :func:`warnings.warn`
+    or :func:`logging.log` that corresponds to the outermost stack frame
+    that does not belong to any of **modules** as determined by their
+    file paths. Functions similarly to the `skip_file_prefixes` argument
+    of :func:`warnings.warn` (python 3.12+).
+
+    Args:
+        modules (Iterable[Union[str, types.ModuleType]]): python modules
+        or names of modules to skip
+
+    Returns:
+        int: the outermost stacklevel that excludes **modules**
+    """
+    prefixes = [get_module_file_prefix(p) for p in modules]
+
+    res = 1
+    # skip this function
+    for i, frame_info in enumerate(inspect.stack()[1:]):
+        for p in prefixes:
+            if frame_info.frame.f_code.co_filename.startswith(p):
+                break
+        else:
+            return i + 1
+    return res
 
 #endregion

@@ -349,7 +349,7 @@ from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, CPU, CUDA, E
                                               Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, MPS, NODE_VALUES, NODE_VARIABLES,
                                               OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP,
                                               TARGETS, TRAINED_OUTPUTS, TRIAL)
-from psyneulink.core.globals.utilities import is_numeric_scalar
+from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1067,9 +1067,9 @@ class AutodiffComposition(Composition):
     def autodiff_forward(self, inputs, targets,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
-        """Perform forward pass of model and compute loss for a single trial (i.e., a single input) in Pytorch mode.
-        Losses are accumulated in pytorch_rep.track_losses, over calls to this method within a minibatch;
-          at the end of a minibatch, they are averaged and backpropagated by compositionrunner.run_learning()
+        """
+        Perform forward pass of model and compute loss for a batch of trials in Pytorch mode.
+        Losses are then accumulated, error is backpropagated by compositionrunner.run_learning()
           before the next time it calls run(), in a call to backward() by do_gradient_optimization()
           in _batch_inputs() or _batch_function_inputs(),
         """
@@ -1082,7 +1082,10 @@ class AutodiffComposition(Composition):
         # Get value of INPUT nodes for current trial
         curr_tensors_for_inputs = {}
         for component in inputs.keys():
-            curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            if not isinstance(inputs[component], torch.Tensor):
+                curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+            else:
+                curr_tensors_for_inputs[component] = inputs[component]
 
         # Get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
@@ -1095,10 +1098,13 @@ class AutodiffComposition(Composition):
 
         # Get value of TARGET nodes for current trial
         curr_tensors_for_targets = {}
-        for component in targets.keys():
-            curr_tensors_for_targets[component] = [torch.tensor(np.atleast_1d(target),
-                                                           device=self.device).double()
-                                              for target in targets[component]]
+        for component, target in targets.items():
+            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+                curr_tensors_for_targets[component] = [target[:, i, :] for i in range(target.shape[1])]
+            else:
+                # It's  a list, of lists, of torch tensors because it is ragged
+                num_outputs = len(targets[component][0])
+                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i] for batch_elem in target]) for i in range(num_outputs)]
 
         # Get value of TARGET nodes for trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1106,13 +1112,20 @@ class AutodiffComposition(Composition):
             curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
 
         # Calculate and track the loss over the trained OUTPUT nodes
-        for component in curr_tensors_for_trained_outputs.keys():
+        for component, outputs in curr_tensors_for_trained_outputs.items():
             trial_loss = 0
-            for i in range(len(curr_tensors_for_trained_outputs[component])):
+            targets = curr_target_tensors_for_trained_outputs[component]
+            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0])
+            for i in range(num_outputs):
                 # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
+
+                # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
+                # need to index
+                output = outputs[:, i, :] if type(outputs) is torch.Tensor else torch.stack([batch_elem[i] for batch_elem in outputs])
+
                 comp_loss = self.loss_function(
-                    curr_tensors_for_trained_outputs[component][i],
-                    torch.atleast_1d(curr_target_tensors_for_trained_outputs[component][i].squeeze())
+                    output,
+                    torch.atleast_1d(targets[i])
                 )
                 comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
                 trial_loss += comp_loss
@@ -1130,7 +1143,14 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, source, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = source.output_ports.index(port)
-            trained_output_values += [curr_tensors_for_trained_outputs[source][idx].detach().cpu().numpy().copy().tolist()]
+            outputs = curr_tensors_for_trained_outputs[source]
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, idx, ...]
+            else:
+                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+
+            output = output.detach().cpu().numpy().copy().tolist()
+            trained_output_values += [output]
 
         # Get values of all OUTPUT nodes
         all_output_values = []
@@ -1139,7 +1159,22 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: {input_port.name} of ouput_CIM for '{self.name}' has more than one afferent."
             port, component, _ = self.output_CIM._get_source_info_from_output_CIM(input_port)
             idx = component.output_ports.index(port)
-            all_output_values += [curr_tensors_for_outputs[component][idx].detach().cpu().numpy().copy().tolist()]
+            outputs = curr_tensors_for_outputs[component]
+
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, idx, ...]
+            else:
+                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+
+            output = output.detach().cpu().numpy().copy().tolist()
+            all_output_values += [output]
+
+        # Turn into a numpy array, possibly ragged
+        all_output_values = convert_to_np_array(all_output_values)
+
+        # Swap the first two dimensions (output_port, batch) to (batch, output_port)
+        all_output_values = all_output_values.swapaxes(0, 1)
+
         pytorch_rep.all_output_values = all_output_values
 
         # Get values of TARGET nodes
@@ -1335,6 +1370,11 @@ class AutodiffComposition(Composition):
                                               retain_torch_losses,
                                               **kwargs))
 
+        if execution_mode == pnlvm.ExecutionMode.PyTorch and not torch_available:
+            raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
+                                           f"but Pytorch module ('torch') is not installed. "
+                                           f"Please install it with `pip install torch` or `pip3 install torch`")
+
         return super().learn(*args,
                              synch_with_pnl_options=synch_with_pnl_options,
                              retain_in_pnl_options=retain_in_pnl_options,
@@ -1525,6 +1565,7 @@ class AutodiffComposition(Composition):
 
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
+                self.most_recent_context = context
                 return all_output_values
 
         # Call Composition execute in Python mode
@@ -1554,6 +1595,7 @@ class AutodiffComposition(Composition):
             retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            batched_results:bool=False,
             **kwargs):
         """Override to handle synch and retain args if run called directly from run() rather than learn()
         Note: defaults for synch and retain args are NotImplemented, so that the user can specify None if they want
@@ -1561,6 +1603,9 @@ class AutodiffComposition(Composition):
               for details). This is distinct from the user assigning the Parameter default_values(s), which is done
               in the AutodiffComposition constructor and handled by the Parameter._specify_none attribute.
         """
+
+        # Store whether we need to return results list with a batch dimension, or flatten it
+        self.batched_results = batched_results
 
         if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
             # No synch_with_pnl_options and retain_in_pnl_options dicts:
@@ -1598,16 +1643,30 @@ class AutodiffComposition(Composition):
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
+
+            # Check if the trial_output is atleast 3D
+            is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
+                                                      isinstance(trial_output[0, 0], (np.ndarray, list)))
+
             # FIX: FOR NOW, USE THIS FOR BOTH TRIAL AND MINIBATCH, SINCE CURRENTLY NO DIFFERENCE;
             #      NEED TO FIGURE OUT WHAT TO DO ABOUT UPDATING RESULTS ONCE TRUE BATCHING IS IMPLEMENTED
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
-                super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+                if not self.batched_results and is_output_3d:
+                    for out in trial_output:
+                        super()._update_results(results, out, execution_mode, synch_with_pnl_options, context)
+                else:
+                    super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
+
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
-                self.parameters.pytorch_representation._get(context).retain_results(trial_output)
+                if not self.batched_results and is_output_3d:
+                    for out in trial_output:
+                        self.parameters.pytorch_representation._get(context).retain_results(out)
+                else:
+                    self.parameters.pytorch_representation._get(context).retain_results(trial_output)
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
@@ -1676,7 +1735,7 @@ class AutodiffComposition(Composition):
         return path
 
     @handle_external_context(fallback_most_recent=True)
-    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None):
+    def load(self, path:PosixPath=None, directory:str=None, filename:str=None, context=None, weights_only:bool=False):
         """Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
         Arguments
         ---------
@@ -1708,7 +1767,7 @@ class AutodiffComposition(Composition):
             except IsADirectoryError:
                 raise AutodiffCompositionError(f"'{path}'{error_msg}")
         try:
-            state = torch.load(path)
+            state = torch.load(path, weights_only=weights_only)
         except FileNotFoundError:
             raise AutodiffCompositionError(f"'{path}'{error_msg}")
 
@@ -1754,4 +1813,4 @@ class AutodiffComposition(Composition):
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
-        self._show_graph.show_graph(*args, **kwargs)
+        return self._show_graph.show_graph(*args, **kwargs)

@@ -6600,6 +6600,52 @@ class TestInputSpecifications:
                 num_trials = 2
             len(ocomp.results)==num_trials
 
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize(
+        'merge_targets_1', [True, False], ids=['merge_targets_1', 'separate_targets_1'],
+    )
+    @pytest.mark.parametrize(
+        'merge_targets_2', [True, False], ids=['merge_targets_2', 'separate_targets_2'],
+    )
+    def test_targets_order(self, merge_targets_1, merge_targets_2):
+        in_1 = pnl.TransferMechanism(name='in_1', input_shapes=1)
+        in_2 = pnl.TransferMechanism(name='in_2', input_shapes=2)
+        out_1 = pnl.TransferMechanism(name='out_1', input_shapes=1)
+        out_2 = pnl.TransferMechanism(name='out_2', input_shapes=2)
+
+        comp = pnl.AutodiffComposition(
+            name='comp',
+            pathways=[
+                [in_1, out_1],
+                [in_1, out_2],
+                [in_2, out_1],
+                [in_2, out_2],
+            ],
+        )
+
+        in_1_train = [0, 0, 0, 1, 1, 1]
+        in_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+        out_1_train = [0, 0, 0, 1, 1, 1]
+        out_2_train = [[0, 0], [0, 0], [0, 0], [1, 1], [1, 1], [1, 1]]
+
+        inp_1 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_1: out_1_train, out_2: out_2_train},
+        }
+        inp_2 = {
+            'inputs': {in_1: in_1_train, in_2: in_2_train},
+            'targets': {out_2: out_2_train, out_1: out_1_train},
+        }
+        if merge_targets_1:
+            inp_1 = {'inputs': inp_1}
+        if merge_targets_2:
+            inp_2 = {'inputs': inp_2}
+
+        res_1 = comp.learn(**inp_1, execution_mode=pnl.ExecutionMode.PyTorch, context=1)
+        res_2 = comp.learn(**inp_2, execution_mode=pnl.ExecutionMode.PyTorch, context=2)
+
+        np.testing.assert_array_equal(res_1, res_2)
+
 
 class TestProperties:
 
@@ -8038,6 +8084,132 @@ class TestNodeRoles:
         assert comp.nodes_to_roles[C] == {NodeRole.OUTPUT, NodeRole.ORIGIN}
 
 
+# based on tests in TestNodeRoles
+@pytest.mark.composition
+class TestFeedbackProjections:
+    @staticmethod
+    def _gen_mechs(n):
+        return [ProcessingMechanism() for _ in range(n)]
+
+    def test_two_node_cycle(self):
+        A, B = self._gen_mechs(2)
+        comp = Composition(pathways=[A, B, A])
+        assert comp.feedback_projections == []
+
+    def test_three_node_cycle(self):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        assert comp.feedback_projections == []
+
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_three_node_cycle_with_FEEDBACK(self, feedback):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=feedback)
+        assert comp.feedback_projections == A.get_afferents(C)
+
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_three_node_cycle_with_FEEDBACK_attr(self, feedback):
+        A, B, C = self._gen_mechs(3)
+        comp = Composition(pathways=[A, B, C])
+        p = MappingProjection(sender=C, receiver=A)
+        p.feedback = feedback
+        comp.add_projection(p)
+        exp_feedback = [eff for eff in C.efferents if eff.receiver.owner is A]
+        assert comp.feedback_projections == exp_feedback
+
+    def test_branch(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_bypass(self):
+        a, b, c, d = self._gen_mechs(4)
+        comp = Composition(pathways=[[a, b, c, d], [a, b, d]])
+        assert comp.feedback_projections == []
+
+    def test_chain(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, c], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_convergent(self):
+        a, b, c, d, e = self._gen_mechs(5)
+        comp = Composition(pathways=[[a, b, e], [c, d, e]])
+        assert comp.feedback_projections == []
+
+    def test_two_pathway_cycle(self):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(pathways=[[a, b, a], [a, c, a]])
+        assert comp.feedback_projections == []
+
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True, pnl.EdgeType.FLEXIBLE])
+    def test_two_pathway_cycle_feedback(self, feedback):
+        a, b, c = self._gen_mechs(3)
+        comp = Composition(
+            pathways=[
+                [a, b, (MappingProjection, feedback), a],
+                [a, c, (MappingProjection, feedback), a],
+            ]
+        )
+        assert comp.feedback_projections == b.get_efferents(a) + c.get_efferents(a)
+
+    def test_extended_loop(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(pathways=[[a, b, c, d], [e, c, f, b, d]])
+        assert comp.feedback_projections == []
+
+    @pytest.mark.parametrize('feedback', [pnl.EdgeType.FEEDBACK, True])
+    def test_extended_loop_feedback(self, feedback):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, (MappingProjection, feedback), d]]
+        )
+        assert comp.feedback_projections == b.get_efferents(d)
+
+    def test_extended_loop_feedback_attr_two_flexible(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.FLEXIBLE
+        comp._analyze_graph()
+        assert comp.feedback_projections == c.get_efferents(f)
+
+    def test_extended_loop_feedback_attr_unneeded_flexible(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.FEEDBACK
+        comp._analyze_graph()
+        assert comp.feedback_projections == f.get_efferents(b)
+
+    def test_extended_loop_feedback_attr_both_non_feedback(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.NON_FEEDBACK
+        f.get_efferents(b)[0].feedback = pnl.EdgeType.NON_FEEDBACK
+        comp._analyze_graph()
+        assert comp.feedback_projections == []
+
+    def test_extended_loop_feedback_attr_extraneous(self):
+        a, b, c, d, e, f = self._gen_mechs(6)
+        comp = Composition(
+            pathways=[[a, b, c, d], [e, c, f, b, d]]
+        )
+        c.get_efferents(f)[0].feedback = pnl.EdgeType.FLEXIBLE
+        # not in a cycle
+        c.get_efferents(d)[0].feedback = pnl.EdgeType.FLEXIBLE
+        comp._analyze_graph()
+        assert comp.feedback_projections == c.get_efferents(f)
+
+
 class TestMisc:
 
     @pytest.mark.skip(reason="This test is hanging on MacOS for some reason.")
@@ -8319,6 +8491,48 @@ class TestMisc:
 
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A}, {A}, {C}]
         assert set(comp.scheduler._user_specified_conds.conditions.keys()) == {C}
+
+    # empty pathway bypasses call to .execute, but most_recent_context
+    # should still be set
+    @pytest.mark.parametrize(
+        'inner_pathway',
+        [
+            pytest.param([ProcessingMechanism()], id='1_mech'),
+            pytest.param([], id='empty'),
+        ]
+    )
+    def test_most_recent_context_nested(self, inner_pathway):
+        inner = pnl.Composition(name='inner', pathways=inner_pathway)
+        outer = pnl.Composition(name='outer')
+        outer.add_node(inner)
+
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id is None
+
+        inner.run()
+        assert outer.most_recent_context.execution_id is None
+        assert inner.most_recent_context.execution_id == inner.name
+
+        if len(inner_pathway) == 0:
+            with pytest.raises(
+                pnl.MechanismError,
+                match=r'Number of inputs \(1\) to inner Output_CIM does not match its number of input_ports \(0\)'
+            ) as e:
+                outer.run()
+            if e:
+                pytest.xfail(
+                    reason='running outer comp with empty inner comp fails validation'
+                )
+        else:
+            outer.run()
+            assert outer.most_recent_context.execution_id == outer.name
+            assert inner.most_recent_context.execution_id == outer.name
+
+        # COMMAND_LINE to bypass check for input passed to nested comp
+        c = pnl.Context(source=pnl.ContextFlags.COMMAND_LINE)
+        inner.run(context=c)
+        assert outer.most_recent_context.execution_id == outer.name
+        assert inner.most_recent_context.execution_id == c.execution_id
 
 
 class TestInputSpecsDocumentationExamples:

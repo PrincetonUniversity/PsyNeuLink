@@ -171,9 +171,22 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
-    random_matrix, array_from_matrix_string
+    NumericCollections,
+    SeededRandomState,
+    _get_global_seed,
+    array_from_matrix_string,
+    contains_type,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    is_instance_or_subclass,
+    is_numeric,
+    is_numeric_scalar,
+    object_has_single_value,
+    parameter_spec,
+    parse_valid_identifier,
+    random_matrix,
+    safe_len,
+    try_extract_0d_array_item,
 )
 
 __all__ = [
@@ -357,7 +370,7 @@ def _seed_setter(value, owning_component, context, *, compilation_sync):
 
     value = try_extract_0d_array_item(value)
     if value is None or value == DEFAULT_SEED():
-        value = get_global_seed()
+        value = _get_global_seed()
 
     # Remove any old PRNG state
     owning_component.parameters.random_state.set(None, context=context)
@@ -1000,8 +1013,8 @@ class Function_Base(Function):
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
-PROPENSITY = "PROPENSITY"
-PERTINACITY = "PERTINACITY"
+PROPENSITY = "propensity"
+PERTINACITY = "pertinacity"
 
 
 class ArgumentTherapy(Function_Base):
@@ -1083,6 +1096,10 @@ class ArgumentTherapy(Function_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
+    class Parameters(Function_Base.Parameters):
+        propensity = None
+        pertinacity = None
+
     # Mode indicators
     class Manner(Enum):
         OBSEQUIOUS = 0
@@ -1095,8 +1112,8 @@ class ArgumentTherapy(Function_Base):
     @check_user_specified
     def __init__(self,
                  default_variable=None,
-                 propensity=10.0,
-                 pertincacity=Manner.CONTRARIAN,
+                 propensity=Manner.CONTRARIAN,
+                 pertinacity=10.0,
                  params=None,
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
@@ -1104,7 +1121,7 @@ class ArgumentTherapy(Function_Base):
         super().__init__(
             default_variable=default_variable,
             propensity=propensity,
-            pertinacity=pertincacity,
+            pertinacity=pertinacity,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1155,7 +1172,7 @@ class ArgumentTherapy(Function_Base):
 
             # Validate param
             if param_name == PERTINACITY:
-                if isinstance(param_value, numbers.Number) and 0 <= param_value <= 10:
+                if is_numeric_scalar(param_value) and 0 <= param_value <= 10:
                     # target_set[PERTINACITY] = param_value
                     pass  # This leaves param in request_set, clear to be assigned to target_set in call to super below
                 else:

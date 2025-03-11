@@ -393,7 +393,7 @@ def _distance_field_weights_setter(value, owning_component=None, context=None):
     # NOTE: need the following to accommodate various forms of specification (single value, None's, etc)
     #       that are resolved elsewhere
     # FIX: STANDARDIZE FORMAT FOR FIELDWEIGHTS HERE (AS LIST OF INTS) AND GET RID OF THE FOLLOWING
-    test_val = np.array([int(np.array(val).item()) if val else 0 for val in value])
+    test_val = np.array([int(np.array(val).item()) if (arr := np.array(val)).size and arr.item() else 0 for val in value])
     test_val = np.full(len(variable), test_val) if len(test_val) == 1 else test_val
     test_curr_field_weights = np.array([int(np.array(val).item()) if val else 0 for val in current_field_weights])
     test_curr_field_weights = (np.full(len(variable), test_curr_field_weights) if len(variable) == 1
