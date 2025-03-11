@@ -39,6 +39,7 @@ class TestExecution:
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
     def test_pytorch_unnested_learning_identicality_with_pytorch(self, bias):
         # Test identicality of learning results of GRUComposition against native Pytorch GRU
+
         import torch
         inputs = [[1,2,3]]
         targets = [[1,1,1,1,1]]
@@ -46,9 +47,7 @@ class TestExecution:
         HIDDEN_SIZE = 5
         LEARNING_RATE = .001
 
-        bias = True
-
-        # Set up TORCH GRU model
+        # Set up and run TORCH GRU model
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
@@ -62,7 +61,7 @@ class TestExecution:
         torch_optimizer.step()
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs).astype(np.float32)),hn)
 
-        # Set up PNL model
+        # Set up and run PNL Autodiff model
         # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
         pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE)
         pnl_gru.set_weights(*torch_gru_initial_weights)
@@ -79,16 +78,71 @@ class TestExecution:
         # Compare results from after learning:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
 
-    def test_nested_gru_composition_learning(self):
-        # Test identicality of results of nested and non-nested learning of GRUComposition
+    @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
+    def test_nested_gru_composition_learning(self, bias):
+        # Test identicality of results of nested GRUComposition and pure pytorch version
+
+        import torch
+        import torch.optim as optim
+        inputs = [[1,2,3]]
+        targets = [[1,1,1,1,1]]
+        INPUT_SIZE = 3
+        HIDDEN_SIZE = 5
+        LEARNING_RATE = .001
+
+        # Set up and run TORCH GRU model
+        class TorchModel(torch.nn.Module):
+            def __init__(self):
+                super(TorchModel, self).__init__()
+                # FIX: MAKE SURE BIASES ARE NOT USED FOR THESE MODULES:
+                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
+                self.gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
+                self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
+
+            def forward(self, x, hidden):
+                x = self.input(x)
+                x, hidden = self.gru(x, hidden)
+                x = self.output(x)
+                return x, hidden
+
+        torch_model = TorchModel()
+        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
+        loss_fct = torch.nn.MSELoss(reduction='mean')
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = torch_model.state_dict()['input.weight']
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_model.gru)
+        torch_output_initial_weights = torch_model.state_dict()['output.weight']
+
+        # Execute Torch model
+        hidden_init = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
+        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+                                                                 hidden_init)
+        torch_optimizer.zero_grad()
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float32))
+        torch_loss.backward()
+        torch_optimizer.step()
+        torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+                                                                hidden_state)
+
+        # Set up and run PNL Autodiff model
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
         gru = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=True)
-        comp = pnl.AutodiffComposition(name='OUTER COMP',
+        autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech, gru, output_mech])
-        targets = comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        nested_result = comp.learn(inputs={input_mech:[[1,2,3]],
-                                           targets[0]: [[1,1,1,1,1]]},
-                                   execution_mode=pnl.ExecutionMode.PyTorch)
-        print("STILL NEEDS NUMERICAL VALIDATION")
+        autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
+        autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
+        target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs})
+        autodiff_result_after_learning = autodiff_comp.learn(inputs={input_mech:inputs,
+                                                                     target_mechs[0]: targets},
+                                                             execution_mode=pnl.ExecutionMode.PyTorch)
+
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
+                                   autodiff_result_before_learning, atol=1e-6)
+
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   autodiff_result_after_learning, atol=1e-6)

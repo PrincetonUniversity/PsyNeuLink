@@ -339,6 +339,7 @@ import numpy as np
 from packaging import version
 from pathlib import Path, PosixPath
 from collections import deque
+from typing import Union
 
 try:
     import torch
@@ -1405,6 +1406,15 @@ class AutodiffComposition(Composition):
             if isinstance(node, AutodiffComposition):
                 target_nodes.extend(node._identify_target_nodes(context))
         return target_nodes
+
+    @handle_external_context()
+    def set_weights(self, pnl_proj, weights:Union[list, np.ndarray], context=None):
+        """Set weights for specified Projection."""
+        pnl_wt_matrix = pnl_proj.parameters.matrix._get(context)
+        assert weights.shape == pnl_wt_matrix.shape, \
+            (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
+             f"Specified weights do not match required shape ({pnl_proj.ma.shape}).)")
+        pnl_proj.parameters.matrix._set(weights, context)
 
     @handle_external_context()
     def learn(self,
