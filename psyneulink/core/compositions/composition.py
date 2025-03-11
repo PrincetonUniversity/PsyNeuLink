@@ -2047,10 +2047,8 @@ modules. Below are details about setting PsyNeuLink global and local seeds.
    (e.g., ``<component>.random_state.normal()`` or ``<component>.random_state.uniform()``) to get a random value.
 
 .. technical_note::
-   PsyNeuLink uses the `Mersenne Twister <https://en.wikipedia.org/wiki/Mersenne_Twister>`_ algorithm for its
-   pseudorandom number generator (PRNG), which is the default PRNG for numpy.  `Philox
-   <https://numpy.org/doc/2.1/reference/random/bit_generators/philox.html>`_, which can be substantially more
-   memory efficient in some cases, is also supported, and can be used...
+   PsyNeuLink uses the `Mersenne Twister <https://en.wikipedia.org/wiki/Mersenne_Twister>`_ algorithm
+   for its pseudorandom number generator (PRNG), which is the default PRNG for numpy.
 
 
 .. _Composition_Global_Random_Seed:
