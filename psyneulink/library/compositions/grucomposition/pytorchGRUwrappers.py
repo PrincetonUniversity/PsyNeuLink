@@ -21,6 +21,7 @@ from psyneulink.core.components.projections.projection import DuplicateProjectio
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
+from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH, \
     MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.log import LogCondition
@@ -309,22 +310,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             node_wrapper.log_value()
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, proj_wrapper in self._projection_map.items():
-            # MODIFIED 3/2/25 NEW:
-            # if SYNCH in proj_wrapper._use:
-            # MODIFIED 3/1/25 END
-                torch_parameter = proj_wrapper.torch_parameter
-                torch_indices = proj_wrapper.matrix_indices
-                matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
-                projection.parameters.matrix._set(matrix, context)
-                projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+        for proj_wrapper in self._projection_map.values():
+            if SYNCH in proj_wrapper._use:
+                proj_wrapper._copy_params_to_pnl_proj(context)
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
-            # MODIFIED 3/2/25 NEW:
-            # THIS MADE THE DIFFERENCE for test_grucomposition 3/2/25
-            # if SYNCH in proj_wrapper._use:
-            # MODIFIED 3/1/25
+            if SYNCH in proj_wrapper._use:
                 proj_wrapper.set_torch_gru_parameter(context)
 
     def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
@@ -525,7 +517,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         self.torch_parameter, self.matrix_indices = torch_parameter
         # Projections for GRUComposition are not included in autodiff; matrices are set directly in Pytorch GRU module:
         self.projection.exclude_in_autodiff = True
-        self._use = list(use)
+        self._use = convert_to_list(use)
         self.device = device
 
     def set_torch_gru_parameter(self, context):
@@ -533,6 +525,13 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         matrix = self.projection.parameters.matrix._get(context).T
         proj_matrix_as_tensor =  torch.tensor(matrix.squeeze(), dtype=torch.float32)
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
+
+    def _copy_params_to_pnl_proj(self, context):
+        torch_parameter = self.torch_parameter
+        torch_indices = self.matrix_indices
+        matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
+        self.projection.parameters.matrix._set(matrix, context)
+        self.projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

@@ -973,13 +973,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.copy_results_to_psyneulink(current_condition, context)
 
     def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep_proj_wrapper in self._projection_map.items():
-            # MODIFIED 3/1/25 NEW:
+        for pytorch_rep_proj_wrapper in self._projection_map.values():
             if SYNCH in pytorch_rep_proj_wrapper._use:
-            # MODIFIED 3/1/25 END
-                matrix = pytorch_rep_proj_wrapper.matrix.detach().cpu().numpy()
-                projection.parameters.matrix._set(matrix, context)
-                projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+                pytorch_rep_proj_wrapper._copy_params_to_pnl_proj(context)
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -992,9 +988,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if nodes == ALL:
             nodes = self._nodes_map.items()
         for pnl_node, pytorch_node in nodes:
-            # # MODIFIED 3/1/25 NEW:
             if SYNCH in pytorch_node._use:
-            # MODIFIED 3/1/25 END
                 # First get variable in numpy format
                 if isinstance(pytorch_node.input, list):
                     variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
@@ -1534,7 +1528,8 @@ class PytorchProjectionWrapper():
 
         self.projection = projection  # Projection being wrapped (may *not* be the one being learned; see note above)
         self._pnl_proj = pnl_proj     # Projection to/from CIM that actually projects to/from sender/receiver
-        self._use = list(use) or [LEARNING, SYNCH, SHOW_GRAPH]  # learn, synch, and/or display connection weights
+        self._use = convert_to_list(use) or [LEARNING, SYNCH, SHOW_GRAPH]  # learn, synch, and/or display connection
+        # weights
         self._idx = component_idx     # Index of Projection in Composition's list of projections
         self._sender_port_idx = sender_port_idx  # Index of sender output_ports for which Projection is an efferent
         self._value_idx = 0           # Index of value in sender's value (used in collect_afferents)
@@ -1585,6 +1580,12 @@ class PytorchProjectionWrapper():
     def execute(self, variable):
         # return torch.matmul(variable, self.matrix)
         return self.function(variable, self.matrix)
+
+    def _copy_params_to_pnl_proj(self, context):
+        projection = self.projection
+        matrix = self.matrix.detach().cpu().numpy()
+        projection.parameters.matrix._set(matrix, context)
+        projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:
