@@ -1727,6 +1727,13 @@ def _get_global_seed(offset=1):
 
 
 def set_global_seed(new_seed):
+    """Set global randomization seed for all Components for which a local seed has not been specified.
+
+    Arguments
+    ---------
+    new_seed : int
+        new seed to use for randomization
+    """
     global _seed
     _seed = new_seed
 

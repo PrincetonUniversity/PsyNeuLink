@@ -57,6 +57,7 @@ Contents
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
+        • `Composition_Randomization`
         • `Composition_Compilation`
      - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
   * `Composition_Visualization`
@@ -1200,6 +1201,7 @@ Executing a Composition
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
+        • `Composition_Randomization`
         • `Composition_Compilation`
     - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
 
@@ -1653,6 +1655,7 @@ COMMENT
   • `Composition_Execution_Context`
   • `Composition_Timing`
   • `Composition_Reset`
+  • `Composition_Randomization`
   • `Composition_Compilation`
 
 
@@ -2022,6 +2025,47 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      case, the `Condition` specified by its own `reset_stateful_function_when <Component.reset_stateful_function_when>`
      parameter will be used.
 
+.. _Composition_Randomization:
+
+*Randomization*
+^^^^^^^^^^^^^^^
+
+Each PsyNeuLink Component that relies on randomization uses a private instance of a `pseudorandom number generator
+<https://en.wikipedia.org/wiki/Pseudorandom_number_generator#:~:text=A%20pseudorandom%20number%20generator%20(PRNG,
+of%20sequences%20of%20random%20numbers>`_ (PRNG). This makes random sequences within each Component independent of
+one another, and independent of any random number generation used in the script from which PsyNeuLink is run and/or any
+imported modules in that script. Each PsyNeuLink Component that relies on randomization has its won `seed` `Parameter`
+that can be used to explicitly seed its PRNG (see `below <Composition_Local_Random_Seed>`).  If no seed is specified for
+a Component, it gets its seed from the PsyNeuLink `global seed <Composition_Global_Random_Seed>`. Because PsyNeuLink
+handles randomization internally in this way, the behavior of a Composition is reproducible, and is isolated from any
+calls to python and/or numpy random modules from the script in which the Composition is run, and/or any imported
+modules. Below are details about setting PsyNeuLink global and local seeds.
+
+.. technical_note::
+   To avoid interfering with the internal handling of randomization, `np.random` and python `random` should *NOT*
+   be called inside PsyNeulink code itself.  Rather, a Component's `random_state` `Parameter` should be used, which
+   provides a `numpy.random.RandomState <https://numpy.org/doc/2.2/reference/random/legacy.html>`_ object that is
+   initialized with the seed assigned to the Component; that can then be used to call the desired numpy function
+   (e.g., ``<component>.random_state.normal()`` or ``<component>.random_state.uniform()``) to get a random value.
+
+.. technical_note::
+   PsyNeuLink uses the `Mersenne Twister <https://en.wikipedia.org/wiki/Mersenne_Twister>`_ algorithm
+   for its pseudorandom number generator (PRNG), which is the default PRNG for numpy.
+
+
+.. _Composition_Global_Random_Seed:
+
+**Global random seed.** Calling `set_global_seed()` sets the seed for all Components for which a `local seed
+<Composition_Local_Random_Seed>` has not been specified. This can be used to ensure that, each time the Composition
+is constructed and executed, its Components are assigned the same sequence of random numbers, and therefore any
+results affected by randomization will be the exact same across executions. The call to `set_global_seed()` must be
+made before construction of a Composition to ensure consistency of randomization.
+
+.. _Composition_Local_Random_Seed:
+
+**Local random seeds.** Individual Components that use random values can be assigned their own seed, by specifying
+it in the **random_seed** argument of the Component's constructor, or by assigning a value to its `seed` `Parameter`.
+Components assigned their own seed will not be affected by any calls to the `set_global_seed` function.
 
 .. _Composition_Compilation:
 
