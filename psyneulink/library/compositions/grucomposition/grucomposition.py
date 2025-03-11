@@ -1158,13 +1158,13 @@ class GRUComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _add_pathway_dependency_to_queue(self,
-                                         sender:ProcessingMechanism,
-                                         projection:MappingProjection,
-                                         receiver:ProcessingMechanism,
-                                         dependency_dict:dict,
-                                         queue:deque,
-                                         comp:AutodiffComposition):
+    def _add_dependency(self,
+                        sender:ProcessingMechanism,
+                        projection:MappingProjection,
+                        receiver:ProcessingMechanism,
+                        dependency_dict:dict,
+                        queue:deque,
+                        comp:AutodiffComposition):
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         """
         # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:

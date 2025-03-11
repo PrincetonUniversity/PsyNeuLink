@@ -893,13 +893,9 @@ class AutodiffComposition(Composition):
         IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
         Return a list of all pathways from input_node -> output node
         """
-        # MODIFIED 2/16/25 NEW:
-        # if hasattr(input_node, '_get_pytorch_backprop_pathways'):
-        #     return input_node._get_pytorch_backprop_pathways()
-        # MODIFIED 2/16/25 END
 
         pathways = []  # List of all feedforward pathways from INPUT Node to OUTPUT Node
-        prev = {}      # Dictionary of previous component for each component in every pathway
+        dependency_dict = {}      # Dictionary of previous component for each component in every pathway
         queue = deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
         # MODIFIED 3/5/25 NEW:
@@ -914,17 +910,17 @@ class AutodiffComposition(Composition):
         #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
         #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
         def create_pathway(current_comp, node)->list:
-            """Create pathway starting with node (presumably an output NODE) and working backward via prev"""
+            """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
             pathway = []
             entry = node
-            while entry in prev:
+            while entry in dependency_dict:
                 # MODIFIED 2/22/25 NEW:
                 # Prevent cycle from recurrent pathway
                 if entry in pathway:
                     break
                 # MODIFIED 2/22/25 END
                 pathway.insert(0, entry)
-                entry = prev[entry]
+                entry = dependency_dict[entry]
             pathway.insert(0, entry)
             # Only consider pathways with 3 or more components (input -> projection -> ... -> output)
             #    since can't learn on only one mechanism (len==1)
@@ -991,8 +987,8 @@ class AutodiffComposition(Composition):
                                 assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                     f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
                                 # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            rcvr_comp._add_pathway_dependency_to_queue(node, efferent_proj, nested_rcvr,
-                                                                       prev, queue, rcvr_comp)
+                            rcvr_comp._add_dependency(node, efferent_proj, nested_rcvr,
+                                                      dependency_dict, queue, rcvr_comp)
 
                     # rcvr is Nested Composition output_CIM:
                     # Projection is to output_CIM exiting from a nested Composition
@@ -1021,8 +1017,8 @@ class AutodiffComposition(Composition):
                                     _, rcvr, rcvr_comp = receiver
                                     assert rcvr_comp is not current_comp
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                                rcvr_comp._add_pathway_dependency_to_queue(node, efferent_proj, rcvr,
-                                                                           prev, queue, rcvr_comp)
+                                rcvr_comp._add_dependency(node, efferent_proj, rcvr,
+                                                          dependency_dict, queue, rcvr_comp)
                         else:
                             pathways.append(create_pathway(current_comp, node))
 
@@ -1043,11 +1039,11 @@ class AutodiffComposition(Composition):
                 else:
                     if rcvr in current_comp.nodes:
                         # rcvr is still in nested Composition, so keep traversing that
-                        current_comp._add_pathway_dependency_to_queue(node, efferent_proj, rcvr, prev, queue, current_comp)
+                        current_comp._add_dependency(node, efferent_proj, rcvr, dependency_dict, queue, current_comp)
                         continue
                     elif rcvr in self.nodes:
                         # rcvr is in outer Composition (presumably a direct Pytorch Projection out of nested comp)
-                        self._add_pathway_dependency_to_queue(node, efferent_proj, rcvr, prev, queue, self)
+                        self._add_dependency(node, efferent_proj, rcvr, dependency_dict, queue, self)
                         continue
                     else:
                         assert False, \
@@ -1055,13 +1051,13 @@ class AutodiffComposition(Composition):
 
         return pathways
 
-    def _add_pathway_dependency_to_queue(self,
-                                         sender:ProcessingMechanism,
-                                         projection:MappingProjection,
-                                         receiver:ProcessingMechanism,
-                                         dependency_dict:dict,
-                                         queue:deque,
-                                         comp:Composition):
+    def _add_dependency(self,
+                        sender:ProcessingMechanism,
+                        projection:MappingProjection,
+                        receiver:ProcessingMechanism,
+                        dependency_dict:dict,
+                        queue:deque,
+                        comp:Composition):
         """Append dependencies to dependency list, and next node to queue used in _get_pytorch_backprop_pathway()
         This uses the Projection from node to receiver to implement the relevant dependencies for construcing the
         pathway;  however, this can be overridden by a subclass of Autodiff to implement a custom pathway
@@ -1167,7 +1163,9 @@ class AutodiffComposition(Composition):
         assert execution_mode is pnlvm.ExecutionMode.PyTorch
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
-        # --------- Do forward computation on current inputs -------------------------------------------------
+
+        # --------- Get current values of nodes  -------------------------------------------------
+
         #   should return 2d values for each component
 
         # Get value of INPUT nodes for current trial
@@ -1181,8 +1179,6 @@ class AutodiffComposition(Composition):
         # Get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
 
-        # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
-
         # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
                                             if k in self.outputs_to_targets_map}
@@ -1195,14 +1191,19 @@ class AutodiffComposition(Composition):
             else:
                 # It's  a list, of lists, of torch tensors because it is ragged
                 num_outputs = len(targets[component][0])
-                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i] for batch_elem in target]) for i in range(num_outputs)]
+                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i]
+                                                                    for batch_elem in target])
+                                                       for i in range(num_outputs)]
 
-        # Get value of TARGET nodes for trained OUTPUT nodes
+        # Map value of TARGET nodes to trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
         for trained_output, target in self.outputs_to_targets_map.items():
             curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
 
-        # Calculate and track the loss over the trained OUTPUT nodes
+        # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
+
+        # Calculate and track the loss over the trained OUTPUT nodes:
+        #   curr_target_tensors_for_trained_outputs compared against curr_tensors_for_trained_outputs
         for component, outputs in curr_tensors_for_trained_outputs.items():
             trial_loss = 0
             targets = curr_target_tensors_for_trained_outputs[component]
@@ -1223,7 +1224,7 @@ class AutodiffComposition(Composition):
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
 
-        # --------- Return the values of OUTPUT of trained nodes and all nodes  ---------------------------------------
+        # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
         # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
 
