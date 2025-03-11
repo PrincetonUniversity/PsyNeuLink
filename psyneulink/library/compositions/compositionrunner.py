@@ -129,7 +129,32 @@ class CompositionRunner():
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
 
-        inputs = self.convert_input_to_arrays(inputs, execution_mode)
+        if isinstance(inputs, dict):
+            inputs = self.convert_input_to_arrays(inputs, execution_mode)
+        elif isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs):
+            inputs = [self.convert_input_to_arrays(i, execution_mode) for i in inputs]
+
+            import torch
+            from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+
+            # Now, we need to pad the sequences to the same length
+            packed_inputs = {}
+            for k in inputs[0].keys():
+
+                # Get the length of each sequence for each trial for this input
+                lengths = torch.tensor([trial_inp[k].shape[0] for trial_inp in inputs])
+
+                # If all the lengths are the same, just stack them into one tensor, no need to pad
+                if all(length == lengths[0] for length in lengths):
+                    packed_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
+
+                # Otherwise, we will make a packed padded sequence
+                else:
+                    padded_input = pad_sequence([trial_inp[k] for trial_inp in inputs], batch_first=True)
+                    packed_inputs[k] = padded_input
+                    # packed_inputs[k] = pack_padded_sequence(padded_input, lengths, batch_first=True, enforce_sorted=False)
+
+            inputs = packed_inputs
 
         # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -332,7 +357,8 @@ class CompositionRunner():
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
-        if isinstance(inputs, dict) or callable(inputs):
+        if (isinstance(inputs, dict) or callable(inputs) or
+                (isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs))):
             inputs = [inputs]
 
         if isgeneratorfunction(targets):
@@ -359,10 +385,14 @@ class CompositionRunner():
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
-                                                                                  targets=stim_target,
-                                                                                  execution_mode=execution_mode,
-                                                                                  context=context)
+            # By-pass parse learning spec if we are dealing with sequences for now
+            if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
+                stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
+                                                                                      targets=stim_target,
+                                                                                      execution_mode=execution_mode)
+            else:
+                num_trials = len(stim_input)
+
             if num_trials is None:
                 num_trials = num_input_trials
 
