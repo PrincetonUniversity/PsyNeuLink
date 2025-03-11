@@ -1412,7 +1412,7 @@ class AutodiffComposition(Composition):
         """Set weights for specified Projection."""
         pnl_wt_matrix = pnl_proj.parameters.matrix._get(context)
         assert weights.shape == pnl_wt_matrix.shape, \
-            (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
+            (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
              f"Specified weights do not match required shape ({pnl_proj.ma.shape}).)")
         pnl_proj.parameters.matrix._set(weights, context)
         pnl_proj.parameter_ports['matrix'].parameters.value._set(weights, context)

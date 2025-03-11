@@ -1096,7 +1096,7 @@ class GRUComposition(AutodiffComposition):
                        [self.wts_ir, self.wts_iu, self.wts_in, self.wts_hr, self.wts_hu, self.wts_hn]):
             matrix = proj.parameters.matrix._get(context)
             assert wts.shape == matrix.shape, \
-                (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
+                (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
                  f"({wts.shape}) does not match required shape ({matrix.shape}).)")
             proj.parameters.matrix._set(wts, context)
             proj.parameter_ports['matrix'].parameters.value._set(wts, context)
