@@ -465,14 +465,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # must iterate over at least 1d input per port
         variable = torch.atleast_2d(variable)
 
-        # MODIFIED 3/9/25 OLD:
-        # res = []
-        # for i in range(len(self.input_ports)):
-        #     v = variable[:, i, ...] # Get the input for the port for all items in the batch
-        #     res.append(v)
-        # MODIFIED 3/9/25 NEW:
         res = [variable[:, 0, ...]] # Get the input for the port for all items in the batch
-        # MODIFIED 3/9/25 END
 
         try:
             res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
@@ -481,7 +474,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             batch_size = res[0].shape[0]
             res = [[inp[b] for inp in res] for b in range(batch_size)]
         return res
-
 
     def log_value(self):
         # FIX: LOG HIDDEN STATE OF COMPOSITION MECHANISM
