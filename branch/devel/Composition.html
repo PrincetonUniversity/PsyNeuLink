@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.16.1.0+28.gcbfc6f5b2 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.16.1.0+29.gf85fe8af8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+28
+                  0.16.1.0+29
                 </div>
               
             
@@ -343,6 +343,7 @@
 <li><p><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-timing"><span class="std std-ref">Timing</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Stateful Parameters</span></a></p></li>
+<li><p><a class="reference internal" href="#composition-randomization"><span class="std std-ref">Randomization</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></p></li>
 </ul>
 </dd>
@@ -1347,6 +1348,7 @@ model) are not accessible to other Components in the Composition (e.g., as a sou
 <li><p><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-timing"><span class="std std-ref">Timing</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Stateful Parameters</span></a></p></li>
+<li><p><a class="reference internal" href="#composition-randomization"><span class="std std-ref">Randomization</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></p></li>
 </ul>
 </dd>
@@ -1636,6 +1638,7 @@ directly to the Composition.</p>
 <li><p><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-timing"><span class="std std-ref">Timing</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Stateful Parameters</span></a></p></li>
+<li><p><a class="reference internal" href="#composition-randomization"><span class="std std-ref">Randomization</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></p></li>
 </ul>
 </div></blockquote>
@@ -1929,6 +1932,35 @@ parameter will be used.</p>
 </li>
 </ul>
 </div></blockquote>
+</section>
+<section id="randomization">
+<span id="composition-randomization"></span><h4><em>Randomization</em><a class="headerlink" href="#randomization" title="Permalink to this headline">¶</a></h4>
+<p>Each PsyNeuLink Component that relies on randomization uses a private instance of a <a class="reference external" href="https://en.wikipedia.org/wiki/Pseudorandom_number_generator#:~:text=A%20pseudorandom%20number%20generator%20(PRNG,of%20sequences%20of%20random%20numbers">pseudorandom number generator</a> (PRNG). This makes random sequences within each Component independent of
+one another, and independent of any random number generation used in the script from which PsyNeuLink is run and/or any
+imported modules in that script. Each PsyNeuLink Component that relies on randomization has its won <code class="xref any docutils literal notranslate"><span class="pre">seed</span></code> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>
+that can be used to explicitly seed its PRNG (see <a class="reference internal" href="#composition-local-random-seed"><span class="std std-ref">below</span></a>).  If no seed is specified for
+a Component, it gets its seed from the PsyNeuLink <a class="reference internal" href="#composition-global-random-seed"><span class="std std-ref">global seed</span></a>. Because PsyNeuLink
+handles randomization internally in this way, the behavior of a Composition is reproducible, and is isolated from any
+calls to python and/or numpy random modules from the script in which the Composition is run, and/or any imported
+modules. Below are details about setting PsyNeuLink global and local seeds.</p>
+<div class="technical-note docutils container">
+<p>To avoid interfering with the internal handling of randomization, <code class="xref any docutils literal notranslate"><span class="pre">np.random</span></code> and python <code class="xref any docutils literal notranslate"><span class="pre">random</span></code> should <em>NOT</em>
+be called inside PsyNeulink code itself.  Rather, a Component’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.random_state" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.random_state"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">random_state</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> should be used, which
+provides a <a class="reference external" href="https://numpy.org/doc/2.2/reference/random/legacy.html">numpy.random.RandomState</a> object that is
+initialized with the seed assigned to the Component; that can then be used to call the desired numpy function
+(e.g., <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;.random_state.normal()</span></code> or <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;.random_state.uniform()</span></code>) to get a random value.</p>
+</div>
+<div class="technical-note docutils container">
+<p>PsyNeuLink uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Mersenne_Twister">Mersenne Twister</a> algorithm
+for its pseudorandom number generator (PRNG), which is the default PRNG for numpy.</p>
+</div>
+<p id="composition-global-random-seed"><strong>Global random seed.</strong> Calling <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.set_global_seed" title="psyneulink.core.globals.utilities.set_global_seed"><code class="xref any py py-func docutils literal notranslate"><span class="pre">set_global_seed()</span></code></a> sets the seed for all Components for which a <a class="reference internal" href="#composition-local-random-seed"><span class="std std-ref">local seed</span></a> has not been specified. This can be used to ensure that, each time the Composition
+is constructed and executed, its Components are assigned the same sequence of random numbers, and therefore any
+results affected by randomization will be the exact same across executions. The call to <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.set_global_seed" title="psyneulink.core.globals.utilities.set_global_seed"><code class="xref any py py-func docutils literal notranslate"><span class="pre">set_global_seed()</span></code></a> must be
+made before construction of a Composition to ensure consistency of randomization.</p>
+<p id="composition-local-random-seed"><strong>Local random seeds.</strong> Individual Components that use random values can be assigned their own seed, by specifying
+it in the <strong>random_seed</strong> argument of the Component’s constructor, or by assigning a value to its <code class="xref any docutils literal notranslate"><span class="pre">seed</span></code> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>.
+Components assigned their own seed will not be affected by any calls to the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.set_global_seed" title="psyneulink.core.globals.utilities.set_global_seed"><code class="xref any py py-func docutils literal notranslate"><span class="pre">set_global_seed</span></code></a> function.</p>
 </section>
 <section id="compilation">
 <span id="composition-compilation"></span><h4><em>Compilation</em><a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h4>
@@ -5971,6 +6003,7 @@ This role cannot be modified programmatically.</p>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
 <li><a class="reference internal" href="#timing"><em>Timing</em></a></li>
 <li><a class="reference internal" href="#resetting-stateful-parameters"><em>Resetting Stateful Parameters</em></a></li>
+<li><a class="reference internal" href="#randomization"><em>Randomization</em></a></li>
 <li><a class="reference internal" href="#compilation"><em>Compilation</em></a></li>
 </ul>
 </li>

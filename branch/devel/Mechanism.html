@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.16.1.0+28.gcbfc6f5b2 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.16.1.0+29.gf85fe8af8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+28
+                  0.16.1.0+29
                 </div>
               
             
@@ -694,7 +694,7 @@ the Mechanism</p></li>
 <li><p><a class="reference internal" href="#id12" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.receivers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receivers</span></code></a> – all of the Mechanisms that receive a Projection from the Mechanism</p></li>
 </ul>
 </div></blockquote>
-<p>Each of these is a <code class="xref any docutils literal notranslate"><span class="pre">ContentAddressableList</span></code>, which means that the names of the Components in each list can be listed by
+<p>Each of these is a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContentAddressableList</span></code></a>, which means that the names of the Components in each list can be listed by
 appending <code class="docutils literal notranslate"><span class="pre">.names</span></code> to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
 <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> can be accessed by <code class="docutils literal notranslate"><span class="pre">my_mech.receivers.names</span></code>.</p>
 </section>
@@ -1091,7 +1091,7 @@ Mechanism’s <a class="reference internal" href="#psyneulink.core.components.me
 the Mechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> (i.e., the one in the its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_port</span></code></a> attribute).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList[str, <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a>[str, <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1201,7 +1201,7 @@ the expected <a class="reference internal" href="Projection.html#psyneulink.core
 (see <a class="reference internal" href="#mechanism-parameterports"><span class="std std-ref">ParameterPorts and Parameters</span></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList[str, <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a>[str, <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1272,7 +1272,7 @@ of its <a class="reference internal" href="#psyneulink.core.components.mechanism
 the Mechanism’s <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> (i.e., the one in the its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_port</span></code></a> attribute).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList[str, <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a>[str, <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1362,7 +1362,7 @@ constructor, and to reference it in Mechanism’s list of <a class="reference in
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1377,7 +1377,7 @@ the <a class="reference internal" href="#id7" title="psyneulink.core.components.
 and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1391,7 +1391,7 @@ and the <a class="reference internal" href="#id7" title="psyneulink.core.compone
 <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.,</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1403,7 +1403,7 @@ and the <a class="reference internal" href="#id7" title="psyneulink.core.compone
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attributes of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1415,7 +1415,7 @@ and the <a class="reference internal" href="#id7" title="psyneulink.core.compone
 <a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attributes of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, <code class="xref any docutils literal notranslate"><span class="pre">parameter_ports</span></code>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1426,7 +1426,7 @@ and the <a class="reference internal" href="#id7" title="psyneulink.core.compone
 <dd><p>a list of all of the Mechanism’s efferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, composed from the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.efferents" title="psyneulink.core.components.ports.port.Port_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attributes of all of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1440,7 +1440,7 @@ its <a class="reference internal" href="#id8" title="psyneulink.core.components.
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (also see <a class="reference internal" href="#id13" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.modulators"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulators</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1451,7 +1451,7 @@ its <a class="reference internal" href="#id8" title="psyneulink.core.components.
 <dd><p>a list of all of the <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">AdapativeMechanisms</span></a> that send <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> to the Mechanism (i.e., the senders of its <a class="reference internal" href="#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> (also see <a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.senders"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1463,7 +1463,7 @@ its <a class="reference internal" href="#id8" title="psyneulink.core.components.
 the receivers of its <a class="reference internal" href="#id9" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
