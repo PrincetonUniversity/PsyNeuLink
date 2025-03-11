@@ -1415,6 +1415,7 @@ class AutodiffComposition(Composition):
             (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
              f"Specified weights do not match required shape ({pnl_proj.ma.shape}).)")
         pnl_proj.parameters.matrix._set(weights, context)
+        pnl_proj.parameter_ports['matrix'].parameters.value._set(weights, context)
 
     @handle_external_context()
     def learn(self,

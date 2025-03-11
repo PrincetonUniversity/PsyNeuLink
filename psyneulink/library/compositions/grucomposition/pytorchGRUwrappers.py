@@ -334,7 +334,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
           - reformat biases as 2d
         Return formatted tensors, which are used:
          - in set_weights_from_torch_gru(), where they are converted to numpy arrays
-         - for or forward computation in pytorchGRUwrappers._copy_internal_nodes_values_to_pnl()
+         - for forward computation in pytorchGRUwrappers._copy_internal_nodes_values_to_pnl()
         """
         hid_len = torch_gru.hidden_size
         z_idx = hid_len
@@ -355,25 +355,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         if torch_gru.bias:
             # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
             b_ih = torch_gru_weights['bias_ih_l0']
-            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy(
-
-            ).copy()
-            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu(
-
-            ).numpy().copy()
-            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy(
-
-            ).copy()
+            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             b_hh = torch_gru_weights['bias_hh_l0']
-            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy(
-
-            ).copy()
-            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu(
-
-            ).numpy().copy()
-            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy(
-
-            ).copy()
+            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
 

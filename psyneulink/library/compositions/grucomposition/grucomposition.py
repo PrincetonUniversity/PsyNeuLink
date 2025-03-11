@@ -1092,28 +1092,25 @@ class GRUComposition(AutodiffComposition):
         # MODIFIED 2/16/25 NEW:
         # FIX: CHECK IF TORCH GRU EXISTS YET (CHECK FOR pytorch_representation != None; i.e., LEARNING HAS OCCURRED;
         #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
-        FROM_ARG = 0
-        PNL = 1
-        for wts in zip(weights,
-                       [self.wts_ir.parameters.matrix, self.wts_iu.parameters.matrix, self.wts_in.parameters.matrix,
-                        self.wts_hr.parameters.matrix, self.wts_hu.parameters.matrix, self.wts_hn.parameters.matrix]):
-            assert wts[FROM_ARG].shape == wts[PNL]._get(context).shape, \
+        for wts, proj in zip(weights,
+                       [self.wts_ir, self.wts_iu, self.wts_in, self.wts_hr, self.wts_hu, self.wts_hn]):
+            matrix = proj.parameters.matrix._get(context)
+            assert wts.shape == matrix.shape, \
                 (f"PROGRAM ERROR: Shape of weights  in 'weights' arg of '{self.name}.set_weights' "
-                 f"({wts[FROM_ARG].shape}) does not match required shape ({wts[PNL].shape}).)")
-            wts[PNL]._set(wts[FROM_ARG], context)
-            # wts[PNL].parameter_ports['matrix'].parameters.value._set(wts[FROM_ARG], context)
+                 f"({wts.shape}) does not match required shape ({matrix.shape}).)")
+            proj.parameters.matrix._set(wts, context)
+            proj.parameter_ports['matrix'].parameters.value._set(wts, context)
+        # MODIFIED 3/11/25 END
 
         if biases:
-            for b in zip(biases, [self.bias_ir.parameters.matrix,
-                                  self.bias_iu.parameters.matrix,
-                                  self.bias_in.parameters.matrix,
-                                  self.bias_hr.parameters.matrix,
-                                  self.bias_hu.parameters.matrix,
-                                  self.bias_hn.parameters.matrix]):
-                assert b[FROM_ARG].shape == b[PNL]._get(context).shape, \
+            for torch_bias, pnl_bias in zip(biases, [self.bias_ir, self.bias_iu, self.bias_in,
+                                                     self.bias_hr, self.bias_hu, self.bias_hn]):
+                matrix = pnl_bias.parameters.matrix._get(context)
+                assert torch_bias.shape == matrix.shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
-                     f"({b[FROM_ARG].shape}) does not match required shape ({b[PNL].get(context)[0].shape}).")
-                b[PNL]._set(b[FROM_ARG], context)
+                     f"({torch_bias.shape}) does not match required shape ({matrix.shape}).")
+                pnl_bias.parameters.matrix._set(torch_bias, context)
+                pnl_bias.parameter_ports['matrix'].parameters.value._set(torch_bias, context)
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
