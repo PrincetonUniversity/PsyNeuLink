@@ -15,15 +15,13 @@ import graph_scheduler
 
 from typing import Union, Optional, Literal
 
-from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.utilities import convert_to_list
-from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH, \
-    MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
+from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
@@ -115,8 +113,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              rcvr_mech,
                              nested_port,
                              nested_mech,
-                             composition,
-                             pytorch_wrapper,
+                             outer_comp,
+                             outer_comp_pytorch_rep,
                              access,
                              context)->tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
@@ -129,7 +127,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
-            sndr_mech_wrapper = pytorch_wrapper._nodes_map[sndr_mech]
+            sndr_mech_wrapper = outer_comp_pytorch_rep._nodes_map[sndr_mech]
             rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             try:
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
@@ -143,7 +141,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
-            rcvr_mech_wrapper = pytorch_wrapper._nodes_map[rcvr_mech]
+            rcvr_mech_wrapper = outer_comp_pytorch_rep._nodes_map[rcvr_mech]
             try:
                 direct_proj = MappingProjection(name="Projection from GRU COMP",
                                                 sender=self._composition.gru_mech,
@@ -158,21 +156,19 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         if direct_proj:
-            component_idx = list(composition._inner_projections).index(pnl_proj)
+            component_idx = list(outer_comp._inner_projections).index(pnl_proj)
             proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                     pnl_proj=pnl_proj,
                                                     component_idx=component_idx,
                                                     sender_port_idx=sender_port_idx,
-                                                    use=[LEARNING, SHOW_PYTORCH],
+                                                    use=[SHOW_PYTORCH],
                                                     device=self.device,
                                                     sender_wrapper=sndr_mech_wrapper,
                                                     receiver_wrapper=rcvr_mech_wrapper,
                                                     context=context)
-            self._projection_wrappers.append(proj_wrapper)
-            self._projection_map[direct_proj] = proj_wrapper
-
-        if direct_proj not in self._composition._pytorch_projections:
-            self._composition._pytorch_projections.append(direct_proj)
+            outer_comp_pytorch_rep._projection_wrappers.append(proj_wrapper)
+            outer_comp_pytorch_rep._projection_map[direct_proj] = proj_wrapper
+            outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 

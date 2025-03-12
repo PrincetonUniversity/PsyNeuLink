@@ -449,8 +449,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              rcvr_mech,
                              nested_port,
                              nested_mech,
-                             composition,
-                             pytorch_wrapper,
+                             outer_comp,
+                             outer_comp_pytorch_rep,
                              access,
                              context)->tuple:
         proj_sndr_wrapper = None
@@ -477,6 +477,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                 sender=projection.sender,
                                                 receiver=destination_rcvr_port,
                                                 learnable=projection.learnable)
+            except DuplicateProjectionError:
+                direct_proj = [proj for proj in projection.sender.efferents
+                               if proj.receiver is destination_rcvr_port][0]
+            if direct_proj not in self._projection_wrappers:
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
                                                         component_idx=None,    # These are not needed since the wrapper
@@ -486,11 +490,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
                                                         context=context)
-                self._projection_wrappers.append(proj_wrapper)
-                self._projection_map[direct_proj] = proj_wrapper
-                self._composition._pytorch_projections.append(direct_proj)
-            except DuplicateProjectionError:
-                pass
+                outer_comp_pytorch_rep._projection_wrappers.append(proj_wrapper)
+                outer_comp_pytorch_rep._projection_map[direct_proj] = proj_wrapper
+                outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
 
         elif access == EXIT_NESTED:
             proj_sndr_wrapper = self._nodes_map[nested_mech]
@@ -514,6 +516,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
                                                 learnable=projection.learnable)
+            except DuplicateProjectionError:
+                direct_proj = [proj for proj in projection.receiver.path_afferents
+                               if proj.sender is source_sndr_port][0]
+            if direct_proj not in self._projection_wrappers:
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
                                                         component_idx=None,    # These are not needed since the wrapper
@@ -523,11 +529,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
                                                         context=context)
-                self._projection_wrappers.append(proj_wrapper)
-                self._projection_map[direct_proj] = proj_wrapper
-
-            except DuplicateProjectionError:
-                pass
+                outer_comp_pytorch_rep._projection_wrappers.append(proj_wrapper)
+                outer_comp_pytorch_rep._projection_map[direct_proj] = proj_wrapper
+                outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
 
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"

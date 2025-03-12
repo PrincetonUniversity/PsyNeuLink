@@ -19,9 +19,6 @@ from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SHOW_PYTORCH, PNL
 
-__all__ = ['SHOW_PYTORCH']
-
-SHOW_PYTORCH = 'show_pytorch'
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
 
@@ -45,7 +42,7 @@ class PytorchShowGraph(ShowGraph):
     """
 
     def __init__(self, *args, **kwargs):
-        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
+        self.show_pytorch = kwargs.pop('show_pytorch', False)
         super().__init__(*args, **kwargs)
 
     @beartype
@@ -59,7 +56,7 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
-        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
+        self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
             self.pytorch_rep = self.composition._build_pytorch_representation(context)
