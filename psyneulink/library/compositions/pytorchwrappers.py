@@ -104,14 +104,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
          * Mechanisms:
            - used in Python execution but not Pytorch execution: *SYNCH*
            - used in PyTorch execution but not Python execution: *LEARNING*, *SHOW_PYTORCH*
+           - used for both Python and Pytorch execution: *LEARNING*, *SYNCH*, *SHOW_PYTORCH*
 
          * Projections:
-           - among Mechanisms within a given Composition: *LEARNING*, *SYNCH*
+           - among (non-CIM) Mechanisms within the same Composition: same as Mechanisms (see above)
            - to an input_CIM of a nested Composition:  *LEARNING*, *SYNCH*, *SHOW_PYTORCH*
-           - from an input_CIM to Mechanisms within the Composition: None
-           - to an output_CIM from Mechanisms within the Composition: None
-           - from an output_CIM of a nested Composition:  *LEARNING*, *SYNCH*
-           - directly between (to/from) a nested and outer Composition:  *SHOW_PYTORCH*
+           - from an input_CIM: None
+           - to an output_CIM: None
+           - from an output_CIM:  *LEARNING*, *SYNCH*
+           - directly between (to/from) a nested and outer Composition: *SHOW_PYTORCH*
 
     2) Handle coordination of passing data and outcomes back to PsyNeuLink objects, handled by two main methods:
 
@@ -454,7 +455,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              context)->tuple:
         proj_sndr_wrapper = None
         proj_rcvr_wrapper = None
-        use = [LEARNING, SYNCH, SHOW_PYTORCH]
+        use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
             proj_rcvr_wrapper = self._nodes_map[nested_mech]
