@@ -607,6 +607,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
 
+        nested_node_params = [list(node.params)
+                              for node in self._wrapped_nodes
+                              if hasattr(node, 'params') and isinstance(node.params, torch.nn.ParameterList)]
+        for item in nested_node_params:
+            for item_small in item:
+                self.params.append(item_small)
+
+        assert True
+
+
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         args = [ctx.get_state_struct_type(self._composition).as_pointer(),

@@ -172,6 +172,21 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
+
+    def _regenerate_paramlist(self):
+        """Add Projection matrices to Pytorch Module's parameter list"""
+        self.params = torch.nn.ParameterList()
+        for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
+            self.params.append(proj_wrapper.matrix)
+
+        nested_node_params = [list(node.function.function.parameters())
+                              for node in self._wrapped_nodes
+                              if hasattr(node, 'function') and isinstance(node.function.function, torch.nn.Module)]
+        for item in nested_node_params:
+            for item_small in item:
+                self.params.append(item_small)
+        assert True
+
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:
         """Forward method of the model for PyTorch modes
