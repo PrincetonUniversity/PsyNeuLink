@@ -22,7 +22,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.utilities import convert_to_list
-from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_GRAPH, SYNCH, \
+from psyneulink.core.globals.keywords import ALL, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH, \
     MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.log import LogCondition
 
@@ -51,7 +51,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         pytorch_node = PytorchGRUMechanismWrapper(mechanism=node,
                                                   composition_wrapper=self,
                                                   component_idx=0,
-                                                  use=[LEARNING, SHOW_GRAPH],
+                                                  use=[LEARNING, SHOW_PYTORCH],
                                                   device=device,
                                                   context=context)
         self.gru_pytorch_node = pytorch_node
@@ -125,7 +125,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # sndr_mech_wrapper = None
         # rcvr_mech_wrapper = None
         direct_proj = None
-        # use = [LEARNING, SYNCH, SHOW_GRAPH]
+        # use = [LEARNING, SYNCH, SHOW_PYTORCH]
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
@@ -163,7 +163,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                     pnl_proj=pnl_proj,
                                                     component_idx=component_idx,
                                                     sender_port_idx=sender_port_idx,
-                                                    use=[LEARNING, SHOW_GRAPH],
+                                                    use=[LEARNING, SHOW_PYTORCH],
                                                     device=self.device,
                                                     sender_wrapper=sndr_mech_wrapper,
                                                     receiver_wrapper=rcvr_mech_wrapper,
@@ -480,7 +480,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     def __init__(self,
                  projection:MappingProjection,
                  torch_parameter:tuple,
-                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_GRAPH]],
+                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],
                  device:str):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
         # GRUComposition Projection being wrapped:
