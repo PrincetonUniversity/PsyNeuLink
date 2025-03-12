@@ -100,10 +100,10 @@ class TestExecution:
                 self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
 
             def forward(self, x, hidden):
-                x = self.input(x)
-                x, hidden = self.gru(x, hidden)
-                x = self.output(x)
-                return x, hidden
+                after_input = self.input(x)
+                after_gru, hidden = self.gru(after_input, hidden)
+                after_output = self.output(after_gru)
+                return after_output, hidden
 
         torch_model = TorchModel()
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
@@ -137,9 +137,11 @@ class TestExecution:
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs})
+        totals = [i.sum().item() for i in list(autodiff_comp._build_pytorch_representation().parameters())]
         autodiff_result_after_learning = autodiff_comp.learn(inputs={input_mech:inputs,
                                                                      target_mechs[0]: targets},
                                                              execution_mode=pnl.ExecutionMode.PyTorch)
+        new_totals = [i.sum().item() for i in list(autodiff_comp.pytorch_representation.parameters())]
 
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
                                    autodiff_result_before_learning, atol=1e-6)

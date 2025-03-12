@@ -1164,7 +1164,6 @@ class AutodiffComposition(Composition):
         assert execution_mode is pnlvm.ExecutionMode.PyTorch
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
-
         # --------- Get current values of nodes  -------------------------------------------------
 
         #   should return 2d values for each component
@@ -1177,7 +1176,7 @@ class AutodiffComposition(Composition):
             else:
                 curr_tensors_for_inputs[component] = inputs[component]
 
-        # Get value of all OUTPUT nodes for current trial
+        # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, context)
 
         # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
@@ -1316,6 +1315,7 @@ class AutodiffComposition(Composition):
         minibatch_loss.backward(retain_graph=not self.force_no_retain_graph)
         # Update weights and copy to PNL
         optimizer.step()
+        assert True
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:

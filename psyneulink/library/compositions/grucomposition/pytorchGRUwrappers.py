@@ -172,7 +172,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
-
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = torch.nn.ParameterList()

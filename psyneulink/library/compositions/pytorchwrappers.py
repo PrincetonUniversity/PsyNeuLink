@@ -865,6 +865,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     node.forward(inputs=None, optimization_num=optimization_num, context=context)
                     continue
 
+                # Get input(s) to node
                 elif node._is_input or node._is_bias:
                     # node is an INPUT to Composition
                     if node.mechanism in inputs:
@@ -931,6 +932,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     variable = node.collect_afferents(batch_size=self._batch_size)
                 variable = node.execute_input_ports(variable)
 
+                # Node is excluded from gradient calculations, so cache for later execution
                 if node.exclude_from_gradient_calc:
                     if node.exclude_from_gradient_calc == AFTER:
                         # Cache variable for later exce execution
