@@ -107,37 +107,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.copy_weights_to_torch_gru(context)
 
     def _instantiate_execution_sets(self, composition, execution_context, base_context):
-    #     try:
-    #         composition.scheduler._init_counts(execution_id=execution_context.execution_id,
-    #                                            base_execution_id=base_context.execution_id)
-    #     except graph_scheduler.SchedulerError:
-    #         # called from LLVM, no base context is provided
-    #         composition.scheduler._init_counts(execution_id=execution_context.execution_id)
-    #
-    #     # Setup execution sets
-    #     # 1) Remove all learning-specific nodes
-    #     self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING))
-    #                            for x in composition.scheduler.run(context=execution_context)]
-    #     # 2) Convert to pytorchcomponent representation
-    #     self.execution_sets = [{self._nodes_map[comp] for comp in s if comp in self._nodes_map}
-    #                            for s in self.execution_sets]
-    #     # 3) Remove empty execution sets
-    #     self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
-    #
-    #     # Flattening for forward() and AutodiffComposition.do_gradient_optimization
-    #
-    #     # Flatten nested execution sets:
-    #     nested_execution_sets = {}
-    #     for exec_set in self.execution_sets:
-    #         for node in exec_set:
-    #             if isinstance(node, PytorchCompositionWrapper):
-    #                 nested_execution_sets[node] = node.execution_sets
-    #     for node, exec_sets in nested_execution_sets.items():
-    #         index = self.execution_sets.index({node})
-    #         # Remove nested Composition from execution sets
-    #         self.execution_sets.remove({node})
-    #         # Insert nested execution sets in place of nested Composition
-    #         self.execution_sets[index:index] = exec_sets
         self.execution_sets = [{self.gru_pytorch_node}]
 
     def _flatten_for_pytorch(self,
@@ -147,16 +116,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              nested_port,
                              nested_mech,
                              composition,
+                             pytorch_wrapper,
                              access,
                              context)->tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
         Replace GRUComposition's nodes with gru_mech and projections to and from it."""
 
-        sndr_mech_wrapper = None
-        rcvr_mech_wrapper = None
+        # sndr_mech_wrapper = None
+        # rcvr_mech_wrapper = None
         direct_proj = None
+        # use = [LEARNING, SYNCH, SHOW_GRAPH]
+        use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
+            sndr_mech_wrapper = pytorch_wrapper._nodes_map[sndr_mech]
             rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             try:
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
@@ -165,12 +138,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                              learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
                 direct_proj = self._composition.gru_mech.afferents[0]
-                sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+            rcvr_mech_wrapper = pytorch_wrapper._nodes_map[rcvr_mech]
             try:
                 direct_proj = MappingProjection(name="Projection from GRU COMP",
                                                 sender=self._composition.gru_mech,
@@ -178,7 +151,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
                 direct_proj = self._composition.gru_mech.efferents[0]
-                rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
             # gru_mech has only one output_port
             sender_port_idx = 0
 
@@ -201,8 +173,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         if direct_proj not in self._composition._pytorch_projections:
             self._composition._pytorch_projections.append(direct_proj)
-        # return direct_proj, sndr_mech_wrapper, rcvr_mech_wrapper
-        return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper
+
+        return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, context=None)->dict:

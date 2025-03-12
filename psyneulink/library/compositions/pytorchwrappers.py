@@ -334,9 +334,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
-                pnl_proj, proj_sndr, proj_rcvr = self._handle_nested_comp(projection, device, context)
-                # use = [LEARNING, SYNCH, SHOW_GRAPH]
-                use = [LEARNING, SYNCH]
+                pnl_proj, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, device, context)
+                # # use = [LEARNING, SYNCH, SHOW_GRAPH]
+                # use = [LEARNING, SYNCH]
 
             # Projection within composition
             elif all(sndr_and_recvr in self._nodes_map for sndr_and_recvr in {sndr_mech, rcvr_mech}):
@@ -386,21 +386,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[rcvr_mech.composition]
-            proj, proj_sndr_wrapper, proj_rcvr_wrapper = (
+            proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
                 nested_pytorch_comp._flatten_for_pytorch(projection,
                                                          sndr_mech, rcvr_mech,
                                                          nested_rcvr_port,
                                                          nested_rcvr_mech,
                                                          self._composition,
+                                                         self,
                                                          ENTER_NESTED,
                                                          context))
-            # MODIFIED 3/9/25 OLD:
-            # assert proj_sndr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for ENTER_NESTED"
-            # proj_sndr_wrapper = self._nodes_map[sndr_mech]
-            # MODIFIED 3/9/25 NEW:
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self._nodes_map[sndr_mech]
-            # MODIFIED 3/9/25 END
 
         # EXIT_NESTED
         # output_cim of nested Composition:
@@ -414,22 +410,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 sndr_mech._get_source_info_from_output_CIM(projection.sender)
             # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
             nested_pytorch_comp = self._nodes_map[sndr_mech.composition]
-            proj, proj_sndr_wrapper, proj_rcvr_wrapper = (
+            proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
                 nested_pytorch_comp._flatten_for_pytorch(projection,
                                                          sndr_mech, rcvr_mech,
                                                          nested_sndr_port,
                                                          nested_sndr_mech,
                                                          self._composition,
+                                                         self,
                                                          EXIT_NESTED,
                                                          context))
-            # MODIFIED 3/9/25 OLD:
-            # assert proj_rcvr_wrapper is None, "PROGRAM ERROR: proj_rcvr_wrapper should be None for EXIT_NESTED"
-            # proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
-            # MODIFIED 3/9/25 NEW:
             if proj_rcvr_wrapper is None:
                 proj_rcvr_wrapper = self._nodes_map[rcvr_mech]
-            # MODIFIED 3/9/25 END
-        return proj, proj_sndr_wrapper, proj_rcvr_wrapper
+        return proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
     def _flatten_for_pytorch(self,
                              projection,
@@ -438,10 +430,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              nested_port,
                              nested_mech,
                              composition,
+                             pytorch_wrapper,
                              access,
                              context)->tuple:
         proj_sndr_wrapper = None
         proj_rcvr_wrapper = None
+        use = [LEARNING, SYNCH, SHOW_GRAPH]
 
         if access == ENTER_NESTED:
             proj_rcvr_wrapper = self._nodes_map[nested_mech]
@@ -518,7 +512,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
-        return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper
+        return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
     def _parse_optimizer_params(self, context):
         """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
