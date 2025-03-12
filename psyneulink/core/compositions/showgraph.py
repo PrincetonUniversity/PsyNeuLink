@@ -710,8 +710,6 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
-        from psyneulink.core.compositions.composition import Composition
-
         composition = self.composition
 
         if context.execution_id is None:

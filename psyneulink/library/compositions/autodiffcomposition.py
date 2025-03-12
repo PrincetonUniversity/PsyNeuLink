@@ -880,6 +880,7 @@ class AutodiffComposition(Composition):
         self._analyze_graph()
         return self.learning_components
 
+    @handle_external_context()
     def _get_pytorch_backprop_pathways(self, context)->list:
 
         self._analyze_graph()
@@ -1070,7 +1071,7 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None, refresh=False)->PytorchCompositionWrapper:
+    def _build_pytorch_representation(self, context=None, refresh=None)->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
@@ -1083,9 +1084,8 @@ class AutodiffComposition(Composition):
         # Set up optimizer function
         learning_rate = self._runtime_learning_rate or self.learning_rate
         old_opt = self.parameters.optimizer._get(context)
-        if old_opt is None or refresh:
+        if (old_opt is None or refresh) and refresh is not False:
             self._instantiate_optimizer(refresh, learning_rate, context)
-
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
