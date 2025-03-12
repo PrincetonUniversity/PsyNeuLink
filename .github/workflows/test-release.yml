@@ -193,5 +193,9 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        previous_release=$(gh --repo ${{ github.repository }} release list | head -n 1 | awk '{print $1}')
+        previous_release=$(gh --repo ${{ github.repository }} release list -L 1 | cut -f1)
+        if [[ -z "$previous_release" ]]; then
+          echo "No previous release found"
+          exit 1
+        fi
         gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref_name }} dist/*
