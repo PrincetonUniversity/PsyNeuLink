@@ -163,7 +163,6 @@ class TestExecution:
                 GRU_node_values['UPDATE'] = z_t.detach()
                 GRU_node_values['NEW'] = n_t.detach()
                 GRU_node_values['HIDDEN'] = h_t.detach()
-                assert True
 
         torch_model = TorchModel()
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
@@ -178,23 +177,26 @@ class TestExecution:
         hidden_init = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
         torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
                                                                  hidden_init)
-        # # Compute loss and update weights
-        # torch_optimizer.zero_grad()
-        # torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float32))
-        # torch_loss.backward()
-        # torch_optimizer.step()
-        #
-        # # Get results after learning
-        # torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
-        #                                                         hidden_state)
+        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+                                                                 hidden_state)
+        # Compute loss and update weights
+        torch_optimizer.zero_grad()
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float32))
+        torch_loss.backward()
+        torch_optimizer.step()
+
+        # Get results after learning
+        torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+                                                                hidden_state)
 
         # Set up and run PNL Autodiff model
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
         gru = GRUComposition(name='GRU COMP',
-                             input_size=3, hidden_size=5, bias=True)
+                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
-                                   pathways=[input_mech, gru, output_mech])
+                                   pathways=[input_mech, gru, output_mech],
+                                                learning_rate = LEARNING_RATE)
         autodiff_comp.projections[0].learnable = False
         autodiff_comp.set_weights(autodiff_comp.nodes[0].path_afferents[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
@@ -202,18 +204,18 @@ class TestExecution:
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
         # Execute autodiff without learning
-        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs})
+        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs}, num_trials=2)
         totals = [i.sum().item() for i in list(autodiff_comp._build_pytorch_representation().parameters())]
 
-        # # Execute autodiff with learning
-        # autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
-        #                     execution_mode=pnl.ExecutionMode.PyTorch)
-        # # Get results after learning
-        # autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs})
-        # new_totals = [i.sum().item() for i in list(autodiff_comp.pytorch_representation.parameters())]
+        # Execute autodiff with learning
+        autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
+                            execution_mode=pnl.ExecutionMode.PyTorch)
+        # Get results after learning
+        autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs})
+        new_totals = [i.sum().item() for i in list(autodiff_comp.pytorch_representation.parameters())]
 
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
                                    autodiff_result_before_learning, atol=1e-6)
 
-        # np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-        #                            autodiff_result_after_learning, atol=1e-6)
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   autodiff_result_after_learning, atol=1e-6)
