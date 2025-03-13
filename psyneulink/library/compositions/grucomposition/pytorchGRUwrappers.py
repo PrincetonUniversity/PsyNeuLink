@@ -24,14 +24,10 @@ from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import ALL, CONTEXT, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME', 'GRU_node_values']
+__all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
 
 GRU_NODE_NAME = 'PYTORCH GRU NODE'
 TARGET_NODE_NAME = 'GRU TARGET NODE'
-
-# Dict that holds values of Pytorch GRU module
-GRU_node_values = {}
-
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for GRUComposition as a Pytorch Module
@@ -39,30 +35,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     and the Pytorch GRU Module's parameters, and return its output value.
     """
 
-    torch_dtype = torch.float64
-    numpy_dtype = np.array([10]).dtype
-
-    node_values = {} # Dict that captures computations of torch.GRU by _pytorch_GRU_module_values_hook()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._torch_gru = self._composition.gru_mech.function
 
-        if kwargs.pop('dtype', None) is not None:
-            self.torch_dtype = kwargs['dtype']
-        else:
-            self.torch_dtype = PytorchGRUCompositionWrapper.torch_dtype
-
-        if kwargs.pop('enable_hooks', False):
-            self._torch_gru.register_forward_hook(PytorchGRUCompositionWrapper._pytorch_GRU_module_values_hook)
-            self._node_variables_hook_handle = None
-            self._node_values_hook_handle = None
-            # Set hooks here if they will always be in use
-            if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
-                self._node_variables_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_inputs_to_pnl_variables)
-            if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
-                self._node_values_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_outputs_to_pnl_values)
+        self.torch_dtype = kwargs.pop('dtype', torch.float64)
+        self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -363,53 +342,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
 
-    def _pytorch_GRU_module_values_hook(module, input, output):
-        in_len = module.input_size
-        hid_len = module.hidden_size
-        z_idx = hid_len
-        n_idx = 2 * hid_len
-
-        ih = module.weight_ih_l0
-        hh = module.weight_hh_l0
-        if module.bias:
-            b_ih = module.bias_ih_l0
-            b_hh = module.bias_hh_l0
-        else:
-            b_ih = torch.tensor(np.array([0] * 3 * hid_len))
-            b_hh = torch.tensor(np.array([0] * 3 * hid_len))
-
-        w_ir = ih[:z_idx].T
-        w_iz = ih[z_idx:n_idx].T
-        w_in = ih[n_idx:].T
-        w_hr = hh[:z_idx].T
-        w_hz = hh[z_idx:n_idx].T
-        w_hn = hh[n_idx:].T
-
-        b_ir = b_ih[:z_idx]
-        b_iz = b_ih[z_idx:n_idx]
-        b_in = b_ih[n_idx:]
-        b_hr = b_hh[:z_idx]
-        b_hz = b_hh[z_idx:n_idx]
-        b_hn = b_hh[n_idx:]
-
-        # assert len(input) > 1, (f"PROGRAM ERROR: _pytorch_GRU_module_values_hook hook received only one tensor "
-        #                         f"in its input argument: {input}; either the input or hidden state is missing.")
-        x = input[0]
-        h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=self.torch_dtype)
-        # h = input[1]
-
-        # Reproduce GRU forward calculations
-        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-        h_t = (1 - z_t) * n_t + z_t * h
-
-        # Put internal calculations in dict with corresponding node names as keys
-        GRU_node_values['RESET'] = r_t.detach()
-        GRU_node_values['UPDATE'] = z_t.detach()
-        GRU_node_values['NEW'] = n_t.detach()
-        GRU_node_values['HIDDEN'] = h_t.detach()
-
 
 class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
     """Wrapper for a Pytorch GRU Node"""
@@ -432,8 +364,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # MODIFIED 3/13/25 NEW:
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
-                                 bias=bias,
-                                 dtype=self.torch_dtype)
+                                 bias=bias).to(dtype=self.torch_dtype)
         function_wrapper = PytorchGRUFunctionWrapper(torch_GRU, device, context)
         # MODIFIED 3/13/25 END
         self.function = function_wrapper
