@@ -39,23 +39,30 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     and the Pytorch GRU Module's parameters, and return its output value.
     """
 
-    torch_dtype = torch.float32
-    node_values = {}
-    # Dict that captures internal computations of GRU node in _node_values_hook
+    torch_dtype = torch.float64
+    numpy_dtype = np.array([10]).dtype
+
+    node_values = {} # Dict that captures computations of torch.GRU by _pytorch_GRU_module_values_hook()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._torch_gru = self._composition.gru_mech.function
 
-        # self._torch_gru.register_forward_hook(PytorchGRUCompositionWrapper._pytorch_GRU_module_values_hook)
-        # self._node_variables_hook_handle = None
-        # self._node_values_hook_handle = None
-        # # Set hooks here if they will always be in use
-        # if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
-        #     self._node_variables_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_inputs_to_pnl_variables)
-        # if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
-        #     self._node_values_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_outputs_to_pnl_values)
+        if kwargs.pop('dtype', None) is not None:
+            self.torch_dtype = kwargs['dtype']
+        else:
+            self.torch_dtype = PytorchGRUCompositionWrapper.torch_dtype
+
+        if kwargs.pop('enable_hooks', False):
+            self._torch_gru.register_forward_hook(PytorchGRUCompositionWrapper._pytorch_GRU_module_values_hook)
+            self._node_variables_hook_handle = None
+            self._node_values_hook_handle = None
+            # Set hooks here if they will always be in use
+            if self._composition.parameters.synch_node_variables_with_torch.get(kwargs[CONTEXT]) == ALL:
+                self._node_variables_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_inputs_to_pnl_variables)
+            if self._composition.parameters.synch_node_values_with_torch.get(kwargs[CONTEXT]) == ALL:
+                self._node_values_hook_handle = self._add_pytorch_hook(self._copy_pytorch_node_outputs_to_pnl_values)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -64,6 +71,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   composition_wrapper=self,
                                                   component_idx=0,
                                                   use=[LEARNING, SHOW_PYTORCH],
+                                                  dtype=self.torch_dtype,
                                                   device=device,
                                                   context=context)
         self.gru_pytorch_node = pytorch_node
@@ -207,8 +215,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         standalone Composition; otherwise, those will be ignored and the outputs will be used by the aggregate_afferents
         method(s) of the other node(s) that receive Projections from the GRUComposition.
         """
-        # Reshape input for GRU module (from float64 to float32)
-        inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(np.float32))
+        # Reshape input for GRU module (to torch_dtype)
+        inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(self.numpy_dtype))
         hidden_state = self._composition.hidden_state
         output, self.hidden_state = self.gru_pytorch_node.execute([inputs, hidden_state], context)
         # Assign output to the OUTPUT Node of the GRUComposition
@@ -270,7 +278,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         torch_weights = torch_gru_parameters[0]
         torch_weights = list(torch_weights)
         for i, weight in enumerate(torch_weights):
-            torch_weights[i] = torch.tensor(weight, dtype=torch.float32)
+            torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
         w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
         if pnl_comp.bias:
             assert len(torch_gru_parameters) > 1, \
@@ -315,7 +323,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self._projection_map.items():
             if SYNCH in proj_wrapper._use:
-                proj_wrapper.set_torch_gru_parameter(context)
+                proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
 
     def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
@@ -387,7 +395,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # assert len(input) > 1, (f"PROGRAM ERROR: _pytorch_GRU_module_values_hook hook received only one tensor "
         #                         f"in its input argument: {input}; either the input or hidden state is missing.")
         x = input[0]
-        h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=torch.float32)
+        h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=self.torch_dtype)
         # h = input[1]
 
         # Reproduce GRU forward calculations
@@ -404,16 +412,30 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
 
 class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
-    """Wrapper for a GRU Node"""
+    """Wrapper for a Pytorch GRU Node"""
+
+    def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
+        self.torch_dtype = dtype
+        super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
         input_size = self._composition_wrapper_owner._composition.parameters.input_size.get(context)
         hidden_size = self._composition_wrapper_owner._composition.parameters.hidden_size.get(context)
         bias = self._composition_wrapper_owner._composition.parameters.bias.get(context)
-        function_wrapper = PytorchGRUFunctionWrapper(torch.nn.GRU(input_size=input_size,
-                                                                    hidden_size=hidden_size,
-                                                                    bias=bias), device, context)
+        # # MODIFIED 3/13/25 OLD:
+        # function_wrapper = PytorchGRUFunctionWrapper(torch.nn.GRU(input_size=input_size,
+        #                                                           hidden_size=hidden_size,
+        #                                                           bias=bias,
+        #                                                           dtype=self.torch_dtype),
+        #                                              device, context)
+        # MODIFIED 3/13/25 NEW:
+        torch_GRU = torch.nn.GRU(input_size=input_size,
+                                 hidden_size=hidden_size,
+                                 bias=bias,
+                                 dtype=self.torch_dtype)
+        function_wrapper = PytorchGRUFunctionWrapper(torch_GRU, device, context)
+        # MODIFIED 3/13/25 END
         self.function = function_wrapper
         mechanism.function = function_wrapper.function
 
@@ -427,10 +449,15 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # FIX: 3/9/25: THIS NEEDS TO BE CLEANED UP
         self.input = variable
         if isinstance(variable, list): # FIX NON-NESTED (CALLED FROM GRUComposition; NUMERICALLY VALIDATED)
-            self.output = self.function(*variable)
+            # # MODIFIED 3/13/25 OLD:
+            # self.output = self.function(*variable)
+            # MODIFIED 3/13/25 NEW:
+            self.output = self.function(*[var.type(self.torch_dtype)
+                                          if var is not None else None for var in variable])
+            # MODIFIED 3/13/25 END
             return self.output
         else:  # FIX: NESTED (CALLED FROM AutodiffComposition); NOT NUMERICALLY VALIDATED, MAY NOT HHANDLE hidden
-            variable = variable.type(PytorchGRUCompositionWrapper.torch_dtype)
+            variable = variable.type(self.torch_dtype)
             output, hidden = self.function(*variable)
             output = output.type(PytorchCompositionWrapper.torch_dtype)
             hidden = hidden.type(PytorchCompositionWrapper.torch_dtype)
@@ -565,10 +592,10 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         self._use = convert_to_list(use)
         self.device = device
 
-    def set_torch_gru_parameter(self, context):
+    def set_torch_gru_parameter(self, context, dtype):
         """Set relevant part of tensor for parameter of Pytorch GRU module from GRUComposition's Projections."""
         matrix = self.projection.parameters.matrix._get(context).T
-        proj_matrix_as_tensor =  torch.tensor(matrix.squeeze(), dtype=torch.float32)
+        proj_matrix_as_tensor =  torch.tensor(matrix.squeeze(), dtype=dtype)
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
 
     def _copy_params_to_pnl_proj(self, context):

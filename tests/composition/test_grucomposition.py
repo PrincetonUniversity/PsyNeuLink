@@ -105,17 +105,17 @@ class TestExecution:
             def __init__(self):
                 super(TorchModel, self).__init__()
                 # FIX: MAKE SURE BIASES ARE NOT USED FOR THESE MODULES:
-                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
+                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False, dtype=torch.float64)
                 self.input.weight.requires_grad = False # Since weights to INPUT nodes of Composition are not learnable
                 self.gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
-                self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
+                self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False, dtype=torch.float64)
                 self.gru.register_forward_hook(TorchModel._pytorch_GRU_module_values_hook)
 
             def forward(self, x, hidden):
-                after_input = self.input(x)
-                after_gru, hidden_state = self.gru(after_input, hidden)
-                after_output = self.output(after_gru)
-                return after_output, hidden_state
+                after_input = self.input(x.type(torch.float64))
+                after_gru, hidden_state = self.gru(after_input.type(torch.float32), hidden.type(torch.float32))
+                after_output = self.output(after_gru.type(torch.float64))
+                return after_output.type(torch.float64), hidden_state.type(torch.float64)
 
             def _pytorch_GRU_module_values_hook(module, input, output):
                 in_len = module.input_size
@@ -175,18 +175,18 @@ class TestExecution:
 
         # Execute Torch model without learning
         hidden_init = torch.tensor([[0,0,0,0,0]], dtype=torch.float32)
-        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)),
                                                                  hidden_init)
-        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)),
                                                                  hidden_state)
         # Compute loss and update weights
         torch_optimizer.zero_grad()
-        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float32))
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets, dtype=torch.float64))
         torch_loss.backward()
         torch_optimizer.step()
 
         # Get results after learning
-        torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs).astype(np.float32)),
+        torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)),
                                                                 hidden_state)
 
         # Set up and run PNL Autodiff model
