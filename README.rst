@@ -1,9 +1,13 @@
-.. image:: https://badge.fury.io/py/psyneulink.svg
+.. |pypi-badge| image:: https://badge.fury.io/py/psyneulink.svg
     :target: https://badge.fury.io/py/psyneulink
-.. image:: https://github.com/PrincetonUniversity/PsyNeuLink/workflows/PsyNeuLink%20CI/badge.svg?branch=master
+
+.. |build-badge| image:: https://github.com/PrincetonUniversity/PsyNeuLink/workflows/PsyNeuLink%20CI/badge.svg?branch=master
     :target: https://github.com/PrincetonUniversity/PsyNeuLink/actions
-.. image:: https://mybinder.org/badge.svg
+
+.. |binder-badge| image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
+
+|pypi-badge| |build-badge| |binder-badge|
 
 .. *****************************************************************************************
 .. ****** NOTE:  UPDATES TO THIS PAGE SHOULD ALSO BE MADE TO docs/source.index.rst *********
@@ -46,7 +50,7 @@ It is:
 
  ..
 
- - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
+ - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
    disparate components that vary in their granularity of representation and function (from individual neurons or
    neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
 
