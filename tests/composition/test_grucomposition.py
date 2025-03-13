@@ -307,9 +307,11 @@ class TestExecution:
                                                            execution_mode=pnl.ExecutionMode.PyTorch)
         # new_totals = [i.sum().item() for i in list(autodiff_comp.pytorch_representation.parameters())]
 
-        # np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
-        #                            autodiff_result_before_learning, atol=1e-6)
+        # Test of forward passes:
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
+                                   autodiff_result_before_learning, atol=1e-6)
 
+        # Test of backward (learning) pass:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-6)
 
