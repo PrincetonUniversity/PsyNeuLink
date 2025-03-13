@@ -73,6 +73,8 @@ runs:
           echo "llvmlite < 0.42.0" >> env_constraints.txt
           # matplotlib >=3.8.0 doesn't provide win32 wheel
           echo "matplotlib < 3.8.0" >> env_constraints.txt
+          # fastkde >= 2.1.3 doesn't provide win32 wheel
+          echo "fastkde < 2.1.3" >> env_constraints.txt
         fi
 
     - name: Install updated package
