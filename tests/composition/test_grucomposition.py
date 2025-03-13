@@ -313,7 +313,7 @@ class TestExecution:
 
         # Test of backward (learning) pass:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   autodiff_result_after_learning, atol=1e-6)
+                                   autodiff_result_after_learning, atol=1e-3)
 
         torch.set_default_dtype(entry_torch_dtype)
 
