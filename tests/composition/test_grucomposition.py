@@ -54,7 +54,7 @@ def _pytorch_gru_module_values_hook(module, input, output):
     # assert len(input) > 1, (f"PROGRAM ERROR: _pytorch_GRU_module_values_hook hook received only one tensor "
     #                         f"in its input argument: {input}; either the input or hidden state is missing.")
     x = input[0]
-    h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=self.torch_dtype)
+    h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size])
     # h = input[1]
 
     # Reproduce GRU forward calculations
@@ -155,7 +155,7 @@ class TestExecution:
         torch_loss.backward()
         torch_optimizer.step()
 
-        # Compute loss and update weights
+        # Get output after learning
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
 
         # Set up and run PNL Autodiff model -------------------------------------
@@ -177,7 +177,8 @@ class TestExecution:
         # Compare results from before learning:
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
         # Compare results from after learning:
-        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(), pnl_result_after_learning, atol=1e-6)
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   pnl_result_after_learning, atol=1e-6)
 
         torch.set_default_dtype(entry_torch_dtype)
 
