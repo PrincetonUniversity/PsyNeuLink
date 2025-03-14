@@ -417,7 +417,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                         if composition.hidden_state is not None else None)
         self.input = [inputs, hidden_state]
         output = self.function(*self.input)
-        self.output = output[0]
+        self.output = output[0].unsqueeze(1)
         composition.hidden_state = output[1].detach().numpy()
         return output
         # MODIFIED 3/13/25 END

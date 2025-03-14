@@ -166,9 +166,10 @@ class TestExecution:
         target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
         # Execute PNL GRUComposition
-        pnl_result_before_learning = pnl_gru.run(inputs={pnl_gru.input_node:[[1.,2.,3.]]})
-        pnl_gru.learn(inputs={pnl_gru.input_node:[[1.,2.,3.]], target_node[0]: [[1.,1.,1.,1.,1.]]},
-                      execution_mode=pnl.ExecutionMode.PyTorch)
+        # Corresponds to forward and then backward passes of torch model, but results do not yet reflect weight updates
+        pnl_result_before_learning = pnl_gru.learn(inputs={pnl_gru.input_node:[[1.,2.,3.]],
+                                                           target_node[0]: [[1.,1.,1.,1.,1.]]},
+                                                   execution_mode=pnl.ExecutionMode.PyTorch)
 
         # Need to run it one more time (due to lazy updating) to see the effects of learning
         pnl_result_after_learning = pnl_gru.run(inputs={pnl_gru.input_node:[[1.,2.,3.]]})
