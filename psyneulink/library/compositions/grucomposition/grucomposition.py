@@ -291,7 +291,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GRU_NODE_NAME, TARGET_NODE_NAME
+from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GRU_NODE, GRU_TARGET_NODE
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
@@ -809,7 +809,7 @@ class GRUComposition(AutodiffComposition):
         self._assign_gru_specific_attributes()
 
         # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
-        self.gru_mech = ProcessingMechanism(name=GRU_NODE_NAME,
+        self.gru_mech = ProcessingMechanism(name=GRU_NODE,
                                             input_shapes=input_size,
                                             function=MatrixTransform(
                                                 default_variable=np.zeros(input_size),
@@ -817,7 +817,7 @@ class GRUComposition(AutodiffComposition):
         self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node: self.gru_mech}
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
-                                               name= TARGET_NODE_NAME)
+                                               name= GRU_TARGET_NODE)
 
         # # MODIFIED 3/1/25 NEW:
         # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])

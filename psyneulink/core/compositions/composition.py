@@ -3794,7 +3794,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._scheduler = None
         self._partially_added_nodes = []
-
         self.parsed_inputs = False
 
         self.disable_learning = disable_learning
@@ -12217,6 +12216,9 @@ _
                                              runtime_params=execution_runtime_params,
                                              )
                                 assert 'DEBUGGING BREAK POINT'
+                                if node.name == 'HIDDEN\nLAYER':
+                                    print('PNL: ', node.value.sum().item())
+
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):

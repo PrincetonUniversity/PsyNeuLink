@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from networkx.algorithms.isomorphism.matchhelpers import allclose
 
 import psyneulink as pnl
 
@@ -156,6 +157,7 @@ class TestExecution:
         torch_optimizer.step()
 
         # Get output after learning
+        print('PYTORCH: ', hn.sum().item())
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
 
         # Set up and run PNL Autodiff model -------------------------------------
@@ -275,7 +277,7 @@ class TestExecution:
         # Execute Torch model without learning
         hidden_init = torch.tensor([[0.,0.,0.,0.,0.]])
         torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_init)
-        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_state)
+
         # Compute loss and update weights
         torch_optimizer.zero_grad()
         torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets))
@@ -299,15 +301,15 @@ class TestExecution:
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
-        # Execute autodiff without learning
-        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs},
-                                                            num_trials=2,
-                                                            execution_mode=pnl.ExecutionMode.PyTorch)
+        # # Execute autodiff without learning
+        # autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs},
+        #                                                     num_trials=2,
+        #                                                     execution_mode=pnl.ExecutionMode.PyTorch)
         # totals = [i.sum().item() for i in list(autodiff_comp._build_pytorch_representation().parameters())]
 
         # Execute autodiff with learning
-        autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
-                            execution_mode=pnl.ExecutionMode.PyTorch)
+        autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
+                                                              execution_mode=pnl.ExecutionMode.PyTorch)
         # Get results after learning
         autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
                                                            execution_mode=pnl.ExecutionMode.PyTorch)
@@ -317,10 +319,11 @@ class TestExecution:
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
                                    autodiff_result_before_learning, atol=1e-6)
 
+        np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
+
         # Test of backward (learning) pass:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-6)
 
+
         torch.set_default_dtype(entry_torch_dtype)
-
-

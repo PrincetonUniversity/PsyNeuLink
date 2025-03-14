@@ -24,10 +24,10 @@ from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import ALL, CONTEXT, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE_NAME', 'TARGET_NODE_NAME']
+__all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE', 'GRU_TARGET_NODE']
 
-GRU_NODE_NAME = 'PYTORCH GRU NODE'
-TARGET_NODE_NAME = 'GRU TARGET NODE'
+GRU_NODE = 'PYTORCH GRU NODE'
+GRU_TARGET_NODE = 'GRU TARGET NODE'
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for GRUComposition as a Pytorch Module
@@ -90,7 +90,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
 
         if pnl.bias:
-            assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE_NAME}.bias=False. "
+            assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
             b_ih = torch_params['bias_ih_l0']
             b_hh = torch_params['bias_hh_l0']
             torch_gru_bias_indices = [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
@@ -197,18 +197,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Get input from GRUComposition's INPUT_NODE
         inputs = inputs[self._composition.input_node]
 
-        # Get hidden state from GRUComposition's HIDDEN_NODE.value
-        from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
-        hidden_state = self._composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
-        # FIX: 3/14/25 - DAVE RE: HOW TO HANDLE BATCH DIMENSION HERE
-        self.gru_pytorch_node.hidden_state = torch.tensor([hidden_state])
-
         # Execute GRU Node
         output = self.gru_pytorch_node.execute(inputs, context)
 
-        # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
-        hidden_state = self.gru_pytorch_node.hidden_state.detach().cpu().numpy()
-        self._composition.nodes[HIDDEN_LAYER].parameters.value._set(hidden_state, context)
+        # # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
+        # hidden_state = self.gru_pytorch_node.hidden_state.detach().cpu().numpy()
+        # pnl_hidden_layer = self._composition.nodes[HIDDEN_LAYER]
+        # pnl_hidden_layer.output_port.parameters.value._set(hidden_state.squeeze(), context)
+
+        # if self._composition.frozen_values:
+        #     self._composition.frozen_values[HIDDEN_LAYER] = hidden_state
 
         # Set GRUComposition's OUTPUT Node of output of GRU Node
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
@@ -243,10 +241,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def _copy_pytorch_node_outputs_to_pnl_values(self, nodes, context):
         # FIX: 3/9/25 - FLESH THIS OUT TO BE SURE ONLY NODES ARE GRU, INPUT AND OUTPUT
         #               AND EXPLICITY ASSIGN pnl_node TO ONE IN MAP
+        from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
         node_map = list(nodes)
+        pnl_node = node_map[0][0]
+        pytorch_node = node_map[0][1]
         pnl_comp = self._composition
-        pnl_node = list(nodes)[0][0]
-        pytorch_node = list(nodes)[0][1]
 
         assert len(nodes) == 1, \
             (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
@@ -289,6 +288,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         h_t = (1 - z_t) * n_t + z_t * h
 
         # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+        # FIX: 3/14/25 - THESE SHOULD ALL BE CHANGED TO OUTPUT_PORT VALUES
         pnl_comp.reset_node.parameters.value._set(r_t.detach().cpu().numpy(), context)
         pnl_comp.update_node.parameters.value._set(z_t.detach().cpu().numpy(), context)
         pnl_comp.new_node.parameters.value._set(n_t.detach().cpu().numpy(), context)
@@ -366,7 +366,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
         self.torch_dtype = dtype
-        self.hidden_state = None
         super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
@@ -384,6 +383,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
                                  bias=bias).to(dtype=self.torch_dtype)
+        self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)
+
         function_wrapper = PytorchGRUFunctionWrapper(torch_GRU, device, context)
         # MODIFIED 3/13/25 END
         self.function = function_wrapper
@@ -417,10 +418,22 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # MODIFIED 3/14/25 NEW:
 
+        # Get hidden state from GRUComposition's HIDDEN_NODE.value
+        from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
+        composition = self._composition_wrapper_owner._composition
+
+        hidden_state = composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
+        self.hidden_state = torch.tensor(hidden_state).unsqueeze(1)
+
         self.input = input
+        # FIX DAVE
         variable = [input, self.hidden_state]
         self.output, self.hidden_state = self.function(*variable)
 
+        # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
+        pnl_hidden_layer = composition.nodes[HIDDEN_LAYER]
+        pnl_hidden_layer.output_port.parameters.value._set(self.hidden_state.detach().cpu().numpy().squeeze(),
+                                                           context)
         return self.output
 
         # MODIFIED 3/14/25 END
@@ -489,17 +502,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                                                 f"should be a torch.Tensor, but is {type(variable)}.")
 
         # must iterate over at least 1d input per port
-        variable = torch.atleast_2d(variable)
-
-        res = [variable[:, 0, ...]] # Get the input for the port for all items in the batch
-
-        try:
-            res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
-        except (RuntimeError, TypeError):
-            # is ragged, need to reshape things so batch size is first dimension.
-            batch_size = res[0].shape[0]
-            res = [[inp[b] for inp in res] for b in range(batch_size)]
-        return res
+        return variable[:, 0, ...] # Get the input for the port for all items in the batch
 
     def log_value(self):
         # FIX: LOG HIDDEN STATE OF COMPOSITION MECHANISM
