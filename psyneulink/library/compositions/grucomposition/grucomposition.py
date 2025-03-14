@@ -306,18 +306,18 @@ from psyneulink.core.llvm import ExecutionMode
 
 
 __all__ = ['GRUComposition', 'GRUCompositionError',
-           'INPUT_NODE_NAME', 'HIDDEN_LAYER_NODE_NAME', 'RESET_NODE_NAME',
-           'UPDATE_NODE_NAME', 'NEW_NODE_NAME', 'OUTPUT_NODE_NAME']
+           'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE',
+           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE']
 
 from sympy.printing.cxx import CXX17CodePrinter
 
 # Node names
-INPUT_NODE_NAME = 'INPUT'
-HIDDEN_LAYER_NODE_NAME = 'HIDDEN\nLAYER'
-RESET_NODE_NAME = 'RESET'
-UPDATE_NODE_NAME = 'UPDATE'
-NEW_NODE_NAME = 'NEW'
-OUTPUT_NODE_NAME = 'OUTPUT'
+INPUT_NODE = 'INPUT'
+HIDDEN_LAYER = 'HIDDEN\nLAYER'
+RESET_NODE = 'RESET'
+UPDATE_NODE = 'UPDATE'
+NEW_NODE = 'NEW'
+OUTPUT_NODE = 'OUTPUT'
 
 
 class GRUCompositionError(CompositionError):
@@ -728,7 +728,6 @@ class GRUComposition(AutodiffComposition):
         hidden_size = Parameter(1, structural=True, stateful=False)
         bias = Parameter(False, structural=True, stateful=False)
         gru_mech = Parameter(None, structural=True, stateful=False)
-        hidden_state = Parameter(None, structural=True)
         enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         input_weights_learning_rate = Parameter(True, structural=True)
@@ -832,12 +831,12 @@ class GRUComposition(AutodiffComposition):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
-        self.input_node = ProcessingMechanism(name=INPUT_NODE_NAME,
+        self.input_node = ProcessingMechanism(name=INPUT_NODE,
                                               input_shapes=input_size)
 
         # Two input_ports are used to separately gate input its recurrent Projection and from new_node
         # LinearCombination function of each InputPort is explicitly specified to allow for gating by a vector
-        self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER_NODE_NAME,
+        self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER,
                                                      input_shapes=[hidden_size, hidden_size],
                                                      input_ports=[
                                                          InputPort(name='NEW INPUT',
@@ -849,7 +848,7 @@ class GRUComposition(AutodiffComposition):
         # Two input_ports are used to allow the input from the hidden_layer_node to be gated but not the input_node
         # The node's LinearCombination function is then used to combine the two inputs
         # And then Tanh is assigend as the function of the OutputPort to do the nonlinear transform
-        self.new_node = ProcessingMechanism(name=NEW_NODE_NAME,
+        self.new_node = ProcessingMechanism(name=NEW_NODE,
                                             input_shapes=[hidden_size, hidden_size],
                                             input_ports=['FROM INPUT',
                                                          InputPort(name='FROM HIDDEN',
@@ -859,7 +858,7 @@ class GRUComposition(AutodiffComposition):
                                                                      function=Tanh)])
 
         # Gates input to hidden_layer_node from its recurrent Projection and from new_node
-        self.update_node = GatingMechanism(name=UPDATE_NODE_NAME,
+        self.update_node = GatingMechanism(name=UPDATE_NODE,
                                            default_allocation=hidden_shape,
                                            function=Logistic,
                                            gating_signals=[
@@ -875,7 +874,7 @@ class GRUComposition(AutodiffComposition):
         self.recurrent_gate = self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0]
         self.recurrent_gate.name = 'RECURRENT GATE'
 
-        self.reset_node = GatingMechanism(name=RESET_NODE_NAME,
+        self.reset_node = GatingMechanism(name=RESET_NODE,
                                           default_allocation=hidden_shape,
                                           function=Logistic,
                                           gating_signals=[
@@ -885,7 +884,7 @@ class GRUComposition(AutodiffComposition):
         self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
         self.reset_gate.name = 'RESET GATE'
 
-        self.output_node = ProcessingMechanism(name=OUTPUT_NODE_NAME,
+        self.output_node = ProcessingMechanism(name=OUTPUT_NODE,
                                                input_shapes=hidden_size,
                                                function=Linear)
 
