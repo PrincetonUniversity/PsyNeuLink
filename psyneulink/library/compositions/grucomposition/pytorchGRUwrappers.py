@@ -214,6 +214,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
+        assert 'DEBUGGING BREAK POINT'
+
         return {self._composition.gru_mech: output}
 
     def log_weights(self):

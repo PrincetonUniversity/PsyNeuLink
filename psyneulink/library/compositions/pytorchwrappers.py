@@ -950,6 +950,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
                 node._composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
 
+                assert 'DEBUGGING BREAK POINT'
+
                 # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened

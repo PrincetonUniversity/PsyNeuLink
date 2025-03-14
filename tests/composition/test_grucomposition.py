@@ -164,6 +164,7 @@ class TestExecution:
         pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE)
         pnl_gru.set_weights(*torch_gru_initial_weights)
         target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
         # Execute PNL GRUComposition
         pnl_result_before_learning = pnl_gru.run(inputs={pnl_gru.input_node:[[1.,2.,3.]]})
         # Execute PNL GRUComposition
@@ -293,13 +294,16 @@ class TestExecution:
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
         autodiff_comp.projections[0].learnable = False
-        autodiff_comp.set_weights(autodiff_comp.nodes[0].path_afferents[0], torch_input_initial_weights)
+        # autodiff_comp.set_weights(autodiff_comp.nodes[0].path_afferents[0], torch_input_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
         # Execute autodiff without learning
-        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs}, num_trials=2)
+        autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs},
+                                                            num_trials=2,
+                                                            execution_mode=pnl.ExecutionMode.PyTorch)
         # totals = [i.sum().item() for i in list(autodiff_comp._build_pytorch_representation().parameters())]
 
         # Execute autodiff with learning
@@ -316,7 +320,7 @@ class TestExecution:
 
         # Test of backward (learning) pass:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   autodiff_result_after_learning, atol=1e-3)
+                                   autodiff_result_after_learning, atol=1e-6)
 
         torch.set_default_dtype(entry_torch_dtype)
 
