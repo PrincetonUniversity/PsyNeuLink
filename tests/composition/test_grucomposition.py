@@ -294,7 +294,6 @@ class TestExecution:
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
         autodiff_comp.projections[0].learnable = False
-        # autodiff_comp.set_weights(autodiff_comp.nodes[0].path_afferents[0], torch_input_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
