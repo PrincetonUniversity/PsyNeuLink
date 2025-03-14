@@ -687,6 +687,11 @@ class GRUComposition(AutodiffComposition):
                     :default value: 1
                     :type: ``int``
 
+                hidden_state
+
+                    :default value: None
+                    :type: ``ndarray``
+
                 hidden_weights_learning_rate
                     see `hidden_weights_learning_rate <GRUComposition.hidden_weights_learning_rate>`
 

@@ -195,17 +195,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         method(s) of the other node(s) that receive Projections from the GRUComposition.
         """
         # Reshape input for GRU module (to torch_dtype)
-        inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(self.numpy_dtype))
-        hidden_state = self._composition.hidden_state
-        output, self.hidden_state = self.gru_pytorch_node.execute([inputs, hidden_state], context)
+        # # MODIFIED 3/13/25 OLD:
+        # inputs = torch.tensor(np.array(inputs[self._composition.input_node]).astype(self.numpy_dtype))
+        # hidden_state = self._composition.hidden_state
+        # output, self.hidden_state = self.gru_pytorch_node.execute([inputs, hidden_state], context)
+        # MODIFIED 3/13/25 NEW:
+        output, self.hidden_state = self.gru_pytorch_node.execute(inputs[self._composition.input_node],context)
+        # MODIFIED 3/13/25 END
         # Assign output to the OUTPUT Node of the GRUComposition
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
-        # # MODIFIED 3/2/25 OLD:
-        # return {self._composition.output_node: output}
-        # MODIFIED 3/2/25 NEW: test_grucomposition
+
+        assert 'DEBUGGING BREAK POINT'
+
         return {self._composition.gru_mech: output}
-        # MODIFIED 3/2/25 END
 
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
@@ -374,26 +377,50 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def execute(self, variable, context):
+    # MODIFIED 3/13/25 OLD:
+    # def execute(self, variable, context):
+    #     """Execute GRU Node with input variable and return output value
+    #     """
+    #     # FIX: 3/9/25: THIS NEEDS TO BE CLEANED UP
+    #
+    #     # FIX:
+    #     #  IF BEING CALLED AFTER CALL TO RUN OF GRUComposition, and only 1 item in variable shoud add...
+    #     #  THEN NONE BELOW SHOUD BE REPLACED WITH hidden_node.value OF GRUComposition TO ESTABLISH STATE
+    #     # hidden = self._composition.nodes["HIDDEN\nLAYER"].value
+    #
+    #     # MODIFIED 3/13/25 OLD:
+    #     self.input = variable
+    #     if isinstance(variable, list): # FIX NON-NESTED (CALLED FROM GRUComposition; NUMERICALLY VALIDATED)
+    #         # # MODIFIED 3/13/25 OLD:
+    #         # self.output = self.function(*variable)
+    #         # MODIFIED 3/13/25 NEW:
+    #         self.output = self.function(*[var.type(self.torch_dtype)
+    #                                       if var is not None else None for var in variable])
+    #         # MODIFIED 3/13/25 END
+    #         return self.output
+    #     else:  # FIX: NESTED (CALLED FROM AutodiffComposition); NOT NUMERICALLY VALIDATED, MAY NOT HHANDLE hidden
+    #         variable = variable.type(self.torch_dtype)
+    #         output, hidden = self.function(*variable)
+    #         output = output.type(PytorchCompositionWrapper.torch_dtype)
+    #         hidden = hidden.type(PytorchCompositionWrapper.torch_dtype)
+    #         self.output = output
+    #         return output, hidden
+    # MODIFIED 3/13/25 NEW:
+    def execute(self, inputs, context):
         """Execute GRU Node with input variable and return output value
         """
-        # FIX: 3/9/25: THIS NEEDS TO BE CLEANED UP
-        self.input = variable
-        if isinstance(variable, list): # FIX NON-NESTED (CALLED FROM GRUComposition; NUMERICALLY VALIDATED)
-            # # MODIFIED 3/13/25 OLD:
-            # self.output = self.function(*variable)
-            # MODIFIED 3/13/25 NEW:
-            self.output = self.function(*[var.type(self.torch_dtype)
-                                          if var is not None else None for var in variable])
-            # MODIFIED 3/13/25 END
-            return self.output
-        else:  # FIX: NESTED (CALLED FROM AutodiffComposition); NOT NUMERICALLY VALIDATED, MAY NOT HHANDLE hidden
-            variable = variable.type(self.torch_dtype)
-            output, hidden = self.function(*variable)
-            output = output.type(PytorchCompositionWrapper.torch_dtype)
-            hidden = hidden.type(PytorchCompositionWrapper.torch_dtype)
-            self.output = output
-            return output, hidden
+        composition = self._composition_wrapper_owner._composition
+        # inputs = torch.tensor(np.array(inputs[composition.input_node]).astype(self.numpy_dtype))
+        # FIX: NEED TO DEAL WITH EXTRA DIMENSIONAITY HERE
+        inputs = torch.tensor(inputs[0]).to(self.torch_dtype)
+        hidden_state = (torch.tensor(composition.hidden_state).to(self.torch_dtype)
+                        if composition.hidden_state is not None else None)
+        self.input = [inputs, hidden_state]
+        output = self.function(*self.input)
+        self.output = output[0]
+        composition.hidden_state = output[1].detach().numpy()
+        return output
+        # MODIFIED 3/13/25 END
 
     def collect_afferents(self, batch_size, port=None):
         """
