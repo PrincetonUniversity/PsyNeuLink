@@ -258,89 +258,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         for proj_wrapper in self._projection_wrappers:
             proj_wrapper.log_matrix()
 
-    # # FIX: 3/9/25 - ALONG LINES OF _copy_pytorch_node_outputs_to_pnl_values
-    # def _copy_pytorch_node_inputs_to_pnl_variables(self,
-    #                                                nodes:Optional[Union[list,Literal[ALL, INPUTS]]]=ALL,
-    #                                                context=None):
-    #     """Copy input to Pytorch nodes to variable of AutodiffComposition nodes.
-    #     IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
-    #     """
-    #     if nodes == ALL:
-    #         nodes = self._nodes_map.items()
-    #     for pnl_node, pytorch_node in nodes:
-    #         # First get variable in numpy format
-    #         if isinstance(pytorch_node.input, list):
-    #             variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
-    #         else:
-    #             variable = pytorch_node.input.detach().cpu().numpy()
-    #         # Set pnl_node's value to value
-    #         pnl_node.parameters.variable._set(variable, context)
-    #
-    # def _copy_pytorch_node_outputs_to_pnl_values(self, nodes, context):
-    #     # FIX: 3/9/25 - FLESH THIS OUT TO BE SURE ONLY NODES ARE GRU, INPUT AND OUTPUT
-    #     #               AND EXPLICITY ASSIGN pnl_node TO ONE IN MAP
-    #     # from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
-    #     nodes = list(nodes)
-    #     pnl_node = nodes[0][0]
-    #     pytorch_node = nodes[0][1]
-    #     pnl_comp = self._composition
-    #
-    #     assert len(nodes) == 1, \
-    #         (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
-    #          f"but has {len(nodes)}: {[node.name for node in nodes]}")
-    #     assert pnl_node == pnl_comp.gru_mech, \
-    #         f"PROGRAM ERROR: Bad mechanism passed ({pnl_node}); should be: {pnl_node.name}."
-    #     assert pytorch_node == self._wrapped_nodes[0], \
-    #         f"PROGRAM ERROR: Bad PyTorchMechanismWrapper passed ({pytorch_node}); should be: {pytorch_node.name}."
-    #
-    #     # Update  node's value with the output of the corresponding wrapper in the PyTorch representation
-    #     if pytorch_node.output is None:
-    #         assert pytorch_node.exclude_from_gradient_calc, \
-    #             (f"PROGRAM ERROR: Value of PyTorch wrapper for '{pnl_node.name}' is None during forward pass, "
-    #              f"but it is not excluded from gradient calculation.")
-    #     torch_gru_output = pytorch_node.output[0].detach().cpu().numpy()
-    #
-    #     torch_gru_parameters = self.__class__.get_weights_from_torch_gru(self.torch_gru)
-    #     torch_weights = torch_gru_parameters[0]
-    #     torch_weights = list(torch_weights)
-    #     for i, weight in enumerate(torch_weights):
-    #         torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
-    #     w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
-    #     if pnl_comp.bias:
-    #         assert len(torch_gru_parameters) > 1, \
-    #             (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
-    #              f"but no bias weights were returned for torch_gru_parameters.")
-    #         b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
-    #     else:
-    #         b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
-    #
-    #     x = self.gru_pytorch_node.input[0][0]
-    #
-    #     # Use previous hidden state so that these calculations align with those done by GRU when executed
-    #     h = pytorch_node.previous_hidden_state.detach()
-    #     r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-    #     z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-    #     n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-    #     h_t = (1 - z_t) * n_t + z_t * h
-    #
-    #     # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
-    #     pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
-    #     pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
-    #     pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
-    #     pnl_comp.new_node.output_port.parameters.value._set(n_t.detach().cpu().numpy().squeeze(), context)
-    #     pnl_comp.output_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
-    #     # Note: no need to set hidden_layer since it was already done when the GRU Node executed
-    #     # pnl_comp.hidden_layer_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
-    #
-    #     # KEEP FOR FUTURE DEBUGGING
-    #     # result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
-    #
-    #     # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
-    #     # # If pnl_node's function is Stateful, assign value to its previous_value parameter
-    #     # #   so that if Python implementation is run it picks up where PyTorch execution left off
-    #     # if isinstance(pnl_node.function, StatefulFunction):
-    #     #     pnl_node.function.parameters.previous_value._set(torch_gru_output, context)
-
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
@@ -470,6 +387,71 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # must iterate over at least 1d input per port
         return variable[:, 0, ...] # Get the input for the port for all items in the batch
+
+    # def _copy_pytorch_node_outputs_to_pnl_values(self, nodes, context):
+    #     # FIX: 3/9/25 - FLESH THIS OUT TO BE SURE ONLY NODES ARE GRU, INPUT AND OUTPUT
+    #     #               AND EXPLICITY ASSIGN pnl_node TO ONE IN MAP
+    #     # from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
+    #     nodes = list(nodes)
+    #     pnl_node = nodes[0][0]
+    #     pytorch_node = nodes[0][1]
+    #     pnl_comp = self._composition
+    #
+    #     assert len(nodes) == 1, \
+    #         (f"PROGRAM ERROR: PytorchGRUCompositionWrapper should have only one node, "
+    #          f"but has {len(nodes)}: {[node.name for node in nodes]}")
+    #     assert pnl_node == pnl_comp.gru_mech, \
+    #         f"PROGRAM ERROR: Bad mechanism passed ({pnl_node}); should be: {pnl_node.name}."
+    #     assert pytorch_node == self._wrapped_nodes[0], \
+    #         f"PROGRAM ERROR: Bad PyTorchMechanismWrapper passed ({pytorch_node}); should be: {pytorch_node.name}."
+    #
+    #     # Update  node's value with the output of the corresponding wrapper in the PyTorch representation
+    #     if pytorch_node.output is None:
+    #         assert pytorch_node.exclude_from_gradient_calc, \
+    #             (f"PROGRAM ERROR: Value of PyTorch wrapper for '{pnl_node.name}' is None during forward pass, "
+    #              f"but it is not excluded from gradient calculation.")
+    #     torch_gru_output = pytorch_node.output[0].detach().cpu().numpy()
+    #
+    #     torch_gru_parameters = self.__class__.get_weights_from_torch_gru(self.torch_gru)
+    #     torch_weights = torch_gru_parameters[0]
+    #     torch_weights = list(torch_weights)
+    #     for i, weight in enumerate(torch_weights):
+    #         torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
+    #     w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
+    #     if pnl_comp.bias:
+    #         assert len(torch_gru_parameters) > 1, \
+    #             (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
+    #              f"but no bias weights were returned for torch_gru_parameters.")
+    #         b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
+    #     else:
+    #         b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
+    #
+    #     x = self.gru_pytorch_node.input[0][0]
+    #
+    #     # Use previous hidden state so that these calculations align with those done by GRU when executed
+    #     h = pytorch_node.previous_hidden_state.detach()
+    #     r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+    #     z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+    #     n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+    #     h_t = (1 - z_t) * n_t + z_t * h
+    #
+    #     # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+    #     pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
+    #     pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
+    #     pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
+    #     pnl_comp.new_node.output_port.parameters.value._set(n_t.detach().cpu().numpy().squeeze(), context)
+    #     pnl_comp.output_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
+    #     # Note: no need to set hidden_layer since it was already done when the GRU Node executed
+    #     # pnl_comp.hidden_layer_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
+    #
+    #     # KEEP FOR FUTURE DEBUGGING
+    #     # result = self._composition(inputs={self._composition.input_node: x.detach().numpy()})
+    #
+    #     # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
+    #     # # If pnl_node's function is Stateful, assign value to its previous_value parameter
+    #     # #   so that if Python implementation is run it picks up where PyTorch execution left off
+    #     # if isinstance(pnl_node.function, StatefulFunction):
+    #     #     pnl_node.function.parameters.previous_value._set(torch_gru_output, context)
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=None,
