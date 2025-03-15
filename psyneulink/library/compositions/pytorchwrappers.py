@@ -1364,8 +1364,8 @@ class PytorchMechanismWrapper():
         return self.output
 
     def set_pnl_variable_and_values(self,
-                                    set_variable:bool=None,
-                                    set_value:bool=None,
+                                    set_variable:bool=False,
+                                    set_value:bool=True,
                                     # FIX: 3/15/25 - ADD SUPPORT FOR THESE
                                     # set_output_values:bool=None,
                                     # execute_mech:bool=True,
