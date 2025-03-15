@@ -157,7 +157,6 @@ class TestExecution:
         torch_optimizer.step()
 
         # Get output after learning
-        print('PYTORCH: ', hn.sum().item())
         torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
 
         # Set up and run PNL Autodiff model -------------------------------------
@@ -295,6 +294,7 @@ class TestExecution:
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
+        # FIX: 3/15/25 - NEED TO BE HARDWIRED:
         autodiff_comp.projections[0].learnable = False
         autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)

@@ -1063,6 +1063,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
                      f"but it is not excluded from gradient calculation.")
                 continue
+
             # First get value in numpy format
             if isinstance(pytorch_node.output, list):
                 batch_size = len(pytorch_node.output)
@@ -1075,6 +1076,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 value = pytorch_node.output.detach().cpu().numpy()
 
+            # FIX: 3/14/25 - MIGHT BE BETTER TO JUST ASSIGN VARIABLES (PER METHOD ABOVE) AND THEN EXECUTE MECHANISMS?
             # Set pnl_node's value to value
             pnl_node.parameters.value._set(value, context)
 

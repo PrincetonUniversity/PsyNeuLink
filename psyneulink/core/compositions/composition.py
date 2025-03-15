@@ -12216,9 +12216,6 @@ _
                                              runtime_params=execution_runtime_params,
                                              )
                                 assert 'DEBUGGING BREAK POINT'
-                                if node.name == 'HIDDEN\nLAYER':
-                                    print('PNL: ', node.value.sum().item())
-
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
