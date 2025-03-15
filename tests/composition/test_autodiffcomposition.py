@@ -3647,6 +3647,7 @@ class TestACLogging:
         xor.clear_losses(context=xor)
         assert len(xor.losses) == 0
 
+    @pytest.mark.pytorch
     def test_synching(self):
         """Test synchronization of variables and values of nested Compositions with PyTorch execution."""
         inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=2, function=pnl.Logistic)
