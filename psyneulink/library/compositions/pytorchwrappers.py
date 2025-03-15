@@ -1016,32 +1016,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_wrapper.log_matrix()
 
     def copy_node_variables_and_values_to_psyneulink(self, options:dict, context=None):
-
-        # MODIFIED 3/15/25 OLD:
-        # def update_autodiff_all_output_values(context):
-        #     """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
-        #     if self.all_output_values is not None:
-        #         # Execute the output_CIM on the last element of the batch to update the output ports
-        #         self._composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
-        #
-        # FIX: NEEDS ADDITIONAL SUPPORT FOR SELECTIVELY SPECIFYING SUBSETS OF NODES TO UPDATE
-        # if nodes == ALL:
-        #     nodes = self._nodes_map.items()
-        # elif nodes == INPUTS:
-        #     nodes = [(node, self._nodes_map[node]) for node in self._composition.get_input_nodes()]
-        # elif nodes == OUTPUTS:
-        #     nodes = [(node, self._nodes_map[node]) for node in self._composition.get_output_nodes()]
-        # Allow selective updating of just autodiff.output_values if specified
-        # if nodes == OUTPUTS:
-        #     update_autodiff_all_output_values(context)
-        #     return
-        # MODIFIED 3/15/25 END
         for pytorch_node in self._nodes_map.values():
             pytorch_node.set_pnl_variable_and_values(set_variable=True if NODE_VARIABLES in options else False,
                                                      set_value=True if NODE_VALUES in options else False,
                                                      # FIX: 3/15/25 - ADD SUPPORT FOR THESE
                                                      # set_output_values=True if OUTPUT_VALUES in options else False,
-                                                     # set_execute=True if EXECUTE_NODES in options else False,
+                                                     # execute_mech=True if EXECUTE_NODES in options else False,
                                                      context=context)
 
         # Update output_values of autodiff Composition by executing its output_CIM with pytorch_rep all_output_values
@@ -1388,10 +1368,10 @@ class PytorchMechanismWrapper():
                                     set_value:bool=None,
                                     # FIX: 3/15/25 - ADD SUPPORT FOR THESE
                                     # set_output_values:bool=None,
-                                    # set_execute:bool=True,
+                                    # execute_mech:bool=True,
                                     context=None):
         """Set the state of the PytorchMechanismWrapper's Mechanism
-        Note: if execute=True, variable must be provided.
+        Note: if execute_mech=True requires that variable=True
         """
         if SYNCH not in self._use:
             return
