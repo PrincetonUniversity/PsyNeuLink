@@ -557,24 +557,26 @@ class AutodiffComposition(Composition):
 
     synch_node_variables_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines when to copy the current input to Pytorch functions to the PsyNeuLink `variable
-        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not
-        specified in the call to `learn <AutodiffComposition.learn>`.
+        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
+        if this is not specified in the call to `learn <AutodiffComposition.learn>`.
         COMMENT:
-        8/8/24 - FIX: ADD EXPLANATION OF WHY THIS IS NOT GENERALLY USEFUL ALONG THE LINES OF THE FOLLOWING
+        8/8/24 - FIX: 3/15/25 ADD EXPLANATION OF WHY THIS IS NOT GENERALLY USEFUL ALONG THE LINES OF THE FOLLOWING
+                 ALSO RELATE TO EXECUTE_NODES OPTION ONCE IMPLEMENTED
         This is supported for inspection and debugging, but is not generally useful, as PsyNeuLink uses `Lazy
         Evaluation <Component_Lazy_Updating>`, in which the variable of a node is determined by the input it receives
         during execution.
         COMMENT
-        Copying more frequently keeps the PsyNeuLink
-        representation more closely copying more frequently keeps them synchronized with parameter updates in Pytorch,
-        but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        Copying more frequently keeps the PsyNeuLink representation more closely copying more frequently
+        keeps them synchronized with parameter updates in Pytorch, but can slow performance (see
+        `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     synch_node_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
-    determines when to copy the current output of Pytorch functions to the PsyNeuLink `value <Mechanism_Base.value>`
-        attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`, if this is not specified in the call to
-        `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink representation more closely
-        copying more frequently keeps them synchronized with parameter updates in Pytorch, but slows performance
-        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        determines when to copy the current output of Pytorch functions to the PsyNeuLink `value
+        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
+        if this is not specified in the call to `learn <AutodiffComposition.learn>`. Copying more
+        frequently keeps the PsyNeuLink representation more closely synchronized with parameter
+        updates in Pytorch, but can also slow performance (see `AutodiffComposition_PyTorch_LearningScale`
+        for information about settings).
 
     synch_results_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH or RUN
         determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results
@@ -584,10 +586,10 @@ class AutodiffComposition(Composition):
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
     retain_torch_trained_outputs : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
-        determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in the
-        AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not specified
-        in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale` for
-        information about settings)
+        determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in
+        the AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not
+        specified in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale`
+        for information about settings)
 
     retain_torch_targets : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the targets used for training the Pytorch model are tracked, all of which

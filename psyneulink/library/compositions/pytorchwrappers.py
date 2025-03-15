@@ -983,9 +983,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
         params can be used to restrict copy to a specific (set of) param(s). If params is not specified, all are copied;
         """
-        # 8/7/24: FIX - THIS COULD BE MADE TO BE MORE EFFICIENT ALONG THE LINES OF retain_for_psyneulink()
-        #               AND REFACTORED TO USE DICT WITH DATATYPES AS KEYS AND PARAMS AS VALUES;
-        all = [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES, RESULTS]
+        all = [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES,
+               # 3/15/25 FIX: ADD SUPPORT FOR THESE IN AutodiffComposition AND BELOW
+               # NODE_OUTPUT_VALUES, EXECUTE_NODES,
+               RESULTS]
         params = convert_to_list(params) or all
         illegal_params = [param for param in params if param not in all]
         assert not illegal_params, \
@@ -994,17 +995,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
             self.copy_weights_to_psyneulink(context)
 
-        # # MODIFIED 3/15/25 OLD:
-        # if NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition:
-        #     self._copy_pytorch_node_inputs_to_pnl_variables(ALL, context)
-        # 
-        # if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
-        #     self.copy_node_values_to_psyneulink(ALL, context)
-        # MODIFIED 3/15/25 NEW:
+        # If either NODE_VARIABLES or NODE_VALUES is specified, and current condition is met, do relevant copies
         if ((NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition)
                 or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition)):
-            self.copy_node_variables_and_values_to_psyneulink(ALL, context)
-        # MODIFIED 3/15/25 END
+            self.copy_node_variables_and_values_to_psyneulink({k:v for k,v in synch_with_pnl_options.items()
+                                                               if (k in {NODE_VARIABLES, NODE_VALUES} and
+                                                                   v == current_condition)},
+                                                              context)
 
         if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
             self.copy_results_to_psyneulink(current_condition, context)
@@ -1018,86 +1015,39 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in self._projection_wrappers:
             proj_wrapper.log_matrix()
 
-    def _copy_pytorch_node_inputs_to_pnl_variables(self, nodes:Optional[Union[list,Literal[ALL, INPUTS]]]=ALL, context=None):
-        """Copy input to Pytorch nodes to variable of AutodiffComposition nodes.
-        IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
-        """
-        if nodes == ALL:
-            nodes = self._nodes_map.items()
-        for pnl_node, pytorch_node in nodes:
-            if SYNCH in pytorch_node._use:
-                # First get variable in numpy format
-                if isinstance(pytorch_node.input, list):
-                    variable = np.array([val.detach().cpu().numpy() for val in pytorch_node.input], dtype=object)
-                else:
-                    variable = pytorch_node.input.detach().cpu().numpy()
-                # Set pnl_node's value to value
-                pnl_node.parameters.variable._set(variable, context)
+    def copy_node_variables_and_values_to_psyneulink(self, options:dict, context=None):
 
-    def copy_node_variables_and_values_to_psyneulink(self,
-                                                     nodes:Optional[Union[list,Literal[ALL,OUTPUTS,INPUTS]]]=ALL,
-                                                     context=None):
-        pass
-
-    def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
-        """Copy output of Pytorch nodes to value of AutodiffComposition nodes.
-        IMPLEMENTATION NOTE:  list included in nodes arg to allow for future specification of specific nodes to copy
-        """
-        if nodes == ALL:
-            nodes = self._nodes_map.items()
+        # MODIFIED 3/15/25 OLD:
+        # def update_autodiff_all_output_values(context):
+        #     """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
+        #     if self.all_output_values is not None:
+        #         # Execute the output_CIM on the last element of the batch to update the output ports
+        #         self._composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
+        #
+        # FIX: NEEDS ADDITIONAL SUPPORT FOR SELECTIVELY SPECIFYING SUBSETS OF NODES TO UPDATE
+        # if nodes == ALL:
+        #     nodes = self._nodes_map.items()
+        # elif nodes == INPUTS:
+        #     nodes = [(node, self._nodes_map[node]) for node in self._composition.get_input_nodes()]
         # elif nodes == OUTPUTS:
         #     nodes = [(node, self._nodes_map[node]) for node in self._composition.get_output_nodes()]
-
-        def update_autodiff_all_output_values(context):
-            """Update autodiff's output_values by executing its output_CIM's with pytorch_rep all_output_values"""
-            if self.all_output_values is not None:
-                # Execute the output_CIM on the last element of the batch to update the output ports
-                self._composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
-
         # Allow selective updating of just autodiff.output_values if specified
-        if nodes == OUTPUTS:
-            update_autodiff_all_output_values(context)
-            return
+        # if nodes == OUTPUTS:
+        #     update_autodiff_all_output_values(context)
+        #     return
+        # MODIFIED 3/15/25 END
+        for pytorch_node in self._nodes_map.values():
+            pytorch_node.set_pnl_variable_and_values(set_variable=True if NODE_VARIABLES in options else False,
+                                                     set_value=True if NODE_VALUES in options else False,
+                                                     # FIX: 3/15/25 - ADD SUPPORT FOR THESE
+                                                     # set_output_values=True if OUTPUT_VALUES in options else False,
+                                                     # set_execute=True if EXECUTE_NODES in options else False,
+                                                     context=context)
 
-        # Copy all remaining node values
-        self._copy_pytorch_node_outputs_to_pnl_values(nodes, context)
-
-        # Finally, update the output_values of the autodiff Composition by executing its output_CIM
-        update_autodiff_all_output_values(context)
-
-    def _copy_pytorch_node_outputs_to_pnl_values(self, nodes, context):
-        for pnl_node, pytorch_node in nodes:
-            # Update each node's value with the output of the corresponding wrapper in the PyTorch representation
-            if pytorch_node.output is None:
-                assert pytorch_node.exclude_from_gradient_calc, \
-                    (f"PROGRAM ERROR: Value of PyTorch wrapper for {pnl_node.name} is None during forward pass, "
-                     f"but it is not excluded from gradient calculation.")
-                continue
-
-            # First get value in numpy format
-            if isinstance(pytorch_node.output, list):
-                batch_size = len(pytorch_node.output)
-                num_outputs = len(pytorch_node.output[0])
-                value = np.empty((batch_size, num_outputs), dtype=object)
-                for bi in range(batch_size):
-                    for i in range(num_outputs):
-                        value[bi, i] = pytorch_node.output[bi][i].detach().cpu().numpy()
-
-            else:
-                value = pytorch_node.output.detach().cpu().numpy()
-
-            # FIX: 3/14/25 - MIGHT BE BETTER TO JUST ASSIGN VARIABLES (PER METHOD ABOVE) AND THEN EXECUTE MECHANISMS?
-            # Set pnl_node's value to value
-            pnl_node.parameters.value._set(value, context)
-
-            # If pnl_node's function is Stateful, assign value to its previous_value parameter
-            #   so that if Python implementation is run it picks up where PyTorch execution left off
-            if isinstance(pnl_node.function, StatefulFunction):
-                pnl_node.function.parameters.previous_value._set(value, context)
-            # Do same for integrator_function of TransferMechanism if it is in integrator_mode
-            if isinstance(pnl_node, TransferMechanism) and pnl_node.integrator_mode:
-                pnl_node.integrator_function.parameters.previous_value._set(pytorch_node.integrator_previous_value,
-                                                                            context)
+        # Update output_values of autodiff Composition by executing its output_CIM with pytorch_rep all_output_values
+        if self.all_output_values is not None:
+            # Execute the output_CIM on the last element of the batch to update the output ports
+            self._composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
 
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
@@ -1434,25 +1384,70 @@ class PytorchMechanismWrapper():
         return self.output
 
     def set_pnl_variable_and_values(self,
-                                   variable:torch.Tensor=None,
-                                   value:torch.Tensor=None,
-                                   output_values:torch.Tensor=None,
-                                   execute:bool=True):
+                                    set_variable:bool=None,
+                                    set_value:bool=None,
+                                    # FIX: 3/15/25 - ADD SUPPORT FOR THESE
+                                    # set_output_values:bool=None,
+                                    # set_execute:bool=True,
+                                    context=None):
         """Set the state of the PytorchMechanismWrapper's Mechanism
         Note: if execute=True, variable must be provided.
         """
-        if variable:
-            self.mechanism.parameters.variable._set(variable.detach().cpu().numpy().squeeze(1), context)
-        if value:
-            self.mechanism.parameters.value._set(value.detach().cpu().numpy().squeeze(1), context)
-        if output_values:
-            for value, port in zip(output_values, self.mechanism.output_ports):
-                port.parameters.value._set(value.detach().cpu().numpy().squeeze(), context)
-        if execute:
-            if variable:
-                self.execute(variable)
+        if SYNCH not in self._use:
+            return
+
+        pnl_mech = self.mechanism
+
+        if set_variable:
+            # First get variable in numpy format
+            if isinstance(self.input, list):
+                variable = np.array([val.detach().cpu().numpy() for val in self.input], dtype=object)
             else:
-                assert False, "PROGRAM ERROR: set_state called execute=True but no variable specified"
+                variable = self.input.detach().cpu().numpy()
+            # Set pnl_mech's variable
+            pnl_mech.parameters.variable._set(variable, context)
+
+        if set_value:
+            # self.mechanism.parameters.value._set(value.detach().cpu().numpy().squeeze(1), context)
+            if self.output is None:
+                assert self.exclude_from_gradient_calc, \
+                    (f"PROGRAM ERROR: Value of PyTorch wrapper for {self.name} is None during forward pass, "
+                     f"but it is not excluded from gradient calculation.")
+
+            # First get value in numpy format
+            if isinstance(self.output, list):
+                batch_size = len(self.output)
+                num_outputs = len(self.output[0])
+                value = np.empty((batch_size, num_outputs), dtype=object)
+                for bi in range(batch_size):
+                    for i in range(num_outputs):
+                        value[bi, i] = self.output[bi][i].detach().cpu().numpy()
+
+            else:
+                value = self.output.detach().cpu().numpy()
+
+            # FIX: 3/14/25 - MIGHT BE BETTER TO JUST ASSIGN VARIABLES (PER METHOD ABOVE) AND THEN EXECUTE MECHANISMS?
+            # Set pnl_mech's value
+            pnl_mech.parameters.value._set(value, context)
+
+            # If pnl_mech's function is Stateful, assign value to its previous_value parameter
+            #   so that if Python implementation is run it picks up where PyTorch execution left off
+            if isinstance(pnl_mech.function, StatefulFunction):
+                pnl_mech.function.parameters.previous_value._set(value, context)
+            # Do same for integrator_function of TransferMechanism if it is in integrator_mode
+            if isinstance(pnl_mech, TransferMechanism) and pnl_mech.integrator_mode:
+                pnl_mech.integrator_function.parameters.previous_value._set(pnl_mech.integrator_previous_value,
+                                                                            context)
+
+        # FIX: 3/15/25 - ADD SUPPORT FOR THESE
+        # if output_values:
+        #     for value, port in zip(output_values, self.mechanism.output_ports):
+        #         port.parameters.value._set(value.detach().cpu().numpy().squeeze(), context)
+        # if execute:
+        #     if variable:
+        #         self.execute(variable)
+        else:
+            assert False, "PROGRAM ERROR: set_state called but neither set_variable nor set_value is specified"
 
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
         mech_func = ctx.import_llvm_function(self.mechanism)
