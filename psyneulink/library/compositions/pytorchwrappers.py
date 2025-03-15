@@ -1423,6 +1423,27 @@ class PytorchMechanismWrapper():
         self.output = execute_function(self.function, variable)
         return self.output
 
+    def set_state(self,
+                  variable:torch.Tensor=None,
+                  value:torch.Tensor=None,
+                  output_values:torch.Tensor=None,
+                  execute:bool=True):
+        """Set the state of the PytorchMechanismWrapper's Mechanism
+        Note: if execute=True, variable must be provided.
+        """
+        if variable:
+            self.mechanism.parameters.variable._set(variable.detach().cpu().numpy().squeeze(1), context)
+        if value:
+            self.mechanism.parameters.value._set(value.detach().cpu().numpy().squeeze(1), context)
+        if output_values:
+            for value, port in zip(output_values, self.mechanism.output_ports):
+                port.parameters.value._set(value.detach().cpu().numpy().squeeze(), context)
+        if execute:
+            if variable:
+                self.execute(variable)
+            else:
+                assert False, "PROGRAM ERROR: set_state called execute=True but no variable specified"
+
     def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
         mech_func = ctx.import_llvm_function(self.mechanism)
 

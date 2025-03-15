@@ -200,19 +200,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # Execute GRU Node
         output = self.gru_pytorch_node.execute(inputs, context)
 
-        # # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
-        # hidden_state = self.gru_pytorch_node.hidden_state.detach().cpu().numpy()
-        # pnl_hidden_layer = self._composition.nodes[HIDDEN_LAYER]
-        # pnl_hidden_layer.output_port.parameters.value._set(hidden_state.squeeze(), context)
-
-        # if self._composition.frozen_values:
-        #     self._composition.frozen_values[HIDDEN_LAYER] = hidden_state
-
         # Set GRUComposition's OUTPUT Node of output of GRU Node
         self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
-
-        assert 'DEBUGGING BREAK POINT'
 
         return {self._composition.gru_mech: output}
 
@@ -398,7 +388,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.previous_hidden_state = self.hidden_state
 
         self.input = input
-        # FIX DAVE
         variable = [input, self.hidden_state]
         self.output, self.hidden_state = self.function(*variable)
 
@@ -407,11 +396,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         composition.hidden_layer_node.output_port.parameters.value._set(
             self.hidden_state.detach().cpu().numpy().squeeze(), context)
 
-        # # FIX: 3/14/25 - SHOULD MOVE THIS SOMEWHERE
-        # # self.self._composition_wrapper_owner.synch_with_pnl(context)
-        # self._composition_wrapper_owner._copy_pytorch_node_outputs_to_pnl_values([(self.mechanism, self)],
-        #                                                                          context)
-        #
+        # # FIX: 3/15/25 - SHOULD MOVE THIS SOMEWHERE
+        if context.composition != self._composition_wrapper_owner._composition:
+            self._composition_wrapper_owner.synch_with_psyneulink(synch_with_pnl_options, current_condition, context)
+            # self._composition_wrapper_owner._copy_pytorch_node_outputs_to_pnl_values([(self.mechanism, self)],
+            #                                                                          context)
+
         return self.output
 
         # MODIFIED 3/14/25 END

@@ -805,6 +805,9 @@ class GRUComposition(AutodiffComposition):
                          **kwargs
                          )
 
+        input_size = self.input_size
+        hidden_size = self.hidden_size
+
         self._construct_composition(input_size, hidden_size)
         self._assign_gru_specific_attributes()
 
@@ -1121,6 +1124,7 @@ class GRUComposition(AutodiffComposition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
+        # FIX: 3/15/25
         # if self.gru_mech:
         #     return [self.target_node]
 
