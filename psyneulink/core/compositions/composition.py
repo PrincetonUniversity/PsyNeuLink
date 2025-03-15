@@ -12044,7 +12044,7 @@ _
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
-            assert 'DEBUGGING BREAK POINT'
+            assert 'DEBUGGING BREAK POINT: TRIAL EXECUTION'
 
             for next_execution_set in execution_sets:
 
@@ -12056,7 +12056,9 @@ _
                 # know a PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we
                 # have to run call_after_pass before the next PASS (here) or after this code block (see call to
                 # call_after_pass below)
-                # IMPLEMENTATION NOTE: GOOD PLACE FOR BREAKPOINT WHEN EXAMINING / DEBUGGING execution_sets
+
+                assert 'DEBUGGING BREAK POINT: EXECUTION_SET EXECUTION'
+
                 curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
                                                                                             TimeScale.TRIAL)
                 new_pass = False
@@ -12215,7 +12217,7 @@ _
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                                assert 'DEBUGGING BREAK POINT'
+                                assert 'DEBUGGING BREAK POINT: NODE EXECUTION'
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):

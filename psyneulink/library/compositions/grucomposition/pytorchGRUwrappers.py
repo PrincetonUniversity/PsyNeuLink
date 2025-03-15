@@ -397,10 +397,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             self.hidden_state.detach().cpu().numpy().squeeze(), context)
 
         # # FIX: 3/15/25 - SHOULD MOVE THIS SOMEWHERE
-        if context.composition != self._composition_wrapper_owner._composition:
-            self._composition_wrapper_owner.synch_with_psyneulink(synch_with_pnl_options, current_condition, context)
-            # self._composition_wrapper_owner._copy_pytorch_node_outputs_to_pnl_values([(self.mechanism, self)],
-            #                                                                          context)
+        # if context.composition != self._composition_wrapper_owner._composition:
+        #     self._composition_wrapper_owner.synch_with_psyneulink(synch_with_pnl_options, current_condition, context)
+        #     # self._composition_wrapper_owner._copy_pytorch_node_outputs_to_pnl_values([(self.mechanism, self)],
+        #     #                                                                          context)
 
         return self.output
 

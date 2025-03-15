@@ -3647,6 +3647,47 @@ class TestACLogging:
         xor.clear_losses(context=xor)
         assert len(xor.losses) == 0
 
+    def test_synching(self):
+        """Test synchronization of variables and values of nested Compositions with PyTorch execution."""
+        inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=2, function=pnl.Logistic)
+        inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=3)
+        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=4)
+        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=5, function=pnl.Logistic)
+        inner_comp = pnl.AutodiffComposition(name='Inner Comp',
+                                             pathways=[inner_mech_1, inner_mech_2],
+                                             synch_node_variables_with_torch=pnl.RUN)
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                             pathways=[outer_mech_in, inner_comp, outer_mech_out],
+                                             synch_node_variables_with_torch=pnl.RUN)
+        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
+                                          targets[0]: [[1,1,1,1,1]]},
+                                  execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Outer Mechanism
+        # variable
+        expected = [[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].variable, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.variable.get('Outer Comp'), expected)
+        # value
+        expected = [[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].value, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.value.get('Outer Comp'), expected)
+
+        # Nested Mechanism
+        # variable
+        expected = [[[10, 10]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].variable, expected)
+        # np.testing.assert_allclose(outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].variable, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.variable.get('Outer Comp'), expected)
+        # value
+        expected = [[[0.9999546, 0.9999546]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].value, expected)
+        # np.testing.assert_allclose(['Inner Comp'].nodes['Inner Mech 1'].value, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.value.get('Outer Comp'), expected)
+
 
 @pytest.mark.pytorch
 class TestBatching:
@@ -3851,6 +3892,7 @@ class TestBatching:
         ce_torch = adc.loss_function(output, target).detach().numpy()
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
+
 
 @pytest.mark.pytorch
 @pytest.mark.parametrize('batch_size', [1, 2, 4])

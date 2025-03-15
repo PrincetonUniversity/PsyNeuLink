@@ -204,65 +204,17 @@ class TestExecution:
         class TorchModel(torch.nn.Module):
             def __init__(self):
                 super(TorchModel, self).__init__()
-                # FIX: MAKE SURE BIASES ARE NOT USED FOR THESE MODULES:
+                # Note:  input and output modules don't use biases in PNL version, so match that here
                 self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
                 self.input.weight.requires_grad = False # Since weights to INPUT nodes of Composition are not learnable
                 self.gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
                 self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
-                self.gru.register_forward_hook(TorchModel._pytorch_GRU_module_values_hook)
 
             def forward(self, x, hidden):
                 after_input = self.input(x)
                 after_gru, hidden_state = self.gru(after_input, hidden)
                 after_output = self.output(after_gru)
                 return after_output, hidden_state
-
-            def _pytorch_GRU_module_values_hook(module, input, output):
-                in_len = module.input_size
-                hid_len = module.hidden_size
-                z_idx = hid_len
-                n_idx = 2 * hid_len
-
-                ih = module.weight_ih_l0
-                hh = module.weight_hh_l0
-                if module.bias:
-                    b_ih = module.bias_ih_l0
-                    b_hh = module.bias_hh_l0
-                else:
-                    b_ih = torch.tensor(np.array([0] * 3 * hid_len))
-                    b_hh = torch.tensor(np.array([0] * 3 * hid_len))
-
-                w_ir = ih[:z_idx].T
-                w_iz = ih[z_idx:n_idx].T
-                w_in = ih[n_idx:].T
-                w_hr = hh[:z_idx].T
-                w_hz = hh[z_idx:n_idx].T
-                w_hn = hh[n_idx:].T
-
-                b_ir = b_ih[:z_idx]
-                b_iz = b_ih[z_idx:n_idx]
-                b_in = b_ih[n_idx:]
-                b_hr = b_hh[:z_idx]
-                b_hz = b_hh[z_idx:n_idx]
-                b_hn = b_hh[n_idx:]
-
-                # assert len(input) > 1, (f"PROGRAM ERROR: _pytorch_GRU_module_values_hook hook received only one tensor "
-                #                         f"in its input argument: {input}; either the input or hidden state is missing.")
-                x = input[0]
-                h = input[1] if len(input) > 1 else torch.tensor([[0] * module.hidden_size], dtype=torch.float32)
-                # h = input[1]
-
-                # Reproduce GRU forward calculations
-                r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-                z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-                n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-                h_t = (1 - z_t) * n_t + z_t * h
-
-                # Put internal calculations in dict with corresponding node names as keys
-                GRU_node_values['RESET'] = r_t.detach()
-                GRU_node_values['UPDATE'] = z_t.detach()
-                GRU_node_values['NEW'] = n_t.detach()
-                GRU_node_values['HIDDEN'] = h_t.detach()
 
         torch_model = TorchModel()
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
@@ -301,29 +253,20 @@ class TestExecution:
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
-        # # Execute autodiff without learning
-        # autodiff_result_before_learning = autodiff_comp.run(inputs={input_mech:inputs},
-        #                                                     num_trials=2,
-        #                                                     execution_mode=pnl.ExecutionMode.PyTorch)
-        # totals = [i.sum().item() for i in list(autodiff_comp._build_pytorch_representation().parameters())]
-
-        # Execute autodiff with learning
+        # Execute autodiff with learning (but not weight updates yet)
         autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
                                                               execution_mode=pnl.ExecutionMode.PyTorch)
-        # Get results after learning
+        # Get results after learning (with weight updates)
         autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
                                                            execution_mode=pnl.ExecutionMode.PyTorch)
-        # new_totals = [i.sum().item() for i in list(autodiff_comp.pytorch_representation.parameters())]
 
-        # Test of forward passes:
+        # Test of forward pass (without effects of learning yet):
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
                                    autodiff_result_before_learning, atol=1e-6)
 
+        # Test of execution after backward pass (learning):
         np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
-
-        # Test of backward (learning) pass:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-6)
-
 
         torch.set_default_dtype(entry_torch_dtype)
