@@ -616,7 +616,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         assert True
 
-
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         args = [ctx.get_state_struct_type(self._composition).as_pointer(),
@@ -981,7 +980,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                               current_condition:LEARNING_SCALE_LITERALS,
                               context:Context,
                               params:Optional[list]=None):
-        """Copy weights, values, and/or results from Pytorch to PsyNeuLink at specified junctures
+        """Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
         params can be used to restrict copy to a specific (set of) param(s). If params is not specified, all are copied;
         """
         # 8/7/24: FIX - THIS COULD BE MADE TO BE MORE EFFICIENT ALONG THE LINES OF retain_for_psyneulink()
@@ -995,11 +994,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
             self.copy_weights_to_psyneulink(context)
 
-        if NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition:
-            self._copy_pytorch_node_inputs_to_pnl_variables(ALL, context)
-
-        if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
-            self.copy_node_values_to_psyneulink(ALL, context)
+        # # MODIFIED 3/15/25 OLD:
+        # if NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition:
+        #     self._copy_pytorch_node_inputs_to_pnl_variables(ALL, context)
+        # 
+        # if NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition:
+        #     self.copy_node_values_to_psyneulink(ALL, context)
+        # MODIFIED 3/15/25 NEW:
+        if ((NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition)
+                or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition)):
+            self.copy_node_variables_and_values_to_psyneulink(ALL, context)
+        # MODIFIED 3/15/25 END
 
         if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
             self.copy_results_to_psyneulink(current_condition, context)
@@ -1028,6 +1033,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     variable = pytorch_node.input.detach().cpu().numpy()
                 # Set pnl_node's value to value
                 pnl_node.parameters.variable._set(variable, context)
+
+    def copy_node_variables_and_values_to_psyneulink(self,
+                                                     nodes:Optional[Union[list,Literal[ALL,OUTPUTS,INPUTS]]]=ALL,
+                                                     context=None):
+        pass
 
     def copy_node_values_to_psyneulink(self, nodes:Optional[Union[list,Literal[ALL, OUTPUTS]]]=ALL, context=None):
         """Copy output of Pytorch nodes to value of AutodiffComposition nodes.
@@ -1109,7 +1119,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         ---------
         data : dict
             specifies local data available to retain (for copying to pnl at end of run;
-            keys must be one or more of the keywords OUTPUTS, TARGETS, or LOSSES; value must be a torch.Tensor
+            keys must be one or more of the keywords OUTPUTS, TARGETS, or LOSSES; values must be a torch.Tensor
         retain_in_pnl_options : dict
             specifies which data the user has requested be retained (and copied to pnl at end of run)
             keys must be OUTPUTS, TARGETS, or LOSSES; value must be a LearningScale.name or None (which suppresses copy)
@@ -1423,11 +1433,11 @@ class PytorchMechanismWrapper():
         self.output = execute_function(self.function, variable)
         return self.output
 
-    def set_state(self,
-                  variable:torch.Tensor=None,
-                  value:torch.Tensor=None,
-                  output_values:torch.Tensor=None,
-                  execute:bool=True):
+    def set_pnl_variable_and_values(self,
+                                   variable:torch.Tensor=None,
+                                   value:torch.Tensor=None,
+                                   output_values:torch.Tensor=None,
+                                   execute:bool=True):
         """Set the state of the PytorchMechanismWrapper's Mechanism
         Note: if execute=True, variable must be provided.
         """

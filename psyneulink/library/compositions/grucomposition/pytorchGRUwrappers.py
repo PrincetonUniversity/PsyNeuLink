@@ -206,6 +206,54 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return {self._composition.gru_mech: output}
 
+    def copy_weights_to_psyneulink(self, context=None):
+        for proj_wrapper in self._projection_map.values():
+            if SYNCH in proj_wrapper._use:
+                proj_wrapper._copy_params_to_pnl_proj(context)
+
+    def copy_weights_to_torch_gru(self, context=None):
+        for projection, proj_wrapper in self._projection_map.items():
+            if SYNCH in proj_wrapper._use:
+                proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
+
+    def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
+        """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
+        Format tensors:
+          - transpose all weight and bias tensors;
+          - reformat biases as 2d
+        Return formatted tensors, which are used:
+         - in set_weights_from_torch_gru(), where they are converted to numpy arrays
+         - for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()
+        """
+        hid_len = torch_gru.hidden_size
+        z_idx = hid_len
+        n_idx = 2 * hid_len
+
+        torch_gru_weights = torch_gru.state_dict()
+        wts_ih = torch_gru_weights['weight_ih_l0']
+        wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
+        wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
+        wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
+        wts_hh = torch_gru_weights['weight_hh_l0']
+        wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
+        wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
+        wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
+        weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
+
+        biases = None
+        if torch_gru.bias:
+            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
+            b_ih = torch_gru_weights['bias_ih_l0']
+            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_hh = torch_gru_weights['bias_hh_l0']
+            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
+            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
+        return weights, biases
+
     def log_weights(self):
         for proj_wrapper in self._projection_wrappers:
             proj_wrapper.log_matrix()
@@ -296,54 +344,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def log_values(self):
         for node_wrapper in [n for n in self._wrapped_nodes if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
-
-    def copy_weights_to_psyneulink(self, context=None):
-        for proj_wrapper in self._projection_map.values():
-            if SYNCH in proj_wrapper._use:
-                proj_wrapper._copy_params_to_pnl_proj(context)
-
-    def copy_weights_to_torch_gru(self, context=None):
-        for projection, proj_wrapper in self._projection_map.items():
-            if SYNCH in proj_wrapper._use:
-                proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
-
-    def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
-        """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
-        Format tensors:
-          - transpose all weight and bias tensors;
-          - reformat biases as 2d
-        Return formatted tensors, which are used:
-         - in set_weights_from_torch_gru(), where they are converted to numpy arrays
-         - for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()
-        """
-        hid_len = torch_gru.hidden_size
-        z_idx = hid_len
-        n_idx = 2 * hid_len
-
-        torch_gru_weights = torch_gru.state_dict()
-        wts_ih = torch_gru_weights['weight_ih_l0']
-        wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
-        wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
-        wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
-        wts_hh = torch_gru_weights['weight_hh_l0']
-        wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
-        wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
-        wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
-        weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
-
-        biases = None
-        if torch_gru.bias:
-            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-            b_ih = torch_gru_weights['bias_ih_l0']
-            b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hh = torch_gru_weights['bias_hh_l0']
-            b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
-        return weights, biases
 
 
 class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
