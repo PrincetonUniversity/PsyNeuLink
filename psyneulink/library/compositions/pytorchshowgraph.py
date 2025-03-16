@@ -175,9 +175,9 @@ class PytorchShowGraph(ShowGraph):
             elif rcvr not in self.composition.nodes:
                 #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph
                 #  (since they are not in the outermost Composition and are therefore ignored when it is flattened)
-                dependenies = self._get_processing_graph(self.composition, context)
-                receivers = dependenies.keys()
-                senders = [sender for sender_list in dependenies.values() for sender in sender_list]
+                dependencies = self._get_processing_graph(self.composition, context)
+                receivers = dependencies.keys()
+                senders = [sender for sender_list in dependencies.values() for sender in sender_list]
                 if rcvr in receivers and rcvr not in senders:
                     kwargs['color'] = self.output_color
                     kwargs['penwidth'] = str(self.bold_width)
