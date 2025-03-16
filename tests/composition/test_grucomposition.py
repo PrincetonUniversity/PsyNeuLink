@@ -109,7 +109,7 @@ class TestExecution:
 
         h0 = torch.tensor(np.array([[0.,0.,0.,0.,0.]]))
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
-        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_gru)
         result, hn = torch_gru(torch.tensor(np.array(inputs)),h0)
         torch_results = [result.detach().numpy()]
         result, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
@@ -144,7 +144,7 @@ class TestExecution:
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_gru.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
-        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_gru)
 
         # Execute model without learning
         h0 = torch.tensor([[0.,0.,0.,0.,0.]])
@@ -222,7 +222,7 @@ class TestExecution:
 
         # Get initial weights (to initialize autodiff below with same initial conditions)
         torch_input_initial_weights = torch_model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
-        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_model.gru)
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_model.gru)
         torch_output_initial_weights = torch_model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
 
         # Execute Torch model without learning
@@ -294,9 +294,12 @@ class TestExecution:
             np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
                                        [[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]],
                                        atol=1e-8)
-            # FIX: HIDDEN SHOULD ALSO EQAUL GRU_NODE.output AND SAME AS OUTPUT BELOW)
+            torch_gru = autodiff_comp.pytorch_representation._wrapped_nodes[2]._wrapped_nodes[0]
             np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
-                                       [[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]],
-                                       atol=1e-8)
+                                       GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'))
+            # MODIFIED 3/16/25 OLD:
+            # np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
+            #                           torch_gru.hidden_state.detach().numpy(), atol=1e-8)
+            # MODIFIED 3/16/25 END
 
         torch.set_default_dtype(entry_torch_dtype)

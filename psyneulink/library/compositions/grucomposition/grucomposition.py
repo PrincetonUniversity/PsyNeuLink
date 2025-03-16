@@ -307,17 +307,18 @@ from psyneulink.core.llvm import ExecutionMode
 
 __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE',
-           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE']
+           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE', 'gru_internal_state_names']
 
 from sympy.printing.cxx import CXX17CodePrinter
 
 # Node names
 INPUT_NODE = 'INPUT'
-HIDDEN_LAYER = 'HIDDEN\nLAYER'
+NEW_NODE = 'NEW'
 RESET_NODE = 'RESET'
 UPDATE_NODE = 'UPDATE'
-NEW_NODE = 'NEW'
+HIDDEN_LAYER = 'HIDDEN\nLAYER'
 OUTPUT_NODE = 'OUTPUT'
+gru_internal_state_names = [NEW_NODE, RESET_NODE, UPDATE_NODE, HIDDEN_LAYER]
 
 
 class GRUCompositionError(CompositionError):

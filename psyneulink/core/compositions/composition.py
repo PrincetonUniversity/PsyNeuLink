@@ -12044,7 +12044,7 @@ _
                 for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
-            assert 'DEBUGGING BREAK POINT: TRIAL EXECUTION'
+            assert 'DEBUGGING BREAK POINT: BEGINNING OF TRIAL EXECUTION'
 
             for next_execution_set in execution_sets:
 

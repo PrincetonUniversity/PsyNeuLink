@@ -15,6 +15,8 @@ import graph_scheduler
 
 from typing import Union, Optional, Literal
 
+from sympy.printing.cxx import CXX17CodePrinter
+
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
@@ -206,6 +208,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return {self._composition.gru_mech: output}
 
+    def synch_with_psyneulink(self, synch_with_pnl_options, current_condition, context, params):
+        """Overrided to set PytorchMechanismWrapper's synch_with_pnl attribute when called for."""
+        if (NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition):
+            self.gru_pytorch_node.synch_with_pnl = True
+        super().synch_with_psyneulink(synch_with_pnl_options, current_condition, context, params)
+
     def copy_weights_to_psyneulink(self, context=None):
         for proj_wrapper in self._projection_map.values():
             if SYNCH in proj_wrapper._use:
@@ -216,7 +224,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
 
-    def get_weights_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
+    def get_parameters_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;
@@ -272,6 +280,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
         self.torch_dtype = dtype
+        self.synch_with_pnl = False
         super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
@@ -292,21 +301,25 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def execute(self, input, context):
+    def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value
         """
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
         composition = self._composition_wrapper_owner._composition
 
+        self.input = input
+
         hidden_state = composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
         self.hidden_state = torch.tensor(hidden_state).unsqueeze(1)
         # Save starting hidden_state for re-computing current values in _copy_pytorch_node_outputs_to_pnl_values()
-        self.previous_hidden_state = self.hidden_state
+        self.previous_hidden_state = self.hidden_state.detach()
 
-        self.input = input
-        variable = [input, self.hidden_state]
-        self.output, self.hidden_state = self.function(*variable)
+        if self.synch_with_pnl:
+            self._cache_torch_gru_internal_state_values(self.input[0][0], self.hidden_state.detach())
+
+        # Execute torch GRU module with input and hidden state
+        self.output, self.hidden_state = self.function(*[input, self.hidden_state])
 
         # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
         # Note: this must be done in case the GRUComposition is run after learning,
@@ -323,7 +336,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # MODIFIED 3/14/25 END
 
-    def collect_afferents(self, batch_size, port=None):
+    def collect_afferents(self, batch_size, port=None)->torch.Tensor:
         """
         Return afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
@@ -379,14 +392,46 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         return res
 
-    def execute_input_ports(self, variable):
+    def execute_input_ports(self, variable)->torch.Tensor:
         from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-
         assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
                                                 f"should be a torch.Tensor, but is {type(variable)}.")
+        # Return the input for the port for all items in the batch
+        return variable[:, 0, ...]
 
-        # must iterate over at least 1d input per port
-        return variable[:, 0, ...] # Get the input for the port for all items in the batch
+    # FIX: 3/16/25
+    # def _get_gru_internal_state_values(self)->dict:
+    def _cache_torch_gru_internal_state_values(self, input, hidden_state):
+        """Manually calculate and store internal state values for torch GRU prior to backward pass
+        These are needed for assigning to the corresponding nodes in the GRUComposition.
+        """
+        torch_gru_parameters = PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(self.function.function)
+
+        # Get weights
+        torch_weights = list(torch_gru_parameters[0])
+        for i, weight in enumerate(torch_weights):
+            torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
+        w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
+
+        # Get biases
+        pnl_comp = self._composition_wrapper_owner._composition
+        if pnl_comp.bias:
+            assert len(torch_gru_parameters) > 1, \
+                (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
+                 f"but no bias weights were returned for torch_gru_parameters.")
+            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
+        else:
+            b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
+
+        # Do calculations for internal state values
+        x = input
+        h = hidden_state
+        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+        h_t = (1 - z_t) * n_t + z_t * h
+
+        self.torch_gru_internal_state_values = (r_t, z_t, n_t, h_t)
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -401,39 +446,17 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                 f"PROGRAM ERROR: copying variables to GRUComposition from pytorch execution is not currently supported."
 
         if set_value:
-
-            if self.output is None:
-                assert pytorch_node.exclude_from_gradient_calc, \
-                    (f"PROGRAM ERROR: Value of PyTorch wrapper for '{self.name}' is None during forward pass, "
-                     f"but it is not excluded from gradient calculation.")
-
-            pnl_comp = self._composition_wrapper_owner._composition
-            torch_gru = self.function.function
-            torch_gru_output = self.output[0].detach().cpu().numpy()
-            torch_gru_parameters = PytorchGRUCompositionWrapper.get_weights_from_torch_gru(torch_gru)
-            torch_weights = torch_gru_parameters[0]
-            torch_weights = list(torch_weights)
-            for i, weight in enumerate(torch_weights):
-                torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
-            w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
-            if pnl_comp.bias:
-                assert len(torch_gru_parameters) > 1, \
-                    (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
-                     f"but no bias weights were returned for torch_gru_parameters.")
-                b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
-            else:
-                b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
-
-            x = self.input[0][0]
-
-            # Use previous hidden state so that these calculations align with those done by GRU when executed
-            h = self.previous_hidden_state.detach()
-            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-            h_t = (1 - z_t) * n_t + z_t * h
+            r_t, z_t, n_t, h_t = self.torch_gru_internal_state_values
+            try:
+                # Ensure that result of manual-calculated state values matches output of actual call to PyTorch module
+                np.testing.assert_allclose(h_t.detach().numpy(),
+                                           self.output.detach().numpy(),
+                                           atol=1e-8)
+            except ValueError:
+                assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
 
             # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+            pnl_comp = self._composition_wrapper_owner._composition
             pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
