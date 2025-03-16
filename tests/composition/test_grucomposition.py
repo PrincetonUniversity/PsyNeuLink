@@ -184,7 +184,7 @@ class TestExecution:
         torch.set_default_dtype(entry_torch_dtype)
 
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
-    def test_nested_gru_composition_learning(self, bias):
+    def test_nested_gru_composition_learning_and_copy_values(self, bias):
         # Test identicality of results of nested GRUComposition and pure pytorch version
 
         import torch
@@ -268,5 +268,35 @@ class TestExecution:
         np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-6)
+
+        if not bias:
+            # Test synchronization of values
+            # Outer Comp
+            expected = [0]
+            np.testing.assert_allclose(autodiff_comp.nodes['INPUT MECH'].parameters.variable.get('OUTER COMP'),
+                                       [[1., 2., 3.]])
+            np.testing.assert_allclose(autodiff_comp.nodes['OUTPUT MECH'].parameters.variable.get('OUTER COMP'),
+                                       [[-0.2371911, 0.09483196, 0.08101949, -0.32086433, 0.17566031]],
+                                       atol=1e-8)
+            # GRU Comp
+            GRU_comp_nodes = autodiff_comp.nodes['GRU COMP'].nodes
+            np.testing.assert_allclose(GRU_comp_nodes['INPUT'].parameters.value.get('OUTER COMP'),
+                                       [[0.88200826,  1.82932232, -0.43319262]],
+                                       atol=1e-8)
+            np.testing.assert_allclose(GRU_comp_nodes['RESET'].parameters.value.get('OUTER COMP'),
+                                       [[0.52969068, 0.42252881, 0.54034619, 0.64740737, 0.34754141]],
+                                       atol=1e-8)
+            np.testing.assert_allclose(GRU_comp_nodes['UPDATE'].parameters.value.get('OUTER COMP'),
+                                       [[0.4842834,  0.65262676, 0.73368542, 0.32401945, 0.51233801]])
+            np.testing.assert_allclose(GRU_comp_nodes['NEW'].parameters.value.get('OUTER COMP'),
+                                       [[-0.2679114,  -0.01421539,  0.67555595,  0.76259181, -0.81329808]],
+                                       atol=1e-8)
+            np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
+                                       [[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]],
+                                       atol=1e-8)
+            # FIX: HIDDEN SHOULD ALSO EQAUL GRU_NODE.output AND SAME AS OUTPUT BELOW)
+            np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
+                                       [[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]],
+                                       atol=1e-8)
 
         torch.set_default_dtype(entry_torch_dtype)
