@@ -77,12 +77,12 @@ class PytorchShowGraph(ShowGraph):
                     receiver = projection.receiver.owner
                     if node is receiver:
                         dependencies.add(sender)
-                    # FIX: 3/9/25 - HANDLE NOTED THAT PROJECTS TO OUPUT_CIM IN SAME WAY:
+                    # FIX: 3/9/25 - HANDLE NOTED THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                     elif (isinstance(receiver, CompositionInterfaceMechanism) and
                           # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
-                          # FIX: SUPPOSED TO RETIREVE GRU NODE HERE, BUT NEED TO DEAL WITH INTERFERNING PROJECTION FROM
-                          #  OUTPUT NODE
+                          # FIX: SUPPOSED TO RETRIEVE GRU NODE HERE,
+                          #      BUT NEED TO DEAL WITH INTERFERING PROJECTION FROM OUTPUT NODE
                           receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
                         dependencies.add(sender)
                     else:
@@ -97,11 +97,6 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_processing_graph(composition, context)
 
-    # @property
-    # def _nodes_map(self):
-    #     """Get _nodes_map from AutodiffComposition's PytorchCompositionWrapper"""
-    #     return self.pytorch_rep._get_nodes_map(context=Context(execution_phase=ContextFlags.DISPLAYING))
-    #
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
@@ -171,20 +166,24 @@ class PytorchShowGraph(ShowGraph):
     def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
         if self.show_pytorch:
-            # MODIFIED 2/22/25 NEW:
             if hasattr(rcvr, 'exclude_from_show_graph'):
                 # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
                 return
-            # # MODIFIED 2/22/25 END
-            # # MODIFIED 3/9/25 OLD:
-            # if self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
-            # MODIFIED 3/9/25 NEW:
-            # node = self._get_processing_graph(self, context)[rcvr]
-            # if node and self.pytorch_rep._nodes_map[node].exclude_from_gradient_calc:
             if rcvr in self.pytorch_rep._nodes_map and self.pytorch_rep._nodes_map[rcvr].exclude_from_gradient_calc:
-            # MODIFIED 3/9/25 END
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
+            elif rcvr not in self.composition.nodes:
+                #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph
+                #  (since they are not in the outermost Composition and are therefore ignored when it is flattened)
+                dependenies = self._get_processing_graph(self.composition, context)
+                receivers = dependenies.keys()
+                senders = [sender for sender_list in dependenies.values() for sender in sender_list]
+                if rcvr in receivers and rcvr not in senders:
+                    kwargs['color'] = self.output_color
+                    kwargs['penwidth'] = str(self.bold_width)
+                elif rcvr in senders and rcvr not in receivers:
+                    kwargs['color'] = self.input_color
+                    kwargs['penwidth'] = str(self.bold_width)
             g.node(*args, **kwargs)
         else:
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)

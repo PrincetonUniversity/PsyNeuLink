@@ -196,8 +196,6 @@ class TestExecution:
         HIDDEN_SIZE = 5
         LEARNING_RATE = .001
 
-        GRU_node_values = {}
-
         # Set up and run TORCH GRU model
         class TorchModel(torch.nn.Module):
             def __init__(self):
@@ -244,7 +242,7 @@ class TestExecution:
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
-        # FIX: 3/15/25 - NEED TO BE HARDWIRED:
+        # FIX: 3/15/25 - NEED TO BE HARDWIRED IN CONSTRUCTION OF ?AUTODIFF OR GRUCOMPOSITION:
         autodiff_comp.projections[0].learnable = False
         autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
@@ -270,27 +268,27 @@ class TestExecution:
         if not bias:
             # Test synchronization of values
             # Outer Comp
-            expected = [0]
             np.testing.assert_allclose(autodiff_comp.nodes['INPUT MECH'].parameters.variable.get('OUTER COMP'),
-                                       [[1., 2., 3.]])
+                                       np.array([[1., 2., 3.]]))
             np.testing.assert_allclose(autodiff_comp.nodes['OUTPUT MECH'].parameters.variable.get('OUTER COMP'),
-                                       [[-0.2371911, 0.09483196, 0.08101949, -0.32086433, 0.17566031]],
+                                       np.array([[-0.2371911, 0.09483196, 0.08101949, -0.32086433, 0.17566031]]),
                                        atol=1e-8)
             # GRU Comp
             GRU_comp_nodes = autodiff_comp.nodes['GRU COMP'].nodes
             np.testing.assert_allclose(GRU_comp_nodes['INPUT'].parameters.value.get('OUTER COMP'),
-                                       [[0.88200826,  1.82932232, -0.43319262]],
+                                       np.array([[0.88200826,  1.82932232, -0.43319262]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['RESET'].parameters.value.get('OUTER COMP'),
-                                       [[0.52969068, 0.42252881, 0.54034619, 0.64740737, 0.34754141]],
+                                       np.array([[0.52969068, 0.42252881, 0.54034619, 0.64740737, 0.34754141]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['UPDATE'].parameters.value.get('OUTER COMP'),
-                                       [[0.4842834,  0.65262676, 0.73368542, 0.32401945, 0.51233801]])
+                                       np.array([[0.4842834,  0.65262676, 0.73368542, 0.32401945, 0.51233801]]),
+                                       atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['NEW'].parameters.value.get('OUTER COMP'),
-                                       [[-0.2679114,  -0.01421539,  0.67555595,  0.76259181, -0.81329808]],
+                                       np.array([[-0.2679114,  -0.01421539,  0.67555595,  0.76259181, -0.81329808]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
-                                       [[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]],
+                                       np.array([[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]]),
                                        atol=1e-8)
             torch_gru = autodiff_comp.pytorch_representation._wrapped_nodes[2]._wrapped_nodes[0]
             np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
