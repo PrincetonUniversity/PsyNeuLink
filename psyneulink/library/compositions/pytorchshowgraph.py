@@ -93,7 +93,8 @@ class PytorchShowGraph(ShowGraph):
             # Add TARGET nodes
             for node in self.composition.learning_components:
                 processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
-            return processing_graph
+            return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+
         else:
             return super()._get_processing_graph(composition, context)
 
