@@ -23,7 +23,8 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.utilities import convert_to_list
-from psyneulink.core.globals.keywords import ALL, CONTEXT, INPUTS, LEARNING, SHOW_PYTORCH, SYNCH
+from psyneulink.core.globals.keywords import (
+    ALL, CONTEXT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE', 'GRU_TARGET_NODE']
@@ -190,12 +191,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         assert True
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, context=None)->dict:
         """Forward method of the model for PyTorch modes
-        Returns a dictionary {output_node:value} with the output value for the module in case it is run as a
-        standalone Composition; otherwise, those will be ignored and the outputs will be used by the aggregate_afferents
-        method(s) of the other node(s) that receive Projections from the GRUComposition.
+
+        This is called only when GRUComposition is run as a standalone Composition.
+        Otherwise, the execute_node method is called (i.e., it is treated as a single node).
+        Returns a dictionary {output_node:value} with the output value for the torch GRU module (that is used
+        by the collect_afferents method(s) of the other node(s) that receive Projections from the GRUComposition.
+
         """
+
+        self._set_synch_with_pnl(synch_with_pnl_options)
+
         # Get input from GRUComposition's INPUT_NODE
         inputs = inputs[self._composition.input_node]
 
@@ -207,6 +214,23 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
         return {self._composition.gru_mech: output}
+
+    def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
+        """Override to set GRU Node's synch_with_pnl option if GRUComposition is a nested Composition
+        This is called if GRUComposition is in a nested Composition, rather than its forward method.
+        Treats GRUComposition as a single node in the PytorchCompositionWrapper's graph, inputs
+          received from other node(s) that project to the GRUComposition, and its outputs used by the
+          collect_afferents method(s) of the other node(s) that receive Projections from the  GRUComposition.
+        """
+        self._set_synch_with_pnl(synch_with_pnl_options)
+        super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
+
+
+    def _set_synch_with_pnl(self, synch_with_pnl_options):
+        if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
+            self.gru_pytorch_node.synch_with_pnl = True
+        else:
+            self.gru_pytorch_node.synch_with_pnl = False
 
     def copy_weights_to_psyneulink(self, context=None):
         for proj_wrapper in self._projection_map.values():
@@ -274,10 +298,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
         self.torch_dtype = dtype
-        # # MODIFIED 3/16/25 OLD:
-        # self.synch_with_pnl = False
-        # MODIFIED 3/16/25 NEW:
-        self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
+        # MODIFIED 3/16/25 OLD:
+        self.synch_with_pnl = False
+        # # MODIFIED 3/16/25 NEW:
+        # self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
         # MODIFIED 3/16/25 END
         super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 

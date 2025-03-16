@@ -835,7 +835,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, context=None)->dict:
     # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
@@ -947,7 +947,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Execute the node (i.e., call its forward method) using composition_wrapper_owner for Composition
                 # wrapper to which it belongs; this is to support override of the execute_node method by subclasses of
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                node._composition_wrapper_owner.execute_node(node, variable, optimization_num, context)
+                node._composition_wrapper_owner.execute_node(node, variable, optimization_num,
+                                                             synch_with_pnl_options, context)
 
                 assert 'DEBUGGING BREAK POINT'
 
@@ -968,7 +969,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Return outputs of the outermost Composition
         return outputs
 
-    def execute_node(self, node, variable, optimization_num, context=None):
+    def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
         """Execute node and store the result in the node's value attribute
         Implemented as method (and includes optimization_num and context as args)
           so that it can be overridden by subclasses of PytorchCompositionWrapper
