@@ -1394,6 +1394,7 @@ class PytorchMechanismWrapper():
                 assert self.exclude_from_gradient_calc, \
                     (f"PROGRAM ERROR: Value of PyTorch wrapper for {self.name} is None during forward pass, "
                      f"but it is not excluded from gradient calculation.")
+                return
 
             # First get value in numpy format
             if isinstance(self.output, list):
