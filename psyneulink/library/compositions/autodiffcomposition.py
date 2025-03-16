@@ -366,8 +366,8 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, EXECUTION_MODE,
                                               LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
                                               Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP,
-                                              TARGETS, TRAINED_OUTPUTS, TRIAL)
+                                              OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
+                                              RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL)
 from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -1494,7 +1494,7 @@ class AutodiffComposition(Composition):
                                      retain_torch_targets:Optional[LEARNING_SCALE_LITERALS],
                                      retain_torch_losses:Optional[LEARNING_SCALE_LITERALS],
                                      **kwargs
-                                     ):
+                                     )->tuple:
         # Remove args from kwargs in case called from run() (won't be there if called from learn()
         if synch_projection_matrices_with_torch == NotImplemented:
             synch_projection_matrices_with_torch = kwargs.pop('synch_projection_matrices_with_torch', NotImplemented)
@@ -1710,7 +1710,7 @@ class AutodiffComposition(Composition):
         # Store whether we need to return results list with a batch dimension, or flatten it
         self.batched_results = batched_results
 
-        if not ('synch_with_pnl_options' in kwargs and 'retain_in_pnl_options' in kwargs):
+        if not (SYNCH_WITH_PNL_OPTIONS in kwargs and RETAIN_IN_PNL_OPTIONS in kwargs):
             # No synch_with_pnl_options and retain_in_pnl_options dicts:
             # - so must have been called from run directly rather than learn
             # - therefore, must validate, parse and package options into those dicts
@@ -1731,8 +1731,8 @@ class AutodiffComposition(Composition):
                                                    retain_torch_targets,
                                                    retain_torch_losses,
                                                    **kwargs))
-            kwargs['synch_with_pnl_options'] = synch_with_pnl_options
-            kwargs['retain_in_pnl_options'] = retain_in_pnl_options
+            kwargs[SYNCH_WITH_PNL_OPTIONS] = synch_with_pnl_options
+            kwargs[RETAIN_IN_PNL_OPTIONS] = retain_in_pnl_options
 
         # If called from AutodiffComposition in Pytorch mode, provide chance to update results after run()
         results = super(AutodiffComposition, self).run(*args, **kwargs)
@@ -1741,7 +1741,7 @@ class AutodiffComposition(Composition):
             context = kwargs[CONTEXT]
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
-                pytorch_rep.synch_with_psyneulink(kwargs['synch_with_pnl_options'], RUN,context)
+                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], RUN,context)
         return results
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):

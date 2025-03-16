@@ -208,12 +208,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return {self._composition.gru_mech: output}
 
-    def synch_with_psyneulink(self, synch_with_pnl_options, current_condition, context, params):
-        """Overrided to set PytorchMechanismWrapper's synch_with_pnl attribute when called for."""
-        if (NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition):
-            self.gru_pytorch_node.synch_with_pnl = True
-        super().synch_with_psyneulink(synch_with_pnl_options, current_condition, context, params)
-
     def copy_weights_to_psyneulink(self, context=None):
         for proj_wrapper in self._projection_map.values():
             if SYNCH in proj_wrapper._use:
@@ -280,7 +274,11 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
         self.torch_dtype = dtype
-        self.synch_with_pnl = False
+        # # MODIFIED 3/16/25 OLD:
+        # self.synch_with_pnl = False
+        # MODIFIED 3/16/25 NEW:
+        self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
+        # MODIFIED 3/16/25 END
         super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
@@ -316,7 +314,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.previous_hidden_state = self.hidden_state.detach()
 
         if self.synch_with_pnl:
-            self._cache_torch_gru_internal_state_values(self.input[0][0], self.hidden_state.detach())
+            self.torch_gru_internal_state_values = \
+                self._calculate_torch_gru_internal_state_values(self.input[0][0], self.hidden_state.detach())
 
         # Execute torch GRU module with input and hidden state
         self.output, self.hidden_state = self.function(*[input, self.hidden_state])
@@ -326,15 +325,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         composition.hidden_layer_node.output_port.parameters.value._set(
             self.hidden_state.detach().cpu().numpy().squeeze(), context)
 
-        # # FIX: 3/15/25 - SHOULD MOVE THIS SOMEWHERE
-        # if context.composition != self._composition_wrapper_owner._composition:
-        #     self._composition_wrapper_owner.synch_with_psyneulink(synch_with_pnl_options, current_condition, context)
-        #     # self._composition_wrapper_owner._copy_pytorch_node_outputs_to_pnl_values([(self.mechanism, self)],
-        #     #                                                                          context)
-
         return self.output
-
-        # MODIFIED 3/14/25 END
 
     def collect_afferents(self, batch_size, port=None)->torch.Tensor:
         """
@@ -401,9 +392,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     # FIX: 3/16/25
     # def _get_gru_internal_state_values(self)->dict:
-    def _cache_torch_gru_internal_state_values(self, input, hidden_state):
+    def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->tuple:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
         These are needed for assigning to the corresponding nodes in the GRUComposition.
+        Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively
         """
         torch_gru_parameters = PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(self.function.function)
 
@@ -431,7 +423,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
         h_t = (1 - z_t) * n_t + z_t * h
 
-        self.torch_gru_internal_state_values = (r_t, z_t, n_t, h_t)
+        return r_t, z_t, n_t, h_t
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,

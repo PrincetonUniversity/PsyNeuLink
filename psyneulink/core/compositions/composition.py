@@ -2997,18 +2997,19 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-    DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
-    INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    LEARNING_SIGNAL, Loss, \
-    MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
-    NAME, NESTED, NO_CLAMP, NODE, NODES, \
-    OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PORT, \
-    PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, RECEIVER, \
-    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, \
-    TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
+    (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
+     DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
+     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+     LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+     LEARNING_SIGNAL, Loss, \
+     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
+     NAME, NESTED, NO_CLAMP, NODE, NODES, \
+     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
+     PARAMETER, PARAMETER_CIM_NAME, PORT, \
+     PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
+     RECEIVER, RETAIN_IN_PNL_OPTIONS, \
+     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS, \
+     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
@@ -3029,7 +3030,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole',
     ]
 
 logger = logging.getLogger(__name__)
@@ -11289,7 +11290,7 @@ _
                 self._update_results(results,
                                      trial_output,
                                      execution_mode,
-                                     kwargs['synch_with_pnl_options'] if 'synch_with_pnl_options' in kwargs else None,
+                                     kwargs[SYNCH_WITH_PNL_OPTIONS] if SYNCH_WITH_PNL_OPTIONS in kwargs else None,
                                      context)
 
                 if not self.parameters.retain_old_simulation_data._get():
