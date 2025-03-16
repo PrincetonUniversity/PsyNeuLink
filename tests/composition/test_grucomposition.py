@@ -1,10 +1,9 @@
 import numpy as np
 import pytest
-from networkx.algorithms.isomorphism.matchhelpers import allclose
 
 import psyneulink as pnl
 
-from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition, GRUCompositionError
+from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
@@ -191,7 +190,6 @@ class TestExecution:
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)
 
-        import torch.optim as optim
         inputs = [[1.,2.,3.]]
         targets = [[1.,1.,1.,1.,1.]]
         INPUT_SIZE = 3
