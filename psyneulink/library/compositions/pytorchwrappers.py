@@ -1417,8 +1417,13 @@ class PytorchMechanismWrapper():
                 pnl_mech.function.parameters.previous_value._set(value, context)
             # Do same for integrator_function of TransferMechanism if it is in integrator_mode
             if isinstance(pnl_mech, TransferMechanism) and pnl_mech.integrator_mode:
-                pnl_mech.integrator_function.parameters.previous_value._set(pnl_mech.integrator_previous_value,
-                                                                            context)
+                # MODIFIED 3/16/25 OLD:
+                # pnl_mech.integrator_function.parameters.previous_value._set(pnl_mech.integrator_previous_value,
+                #                                                             context)
+                # MODIFIED 3/16/25 NEW:
+                pnl_mech.integrator_function.parameters.previous_value._set(value, context)
+                # MODIFIED 3/16/25 END
+
 
         # FIX: 3/15/25 - ADD SUPPORT FOR THESE
         # if output_values:
