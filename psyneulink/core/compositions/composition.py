@@ -6588,7 +6588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"Must be a Projection.")
         return projection
 
-    def _parse_sender_spec(self, projection, sender, is_learning_projection):
+    def _parse_sender_spec(self, projection, sender, is_learning_projection)->tuple:
 
         # if a sender was not passed, check for a sender OutputPort stored on the Projection object
         if sender is None:
@@ -6614,11 +6614,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             sender_mechanism = graph_sender = sender.owner
 
         elif isinstance(sender, Composition):
-            # Nested Composition Spec -- update sender_mechanism to CIM; sender_output_port to CIM's primary O.S.
-            sender_mechanism = sender.output_CIM
-            sender_output_port = sender_mechanism.output_port
-            nested_compositions.append(sender)
-
+            # Preceding entry in pathway is a Composition
+            nested_comp = sender
+            if projection.initialization_status == ContextFlags.DEFERRED_INIT and projection._init_args[SENDER]:
+                # If a sender was specified for the MappingProjection (in its constructor), try to use that
+                specified_sender = projection._init_args[SENDER]
+                if isinstance(specified_sender, (OutputPort, Mechanism)):
+                    if isinstance(specified_sender, Mechanism):
+                        # If Mechanism is specified, use its primary OutputPort output_port
+                        sender_mechanism = specified_sender
+                        sender_output_port = sender_mechanism.output_port
+                    else:
+                        sender_mechanism = specified_sender.owner
+                        sender_output_port = specified_sender
+                    sender = sender_mechanism
+                    if sender_mechanism not in nested_comp.nodes:
+                        # Validate that the sender is in nested_comp
+                        raise CompositionError(f"The sender ('{sender.name}') specified for '{projection.name}' in a "
+                                               f"pathway for '{self.name}' is not a node in the nested Composition "
+                                               f"('{nested_comp.name}') preceding it in the pathway.")
+                elif isinstance(specified_sender, Composition):
+                    assert False, "Specifying a doubly-nested Composition as a sender is not currently supported"
+                else:
+                    assert False, ("PROGRAM ERROR: specified sender for {projection.name} is not an "
+                                   "OutputPort, Mechanism or nested Composition.")
+            else:
+                # Set sender as the output_CIM of the nested Composition, and use its primary OutputPort
+                sender_mechanism = sender.output_CIM
+                sender_output_port = sender_mechanism.output_port
+            nested_compositions.append(nested_comp)
+            # MODIFIED 3/17/25 END
         else:
             raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(sender, self.name,

@@ -2240,19 +2240,8 @@ class TestNestedLearning:
         pathway_b = [input_nodes[0],
                      MappingProjection(input_nodes[0], hidden_nodes[1]),
                      nested,
-                     # MappingProjection(hidden_nodes[1]), # <- FIX FAILS
-                     MappingProjection(hidden_nodes[1], output_nodes[0]),
+                     MappingProjection(hidden_nodes[1]), # <- FIX FAILS
                      output_nodes[0]]
-
-        # error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
-        #              "to a node in the outer composition ('autodiff_comp') to be learnable.")
-        #
-        # with pytest.raises(AutodiffCompositionError) as error_text:
-        #     autodiff_results = execute_learning(comp_type='autodiff',
-        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                         pathways=[pathway_a, pathway_b],
-        #                                         inputs=inputs)
-        # assert error_msg in str(error_text.value)
 
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
