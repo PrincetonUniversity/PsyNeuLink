@@ -469,8 +469,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
             pnl_proj = incoming_projections[0]
             if pnl_proj != nested_port.path_afferents[0]:
-                from psyneulink.core.compositions.composition import CompositionError
-                raise CompositionError(
+                from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+                raise AutodiffCompositionError(
                     f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
                     f"'{nested_port.path_afferents[0].sender.owner.name}') is not the same as its "
                     f"Projection from the input_CIM of '{projection.receiver.owner.composition.name}'. "
