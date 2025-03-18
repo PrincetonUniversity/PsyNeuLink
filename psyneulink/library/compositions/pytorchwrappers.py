@@ -460,13 +460,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if access == ENTER_NESTED:
             proj_rcvr_wrapper = self._nodes_map[nested_mech]
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
-            # MODIFIED 3/17/25 OLD:
-            pnl_proj = projection.receiver.owner.port_map[nested_port][1].efferents[0]
-            assert pnl_proj == nested_port.path_afferents[0], \
-                (f"PROGRAM ERROR: First afferent Projection to '{nested_port.owner.name}' "
-                 f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
-                 f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'."
-                 f"One for this reason may be that these Components may belong to different Compositions.")
+            nested_comp = projection.receiver.owner.composition
+            incoming_projections = [proj for proj in nested_comp.input_CIM.port_map[nested_port][1].efferents
+                                    if proj in nested_comp.projections]
+            assert len(incoming_projections) == 1, \
+                (f"PROGRAM ERROR: There is more than one Projection registered in '{nested_comp.name}' "
+                 f"from its input_CIM to '{nested_port.owner.name}'.")
+            nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
+            pnl_proj = incoming_projections[0]
+            if pnl_proj != nested_port.path_afferents[0]:
+                from psyneulink.core.compositions.composition import CompositionError
+                raise CompositionError(
+                    f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
+                    f"'{nested_port.path_afferents[0].sender.owner.name}') is not the same as its "
+                    f"Projection from the input_CIM of '{projection.receiver.owner.composition.name}'. "
+                    f"One for this reason may be that these Components belong to different Compositions.")
+            # MODIFIED 3/17/25 END
 
             # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
             #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_PYTORCH,
