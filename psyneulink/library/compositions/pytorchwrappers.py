@@ -466,21 +466,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 (f"PROGRAM ERROR: First afferent Projection to '{nested_port.owner.name}' "
                  f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
                  f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'."
-                 f"One reason may be that these Components may belong to different Compositions.")
-            # # MODIFIED 3/17/25 NEW:
-            # nested_comp = projection.receiver.owner.composition
-            # incoming_projections = [proj for proj in nested_comp.input_CIM.port_map[nested_port][1].efferents
-            #                         if proj in nested_comp.projections]
-            # assert len(incoming_projections) == 1, \
-            #     (f"PROGRAM ERROR: There is more than one Projection registered in '{nested_comp.name}' "
-            #      f"from its input_CIM to '{nested_port.owner.name}'.")
-            # nested_port_afferents = [proj for proj in nested_port.path_afferents if proj in nested_comp.projections]
-            # pnl_proj = incoming_projections[0]
-            # assert pnl_proj == nested_port.path_afferents[0], \
-            #     (f"PROGRAM ERROR: First afferent Projection to '{nested_port.owner.name}' "
-            #      f"(which should be from '{nested_port.path_afferents[0].sender.owner.name}') is "
-            #      f"not the same as its Projection from '{projection.receiver.owner.composition.name}.input_CIM'")
-            # MODIFIED 3/17/25 END
+                 f"One for this reason may be that these Components may belong to different Compositions.")
 
             # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
             #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_PYTORCH,
@@ -518,7 +504,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert pnl_proj == nested_port.efferents[0], \
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
-                 f"Projection to '{projection.sender.owner.composition.name}.output_CIM'")
+                 f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
+                 f"One for this reason may be that these Components may belong to different Compositions.")
+            # FIX: 3/17/25 - IS THIS CORRECT, OR SHOULD IT REMAIN AS ASSIGNED ABOVE;  IF THE LATTER, DELETED PRECEDING
             pnl_proj = projection
 
             # Construct direct Projection from sender in nested Composition to receiver in outer Composition,
