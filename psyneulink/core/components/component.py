@@ -4467,7 +4467,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     @property
     def most_recent_context(self):
         """
-            used to set a default behavior for attributes that correspond to parameters
+        Returns:
+            `Context`: the `Context` object this Component used in its
+            last call to `execute <Component.execute>`,
+            `run <Composition.run>`, or `learn <Composition.learn>`. If
+            none of these methods have been called, a `Context` object
+            with the default execution_id (None)
         """
         try:
             return self._most_recent_context

@@ -56,6 +56,11 @@ logger = logging.getLogger(__name__)
 # see http://doc.pytest.org/en/latest/skipping.html
 
 
+composition_classes = pytest.helpers.get_all_subclasses(
+    type_=pnl.Composition, exclude_type=pnl.CompositionFunctionApproximator
+)
+
+
 def record_values(d, time_scale, *mechs, comp=None):
     if time_scale not in d:
         d[time_scale] = {}
@@ -8554,6 +8559,36 @@ class TestMisc:
         inner.run(context=c)
         assert outer.most_recent_context.execution_id == outer.name
         assert inner.most_recent_context.execution_id == c.execution_id
+
+    @pytest.mark.parametrize('comp_type', composition_classes)
+    @pytest.mark.parametrize('method', ['run', 'execute'])
+    def test_most_recent_context(self, comp_type, method):
+        if method not in comp_type.__dict__:
+            pytest.skip(f'{comp_type} does not override {method}')
+
+        try:
+            comp = comp_type()
+        except TypeError as e:
+            if 'required positional arguments' in str(e):
+                pytest.skip(f'{comp_type} cannot be instantiated with no arguments')
+            else:
+                raise
+
+        # autodiff requires at least two nodes to run
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        try:
+            comp.add_node(a)
+            comp.add_linear_processing_pathway([a, b])
+        except CompositionError as e:
+            if 'Nodes cannot be added' not in str(e):
+                raise
+
+        getattr(comp, method)(
+            inputs={a: [a.defaults.variable]},
+            execution_mode=pnl.ExecutionMode.Python,
+        )
+        assert comp.most_recent_context.execution_id == comp.default_execution_id
 
 
 class TestInputSpecsDocumentationExamples:

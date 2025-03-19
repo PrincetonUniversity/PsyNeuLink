@@ -1438,7 +1438,7 @@ class AutodiffComposition(Composition):
         pnl_proj.parameters.matrix._set(weights, context)
         pnl_proj.parameter_ports['matrix'].parameters.value._set(weights, context)
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
               synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
@@ -1598,7 +1598,7 @@ class AutodiffComposition(Composition):
 
         return execution_mode
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def execute(self,
                 inputs=None,
                 num_trials=None,
@@ -1713,7 +1713,7 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def run(self, *args,
             synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
