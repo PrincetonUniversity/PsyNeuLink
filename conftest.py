@@ -317,6 +317,7 @@ def pytest_configure(config):
 def get_all_subclasses(
     type_=psyneulink.core.components.component.Component,
     module=psyneulink,
+    exclude_type=None,
     include_abstract=True,
     sort=True,
 ):
@@ -330,7 +331,8 @@ def get_all_subclasses(
             and issubclass(cls_, type_)
             and (include_abstract or not inspect.isabstract(cls_))
         ):
-            classes.append(cls_)
+            if exclude_type is None or not issubclass(cls_, exclude_type):
+                classes.append(cls_)
 
     if sort:
         classes.sort(key=lambda x: x.__name__)
