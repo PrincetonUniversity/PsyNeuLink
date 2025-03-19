@@ -306,17 +306,18 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         mechanism.function = function_wrapper.function
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
-        # # MODIFIED 3/19/25 OLD:
-        # self.params = torch.nn.ParameterList()
-        # node_params = list(function_wrapper.function.parameters())
-        # for param in node_params:
-        #     self.params.append(param)
-        # # MODIFIED 3/19/25 NEW:
-        # for param in list(function_wrapper.function.named_parameters()):
+        # MODIFIED 3/19/25 OLD:
+        self.params = torch.nn.ParameterList()
+        node_params = list(function_wrapper.function.parameters())
+        for param in node_params:
+            self.params.append(param)
+        # # # MODIFIED 3/19/25 NEW:
+        # # for param in list(function_wrapper.function.named_parameters()):
         #     # Assign parameters to PytorchGRUMechanismWrapper in case it is called when GRUComposition is run on its own
-        #     self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
-        #     # # Assign parameters to PytorchGRUCompositionWrapper in case it is called when GRUComposition is nested
+        #     # self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
+        #     # Assign parameters to PytorchGRUCompositionWrapper in case it is called when GRUComposition is nested
         #     # self.register_parameter(param[0], param[1])
+        # self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
         # MODIFIED 3/19/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
