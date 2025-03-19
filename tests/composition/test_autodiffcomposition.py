@@ -2746,9 +2746,9 @@ class TestMiscTrainingFunctionality:
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy())
         np.testing.assert_allclose(out_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
     def test_training_then_processing(self, autodiff_mode):
@@ -2797,8 +2797,8 @@ class TestMiscTrainingFunctionality:
                                         execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        # pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         #KAM temporarily removed -- will reimplement when pytorch weights can be used in pure PNL execution
         # do processing on a few inputs
@@ -2973,9 +2973,10 @@ class TestMiscTrainingFunctionality:
                   execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
-
+        # pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        pt_weights_hid = list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy().copy()
+        pt_weights_out = list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy().copy()
         # assert that projections are still what they were initialized as
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None), hid_m)
         np.testing.assert_allclose(out_map.parameters.matrix.get(None), out_m)

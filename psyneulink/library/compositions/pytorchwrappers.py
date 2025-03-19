@@ -278,6 +278,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._regenerate_paramlist()
 
+        # if params:
+        #     for name, param in params.items():
+        #         self.register_parameter(name, nn.Parameter(param))
+
+
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -475,7 +480,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     f"'{nested_port.path_afferents[0].sender.owner.name}') is not the same as its "
                     f"Projection from the input_CIM of '{projection.receiver.owner.composition.name}'. "
                     f"One for this reason may be that these Components belong to different Compositions.")
-            # MODIFIED 3/17/25 END
 
             # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
             #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_PYTORCH,
@@ -617,17 +621,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _regenerate_paramlist(self):
         """Add Projection matrices to Pytorch Module's parameter list"""
         self.params = nn.ParameterList()
+
+        # Get pytorch Parameters for ProjectionWrappers
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.params.append(proj_wrapper.matrix)
 
-        nested_node_params = [list(node.params)
-                              for node in self._wrapped_nodes
-                              if hasattr(node, 'params') and isinstance(node.params, torch.nn.ParameterList)]
-        for item in nested_node_params:
-            for item_small in item:
-                self.params.append(item_small)
+        def _get_torch_module_params(node:torch.nn.Module):
+            """Recursively find and append torch Parameters of torch.nn.Modules to self.params"""
+            if hasattr(node, 'params') and isinstance(node.params, torch.nn.ParameterList):
+                self.params.extend(list(node.params))
+            if isinstance(node, PytorchCompositionWrapper):
+                for nested_node in node._wrapped_nodes:
+                    _get_torch_module_params(nested_node)
 
-        assert True
+        # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
+        for node in self._wrapped_nodes:
+            _get_torch_module_params(node)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
