@@ -1498,6 +1498,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "search_termination_function", "state_feature_function",
                      "search_function", "weight", "exponent", "gating_signal_params",
                      "retain_old_simulation_data",
+                     "input_size", "hidden_size", "output_size", "bias", "gru_mech",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
@@ -1506,6 +1507,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "minibatch_size", "optimizations_per_minibatch", "device",
                      "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
                      "torch_trained_outputs", "torch_targets", "torch_losses",
+                     "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
+                     "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
