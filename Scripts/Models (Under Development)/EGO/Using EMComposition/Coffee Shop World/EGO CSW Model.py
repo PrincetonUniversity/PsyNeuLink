@@ -425,7 +425,7 @@ if __name__ == '__main__':
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
                   #   call_after_minibatch=print_stuff,
-                  #   optimizations_per_minibatch=model_params['num_optimization_steps'],
+                    optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],
                     synch_results_with_torch=model_params['synch_results'],

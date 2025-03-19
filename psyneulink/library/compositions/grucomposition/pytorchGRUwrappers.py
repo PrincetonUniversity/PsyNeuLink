@@ -306,14 +306,25 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         mechanism.function = function_wrapper.function
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
-        self.params = torch.nn.ParameterList()
-        node_params = list(function_wrapper.function.parameters())
-        for param in node_params:
-            self.params.append(param)
+        # # MODIFIED 3/19/25 OLD:
+        # self.params = torch.nn.ParameterList()
+        # node_params = list(function_wrapper.function.parameters())
+        # for param in node_params:
+        #     self.params.append(param)
+        # # MODIFIED 3/19/25 NEW:
+        # for param in list(function_wrapper.function.named_parameters()):
+        #     # Assign parameters to PytorchGRUMechanismWrapper in case it is called when GRUComposition is run on its own
+        #     self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
+        #     # # Assign parameters to PytorchGRUCompositionWrapper in case it is called when GRUComposition is nested
+        #     # self.register_parameter(param[0], param[1])
+        # MODIFIED 3/19/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
+
+    def _get_torch_module_params(self):
+        return self.function.function.named_parameters()
 
     def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value

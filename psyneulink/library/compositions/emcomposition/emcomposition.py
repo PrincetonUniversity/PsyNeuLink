@@ -2133,12 +2133,12 @@ class EMComposition(AutodiffComposition):
                 correction_msg = ""
 
             elif not all(np.all(keys_weight == keys_weights[0]) for keys_weight in keys_weights):
-                error_msg = f" field weights ({field_weights}) are not all equal"
+                error_msg = f"field weights ({field_weights}) are not all equal"
                 correction_msg = (f" To use concatenation, remove `field_weights` "
                                   f"specification or make them all the same.")
 
             elif not normalize_memories:
-                error_msg = f" normalize_memories is False"
+                error_msg = f"normalize_memories is False"
                 correction_msg = f" To use concatenation, set normalize_memories to True."
 
             else:
