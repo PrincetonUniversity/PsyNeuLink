@@ -315,7 +315,7 @@ def pytest_configure(config):
 
 @pytest.helpers.register
 def get_all_subclasses(
-    type_=psyneulink.core.components.component.ComponentsMeta,
+    type_=psyneulink.core.components.component.Component,
     module=psyneulink,
     include_abstract=True,
     sort=True,
@@ -326,7 +326,8 @@ def get_all_subclasses(
         cls_ = getattr(module, item)
 
         if (
-            isinstance(cls_, type_)
+            inspect.isclass(cls_)
+            and issubclass(cls_, type_)
             and (include_abstract or not inspect.isabstract(cls_))
         ):
             classes.append(cls_)
