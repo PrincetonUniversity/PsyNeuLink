@@ -2066,6 +2066,18 @@ def contains_type(
     except TypeError:
         return False
 
+    arr_dtype = getattr(arr, 'dtype', object)
+    if arr_dtype != object:
+        if isinstance(typ, tuple):
+            if all(np.dtype(t) != arr_dtype for t in typ):
+                return False
+        else:
+            if np.dtype(typ) != arr_dtype:
+                return False
+
+    if isinstance(arr, str):
+        return False
+
     recurse = not isinstance(arr, np.matrix)
     for a in arr_items:
         if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
