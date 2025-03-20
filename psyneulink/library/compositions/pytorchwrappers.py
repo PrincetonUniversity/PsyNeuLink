@@ -232,8 +232,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._projection_wrappers = [] # PytorchProjectionWrappers
         self._projection_map = {}  # maps Projections -> PytorchProjectionWrappers
-        # MODIFIED 3/19/25 OLD:
-        self.params = nn.ParameterList()
+        # # MODIFIED 3/19/25 OLD:
+        # self.params = nn.ParameterList()
         # MODIFIED 3/19/25 END
         self._pnl_refs_to_torch_params_map = {} # API for PNL refs to PyTorch params (used by _parse_optimizer_params)
 
@@ -1153,7 +1153,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             projection.matrix.detach()
 
 
-class PytorchMechanismWrapper():
+class PytorchMechanismWrapper(torch.nn.Module):
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
     These comprise nodes of the PytorchCompositionWrapper, and generally correspond to functions in a Pytorch model.
 
@@ -1218,6 +1218,7 @@ class PytorchMechanismWrapper():
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
         # MODIFIED 7/10/24 END
+        super().__init__()
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.mechanism = mechanism
         self._idx = component_idx

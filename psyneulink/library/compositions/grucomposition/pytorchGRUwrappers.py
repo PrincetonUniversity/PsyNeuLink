@@ -307,23 +307,16 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
 
-        # # MODIFIED 3/19/25 OLD:
-        # self.params = torch.nn.ParameterList()
-        # node_params = list(function_wrapper.function.parameters())
-        # for param in node_params:
-        #     self.params.append(param)
         # MODIFIED 3/19/25 NEW:
         self.params = torch.nn.ParameterList()
-        node_params = list(function_wrapper.function.named_parameters())
+        node_params = list(function_wrapper.named_parameters())
         for param in node_params:
             self.params.append(param[1])
-            self._composition_wrapper_owner.register_parameter(param[0],param[1])
-            # FIX: WOULD NEED TO MAKE PytorchMechanismWrapper A nn.Module TO REGISTER PARAMETERS
-            # self.register_parameter(param[0], param[1])
-        # MODIFIED 3/19/25 END
+            self.register_parameter(param[0], param[1])
+        # # MODIFIED 3/19/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
-        self.input_ports = [PytorchGRUFunctionWrapper(input_port.function, device, context)
+        self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
     def _get_torch_module_params(self):
@@ -567,12 +560,18 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
             self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
 
-class PytorchGRUFunctionWrapper(PytorchFunctionWrapper):
+# class PytorchGRUFunctionWrapper(PytorchFunctionWrapper):
+class PytorchGRUFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
+        super().__init__()
         self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[GRU NODE]"
         self._context = context
         self.function = function
+        for name, param in list(function.named_parameters()):
+            self.register_parameter(name, param)
+        assert True
+
 
     def __repr__(self):
         return "PytorchWrapper for: " + self._pnl_function.__repr__()
