@@ -71,7 +71,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         pnl = self._composition
         torch_gru = self.torch_gru
-        self.torch_parameters = torch_gru.parameters
+        self.torch_gru_parameters = torch_gru.parameters
         self._projection_map = {}
 
         # Pytorch parameter info
@@ -306,18 +306,20 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         mechanism.function = function_wrapper.function
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
-        # MODIFIED 3/19/25 OLD:
+
+        # # MODIFIED 3/19/25 OLD:
+        # self.params = torch.nn.ParameterList()
+        # node_params = list(function_wrapper.function.parameters())
+        # for param in node_params:
+        #     self.params.append(param)
+        # MODIFIED 3/19/25 NEW:
         self.params = torch.nn.ParameterList()
-        node_params = list(function_wrapper.function.parameters())
+        node_params = list(function_wrapper.function.named_parameters())
         for param in node_params:
-            self.params.append(param)
-        # # # MODIFIED 3/19/25 NEW:
-        # # for param in list(function_wrapper.function.named_parameters()):
-        #     # Assign parameters to PytorchGRUMechanismWrapper in case it is called when GRUComposition is run on its own
-        #     # self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
-        #     # Assign parameters to PytorchGRUCompositionWrapper in case it is called when GRUComposition is nested
-        #     # self.register_parameter(param[0], param[1])
-        # self.Parameters = torch.nn.ParameterList(function_wrapper.function.named_parameters())
+            self.params.append(param[1])
+            self._composition_wrapper_owner.register_parameter(param[0],param[1])
+            # FIX: WOULD NEED TO MAKE PytorchMechanismWrapper A nn.Module TO REGISTER PARAMETERS
+            # self.register_parameter(param[0], param[1])
         # MODIFIED 3/19/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
@@ -420,7 +422,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     # FIX: 3/16/25
     # def _get_gru_internal_state_values(self)->dict:
-    def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->tuple:
+    def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->dict:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
         These are needed for assigning to the corresponding nodes in the GRUComposition.
         Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively
@@ -451,7 +453,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
         h_t = (1 - z_t) * n_t + z_t * h
 
-        return r_t, z_t, n_t, h_t
+        from psyneulink.library.compositions.grucomposition.grucomposition import GRU_INTERNAL_STATE_NAMES
+        return {k:v for k,v in zip (GRU_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -466,7 +469,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                 f"PROGRAM ERROR: copying variables to GRUComposition from pytorch execution is not currently supported."
 
         if set_value:
-            r_t, z_t, n_t, h_t = self.torch_gru_internal_state_values
+            n_t, r_t, z_t, h_t = list(self.torch_gru_internal_state_values.values())
             try:
                 # Ensure that result of manual-calculated state values matches output of actual call to PyTorch module
                 np.testing.assert_allclose(h_t.detach().numpy(),

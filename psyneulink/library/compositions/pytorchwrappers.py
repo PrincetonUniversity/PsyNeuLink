@@ -272,18 +272,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self._nodes_map = {k: v for k, v in self._nodes_map.items()
                            if not isinstance(v, PytorchCompositionWrapper)}
 
-        # Flatten projections so that they are all in the outer Composition and visible by _regenerate_paramlist
+        # Flatten projections so that they are all in the outer Composition and visible by _regenerate_torch_parameter_list
         #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
         self._projection_wrappers = list(self._projection_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
-        self._regenerate_paramlist()
-
-        # if params:
-        #     for name, param in params.items():
-        #         self.register_parameter(name, nn.Parameter(param))
-
+        self._regenerate_torch_parameter_list()
+        assert True
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
@@ -620,14 +616,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     __deepcopy__ = get_deepcopy_with_shared()
 
-    def _regenerate_paramlist(self, base=None):
+    def _regenerate_torch_parameter_list(self, base=None):
         """Add Projection matrices to Pytorch Module's parameter list"""
         # MODIFIED 3/19/25 OLD:
         self.params = nn.ParameterList()
 
         # Get pytorch Parameters for ProjectionWrappers
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
-            self.params.append(proj_wrapper.matrix)
+            # self.params.append(proj_wrapper.matrix)
+            self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
         def _get_torch_module_params(node:torch.nn.Module):
             """Recursively find and append torch Parameters of torch.nn.Modules to self.params"""
@@ -640,6 +637,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
         for node in self._wrapped_nodes:
             _get_torch_module_params(node)
+        assert True
         # MODIFIED 3/19/25 NEW:
         # base = base or self
         #
@@ -651,7 +649,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
         # for node_wrapper in self._wrapped_nodes:
         #     if isinstance(node_wrapper, PytorchCompositionWrapper):
-        #         node_wrapper._regenerate_paramlist(base)
+        #         node_wrapper._regenerate_torch_parameter_list(base)
         #         continue
         #     if node_wrapper.exclude_from_gradient_calc:
         #         continue
