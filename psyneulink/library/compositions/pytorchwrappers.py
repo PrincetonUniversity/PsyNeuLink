@@ -618,64 +618,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _regenerate_torch_parameter_list(self, base=None):
         """Add Projection matrices to Pytorch Module's parameter list"""
-        # MODIFIED 3/19/25 OLD:
 
-        # Get pytorch Parameters for ProjectionWrappers
+        # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
         def _get_torch_module_params(nodes:torch.nn.Module):
-            """Recursively find and register torch Parameters of torch.nn.Modules to self.params"""
-            # if hasattr(node, 'params') and isinstance(node.params, torch.nn.ParameterList):
-            #     self.params.extend(list(node.params))
+            """Recursively find and add torch Parameters of torch.nn.Modules to self.params"""
             for node in nodes:
                 if hasattr(node, 'named_parameters'):
                     list(self.named_parameters()).append(list(node.named_parameters()))
                     assert True
                 if isinstance(node, PytorchCompositionWrapper):
                     _get_torch_module_params(node._wrapped_nodes)
-
-        # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
+        # Get pytorch Parameters for nested CompositionWrappers and MechanismWrappers
         _get_torch_module_params(self._wrapped_nodes)
         assert True
-        # MODIFIED 3/19/25 NEW:
-        # base = base or self
-        #
-        # # Get pytorch Parameters for ProjectionWrappers
-        # for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
-        #     # self.params.append(proj_wrapper.matrix)
-        #     base.register_parameter(proj_wrapper.name, nn.Parameter(proj_wrapper.matrix))
-        #
-        # # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
-        # for node_wrapper in self._wrapped_nodes:
-        #     if isinstance(node_wrapper, PytorchCompositionWrapper):
-        #         node_wrapper._regenerate_torch_parameter_list(base)
-        #         continue
-        #     if node_wrapper.exclude_from_gradient_calc:
-        #         continue
-        #     params = node_wrapper._get_torch_module_params()
-        #     for param in params:
-        #         base.register_parameter(param[0], param[1])
-        #
-        #     # if hasattr(node_wrapper, 'Parameters') and isinstance(node_wrapper.Parameters, torch.nn.ParameterList):
-        #     #     for param in node_wrapper.Parameters:
-        #     #         base.register_parameter(param[0], param[1])
-        # # for param in node_wrapper.Parameters:
-        #
-        # # for param in base.
-        # assert True
-        # MODIFIED 3/19/25 END
-
-    # def _get_torch_module_params(base):
-    #     """Recursively find and append torch Parameters of torch.nn.Modules to self.params"""
-    #     if isinstance(node, PytorchCompositionWrapper):
-    #         for nested_node in node._wrapped_nodes:
-    #             self._get_torch_module_params(nested_node)
-    #     if hasattr(node, 'Parameters') and isinstance(node.Parameters, torch.nn.ParameterList):
-    #         # self.params.extend(list(node.params))
-    #         for param in node.Parameters:
-    #             self.register_parameter(param[0], param[1])
-
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -1252,8 +1210,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def _get_torch_module_params(self):
-        return []
+    # def _get_torch_module_params(self):
+    #     return []
 
     def add_efferent(self, efferent):
         """Add ProjectionWrapper for efferent from MechanismWrapper.

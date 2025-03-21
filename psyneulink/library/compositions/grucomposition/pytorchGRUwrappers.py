@@ -57,11 +57,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   device=device,
                                                   context=context)
         # MODIFIED 3/20/25 NEW:
-        # FIX: THIS DOESN'T SEEM TO ADD THE NODE PARAMETERES TO THE COMPOSITION WRAPPER:
+        # FIX: THIS DOESN'T SEEM TO ADD THE NODE PARAMETERS TO THE COMPOSITION WRAPPER:
         list(self.named_parameters()).append(list(pytorch_node.named_parameters()))
         # FIX: AND THIS CRASHES SINCE THERE ARE DOTS IN THE PARAMETER NAMES:
-        for param in list(pytorch_node.named_parameters()):
-            self.register_parameter(param[0], param[1])
+        # for param in list(pytorch_node.named_parameters()):
+        #     self.register_parameter(param[0], param[1])
         assert True
         # # MODIFIED 3/20/25 END
 
@@ -316,17 +316,17 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
 
-        # MODIFIED 3/19/25 NEW:
+        # MODIFIED 3/20/25 NEW:
         list(self.named_parameters()).append(list(function_wrapper.named_parameters()))
         assert True
-        # # MODIFIED 3/19/25 END
+        # # MODIFIED 3/20/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def _get_torch_module_params(self):
-        return self.function.function.named_parameters()
+    # def _get_torch_module_params(self):
+    #     return self.function.function.named_parameters()
 
     def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value
