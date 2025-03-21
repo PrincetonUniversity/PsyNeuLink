@@ -314,13 +314,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.function = function_wrapper
         mechanism.function = function_wrapper.function
 
-        # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
-
-        # MODIFIED 3/20/25 NEW:
-        # list(self.named_parameters()).append(list(function_wrapper.named_parameters()))
-        assert True
-        # # MODIFIED 3/20/25 END
-
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
