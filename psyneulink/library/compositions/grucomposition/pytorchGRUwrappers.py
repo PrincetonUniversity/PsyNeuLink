@@ -319,9 +319,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def _get_torch_module_params(self):
-        return self.function.function.named_parameters()
-
     def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value
         """
