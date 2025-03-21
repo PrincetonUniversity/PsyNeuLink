@@ -56,9 +56,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   dtype=self.torch_dtype,
                                                   device=device,
                                                   context=context)
+        # MODIFIED 3/20/25 NEW:
+        # FIX: THIS DOESN'T SEEM TO ADD THE NODE PARAMETERS TO THE COMPOSITION WRAPPER:
+        # list(self.named_parameters()).append(list(pytorch_node.named_parameters()))
+        # FIX: AND THIS CRASHES SINCE THERE ARE DOTS IN THE PARAMETER NAMES:
+        # for param in list(pytorch_node.named_parameters()):
+        #     self.register_parameter(param[0], param[1])
+        assert True
+        # # MODIFIED 3/20/25 END
+
         self.gru_pytorch_node = pytorch_node
         self.torch_gru = pytorch_node.function.function
-        self._nodes_map[node] = pytorch_node
+        self._add_node_to_nodes_map(node, pytorch_node)
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
@@ -283,13 +292,13 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
     """
 
     def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
-        self.torch_dtype = dtype
+        super().__init__(mechanism, composition_wrapper, component_idx, use, dtype, device, context)
+        # self.torch_dtype = dtype
         # MODIFIED 3/16/25 OLD:
         self.synch_with_pnl = False
         # # MODIFIED 3/16/25 NEW:
         # self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
         # MODIFIED 3/16/25 END
-        super().__init__(mechanism, composition_wrapper, component_idx, use, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
@@ -307,17 +316,17 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Assign node-level pytorch params to PytorchGRUMechanismWrapper (to be picked up by PytorchCompositionWrapper)
 
-        # MODIFIED 3/19/25 NEW:
-        self.params = torch.nn.ParameterList()
-        node_params = list(function_wrapper.named_parameters())
-        for param in node_params:
-            self.params.append(param[1])
-            self.register_parameter(param[0], param[1])
-        # # MODIFIED 3/19/25 END
+        # MODIFIED 3/20/25 NEW:
+        # list(self.named_parameters()).append(list(function_wrapper.named_parameters()))
+        assert True
+        # # MODIFIED 3/20/25 END
 
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
+
+    # def _get_torch_module_params(self):
+    #     return self.function.function.named_parameters()
 
     def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value
@@ -339,6 +348,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Execute torch GRU module with input and hidden state
         self.output, self.hidden_state = self.function(*[input, self.hidden_state])
+        # self.output, self.hidden_state = self.function.function(*[input, self.hidden_state])
 
         # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
         # Note: this must be done in case the GRUComposition is run after learning,
@@ -565,10 +575,8 @@ class PytorchGRUFunctionWrapper(torch.nn.Module):
         self.name = f"PytorchFunctionWrapper[GRU NODE]"
         self._context = context
         self.function = function
-        for name, param in list(function.named_parameters()):
-            self.register_parameter(name, param)
+        # list(self.named_parameters()).append(list(function.named_parameters()))
         assert True
-
 
     def __repr__(self):
         return "PytorchWrapper for: " + self._pnl_function.__repr__()

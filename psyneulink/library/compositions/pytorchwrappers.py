@@ -227,6 +227,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self._composition = composition
         self._wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
+        self._modules_dict = torch.nn.ModuleDict()
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
         self._batch_size = 1 # Store the currently used batch size
 
@@ -267,10 +268,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
                 self._projection_map.update(node_wrapper._projection_map)
                 # Not sure if this is needed, but just to be safe
-                self._nodes_map.update(node_wrapper._nodes_map)
+                for k, v in node_wrapper._nodes_map.items():
+                    self._add_node_to_nodes_map(k, v)
         # Purge _nodes_map of entries for nested Compositions (their nodes are now in self._nodes_map)
-        self._nodes_map = {k: v for k, v in self._nodes_map.items()
-                           if not isinstance(v, PytorchCompositionWrapper)}
+        nodes_to_remove = [k for k, v in self._nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
+        for node in nodes_to_remove:
+            self._remove_node_from_nodes_map(node)
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_torch_parameter_list
         #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
@@ -280,6 +283,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._regenerate_torch_parameter_list()
         assert True
+
+    def _add_node_to_nodes_map(self, node, node_wrapper):
+        self._nodes_map[node] = node_wrapper
+        self._modules_dict[node.name] = node_wrapper
+
+    def _remove_node_from_nodes_map(self, node):
+        self._nodes_map.pop(node)
+        self._modules_dict.pop(node.name)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
@@ -309,13 +320,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        # component_idx=self._composition._get_node_index(node),
                                                        component_idx=None,
                                                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
+                                                       dtype=self.torch_dtype,
                                                        device=device,
                                                        context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
                 pytorch_node._is_bias = node in self._composition.get_nodes_by_role(NodeRole.BIAS)
 
-            self._nodes_map[node] = pytorch_node
+            self._add_node_to_nodes_map(node, pytorch_node)
+            # FIX: 3/21/25: JUST USE KEYS OF _nodes_map??
             self._wrapped_nodes.append(pytorch_node)
 
         # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
@@ -618,25 +631,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _regenerate_torch_parameter_list(self, base=None):
         """Add Projection matrices to Pytorch Module's parameter list"""
-        self.params = nn.ParameterList()
 
-        # Get pytorch Parameters for ProjectionWrappers
+        # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
-            # self.params.append(proj_wrapper.matrix)
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
-
-        def _get_torch_module_params(node:torch.nn.Module):
-            """Recursively find and append torch Parameters of torch.nn.Modules to self.params"""
-            if hasattr(node, 'params') and isinstance(node.params, torch.nn.ParameterList):
-                self.params.extend(list(node.params))
-            if isinstance(node, PytorchCompositionWrapper):
-                for nested_node in node._wrapped_nodes:
-                    _get_torch_module_params(nested_node)
-
-        # Get pytorch Parameters for CompositionWrappers and MechanismWrappers
-        for node in self._wrapped_nodes:
-            _get_torch_module_params(node)
-        assert True
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -1174,6 +1172,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                  composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
+                 dtype:torch.dtype,                             # needed for Pytorch
                  device:str,                                    # needed for Pytorch
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
@@ -1190,6 +1189,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
         self._composition_wrapper_owner = composition_wrapper
+        self.torch_dtype = dtype
 
         self.input = None
         self.output = None
@@ -1720,8 +1720,9 @@ class PytorchProjectionWrapper():
         return "PytorchWrapper for: " +self.projection.__repr__()
 
 
-class PytorchFunctionWrapper():
+class PytorchFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
+        super().__init__()
         self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[{function.name}]"
         self._context = context
