@@ -227,6 +227,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self._composition = composition
         self._wrapped_nodes = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_map = {}    # maps Node (Mech or nested Comp) -> PytorchMechanismWrapper or PytorchCompositionWrapper
+        self._modules_dict = torch.nn.ModuleDict()
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
         self._batch_size = 1 # Store the currently used batch size
 
@@ -267,10 +268,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
                 self._projection_map.update(node_wrapper._projection_map)
                 # Not sure if this is needed, but just to be safe
-                self._nodes_map.update(node_wrapper._nodes_map)
+                # self._nodes_map.update(node_wrapper._nodes_map)
+                for k, v in node_wrapper._nodes_map.items():
+                    self._add_node_to_nodes_map(k, v)
         # Purge _nodes_map of entries for nested Compositions (their nodes are now in self._nodes_map)
-        self._nodes_map = {k: v for k, v in self._nodes_map.items()
-                           if not isinstance(v, PytorchCompositionWrapper)}
+        # self._nodes_map = {k: v for k, v in self._nodes_map.items()
+        #                    if not isinstance(v, PytorchCompositionWrapper)}
+        nodes_to_remove = [k for k, v in self._nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
+        for node in nodes_to_remove:
+            self._remove_node_from_nodes_map(node)
 
         # Flatten projections so that they are all in the outer Composition and visible by _regenerate_torch_parameter_list
         #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
@@ -280,6 +286,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._regenerate_torch_parameter_list()
         assert True
+
+    def _add_node_to_nodes_map(self, node, node_wrapper):
+        self._nodes_map[node] = node_wrapper
+        self._modules_dict[node.name] = node_wrapper
+
+    def _remove_node_from_nodes_map(self, node):
+        self._nodes_map.pop(node)
+        self._modules_dict.pop(node.name)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context):
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
@@ -316,7 +330,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #                             for input_port in node.input_ports)
                 pytorch_node._is_bias = node in self._composition.get_nodes_by_role(NodeRole.BIAS)
 
-            self._nodes_map[node] = pytorch_node
+            self._add_node_to_nodes_map(node, pytorch_node)
+            # FIX: 3/21/25: JUST USE KEYS OF _nodes_map??
             self._wrapped_nodes.append(pytorch_node)
 
         # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
@@ -623,25 +638,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
-
-        # FIX: 3/20/25 - TRIED COMMENTING THE BLOCK BELOW OUT, AND LETTING PYTORCH DETECT THE NESTED PARAMS,
-        #                BUT IT DOESN'T
-        def _get_torch_module_params(nodes:torch.nn.Module):
-            """Recursively find and add torch Parameters of torch.nn.Modules to self.params"""
-            for node in nodes:
-                if hasattr(node, 'named_parameters'):
-                    # list(self.named_parameters()).append(list(node.named_parameters()))
-                    # FIX: 3/20/25 - TRIED THIS SINCE PROJ_WRAPPER PARAMETERS ARE REGISTERED,
-                    #                SO THOUGHT MAYBE THEY ARE "BLOCKING" THE DETECTION OF THESE,
-                    #                BUT THIS DOESN'T WORK BECAUSE PARAMETERS HAVE DOTS IN THEIR NAMES:
-                    for param in list(node.named_parameters()):
-                        self.register_parameter(param[0], param[1])
-                    assert True
-                if isinstance(node, PytorchCompositionWrapper):
-                    _get_torch_module_params(node._wrapped_nodes)
-        # Get pytorch Parameters for nested CompositionWrappers and MechanismWrappers
-        _get_torch_module_params(self._wrapped_nodes)
-        assert True
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):

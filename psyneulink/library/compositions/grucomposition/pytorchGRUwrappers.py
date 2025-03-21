@@ -67,7 +67,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self.gru_pytorch_node = pytorch_node
         self.torch_gru = pytorch_node.function.function
-        self._nodes_map[node] = pytorch_node
+        self._add_node_to_nodes_map(node, pytorch_node)
         self._wrapped_nodes.append(pytorch_node)
         if not composition.is_nested:
             node._is_input = True
