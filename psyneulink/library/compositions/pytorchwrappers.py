@@ -309,6 +309,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                        # component_idx=self._composition._get_node_index(node),
                                                        component_idx=None,
                                                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
+                                                       dtype=self.torch_dtype,
                                                        device=device,
                                                        context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
@@ -623,11 +624,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in [p for p in self._projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
+        # FIX: 3/20/25 - TRIED COMMENTING THE BLOCK BELOW OUT, AND LETTING PYTORCH DETECT THE NESTED PARAMS,
+        #                BUT IT DOESN'T
         def _get_torch_module_params(nodes:torch.nn.Module):
             """Recursively find and add torch Parameters of torch.nn.Modules to self.params"""
             for node in nodes:
                 if hasattr(node, 'named_parameters'):
-                    list(self.named_parameters()).append(list(node.named_parameters()))
+                    # list(self.named_parameters()).append(list(node.named_parameters()))
+                    # FIX: 3/20/25 - TRIED THIS SINCE PROJ_WRAPPER PARAMETERS ARE REGISTERED,
+                    #                SO THOUGHT MAYBE THEY ARE "BLOCKING" THE DETECTION OF THESE,
+                    #                BUT THIS DOESN'T WORK BECAUSE PARAMETERS HAVE DOTS IN THEIR NAMES:
+                    for param in list(node.named_parameters()):
+                        self.register_parameter(param[0], param[1])
                     assert True
                 if isinstance(node, PytorchCompositionWrapper):
                     _get_torch_module_params(node._wrapped_nodes)
@@ -1171,6 +1179,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                  composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
+                 dtype:torch.dtype,                             # needed for Pytorch
                  device:str,                                    # needed for Pytorch
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
@@ -1187,6 +1196,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
         self._composition_wrapper_owner = composition_wrapper
+        self.torch_dtype = dtype
 
         self.input = None
         self.output = None
@@ -1720,8 +1730,9 @@ class PytorchProjectionWrapper():
         return "PytorchWrapper for: " +self.projection.__repr__()
 
 
-class PytorchFunctionWrapper():
+class PytorchFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
+        super().__init__()
         self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[{function.name}]"
         self._context = context
