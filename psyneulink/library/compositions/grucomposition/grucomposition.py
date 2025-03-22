@@ -412,7 +412,7 @@ class GRUComposition(AutodiffComposition):
     enable_learning : bool
         determines whether learning is enabled for the GRUComposition
         (see `Learning Arguments <GRUComposition_Learning_Arguments>` for additional details).
-        
+
     learning_rate : float
         determines the default learning_rate for the parameters of the Pytorch `GRU
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified

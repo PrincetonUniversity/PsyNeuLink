@@ -3041,18 +3041,18 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
-    (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY, \
-     DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, \
-     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-     LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-     LEARNING_SIGNAL, Loss, \
-     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
-     NAME, NESTED, NO_CLAMP, NODE, NODES, \
-     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-     PARAMETER, PARAMETER_CIM_NAME, PORT, \
+    (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY,
+     DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
+     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
+     LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
+     LEARNING_SIGNAL, Loss,
+     MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM,
+     NAME, NESTED, NO_CLAMP, NODE, NODES,
+     OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE,
+     PARAMETER, PARAMETER_CIM_NAME, PORT,
      PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
-     RECEIVER, RETAIN_IN_PNL_OPTIONS, \
-     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS, \
+     RECEIVER, RETAIN_IN_PNL_OPTIONS,
+     SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS,
      TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified, copy_parameter_value
@@ -6375,12 +6375,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if (isinstance(receiver_input_port, InputPort)
                 and receiver_input_port.default_input == DEFAULT_VARIABLE):
-                if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
-                    err_msg = (f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} Node, ")
+            if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
+                err_msg = (f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} Node, ")
                 else:
-                    err_msg = (f"'{receiver_mechanism.name}' has only one InputPort for which "
-                               f"'default_input'=DEFAULT_VARIABLE', and therefore will be configured as a "
-                               f"{NodeRole.BIAS.name} Node, ")
+                err_msg = (f"'{receiver_mechanism.name}' has only one InputPort for which "
+                           f"'default_input'=DEFAULT_VARIABLE', and therefore will be configured as a "
+                           f"{NodeRole.BIAS.name} Node, ")
                 err_msg = err_msg + (f"so it cannot receive a MappingProjection from '{sender.name}' "
                                      f"as specified for a pathway in '{self.name}'.")
                 raise CompositionError(err_msg)

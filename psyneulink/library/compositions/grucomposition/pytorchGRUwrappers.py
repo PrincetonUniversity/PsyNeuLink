@@ -131,12 +131,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              access,
                              context)->Tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
-        Replace GRUComposition's nodes with gru_mech and projections to and from it."""
+        Replace GRUComposition's nodes with gru_mech and projections to and from it.
+        """
 
-        # sndr_mech_wrapper = None
-        # rcvr_mech_wrapper = None
         direct_proj = None
-        # use = [LEARNING, SYNCH, SHOW_PYTORCH]
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
@@ -447,7 +445,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         h_t = (1 - z_t) * n_t + z_t * h
 
         from psyneulink.library.compositions.grucomposition.grucomposition import GRU_INTERNAL_STATE_NAMES
-        return {k:v for k,v in zip (GRU_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
+        return {k:v for k,v in zip(GRU_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -543,13 +541,13 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     def set_torch_gru_parameter(self, context, dtype):
         """Set relevant part of tensor for parameter of Pytorch GRU module from GRUComposition's Projections."""
         matrix = self.projection.parameters.matrix._get(context).T
-        proj_matrix_as_tensor =  torch.tensor(matrix.squeeze(), dtype=dtype)
+        proj_matrix_as_tensor = torch.tensor(matrix.squeeze(), dtype=dtype)
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
 
     def _copy_params_to_pnl_proj(self, context):
         torch_parameter = self.torch_parameter
         torch_indices = self.matrix_indices
-        matrix =  torch_parameter[torch_indices].detach().cpu().clone().numpy().T
+        matrix = torch_parameter[torch_indices].detach().cpu().clone().numpy().T
         self.projection.parameters.matrix._set(matrix, context)
         self.projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
 
@@ -576,4 +574,3 @@ class PytorchGRUFunctionWrapper(torch.nn.Module):
 
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
-
