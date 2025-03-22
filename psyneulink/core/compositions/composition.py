@@ -6377,13 +6377,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and receiver_input_port.default_input == DEFAULT_VARIABLE):
             if (receiver_mechanism, NodeRole.BIAS) in self.required_node_roles:
                 err_msg = (f"'{receiver_mechanism.name}' is configured as a {NodeRole.BIAS.name} Node, ")
-                else:
+            else:
                 err_msg = (f"'{receiver_mechanism.name}' has only one InputPort for which "
                            f"'default_input'=DEFAULT_VARIABLE', and therefore will be configured as a "
                            f"{NodeRole.BIAS.name} Node, ")
-                err_msg = err_msg + (f"so it cannot receive a MappingProjection from '{sender.name}' "
-                                     f"as specified for a pathway in '{self.name}'.")
-                raise CompositionError(err_msg)
+            err_msg = err_msg + (f"so it cannot receive a MappingProjection from '{sender.name}' "
+                                 f"as specified for a pathway in '{self.name}'.")
+            raise CompositionError(err_msg)
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
                 and receiver_input_port.owner not in self.nodes
