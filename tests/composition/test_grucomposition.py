@@ -97,10 +97,12 @@ def _pytorch_gru_module_values_hook(module, input, output):
 class TestConstruction:
     def test_disallow_modification(self):
         gru = GRUComposition()
-        mech = pnl.ProcessingMechanism()
         with pytest.raises(CompositionError) as error_text:
-            gru.add_node(mech)
+            gru.add_node(pnl.ProcessingMechanism())
         assert 'Nodes cannot be added to GRU Composition.' in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            gru.add_projection(pnl.MappingProjection())
+        assert 'Projections cannot be added to GRU Composition.' in str(error_text.value)
 
 
 @pytest.mark.pytorch
