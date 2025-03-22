@@ -7743,7 +7743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             proj_set.append(projection)
 
                         except (InputPortError, ProjectionError, MappingError) as error:
-                            handle_misc_errors(proj, error)
+                            handle_misc_errors(projection, error)
                         except DuplicateProjectionError:
                             handle_duplicates(sender, receiver)
 
