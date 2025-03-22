@@ -810,7 +810,8 @@ class GRUComposition(AutodiffComposition):
         input_size = self.input_size
         hidden_size = self.hidden_size
 
-        self._construct_composition(input_size, hidden_size)
+        self._construct_composition(input_size, hidden_size,
+                                    context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
         self._assign_gru_specific_attributes()
 
         # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
@@ -837,7 +838,7 @@ class GRUComposition(AutodiffComposition):
     #region
     # Construct Nodes --------------------------------------------------------------------------------
 
-    def _construct_composition(self, input_size, hidden_size):
+    def _construct_composition(self, input_size, hidden_size, context):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
@@ -900,8 +901,7 @@ class GRUComposition(AutodiffComposition):
 
         self.add_nodes([self.input_node, self.new_node, self.reset_node,
                         self.update_node, self.output_node, self.hidden_layer_node],
-                       context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU')
-                       )
+                       context=context)
 
         def init_wts(sender_size, receiver_size):
             """Initialize weights for Projections"""
