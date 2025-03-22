@@ -104,6 +104,11 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to GRU Composition.' in str(error_text.value)
 
+    def test_solo_nested(self):
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=True)
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',pathways=[gru])
+        target_mech = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        assert target_mech[0].name == 'TARGET for PYTORCH GRU NODE'
 
 @pytest.mark.pytorch
 @pytest.mark.composition
