@@ -300,7 +300,8 @@ from psyneulink.core.components.projections.modulatory.gatingprojection import G
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, GRU_COMPOSITION, OUTCOME, SUM, IDENTITY_MATRIX
+from psyneulink.core.globals.keywords import (
+    CONTEXT, FULL_CONNECTIVITY_MATRIX, GRU_COMPOSITION, IDENTITY_MATRIX, OUTCOME, SUM)
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import ExecutionMode
 
@@ -809,7 +810,8 @@ class GRUComposition(AutodiffComposition):
         input_size = self.input_size
         hidden_size = self.hidden_size
 
-        self._construct_composition(input_size, hidden_size)
+        self._construct_composition(input_size, hidden_size,
+                                    context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
         self._assign_gru_specific_attributes()
 
         # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
@@ -836,7 +838,7 @@ class GRUComposition(AutodiffComposition):
     #region
     # Construct Nodes --------------------------------------------------------------------------------
 
-    def _construct_composition(self, input_size, hidden_size):
+    def _construct_composition(self, input_size, hidden_size, context):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
@@ -898,7 +900,8 @@ class GRUComposition(AutodiffComposition):
                                                function=Linear)
 
         self.add_nodes([self.input_node, self.new_node, self.reset_node,
-                        self.update_node, self.output_node, self.hidden_layer_node])
+                        self.update_node, self.output_node, self.hidden_layer_node],
+                       context=context)
 
         def init_wts(sender_size, receiver_size):
             """Initialize weights for Projections"""
@@ -964,7 +967,8 @@ class GRUComposition(AutodiffComposition):
                                       self.wts_hn, self.wts_hr, self.wts_hu]
 
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh,
-                              self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho])
+                              self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho],
+                             context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
 
         if self.bias:
             self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
@@ -1008,11 +1012,13 @@ class GRUComposition(AutodiffComposition):
                             (self.bias_in_node, NodeRole.BIAS),
                             (self.bias_hr_node, NodeRole.BIAS),
                             (self.bias_hu_node, NodeRole.BIAS),
-                            (self.bias_hn_node, NodeRole.BIAS)])
+                            (self.bias_hn_node, NodeRole.BIAS)],
+                           context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU')
+                           )
 
             self.biases = [self.bias_ir, self.bias_iu, self.bias_in,
                                   self.bias_hr, self.bias_hu, self.bias_hn]
-            self.add_projections(self.biases)
+            self.add_projections(self.biases, context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
 
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
@@ -1135,8 +1141,8 @@ class GRUComposition(AutodiffComposition):
         target_mech = self.target_node
 
         # Add target Node to GRUComposition
-        context = Context(source=ContextFlags.METHOD)
-        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING],
+                      context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
 
         for output_port in target_mech.output_ports:
@@ -1213,3 +1219,15 @@ class GRUComposition(AutodiffComposition):
 
     def _identify_target_nodes(self, context):
         return [self.gru_mech]
+
+    def add_node(self, node, required_roles=None, context=None):
+        """Override if called from command line to disallow modification of GRUComposition"""
+        if context is None:
+            raise CompositionError(f"Nodes cannot be added to {self.name}.")
+        super().add_node(node, required_roles, context)
+
+    def add_projection(self, *args, **kwargs):
+        """Override if called from command line to disallow modification of GRUComposition"""
+        if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+            raise CompositionError(f"Projections cannot be added to {self.name}.")
+        super().add_projection(*args, **kwargs)

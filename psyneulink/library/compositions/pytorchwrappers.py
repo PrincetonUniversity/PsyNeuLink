@@ -317,8 +317,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 pytorch_node = PytorchMechanismWrapper(mechanism=node,
                                                        composition_wrapper=self,
-                                                       # component_idx=self._composition._get_node_index(node),
-                                                       component_idx=None,
+                                                       component_idx=self._composition._get_node_index(node),
+                                                       # component_idx=None,
                                                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
                                                        dtype=self.torch_dtype,
                                                        device=device,
@@ -757,7 +757,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 else:
                     # We propagate error backwards from next layer
                     for proj_idx, proj in enumerate(node.efferents):
-                        efferent_node = proj.receiver
+                        efferent_node = proj.receiver_wrapper
                         efferent_node_error = error_dict[efferent_node]
 
                         weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
@@ -783,7 +783,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # get a_(l-1)
                 afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0),
                                                                       ctx.int32_ty(0),
-                                                                      ctx.int32_ty(proj.sender._idx),
+                                                                      ctx.int32_ty(proj.sender_wrapper._idx),
                                                                       ctx.int32_ty(0)])
 
                 # get dimensions of weight matrix
@@ -791,8 +791,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pnlvm.helpers.printf_float_matrix(ctx,
                                                   builder,
                                                   weights_llvmlite,
-                                                  prefix= f"{proj.sender.mechanism} -> {proj.receiver.mechanism}\n",
-                                                  tags={"torch"})
+                                                  prefix= f"{proj.sender_wrapper.mechanism} -> "
+                                                          f"{proj.receiver_wrapper.mechanism}\n", tags={"torch"})
                 # update delta_W
                 node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
 

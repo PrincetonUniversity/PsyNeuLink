@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+from psyneulink import CompositionError
 
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
@@ -90,6 +91,19 @@ def _pytorch_gru_module_values_hook(module, input, output):
 # ----------------------------------
 
 # Unit tests for functions of GRUComposition class
+
+@pytest.mark.pytorch
+@pytest.mark.composition
+class TestConstruction:
+    def test_disallow_modification(self):
+        gru = GRUComposition()
+        with pytest.raises(CompositionError) as error_text:
+            gru.add_node(pnl.ProcessingMechanism())
+        assert 'Nodes cannot be added to GRU Composition.' in str(error_text.value)
+        with pytest.raises(CompositionError) as error_text:
+            gru.add_projection(pnl.MappingProjection())
+        assert 'Projections cannot be added to GRU Composition.' in str(error_text.value)
+
 
 @pytest.mark.pytorch
 @pytest.mark.composition
