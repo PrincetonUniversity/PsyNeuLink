@@ -13,7 +13,7 @@ import torch
 import numpy as np
 import graph_scheduler
 
-from typing import Union, Optional, Literal
+from typing import Union, Optional, Literal, Tuple
 
 from sympy.printing.cxx import CXX17CodePrinter
 
@@ -129,7 +129,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              outer_comp,
                              outer_comp_pytorch_rep,
                              access,
-                             context)->tuple:
+                             context)->Tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
         Replace GRUComposition's nodes with gru_mech and projections to and from it."""
 
@@ -237,7 +237,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
 
-    def get_parameters_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
+    def get_parameters_from_torch_gru(torch_gru)->Tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;
@@ -527,7 +527,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     """
     def __init__(self,
                  projection:MappingProjection,
-                 torch_parameter:tuple,
+                 torch_parameter:Tuple,
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],
                  device:str):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
