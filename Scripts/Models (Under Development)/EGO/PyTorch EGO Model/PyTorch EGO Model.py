@@ -10,6 +10,7 @@ FILL = 0
 
 
 def gen_data_loader(paradigm, probs=[1., 1., 1.], n=1):
+    ds = None
     if paradigm == 'tst':
         contexts_to_load =[0]
         n_samples_per_context = [n]

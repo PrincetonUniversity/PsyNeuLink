@@ -1073,7 +1073,7 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None, refresh=None)->PytorchCompositionWrapper:
+    def _build_pytorch_representation(self, context=None, refresh=None):
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
