@@ -524,8 +524,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_sndr_wrapper = self._nodes_map[nested_mech]
 
             # Assign Projection from nested_sndr_port to output_CIM as pnl_proj
-            pnl_proj = projection.sender.owner.port_map[nested_port][0].path_afferents[0]
-            assert pnl_proj == nested_port.efferents[0], \
+            assert nested_port.efferents[0] == projection.sender.owner.port_map[nested_port][0].path_afferents[0], \
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
