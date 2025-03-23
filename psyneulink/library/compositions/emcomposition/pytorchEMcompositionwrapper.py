@@ -17,11 +17,7 @@ except (ImportError, ModuleNotFoundError):
 
 from typing import Optional
 
-from psyneulink.library.compositions.autodiffcomposition import torch_available
-if torch_available:
-    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
-# from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
-
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.globals.keywords import AFTER
 
