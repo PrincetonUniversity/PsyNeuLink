@@ -1,7 +1,11 @@
 from . import emcomposition
 
 from .emcomposition import *
-from .pytorchEMcompositionwrapper import *
-
 __all__ = list(emcomposition.__all__)
-__all__.extend(pytorchEMcompositionwrapper.__all__)
+
+try:
+    import torch
+    from .pytorchEMcompositionwrapper import *
+    __all__.extend(pytorchEMcompositionwrapper.__all__)
+except:
+    pass
