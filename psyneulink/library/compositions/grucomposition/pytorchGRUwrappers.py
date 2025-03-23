@@ -16,7 +16,6 @@ from typing import Union, Optional, Literal, Tuple
 
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
-from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
@@ -97,6 +96,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
 
         if pnl.bias:
+            from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
             b_ih = torch_params['bias_ih_l0']
             b_hh = torch_params['bias_hh_l0']
