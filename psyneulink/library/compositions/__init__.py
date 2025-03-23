@@ -8,8 +8,6 @@ from psyneulink.library.compositions.grucomposition.grucomposition import *
 __all__ = list(regressioncfa.__all__)
 __all__.extend(compositionrunner.__all__)
 __all__.extend(autodiffcomposition.__all__)
-__all__.extend(emcomposition.__all__)
-__all__.extend(grucomposition.__all__)
 
 try:
     import torch
@@ -20,6 +18,9 @@ try:
     torch.tensor([1,2,3]).numpy()
 
     torch_available = True
+    __all__.extend(emcomposition.__all__)
+    __all__.extend(grucomposition.__all__)
+
 except (ImportError, RuntimeError):
     torch_available = False
 
