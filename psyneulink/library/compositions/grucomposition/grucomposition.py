@@ -323,10 +323,7 @@ GRU_INTERNAL_STATE_NAMES = [NEW_NODE, RESET_NODE, UPDATE_NODE, HIDDEN_LAYER]
 
 
 class GRUCompositionError(CompositionError):
-    def __init__(self, error_value):
-        self.error_value = error_value
-    def __str__(self):
-        return repr(self.error_value)
+    pass
 
 
 class GRUComposition(AutodiffComposition):

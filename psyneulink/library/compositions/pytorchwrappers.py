@@ -11,12 +11,12 @@
 from psyneulink._typing import Optional, Literal, Union
 
 import graph_scheduler
-import torch.nn as nn
 import numpy as np
 
 # import torch
 try:
     import torch
+    import torch.nn as nn
 except (ImportError, ModuleNotFoundError):
     torch = None
 
