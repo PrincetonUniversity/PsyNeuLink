@@ -11,9 +11,14 @@
 from psyneulink._typing import Optional, Literal, Union
 
 import graph_scheduler
-import torch
 import torch.nn as nn
 import numpy as np
+
+# import torch
+try:
+    import torch
+except (ImportError, ModuleNotFoundError):
+    torch = None
 
 from enum import Enum, auto
 

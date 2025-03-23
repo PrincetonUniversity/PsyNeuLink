@@ -9,9 +9,15 @@
 
 """PyTorch wrapper for GRUComposition"""
 
-import torch
 import numpy as np
 import graph_scheduler
+
+# import torch
+try:
+    import torch
+except (ImportError, ModuleNotFoundError):
+    torch = None
+
 
 from typing import Union, Optional, Literal, Tuple
 
