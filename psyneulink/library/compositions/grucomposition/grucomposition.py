@@ -291,7 +291,6 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
-from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import GRU_NODE, GRU_TARGET_NODE
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
@@ -305,10 +304,9 @@ from psyneulink.core.globals.keywords import (
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import ExecutionMode
 
-
 __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE',
-           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES']
+           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES', 'GRU_NODE', 'GRU_TARGET_NODE']
 
 from sympy.printing.cxx import CXX17CodePrinter
 
@@ -320,7 +318,8 @@ UPDATE_NODE = 'UPDATE'
 HIDDEN_LAYER = 'HIDDEN\nLAYER'
 OUTPUT_NODE = 'OUTPUT'
 GRU_INTERNAL_STATE_NAMES = [NEW_NODE, RESET_NODE, UPDATE_NODE, HIDDEN_LAYER]
-
+GRU_NODE = 'PYTORCH GRU NODE'
+GRU_TARGET_NODE = 'GRU TARGET NODE'
 
 class GRUCompositionError(CompositionError):
     pass

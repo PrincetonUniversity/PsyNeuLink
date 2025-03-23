@@ -11,19 +11,13 @@
 
 import numpy as np
 import graph_scheduler
-
-try:
-    import torch
-except (ImportError, ModuleNotFoundError):
-    torch = None
-
-
+import torch
 from typing import Union, Optional, Literal, Tuple
-
-from sympy.printing.cxx import CXX17CodePrinter
 
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
+from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
+    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
