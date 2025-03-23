@@ -16,6 +16,7 @@ from typing import Union, Optional, Literal, Tuple
 
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
+from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED
 from psyneulink.core.globals.context import handle_external_context, ContextFlags
@@ -24,10 +25,7 @@ from psyneulink.core.globals.keywords import (
     ALL, CONTEXT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper', 'GRU_NODE', 'GRU_TARGET_NODE']
-
-GRU_NODE = 'PYTORCH GRU NODE'
-GRU_TARGET_NODE = 'GRU TARGET NODE'
+__all__ = ['PytorchGRUCompositionWrapper']
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for GRUComposition as a Pytorch Module
