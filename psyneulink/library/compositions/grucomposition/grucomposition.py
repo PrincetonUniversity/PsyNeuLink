@@ -308,8 +308,6 @@ __all__ = ['GRUComposition', 'GRUCompositionError',
            'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE',
            'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES', 'GRU_NODE', 'GRU_TARGET_NODE']
 
-from sympy.printing.cxx import CXX17CodePrinter
-
 # Node names
 INPUT_NODE = 'INPUT'
 NEW_NODE = 'NEW'
