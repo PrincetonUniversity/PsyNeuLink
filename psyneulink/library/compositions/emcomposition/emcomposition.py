@@ -1458,7 +1458,6 @@ class EMComposition(AutodiffComposition):
     query_and_value_input_nodes : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
         followed by value_input_nodes; used primarily for internal computations.
-
     """
 
     componentCategory = EM_COMPOSITION
