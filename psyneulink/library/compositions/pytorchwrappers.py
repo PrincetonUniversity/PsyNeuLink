@@ -16,9 +16,10 @@ import numpy as np
 # import torch
 try:
     import torch
-    import torch.nn as nn
 except (ImportError, ModuleNotFoundError):
     torch = None
+else:
+    import torch.nn as nn
 
 from enum import Enum, auto
 

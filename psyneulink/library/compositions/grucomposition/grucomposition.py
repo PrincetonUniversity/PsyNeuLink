@@ -650,7 +650,6 @@ class GRUComposition(AutodiffComposition):
         from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
 
-
     class Parameters(AutodiffComposition.Parameters):
         """
             Attributes
