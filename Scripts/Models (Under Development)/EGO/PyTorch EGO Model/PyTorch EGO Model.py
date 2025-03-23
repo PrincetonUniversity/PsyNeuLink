@@ -9,7 +9,6 @@ from random import randint
 FILL = 0
 
 def gen_data_loader(paradigm, probs=[1., 1., 1.], n=1):
-    ds = None
     if paradigm == 'tst':
         contexts_to_load =[0]
         n_samples_per_context = [n]
@@ -23,6 +22,7 @@ def gen_data_loader(paradigm, probs=[1., 1., 1.], n=1):
         contexts_to_load = [0, 1] * (2 * n) + [randint(0, 2) for _ in range(n)]
         n_samples_per_context = [1] * (4 * n) + [1] * n
         ds = CSWDataset(n_samples_per_context, contexts_to_load, probs=probs)
+    assert False, "ds must be 'blocked' or 'interleaved'"
     return torch.utils.data.DataLoader(ds, batch_size=1, shuffle=False)
 
 
