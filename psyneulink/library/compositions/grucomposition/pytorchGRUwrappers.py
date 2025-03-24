@@ -31,7 +31,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
     and the Pytorch GRU Module's parameters, and return its output value.
     """
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

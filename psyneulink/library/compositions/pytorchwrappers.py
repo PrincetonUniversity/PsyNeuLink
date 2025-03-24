@@ -261,10 +261,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
 
-        # Instantiate nodes and projections
+        # Instantiate PyttorchWrappers for Mechanisms and Projections, and execution_sets used in forward method
         self._instantiate_pytorch_mechanism_wrappers(composition, device, context)
         self._instantiate_pytorch_projection_wrappers(composition, device, context)
-
         execution_context = Context()
         self._instantiate_execution_sets(composition, execution_context, context)
 
@@ -273,7 +272,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if isinstance(node_wrapper, PytorchCompositionWrapper):
                 # For copying weights back to PNL in AutodiffComposition.do_gradient_optimization
                 self._projection_map.update(node_wrapper._projection_map)
-                # Not sure if this is needed, but just to be safe
                 for k, v in node_wrapper._nodes_map.items():
                     self._add_node_to_nodes_map(k, v)
         # Purge _nodes_map of entries for nested Compositions (their nodes are now in self._nodes_map)
@@ -281,8 +279,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node in nodes_to_remove:
             self._remove_node_from_nodes_map(node)
 
-        # Flatten projections so that they are all in the outer Composition and visible by _regenerate_torch_parameter_list
-        #     needed for call to backward() in AutodiffComposition.do_gradient_optimization
+        # Get projections from flattened set, so that they are all in the outer Composition
+        #   and visible by _regenerate_torch_parameter_list;
+        #   needed for call to backward() in AutodiffComposition.do_gradient_optimization
         self._projection_wrappers = list(self._projection_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
