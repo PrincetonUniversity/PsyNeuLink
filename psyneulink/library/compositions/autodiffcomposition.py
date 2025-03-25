@@ -733,10 +733,10 @@ class AutodiffComposition(Composition):
                  name="autodiff_composition",
                  **kwargs):
 
-        if not torch_available:
-            raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-                                           '`pip install torch` or `pip3 install torch`')
-
+        # if not torch_available:
+        #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
+        #                                    '`pip install torch` or `pip3 install torch`')
+        #
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
 
         super(AutodiffComposition, self).__init__(
