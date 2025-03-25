@@ -86,7 +86,7 @@ def safe_softmax(t, eps=1e-6, **kwargs):
 def set_random_seed(params):
     try:
         seed = params.seed
-    except:
+    except AttributeError:
         seed = params
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)

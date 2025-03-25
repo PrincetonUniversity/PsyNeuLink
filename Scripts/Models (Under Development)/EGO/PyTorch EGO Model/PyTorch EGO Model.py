@@ -2,8 +2,7 @@ from declan.models import EMModule, RecurrentContextModule, prep_EM
 import torch
 import numpy as np
 from torch import nn
-import declan.utils as utils
-from declan.dataset import CSWDataset, CompositionalWords
+from declan.dataset import CSWDataset
 from random import randint
 
 FILL = 0
