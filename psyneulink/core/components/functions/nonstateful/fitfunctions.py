@@ -237,7 +237,7 @@ def simulation_likelihood(
             else:
                 kdes_eval[trial] = ZERO_PROB
 
-        # Check to see if any of the trials have non-zero likelihood, if not, something is probably wrong
+        # Check to see if all of the trials have non-zero likelihood, if so, something is probably wrong
         # and we should warn the user.
         if all(kdes_eval == ZERO_PROB):
             warnings.warn(
@@ -603,13 +603,13 @@ class PECOptimizationFunction(OptimizationFunction):
             self.num_evals = self.num_evals + 1
 
             # Keep a log of warnings and the parameters that caused them
-            if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
+            if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
                 warns_with_params.append((warns[-1], params))
 
             # Are we displaying each iteration
             if display_iter:
                 # If we got a warning generating the objective function value, report it
-                if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
+                if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
                     progress.console.print(f"Warning: ", style="bold red")
                     progress.console.print(f"{warns[-1].message}", style="bold red")
                     progress.console.print(
@@ -699,6 +699,9 @@ class PECOptimizationFunction(OptimizationFunction):
 
             warns_with_params = []
             with warnings.catch_warnings(record=True) as warns:
+                warnings.simplefilter("always", PECObjectiveFuncWarning)
+                warnings.simplefilter("always", BadLikelihoodWarning)
+
                 objfunc_wrapper = self._make_obj_func_wrapper(
                     progress,
                     display_iter,
