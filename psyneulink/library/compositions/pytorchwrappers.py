@@ -687,7 +687,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             execution_sets.remove({node})
             # Insert nested execution sets in place of nested Composition
             execution_sets[index:index] = exec_sets
-        
+
         return execution_sets, execution_context
 
     __deepcopy__ = get_deepcopy_with_shared()
@@ -1237,6 +1237,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
                  dtype:torch.dtype,                             # needed for Pytorch
                  device:str,                                    # needed for Pytorch
+                 subclass_specifies_function:bool=False,        # used to determine whether to assign function here
                  context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
@@ -1264,7 +1265,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self.afferents = []
         self.efferents = []
 
-        self._assign_pytorch_function(mechanism, device, context)
+        if subclass_specifies_function is False:
+            self._assign_pytorch_function(mechanism, device, context)
 
     def _assign_pytorch_function(self, mechanism, device, context):
         self.function = PytorchFunctionWrapper(mechanism.function, device, context)

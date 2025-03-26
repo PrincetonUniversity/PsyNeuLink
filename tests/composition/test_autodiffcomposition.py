@@ -63,11 +63,6 @@ class TestAutodiffConstructor:
         hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
         hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
         output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
-
-        nested = pnl.AutodiffComposition(name='autodiff NESTED',
-                                     nodes = [hidden_node_autodiff_1,
-                                              hidden_node_autodiff_2])
-
         nested = pnl.AutodiffComposition(name='autodiff NESTED',
                                      nodes = [hidden_node_autodiff_1,
                                               hidden_node_autodiff_2])

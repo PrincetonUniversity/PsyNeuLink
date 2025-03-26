@@ -296,16 +296,30 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
     - sets GRUComposition's HIDDEN_NODE.value to return value for hidden state
     """
 
-    def __init__(self, mechanism, composition_wrapper, component_idx, use, dtype, device, context):
-        super().__init__(mechanism, composition_wrapper, component_idx, use, dtype, device, context)
-        # self.torch_dtype = dtype
+    def __init__(self,
+                 mechanism,
+                 composition_wrapper,
+                 component_idx,
+                 use,
+                 dtype,
+                 device,
+                 context):
+        super().__init__(mechanism=mechanism,
+                         composition_wrapper=composition_wrapper,
+                         component_idx=component_idx,
+                         use=use,
+                         dtype=dtype,
+                         device=device,
+                         subclass_specifies_function=True,
+                         context=context)
+        self._assign_GRU_pytorch_function(mechanism, device, context)
         # MODIFIED 3/16/25 OLD:
         self.synch_with_pnl = False
         # # MODIFIED 3/16/25 NEW:
         # self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
         # MODIFIED 3/16/25 END
 
-    def _assign_pytorch_function(self, mechanism, device, context):
+    def _assign_GRU_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
         input_size = self._composition_wrapper_owner._composition.parameters.input_size.get(context)
         hidden_size = self._composition_wrapper_owner._composition.parameters.hidden_size.get(context)
