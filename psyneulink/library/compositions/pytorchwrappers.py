@@ -227,13 +227,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         super(PytorchCompositionWrapper, self).__init__()
 
-        execution_sets = None
+        _execution_sets = None
 
         if subclass_components is not None:
-            _node_wrapper_pairs, _projection_wrapper_pairs, execution_sets, execution_context = subclass_components
-            self._validate_subclass_components(_node_wrapper_pairs, _projection_wrapper_pairs, execution_sets)
+            _node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets, execution_context = subclass_components
+            self._validate_subclass_components(_node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets)
             self._construct_node_wrapper_maps(_node_wrapper_pairs)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
+            self.execution_sets = _execution_sets
 
         else:
             self._early_init(composition, device)
@@ -243,8 +244,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
 
-        if execution_sets is None:
-            # If execution_sets was not passed in from subclass, get it here
+        if _execution_sets is None:
+            # If _execution_sets was not passed in from subclass, get it here
             self.execution_sets, execution_context = self._get_execution_sets(composition, context)
 
         # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
@@ -332,10 +333,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
              f"projection wrapper(s) from subclass.")
         for exec_set in execution_sets:
             assert isinstance(exec_set, set), \
-                f"PROGRAM ERROR: {self}._execution_sets contains non-ExecutionSet object(s)."
+                f"PROGRAM ERROR: {self}.execution_sets contains non-ExecutionSet object(s)."
             for item in exec_set:
                 assert isinstance(item, (PytorchMechanismWrapper, PytorchCompositionWrapper)), \
-                    (f"PROGRAM ERROR: {self}._execution_sets contains a set with non-PytorchMechanismWrapper "
+                    (f"PROGRAM ERROR: {self}.execution_sets contains a set with non-PytorchMechanismWrapper "
                      f"or PytorchCompositionWrapper object).")
 
     def _construct_node_wrapper_maps(self, _node_wrapper_pairs):
