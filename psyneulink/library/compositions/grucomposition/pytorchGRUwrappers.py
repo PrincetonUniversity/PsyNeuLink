@@ -58,6 +58,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self.gru_pytorch_node = gru_pytorch_node
         self.torch_gru = torch_gru
+        # Note: this has to be done after call to super, so that projections_map has been populated
+        self.copy_weights_to_torch_gru(context)
 
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
@@ -122,8 +124,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                                              use=SYNCH,
                                                                              device=device)))
             self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
-
-        self.copy_weights_to_torch_gru(context)
 
         return _projection_wrapper_pairs
 
