@@ -337,21 +337,27 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _construct_node_wrapper_maps(self, _node_wrapper_pairs):
         self.nodes_map = {} # maps Node(Mech | nested Comp) -> PytorchMechanismWrapper | PytorchCompositionWrapper
+        self.node_wrappers = []
         self._modules_dict = torch.nn.ModuleDict()
         for node, pytorch_node_wrapper in _node_wrapper_pairs:
             self._add_node_to_nodes_map(node, pytorch_node_wrapper)
-        self.node_wrappers = list(self.nodes_map.values())
 
     def _construct_projection_wrapper_maps(self, _projection_wrapper_pairs):
         self.projections_map = {k:v for k,v in _projection_wrapper_pairs}
         self.projection_wrappers = list(self.projections_map.values())
 
     def _add_node_to_nodes_map(self, node, node_wrapper):
+        """Keep nodes_map, node_wrappers and modules_dict in synch"""
         self.nodes_map[node] = node_wrapper
+        if node not in self.node_wrappers:
+            self.node_wrappers.append(node_wrapper)
         self._modules_dict[node.name] = node_wrapper
 
     def _remove_node_from_nodes_map(self, node):
+        """Keep nodes_map, node_wrappers and modules_dict in synch"""
         self.nodes_map.pop(node)
+        if node in self.node_wrappers:
+            self.node_wrappers.remove(node)
         self._modules_dict.pop(node.name)
 
     def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context)->list:
