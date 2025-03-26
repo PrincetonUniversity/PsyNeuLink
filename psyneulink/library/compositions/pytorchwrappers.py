@@ -227,26 +227,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         super(PytorchCompositionWrapper, self).__init__()
 
-        _execution_sets = None
-
-        if subclass_components is not None:
-            _node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets, execution_context = subclass_components
-            self._validate_subclass_components(_node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets)
-            self._construct_node_wrapper_maps(_node_wrapper_pairs)
-            self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
-            self.execution_sets = _execution_sets
-
-        else:
+        if subclass_components is None:
             self._early_init(composition, device)
             # Instantiate standard PytorchWrappers for Mechanisms and Projections, and execution_sets used in forward()
             _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context)
             self._construct_node_wrapper_maps(_node_wrapper_pairs)
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
-
-        if _execution_sets is None:
-            # If _execution_sets was not passed in from subclass, get it here
             self.execution_sets, execution_context = self._get_execution_sets(composition, context)
+
+        else:
+            # Construct node_wrappers, projection_wrappers, and execution_sets from subclass components passed in
+            _node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets, execution_context = subclass_components
+            self._validate_subclass_components(_node_wrapper_pairs, _projection_wrapper_pairs, _execution_sets)
+            self._construct_node_wrapper_maps(_node_wrapper_pairs)
+            self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
+            self.execution_sets = _execution_sets
 
         # Assign INPUT Nodes for outermost Composition (including any that are nested within it at any level)
         # Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
