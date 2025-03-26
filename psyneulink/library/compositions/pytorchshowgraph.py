@@ -110,9 +110,9 @@ class PytorchShowGraph(ShowGraph):
     def _get_projections(self, composition, context):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            # projections = list(self.pytorch_rep._projection_map.keys())
-            projections = [proj for proj in self.pytorch_rep._projection_map
-                           if SHOW_PYTORCH in self.pytorch_rep._projection_map[proj]._use]
+            # projections = list(self.pytorch_rep._projections_map.keys())
+            projections = [proj for proj in self.pytorch_rep._projections_map
+                           if SHOW_PYTORCH in self.pytorch_rep._projections_map[proj]._use]
             # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
             # Add any Projections to TARGET nodes
             projections += [afferent
@@ -203,17 +203,17 @@ class PytorchShowGraph(ShowGraph):
                 # modulatory_node = self._nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
                 # # MODIFIED 2/22/25 END
 
-            if proj in self.pytorch_rep._projection_map:
+            if proj in self.pytorch_rep._projections_map:
                 # # MODIFIED 2/25/25 NEW:
                 # if ((hasattr(proj, 'learnable') and proj.learnable)
-                #         or (proj in self.pytorch_rep._projection_map and
-                #             self.pytorch_rep._projection_map[proj].matrix.requires_grad)):
+                #         or (proj in self.pytorch_rep._projections_map and
+                #             self.pytorch_rep._projections_map[proj].matrix.requires_grad)):
                 #     proj_is_learnable = True
                 # # MODIFIED 2/25/25 END
 
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
                 # # MODIFIED 2/25/25 OLD:
-                if proj.learnable or self.pytorch_rep._projection_map[proj].matrix.requires_grad:
+                if proj.learnable or self.pytorch_rep._projections_map[proj].matrix.requires_grad:
                 # # MODIFIED 2/25/25 NEW:
                 # if proj_is_learnable:
                 # # MODIFIED 2/25/25 END
@@ -224,7 +224,7 @@ class PytorchShowGraph(ShowGraph):
                     kwargs['color'] = self.exclude_from_gradient_calc_color
                     kwargs['style'] = self.exclude_from_gradient_calc_line_style
 
-            elif self._proj_in_composition(proj, self.pytorch_rep._projection_map, context) and proj.learnable:
+            elif self._proj_in_composition(proj, self.pytorch_rep._projections_map, context) and proj.learnable:
                 kwargs['color'] = self.learning_color
 
             graph.edge(*args, **kwargs)

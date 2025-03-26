@@ -309,7 +309,7 @@ class TestExecution:
             np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
                                        np.array([[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]]),
                                        atol=1e-8)
-            torch_gru = autodiff_comp.pytorch_representation._wrapped_nodes[2]._wrapped_nodes[0]
+            torch_gru = autodiff_comp.pytorch_representation._node_wrappers[2]._node_wrappers[0]
             np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
                                        GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'))
             # MODIFIED 3/16/25 OLD:
