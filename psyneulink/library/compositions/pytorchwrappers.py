@@ -323,7 +323,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             (f"PROGRAM ERROR: Constructor for {self} passed non-PytorchProjectionWrapper object(s) as "
              f"projection wrapper(s) from subclass.")
         for exec_set in execution_sets:
-            assert isinstance(exec_set, Set), \
+            assert isinstance(exec_set, set), \
                 f"PROGRAM ERROR: {self}._execution_sets contains non-ExecutionSet object(s)."
             for item in exec_set:
                 assert isinstance(item, (PytorchMechanismWrapper, PytorchCompositionWrapper)), \
