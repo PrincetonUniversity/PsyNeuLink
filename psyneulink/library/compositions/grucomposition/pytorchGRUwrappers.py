@@ -494,10 +494,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def log_value(self):
         # FIX: LOG HIDDEN STATE OF COMPOSITION MECHANISM
-        if self._mechanism.parameters.value.log_condition != LogCondition.OFF:
+        if self.mechanism.parameters.value.log_condition != LogCondition.OFF:
             detached_value = self.output.detach().cpu().numpy()
-            self._mechanism.output_port.parameters.value._set(detached_value, self._context)
-            self._mechanism.parameters.value._set(detached_value, self._context)
+            self.mechanism.output_port.parameters.value._set(detached_value, self._context)
+            self.mechanism.parameters.value._set(detached_value, self._context)
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

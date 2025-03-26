@@ -277,6 +277,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         composition.scheduler._delete_counts(execution_context.execution_id)
 
         self._regenerate_torch_parameter_list()
+        assert 'DEBUGGING BREAKPOINT'
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
