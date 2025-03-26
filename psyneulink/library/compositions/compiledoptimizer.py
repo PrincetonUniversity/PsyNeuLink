@@ -13,8 +13,8 @@ class Optimizer():
 
     # gets the type of the delta_w struct
     def _get_delta_w_struct_type(self, ctx):
-        delta_w = [None] * len(self._pytorch_model._projection_wrappers)
-        for idx, proj in enumerate(self._pytorch_model._projection_wrappers):
+        delta_w = [None] * len(self._pytorch_model.projection_wrappers)
+        for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             proj_matrix = proj.matrix
             dim_x, dim_y = proj_matrix.shape
 
@@ -128,7 +128,7 @@ class AdamOptimizer(Optimizer):
         pnlvm.helpers.printf(ctx, builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow, tags={"torch"})
 
         # 2) update first moments
-        for idx, proj in enumerate(self._pytorch_model._projection_wrappers):
+        for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             proj_idx_ir = ctx.int32_ty(idx)
 
             m_t_ptr = builder.gep(m_t, [zero, proj_idx_ir])
@@ -150,7 +150,7 @@ class AdamOptimizer(Optimizer):
                                                      f" {proj.receiver_wrapper.mechanism}\n",
                                               tags={"torch"})
         # 3) update second moments
-        for idx, proj in enumerate(self._pytorch_model._projection_wrappers):
+        for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             proj_idx_ir = ctx.int32_ty(idx)
 
             v_t_ptr = builder.gep(v_t, [zero, proj_idx_ir])
@@ -174,7 +174,7 @@ class AdamOptimizer(Optimizer):
         step_size = builder.fdiv(lr, one_minus_b1_pow)
         step_size = pnlvm.helpers.fneg(builder, step_size)
 
-        for idx, proj in enumerate(self._pytorch_model._projection_wrappers):
+        for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             proj_idx_ir = ctx.int32_ty(idx)
 
             m_t_ptr = builder.gep(
@@ -256,7 +256,7 @@ class SGDOptimizer(Optimizer):
         lr = ctx.float_ty(self.lr)
 
         # update weights
-        for idx, proj in enumerate(self._pytorch_model._projection_wrappers):
+        for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
             delta_w_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx)])
             weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, state, params)
 

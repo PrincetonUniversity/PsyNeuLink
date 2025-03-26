@@ -36,21 +36,22 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                  device,
                  outer_creator=None,
                  dtype=None,
+                 subclass_components=None,
                  context=None):
 
         self._early_init(composition, device)
 
-        node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
-        gru_pytorch_node = node_wrapper_pairs[0][1]
+        _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
+        gru_pytorch_node = _node_wrapper_pairs[0][1]
         torch_gru = gru_pytorch_node.function.function
-        projection_wrapper_pairs = self._instantiate_GRU_pytorch_projection_wrappers(torch_gru, device, context)
+        _projection_wrapper_pairs = self._instantiate_GRU_pytorch_projection_wrappers(torch_gru, device, context)
         execution_sets = [{gru_pytorch_node}]
 
         super().__init__(composition=composition,
                          device=device,
                          outer_creator=outer_creator,
-                         subclass_components=(node_wrapper_pairs,
-                                              projection_wrapper_pairs,
+                         subclass_components=(_node_wrapper_pairs,
+                                              _projection_wrapper_pairs,
                                               execution_sets,
                                               Context()),
                          context=context)
@@ -85,7 +86,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         pnl = self._composition
         self.torch_gru_parameters = torch_gru.parameters
 
-        projection_wrapper_pairs = []
+        _projection_wrapper_pairs = []
 
         # Pytorch parameter info
         torch_params = torch_gru.state_dict()
@@ -99,7 +100,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                  (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]
         pnl_proj_wts = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
         for pnl_proj, torch_matrix in zip(pnl_proj_wts, torch_gru_wts_indices):
-            projection_wrapper_pairs.append((pnl_proj,
+            _projection_wrapper_pairs.append((pnl_proj,
                                              PytorchGRUProjectionWrapper(projection=pnl_proj,
                                                                          torch_parameter=torch_matrix,
                                                                          use=SYNCH,
@@ -115,7 +116,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                       (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
             for pnl_bias_proj, torch_bias in zip(pnl_biases, torch_gru_bias_indices):
-                projection_wrapper_pairs.append((pnl_bias_proj,
+                _projection_wrapper_pairs.append((pnl_bias_proj,
                                                  PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
                                                                              torch_parameter=torch_bias,
                                                                              use=SYNCH,
@@ -124,7 +125,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self.copy_weights_to_torch_gru(context)
 
-        return projection_wrapper_pairs
+        return _projection_wrapper_pairs
 
     def _flatten_for_pytorch(self,
                              pnl_proj,
@@ -144,8 +145,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
-            sndr_mech_wrapper = outer_comp_pytorch_rep._nodes_map[sndr_mech]
-            rcvr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
+            sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
+            rcvr_mech_wrapper = self.nodes_map[self._composition.gru_mech]
             try:
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
                                              sender=pnl_proj.sender,
@@ -157,8 +158,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
-            sndr_mech_wrapper = self._nodes_map[self._composition.gru_mech]
-            rcvr_mech_wrapper = outer_comp_pytorch_rep._nodes_map[rcvr_mech]
+            sndr_mech_wrapper = self.nodes_map[self._composition.gru_mech]
+            rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
             try:
                 direct_proj = MappingProjection(name="Projection from GRU COMP",
                                                 sender=self._composition.gru_mech,
@@ -183,8 +184,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                     sender_wrapper=sndr_mech_wrapper,
                                                     receiver_wrapper=rcvr_mech_wrapper,
                                                     context=context)
-            outer_comp_pytorch_rep._projection_wrappers.append(proj_wrapper)
-            outer_comp_pytorch_rep._projections_map[direct_proj] = proj_wrapper
+            outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
+            outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
             outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
@@ -232,12 +233,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             self.gru_pytorch_node.synch_with_pnl = False
 
     def copy_weights_to_psyneulink(self, context=None):
-        for proj_wrapper in self._projections_map.values():
+        for proj_wrapper in self.projections_map.values():
             if SYNCH in proj_wrapper._use:
                 proj_wrapper._copy_params_to_pnl_proj(context)
 
     def copy_weights_to_torch_gru(self, context=None):
-        for projection, proj_wrapper in self._projections_map.items():
+        for projection, proj_wrapper in self.projections_map.items():
             if SYNCH in proj_wrapper._use:
                 proj_wrapper.set_torch_gru_parameter(context, self.torch_dtype)
 
@@ -280,11 +281,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return weights, biases
 
     def log_weights(self):
-        for proj_wrapper in self._projection_wrappers:
+        for proj_wrapper in self.projection_wrappers:
             proj_wrapper.log_matrix()
 
     def log_values(self):
-        for node_wrapper in [n for n in self._node_wrappers if not isinstance(n, PytorchCompositionWrapper)]:
+        for node_wrapper in [n for n in self.node_wrappers if not isinstance(n, PytorchCompositionWrapper)]:
             node_wrapper.log_value()
 
 

@@ -30,7 +30,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
-        self.storage_node = [node for node in self._nodes_map.values()
+        self.storage_node = [node for node in self.nodes_map.values()
                              if isinstance(node.mechanism, EMStorageMechanism)][0]
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
@@ -48,14 +48,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         learning_signals_for_match_nodes = pnl_storage_mech.learning_signals[:num_match_fields]
         pnl_match_projs = [match_node_learning_signal.efferents[0].receiver.owner
                            for match_node_learning_signal in learning_signals_for_match_nodes]
-        self.match_projection_wrappers = [self._projections_map[pnl_match_proj]
+        self.match_projection_wrappers = [self.projections_map[pnl_match_proj]
                                           for pnl_match_proj in pnl_match_projs]
 
         # ProjectionWrappers for retrieve nodes
         learning_signals_for_retrieve_nodes = pnl_storage_mech.learning_signals[num_match_fields:]
         pnl_retrieve_projs = [retrieve_node_learning_signal.efferents[0].receiver.owner
                               for retrieve_node_learning_signal in learning_signals_for_retrieve_nodes]
-        self.retrieve_projection_wrappers = [self._projections_map[pnl_retrieve_proj]
+        self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
     def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context):
