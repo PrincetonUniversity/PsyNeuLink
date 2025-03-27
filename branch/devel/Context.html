@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.16.1.0+47.g145ba331a documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.16.1.0+48.g110c0ae40 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+47
+                  0.16.1.0+48
                 </div>
               
             
@@ -465,56 +465,62 @@ Also used to specify the context in which a value of the Component or its attrib
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.DISPLAYING">
+<span class="sig-name descname"><span class="pre">DISPLAYING</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1024</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.DISPLAYING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during call to Composition’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph`show_graph</span></code> method.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.IDLE">
-<span class="sig-name descname"><span class="pre">IDLE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1024</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.IDLE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">IDLE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2048</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.IDLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Identifies condition in which no flags in the <a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_phase</span></code></a> are set.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.COMMAND_LINE">
-<span class="sig-name descname"><span class="pre">COMMAND_LINE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2048</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">COMMAND_LINE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">4096</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Direct call by user (either interactively from the command line, or in a script).</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR">
-<span class="sig-name descname"><span class="pre">CONSTRUCTOR</span></span><em class="property"> <span class="pre">=</span> <span class="pre">4096</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">CONSTRUCTOR</span></span><em class="property"> <span class="pre">=</span> <span class="pre">8192</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call from Component’s constructor method.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.METHOD">
-<span class="sig-name descname"><span class="pre">METHOD</span></span><em class="property"> <span class="pre">=</span> <span class="pre">8192</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.METHOD" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">METHOD</span></span><em class="property"> <span class="pre">=</span> <span class="pre">16384</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call by method of the Component other than its constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.COMPOSITION">
-<span class="sig-name descname"><span class="pre">COMPOSITION</span></span><em class="property"> <span class="pre">=</span> <span class="pre">16384</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">COMPOSITION</span></span><em class="property"> <span class="pre">=</span> <span class="pre">32768</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call by a/the Composition to which the Component belongs.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.NONE">
-<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">32768</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.NONE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">65536</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.NONE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call by a/the Composition to which the Component belongs.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.DEFAULT_MODE">
-<span class="sig-name descname"><span class="pre">DEFAULT_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">65536</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.DEFAULT_MODE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">DEFAULT_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">131072</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.DEFAULT_MODE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default mode</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.LEARNING_MODE">
-<span class="sig-name descname"><span class="pre">LEARNING_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">131072</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.LEARNING_MODE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">LEARNING_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">262144</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.LEARNING_MODE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during <code class="xref any docutils literal notranslate"><span class="pre">composition.learn</span></code></p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.context.ContextFlags.SIMULATION_MODE">
-<span class="sig-name descname"><span class="pre">SIMULATION_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">262144</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.SIMULATION_MODE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">SIMULATION_MODE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">524288</span></em><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags.SIMULATION_MODE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during simulation by Composition.controller</p>
 </dd></dl>
 

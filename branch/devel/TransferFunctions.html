@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.16.1.0+47.g145ba331a documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.16.1.0+48.g110c0ae40 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+47
+                  0.16.1.0+48
                 </div>
               
             
@@ -1926,7 +1926,7 @@ it is <code class="docutils literal notranslate"><span class="pre">[0.47536689</
 thresholding <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the SoftMax function, or by adapting the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parametrically based on the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
 <ul class="simple">
 <li><p><em>mask_threshold</em> – setting the <strong>mask_threshold</strong> argument to a scalar value causes the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to be thresholded by that value before applying the SoftMax function; Each element in
-variable &lt;SoftMax.variable&gt; is first scaled by gain &lt;SoftMax.gain&gt;. Then, any elements with an absolute
+<a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is first scaled by <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>. Then, any elements with an absolute
 value below <em>mask_threshold</em> are set to negative infinity (<code class="docutils literal notranslate"><span class="pre">-inf</span></code>), effectively masking them since
 <code class="docutils literal notranslate"><span class="pre">exp(-inf)</span> <span class="pre">=</span> <span class="pre">0</span></code>. The remaining values are then passed through the SoftMax function. This only applies if the
 <strong>gain</strong> argument is specified as a scalar; if it is specified as <em>ADAPTIVE</em>, then the <strong>mask_threshold</strong>
@@ -2000,9 +2000,9 @@ if it is ‘ADAPTIVE’, it is determined dynamically adjusted using the <a clas
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.mask_threshold">
 <span class="sig-name descname"><span class="pre">mask_threshold</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.mask_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines whether the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is thresholded before applying the SoftMax function;
-if it is a scalar, each elements of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is first scaled by <code class="xref any docutils literal notranslate"><span class="pre">&lt;SoftMax.gain&gt;</span></code>. Then,
-only elements with an absolute value greater than <em>mask_threshold</em> are considered when applying the SoftMax
+<dd><p>determines whether the <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is thresholded before applying the SoftMax function; if
+it is a scalar, each element of <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is first scaled by ` gain &lt;SoftMax.gain&gt;`. Then
+only elements with an absolute value greater than <strong>mask_threshold</strong> are considered when applying the SoftMax
 function, while all other elements are set to <code class="docutils literal notranslate"><span class="pre">-inf</span></code> effectively masking them since <code class="docutils literal notranslate"><span class="pre">exp(-inf)</span> <span class="pre">=</span> <span class="pre">0</span></code>.
 This only applies if <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain" title="psyneulink.core.components.functions.nonstateful.transferfunctions.SoftMax.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> is specified as a scalar;  otherwise it is ignored
 (see <a class="reference internal" href="#softmax-adaptgain"><span class="std std-ref">Thresholding and Adaptive Gain</span></a> for details).</p>

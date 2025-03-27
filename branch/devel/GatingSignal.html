@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.16.1.0+47.g145ba331a documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.16.1.0+48.g110c0ae40 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+47
+                  0.16.1.0+48
                 </div>
               
             
@@ -542,6 +542,13 @@ of the Port(s) to which the GatingSignal’s <a class="reference internal" href=
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal._instantiate_cost_functions">
 <span class="sig-name descname"><span class="pre">_instantiate_cost_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal._instantiate_cost_functions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override ControlSignal as GatingSignal has not cost functions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.compute_costs">
+<span class="sig-name descname"><span class="pre">compute_costs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.compute_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrided to always return 0
+Costs not used by Gating Mechanism, and method on ControlSignal doesn’t support vectors which GatingSignal does.</p>
 </dd></dl>
 
 </dd></dl>
