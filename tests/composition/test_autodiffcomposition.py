@@ -63,7 +63,12 @@ class TestAutodiffConstructor:
         hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
         hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
         output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
+
         nested = pnl.AutodiffComposition(name='autodiff NESTED',
+                                     nodes = [hidden_node_autodiff_1,
+                                              hidden_node_autodiff_2])
+
+        nested = pnl.AutodiffComposition(name='autodiff NESTED 2',
                                      nodes = [hidden_node_autodiff_1,
                                               hidden_node_autodiff_2])
         pathway_a = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_1), nested]
@@ -74,7 +79,7 @@ class TestAutodiffConstructor:
             autodiff_comp._build_pytorch_representation()
         assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
                                                 "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
-                                                "from the input_CIM of 'autodiff NESTED-1'. One for this reason may "
+                                                "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
                                                 "be that these Components belong to different Compositions.")
 
     def test_report_prefs(self):

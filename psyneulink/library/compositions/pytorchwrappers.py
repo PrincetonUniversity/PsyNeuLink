@@ -589,7 +589,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 (f"PROGRAM ERROR: First efferent Projection from '{nested_port.owner.name}' "
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
-                 f"One for this reason may be that these Components may belong to different Compositions.")
+                 f"One for this reason may be that these Components belong to different Compositions.")
             # FIX: 3/17/25 - IS THIS CORRECT, OR SHOULD IT REMAIN AS ASSIGNED ABOVE;  IF THE LATTER, DELETED PRECEDING
             pnl_proj = projection
 
