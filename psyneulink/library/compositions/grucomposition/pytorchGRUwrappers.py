@@ -235,7 +235,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def copy_weights_to_psyneulink(self, context=None):
         for proj_wrapper in self.projections_map.values():
             if SYNCH in proj_wrapper._use:
-                proj_wrapper._copy_params_to_pnl_proj(context)
+                proj_wrapper._copy_torch_params_to_pnl_proj(context)
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self.projections_map.items():
@@ -428,8 +428,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # Return the input for the port for all items in the batch
         return variable[:, 0, ...]
 
-    # FIX: 3/16/25
-    # def _get_gru_internal_state_values(self)->dict:
     def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->dict:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
         These are needed for assigning to the corresponding nodes in the GRUComposition.
@@ -561,7 +559,7 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         proj_matrix_as_tensor = torch.tensor(matrix.squeeze(), dtype=dtype)
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
 
-    def _copy_params_to_pnl_proj(self, context):
+    def _copy_torch_params_to_pnl_proj(self, context):
         torch_parameter = self.torch_parameter
         torch_indices = self.matrix_indices
         matrix = torch_parameter[torch_indices].detach().cpu().clone().numpy().T

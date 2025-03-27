@@ -1093,7 +1093,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def copy_weights_to_psyneulink(self, context=None):
         for pytorch_rep_proj_wrapper in self.projections_map.values():
             if SYNCH in pytorch_rep_proj_wrapper._use:
-                pytorch_rep_proj_wrapper._copy_params_to_pnl_proj(context)
+                pytorch_rep_proj_wrapper._copy_torch_params_to_pnl_proj(context)
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
@@ -1706,12 +1706,11 @@ class PytorchProjectionWrapper():
 
         self.function = projection.function._gen_pytorch_fct(device, context)
 
-
     def execute(self, variable):
         # return torch.matmul(variable, self.matrix)
         return self.function(variable, self.matrix)
 
-    def _copy_params_to_pnl_proj(self, context):
+    def _copy_torch_params_to_pnl_proj(self, context):
         projection = self.projection
         matrix = self.matrix.detach().cpu().numpy()
         projection.parameters.matrix._set(matrix, context)
