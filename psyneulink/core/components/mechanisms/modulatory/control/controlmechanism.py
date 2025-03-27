@@ -926,7 +926,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     default_allocation : number, list or 1d array
         determines the default_allocation of any `control_signals <ControlMechanism.control_signals>` for
-        which the **default_allocation** was not specified in its constructor;  if it is None (not specified)
+        which the **default_allocation** is not specified in its constructor;  if it is None (not specified)
         then the ControlSignal's parameters.allocation.default_value is used. See documentation for
         **default_allocation** argument of ControlSignal constructor for additional details.
 
@@ -1600,14 +1600,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
+            # Get name of default input_port (specified in self.input_ports) if it is not 'OUTCOME'
+            default_input_port_name = self.input_ports[0]
+            if default_input_port_name != OUTCOME:
+                if isinstance(default_input_port_name, InputPort):
+                    default_input_port_name = default_input_port_name.name.strip(' [Deferred Init]')
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
             # Construct full list of InputPort specifications and sizes
+            default_input_port_shape = self._handle_input_shapes(self.input_shapes, self.variable).tolist()
+            input_port_value_sizes = convert_all_elements_to_np_array(default_input_port_shape
+                                                                      + other_input_port_value_sizes)
             input_ports = self.input_ports + other_input_ports
-            input_port_value_sizes = convert_all_elements_to_np_array([[0]] + other_input_port_value_sizes)
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
-            self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            self.outcome_input_ports.append(self.input_ports[default_input_port_name])
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.

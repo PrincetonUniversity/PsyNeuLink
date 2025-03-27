@@ -6,7 +6,7 @@ import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html

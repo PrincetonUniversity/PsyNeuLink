@@ -146,7 +146,8 @@ class AdamOptimizer(Optimizer):
             pnlvm.helpers.printf_float_matrix(ctx,
                                               builder,
                                               m_t_ptr,
-                                              prefix=f"mt val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              prefix=f"mt val: {proj.sender_wrapper.mechanism} ->"
+                                                     f" {proj.receiver_wrapper.mechanism}\n",
                                               tags={"torch"})
         # 3) update second moments
         for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
@@ -186,7 +187,8 @@ class AdamOptimizer(Optimizer):
             pnlvm.helpers.printf_float_matrix(ctx,
                                               builder,
                                               delta_w_ptr,
-                                              prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              prefix=f"grad val: {proj.sender_wrapper.mechanism} ->"
+                                                     f" {proj.receiver_wrapper.mechanism}\n",
                                               tags={"torch"})
 
             # this is messy - #TODO - cleanup this

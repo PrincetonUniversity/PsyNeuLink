@@ -372,16 +372,16 @@ class TestInputAndTargetSpecs:
         with pytest.raises(RunError) as error_text:
             comp.run(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        error_msg = ("Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'TARGET for learning-process-mech-C' is incompatible with the shape of its external input ([array([0., 0.])]).")
         assert error_msg in str(error_text.value)
 
         # Elicit error with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) "
+                     f"for 'TARGET for learning-process-mech-C' is incompatible with the "
+                     f"shape of its external input ([array([0., 0.])]).")
         assert error_msg in str(error_text.value)
 
     # The input sizes were picked because the lengths conflict in set:

@@ -1,4 +1,4 @@
-EMComposition
+GRUComposition
 =============
 
 .. container:: related
@@ -7,10 +7,8 @@ EMComposition
 
     * `AutodiffComposition`
     * `Composition_Learning`
-    * `EpisodicMemoryMechanism`
-    * `ContentAddressableMemory`
 
-.. automodule:: psyneulink.library.compositions.emcomposition.emcomposition
+.. automodule:: psyneulink.library.compositions.grucomposition.grucomposition
    :members:
    :private-members:
    :exclude-members: Parameters, execute

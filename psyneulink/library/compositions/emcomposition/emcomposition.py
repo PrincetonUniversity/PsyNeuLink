@@ -947,10 +947,9 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VALUE, VARIABLE)
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
-from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1459,13 +1458,12 @@ class EMComposition(AutodiffComposition):
     query_and_value_input_nodes : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
         followed by value_input_nodes; used primarily for internal computations.
-
     """
 
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        from psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
 
 
@@ -2134,12 +2132,12 @@ class EMComposition(AutodiffComposition):
                 correction_msg = ""
 
             elif not all(np.all(keys_weight == keys_weights[0]) for keys_weight in keys_weights):
-                error_msg = f" field weights ({field_weights}) are not all equal"
+                error_msg = f"field weights ({field_weights}) are not all equal"
                 correction_msg = (f" To use concatenation, remove `field_weights` "
                                   f"specification or make them all the same.")
 
             elif not normalize_memories:
-                error_msg = f" normalize_memories is False"
+                error_msg = f"normalize_memories is False"
                 correction_msg = f" To use concatenation, set normalize_memories to True."
 
             else:

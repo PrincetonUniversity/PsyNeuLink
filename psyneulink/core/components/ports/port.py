@@ -1316,9 +1316,9 @@ class Port_Base(Port):
                 projection = projection_type(**projection_spec)
 
             else:
-                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
-                                 "from _parse_connection_specs for connection from {} to {} of {}".
-                                 format(Projection.__name__,projection_spec,sender.__name__,self.name,self.owner.name))
+                raise PortError(
+                    f"PROGRAM ERROR: Unrecognized {Projection.__name__} specification ({projection_spec}) "
+                    f"returned from _parse_connection_specs for connection to {self.name} of {self.owner.name}.")
 
             # ASSIGN PARAMS
 
@@ -1565,7 +1565,13 @@ class Port_Base(Port):
                                                    connections=receiver)
                     return _get_receiver_port(spec[0].port)
                 elif isinstance(spec, Projection):
-                    return spec.receiver
+                    try:
+                        return spec.receiver
+                    except AttributeError:
+                        return spec._init_args[RECEIVER]
+                    except:
+                        raise PortError(f"Unrecognized specification of receiver for Projection "
+                                        f"from '{self.name}' of '{self.owner.name}'.")
                 # FIX: 11/25/17 -- NEEDS TO CHECK WHETHER PRIMARY SHOULD BE INPUT_PORT OR PARAMETER_PORT
                 elif isinstance(spec, Mechanism):
                     return spec.input_port
@@ -1652,20 +1658,19 @@ class Port_Base(Port):
                 rcvr_str = ""
                 if receiver:
                     if isinstance(receiver, Port):
-                        rcvr_str = " to {}".format(receiver.name)
+                        rcvr_str = f" to {receiver.name}"
                     else:
-                        rcvr_str = " to {}".format(receiver.__name__)
-                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
-                                 "from _parse_connection_specs for connection from {} of {}{}".
-                                 format(Projection.__name__,projection_spec,self.name,self.owner.name,rcvr_str))
+                        rcvr_str = f" to {receiver.__name__}"
+                raise PortError(f"PROGRAM ERROR: Unrecognized {Projection.__name__} specification ({projection_spec}) "
+                                f"returned from _parse_connection_specs for connection from {self.name} of "
+                                f"{self.owner.name}{rcvr_str}.")
 
             # Validate that receiver and projection_spec receiver are now the same
             receiver = proj_recvr or receiver  # If receiver was not specified, assign it receiver from projection_spec
             if proj_recvr and receiver and proj_recvr is not receiver:
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
-                raise PortError("Receiver ({}) specified for Projection ({}) "
-                                 "is not the same as the one specified in {} ({})".
-                                 format(proj_recvr, projection.name, ProjectionTuple.__name__, receiver))
+                raise PortError(f"Receiver ({proj_recvr}) specified for Projection ({projection.name}) "
+                                f"is not the same as the one specified in {ProjectionTuple.__name__} ({receiver}).")
 
             # ASSIGN REMAINING PARAMS
 
@@ -1736,7 +1741,6 @@ class Port_Base(Port):
                             and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
                                             f"with the value of {receiver.name} ({mod_param_value}).")
-
 
             # ASSIGN TO PORT
 

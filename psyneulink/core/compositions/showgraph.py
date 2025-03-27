@@ -710,8 +710,6 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
-        from psyneulink.core.compositions.composition import Composition
-
         composition = self.composition
 
         if context.execution_id is None:
@@ -725,6 +723,7 @@ class ShowGraph():
 
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
         processing_graph = self._get_processing_graph(composition, context)
+
         # IMPLEMENTATION_NOTE:  Take diff with following to get scheduling edges not in compostion graph:
         # processing_graph = composition.scheduler.dependency_dict
 
@@ -955,8 +954,15 @@ class ShowGraph():
         return self.show_graph(**args)
 
     def _get_processing_graph(self, composition, context):
-        """Helper method that allows override by subclass to filter nodes and their dependencies used for graph"""
+        """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
+        Sorts graph by node name for consistency in display
+        """
+        # MODIFIED 3/16/25 OLD:
         return composition.graph_processing.dependency_dict
+        # MODIFIED 3/16/25 NEW:
+        # return {k: composition.graph_processing.dependency_dict[k]
+        #         for k in sorted(composition.graph_processing.dependency_dict.keys())}
+        # MODIFIED 3/16/25 END
 
     def _get_nodes(self, composition ,context):
         """Helper method that allows override by subclass to filter nodes used for graph"""

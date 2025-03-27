@@ -53,9 +53,34 @@ class TestAutodiffConstructor:
     #     assert comp.target_CIM.composition == comp
     #     assert comp.target_CIM_ports == {}
 
-    def test_pytorch_representation(self):
+    def test_no_initial_pytorch_representation(self):
         comp = AutodiffComposition()
         assert comp.pytorch_representation is None
+
+    def test_duplicate_projections_to_nested_comp(self):
+        input_node_autodiff = pnl.ProcessingMechanism(name='autodiff INPUT', input_shapes=2)
+        hidden_node_autodiff_1 = pnl.ProcessingMechanism(name='autodiff HIDDEN 1', input_shapes=3)
+        hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
+        hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
+        output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
+
+        nested = pnl.AutodiffComposition(name='autodiff NESTED',
+                                     nodes = [hidden_node_autodiff_1,
+                                              hidden_node_autodiff_2])
+
+        nested = pnl.AutodiffComposition(name='autodiff NESTED 2',
+                                     nodes = [hidden_node_autodiff_1,
+                                              hidden_node_autodiff_2])
+        pathway_a = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_1), nested]
+        pathway_b = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_2), nested,
+                     MappingProjection(sender=hidden_node_autodiff_2, name="PROBLEM PROJ"), output_node_autodiff]
+        autodiff_comp = pnl.AutodiffComposition(pathways=[pathway_a, pathway_b], name='autodiff COMP')
+        with pytest.raises(AutodiffCompositionError) as error_text:
+            autodiff_comp._build_pytorch_representation()
+        assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
+                                                "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
+                                                "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
+                                                "be that these Components belong to different Compositions.")
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
@@ -2240,18 +2265,8 @@ class TestNestedLearning:
         pathway_b = [input_nodes[0],
                      MappingProjection(input_nodes[0], hidden_nodes[1]),
                      nested,
-                     MappingProjection(hidden_nodes[1]),
+                     MappingProjection(hidden_nodes[1]), # <- FIX FAILS
                      output_nodes[0]]
-
-        # error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
-        #              "to a node in the outer composition ('autodiff_comp') to be learnable.")
-        #
-        # with pytest.raises(AutodiffCompositionError) as error_text:
-        #     autodiff_results = execute_learning(comp_type='autodiff',
-        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                         pathways=[pathway_a, pathway_b],
-        #                                         inputs=inputs)
-        # assert error_msg in str(error_text.value)
 
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
@@ -2265,7 +2280,7 @@ class TestNestedLearning:
                                         pathways=[pathway_a, pathway_b],
                                         inputs=inputs)
 
-        # np.testing.assert_allclose(comp_results, autodiff_results)
+        np.testing.assert_allclose(comp_results, autodiff_results)
 
     def test_nested_autodiff_learning_with_input_func(self):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
@@ -2731,9 +2746,9 @@ class TestMiscTrainingFunctionality:
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy())
         np.testing.assert_allclose(out_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
     def test_training_then_processing(self, autodiff_mode):
@@ -2782,8 +2797,8 @@ class TestMiscTrainingFunctionality:
                                         execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        # pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         #KAM temporarily removed -- will reimplement when pytorch weights can be used in pure PNL execution
         # do processing on a few inputs
@@ -2958,9 +2973,10 @@ class TestMiscTrainingFunctionality:
                   execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
-
+        # pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        pt_weights_hid = list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy().copy()
+        pt_weights_out = list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy().copy()
         # assert that projections are still what they were initialized as
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None), hid_m)
         np.testing.assert_allclose(out_map.parameters.matrix.get(None), out_m)
@@ -3646,6 +3662,54 @@ class TestACLogging:
         xor.clear_losses(context=xor)
         assert len(xor.losses) == 0
 
+    @pytest.mark.pytorch
+    def test_synching_variable_and_value(self):
+        """Test synchronization of variables and values of nested Compositions with PyTorch execution."""
+        inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=2, function=pnl.Logistic)
+        inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=3)
+        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=4)
+        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=5, function=pnl.Logistic)
+        inner_comp = pnl.AutodiffComposition(name='Inner Comp',
+                                             pathways=[inner_mech_1, inner_mech_2],
+                                             # Note: no need to specify synch_node_values_with_torch, since default=RUN
+                                             synch_node_variables_with_torch=pnl.RUN)
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                             pathways=[outer_mech_in, inner_comp, outer_mech_out],
+                                             # Note: no need to specify synch_node_values_with_torch, since default=RUN
+                                             synch_node_variables_with_torch=pnl.RUN)
+        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
+                                          targets[0]: [[1,1,1,1,1]]},
+                                  execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Outer OUTPUT Mechanism -----------
+
+        # variable
+        expected = [[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].variable, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.variable.get('Outer Comp'), expected)
+
+        # value
+        expected = [[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].value, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.value.get('Outer Comp'), expected)
+
+        # Nested INPUT Mechanism  ----------
+
+        # variable
+        expected = [[[10, 10]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].variable, expected)
+        # np.testing.assert_allclose(outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].variable, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.variable.get('Outer Comp'), expected)
+
+        # value
+        expected = [[[0.9999546, 0.9999546]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].value, expected)
+        # np.testing.assert_allclose(['Inner Comp'].nodes['Inner Mech 1'].value, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.value.get('Outer Comp'), expected)
+
 
 @pytest.mark.pytorch
 class TestBatching:
@@ -3850,6 +3914,7 @@ class TestBatching:
         ce_torch = adc.loss_function(output, target).detach().numpy()
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
+
 
 @pytest.mark.pytorch
 @pytest.mark.parametrize('batch_size', [1, 2, 4])

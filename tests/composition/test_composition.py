@@ -48,7 +48,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
-from psyneulink.library.compositions.emcomposition import EMComposition
+from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition
 
 logger = logging.getLogger(__name__)
 
@@ -720,7 +720,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         assert l.name == 'L'
         assert l.input == F
         assert l.output == G
-        assert l.target == c.nodes['Target']
+        assert l.target == c.nodes['TARGET for G']
         assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
                c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
         assert l.learning_objective == c.nodes['Comparator']
@@ -1649,7 +1649,7 @@ class TestCompositionPathwaysArg:
         assert set(c.get_nodes_by_role(NodeRole.OUTPUT)) == {B, D}
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
-        assert c.pathways['P2'].target == c.nodes['Target']
+        assert c.pathways['P2'].target == c.nodes['TARGET for D']
         assert set(c.pathways['P1'].roles) == {PathwayRole.ORIGIN,
                                                PathwayRole.INPUT,
                                                PathwayRole.OUTPUT,
@@ -1682,7 +1682,7 @@ class TestCompositionPathwaysArg:
         c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, ([C,D], pnl.BackPropagation)])
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
         assert c.pathways['P1'].name == 'P1'
-        assert c.pathways['P1'].target == c.nodes['Target']
+        assert c.pathways['P1'].target == c.nodes['TARGET for B']
 
     def test_composition_pathways_bad_arg_error(self):
         I = InputPort(name='I')
@@ -7403,12 +7403,13 @@ class TestNodeRoles:
         def test_just_BIAS_Node(self, nodes, comp_mode):
             """Composition with just a BIAS Node"""
             comp = Composition(pathways=[(nodes('DOUBLE BIAS'), NodeRole.BIAS)])
-            assert nodes('DOUBLE BIAS').input_port.default_input == DEFAULT_VARIABLE
+            assert nodes('DOUBLE BIAS').input_ports[0].default_input == DEFAULT_VARIABLE
             assert nodes('DOUBLE BIAS').input_ports[1].default_input == DEFAULT_VARIABLE
             assert comp.get_nodes_by_role(NodeRole.BIAS) == [nodes('DOUBLE BIAS')]
             assert comp.get_nodes_by_role(NodeRole.INPUT) == []
+            assert comp.get_nodes_by_role(NodeRole.OUTPUT) == []
             results = comp.run(execution_mode=comp_mode)
-            assert all(results == [[3.],[7.]])
+            assert all(results == [])
 
         def test_assign_BIAS_NodeRole_after_adding_to_composition(self, nodes):
             comp = Composition(pathways=[nodes('DOUBLE BIAS')])
@@ -7442,20 +7443,29 @@ class TestNodeRoles:
             nested_comp = Composition(name='NESTED COMP', pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
             comp = Composition(name='COMP', pathways=[[nodes('INPUT'), nodes('OUTPUT')], nested_comp])
             assert comp.nodes['NESTED COMP'].get_nodes_by_role(NodeRole.BIAS) == [nodes('SINGLE BIAS')]
+            # BIAS Node should never be an INPUT Node of a Comosition, nested or otherwise
             assert comp.nodes['NESTED COMP'].get_nodes_by_role(NodeRole.INPUT) == []
+            # BIAS Node should be *not* be an OUTPUT Node of the nested Composition since it doesn't project out of it
+            assert NodeRole.OUTPUT not in comp.nodes['NESTED COMP'].get_roles_by_node(nodes('SINGLE BIAS'))
             result = comp.run(inputs={nodes('INPUT'):[[[1]]]}, execution_mode=comp_mode)
-            assert all(result == [[1],[2]])
-            comp.add_projection(MappingProjection(sender=nodes('SINGLE BIAS'), receiver=nodes('OUTPUT')))
-            result = comp.run(inputs={nodes('INPUT'):[[[1]]]},execution_mode=comp_mode)
-            assert all(result == [[3]])
+            assert all(result == [[1]])
+
+        def test_BIAS_Node_as_ORIGIN_that_projects_to_node_in_nested_composition(self, nodes, comp_mode):
+            nested_comp = Composition(name='NESTED COMP', pathways=[nodes('OUTPUT')])
+            comp = Composition(name='COMP', pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS), nested_comp])
+            assert comp.get_nodes_by_role(NodeRole.BIAS) == [nodes('SINGLE BIAS')]
+            assert comp.get_nodes_by_role(NodeRole.INPUT) == []
+            assert comp.get_nodes_by_role(NodeRole.PROBE) == []
+            assert comp.execute() == [[2]]
+            assert comp.run(execution_mode=comp_mode) == [[2]]
 
         @pytest.mark.nested
-        def test_BIAS_Node_errors(self, nodes, comp_mode):
+        def test_BIAS_Node_errors(self, nodes):
             # Error if BIAS Node is assigned in a pathway that would cause it to be assigned a afferent Projection
             with pytest.raises(CompositionError) as error_text:
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('SINGLE BIAS'), NodeRole.BIAS)}])
-            assert (f"'SINGLE BIAS' is configured as a BIAS node, so it cannot receive a MappingProjection "
-                    f"from 'INPUT' as currently specified for a pathway in 'Composition-0'.") in str(error_text)
+            assert (f"'SINGLE BIAS' is configured as a BIAS Node, so it cannot receive a MappingProjection "
+                    f"from 'INPUT' as specified for a pathway in 'Composition-0'.") in str(error_text.value)
 
             # Error if BIAS Node in nested Composition is assigned an afferent Projection
             with pytest.raises(CompositionError) as error_text:
@@ -7480,6 +7490,36 @@ class TestNodeRoles:
                                       (nodes('SINGLE BIAS'), [NodeRole.BIAS, NodeRole.INPUT])])
             assert (f"A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "
                     f"(since it does not receive any input).") in str(error_text.value)
+
+            # Error on constructing Composition with BIAS Node in nested Composition that projects to Node in outer one
+            nested_comp = Composition(name='NESTED COMP', pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
+            with pytest.raises(CompositionError) as error_text:
+                Composition(name='COMP', pathways=[nested_comp, nodes('OUTPUT')])
+            assert (f"A nested Composition ('NESTED COMP') included in 'pathway' arg for add_linear_processing_pathway "
+                    f"method of 'COMP' does not (yet) have a Node with the NodeRole 'OUTPUT' required by its position "
+                    f"the specified pathway. This is probably because its only TERMINAL Node is 'SINGLE BIAS' which a "
+                    f"BIAS Node which cannot project to a Node in an outer Composition." in str(error_text.value))
+            # FIX: replace error capture above with commeneted code below
+            #      when a nested BIAS Node can be assigned a projection to a Node in an outer Composition
+            # BIAS Node should be now be an OUTPUT Node of the nested Composition since it Projects to node in outer one
+            # assert NodeRole.OUTPUT in comp.nodes['NESTED COMP'].get_roles_by_node(nodes('SINGLE BIAS'))
+            # result = comp.run(inputs={nodes('INPUT'):[[[1]]]},execution_mode=comp_mode)
+            # assert all(result == [[3]])
+
+            # Error when assigning a Projection from a BIAS Node in a nested Composition to a node in an outer one
+            nested_comp = Composition(name='NESTED COMP', pathways=[(nodes('SINGLE BIAS'), NodeRole.BIAS)])
+            comp = Composition(name='COMP', pathways=[[nodes('INPUT'), nodes('OUTPUT')], nested_comp])
+            with pytest.raises(CompositionError) as error_text:
+                comp.add_projection(MappingProjection(sender=nodes('SINGLE BIAS'), receiver=nodes('OUTPUT')))
+            assert ("A BIAS Node in a nested Composition cannot be assigned to bias a Node in an outer Composition "
+                    "('SINGLE BIAS' in 'NESTED COMP-1' -> 'COMP-1')" in str(error_text.value))
+            # FIX: replace error capture above with commeneted code below
+            #      when a nested BIAS Node can be assigned a projection to a Node in an outer Composition
+            # BIAS Node should be now be an OUTPUT Node of the nested Composition since it Projects to node in outer one
+            # assert NodeRole.OUTPUT in comp.nodes['NESTED COMP'].get_roles_by_node(nodes('SINGLE BIAS'))
+            # result = comp.run(inputs={nodes('INPUT'):[[[1]]]},execution_mode=comp_mode)
+            # assert all(result == [[3]])
+
 
     @pytest.mark.composition
     def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
@@ -8513,20 +8553,9 @@ class TestMisc:
         assert outer.most_recent_context.execution_id is None
         assert inner.most_recent_context.execution_id == inner.name
 
-        if len(inner_pathway) == 0:
-            with pytest.raises(
-                pnl.MechanismError,
-                match=r'Number of inputs \(1\) to inner Output_CIM does not match its number of input_ports \(0\)'
-            ) as e:
-                outer.run()
-            if e:
-                pytest.xfail(
-                    reason='running outer comp with empty inner comp fails validation'
-                )
-        else:
-            outer.run()
-            assert outer.most_recent_context.execution_id == outer.name
-            assert inner.most_recent_context.execution_id == outer.name
+        outer.run()
+        assert outer.most_recent_context.execution_id == outer.name
+        assert inner.most_recent_context.execution_id == outer.name
 
         # COMMAND_LINE to bypass check for input passed to nested comp
         c = pnl.Context(source=pnl.ContextFlags.COMMAND_LINE)
