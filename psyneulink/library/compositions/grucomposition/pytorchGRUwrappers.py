@@ -304,6 +304,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                  dtype,
                  device,
                  context):
+
         super().__init__(mechanism=mechanism,
                          composition_wrapper=composition_wrapper,
                          component_idx=component_idx,
@@ -312,12 +313,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          device=device,
                          subclass_specifies_function=True,
                          context=context)
+
         self._assign_GRU_pytorch_function(mechanism, device, context)
-        # MODIFIED 3/16/25 OLD:
+
         self.synch_with_pnl = False
-        # # MODIFIED 3/16/25 NEW:
-        # self.synch_with_pnl = True # FOR TESTING, UNTIL _parse_synch_and_retain_args() IS CAPTURED
-        # MODIFIED 3/16/25 END
 
     def _assign_GRU_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
@@ -336,9 +335,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
-
-    # def _get_torch_module_params(self):
-    #     return self.function.function.named_parameters()
 
     def execute(self, input, context)->torch.Tensor:
         """Execute GRU Node with input variable and return output value
