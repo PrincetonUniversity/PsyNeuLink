@@ -85,7 +85,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         to the corresponding part of the tensor in the parameter of the Pytorch GRU module.
         """
 
-        pnl = self._composition
+        pnl = self.composition
         self.torch_gru_parameters = torch_gru.parameters
 
         _projection_wrapper_pairs = []
@@ -146,27 +146,27 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         if access == ENTER_NESTED:
             sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
-            rcvr_mech_wrapper = self.nodes_map[self._composition.gru_mech]
+            rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             try:
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
                                              sender=pnl_proj.sender,
-                                             receiver=self._composition.gru_mech,
+                                             receiver=self.composition.gru_mech,
                                              learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
-                direct_proj = self._composition.gru_mech.afferents[0]
+                direct_proj = self.composition.gru_mech.afferents[0]
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
-            sndr_mech_wrapper = self.nodes_map[self._composition.gru_mech]
+            sndr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
             try:
                 direct_proj = MappingProjection(name="Projection from GRU COMP",
-                                                sender=self._composition.gru_mech,
+                                                sender=self.composition.gru_mech,
                                                 receiver=pnl_proj.receiver,
                                                 learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
-                direct_proj = self._composition.gru_mech.efferents[0]
+                direct_proj = self.composition.gru_mech.efferents[0]
             # gru_mech has only one output_port
             sender_port_idx = 0
 
@@ -186,7 +186,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                     context=context)
             outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
             outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
-            outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
+            outer_comp_pytorch_rep.composition._pytorch_projections.append(direct_proj)
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
@@ -204,16 +204,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self._set_synch_with_pnl(synch_with_pnl_options)
 
         # Get input from GRUComposition's INPUT_NODE
-        inputs = inputs[self._composition.input_node]
+        inputs = inputs[self.composition.input_node]
 
         # Execute GRU Node
         output = self.gru_pytorch_node.execute(inputs, context)
 
         # Set GRUComposition's OUTPUT Node of output of GRU Node
-        self._composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
-        self._composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
+        self.composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
+        self.composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
-        return {self._composition.gru_mech: output}
+        return {self.composition.gru_mech: output}
 
     def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to set GRU Node's synch_with_pnl option if GRUComposition is a nested Composition
@@ -321,9 +321,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def _assign_GRU_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
-        input_size = self._composition_wrapper_owner._composition.parameters.input_size.get(context)
-        hidden_size = self._composition_wrapper_owner._composition.parameters.hidden_size.get(context)
-        bias = self._composition_wrapper_owner._composition.parameters.bias.get(context)
+        input_size = self.composition_wrapper_owner.composition.parameters.input_size.get(context)
+        hidden_size = self.composition_wrapper_owner.composition.parameters.hidden_size.get(context)
+        bias = self.composition_wrapper_owner.composition.parameters.bias.get(context)
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
                                  bias=bias).to(dtype=self.torch_dtype)
@@ -345,7 +345,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
-        composition = self._composition_wrapper_owner._composition
+        composition = self.composition_wrapper_owner.composition
 
         self.input = input
 
@@ -448,7 +448,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
 
         # Get biases
-        pnl_comp = self._composition_wrapper_owner._composition
+        pnl_comp = self.composition_wrapper_owner.composition
         if pnl_comp.bias:
             assert len(torch_gru_parameters) > 1, \
                 (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
@@ -491,7 +491,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
 
             # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
-            pnl_comp = self._composition_wrapper_owner._composition
+            pnl_comp = self.composition_wrapper_owner.composition
             pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)

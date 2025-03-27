@@ -284,11 +284,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Assign attributes
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
         self.device = device
-        self.optimizer = None # This gets assigned by self._composition after the wrapper is created,
+        self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
         self._optimizer_param_groups = []
 
-        self._composition = composition
+        self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
         self._batch_size = 1 # Store the currently used batch size
@@ -375,7 +375,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  # Leave nested Compositions
                  if (isinstance(n, AutodiffComposition)
                      # Needed since composition.nodes is flattened in infer_backpropagation_learning_pathways
-                     or n not in [n[0] for n in self._composition._get_nested_nodes()])]
+                     or n not in [n[0] for n in self.composition._get_nested_nodes()])]
 
         _node_wrapper_pairs = []
         # Sort to be sure nested Compositions are processed last, as they need outer nodes that project in/out of them
@@ -390,14 +390,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 pytorch_node_wrapper = PytorchMechanismWrapper(mechanism=node,
                                                                composition_wrapper=self,
-                                                               component_idx=self._composition._get_node_index(node),
+                                                               component_idx=self.composition._get_node_index(node),
                                                                use=[LEARNING, SYNCH, SHOW_PYTORCH],
                                                                dtype=self.torch_dtype,
                                                                device=device,
                                                                context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
-                pytorch_node_wrapper._is_bias = node in self._composition.get_nodes_by_role(NodeRole.BIAS)
+                pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
             _node_wrapper_pairs.append((node, pytorch_node_wrapper))
 
         return _node_wrapper_pairs
@@ -443,7 +443,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            component_idx = list(self._composition._inner_projections).index(projection)
+            component_idx = list(self.composition._inner_projections).index(projection)
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
@@ -488,7 +488,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                          sndr_mech, rcvr_mech,
                                                          nested_rcvr_port,
                                                          nested_rcvr_mech,
-                                                         self._composition,
+                                                         self.composition,
                                                          self,
                                                          ENTER_NESTED,
                                                          context))
@@ -512,7 +512,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                          sndr_mech, rcvr_mech,
                                                          nested_sndr_port,
                                                          nested_sndr_mech,
-                                                         self._composition,
+                                                         self.composition,
                                                          self,
                                                          EXIT_NESTED,
                                                          context))
@@ -579,7 +579,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
                 outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
-                outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
+                outer_comp_pytorch_rep.composition._pytorch_projections.append(direct_proj)
 
         elif access == EXIT_NESTED:
             proj_sndr_wrapper = self.nodes_map[nested_mech]
@@ -619,7 +619,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
                 outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
-                outer_comp_pytorch_rep._composition._pytorch_projections.append(direct_proj)
+                outer_comp_pytorch_rep.composition._pytorch_projections.append(direct_proj)
 
         else:
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
@@ -628,10 +628,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _parse_optimizer_params(self, context):
         """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
-        composition = self._composition
+        composition = self.composition
 
         # Replace pnl names with actual torch params as keys in optimizer_params
-        optimizer_params = self._composition._optimizer_params
+        optimizer_params = self.composition._optimizer_params
         for param_name in optimizer_params.copy():
             param = self._pnl_refs_to_torch_params_map.get(param_name, None)
             if param:
@@ -701,9 +701,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        args = [ctx.get_state_struct_type(self._composition).as_pointer(),
-                ctx.get_param_struct_type(self._composition).as_pointer(),
-                ctx.get_data_struct_type(self._composition).as_pointer()
+        args = [ctx.get_state_struct_type(self.composition).as_pointer(),
+                ctx.get_param_struct_type(self.composition).as_pointer(),
+                ctx.get_data_struct_type(self.composition).as_pointer()
                 ]
         builder = ctx.create_llvm_function(args, self)
 
@@ -714,7 +714,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             model_input = builder.gep(data,
                                       [ctx.int32_ty(0),
                                        ctx.int32_ty(0),
-                                       ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
+                                       ctx.int32_ty(self.composition._get_node_index(self.composition.input_CIM))])
             self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
 
         builder.ret_void()
@@ -729,7 +729,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
-                if NodeRole.INPUT in self._composition.get_roles_by_node(component.mechanism):
+                if NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                     input_id = component._idx
@@ -749,13 +749,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     # generates a function responsible for a single epoch of the training
     def _gen_llvm_training_backprop(self, ctx, optimizer, loss):
-        composition = self._composition
+        composition = self.composition
         args = [ctx.get_state_struct_type(composition).as_pointer(),
                 ctx.get_param_struct_type(composition).as_pointer(),
                 ctx.get_data_struct_type(composition).as_pointer(),
                 optimizer._get_optimizer_struct_type(ctx).as_pointer(),
                 ]
-        name = self._composition.name + "_training_backprop"
+        name = self.composition.name + "_training_backprop"
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
         for a in llvm_func.args:
@@ -765,10 +765,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         state, params, data, optim_struct = llvm_func.args
         model_input = builder.gep(data, [ctx.int32_ty(0),
                                          ctx.int32_ty(0),
-                                         ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
+                                         ctx.int32_ty(self.composition._get_node_index(self.composition.input_CIM))])
         model_output = data
         # setup useful mappings
-        input_nodes = set(self._composition.get_nodes_by_role(NodeRole.INPUT))
+        input_nodes = set(self.composition.get_nodes_by_role(NodeRole.INPUT))
 
         # initialize optimizer params:
         delta_w = builder.gep(optim_struct, [ctx.int32_ty(0), ctx.int32_ty(optimizer._DELTA_W_NUM)])
@@ -793,13 +793,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 error_val = builder.alloca(z_values[node].type.pointee)
                 error_dict[node] = error_val
 
-                if NodeRole.OUTPUT in self._composition.get_roles_by_node(node.mechanism):
+                if NodeRole.OUTPUT in self.composition.get_roles_by_node(node.mechanism):
                     # We handle output layer here
                     # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
 
                     # 1) Lookup desired target value
-                    terminal_sequence = self._composition._terminal_backprop_sequences[node.mechanism]
-                    target_idx = self._composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
+                    terminal_sequence = self.composition._terminal_backprop_sequences[node.mechanism]
+                    target_idx = self.composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value
@@ -881,11 +881,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return builder.function
 
     def _gen_llvm_training_function_body(self, ctx, builder, state, params, data):
-        composition = self._composition
+        composition = self.composition
 
         optimizer = self._get_compiled_optimizer()
         # setup loss
-        loss_type = self._composition.loss_spec
+        loss_type = self.composition.loss_spec
         if loss_type == Loss.MSE:
             loss = MSELoss()
         elif loss_type == Loss.CROSS_ENTROPY:
@@ -908,11 +908,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _get_compiled_optimizer(self):
         # setup optimizer
-        optimizer_type = self._composition.optimizer_type
+        optimizer_type = self.composition.optimizer_type
         if optimizer_type == 'adam':
-            optimizer = AdamOptimizer(self, lr=self._composition.learning_rate)
+            optimizer = AdamOptimizer(self, lr=self.composition.learning_rate)
         elif optimizer_type == 'sgd':
-            optimizer = SGDOptimizer(self, lr=self._composition.learning_rate)
+            optimizer = SGDOptimizer(self, lr=self.composition.learning_rate)
         else:
             raise Exception("OPTIMIZER TYPE", optimizer_type, "NOT SUPPORTED")
         return optimizer
@@ -1030,7 +1030,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Execute the node (i.e., call its forward method) using composition_wrapper_owner for Composition
                 # wrapper to which it belongs; this is to support override of the execute_node method by subclasses of
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                node._composition_wrapper_owner.execute_node(node, variable, optimization_num,
+                node.composition_wrapper_owner.execute_node(node, variable, optimization_num,
                                                              synch_with_pnl_options, context)
 
                 assert 'DEBUGGING BREAK POINT'
@@ -1038,11 +1038,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
-                if (node.mechanism in self._composition.get_nested_output_nodes_at_all_levels()):
+                if (node.mechanism in self.composition.get_nested_output_nodes_at_all_levels()):
                     outputs[node.mechanism] = node.output
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
-        # if not self._composition.is_nested:
+        # if not self.composition.is_nested:
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
         self.log_values()
@@ -1111,7 +1111,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Update output_values of autodiff Composition by executing its output_CIM with pytorch_rep all_output_values
         if self.all_output_values is not None:
             # Execute the output_CIM on the last element of the batch to update the output ports
-            self._composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
+            self.composition.output_CIM.execute(self.all_output_values[-1, ...], context=context)
 
     def log_values(self):
         for node_wrapper in [n for n in self.node_wrappers if not isinstance(n, PytorchCompositionWrapper)]:
@@ -1122,7 +1122,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
         if current_condition in {EPOCH, RUN}:
-            self._composition.parameters.results._set(convert_to_np_array(self.retained_results), context)
+            self.composition.parameters.results._set(convert_to_np_array(self.retained_results), context)
 
     def retain_for_psyneulink(self,
                               data:dict,
@@ -1252,7 +1252,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
-        self._composition_wrapper_owner = composition_wrapper
+        self.composition_wrapper_owner = composition_wrapper
         self.torch_dtype = dtype
 
         self.input = None
@@ -1683,12 +1683,12 @@ class PytorchProjectionWrapper():
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
         #       that are not in the current Composition
         # MODIFIED 3/4/25 OLD:
-        if context._composition and LEARNING in self._use:
+        if context.composition and LEARNING in self._use:
         # # MODIFIED 3/4/25 NEW:
-        # if context._composition and LEARNING in self._use and self.sender_wrapper:
+        # if context.composition and LEARNING in self._use and self.sender_wrapper:
         # MODIFIED 3/4/25 END
             for i, output_port in enumerate(self.sender_wrapper.mechanism.output_ports):
-                if all(p in context._composition.projections for p in output_port.efferents):
+                if all(p in context.composition.projections for p in output_port.efferents):
                     if self._pnl_proj in output_port.efferents:
                         self._value_idx = i
                         break
