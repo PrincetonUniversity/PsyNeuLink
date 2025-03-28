@@ -1949,19 +1949,19 @@ class AutodiffComposition(Composition):
 
         context = context or Context(execution_id=self.name)
 
-        torch_param, projection = self._validate_and_parse_torch_param_and_projection(torch_param, projection)
+        torch_param, projection = (
+            self._parse_and_validate_torch_param_and_projection(torch_param,
+                                                                projection,
+                                                                'copy_torch_param_to_projection_matrix'))
 
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-
-        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
-            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
-                                           f"does not match shape of matrix for '{projection.name}' "
-                                           f"{projection.parameters.matrix.default_value.shape}.")
 
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
 
-    def _validate_and_parse_torch_param_and_projection(self, torch_param, projection)->tuple:
+    def _parse_and_validate_torch_param_and_projection(self, torch_param,
+                                                       projection,
+                                                       method_name)->tuple:
 
         if isinstance(torch_param, tuple):
             if len(torch_param) < 2 or len(torch_param) > 3:
@@ -1981,23 +1981,37 @@ class AutodiffComposition(Composition):
             elif len(torch_param) == 3:
                 if not isinstance(torch_param[2], slice):
                     raise AutodiffCompositionError(f"Third item in tuple for 'torch_param' ('{torch_param[2]}') "
-                                                   f"must be a slice within the range of '{torch_param[1]}' "
+                                                   f"must be a slice specifying a range within '{torch_param[1]}' "
                                                    f"Parameter of '{torch_param[0]}'.")
-                torch_param = torch_param[0].state_dict()[torch_param[1]][torch_param[2]]
+                try:
+                    torch_param = torch_param[0].state_dict()[torch_param[1]][torch_param[2]]
+                except IndexError:
+                    raise AutodiffCompositionError(f"The slice in the tuple specified for 'torch_param' "
+                                                   f"('{torch_param[2]}') must be within the range of the "
+                                                   f"'{torch_param[1]}' Parameter of '{torch_param[0]}'.")
+
             else:
-                assert False, f"PROGRAM ERROR: Unexpected length of tuple for 'torch_param' ({len(torch_param)})."
+                assert False, (f"PROGRAM ERROR: Unexpected length of tuple for "
+                               f"'torch_param' ({len(torch_param)}) in {method_name}.")
 
         elif not isinstance(torch_param, torch.Tensor):
             raise AutodiffCompositionError(f"'torch_param' ('{torch_param}') must be a torch.Tensor.")
 
-        # else:
-        #     assert False, (f"PROGRAM ERROR: Unexpected problem parsing 'torch_param' arg ('{torch_param}') of "
-        #                    f"'{self.name}.copy_torch_param_to_projection_matrix'.")
+        if projection not in self.projections:
+            if isinstance(projection, str):
+                raise AutodiffCompositionError(f"'{projection}' is not the name of a Projection in '{self.name}'.")
+            elif isinstance(projection, MappingProjection):
+                raise AutodiffCompositionError(f"'{projection.name}' is not a Projection in '{self.name}'.")
+            else:
+                assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection}) in {method_name}."
+        projection = self.projections[projection]
 
-        if isinstance(projection, str):
-            projection = self.projections[projection]
+        torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
 
-
+        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
+            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
+                                           f"does not match shape of matrix for '{projection.name}' "
+                                           f"{projection.parameters.matrix.default_value.shape}.")
 
         return torch_param, projection
 
