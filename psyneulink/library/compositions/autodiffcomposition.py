@@ -1935,16 +1935,19 @@ class AutodiffComposition(Composition):
         Arguments
         ---------
         torch_param : tuple or torch.nn.Parameter
-           if a tuple, must take the form ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter, str, slice)``
-           where ``str`` is the name of the Parameter and ``slice`` specifies the indices of the Parameter to use
+           torch_param to assign as matrix of Projection; if specified as a tuple, it must take the form
+           ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter, str, slice)`` where ``str`` is
+           the name of the Parameter and ``slice`` specifies the indices of the Parameter to use.
 
         projection : str or MappingProjection
-           if str, msut be the name of the Projecdtion in the AutodiffComposition.
+           Projection to which the torch_param is to be assigned as its `matrix <MappingProjection.matrix>`;
+           if specified as a str, must be the name of a Projection in the AutodiffComposition.
 
         context : Context or None
-           if it is not provided, then a default `Context` is constructed using the `name <Composition.name>` of the
-           AutodiffComposition as the `execution_id <Context.execution_id>`, commensurate with the one used by
-           default for its `execution <AutodiffComposition_Execution>`.
+           context to use for the value of Projection.matrix;  if it is not provided, then a default `Context`
+           is constructed using the `name <Composition.name>` of the AutodiffComposition as the `execution_id
+           <Context.execution_id>`, commensurate with the one used bydefault for its `execution
+           <AutodiffComposition_Execution>`.
         """
         context = context or Context(execution_id=self.name)
         torch_param, projection, context = (
@@ -1964,17 +1967,21 @@ class AutodiffComposition(Composition):
 
         Arguments
         ---------
-        torch_param : tuple or torch.nn.Parameter
-           if a tuple, must take the form ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter, str, slice)``
-           where ``str`` is the name of the Parameter and ``slice`` specifies the indices of the Parameter to use
-
         projection : str or MappingProjection
-           if str, msut be the name of the Projecdtion in the AutodiffComposition.
+           Projection, the `matrix <MappingProjection.matrix>` of which is to be assigned to torch_param;
+           if specified as a str, must be the name of a Projection in the AutodiffComposition.
+
+        torch_param : tuple or torch.nn.Parameter
+           torch Parameter to which the `matrix <MappingProjection.matrix>` of the Projection is to be assigned;
+           if specified as a tuple, it must take the form ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter,
+           str, slice)`` where ``str`` is the name of the Parameter and ``slice`` specifies the indices of the
+           Parameter to use.
 
         context : Context or None
-           if it is not provided, then a default `Context` is constructed using the `name <Composition.name>` of the
-           AutodiffComposition as the `execution_id <Context.execution_id>`, commensurate with the one used by
-           default for its `execution <AutodiffComposition_Execution>`.
+           context to use for the value of Projection.matrix;  if it is not provided, then a default `Context`
+           is constructed using the `name <Composition.name>` of the AutodiffComposition as the `execution_id
+           <Context.execution_id>`, commensurate with the one used bydefault for its `execution
+           <AutodiffComposition_Execution>`.
         """
         torch_param, projection, context = (
             self._parse_and_validate_torch_param_and_projection(torch_param,
