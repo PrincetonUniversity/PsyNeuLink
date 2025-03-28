@@ -134,13 +134,15 @@ class TestAutodiffConstructor:
 
         # Test error for torch_param tuple in which second item is not in state_dict
         with pytest.raises(AutodiffCompositionError) as error_text:
-            gru.copy_torch_param_to_projection_matrix((torch_gru, "I be a bad param"),'INPUT TO NEW WEIGHTS')
+            gru.copy_torch_param_to_projection_matrix((torch_gru, "I be a bad param"),
+                                                      'INPUT TO NEW WEIGHTS')
         assert error_text.value.error_value ==("Parameter name ('I be a bad param') not found "
                                                "in state_dict() for 'GRU(3, 5, bias=False)'.")
 
         # Test error for torch_param tuple in which third item is not a slice
         with pytest.raises(AutodiffCompositionError) as error_text:
-            gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0', "I bad param"),'INPUT TO NEW WEIGHTS')
+            gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0', "I bad param"),
+                                                      'INPUT TO NEW WEIGHTS')
         assert error_text.value.error_value ==("Third item in tuple for 'torch_param' ('I bad param') "
                                                "must be a slice specifying a range within "
                                                "'weight_hh_l0' Parameter of 'GRU(3, 5, bias=False)'.")
@@ -155,7 +157,8 @@ class TestAutodiffConstructor:
 
         # Test error for torch_param that mismatches shape of Projection matrix (in this case, by not slicing)
         with pytest.raises(AutodiffCompositionError) as error_text:
-            gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0'),'INPUT TO NEW WEIGHTS')
+            gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0'),
+                                                      'INPUT TO NEW WEIGHTS')
         assert error_text.value.error_value ==("Shape of torch parameter (5, 15) does not match "
                                                "shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")
 
