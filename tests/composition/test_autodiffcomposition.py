@@ -173,6 +173,97 @@ class TestAutodiffConstructor:
         assert error_text.value.error_value == (f"'BAD PROJECTION [Deferred Init]' "
                                                 f"is not a Projection in 'GRU Composition'.")
 
+    def test_copy_projection_matrix_to_torch_param(self):
+        import torch
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
+
+        # Test torch Parameter name as spec
+        torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
+        torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+        gru.copy_projection_matrix_to_torch_param('HIDDEN TO OUTPUT WEIGHTS', torch_param)
+        new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get(gru.name)
+        torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
+        np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+
+        # # Test 3-item tuple as spec
+        # torch_param_spec = (torch_gru, 'weight_ih_l0', slice(0,5))
+        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+        # gru.copy_torch_param_to_projection_matrix(torch_param_spec,'INPUT TO NEW WEIGHTS')
+        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
+        # new_matrix = gru.projections['INPUT TO NEW WEIGHTS'].parameters.matrix.get(gru.name)
+        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+        # gru.copy_torch_param_to_projection_matrix(torch_param,'INPUT TO NEW WEIGHTS')
+        #
+        # torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
+        #
+        # # Test error for shape mismatch of torch Parameter and Projection.matrix
+        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix(torch_param_spec,'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value == \
+        #        ("Shape of torch parameter (5, 5) does not match shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")
+        #
+        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+        #
+        # # Test error for torch_param tuple of wrong length
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix((13,),'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value == "Tuple for 'torch_param' must have 2 or 3 items; it has 1 items."
+        #
+        # # Test error for torch_param tuple in which first item is not a torch.nn.Module
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix(('I be bad', 1, 2),'INPUT TO NEW WEIGHTS')
+        # assert (error_text.value.error_value ==
+        #         "First item in tuple for 'torch_param' ('I be bad') must be a torch.nn.Module.")
+        #
+        # # Test error for torch_param tuple in which second item is not a string
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix((torch_gru, 13),'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value == ("Second item in tuple for 'torch_param' ('13') must be "
+        #                                         "the name of a Parameter in 'GRU(3, 5, bias=False)'.")
+        #
+        # # Test error for torch_param tuple in which second item is not in state_dict
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix((torch_gru, "I be a bad param"),
+        #                                               'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value ==("Parameter name ('I be a bad param') not found "
+        #                                        "in state_dict() for 'GRU(3, 5, bias=False)'.")
+        #
+        # # Test error for torch_param tuple in which third item is not a slice
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0', "I bad param"),
+        #                                               'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value ==("Third item in tuple for 'torch_param' ('I bad param') "
+        #                                        "must be a slice specifying a range within "
+        #                                        "'weight_hh_l0' Parameter of 'GRU(3, 5, bias=False)'.")
+        #
+        # # SLICES OUT OF RANGE SEEM TO STILL GENERATE (MIS-SHAPPEN) TENSORS RATHER THAN AN ERROR
+        # # # Test error for torch_param tuple in which third item is a slice that is out of range
+        # # with pytest.raises(AutodiffCompositionError) as error_text:
+        # #     gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0', slice(0,50)),'INPUT TO NEW WEIGHTS')
+        # # assert error_text.value.error_value ==("Third item in tuple for 'torch_param' ('I bad param') must be "
+        # #                                        "a slice within the range of 'weight_hh_l0' Parameter of "
+        # #                                        "'GRU(3, 5, bias=False)'.")
+        #
+        # # Test error for torch_param that mismatches shape of Projection matrix (in this case, by not slicing)
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0'),
+        #                                               'INPUT TO NEW WEIGHTS')
+        # assert error_text.value.error_value ==("Shape of torch parameter (5, 15) does not match "
+        #                                        "shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")
+        #
+        # # Test error for specified Projection name not one for Projection in AutodiffComposition)
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix(torch_param,'BAD NAME')
+        # assert error_text.value.error_value ==("'BAD NAME' is not the name of a Projection in 'GRU Composition'.")
+        #
+        # # Test error for specified Projection not in AutodiffComposition)
+        # with pytest.raises(AutodiffCompositionError) as error_text:
+        #     gru.copy_torch_param_to_projection_matrix(torch_param, pnl.MappingProjection(name='BAD PROJECTION'))
+        # assert error_text.value.error_value == (f"'BAD PROJECTION [Deferred Init]' "
+        #                                         f"is not a Projection in 'GRU Composition'.")
+
     def test_report_prefs(self):
         comp = AutodiffComposition()
         assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
