@@ -1116,7 +1116,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier
+    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier, safe_len
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -1616,6 +1616,16 @@ class Mechanism_Base(Mechanism):
             read_only=True,
             structural=True,
         )
+
+        def _parse_variable(self, variable):
+            if variable is None:
+                return None
+            # 2d empty port causes input problems.
+            # occurs for CIMs of empty Compositions, or when remove_port
+            # called on only input port
+            if safe_len(variable) == 0:
+                return np.array([])
+            return convert_to_np_array(variable, dimension=2)
 
         def _parse_input_ports(self, input_ports):
             if input_ports is None:
