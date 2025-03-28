@@ -223,7 +223,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MATRIX, PARAMETER_PORT, PROJECTION_SENDER
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import SharedParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, ValidParamSpecType
@@ -245,15 +245,6 @@ DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningProjectionError(ProjectionError):
     pass
-
-
-def _learning_signal_getter(owning_component=None, context=None):
-    return owning_component.sender.parameters.value._get(context)
-
-
-def _learning_signal_setter(value, owning_component=None, context=None):
-    owning_component.sender.parameters.value._set(value, context)
-    return value
 
 
 class LearningProjection(ModulatoryProjection_Base):
@@ -464,10 +455,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                    stateful=False, loggable=False, reference=True)
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
         # learning_rate = Parameter(None, modulable=True)
-        learning_signal = Parameter(None, read_only=True,
-                                    getter=_learning_signal_getter,
-                                    setter=_learning_signal_setter,
-                                    pnl_internal=True)
+        learning_signal = SharedParameter(attribute_name='sender', shared_parameter_name='value')
         learning_enabled = None
 
 
