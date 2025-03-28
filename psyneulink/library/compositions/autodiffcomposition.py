@@ -20,6 +20,7 @@ Contents
           - `AutodiffComposition_Bias_Parameters`
           - `AutodiffComposition_Nesting`
           - `AutodiffComposition_Learning_Rates`
+          - `AutodiffComposition_Assign_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
           - `AutodiffComposition_PyTorch`
@@ -59,6 +60,7 @@ the standard `Composition methods <Composition_Creation>` for doing so (e.g., `a
 specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
 and `examples <AutodiffComposition_Examples>` below). While an AutodiffComposition can generally be created using the
 same methods as a standard Composition, there are a few restrictions that apply to its construction, summarized below.
+
 
 .. _AutodiffComposition_Restrictions:
 
@@ -146,6 +148,18 @@ for which there is no entry in **optimizer_params** use, in order of precedence:
 <AutodiffComposition.learn>` method, the **learning_rate** argument of its constructor, or the default value for the
 AutodiffComposition.
 
+.. _AutodiffComposition_Assign_Torch_Parameters:
+
+*Assigning a Pytorch Parameter to a Projection Matrix*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The AutodiffComposition's `copy_torch_param_to_projection_matrix` method can be used to copy the Parameters of a
+PyTorch module to the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection` in the AutodiffComposition.
+The Pytorch Parameter can be specified directly, or using a tuple of the form ``(module, parameter_name)`` or
+``(module, parameter_name, slice)`` where ``slice`` specifies the indices of the Parameter to use.  The Projection
+can be specified as a reference to the MappingProjection, or by its `name <MappingProjection.name>`.
+
+
 .. _AutodiffComposition_Post_Construction_Modification:
 
 *No Post-construction Modification*
@@ -175,12 +189,14 @@ which provides a comparison of the different modes of execution for an AutodiffC
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 
+COMMENT:
 # 7/10/24 - FIX:
 .. _AutodiffComposition_PyTorch_LearningScale:
-   ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTOIN OF pytorch_rep:
+   ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTION OF pytorch_rep:
       OPTIMIZATION STEP:
       for AutodiffCompositions, this corresponds to a single call to `foward()` and `backward()`
             methods of the Pytorch model
+COMMENT
 
 This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode** =
 `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method (see `example <BasicsAndPrimer_Rumelhart_Model>`
@@ -1909,6 +1925,49 @@ class AutodiffComposition(Composition):
         optimizer_states = tuple()
 
         return (*comp_states, optimizer_states)
+
+    def copy_torch_param_to_projection_matrix(self,
+                                              torch_param:Union[tuple,torch.nn.Parameter],
+                                              projection:Union[str,MappingProjection],
+                                              context=None):
+        """Take torch Parameter specification and assign to `matrix <MappingProjection.matrix>` Parameter of
+        specified `MappingProjection`.
+
+        Arguments
+        ---------
+        torch_param : tuple or torch.nn.Parameter
+           if a tuple, must take the form ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter, str, slice)``
+           where ``str`` is the name of the Parameter and ``slice`` specifies the indices of the Parameter to use
+
+        projection : str or MappingProjection
+           if str, msut be the name of the Projecdtion in the AutodiffComposition.
+        """
+        context = context or Context(execution_id=self.name)
+        if isinstance(torch_param, tuple):
+            if not isinstance(torch_param[0], torch.nn.Module):
+                raise AutodiffCompositionError(f"First item in tuple for 'torch_param' must be a torch.nn.Module.")
+            if not isinstance(torch_param[1], str):
+                raise AutodiffCompositionError(f"Second item in tuple for 'torch_param' must be "
+                                               f"the name of a Parameter in {torch_param}.")
+            if torch_param[1] not in torch_param[0].state_dict():
+                raise AutodiffCompositionError(f"Parameter '{torch_param[1]}' not found in "
+                                               f"state_dict() for {torch_param[0]}.")
+            if len(torch_param) == 2:
+                torch_param = torch_param[0].state_dict()[torch_param[1]]
+            else:
+                if not isinstance(torch_param[2], slice):
+                    raise AutodiffCompositionError(f"Third item in tuple for 'torch_param' must be a slice in the "
+                                                   f"range of {torch_param[1]} Parameter of {torch_param[0]}.")
+                torch_param = torch_param[0].state_dict()[torch_param[1]][torch_param[2]]
+        if isinstance(projection, str):
+            projection = self.projections[projection]
+        torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
+        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.default_value.shape:
+            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
+                                           f"does not match shape of matrix for '{projection.name}' "
+                                           f"{projection.parameters.matrix.default_value.shape}.")
+        projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
+        projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
