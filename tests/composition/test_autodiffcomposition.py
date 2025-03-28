@@ -145,6 +145,7 @@ class TestAutodiffConstructor:
                                                "must be a slice specifying a range within "
                                                "'weight_hh_l0' Parameter of 'GRU(3, 5, bias=False)'.")
 
+        # SLICES OUT OF RANGE SEEM TO STILL GENERATE (MIS-SHAPPEN) TENSORS RATHER THAN AN ERROR
         # # Test error for torch_param tuple in which third item is a slice that is out of range
         # with pytest.raises(AutodiffCompositionError) as error_text:
         #     gru.copy_torch_param_to_projection_matrix((torch_gru, 'weight_hh_l0', slice(0,50)),'INPUT TO NEW WEIGHTS')

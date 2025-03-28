@@ -1946,22 +1946,52 @@ class AutodiffComposition(Composition):
            AutodiffComposition as the `execution_id <Context.execution_id>`, commensurate with the one used by
            default for its `execution <AutodiffComposition_Execution>`.
         """
-
         context = context or Context(execution_id=self.name)
-
-        torch_param, projection = (
+        torch_param, projection, context = (
             self._parse_and_validate_torch_param_and_projection(torch_param,
                                                                 projection,
+                                                                context,
                                                                 'copy_torch_param_to_projection_matrix'))
-
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
 
+    def copy_projection_matrix_to_torch_param(self,
+                                              projection:Union[str, MappingProjection],
+                                              torch_param:Union[tuple,torch.nn.Parameter],
+                                              context:Optional[Union[Context, str]]=None):
+        """Assign torch Parameter to `matrix <MappingProjection.matrix>` Parameter of specified `MappingProjection`.
+
+        Arguments
+        ---------
+        torch_param : tuple or torch.nn.Parameter
+           if a tuple, must take the form ``(torch.nn.Parameter, str)`` or ``(torch.nn.Parameter, str, slice)``
+           where ``str`` is the name of the Parameter and ``slice`` specifies the indices of the Parameter to use
+
+        projection : str or MappingProjection
+           if str, msut be the name of the Projecdtion in the AutodiffComposition.
+
+        context : Context or None
+           if it is not provided, then a default `Context` is constructed using the `name <Composition.name>` of the
+           AutodiffComposition as the `execution_id <Context.execution_id>`, commensurate with the one used by
+           default for its `execution <AutodiffComposition_Execution>`.
+        """
+        torch_param, projection, context = (
+            self._parse_and_validate_torch_param_and_projection(torch_param,
+                                                                projection,
+                                                                context,
+                                                                'copy_projection_matrix_to_torch_param'))
+        torch_param = torch.Tensor(projection.parameters.matrix.get(context)).T.astype(self.torch_dtype)
+
     def _parse_and_validate_torch_param_and_projection(self, torch_param,
                                                        projection,
+                                                       context,
                                                        method_name)->tuple:
+        """Parse and validate torch_param and projection arguments for copy_torch_param_to_projection_matrix()
+        and copy_projection_matrix_to_torch_param()
+        Return tuple of torch_param (as tensor) and projection (as np.array)
+        """
+        context = context or Context(execution_id=self.name)
 
         if isinstance(torch_param, tuple):
             if len(torch_param) < 2 or len(torch_param) > 3:
@@ -1989,7 +2019,6 @@ class AutodiffComposition(Composition):
                     raise AutodiffCompositionError(f"The slice in the tuple specified for 'torch_param' "
                                                    f"('{torch_param[2]}') must be within the range of the "
                                                    f"'{torch_param[1]}' Parameter of '{torch_param[0]}'.")
-
             else:
                 assert False, (f"PROGRAM ERROR: Unexpected length of tuple for "
                                f"'torch_param' ({len(torch_param)}) in {method_name}.")
@@ -2007,13 +2036,12 @@ class AutodiffComposition(Composition):
         projection = self.projections[projection]
 
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-
         if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
             raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
                                            f"does not match shape of matrix for '{projection.name}' "
                                            f"{projection.parameters.matrix.default_value.shape}.")
 
-        return torch_param, projection
+        return torch_param, projection, context
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
