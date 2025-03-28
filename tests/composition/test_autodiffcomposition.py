@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+from numpy.ma.core import ones_like
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -181,8 +182,13 @@ class TestAutodiffConstructor:
         # Test torch Parameter name as spec
         torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
         torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+
+        ones = np.ones_like(torch_param.detach().numpy())
+        torch_param = torch.tensor(ones, dtype=torch_param.dtype)
+        torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]] = torch_param
+
         gru.copy_projection_matrix_to_torch_param('HIDDEN TO OUTPUT WEIGHTS', torch_param)
-        new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get(gru.name)
+        new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get()
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 

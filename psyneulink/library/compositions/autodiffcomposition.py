@@ -1986,7 +1986,8 @@ class AutodiffComposition(Composition):
             self._parse_and_validate_torch_param_and_projection(torch_param,
                                                                 projection,
                                                                 'copy_projection_matrix_to_torch_param'))
-        torch_param = torch.Tensor(projection.parameters.matrix.get(context).T).astype(torch_param.torch_dtype)
+        torch_param = torch.tensor(projection.parameters.matrix.get(context).T, dtype=torch_param.dtype)
+        assert True
 
     def _parse_and_validate_torch_param_and_projection(self, torch_param,
                                                        projection,
