@@ -1929,9 +1929,8 @@ class AutodiffComposition(Composition):
     def copy_torch_param_to_projection_matrix(self,
                                               torch_param:Union[tuple,torch.nn.Parameter],
                                               projection:Union[str,MappingProjection],
-                                              context=None):
-        """Take torch Parameter specification and assign to `matrix <MappingProjection.matrix>` Parameter of
-        specified `MappingProjection`.
+                                              context:Optional[Union[Context, str]]=None):
+        """Assign torch Parameter to `matrix <MappingProjection.matrix>` Parameter of specified `MappingProjection`.
 
         Arguments
         ---------
@@ -1941,33 +1940,57 @@ class AutodiffComposition(Composition):
 
         projection : str or MappingProjection
            if str, msut be the name of the Projecdtion in the AutodiffComposition.
+
+        context : Context or None
+           if it is not provided, then a default `Context` is constructed using the `name <Composition.name>` of the
+           AutodiffComposition as the `execution_id <Context.execution_id>`, commensurate with the one used by
+           default for its `execution <AutodiffComposition_Execution>`.
         """
+
         context = context or Context(execution_id=self.name)
+
+        self._validate_torch_param_and_projection(torch_param, projection)
+
         if isinstance(torch_param, tuple):
-            if not isinstance(torch_param[0], torch.nn.Module):
-                raise AutodiffCompositionError(f"First item in tuple for 'torch_param' must be a torch.nn.Module.")
-            if not isinstance(torch_param[1], str):
-                raise AutodiffCompositionError(f"Second item in tuple for 'torch_param' must be "
-                                               f"the name of a Parameter in {torch_param}.")
-            if torch_param[1] not in torch_param[0].state_dict():
-                raise AutodiffCompositionError(f"Parameter '{torch_param[1]}' not found in "
-                                               f"state_dict() for {torch_param[0]}.")
             if len(torch_param) == 2:
                 torch_param = torch_param[0].state_dict()[torch_param[1]]
-            else:
-                if not isinstance(torch_param[2], slice):
-                    raise AutodiffCompositionError(f"Third item in tuple for 'torch_param' must be a slice in the "
-                                                   f"range of {torch_param[1]} Parameter of {torch_param[0]}.")
+            elif len(torch_param) == 3:
                 torch_param = torch_param[0].state_dict()[torch_param[1]][torch_param[2]]
+            else:
+                assert False, f"PROGRAM ERROR: Unexpected length of tuple for 'torch_param' ({len(torch_param)})."
+
         if isinstance(projection, str):
             projection = self.projections[projection]
+
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.default_value.shape:
+
+        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
             raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
                                            f"does not match shape of matrix for '{projection.name}' "
                                            f"{projection.parameters.matrix.default_value.shape}.")
+
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
+
+    def _validate_torch_param_and_projection(self, torch_param, projection):
+        if isinstance(torch_param, tuple):
+            if len(torch_param) < 2 or len(torch_param) > 3:
+                raise AutodiffCompositionError(f"Tuple for 'torch_param' must have 2 or 3 items; "
+                                               f"it has {len(torch_param)} items.")
+            if not isinstance(torch_param[0], torch.nn.Module):
+                raise AutodiffCompositionError(f"First item in tuple for 'torch_param' ('{torch_param[0]}')"
+                                               f" must be a torch.nn.Module.")
+            if not isinstance(torch_param[1], str):
+                raise AutodiffCompositionError(f"Second item in tuple for 'torch_param' ('{torch_param[1]}') "
+                                               f"must be the name of a Parameter in '{torch_param[0]}'.")
+            if torch_param[1] not in torch_param[0].state_dict():
+                raise AutodiffCompositionError(f"Parameter name ('{torch_param[1]}') not found in "
+                                               f"state_dict() for '{torch_param[0]}'.")
+            if len(torch_param) == 3:
+                if not isinstance(torch_param[2], slice):
+                    raise AutodiffCompositionError(f"Third item in tuple for 'torch_param' ('{torch_param[2]}') "
+                                                   f"must be a slice within the range of '{torch_param[1]}' "
+                                                   f"Parameter of '{torch_param[0]}'.")
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
