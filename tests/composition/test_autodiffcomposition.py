@@ -88,6 +88,14 @@ class TestAutodiffConstructor:
         torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
 
+        # Test torch Parameter as spec
+        torch_param_spec = list(torch_gru.parameters())[1]
+        torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
+        gru.copy_torch_param_to_projection_matrix(torch_param,'HIDDEN TO OUTPUT WEIGHTS')
+        torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
+        new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get(gru.name)
+        np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+
         # Test torch Parameter name as spec
         torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
         torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
@@ -180,12 +188,25 @@ class TestAutodiffConstructor:
         torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
 
         # Test torch Parameter name as spec
+        # torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
         torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
-        torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
 
-        ones = np.ones_like(torch_param.detach().numpy())
+        torch_param = np.ones_like(torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]])
+        torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]] = torch.tensor(torch_param)
+                                                                                                  # dtype=torch_gru)
+        assert True
+
+        # ones = np.ones_like(torch_param.detach().numpy())
+
+
         torch_param = torch.tensor(ones, dtype=torch_param.dtype)
         torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]] = torch_param
+
+
+
+
+
+
 
         gru.copy_projection_matrix_to_torch_param('HIDDEN TO OUTPUT WEIGHTS', torch_param)
         new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get()
