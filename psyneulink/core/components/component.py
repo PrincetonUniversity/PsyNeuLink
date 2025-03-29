@@ -3314,7 +3314,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # Immutable, so just assign value
             self.defaults.value = value
 
-    def _update_default_variable(self, new_default_variable, context=None):
+    def _update_default_variable(self, new_default_variable, context):
         from psyneulink.core.components.shellclasses import Function
 
         new_default_variable = convert_all_elements_to_np_array(new_default_variable)
