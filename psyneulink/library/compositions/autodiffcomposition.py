@@ -20,7 +20,7 @@ Contents
           - `AutodiffComposition_Bias_Parameters`
           - `AutodiffComposition_Nesting`
           - `AutodiffComposition_Learning_Rates`
-          - `AutodiffComposition_Assign_Torch_Parameters`
+          - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
           - `AutodiffComposition_PyTorch`
@@ -148,16 +148,22 @@ for which there is no entry in **optimizer_params** use, in order of precedence:
 <AutodiffComposition.learn>` method, the **learning_rate** argument of its constructor, or the default value for the
 AutodiffComposition.
 
-.. _AutodiffComposition_Assign_Torch_Parameters:
+.. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
-*Assigning a Pytorch Parameter to a Projection Matrix*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Exchanging Parameters with Pytorch Modules*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The AutodiffComposition's `copy_torch_param_to_projection_matrix` method can be used to copy the Parameters of a
-PyTorch module to the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection` in the AutodiffComposition.
-The Pytorch Parameter can be specified directly, or using a tuple of the form ``(module, parameter_name)`` or
-``(module, parameter_name, slice)`` where ``slice`` specifies the indices of the Parameter to use.  The Projection
-can be specified as a reference to the MappingProjection, or by its `name <MappingProjection.name>`.
+COMMENT:
+FIX: 3/29/25 - SAY SOMETHING HERE ABOUT CONTEXT AND WHEN/HOW NEW VALUES TAKE EFFECT
+COMMENT
+
+The AutodiffComposition's `copy_torch_param_to_projection_matrix` and `copy_projection_matrix_to_torch_param` methods
+can be used to move weight matrices between the parameters of a PyTorch module and the `matrix
+<MappingProjection.matrix>` Parameter of a `MappingProjection` in the AutodiffComposition.  Pytorch Parameters
+can be referenced flexibly, either by the Parameter object itself, or by the module and either name or index of the
+Parameter in the module's state_dict or parameter list, respectively. Slices of PyTorch Parameters can also be used,
+in caess where the matrix of a Project corresponds to only a subpart of the PyTorch Parameter (e.g.,
+for the `GRUComposition`).
 
 
 .. _AutodiffComposition_Post_Construction_Modification:
