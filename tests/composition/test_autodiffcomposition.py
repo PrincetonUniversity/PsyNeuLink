@@ -100,11 +100,12 @@ class TestAutodiffConstructor:
             # Test uses slice
             torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
             torch_param = torch_gru.state_dict()['weight_ih_l0'][slice(0,5)]
-            torch_param_specs = {'tensor_slice': (torch_gru.state_dict()['weight_ih_l0'], slice(0,5)),
-                                 'param_slice': (list(torch_gru.parameters())[0], slice(0,5)),
-                                 'module_name_slice': (torch_gru, 'weight_ih_l0', slice(0,5))}
             autodiff = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
-            proj = autodiff.projections['INPUT TO NEW WEIGHTS']
+            proj_name = 'INPUT TO NEW WEIGHTS'
+            proj = autodiff.projections[proj_name]
+            torch_param_specs = {'tensor_slice': ((torch_gru.state_dict()['weight_ih_l0'], slice(0,5)), proj),
+                                 'param_slice': ((list(torch_gru.parameters())[0], slice(0,5)),proj_name),
+                                 'module_name_slice': ((torch_gru, 'weight_ih_l0', slice(0,5)), proj)}
 
         else:
             # Test doesn't use slice
@@ -113,74 +114,20 @@ class TestAutodiffConstructor:
             autodiff = pnl.AutodiffComposition([pnl.ProcessingMechanism(input_shapes=3),
                                                 pnl.MappingProjection(name='PROJECTION'),
                                                 pnl.ProcessingMechanism(input_shapes=5)])
-            torch_param_specs = {'tensor': torch_linear.state_dict()['weight'],
-                                 'param': list(torch_linear.parameters())[0],
-                                 'module,_name': (torch_linear, 'weight'),
-                                 'module_index': (torch_linear, 0)}
-            proj = autodiff.projections['PROJECTION']
+            proj_name = 'PROJECTION'
+            proj = autodiff.projections[proj_name]
+            torch_param_specs = {'tensor': ((torch_linear.state_dict()['weight']), proj_name),
+                                 'param': ((list(torch_linear.parameters())[0]), proj),
+                                 'module,_name': ((torch_linear, 'weight'), proj_name),
+                                 'module_index': ((torch_linear, 0), proj)}
 
-        torch_param_spec = torch_param_specs[torch_param_spec]
-
-        autodiff.copy_torch_param_to_projection_matrix(torch_param_spec, proj)
+        autodiff.copy_torch_param_to_projection_matrix(*torch_param_specs[torch_param_spec])
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
         new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
         # -------------------------------
 
-        # # Test Parameter as torch param spec
-        # torch_param = torch_linear.state_dict()['weight']
-        # autodiff.copy_torch_param_to_projection_matrix(torch_param, 'PROJECTION')
-        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        # new_matrix = autodiff.projections['PROJECTION'].parameters.matrix.get(autodiff.name)
-        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-        #
-        # # Test (Module, name) as torch param spec
-        # torch_linear = torch.nn.Linear(3, 5, bias=False)
-        # autodiff = pnl.AutodiffComposition([pnl.ProcessingMechanism(input_shapes=3),
-        #                                     pnl.MappingProjection(name='PROJECTION'),
-        #                                     pnl.ProcessingMechanism(input_shapes=5)])
-        # autodiff.copy_torch_param_to_projection_matrix((torch_linear, 'weight'), 'PROJECTION')
-        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        # new_matrix = autodiff.projections['PROJECTION'].parameters.matrix.get(autodiff.name)
-        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-        #
-        # # Test (Module, index) as torch param spec
-        # torch_linear = torch.nn.Linear(3, 5, bias=False)
-        # autodiff = pnl.AutodiffComposition([pnl.ProcessingMechanism(input_shapes=3),
-        #                                     pnl.MappingProjection(name='PROJECTION'),
-        #                                     pnl.ProcessingMechanism(input_shapes=5)])
-        # autodiff.copy_torch_param_to_projection_matrix((torch_linear, 0), 'PROJECTION')
-        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        # new_matrix = autodiff.projections['PROJECTION'].parameters.matrix.get(autodiff.name)
-        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-        #
-        # assert True
-        #
-        #
-        #
-        # # Test (Parameter, slice as torch param spec
-        # torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
-        # gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
-        # torch_param_spec = (torch_gru, 'weight_ih_l0', slice(0,5))
-        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
-        # gru.copy_torch_param_to_projection_matrix(torch_param_spec,'INPUT TO NEW WEIGHTS')
-        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        # new_matrix = gru.projections['INPUT TO NEW WEIGHTS'].parameters.matrix.get(gru.name)
-        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-        # gru.copy_torch_param_to_projection_matrix(torch_param,'INPUT TO NEW WEIGHTS')
-        #
-        # assert True
-        #
-        # # Test (Module, name, slice) as torch param spec
-        # torch_param_spec = (torch_gru, 'weight_ih_l0', slice(0,5))
-        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
-        # gru.copy_torch_param_to_projection_matrix(torch_param_spec,'INPUT TO NEW WEIGHTS')
-        # torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
-        # new_matrix = gru.projections['INPUT TO NEW WEIGHTS'].parameters.matrix.get(gru.name)
-        # np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-        # gru.copy_torch_param_to_projection_matrix(torch_param,'INPUT TO NEW WEIGHTS')
-        #
         # torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
         #
         # # Test error for shape mismatch of torch Parameter and Projection.matrix

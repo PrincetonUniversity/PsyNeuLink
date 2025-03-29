@@ -1938,13 +1938,13 @@ class AutodiffComposition(Composition):
            torch_param to assign as matrix of Projection; if specified as a tuple, it must take one of the following
            forms:
 
-           **(torch.nn.Module, str | int <, slice>)** where *str* is the name of the Parameter (used to access it
+           **(torch.nn.Module, str | int <,slice>)** where *str* is the name of the Parameter (used to access it
              in the Module's state_dict) or *int* is its index (used to access it in the Module's parameterlist),
              and an optional *slice* specifies the indices of the Parameter to use.
 
-           **(torch.nn.Parameter <, slice>)** where the optional *slice* specifies the indices of the Parameter to use.
+           **(torch.nn.Parameter <,slice>)** where the optional *slice* specifies the indices of the Parameter to use.
 
-           **(torch.Tensor <, slice>)** where the optional *slice* specifies the indices of the Tensor to use.
+           **(torch.Tensor <,slice>)** where the optional *slice* specifies the indices of the Tensor to use.
 
         projection : str or MappingProjection
            Projection to which the torch_param is to be assigned as its `matrix <MappingProjection.matrix>`;
