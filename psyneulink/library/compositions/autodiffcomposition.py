@@ -2013,31 +2013,35 @@ class AutodiffComposition(Composition):
         MATRIX_TO_TORCH = 'copy_projection_matrix_to_torch_param'
         TORCH_TO_MATRIX = 'copy_torch_param_to_projection_matrix'
 
+        # Torch Parameter specification is a Tensor or a torch.nn.Parameter
         if isinstance(torch_param_spec, torch.Tensor):
             torch_param = torch_param_spec
 
+       # Torch Parameter specification is a tuple
         elif isinstance(torch_param_spec, tuple):
 
             slice_tuple_idx = 0
 
             if len(torch_param_spec) < 2 or len(torch_param_spec) > 3:
-                raise AutodiffCompositionError(f"Tuple for 'torch_param' must have 2 or 3 items; "
-                                               f"it has {len(torch_param_spec)} items.")
+                raise AutodiffCompositionError(f"Tuple for 'torch_param' in {method_name}() must have "
+                                               f"2 or 3 items; it has {len(torch_param_spec)} item(s).")
 
             # 1st item of tuple is Module
             if isinstance(torch_param_spec[0], torch.torch.nn.Module):
                 if isinstance(torch_param_spec[1], str):
                     # Name of Parameter was specified, so get it from Module's state_dict,
                     if torch_param_spec[1] not in torch_param_spec[0].state_dict():
-                        raise AutodiffCompositionError(f"Parameter name ('{torch_param_spec[1]}') not found in "
-                                                       f"state_dict() for '{torch_param_spec[0]}'.")
+                        raise AutodiffCompositionError(f"Parameter name ('{torch_param_spec[1]}') for 'torch_param' "
+                                                       f"in {method_name}() not found "
+                                                       f"in state_dict() for '{torch_param_spec[0]}'.")
                     torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]]
                 elif isinstance(torch_param_spec[1], int):
                     # Index of Parameter was specified, so get it from Module's parameters() list
                     torch_param = list(torch_param_spec[0].parameters())[torch_param_spec[1]]
                 else:
                     raise AutodiffCompositionError(f"Second item in tuple for 'torch_param' ('{torch_param[1]}') "
-                                                   f"should be the name or index of a Parameter in '{torch_param[0]}'.")
+                                                   f"in {method_name}() should be "
+                                                   f"the name or index of a Parameter in '{torch_param[0]}'.")
                 # Mark whether slice was specified
                 slice_tuple_idx = 2 if len(torch_param_spec) == 3 else 0
 
@@ -2047,33 +2051,44 @@ class AutodiffComposition(Composition):
                     # Slice must be specified (otherwise should have specified on its own, i.e., not in a tuple)
                     slice_tuple_idx = 1
                     if len(torch_param_spec) == 3:
-                        raise AutodiffCompositionError(f"Specification of {tpye(torch_param)} as first item in tuple "
-                                                       f"for 'torch_param' requires only one additional item (slice); "
+                        raise AutodiffCompositionError(f"Specification of {tpye(torch_param)} in {method_name}() "
+                                                       f"as first item in tuple for 'torch_param' "
+                                                       f"requires only one additional item (slice); "
                                                        f"but third was given: '{torch_param_spec[2]}'.")
 
+            # Bad specification for 1st item of tuple
             else:
-                raise AutodiffCompositionError(f"First item in tuple for 'torch_param' ('{torch_param[0]}')"
-                                               f" must be a torch.nn.Module or torch.nn.Parameter.")
+                raise AutodiffCompositionError(f"First item in tuple for 'torch_param' ('{torch_param_spec[0]}') "
+                                               f"in {method_name}() must be a torch.nn.Module or torch.nn.Parameter.")
 
+            # Bad slice specification
             if slice_tuple_idx:
                 if not isinstance(torch_param_spec[slice_tuple_idx], slice):
                     raise AutodiffCompositionError(f"Final item in tuple for 'torch_param' "
-                                                   f"('{torch_param_spec[slice_tuple_idx2]}') must be a slice "
-                                                   f"specifying a range within '{torch_param}'")
+                                                   f"('{torch_param_spec[-1]}') in {method_name}() must be a slice "
+                                                   f"appropriate for specificed Parameter ('{torch_param_spec[1]}')")
                 try:
                     torch_param = torch_param[torch_param_spec[slice_tuple_idx]]
                 except IndexError:
                     raise AutodiffCompositionError(f"The slice in the tuple specified for 'torch_param' "
-                                                   f"('{torch_param}') is outside its range.")
+                                                   f"in {method_name}() ('{torch_param}') is outside its range.")
 
+        # Bad param specification that is not a tuple
         else:
-            assert False, (f"PROGRAM ERROR: Unexpected type for 'torch_param' ({torch_param_spec}) in {method_name}.")
+            if isinstance(torch_param_spec, torch.nn.Module):
+                raise AutodiffCompositionError(f"Specification of 'torch_param' in {method_name}() with a "
+                                               f"torch.nn.Module ({torch_param_spec}) must be done in a tuple "
+                                               f"with a Paramenter name or index, and optionally a slice.")
+            raise AutodiffCompositionError(f"Specification of 'torch_param' in {method_name}() must be a torch.Tensor, "
+                                           f"torch.nn.Parameter or an appropriately formatted tuple.")
 
         if projection not in self.projections:
             if isinstance(projection, str):
-                raise AutodiffCompositionError(f"'{projection}' is not the name of a Projection in '{self.name}'.")
+                raise AutodiffCompositionError(f"'{projection}' in {method_name}() "
+                                               f"is not the name of a Projection in '{self.name}'.")
             elif isinstance(projection, MappingProjection):
-                raise AutodiffCompositionError(f"'{projection.name}' is not a Projection in '{self.name}'.")
+                raise AutodiffCompositionError(f"'{projection.name}' in {method_name}() "
+                                               f"is not a Projection in '{self.name}'.")
             else:
                 assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection}) in {method_name}."
         projection = self.projections[projection]
@@ -2081,8 +2096,8 @@ class AutodiffComposition(Composition):
         torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
         if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
             raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
-                                           f"does not match shape of matrix for '{projection.name}' "
-                                           f"{projection.parameters.matrix.get().shape}.")
+                                           f"in {method_name}() does not match shape of matrix for "
+                                           f"'{projection.name}' {projection.parameters.matrix.get().shape}.")
 
         return torch_param, projection
 
