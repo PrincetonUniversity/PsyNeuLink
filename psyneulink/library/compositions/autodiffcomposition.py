@@ -2022,7 +2022,7 @@ class AutodiffComposition(Composition):
 
             if len(torch_param_spec) < 2 or len(torch_param_spec) > 3:
                 raise AutodiffCompositionError(f"Tuple for 'torch_param' must have 2 or 3 items; "
-                                               f"it has {len(torch_param)} items.")
+                                               f"it has {len(torch_param_spec)} items.")
 
             # 1st item of tuple is Module
             if isinstance(torch_param_spec[0], torch.torch.nn.Module):

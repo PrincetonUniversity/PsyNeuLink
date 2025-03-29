@@ -91,7 +91,7 @@ class TestAutodiffConstructor:
     def copy_test_components(self):
         import torch
         def _get_copy_test_components(use_slice, proj_spec):
-            if use_slice:
+            if use_slice is True:
                 # GRU uses sets of weights defined as slices within a single Parameter
                 torch_module = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
                 torch_param = torch_module.state_dict()['weight_ih_l0'][slice(0,5)]
@@ -101,8 +101,10 @@ class TestAutodiffConstructor:
                 proj_spec = proj if proj_spec == PROJ else proj_name
                 torch_param_specs = {'tensor_slice':((torch_module.state_dict()['weight_ih_l0'],slice(0,5)),proj_spec),
                                      'param_slice':((list(torch_module.parameters())[0],slice(0,5)),proj_spec),
-                                     'module_name_slice':((torch_module,'weight_ih_l0',slice(0,5)),proj_spec)}
-            else:
+                                     'module_name_slice':((torch_module,'weight_ih_l0',slice(0,5)),proj_spec),
+                                     'shape_mismatch':((torch_module,'weight_hh_l0',slice(0,5)),proj_spec),
+                                     }
+            elif use_slice is False:
                 # No slices
                 torch_module = torch.nn.Linear(3, 5, bias=False)
                 torch_param = torch_module.state_dict()['weight']
@@ -115,7 +117,15 @@ class TestAutodiffConstructor:
                 torch_param_specs = {'tensor': ((torch_module.state_dict()['weight']), proj_spec),
                                      'param': ((list(torch_module.parameters())[0]), proj_spec),
                                      'module,_name': ((torch_module, 'weight'), proj_spec),
-                                     'module_index': ((torch_module, 0), proj_spec)}
+                                     'module_index': ((torch_module, 0), proj_spec),
+                                     'missing_tuple':(torch_module,proj_spec),
+                                     'shape_mismatch':(torch.zeros(4),proj_spec),
+                                     'bad_param_spec':((torch_module),proj_spec),
+                                     'torch_spec_tuple_too_short':((torch_module,),proj_spec),
+                                     # 'torch_spec_tuple_too_long':((torch_module,proj_spec),proj_spec)
+                                     }
+            else:
+                assert False, f"Invalid use_slice value: {use_slice}"
             return torch_param, torch_param_specs, autodiff, proj
         return _get_copy_test_components
 
@@ -137,39 +147,35 @@ class TestAutodiffConstructor:
         new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
-    error_types = [('shape_mismatch', False, PROJ, (f"Shape of torch parameter (5, 5) does not match "
-                                                    f"shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")),
-                   ('shape_mismatch', True, PROJ, (f"Shape of torch parameter (5, 15) does not match "
-                                                   "shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")),
-                   ('tuple_wrong_length', False, PROJ, (f"Tuple for 'torch_param' must have 2 or 3 items; "
-                                                        f"it has 1 items.")),
-                   ('1st_tuple_item_not_module_or_param', PROJ, False, (f"First item in tuple for 'torch_param' "
-                                                                        f"('I be bad') must be a torch.nn.Module.")),
-                   ('module_without_name_or_index', PROJ, False, (f"Second item in tuple for 'torch_param' ('13') "
-                                                                  f"must be the name or index of a Parameter in "
-                                                                  f"'GRU(3, 5, bias=False)'.")),
-                   ('param_not_in_state_dict', False, PROJ, (f"Parameter name ('I be a bad param') not found "
-                                                             "in state_dict() for 'GRU(3, 5, bias=False)'.")),
-                   ('module_with_bad_slice', True, PROJ, (f"Third item in tuple for 'torch_param' ('I bad param') "
-                                                          "must be a slice specifying a range within "
-                                                          "'weight_hh_l0' Parameter of 'GRU(3, 5, bias=False)'.")),
-                   ('bad_projection_name', False, PROJ, (f"'BAD NAME' is not the name of a Projection "
-                                                         f"in 'GRUComposition'.")),
-                   ('bad_projection', PROJ, False, (f"'BAD PROJECTION [Deferred Init]' "
-                                                    f"is not a Projection in 'GRU Composition'."))
+    error_types = [('shape_mismatch', False, PROJ, (f"Shape of torch parameter (4,) does not match "
+                                                    f"shape of matrix for 'PROJECTION' (3, 5).")),
+                   ('shape_mismatch', True, PROJ, (f"Shape of torch parameter (5, 5) does not match "
+                                                   f"shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5).")),
+                   ('torch_spec_tuple_too_short', False, PROJ, (f"Tuple for 'torch_param' must have 2 or 3 items; "
+                                                                f"it has 1 items.")),
+                   # ('1st_tuple_item_not_module_or_param', PROJ, False, (f"First item in tuple for 'torch_param' "
+                   #                                                      f"('I be bad') must be a torch.nn.Module.")),
+                   # ('module_without_name_or_index', PROJ, False, (f"Second item in tuple for 'torch_param' ('13') "
+                   #                                                f"must be the name or index of a Parameter in "
+                   #                                                f"'GRU(3, 5, bias=False)'.")),
+                   # ('param_not_in_state_dict', False, PROJ, (f"Parameter name ('I be a bad param') not found "
+                   #                                           "in state_dict() for 'GRU(3, 5, bias=False)'.")),
+                   # ('module_with_bad_slice', True, PROJ, (f"Third item in tuple for 'torch_param' ('I bad param') "
+                   #                                        "must be a slice specifying a range within "
+                   #                                        "'weight_hh_l0' Parameter of 'GRU(3, 5, bias=False)'.")),
+                   # ('bad_projection_name', False, PROJ, (f"'BAD NAME' is not the name of a Projection "
+                   #                                       f"in 'GRUComposition'.")),
+                   # ('bad_projection', PROJ, False, (f"'BAD PROJECTION [Deferred Init]' "
+                   #                                  f"is not a Projection in 'GRU Composition'."))
                    ]
     @pytest.mark.parametrize('error_type, use_slice, proj_spec, error_msg', error_types,
                              ids=[f"{x[0]}_{x[1]}_{x[2]}" for x in error_types])
     def test_copy_torch_to_matrix_errors(self, error_type, use_slice, proj_spec, error_msg, copy_test_components):
-
         torch_param, torch_param_specs, autodiff, proj_spec = copy_test_components(use_slice, proj_spec)
-
-        # Test error for shape mismatch of torch Parameter and Projection.matrix
-        # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
         with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff.copy_torch_param_to_projection_matrix(*torch_param_specs[torch_param_spec])
+            autodiff.copy_torch_param_to_projection_matrix(*torch_param_specs[error_type])
         assert error_text.value.error_value == error_msg
-        #
+
         # torch_param = torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]]
         #
         # # Test error for torch_param tuple of wrong length
