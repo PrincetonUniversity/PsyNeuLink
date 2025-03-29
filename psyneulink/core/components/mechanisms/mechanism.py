@@ -1872,7 +1872,7 @@ class Mechanism_Base(Mechanism):
         input_port_variable_was_specified = None
 
         if (
-            not isinstance(input_ports, list)
+            not isinstance(input_ports, (list, UserList))
             and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
         ):
             input_ports = [input_ports]
