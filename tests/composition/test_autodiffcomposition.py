@@ -33,6 +33,8 @@ def _single_learn_results(composition, *args, **kwargs):
     return composition.learning_results
 
 
+TORCH_PARAM = 'torch_param'
+PROJECTION = 'projection'
 PROJ = 'proj'
 NAME = 'proj_name'
 
@@ -100,12 +102,18 @@ class TestAutodiffConstructor:
                 proj_name = 'INPUT TO NEW WEIGHTS'
                 proj = autodiff.projections[proj_name]
                 proj_spec = proj if proj_spec == PROJ else proj_name
-                torch_param_specs = {'tensor_slice':((torch_module.state_dict()['weight_ih_l0'],slice(0,5)),proj_spec),
-                                     'param_slice':((torch_parameter,slice(0,5)),proj_spec),
-                                     'module_name_slice':((torch_module,'weight_ih_l0',slice(0,5)),proj_spec),
-                                     'shape_mismatch':((torch_module,'weight_hh_l0',slice(0,5)),proj_spec),
-                                     'param_with_bad_slice':((torch_parameter,'SLICE OF PI'), proj_spec),
-                                     'module_with_bad_slice':((torch_module,'weight_hh_l0','SLICE OF PI'), proj_spec),
+                torch_param_specs = {'tensor_slice':{TORCH_PARAM:(torch_module.state_dict()['weight_ih_l0'],slice(0,5)),
+                                                     PROJECTION: proj_spec},
+                                     'param_slice':{TORCH_PARAM: (torch_parameter,slice(0,5)),
+                                                    PROJECTION: proj_spec},
+                                     'module_name_slice':{TORCH_PARAM: (torch_module,'weight_ih_l0',slice(0,5)),
+                                                          PROJECTION: proj_spec},
+                                     'shape_mismatch':{TORCH_PARAM: (torch_module,'weight_hh_l0',slice(0,5)),
+                                                       PROJECTION: proj_spec},
+                                     'param_with_bad_slice':{TORCH_PARAM: (torch_parameter,'SLICE OF PI'),
+                                                             PROJECTION: proj_spec},
+                                     'module_with_bad_slice':{TORCH_PARAM: (torch_module,'weight_hh_l0', 'SLICE OF PI'),
+                                                              PROJECTION: proj_spec}
                                      }
             elif use_slice is False:
                 # No slices
@@ -118,22 +126,38 @@ class TestAutodiffConstructor:
                 proj_name = 'PROJECTION'
                 proj = autodiff.projections[proj_name]
                 proj_spec = proj if proj_spec == PROJ else proj_name
-                torch_param_specs = {'tensor': ((torch_tensor), proj_spec),
-                                     'param': ((torch_parameter), proj_spec),
-                                     'module,_name': ((torch_module, 'weight'), proj_spec),
-                                     'module_index': ((torch_module, 0), proj_spec),
-                                     'missing_tuple':(torch_module,proj_spec),
-                                     'shape_mismatch':(torch.zeros(4),proj_spec),
-                                     'bad_torch_param_spec':(torch_module,proj_spec),
-                                     'torch_spec_tuple_too_short':((torch_module,),proj_spec),
-                                     'torch_spec_tuple_too_long':((torch_module,1,2,3),proj_spec),
-                                     'bad_first_item_of_tuple_str':(("I be bad",1,2),proj_spec),
-                                     'bad_first_item_of_tuple_int':((13,1,2),proj_spec),
-                                     'module_non_tuple':(torch_module,proj_spec),
-                                     'bad_non_tuple_spec':('I AM BAD',proj_spec),
-                                     'param_not_in_state_dict':((torch_module,"I'M IN A BAD STATE"), proj_spec),
-                                     'bad_projection_name':(torch_tensor, "BAD NAME"),
-                                     'bad_projection':(torch_tensor, MappingProjection())
+                torch_param_specs = {'tensor': {TORCH_PARAM: (torch_tensor),
+                                                PROJECTION: proj_spec},
+                                     'param': {TORCH_PARAM: (torch_parameter),
+                                               PROJECTION: proj_spec},
+                                     'module,_name': {TORCH_PARAM: (torch_module, 'weight'),
+                                                      PROJECTION: proj_spec},
+                                     'module_index': {TORCH_PARAM: (torch_module, 0),
+                                                      PROJECTION: proj_spec},
+                                     'missing_tuple':{TORCH_PARAM: torch_module,
+                                                      PROJECTION: proj_spec},
+                                     'shape_mismatch':{TORCH_PARAM: torch.zeros(4),
+                                                       PROJECTION: proj_spec},
+                                     'bad_torch_param_spec':{TORCH_PARAM: torch_module,
+                                                             PROJECTION: proj_spec},
+                                     'torch_spec_tuple_too_short':{TORCH_PARAM: (torch_module,),
+                                                                   PROJECTION: proj_spec},
+                                     'torch_spec_tuple_too_long':{TORCH_PARAM: (torch_module,1,2,3),
+                                                                  PROJECTION: proj_spec},
+                                     'bad_first_item_of_tuple_str':{TORCH_PARAM: ("I be bad",1,2),
+                                                                    PROJECTION: proj_spec},
+                                     'bad_first_item_of_tuple_int':{TORCH_PARAM: (13,1,2),
+                                                                    PROJECTION: proj_spec},
+                                     'module_non_tuple':{TORCH_PARAM: torch_module,
+                                                         PROJECTION: proj_spec},
+                                     'bad_non_tuple_spec':{TORCH_PARAM: 'I AM BAD',
+                                                           PROJECTION: proj_spec},
+                                     'param_not_in_state_dict':{TORCH_PARAM: (torch_module,"I'M IN A BAD STATE"),
+                                                                PROJECTION: proj_spec},
+                                     'bad_projection_name':{TORCH_PARAM: torch_tensor,
+                                                            PROJECTION: "BAD NAME"},
+                                     'bad_projection':{TORCH_PARAM: torch_tensor,
+                                                       PROJECTION: MappingProjection()}
                                      }
             else:
                 assert False, f"Invalid use_slice value: {use_slice}"
@@ -142,7 +166,7 @@ class TestAutodiffConstructor:
 
     # Test cases for copy_torch_param_to_projection_matrix()
     #                              (test, use_slice, proj_spec)
-    torch_to_matrix_param_specs = [('tensor',False, PROJ),
+    torch_to_matrix_param_specs = [('tensor', False, PROJ),
                                    ('tensor_slice', True, NAME),
                                    ('param', False, PROJ),
                                    ('param_slice', True, NAME),
@@ -155,7 +179,7 @@ class TestAutodiffConstructor:
     def test_copy_torch_param_to_projection_matrix(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 
-        autodiff.copy_torch_param_to_projection_matrix(*torch_param_specs[torch_param_spec])
+        autodiff.copy_torch_param_to_projection_matrix(**torch_param_specs[torch_param_spec])
         torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
         new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
@@ -208,12 +232,8 @@ class TestAutodiffConstructor:
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj_spec = (
             copy_test_components(use_slice, proj_spec))
         with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff.copy_torch_param_to_projection_matrix(*torch_param_specs[error_type])
+            autodiff.copy_torch_param_to_projection_matrix(**torch_param_specs[error_type])
         assert error_text.value.error_value == error_msg
-
-
-
-
 
     # Test cases for test_copy_projection_matrix_to_torch_param()
     #                              (test, use_slice, proj_spec)
@@ -227,18 +247,10 @@ class TestAutodiffConstructor:
     def test_copy_projection_matrix_to_torch_param(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 
-        autodiff.copy_projection_matrix_to_torch_param(*torch_param_specs[torch_param_spec])
+        autodiff.copy_projection_matrix_to_torch_param(**torch_param_specs[torch_param_spec])
         torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
-        new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
+        new_matrix = autodiff.projections[proj].parameters.matrix.get()
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
-
-    matrix_to_torch_param_specs = [('tensor',False, PROJ),
-                                   ('tensor_slice', True, NAME)]
-
-
-
-
-
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
