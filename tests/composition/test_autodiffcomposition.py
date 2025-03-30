@@ -175,7 +175,7 @@ class TestAutodiffConstructor:
                                    ('module_name_slice', True, PROJ)]
 
     @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', torch_to_matrix_param_specs,
-                             ids=[x[0]+f"_{x[1]}" for x in torch_to_matrix_param_specs])
+                             ids=[x[0] + f"_{x[1]}" for x in torch_to_matrix_param_specs])
     def test_copy_torch_param_to_projection_matrix(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 
@@ -185,8 +185,10 @@ class TestAutodiffConstructor:
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
     error_types = [
-        ('shape_mismatch', False, PROJ, f"Shape of torch parameter (4,) in copy_torch_param_to_projection_matrix() "
-                                        f"does not match shape of matrix for 'PROJECTION' (3, 5)."),
+        ('shape_mismatch', False, PROJ, f"Shape of torch parameter (1, 4) in copy_torch_param_to_projection_matrix() "
+                                        f"does not match shape of matrix for 'PROJECTION' (3, 5). [Note: torch biases, "
+                                        f"usually 1d, have already been converted to 2d to match PsyNeuLink BIAS Nodes "
+                                        f"Projections.]"),
         ('shape_mismatch', True, PROJ, f"Shape of torch parameter (5, 5) in copy_torch_param_to_projection_matrix() "
                                        f"does not match shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5)."),
         ('bad_torch_param_spec', False, PROJ, f"Specification of 'torch_param' "
@@ -243,7 +245,7 @@ class TestAutodiffConstructor:
                                    ('module_index', False, NAME),
                                    ('module_name_slice', True, PROJ)]
     @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', matrix_to_torch_param_specs,
-                             ids=[x[0]+f"_{x[1]}" for x in matrix_to_torch_param_specs])
+                             ids=[x[0] + f"_{x[1]}" for x in matrix_to_torch_param_specs])
     def test_copy_projection_matrix_to_torch_param(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 

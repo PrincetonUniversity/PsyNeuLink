@@ -451,6 +451,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                             sender_port_idx=sender_port_idx,
                                                             use=use,
                                                             device=device,
+                                                            composition_wrapper=self,
                                                             sender_wrapper=proj_sndr,
                                                             receiver_wrapper=proj_rcvr,
                                                             context=context)
@@ -574,6 +575,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_port_idx=None,  # is only being used for SHOW_PYTORCH
                                                         use=[SHOW_PYTORCH],
                                                         device=self.device,
+                                                        composition_wrapper=self,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
                                                         context=context)
@@ -614,6 +616,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_port_idx=None,  # is only being used for SHOW_PYTORCH
                                                         use=[SHOW_PYTORCH],
                                                         device=self.device,
+                                                        composition_wrapper=self,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
                                                         context=context)
@@ -1027,10 +1030,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
                              f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
 
-                # Execute the node (i.e., call its forward method) using composition_wrapper_owner for Composition
+                # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
                 # wrapper to which it belongs; this is to support override of the execute_node method by subclasses of
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                node.composition_wrapper_owner.execute_node(node, variable, optimization_num,
+                node.composition_wrapper.execute_node(node, variable, optimization_num,
                                                              synch_with_pnl_options, context)
 
                 assert 'DEBUGGING BREAK POINT'
@@ -1077,7 +1080,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
 
         if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
-            self.copy_weights_to_psyneulink(context)
+            self._copy_weights_to_psyneulink(context)
 
         # If either NODE_VARIABLES or NODE_VALUES is specified, and current condition is met, do relevant copies
         if ((NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition)
@@ -1090,10 +1093,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
             self.copy_results_to_psyneulink(current_condition, context)
 
-    def copy_weights_to_psyneulink(self, context=None):
-        for pytorch_rep_proj_wrapper in self.projections_map.values():
-            if SYNCH in pytorch_rep_proj_wrapper._use:
-                pytorch_rep_proj_wrapper._copy_torch_params_to_pnl_proj(context)
+    def _copy_weights_to_psyneulink(self, context=None):
+        for proj_wrapper in self.projections_map.values():
+            if SYNCH in proj_wrapper._use:
+                proj_wrapper._copy_torch_params_to_pnl_proj(context)
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
@@ -1252,7 +1255,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
-        self.composition_wrapper_owner = composition_wrapper
+        self.composition_wrapper = composition_wrapper
         self.torch_dtype = dtype
 
         self.input = None
@@ -1652,10 +1655,11 @@ class PytorchProjectionWrapper():
     def __init__(self,
                  projection:Projection,                      # Projection to be wrapped
                  pnl_proj:Projection,                        # one that directly projects to/from sender/receiver
-                 component_idx:Optional[int],                # index of the Projection in the Composition
-                 sender_port_idx:Optional[int],                     # index in the sender's Mechanism.output_ports
-                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],  # specifies use of the Projection (see below)
+                 component_idx:Optional[int],                   # index of the Projection in the Composition
+                 sender_port_idx:Optional[int],                 # index in the sender's Mechanism.output_ports
+                 use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],
                  device:str,
+                 composition_wrapper:PytorchCompositionWrapper=None,
                  sender_wrapper:PytorchMechanismWrapper=None,
                  receiver_wrapper:PytorchMechanismWrapper=None,
                  context=None):
@@ -1670,6 +1674,7 @@ class PytorchProjectionWrapper():
         self._curr_sender_value = None
 
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
+        self.composition_wrapper = composition_wrapper # PytorchCompositionWrapper to which ProjectionWrapper belongs
         self.sender_wrapper = sender_wrapper          # PytorchMechanismWrapper to which Projection's sender is mapped
         self.receiver_wrapper = receiver_wrapper      # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
@@ -1711,10 +1716,12 @@ class PytorchProjectionWrapper():
         return self.function(variable, self.matrix)
 
     def _copy_torch_params_to_pnl_proj(self, context):
-        projection = self.projection
-        matrix = self.matrix.detach().cpu().numpy()
-        projection.parameters.matrix._set(matrix, context)
-        projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+        composition = self.composition_wrapper.composition
+        composition.copy_torch_param_to_projection_matrix(torch_param=self.matrix.detach().cpu().T,
+                                                          projection=self.projection,
+                                                          validate=False,
+                                                          context=context)
+    # MODIFIED 3/30/25 END
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

@@ -106,6 +106,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                              PytorchGRUProjectionWrapper(projection=pnl_proj,
                                                                          torch_parameter=torch_matrix,
                                                                          use=SYNCH,
+                                                                         composition_wrapper=self,
                                                                          device=device)))
         self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
 
@@ -119,10 +120,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
             for pnl_bias_proj, torch_bias in zip(pnl_biases, torch_gru_bias_indices):
                 _projection_wrapper_pairs.append((pnl_bias_proj,
-                                                 PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
-                                                                             torch_parameter=torch_bias,
-                                                                             use=SYNCH,
-                                                                             device=device)))
+                                                  PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
+                                                                              torch_parameter=torch_bias,
+                                                                              use=SYNCH,
+                                                                              composition_wrapper=self,
+                                                                              device=device)))
             self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
 
         return _projection_wrapper_pairs
@@ -232,11 +234,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         else:
             self.gru_pytorch_node.synch_with_pnl = False
 
-    def copy_weights_to_psyneulink(self, context=None):
-        for proj_wrapper in self.projections_map.values():
-            if SYNCH in proj_wrapper._use:
-                proj_wrapper._copy_torch_params_to_pnl_proj(context)
-
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self.projections_map.items():
             if SYNCH in proj_wrapper._use:
@@ -320,9 +317,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def _assign_GRU_pytorch_function(self, mechanism, device, context):
         # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
-        input_size = self.composition_wrapper_owner.composition.parameters.input_size.get(context)
-        hidden_size = self.composition_wrapper_owner.composition.parameters.hidden_size.get(context)
-        bias = self.composition_wrapper_owner.composition.parameters.bias.get(context)
+        input_size = self.composition_wrapper.composition.parameters.input_size.get(context)
+        hidden_size = self.composition_wrapper.composition.parameters.hidden_size.get(context)
+        bias = self.composition_wrapper.composition.parameters.bias.get(context)
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
                                  bias=bias).to(dtype=self.torch_dtype)
@@ -341,7 +338,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
-        composition = self.composition_wrapper_owner.composition
+        composition = self.composition_wrapper.composition
 
         self.input = input
 
@@ -442,7 +439,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
 
         # Get biases
-        pnl_comp = self.composition_wrapper_owner.composition
+        pnl_comp = self.composition_wrapper.composition
         if pnl_comp.bias:
             assert len(torch_gru_parameters) > 1, \
                 (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
@@ -485,7 +482,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
 
             # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
-            pnl_comp = self.composition_wrapper_owner.composition
+            pnl_comp = self.composition_wrapper.composition
             pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
@@ -542,10 +539,13 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
                  projection:MappingProjection,
                  torch_parameter:Tuple,
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],
+                 composition_wrapper:PytorchGRUCompositionWrapper,
                  device:str):
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
+        self.composition_wrapper = composition_wrapper # PytorchGRUCompositionWrapper to which ProjectionWrapper belongs
         # GRUComposition Projection being wrapped:
         self.projection = projection # PNL Projection being wrapped
+        self._pnl_proj = projection
         # Assign parameter and tensor indices of Pytorch GRU module parameter corresponding to the Projection's matrix:
         self.torch_parameter, self.matrix_indices = torch_parameter
         # Projections for GRUComposition are not included in autodiff; matrices are set directly in Pytorch GRU module:
@@ -560,11 +560,14 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
         self.torch_parameter[self.matrix_indices].data.copy_(proj_matrix_as_tensor)
 
     def _copy_torch_params_to_pnl_proj(self, context):
+        """Override to deal with indexed tensor of Pytorch GRU module Parameter"""
         torch_parameter = self.torch_parameter
         torch_indices = self.matrix_indices
-        matrix = torch_parameter[torch_indices].detach().cpu().clone().numpy().T
-        self.projection.parameters.matrix._set(matrix, context)
-        self.projection.parameter_ports['matrix'].parameters.value._set(matrix, context)
+        matrix = torch_parameter[torch_indices].detach().cpu()
+        self.composition_wrapper.composition.copy_torch_param_to_projection_matrix(torch_param=(matrix),
+                                                                                   projection=self.projection,
+                                                                                   validate=False,
+                                                                                   context=context)
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

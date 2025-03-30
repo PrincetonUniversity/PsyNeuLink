@@ -1979,8 +1979,17 @@ class AutodiffComposition(Composition):
         context = context or Context(execution_id=self.name)
         if validate:
             torch_tensor, projection = self._parse_and_validate_torch_param_to_projection(torch_param, projection)
+        else:
+            if isinstance(torch_param, torch.nn.Parameter):
+                torch_tensor = torch_param.detach().cpu() # REMOVED CLONE
+            else:
+                torch_tensor = torch_param
         # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
-        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        # MODIFIED 3/30/25 OLD:
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REMOVED CLONE
+        # # MODIFIED 3/30/25 NEW:
+        # torch_param_as_pnl_matrix = torch_tensor.numpy().T
+        # MODIFIED 3/30/25 END
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
 
@@ -2019,11 +2028,17 @@ class AutodiffComposition(Composition):
                 assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection_spec}) in {method_name}."
         projection = self.projections[projection_spec]
 
-        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T
+        bias_note = ""
+        if torch_param_as_pnl_matrix.ndim == 1:
+            # Note: torch biases are 1d, but PNL requires matrices to be 2d
+            torch_param_as_pnl_matrix = np.atleast_2d(torch_param_as_pnl_matrix) # REMOVED CLONE
+            bias_note = (f" [Note: torch biases, usually 1d, have already been converted to 2d "
+                         f"to match PsyNeuLink BIAS Nodes Projections.]")
         if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
-            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} "
-                                           f"in {method_name}() does not match shape of matrix for "
-                                           f"'{projection.name}' {projection.parameters.matrix.get().shape}.")
+            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} in "
+                                           f"{method_name}() does not match shape of matrix for '{projection.name}' "
+                                           f"{projection.parameters.matrix.get().shape}.{bias_note}")
 
         return torch_tensor, projection
 
@@ -2118,7 +2133,7 @@ class AutodiffComposition(Composition):
                 assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection_spec}) in {method_name}."
         projection = self.projections[projection_spec]
 
-        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REVMOED CLONE
         if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
             raise AutodiffCompositionError(f"Shape of matrix for '{projection.name}' "
                                            f"{projection.parameters.matrix.get().shape} in {method_name}() "

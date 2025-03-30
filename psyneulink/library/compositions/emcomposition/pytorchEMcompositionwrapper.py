@@ -136,7 +136,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         values = []
         for field_projection in self.match_projection_wrappers + self.retrieve_projection_wrappers:
-            field_idx = self._composition._field_index_map[field_projection._pnl_proj]
+            field_idx = self.composition._field_index_map[field_projection._pnl_proj]
             if field_projection in self.match_projection_wrappers:
                 # For match projections:
                 # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
