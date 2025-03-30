@@ -140,16 +140,18 @@ class TestAutodiffConstructor:
             return torch_parameter, torch_tensor, torch_param_specs, autodiff, proj
         return _get_copy_test_components
 
-    #              (test, use_slice, proj_spec)
-    param_specs = [('tensor',False, PROJ),
-                   ('tensor_slice', True, NAME),
-                   ('param', False, PROJ),
-                   ('param_slice', True, NAME),
-                   ('module,_name', False, PROJ),
-                   ('module_index', False, NAME),
-                   ('module_name_slice', True, PROJ)]
-    @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', param_specs,
-                             ids=[x[0]+f"_{x[1]}" for x in param_specs])
+    # Test cases for copy_torch_param_to_projection_matrix()
+    #                              (test, use_slice, proj_spec)
+    torch_to_matrix_param_specs = [('tensor',False, PROJ),
+                                   ('tensor_slice', True, NAME),
+                                   ('param', False, PROJ),
+                                   ('param_slice', True, NAME),
+                                   ('module,_name', False, PROJ),
+                                   ('module_index', False, NAME),
+                                   ('module_name_slice', True, PROJ)]
+
+    @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', torch_to_matrix_param_specs,
+                             ids=[x[0]+f"_{x[1]}" for x in torch_to_matrix_param_specs])
     def test_copy_torch_param_to_projection_matrix(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
         torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 
@@ -213,49 +215,25 @@ class TestAutodiffConstructor:
 
 
 
+    # Test cases for test_copy_projection_matrix_to_torch_param()
+    #                              (test, use_slice, proj_spec)
+    matrix_to_torch_param_specs = [('param', False, PROJ),
+                                   ('param_slice', True, NAME),
+                                   ('module,_name', False, PROJ),
+                                   ('module_index', False, NAME),
+                                   ('module_name_slice', True, PROJ)]
+    @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', matrix_to_torch_param_specs,
+                             ids=[x[0]+f"_{x[1]}" for x in matrix_to_torch_param_specs])
+    def test_copy_projection_matrix_to_torch_param(self, torch_param_spec, use_slice, proj_spec, copy_test_components):
+        torch_parameter, torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
 
-
-
-    def test_copy_projection_matrix_to_torch_param(self):
-        import torch
-        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
-        torch_gru = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
-
-        # Test torch Parameter name as spec
-        # torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
-        torch_param_spec = (torch_gru, 'weight_hh_l0', slice(0,5))
-
-        # x = list(torch_gru.parameters())[1]
-        # with torch.no_grad():
-        #     ones_tensor = torch.ones_like(torch_param_spec[0].state_dict()[torch_param_spec[1]])
-        #     # torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]] = torch.tensor(ones_tensor)
-        #     torch_param_spec[0].state_dict()[torch_param_spec[1]] = ones_tensor
-                                                                                                  # dtype=torch_gru)
-        ones_tensor = torch.ones_like(torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]])
-        # list(torch_gru.parameters())[1].requires_grad = False
-        # list(torch_gru.parameters())[1][0:5].copy_(ones_tensor)
-        # list(torch_gru.parameters())[1].requires_grad = True
-
-        list(torch_gru.parameters())[1].detach()
-        list(torch_gru.parameters())[1][0:5].copy_(ones_tensor)
-        list(torch_gru.parameters())[1].requires_grad = True
-
-        assert True
-
-        # ones = np.ones_like(torch_param.detach().numpy())
-
-
-        # torch_param = torch.tensor(ones, dtype=torch_param.dtype)
-        torch_param_spec[0].state_dict()[torch_param_spec[1]][torch_param_spec[2]] = torch_param
-
-
-
-        gru.copy_projection_matrix_to_torch_param('HIDDEN TO OUTPUT WEIGHTS', torch_param)
-        new_matrix = gru.projections['HIDDEN TO OUTPUT WEIGHTS'].parameters.matrix.get()
-        torch_param_as_pnl_matrix = torch_param.detach().cpu().clone().numpy().T
+        autodiff.copy_projection_matrix_to_torch_param(*torch_param_specs[torch_param_spec])
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
-
+    matrix_to_torch_param_specs = [('tensor',False, PROJ),
+                                   ('tensor_slice', True, NAME)]
 
 
 

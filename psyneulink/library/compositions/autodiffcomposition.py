@@ -838,6 +838,8 @@ class AutodiffComposition(Composition):
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
+        # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
+        self.require_grad_warning = []
         # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
         # ShowGraph
@@ -2026,7 +2028,10 @@ class AutodiffComposition(Composition):
                                           torch_param:Union[tuple,torch.nn.Parameter],
                                           validate:bool=True,
                                           context:Optional[Union[Context, str]]=None):
-        """Assign torch Parameter to `matrix <MappingProjection.matrix>` Parameter of specified `MappingProjection`.
+        """Assign the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection` to a Pytorch Parameter.
+
+        .. warning:
+           If the PyTorch Parameter has requires_grad=True, this may interfere with its updating in PyTorch.
 
         Arguments
         ---------
@@ -2054,15 +2059,18 @@ class AutodiffComposition(Composition):
            <AutodiffComposition_Execution>`.
         """
         if validate:
-            torch_param, projection = (
-                self._parse_and_validate_torch_param_and_projection(torch_param,
-                                                                    projection,
-                                                                    self.TORCH_TO_MATRIX))
-            # Assume **torch_param** is passed in as a torch.nn.Parameter and **projection** as a Projection
-            # if validate is False
+            torch_param, projection = self._parse_and_validate_projection_to_torch_param(torch_param, projection)
+            # Assume **torch_param** is a torch.nn.Parameter and **projection** is a Projection (if validate is False)
+            requires_grad = torch_param.requires_grad
+            if requires_grad and torch_param not in self.requre_grad_warning:
+                warnings.warn(f"Assigning matrix of '{projection.name}' to torch_param '{torch_param}' that has "
+                              f"requires_grad=True; this may interfere with its updating in PyTorch.")
+                self.require_grad_warning.append[torch_param]
+            torch_param.requires_grad = False
             torch_param = torch.tensor(projection.parameters.matrix.get(context).T, dtype=torch_param.dtype)
+            torch_param.requires_grad = requires_grad
 
-    def _parse_and_validate_projection_to_torch_param(self, torch_param_spec, projection_spec)->tuple:
+    def _parse_and_validate_projection_to_torch_param(self, projection_spec, torch_param_spec)->tuple:
         """Parse and validate torch_param and projection arguments for copying between PyTorch and AutodiffComposition.
         Return tuple of torch.nn.Parameter and MappingProjection.
         """
@@ -2072,7 +2080,7 @@ class AutodiffComposition(Composition):
             err_start = f"Specification of 'torch_param' in {method_name}() ({torch_param_spec}) "
             err_end = (f"must be atorch.nn.Parameter, or a tuple containing either a Parameter and slice, "
                        f"or a torch.nn.Module with a Parameter name or index, and optionally a slice.")
-            error_msg = err_sart + err_end
+            error_msg = err_start + err_end
             # Torch Parameter specification is a Tensor or a torch.nn.Parameter, so acknowledge that
             if isinstance(torch_param_spec, (torch.Tensor, torch.nn.Module)):
                 error_msg = err_start + f"can't be a Tensor or Module; it " + err_end
