@@ -1960,8 +1960,12 @@ class AutodiffComposition(Composition):
            if specified as a str, must be the name of a Projection in the AutodiffComposition.
 
         validate : bool : default True
-           specifies whether to validate the **projection** and **torch_param** arguments; if False, bad arguments
-           raise standard Python exceptions rather than more informative errors, and may lead to unexpected results.
+           specifies whether to validate the **projection** and **torch_param** arguments.
+
+           .. hint::
+              Setting **validate** to False results in more efficient processing if this method is called frequently;
+              hower, invalid arguments will raise standard Python exceptions rather than more informative
+              AutodiffComposition errors, and also may allow unexpected results to go unnoticed.
 
            .. technical_note::
               If validate is False, **torch_param** must be a Tensor and **projection** a MappingProjection.
@@ -2046,8 +2050,12 @@ class AutodiffComposition(Composition):
            and ``slice`` specifies the indices of the Parameter to use.
 
         validate : bool : default True
-           specifies whether to validate the **projection** and **torch_param** arguments; if False, bad arguments
-           raise standard Python exceptions rather than more informative errors, and may lead to unexpected results.
+           specifies whether to validate the **projection** and **torch_param** arguments.
+
+           .. hint::
+              Setting **validate** to False results in more efficient processing if this method is called frequently;
+              hower, invalid arguments will raise standard Python exceptions rather than more informative
+              AutodiffComposition errors, and also may allow unexpected results to go unnoticed.
 
            .. technical_note::
               If validate is False, **torch_param** must be a torch.nn.Parameter and **projection** a MappingProjection.

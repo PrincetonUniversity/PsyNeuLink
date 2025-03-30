@@ -252,6 +252,8 @@ class TestAutodiffConstructor:
         new_matrix = autodiff.projections[proj].parameters.matrix.get()
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
+    # FIX: TESTS FOR copy_projection_matrix_to_torch_param ERRORS
+
     def test_report_prefs(self):
         comp = AutodiffComposition()
         assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
