@@ -1985,11 +1985,7 @@ class AutodiffComposition(Composition):
             else:
                 torch_tensor = torch_param
         # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
-        # MODIFIED 3/30/25 OLD:
         torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REMOVED CLONE
-        # # MODIFIED 3/30/25 NEW:
-        # torch_param_as_pnl_matrix = torch_tensor.numpy().T
-        # MODIFIED 3/30/25 END
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
 
@@ -2081,22 +2077,22 @@ class AutodiffComposition(Composition):
            <Context.execution_id>`, commensurate with the one used bydefault for its `execution
            <AutodiffComposition_Execution>`.
         """
+        torch_slice = None
         if validate:
             torch_param, torch_slice, projection = (
                 self._parse_and_validate_projection_to_torch_param(projection, torch_param))
-            # Assume **torch_param** is a torch.nn.Parameter and **projection** is a Projection (if validate is False)
-            requires_grad = torch_param.requires_grad
-            if requires_grad and torch_param not in self.require_grad_warning:
-                warnings.warn(f"Assigning matrix of '{projection.name}' to torch_param '{torch_param}' that has "
-                              f"requires_grad=True; this may interfere with its updating in PyTorch.")
-                self.require_grad_warning.append(torch_param)
-            torch_param.requires_grad = False
-            if torch_slice is not None:
-                torch_param[torch_slice].copy_(torch.tensor(projection.parameters.matrix.get(context).T,
-                                                            dtype=torch_param.dtype))
-            else:
-                torch_param.copy_(torch.tensor(projection.parameters.matrix.get(context).T, dtype=torch_param.dtype))
-            torch_param.requires_grad = requires_grad
+        # If validate is False, assume:
+        # - **torch_param** is a torch.Tensor, torch.nn.Parameter or a tuple of one with a slice
+        # - **projection** is a MappingProjection
+        elif isinstance(torch_param, tuple):
+            torch_param, torch_slice = torch_param
+
+        matrix = projection.parameters.matrix.get(context).T.squeeze()
+
+        if torch_slice is not None:
+            torch_param[torch_slice].data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
+        else:
+            torch_param.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
 
     def _parse_and_validate_projection_to_torch_param(self, projection_spec, torch_param_spec)->tuple:
         """Parse and validate torch_param and projection arguments for copying between PyTorch and AutodiffComposition.
