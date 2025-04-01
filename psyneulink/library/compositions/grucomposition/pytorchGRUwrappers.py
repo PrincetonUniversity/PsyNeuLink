@@ -556,22 +556,36 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
     def copy_pnl_proj_to_torch_gru_parameter(self, context, dtype):
         """Set relevant part of tensor for parameter of Pytorch GRU module from GRUComposition's Projections."""
         matrix = self.projection.parameters.matrix._get(context).T
-        proj_matrix_as_tensor = torch.tensor(matrix.squeeze(), dtype=dtype)
-        self.composition_wrapper.composition.copy_projection_matrix_to_torch_param(projection=self.projection,
-                                                                                   torch_param=(self.torch_parameter,
-                                                                                                self.matrix_indices),
-                                                                                   validate=False,
-                                                                                   context=context)
+        # MODIFIED 3/31/25 OLD:
+        # self.composition_wrapper.composition.copy_projection_matrix_to_torch_param(projection=self.projection,
+        #                                                                            torch_param=(self.torch_parameter,
+        #                                                                                         self.matrix_indices),
+        #                                                                            validate=False,
+        #                                                                            context=context)
+        # MODIFIED 3/31/25 NEW:
+        torch_tensor = self.torch_parameter[self.matrix_indices]
+        self.composition_wrapper.composition.copy_projection_matrix_to_torch_param_v2(projection=self.projection,
+                                                                                      torch_param=torch_tensor,
+                                                                                      validate=False,
+                                                                                      context=context)
+        # MODIFIED 3/31/25 END
 
     def _copy_torch_params_to_pnl_proj(self, context):
         """Override to deal with indexed tensor of Pytorch GRU module Parameter"""
         torch_parameter = self.torch_parameter
         torch_indices = self.matrix_indices
         matrix = torch_parameter[torch_indices].detach().cpu()
-        self.composition_wrapper.composition.copy_torch_param_to_projection_matrix(torch_param=matrix,
-                                                                                   projection=self.projection,
-                                                                                   validate=False,
-                                                                                   context=context)
+        # MODIFIED 3/31 OLD:
+        # self.composition_wrapper.composition.copy_torch_param_to_projection_matrix(torch_param=matrix,
+        #                                                                            projection=self.projection,
+        #                                                                            validate=False,
+        #                                                                            context=context)
+        # MODIFIED 3/31 NEW:
+        self.composition_wrapper.composition.copy_torch_param_to_projection_matrix_v2(torch_param=matrix,
+                                                                                      projection=self.projection,
+                                                                                      # validate=False,
+                                                                                      context=context)
+        # MODIFIED 3/31 END
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

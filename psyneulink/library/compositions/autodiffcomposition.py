@@ -158,13 +158,12 @@ FIX: 3/29/25 - SAY SOMETHING HERE ABOUT CONTEXT AND WHEN/HOW NEW VALUES TAKE EFF
 COMMENT
 
 The AutodiffComposition's `copy_torch_param_to_projection_matrix` and `copy_projection_matrix_to_torch_param` methods
-can be used to move weight matrices between the parameters of a PyTorch module and the `matrix
-<MappingProjection.matrix>` Parameter of a `MappingProjection` in the AutodiffComposition.  Pytorch Parameters
+can be used to exchange weight matrices between the parameters of a PyTorch module and the `matrix
+<MappingProjection.matrix>` Parameter of a `MappingProjection` in the AutodiffComposition. Pytorch Parameters
 can be referenced flexibly, either by the Parameter object itself, or by the module and either name or index of the
 Parameter in the module's state_dict or parameter list, respectively. Slices of PyTorch Parameters can also be used,
-in caess where the matrix of a Project corresponds to only a subpart of the PyTorch Parameter (e.g.,
+for cases in which the matrix of a Project corresponds to only a subpart of the PyTorch Parameter (e.g.,
 for the `GRUComposition`).
-
 
 .. _AutodiffComposition_Post_Construction_Modification:
 
@@ -2207,6 +2206,286 @@ class AutodiffComposition(Composition):
                                                f"in {method_name}() is outside its range.")
 
         return torch_param, torch_tensor, torch_slice
+
+
+
+
+
+
+
+
+
+    def copy_torch_param_to_projection_matrix_v2(self,
+                                                 projection:Union[str, MappingProjection],
+                                                 torch_param:Union[torch.nn.Parameter, torch.Tensor, str, int],
+                                                 torch_module:torch.nn.Module=None,
+                                                 torch_slice:slice=None,
+                                                 validate:bool=True,
+                                                 context:Optional[Union[Context, str]]=None):
+        """Assign torch Parameter to `matrix <MappingProjection.matrix>` Parameter of specified `MappingProjection`.
+
+        Arguments
+        ---------
+
+        projection : str or MappingProjection
+           specifies `MappingProjection` to which the torch_param is assigned as its `matrix <MappingProjection.matrix>`
+           Parameter;  if specified as a str, it must be the name of a MappingProjection in the AutodiffComposition.
+
+        torch_param : torch.nn.Parameter, str or int
+           specifies torch_param to assign to the `matrix <MappingProjection.matrix>` Parameter of **projection**;
+           if it is a torch.nn.Parameter or torch.Tensor, then the **torch_module** argument does not need to be
+           specified; if specified as a str or int, it must be the name of a torch Parameter (used to access it in
+           the state_dict) or its index (used to access it in the parameterlist) of the **torch_module** argument,
+           which must be also specified.
+
+        torch_module : torch.nn.Module : default None
+           specifies a torch.nn.Module containing **torch_param** assigned to the`matrix<MappingProjection.matrix>`
+           Parameter of **projection**; this does not need to be specified if **torch_param** is a torch.nn.Parameter
+           or torch.Tensor, but must be specified if **torch_param** is a str or int.
+
+        torch_slice : slice : default None
+           specifies a slice of **torch_param** to assign to the `matrix <MappingProjection.matrix>` Parameter
+           of **projection**; if it is not specified, the entire tensor of **torch_param** is used.
+
+          .. warning::
+             **torch_slice** should not be specified if the specification of **torch_param** already takes this
+             into account.
+
+        validate : bool : default True
+           specifies whether to validate the **projection** and **torch_param** arguments; setting it to False
+           results in more efficient processing if this method is called frequently; however, invalid arguments will
+           raise standard Python exceptions rather than more informative AutodiffComposition errors, and unexpected
+           results may go unnoticed.
+
+           .. warning::
+              if validate is False, for efficiency: **projection** *must* be a `MappingProjection`, **torch_param**
+              *must* be a torch.Tensor, and both **torch_module** and **torch_slice** are ignored.
+
+        COMMENT:
+        FIX: 3/31/25 MODIFY THIS IF NONE IS USED AS DEFAULT CONTEXT?
+        COMMENT
+        context : Context or None : default self.name
+           specifies context to use for the value of Projection.matrix;  if it is not provided, then a default `Context`
+           is constructed using the `name <Composition.name>` of the AutodiffComposition as the `execution_id
+           <Context.execution_id>`, commensurate with the one used bydefault for its `execution
+           <AutodiffComposition_Execution>`.
+        """
+        context = context or Context(execution_id=self.name)
+        if validate:
+            torch_tensor, projection = self._validate_torch_param_and_projection(torch_param,
+                                                                                 torch_module,
+                                                                                 torch_slice,
+                                                                                 projection)
+        else:
+            torch_tensor = torch_param
+
+        # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REMOVED CLONE
+        projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
+        projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
+
+    def copy_projection_matrix_to_torch_param_v2(self,
+                                                 projection:Union[str, MappingProjection],
+                                                 torch_param:Union[torch.nn.Parameter, torch.Tensor, str, int],
+                                                 torch_module:torch.nn.Module=None,
+                                                 torch_slice:slice=None,
+                                                 validate:bool=True,
+                                                 context:Optional[Union[Context, str]]=None):
+        """Assign the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection` to a Pytorch Parameter.
+
+        .. warning:
+           If the PyTorch Parameter has requires_grad=True, this will impact its updating in PyTorch.
+
+        Arguments
+        ---------
+
+        projection : str or MappingProjection
+           specifies `MappingProjection`, the `matrix <MappingProjection.matrix>` of which is assigned to torch_param;
+           if specified as a str, it must be the name of a MappingProjection in the AutodiffComposition.
+
+        torch_param : torch.nn.Parameter, str or int
+           specifies torch Parameter to which the `matrix <MappingProjection.matrix>` of the Projection is assigned;
+           if it is a torch.nn.Parameter or torch.Tensor, then the **torch_module** argument does not need to be
+           specified; if specified as a str or int, it must be the name of a torch Parameter (used to access it in
+           the state_dict) or its index (used to access it in the parameterlist) of the **torch_module** argument,
+           which must be also specified.
+
+        torch_module : torch.nn.Module : default None
+           specifies a torch.nn.Module containing **torch_param** to which the **projection**'s `matrix
+           <MappingProjection.matrix>` Parameter is assigned; this does not need to be specified if **torch_param**
+           is a torch.nn.Parameter or torch.Tensor, but must be specified if **torch_param** is a str or int.
+
+        torch_slice : slice : default None
+           specifies a slice of **torch_param** to assign to the `matrix <MappingProjection.matrix>` Parameter
+           of **projection**; if it is not specified, the entire tensor of **torch_param** is used.
+
+          .. warning::
+             **torch_slice** should not be specified if the specification of **torch_param** already takes this
+             into account.
+
+        validate : bool : default True
+           specifies whether to validate the **projection** and **torch_param** arguments; setting it to False
+           results in more efficient processing if this method is called frequently; however, invalid arguments will
+           raise standard Python exceptions rather than more informative AutodiffComposition errors, and unexpected
+           results may go unnoticed.
+
+           .. warning::
+              if validate is False, for efficiency: **projection** *must* be a `MappingProjection`, **torch_param**
+              *must* be a torch.Tensor, and both **torch_module** and **torch_slice** are ignored.
+
+        COMMENT:
+        FIX: 3/31/25 MODIFY THIS IF NONE IS USED AS DEFAULT CONTEXT?
+        COMMENT
+        context : Context or None : default self.name
+           specifies context to use for the value of Projection.matrix;  if it is not provided, then a default `Context`
+           is constructed using the `name <Composition.name>` of the AutodiffComposition as the `execution_id
+           <Context.execution_id>`, commensurate with the one used bydefault for its `execution
+           <AutodiffComposition_Execution>`.
+        """
+
+        context = context or Context(execution_id=self.name)
+        if validate:
+            torch_tensor, projection = self._validate_torch_param_and_projection(torch_param,
+                                                                                 torch_module,
+                                                                                 torch_slice,
+                                                                                 projection)
+        else:
+            torch_tensor = torch_param
+
+        matrix = projection.parameters.matrix.get(context).T.squeeze()
+
+        # if torch_slice is not None:
+        #     torch_param[torch_slice].data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
+        # else:
+        #     torch_param.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
+        torch_tensor.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
+
+
+    def _validate_torch_param_and_projection(self, torch_param, torch_module, torch_slice, projection_spec):
+        """Validate torch and projection arguments for copying between PyTorch and AutodiffComposition.
+        Return tuple of torch.Tensor and MappingProjection.
+        """
+        method_name = 'copy_torch_param_to_projection_matrix'
+
+        # Torch Parameter specification is a Tensor or a torch.nn.Parameter
+        if isinstance(torch_param, torch.Tensor):
+            torch_tensor = torch_param
+
+        elif isinstance(torch_param, (str, int)):
+            if torch_module is None:
+                raise AutodiffCompositionError(f"Specifying of the 'torch_param' arg in {method_name}() with a "
+                                               f"string or int ({torch_param}) requires the 'torch_module' "
+                                               f"arg to be specified as well.")
+            if not isinstance(torch_module, torch.nn.Module):
+                raise AutodiffCompositionError(f"Specification of 'torch_module' arg in {method_name}() "
+                                               f"({torch_module}) must be a torch.nn.Module.")
+            if isinstance(torch_param, str):
+                # Name of Parameter was specified, so get it from Module's state_dict,
+                if torch_param not in torch_module.state_dict():
+                    raise AutodiffCompositionError(f"'{torch_param}' specified in 'torch_param' arg of {method_name}() "
+                                                   f"is not the name of a Parameter in the state_dict() for "
+                                                   f"'{torch_module}'.")
+                torch_tensor = torch_module.state_dict()[torch_param]
+            else:
+                # Index of Parameter was specified, so get it from Module's parameters() list
+                try:
+                    torch_tensor = list(torch_module.parameters())[torch_param]
+                except IndexError:
+                    raise AutodiffCompositionError(f"'{torch_param}' specified in 'torch_param' arg of {method_name}() "
+                                                   f"is not an index with the range of the ParameterList for "
+                                                   f"'{torch_module}'.")
+        else:
+            raise AutodiffCompositionError(f"Specification of 'torch_param' arg in {method_name}() ({torch_param}) "
+                                           f"must be a torch.nn.Parameter, torch.Tensor, str or int.")
+
+        if torch_slice is not None:
+            if not isinstance(torch_slice, slice):
+                raise AutodiffCompositionError(f"Specification of 'torch_slice' arg in {method_name}() "
+                                               f"({torch_slice}) must be a slice.")
+            torch_tensor = torch_tensor[torch_slice]
+
+        # Parse and validate projection spec
+        if projection_spec not in self.projections:
+            if isinstance(projection_spec, str):
+                raise AutodiffCompositionError(f"'{projection_spec}' in {method_name}() "
+                                               f"is not the name of a Projection in '{self.name}'.")
+            elif isinstance(projection_spec, MappingProjection):
+                raise AutodiffCompositionError(f"'{projection_spec.name}' in {method_name}() "
+                                               f"is not a Projection in '{self.name}'.")
+            else:
+                assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection_spec}) in {method_name}."
+        projection = self.projections[projection_spec]
+
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T
+        bias_note = ""
+        if torch_param_as_pnl_matrix.ndim == 1:
+            # Note: torch biases are 1d, but PNL requires matrices to be 2d
+            torch_param_as_pnl_matrix = np.atleast_2d(torch_param_as_pnl_matrix) # REMOVED CLONE
+            bias_note = (f" [Note: torch biases, usually 1d, have already been converted to 2d "
+                         f"to match PsyNeuLink BIAS Nodes Projections.]")
+        if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
+            raise AutodiffCompositionError(f"Shape of torch parameter {torch_param_as_pnl_matrix.shape} in "
+                                           f"{method_name}() does not match shape of matrix for '{projection.name}' "
+                                           f"{projection.parameters.matrix.get().shape}.{bias_note}")
+        return torch_tensor, projection
+
+
+
+
+
+
+    # def _parse_and_validate_projection_to_torch_param(self, projection_spec, torch_param_spec)->tuple:
+    #     """Parse and validate torch_param and projection arguments for copying between PyTorch and AutodiffComposition.
+    #     Return tuple of torch.nn.Parameter and MappingProjection.
+    #     """
+    #     method_name = 'copy_projection_matrix_to_torch_param'
+    #     torch_slice = None
+    #
+    #     if not isinstance(torch_param_spec, (torch.nn.Parameter, tuple)):
+    #         err_start = f"Specification of 'torch_param' in {method_name}() ({torch_param_spec}) "
+    #         err_end = (f"must be atorch.nn.Parameter, or a tuple containing either a Parameter and slice, "
+    #                    f"or a torch.nn.Module with a Parameter name or index, and optionally a slice.")
+    #         error_msg = err_start + err_end
+    #         # Torch Parameter specification is a Tensor or a torch.nn.Parameter, so acknowledge that
+    #         if isinstance(torch_param_spec, (torch.Tensor, torch.nn.Module)):
+    #             error_msg = err_start + f"can't be a Tensor or Module; it " + err_end
+    #         raise AutodiffCompositionError(error_msg)
+    #
+    #     # Torch Parameter specification is a tuple
+    #     if isinstance(torch_param_spec, tuple):
+    #         torch_param, torch_tensor, torch_slice = self._parse_torch_param_tuple_spec(torch_param_spec, method_name)
+    #     else:
+    #         torch_param = torch_tensor = torch_param_spec
+    #
+    #     # Parse and validate projection spec
+    #     if projection_spec not in self.projections:
+    #         if isinstance(projection_spec, str):
+    #             raise AutodiffCompositionError(f"'{projection_spec}' in {method_name}() "
+    #                                            f"is not the name of a Projection in '{self.name}'.")
+    #         elif isinstance(projection_spec, MappingProjection):
+    #             raise AutodiffCompositionError(f"'{projection_spec.name}' in {method_name}() "
+    #                                            f"is not a Projection in '{self.name}'.")
+    #         else:
+    #             assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection_spec}) in {method_name}."
+    #     projection = self.projections[projection_spec]
+    #
+    #     torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REVMOED CLONE
+    #     if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
+    #         raise AutodiffCompositionError(f"Shape of matrix for '{projection.name}' "
+    #                                        f"{projection.parameters.matrix.get().shape} in {method_name}() "
+    #                                        f"does not match shape of the torch parameter "
+    #                                        f"{torch_param_as_pnl_matrix.shape}")
+    #
+    #     return torch_param, torch_slice, projection
+    #
+
+
+
+
+
+
+
+
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
