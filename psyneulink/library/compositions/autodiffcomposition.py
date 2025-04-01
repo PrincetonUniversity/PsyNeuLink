@@ -2360,7 +2360,6 @@ class AutodiffComposition(Composition):
         #     torch_param.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
         torch_tensor.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
 
-
     def _validate_torch_param_and_projection(self, torch_param, torch_module, torch_slice, projection_spec):
         """Validate torch and projection arguments for copying between PyTorch and AutodiffComposition.
         Return tuple of torch.Tensor and MappingProjection.
@@ -2428,64 +2427,6 @@ class AutodiffComposition(Composition):
                                            f"{method_name}() does not match shape of matrix for '{projection.name}' "
                                            f"{projection.parameters.matrix.get().shape}.{bias_note}")
         return torch_tensor, projection
-
-
-
-
-
-
-    # def _parse_and_validate_projection_to_torch_param(self, projection_spec, torch_param_spec)->tuple:
-    #     """Parse and validate torch_param and projection arguments for copying between PyTorch and AutodiffComposition.
-    #     Return tuple of torch.nn.Parameter and MappingProjection.
-    #     """
-    #     method_name = 'copy_projection_matrix_to_torch_param'
-    #     torch_slice = None
-    #
-    #     if not isinstance(torch_param_spec, (torch.nn.Parameter, tuple)):
-    #         err_start = f"Specification of 'torch_param' in {method_name}() ({torch_param_spec}) "
-    #         err_end = (f"must be atorch.nn.Parameter, or a tuple containing either a Parameter and slice, "
-    #                    f"or a torch.nn.Module with a Parameter name or index, and optionally a slice.")
-    #         error_msg = err_start + err_end
-    #         # Torch Parameter specification is a Tensor or a torch.nn.Parameter, so acknowledge that
-    #         if isinstance(torch_param_spec, (torch.Tensor, torch.nn.Module)):
-    #             error_msg = err_start + f"can't be a Tensor or Module; it " + err_end
-    #         raise AutodiffCompositionError(error_msg)
-    #
-    #     # Torch Parameter specification is a tuple
-    #     if isinstance(torch_param_spec, tuple):
-    #         torch_param, torch_tensor, torch_slice = self._parse_torch_param_tuple_spec(torch_param_spec, method_name)
-    #     else:
-    #         torch_param = torch_tensor = torch_param_spec
-    #
-    #     # Parse and validate projection spec
-    #     if projection_spec not in self.projections:
-    #         if isinstance(projection_spec, str):
-    #             raise AutodiffCompositionError(f"'{projection_spec}' in {method_name}() "
-    #                                            f"is not the name of a Projection in '{self.name}'.")
-    #         elif isinstance(projection_spec, MappingProjection):
-    #             raise AutodiffCompositionError(f"'{projection_spec.name}' in {method_name}() "
-    #                                            f"is not a Projection in '{self.name}'.")
-    #         else:
-    #             assert False, f"PROGRAM ERROR: Unexpected type for 'projection' ({projection_spec}) in {method_name}."
-    #     projection = self.projections[projection_spec]
-    #
-    #     torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REVMOED CLONE
-    #     if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:
-    #         raise AutodiffCompositionError(f"Shape of matrix for '{projection.name}' "
-    #                                        f"{projection.parameters.matrix.get().shape} in {method_name}() "
-    #                                        f"does not match shape of the torch parameter "
-    #                                        f"{torch_param_as_pnl_matrix.shape}")
-    #
-    #     return torch_param, torch_slice, projection
-    #
-
-
-
-
-
-
-
-
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
