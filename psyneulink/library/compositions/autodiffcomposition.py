@@ -1933,6 +1933,7 @@ class AutodiffComposition(Composition):
 
         return (*comp_states, optimizer_states)
 
+    # MODIFIED 3/31/25 OLD:
     def copy_torch_param_to_projection_matrix(self,
                                               torch_param:Union[torch.Tensor, torch.nn.Parameter, tuple],
                                               projection:Union[str, MappingProjection],
@@ -2207,14 +2208,7 @@ class AutodiffComposition(Composition):
 
         return torch_param, torch_tensor, torch_slice
 
-
-
-
-
-
-
-
-
+    # MODIFIED 3/31/25 NEW:
     def copy_torch_param_to_projection_matrix_v2(self,
                                                  projection:Union[str, MappingProjection],
                                                  torch_param:Union[torch.nn.Parameter, torch.Tensor, str, int],
@@ -2427,6 +2421,7 @@ class AutodiffComposition(Composition):
                                            f"{method_name}() does not match shape of matrix for '{projection.name}' "
                                            f"{projection.parameters.matrix.get().shape}.{bias_note}")
         return torch_tensor, projection
+    # MODIFIED 3/31/25 END
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
