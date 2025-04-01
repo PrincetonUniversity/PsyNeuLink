@@ -259,11 +259,8 @@ class TestAutodiffConstructor:
 
 
 
-
-
-
     # MODIFIED 3/31/25 NEW:
-    # FIX: 3/31/25: ?NEED TESTS FOR ERRORS WITH copy_projection_matrix_to_torch_param_v2()
+    # FIX: 3/31/25: NEED TESTS FOR ERRORS SPECIFIC TO copy_projection_matrix_to_torch_param_v2()
     # FIX: 3/31/25: ?NEED TESTS FOR validate=False FOR BOTH COPY...() METHODS
 
     @pytest.fixture
@@ -290,13 +287,18 @@ class TestAutodiffConstructor:
                                              "Specification of 'torch_slice' arg in "
                                              "copy_torch_param_to_projection_matrix() (SLICE OF PI) must be a slice."),
                     'param_with_bad_slice':(proj_spec, torch_parameter, None, 'SLICE OF PI',
-                                            f"Final item in tuple for 'torch_param' ('SLICE OF PI') "
-                                            f"in copy_torch_param_to_projection_matrix() must be a slice "
-                                            f"appropriate for specificed Parameter ('SLICE OF PI')"),
-                    'module_with_bad_slice':(proj_spec, 'weight_hh_l0', torch_module, 'SLICE OF PI',
-                                             f"Final item in tuple for 'torch_param' ('SLICE OF PI') in "
-                                             f"copy_torch_param_to_projection_matrix() must be a slice "
-                                             f"appropriate for specificed Parameter ('weight_hh_l0')")
+                                            f"Specification of 'torch_slice' arg in "
+                                            f"copy_torch_param_to_projection_matrix() (SLICE OF PI) must be a slice."),
+                    'module_with_param_name_and_bad_slice':(proj_spec, 'weight_hh_l0', torch_module, 'SLICE OF PI',
+                                                            f"Specification of 'torch_slice' arg in "
+                                                            f"copy_torch_param_to_projection_matrix() ('SLICE OF PI') "
+                                                            f"for Parameter 'weight_hh_l0' of GRU(3, 5, bias=False) "
+                                                            f"must be a slice."),
+                    'module_with_param_index_and_bad_slice':(proj_spec, 0, torch_module, 'SLICE OF PI',
+                                                             f"Specification of 'torch_slice' arg in "
+                                                             f"copy_torch_param_to_projection_matrix() "
+                                                             f"('SLICE OF PI') for Parameter 0 of "
+                                                             f"GRU(3, 5, bias=False) must be a slice.")
                 }
             elif use_slice is False:
                 # No slices
@@ -383,34 +385,46 @@ class TestAutodiffConstructor:
     # Test cases for copy_torch_param_to_projection_matrix()
     #                              (test, use_slice, proj_spec)
     torch_to_matrix_param_specs = [
-        # ('tensor', False, PROJ),
-        # ('tensor_slice', True, NAME),
-        # ('param', False, PROJ),
-        # ('param_slice', True, NAME),
-        # ('module_with_param_name', False, PROJ),
-        # ('module_with_param_index', False, NAME),
-        # ('module_with_param_name_and_slice', True, PROJ),
-        # ('shape_mismatch', False, NAME),
-        # ('shape_mismatch', True, PROJ),
-        # ('bad_param_spec', False, NAME),
-        # ('module_in_param_spec', False, PROJ),
-        # ('param_str_without_module_spec', False, NAME),
-        # ('param_int_without_module_spec', False, PROJ),
-        # ('param_none_spec', False, NAME),
-        # ('bad_module_spec', False, NAME),
-        # ('param_in_module_spec', False, PROJ),
-        # ('module_without_param_spec', False, NAME),
-        # ('param_not_in_state_dict', False, PROJ),
-        # ('param_index_out_of_range', False, NAME),
-        # ('bad_projection_name', False, PROJ),
-        # ('bad_projection', False, NAME),
-        ('tensor_with_bad_slice', True, PROJ),
-        ('param_with_bad_slice', True, NAME),
-        ('module_with_bad_slice', True, PROJ),
+        # name, use_slice, validate, proj_spec
+        # Valid specifications, with validation
+        # ('tensor_slice', True, True, NAME),
+        # ('param', False, True, PROJ),
+        # ('param_slice', True, True, NAME),
+        # ('module_with_param_name', False, True, PROJ),
+        # ('module_with_param_index', False, True, NAME),
+        # ('module_with_param_name_and_slice', True, True, PROJ),
+        # Valid specifications, without validation
+        ('tensor_slice', True, False, NAME),
+        ('param', False, False, PROJ),
+        ('param_slice', True, False, NAME),
+        ('module_with_param_name', False, False, PROJ),
+        ('module_with_param_index', False, False, NAME),
+        ('module_with_param_name_and_slice', True, False, PROJ),
+        # Invalid specifications, without validation (should generate errors)
+        ('shape_mismatch', False, True, NAME),
+        ('shape_mismatch', True, True, PROJ),
+        ('bad_param_spec', False, True, NAME),
+        ('module_in_param_spec', False, True, PROJ),
+        ('param_str_without_module_spec', False, True, NAME),
+        ('param_int_without_module_spec', False, True, PROJ),
+        ('param_none_spec', False, True, NAME),
+        ('bad_module_spec', False, True, NAME),
+        ('param_in_module_spec', False, True, PROJ),
+        ('module_without_param_spec', False, True, NAME),
+        ('param_not_in_state_dict', False, True, PROJ),
+        ('param_index_out_of_range', False, True, NAME),
+        ('bad_projection_name', False, True, PROJ),
+        ('bad_projection', False, True, NAME),
+        ('tensor_with_bad_slice', True, True, PROJ),
+        ('param_with_bad_slice', True, True, NAME),
+        ('module_with_param_name_and_bad_slice', True, True, PROJ),
+        ('module_with_param_index_and_bad_slice', True, True, NAME),
     ]
-    @pytest.mark.parametrize('test_condition, use_slice, proj_spec', torch_to_matrix_param_specs,
-                             ids=[x[0] for x in torch_to_matrix_param_specs])
-    def test_copy_torch_param_to_projection_matrix_v2(self, test_condition, use_slice, proj_spec,
+    @pytest.mark.parametrize('test_condition, use_slice, validate, proj_spec', torch_to_matrix_param_specs,
+                             # ids=[x[0] for x in torch_to_matrix_param_specs])
+                             ids=[x[0] + ('_validate' if x[2] else '_no_validation')
+                                  for x in torch_to_matrix_param_specs])
+    def test_copy_torch_param_to_projection_matrix_v2(self, test_condition, use_slice, validate, proj_spec,
                                                       copy_test_components):
 
         torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
@@ -418,16 +432,23 @@ class TestAutodiffConstructor:
 
         if error_msg is None:
             # autodiff.copy_torch_param_to_projection_matrix_v2(proj, torch_tensor, torch_param, torch_slice)
-            autodiff.copy_torch_param_to_projection_matrix_v2(proj_spec, torch_param, torch_module, torch_slice)
+            autodiff.copy_torch_param_to_projection_matrix_v2(proj_spec,
+                                                              torch_param,
+                                                              torch_module,
+                                                              torch_slice,
+                                                              validate)
             torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
             new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
             np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
         else:
             with pytest.raises(AutodiffCompositionError) as error_text:
-                autodiff.copy_torch_param_to_projection_matrix_v2(proj_spec, torch_param, torch_module, torch_slice)
+                autodiff.copy_torch_param_to_projection_matrix_v2(proj_spec,
+                                                                  torch_param,
+                                                                  torch_module,
+                                                                  torch_slice,
+                                                                  validate)
             assert error_text.value.error_value == error_msg
-
 
 
 

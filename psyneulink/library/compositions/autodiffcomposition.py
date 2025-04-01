@@ -2407,8 +2407,14 @@ class AutodiffComposition(Composition):
 
         if torch_slice is not None:
             if not isinstance(torch_slice, slice):
-                raise AutodiffCompositionError(f"Specification of 'torch_slice' arg in {method_name}() "
-                                               f"({torch_slice}) must be a slice.")
+                if isinstance(torch_param, (str, int)):
+                    param_ref = f"'{torch_param}'" if isinstance(torch_param, str) else f"{torch_param}"
+                    raise AutodiffCompositionError(f"Specification of 'torch_slice' arg in {method_name}() "
+                                                   f"('{torch_slice}') for Parameter {param_ref} of {torch_module} "
+                                                   f"must be a slice.")
+                else:
+                    raise AutodiffCompositionError(f"Specification of 'torch_slice' arg in {method_name}() "
+                                                   f"({torch_slice}) must be a slice.")
             torch_tensor = torch_tensor[torch_slice]
 
         # Parse and validate projection spec
