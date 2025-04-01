@@ -89,6 +89,7 @@ class TestAutodiffConstructor:
                                                 "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
                                                 "be that these Components belong to different Compositions.")
 
+    # MODIFIED 3/31/25 OLD:
     @pytest.fixture
     def copy_test_components(self):
         import torch
@@ -254,7 +255,184 @@ class TestAutodiffConstructor:
         new_matrix = autodiff.projections[proj].parameters.matrix.get()
         np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
-    # FIX: TESTS FOR copy_projection_matrix_to_torch_param ERRORS
+
+
+
+
+
+
+
+    # MODIFIED 3/31/25 NEW:
+    # FIX: 3/31/25: ?NEED TESTS FOR ERRORS WITH copy_projection_matrix_to_torch_param_v2()
+    # FIX: 3/31/25: ?NEED TESTS FOR validate=False FOR BOTH COPY...() METHODS
+
+    @pytest.fixture
+    def copy_test_components(self):
+        import torch
+        def _get_copy_test_components(use_slice, proj_spec):
+            if use_slice is True:
+                # GRU uses sets of weights defined as slices within a single Parameter
+                torch_module = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
+                torch_parameter = list(torch_module.parameters())[0]
+                torch_tensor = torch_module.state_dict()['weight_ih_l0'][slice(0,5)]
+                autodiff = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+                proj_name = 'INPUT TO NEW WEIGHTS'
+                proj = autodiff.projections[proj_name]
+                proj_spec = proj if proj_spec == PROJ else proj_name
+                torch_param_specs = {'tensor_slice':(proj_spec, torch_module.state_dict()['weight_ih_l0'], None,
+                                                     slice(0,5)),
+                                     'param_slice':(proj_spec, torch_parameter, None, slice(0,5)),
+                                     'module_name_slice':(proj_spec, 'weight_ih_l0', torch_module,slice(0,5)),
+                                     'shape_mismatch': (proj_spec, 'weight_hh_l0', torch_module,slice(0,5)),
+                                     'tensor_with_bad_slice':(proj_spec,torch_module.state_dict()['weight_ih_l0'],None,
+                                                              'SLICE OF PI'),
+                                     'param_with_bad_slice':(proj_spec, torch_parameter, None, 'SLICE OF PI'),
+                                     'module_with_bad_slice':(proj_spec, 'weight_hh_l0', torch_module, 'SLICE OF PI')
+                                     }
+            elif use_slice is False:
+                # No slices
+                torch_module = torch.nn.Linear(3, 5, bias=False)
+                torch_parameter = list(torch_module.parameters())[0]
+                torch_tensor = torch_module.state_dict()['weight']
+                autodiff = pnl.AutodiffComposition([pnl.ProcessingMechanism(input_shapes=3),
+                                                    pnl.MappingProjection(name='PROJECTION'),
+                                                    pnl.ProcessingMechanism(input_shapes=5)])
+                proj_name = 'PROJECTION'
+                proj = autodiff.projections[proj_name]
+                proj_spec = proj if proj_spec == PROJ else proj_name
+                torch_param_specs = {'tensor': (proj_spec, torch_tensor, None, None),
+                                     'param': (proj_spec, torch_parameter, None, None),
+                                     'module_name': (proj_spec, 'weight', torch_module, None),
+                                     'module_index': (proj_spec, 0, torch_module, None),
+                                     'shape_mismatch': (proj_spec, torch.zeros(4), None, None),
+                                     'bad_param_spec': (proj_spec, {}, None, None),
+                                     'module_in_param_spec': (proj_spec, torch_module, None, None),
+                                     'param_str_without_module_spec': (proj_spec, "'STRING'", None, None),
+                                     'param_int_without_module_spec': (proj_spec, 3, None, None),
+                                     'bad_module_spec': (proj_spec, None, "'I BE BAD MODULE'", None),
+                                     'param_in_module_spec': (proj_spec, None, torch_parameter, None),
+                                     'module_without_param_spec': (proj_spec, None, torch_module, None),
+                                     'param_not_in_state_dict': (proj_spec, "I'M IN A BAD STATE", torch_module, None),
+                                     'param_index_out_of_range': (proj_spec, 3, torch_module, None),
+                                     'bad_projection_name': ("BAD NAME", torch_tensor, None, None),
+                                     'bad_projection': (MappingProjection(), torch_tensor, None, None)
+                                     }
+            else:
+                assert False, f"Invalid use_slice value: {use_slice}"
+            return torch_tensor, torch_param_specs, autodiff, proj
+        return _get_copy_test_components
+
+    # Test cases for copy_torch_param_to_projection_matrix()
+    #                              (test, use_slice, proj_spec)
+    torch_to_matrix_param_specs = [
+        ('tensor', False, PROJ),
+        ('tensor_slice', True, NAME),
+        ('param', False, PROJ),
+        ('param_slice', True, NAME),
+        ('module_name', False, PROJ),
+        ('module_index', False, NAME),
+        ('module_name_slice', True, PROJ)
+    ]
+
+    @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', torch_to_matrix_param_specs,
+                             ids=[x[0] + ('_use_slice' if x[1] else '_no_slice')
+                                  for x in torch_to_matrix_param_specs])
+    def test_copy_torch_param_to_projection_matrix_v2(self, torch_param_spec, use_slice, proj_spec,
+                                                     copy_test_components):
+        torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
+        autodiff.copy_torch_param_to_projection_matrix_v2(*torch_param_specs[torch_param_spec])
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
+        np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+
+    error_types = [
+        ('shape_mismatch', False, PROJ, f"Shape of torch parameter (1, 4) in copy_torch_param_to_projection_matrix() "
+                                        f"does not match shape of matrix for 'PROJECTION' (3, 5). [Note: torch biases, "
+                                        f"usually 1d, have already been converted to 2d to match PsyNeuLink BIAS Nodes "
+                                        f"Projections.]"),
+        ('shape_mismatch', True, PROJ, f"Shape of torch parameter (5, 5) in copy_torch_param_to_projection_matrix() "
+                                       f"does not match shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5)."),
+        ('bad_param_spec', False, PROJ, f"Specification of 'torch_param' arg in "
+                                        f"copy_torch_param_to_projection_matrix() ({}) "
+                                        f"must be a torch.nn.Parameter, torch.Tensor, str or int."),
+        ('module_in_param_spec', False, PROJ, f"Tuple for 'torch_param' "
+                                              f"in copy_torch_param_to_projection_matrix() "
+                                              f"must have 2 or 3 items; it has 1 item(s)."),
+        ('param_str_without_module_spec', False, PROJ, f"Specifying of the 'torch_param' arg in "
+                                              f"copy_torch_param_to_projection_matrix() with a string or int "
+                                              f"('STRING') requires the 'torch_module' arg to be specified as well."),
+        ('param_int_without_module_spec', False, PROJ, f"Specifying of the 'torch_param' arg in "
+                                              f"copy_torch_param_to_projection_matrix() with a string or int "
+                                              f"(3) requires the 'torch_module' arg to be specified as well."),
+        ('bad_module_spec', False, PROJ, f"Specification of 'torch_module' arg in "
+                                         f"copy_torch_param_to_projection_matrix() (None) "
+                                         f"must be a torch.nn.Parameter, torch.Tensor, str or int."),
+        ('param_in_module_spec', False, PROJ, f"Tuple for 'torch_param' "
+                                              f"in copy_torch_param_to_projection_matrix() "
+                                              f"must have 2 or 3 items; it has 1 item(s)."),
+        ('module_without_param_spec', False, PROJ, f"Specification of 'torch_param' arg in "
+                                                   f"copy_torch_param_to_projection_matrix() (None) "
+                                                   f"must be a torch.nn.Parameter, torch.Tensor, str or int."),
+        ('param_not_in_state_dict', False, PROJ, f"Parameter name ('I'M IN A BAD STATE') for 'torch_param' in "
+                                                 f"copy_torch_param_to_projection_matrix() not found in state_dict() "
+                                                 f"for 'Linear(in_features=3, out_features=5, bias=False)'."),
+        ('param_index_out_of_range', False, PROJ, f"Tuple for 'torch_param' "
+                                                  f"in copy_torch_param_to_projection_matrix() "
+                                                  f"must have 2 or 3 items; it has 1 item(s)."),
+        ('param_with_bad_slice', True, PROJ, f"Final item in tuple for 'torch_param' ('SLICE OF PI') "
+                                             f"in copy_torch_param_to_projection_matrix() must be a slice "
+                                             f"appropriate for specificed Parameter ('SLICE OF PI')"),
+        ('tensor_with_bad_slice', True, PROJ, f"Final item in tuple for 'torch_param' ('SLICE OF PI') in "
+                                              f"copy_torch_param_to_projection_matrix() must be a slice "
+                                              f"appropriate for specificed Parameter ('weight_hh_l0')"),
+        ('module_with_bad_slice', True, PROJ, f"Final item in tuple for 'torch_param' ('SLICE OF PI') in "
+                                              f"copy_torch_param_to_projection_matrix() must be a slice "
+                                              f"appropriate for specificed Parameter ('weight_hh_l0')"),
+        ('bad_projection_name', False, PROJ, f"'BAD NAME' in copy_torch_param_to_projection_matrix() "
+                                             f"is not the name of a Projection in 'autodiff_composition'."),
+        ('bad_projection', False, PROJ, f"'Deferred Init MappingProjection' in copy_torch_param_to_projection_matrix() "
+                                        f"is not a Projection in 'autodiff_composition'.")
+    ]
+
+    @pytest.mark.parametrize('error_type, use_slice, proj_spec, error_msg', error_types,
+                             ids=[f"{x[0]}_{x[1]}_{x[2]}" for x in error_types])
+    def test_errors_copy_torch_to_matrix_v2(self, error_type, use_slice, proj_spec, error_msg, copy_test_components):
+        torch_tensor, torch_param_specs, autodiff, proj_spec = (copy_test_components(use_slice, proj_spec))
+        with pytest.raises(AutodiffCompositionError) as error_text:
+            autodiff.copy_torch_param_to_projection_matrix_v2(*torch_param_specs[error_type])
+        assert error_text.value.error_value == error_msg
+
+    # Test cases for test_copy_projection_matrix_to_torch_param()
+    #                              (test, use_slice, proj_spec)
+    matrix_to_torch_param_specs = [('param', False, PROJ),
+                                   ('param_slice', True, NAME),
+                                   ('module,_name', False, PROJ),
+                                   ('module_index', False, NAME),
+                                   ('module_name_slice', True, PROJ)]
+    @pytest.mark.parametrize('torch_param_spec, use_slice, proj_spec', matrix_to_torch_param_specs,
+                             ids=[x[0] + f"_{x[1]}" for x in matrix_to_torch_param_specs])
+    def test_copy_projection_matrix_to_torch_param_v2(self, torch_param_spec, use_slice, proj_spec,copy_test_components):
+        torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
+        autodiff.copy_projection_matrix_to_torch_param_v2(**torch_param_specs[torch_param_spec])
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+        new_matrix = autodiff.projections[proj].parameters.matrix.get()
+        np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+
+    # MODIFIED 3/31/25 END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
