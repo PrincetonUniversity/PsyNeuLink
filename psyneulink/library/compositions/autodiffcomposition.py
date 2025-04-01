@@ -2360,6 +2360,23 @@ class AutodiffComposition(Composition):
         if isinstance(torch_param, torch.Tensor):
             torch_tensor = torch_param
 
+        # Torch Parameter specification is a Tensor or a torch.nn.Parameter
+        elif isinstance(torch_param, type(None)):
+            if isinstance(torch_module, (torch.nn.Parameter, torch.Tensor)):
+                raise AutodiffCompositionError(f"Specification of 'torch_module' arg in {method_name}() is a "
+                                               f"torch Parameter or Tensor; this should be specified using the "
+                                               f"'torch_para' arg.")
+            raise AutodiffCompositionError(f"The 'torch_param' arg in {method_name}() ({torch_param}) must be "
+                                           f"specified, using either a torch.nn.Parameter or torch.Tensor, or a "
+                                           f"str or int paired with specification of a torch.nn.Module in the "
+                                           f"'torch_module' arg.")
+        # Torch Parameter specification is a torch.nn.Module
+        elif isinstance(torch_param, torch.nn.Module):
+            raise AutodiffCompositionError(f"Specification of 'torch_param' arg in {method_name}() ({torch_param}) is "
+                                           f"a Module, but must be a torch.nn.Parameter, torch.Tensor, str or int; "
+                                           f"if a Module is intended, use the 'torch_module' arg, and specify the "
+                                           f"Parameter name or index in the 'torch_param' arg.")
+
         elif isinstance(torch_param, (str, int)):
             if torch_module is None:
                 raise AutodiffCompositionError(f"Specifying of the 'torch_param' arg in {method_name}() with a "
@@ -2380,10 +2397,11 @@ class AutodiffComposition(Composition):
                 try:
                     torch_tensor = list(torch_module.parameters())[torch_param]
                 except IndexError:
-                    raise AutodiffCompositionError(f"'{torch_param}' specified in 'torch_param' arg of {method_name}() "
-                                                   f"is not an index with the range of the ParameterList for "
-                                                   f"'{torch_module}'.")
+                    raise AutodiffCompositionError(f"The value ({torch_param}) specified in the 'torch_param' arg of "
+                                                   f"{method_name}() is not an index within the range of the "
+                                                   f"ParameterList specified for the Module ('{torch_module}').")
         else:
+            # Unrecognized specification for torch_param arg.
             raise AutodiffCompositionError(f"Specification of 'torch_param' arg in {method_name}() ({torch_param}) "
                                            f"must be a torch.nn.Parameter, torch.Tensor, str or int.")
 
