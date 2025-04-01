@@ -2336,7 +2336,6 @@ class AutodiffComposition(Composition):
            <Context.execution_id>`, commensurate with the one used bydefault for its `execution
            <AutodiffComposition_Execution>`.
         """
-        context = context or Context(execution_id=self.name)
         if validate:
             torch_tensor, projection = self._validate_torch_param_and_projection(torch_param,
                                                                                  torch_module,
@@ -2345,8 +2344,10 @@ class AutodiffComposition(Composition):
         # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
         else:
             torch_tensor = torch_param
+        if slice is not None:
+            torch_tensor = torch_tensor[torch_slice]
         matrix = projection.parameters.matrix.get(context).T.squeeze()
-        matrix_as_tensor = torch.tensor(matrix, dtype=torch_param.dtype)
+        matrix_as_tensor = torch.tensor(matrix, dtype=torch_tensor.dtype)
         torch_tensor.data.copy_(matrix_as_tensor)
         return matrix_as_tensor
 
