@@ -2221,8 +2221,9 @@ class AutodiffComposition(Composition):
                                                  torch_module:torch.nn.Module=None,
                                                  torch_slice:slice=None,
                                                  validate:bool=True,
-                                                 context:Optional[Union[Context, str]]=None):
+                                                 context:Optional[Union[Context, str]]=None)->np.ndarray:
         """Assign torch Parameter to `matrix <MappingProjection.matrix>` Parameter of specified `MappingProjection`.
+        Return torch_param as the np.ndarray assigned to `matrix <MappingProjection.matrix>` Parameter of **projection**.
 
         Arguments
         ---------
@@ -2277,12 +2278,13 @@ class AutodiffComposition(Composition):
                                                                                  torch_slice,
                                                                                  projection)
         else:
+            # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
             torch_tensor = torch_param
 
-        # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
         torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REMOVED CLONE
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
+        return torch_param_as_pnl_matrix
 
     def copy_projection_matrix_to_torch_param_v2(self,
                                                  projection:Union[str, MappingProjection],
@@ -2290,11 +2292,13 @@ class AutodiffComposition(Composition):
                                                  torch_module:torch.nn.Module=None,
                                                  torch_slice:slice=None,
                                                  validate:bool=True,
-                                                 context:Optional[Union[Context, str]]=None):
+                                                 context:Optional[Union[Context, str]]=None)->torch.Tensor:
         """Assign the `matrix <MappingProjection.matrix>` Parameter of a `MappingProjection` to a Pytorch Parameter.
 
         .. warning:
            If the PyTorch Parameter has requires_grad=True, this will impact its updating in PyTorch.
+
+        Return torch.Tensor assigned to **torch_param**
 
         Arguments
         ---------
@@ -2342,25 +2346,21 @@ class AutodiffComposition(Composition):
            <Context.execution_id>`, commensurate with the one used bydefault for its `execution
            <AutodiffComposition_Execution>`.
         """
-
         context = context or Context(execution_id=self.name)
         if validate:
             torch_tensor, projection = self._validate_torch_param_and_projection(torch_param,
                                                                                  torch_module,
                                                                                  torch_slice,
                                                                                  projection)
+        # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
         else:
             torch_tensor = torch_param
-
         matrix = projection.parameters.matrix.get(context).T.squeeze()
+        matrix_as_tensor = torch.tensor(matrix, dtype=torch_param.dtype)
+        torch_tensor.data.copy_(matrix)
+        return matrix_as_tensor
 
-        # if torch_slice is not None:
-        #     torch_param[torch_slice].data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
-        # else:
-        #     torch_param.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
-        torch_tensor.data.copy_(torch.tensor(matrix, dtype=torch_param.dtype))
-
-    def _validate_torch_param_and_projection(self, torch_param, torch_module, torch_slice, projection_spec):
+    def _validate_torch_param_and_projection(self, torch_param, torch_module, torch_slice, projection_spec)->tuple:
         """Validate torch and projection arguments for copying between PyTorch and AutodiffComposition.
         Return tuple of torch.Tensor and MappingProjection.
         """
