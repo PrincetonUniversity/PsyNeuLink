@@ -387,19 +387,16 @@ class TestAutodiffConstructor:
     torch_to_matrix_param_specs = [
         # name, use_slice, validate, proj_spec
         # Valid specifications, with validation
-        # ('tensor_slice', True, True, NAME),
-        # ('param', False, True, PROJ),
-        # ('param_slice', True, True, NAME),
-        # ('module_with_param_name', False, True, PROJ),
-        # ('module_with_param_index', False, True, NAME),
-        # ('module_with_param_name_and_slice', True, True, PROJ),
+        ('tensor_slice', True, True, NAME),
+        ('param_slice', True, True, NAME),
+        ('module_with_param_name', False, True, PROJ),
+        ('module_with_param_index', False, True, NAME),
+        ('module_with_param_name_and_slice', True, True, PROJ),
         # Valid specifications, without validation
-        ('tensor_slice', True, False, NAME),
+        ('tensor', False, False, PROJ),
         ('param', False, False, PROJ),
-        ('param_slice', True, False, NAME),
-        ('module_with_param_name', False, False, PROJ),
-        ('module_with_param_index', False, False, NAME),
-        ('module_with_param_name_and_slice', True, False, PROJ),
+        ('tensor_slice', True, False, PROJ),
+        ('param_slice', True, False, PROJ),
         # Invalid specifications, without validation (should generate errors)
         ('shape_mismatch', False, True, NAME),
         ('shape_mismatch', True, True, PROJ),
@@ -438,7 +435,7 @@ class TestAutodiffConstructor:
                                                               torch_slice,
                                                               validate)
             torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
-            new_matrix = autodiff.projections[proj].parameters.matrix.get(autodiff.name)
+            new_matrix = autodiff.projections[proj].parameters.matrix.get()
             np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
 
         else:

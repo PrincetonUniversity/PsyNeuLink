@@ -2205,6 +2205,7 @@ class AutodiffComposition(Composition):
         return torch_param, torch_tensor, torch_slice
 
     # MODIFIED 3/31/25 NEW:
+    @handle_external_context(fallback_most_recent=True)
     def copy_torch_param_to_projection_matrix_v2(self,
                                                  projection:Union[str, MappingProjection],
                                                  torch_param:Union[torch.nn.Parameter, torch.Tensor, str, int],
@@ -2261,7 +2262,6 @@ class AutodiffComposition(Composition):
            <Context.execution_id>`, commensurate with the one used bydefault for its `execution
            <AutodiffComposition_Execution>`.
         """
-        context = context or Context(execution_id=self.name)
         if validate:
             torch_tensor, projection = self._validate_torch_param_and_projection(torch_param,
                                                                                  torch_module,
@@ -2269,9 +2269,9 @@ class AutodiffComposition(Composition):
                                                                                  projection)
         else:
             # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
-            torch_tensor = torch_param
+            torch_tensor = torch_param[torch_slice] if slice else torch_param
 
-        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T # REMOVED CLONE
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T.squeeze() # REMOVED CLONE
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
         return torch_param_as_pnl_matrix
