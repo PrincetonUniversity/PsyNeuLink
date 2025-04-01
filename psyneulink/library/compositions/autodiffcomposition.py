@@ -2357,7 +2357,7 @@ class AutodiffComposition(Composition):
             torch_tensor = torch_param
         matrix = projection.parameters.matrix.get(context).T.squeeze()
         matrix_as_tensor = torch.tensor(matrix, dtype=torch_param.dtype)
-        torch_tensor.data.copy_(matrix)
+        torch_tensor.data.copy_(matrix_as_tensor)
         return matrix_as_tensor
 
     def _validate_torch_param_and_projection(self, torch_param, torch_module, torch_slice, projection_spec)->tuple:
