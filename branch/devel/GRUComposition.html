@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GRUComposition &mdash; PsyNeuLink 0.16.1.0+49.gbba09d6b8 documentation</title>
+  <title>GRUComposition &mdash; PsyNeuLink 0.16.1.0+50.g57c73742b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+49
+                  0.16.1.0+50
                 </div>
               
             
@@ -361,7 +361,7 @@ computations copied back to Nodes of the full GRUComposition at times determined
 </section>
 <section id="learning">
 <span id="grucomposition-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>Learning is executed using the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method in same way as a standard <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>.  For learning to
+<p>Learning is executed using the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method in same way as a standard <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>.  For learning to
 occur the following conditions must obtain:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1056,8 +1056,8 @@ Format tensors:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_composition">
-<span class="sig-name descname"><span class="pre">_construct_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_composition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_pnl_composition">
+<span class="sig-name descname"><span class="pre">_construct_pnl_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_pnl_composition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct Nodes and Projections for GRUComposition</p>
 </dd></dl>
 
@@ -1085,7 +1085,7 @@ Flattens nested compositions:</p>
 <li><p>excludes Projections from/to CIMs in the nested Composition
 (from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
 </ul>
-<p>see <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> for table of how Projections are handled and further details.</p>
+<p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
 <dl class="field-list simple">

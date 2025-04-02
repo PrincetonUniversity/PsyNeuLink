@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.16.1.0+49.gbba09d6b8 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.16.1.0+50.g57c73742b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+49
+                  0.16.1.0+50
                 </div>
               
             
@@ -1551,7 +1551,7 @@ Assign self.memory_template and self.entry_template attributes</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_pathways">
-<span class="sig-name descname"><span class="pre">_construct_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_choice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_storage_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_pathways" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_construct_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_template</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_memories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_choice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_prob</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_decay_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_storage_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_field_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_pathways" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct Nodes and Pathways for EMComposition</p>
 </dd></dl>
 
@@ -1723,7 +1723,7 @@ Flattens nested compositions:</p>
 <li><p>excludes Projections from/to CIMs in the nested Composition
 (from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
 </ul>
-<p>see <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> for table of how Projections are handled and further details.</p>
+<p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
 </dd></dl>
@@ -1734,6 +1734,12 @@ Flattens nested compositions:</p>
 <dd><p>Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.
 Update parameters (weights) based on trial(s) executed since last optimization,
 Reinitizalize minibatch_loss and minibatch_loss_count</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_roles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.add_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override if called from command line to disallow modification of EMComposition</p>
 </dd></dl>
 
 </dd></dl>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+49.gbba09d6b8 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+50.g57c73742b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+49
+                  0.16.1.0+50
                 </div>
               
             
@@ -225,6 +225,7 @@
 <li><p><a class="reference internal" href="#autodiffcomposition-bias-parameters"><span class="std std-ref">No Bias Parameters</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-nesting"><span class="std std-ref">Nesting</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates and Optimizer Params</span></a></p></li>
+<li><p><a class="reference internal" href="#autodiffcomposition-exchange-with-torch-parameters"><span class="std std-ref">Exchanging Parameters with Pytorch Modules</span></a></p></li>
 <li><p><a class="reference internal" href="#autodiffcomposition-post-construction-modification"><span class="std std-ref">No Post-construction Modification</span></a></p></li>
 </ul>
 </dd>
@@ -330,6 +331,15 @@ may involve different forms of specification and/or support other parameters for
 for which there is no entry in <strong>optimizer_params</strong> use, in order of precedence: the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> specified in the call to the AutodiffComposition’s <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method, the <strong>learning_rate</strong> argument of its constructor, or the default value for the
 AutodiffComposition.</p>
 </section>
+<section id="exchanging-parameters-with-pytorch-modules">
+<span id="autodiffcomposition-exchange-with-torch-parameters"></span><h3><em>Exchanging Parameters with Pytorch Modules</em><a class="headerlink" href="#exchanging-parameters-with-pytorch-modules" title="Permalink to this headline">¶</a></h3>
+<p>The AutodiffComposition’s <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_torch_param_to_projection_matrix" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_torch_param_to_projection_matrix"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">copy_torch_param_to_projection_matrix</span></code></a> and <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_projection_matrix_to_torch_param" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_projection_matrix_to_torch_param"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">copy_projection_matrix_to_torch_param</span></code></a> methods
+can be used to exchange weight matrices between the parameters of a PyTorch module and the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> in the AutodiffComposition. Pytorch Parameters can
+be referenced flexibly, either by the Parameter object itself, or by the module and either the name or index of the
+Parameter in the module’s state_dict or parameter list, respectively. Slices of PyTorch Parameters can also be used,
+for cases in which the matrix of a Project corresponds to only a subpart of the PyTorch Parameter (e.g., for
+<a class="reference internal" href="GRUComposition.html"><span class="doc">GRUComposition</span></a>). Both methods return the item assigned.</p>
+</section>
 <section id="no-post-construction-modification">
 <span id="autodiffcomposition-post-construction-modification"></span><h3><em>No Post-construction Modification</em><a class="headerlink" href="#no-post-construction-modification" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
@@ -345,18 +355,6 @@ These are each described in greater detail below, and summarized in this <a clas
 which provides a comparison of the different modes of execution for an AutodiffComposition and standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <section id="pytorch-mode">
 <span id="autodiffcomposition-pytorch"></span><h3><em>PyTorch mode</em><a class="headerlink" href="#pytorch-mode" title="Permalink to this headline">¶</a></h3>
-<p># 7/10/24 - FIX:
-.. _AutodiffComposition_PyTorch_LearningScale:</p>
-<blockquote>
-<div><dl>
-<dt>ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTOIN OF pytorch_rep:</dt><dd><p>OPTIMIZATION STEP:
-for AutodiffCompositions, this corresponds to a single call to <code class="xref any docutils literal notranslate"><span class="pre">foward()</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">backward()</span></code></p>
-<blockquote>
-<div><p>methods of the Pytorch model</p>
-</div></blockquote>
-</dd>
-</dl>
-</div></blockquote>
 <p>This is the default for an AutodiffComposition, but, can be specified explicitly by setting <strong>execution_mode</strong> =
 <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method (see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-rumelhart-model"><span class="std std-ref">example</span></a>
 in <a class="reference internal" href="BasicsAndPrimer.html"><span class="doc">Basics and Primer</span></a>).  In this mode, the AutodiffComposition is automatically translated to a <a class="reference external" href="https://pytorch.org">PyTorch</a> model for learning.  This is comparable in speed to <code class="xref any docutils literal notranslate"><span class="pre">LLVM</span> <span class="pre">compilation</span></code>, but provides greater flexiblity, including the ability to include nested
@@ -765,466 +763,10 @@ specified by <a class="reference internal" href="#psyneulink.library.composition
 </dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PytorchCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for a Composition as a Pytorch Module.</p>
-<p>Wraps an <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> as a <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html">PyTorch module</a>, with each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in
-the AutodiffComposition wrapped as a <code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code>, each <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> wrapped as
-a <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code>, and any nested Compositions wrapped as <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a>s. Each
-PytorchMechanismWrapper implements a Pytorch version of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function(s)</span></code></a> of the wrapped
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, which are executed in the PyTorchCompositionWrapper’s <code class="xref any docutils literal notranslate"><span class="pre">forward</span></code>
-method in the order specified by the AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scheduler</span></code></a>.  The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameters of each wrapped <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> are assigned as parameters of the
-<code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code> Pytorch module and used, together with a Pytorch <a class="reference external" href="https://pytorch.org/docs/main/generated/torch.matmul.html">matmul</a> operation, to generate the input to each
-PyTorch function as specified by the <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>.  The graph
-can be visualized using the AutodiffComposition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and setting its
-<em>show_pytorch</em> argument to True (see <code class="xref any docutils literal notranslate"><span class="pre">PytorchShowGraph</span></code> for additional information).</p>
-<p>Two main responsibilities:</p>
-<ol class="arabic">
-<li><p>Set up functions and parameters of PyTorch module required for its forward computation:
-- Handle nested compositions (flattened in infer_backpropagation_learning_pathways):
-- Deal with Projections into and/or out of a nested Composition as shown in figure below:</p>
-<blockquote>
-<div><blockquote>
-<div><dl class="simple">
-<dt>(note: Projections in outer Composition to/from a nested Composition’s CIMs are learnable,</dt><dd><p>and ones within a nested Composition from/to its CIMs are not)</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>[      OUTER     ][                            NESTED                               ][     OUTER      ]</dt><dd><p>learnable//   not learnable//                     not learnable//    learnable//</p>
-</dd>
-<dt>—&gt; [Node] —-&gt; [input_CIM] ~~~&gt; [INPUT Node] —-&gt; [OUTPUT Node] ~~~&gt; [output_CIM] —-&gt; [Node] —&gt;</dt><dd><dl>
-<dt>sndr            rcvr          nested_rcvr         nested_sndr         sndr             rcvr</dt><dd><p>^–projection–&gt;^                                                     ^—projection–&gt;^
-^—-PytorchProjectionWrapper—-&gt;^                  ^—-PytorchProjectionWrapper—-&gt;^</p>
-<blockquote>
-<div><p>ENTER_NESTED                                            EXIT_NESTED</p>
-</div></blockquote>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
-<ul class="simple" id="mechanism-and-projection-uses">
-<li><p>The uses of Mechanisms and Projections in the pytorch_representation of an AutodiffComposition are
-determined, respecticely, by its PytorchMechanismWrapper’s <code class="xref any docutils literal notranslate"><span class="pre">use</span></code> and
-PytorchProjectionWrapper’s <code class="xref any docutils literal notranslate"><span class="pre">use</span></code>, as follows:</p>
-<ul>
-<li><p>Mechanisms:
-- used in Python execution but not Pytorch execution: <em>SYNCH</em>
-- used in PyTorch execution but not Python execution: <em>LEARNING</em>, <em>SHOW_PYTORCH</em>
-- used for both Python and Pytorch execution: <em>LEARNING</em>, <em>SYNCH</em>, <em>SHOW_PYTORCH</em></p></li>
-<li><p>Projections:
-- among (non-CIM) Mechanisms within the same Composition: same as Mechanisms (see above)
-- to an input_CIM of a nested Composition:  <em>LEARNING</em>, <em>SYNCH</em>, <em>SHOW_PYTORCH</em>
-- from an input_CIM: None
-- to an output_CIM: None
-- from an output_CIM:  <em>LEARNING</em>, <em>SYNCH</em>
-- directly between (to/from) a nested and outer Composition: <em>SHOW_PYTORCH</em></p></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p>Handle coordination of passing data and outcomes back to PsyNeuLink objects, handled by two main methods:</p>
-<ul>
-<li><dl>
-<dt>synch_with_psyneulink()</dt><dd><p>Copies matrix weights, node variables, node values, and/or autoutdiff results
-at user-specified intervals (LearningScale:  OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN);
-these are specified by the user in the following arguments to run() or learn():</p>
-<blockquote>
-<div><p>synch_projection_matrices_with_torch=RUN,
-synch_node_variables_with_torch=None,
-synch_node_values_with_torch=RUN,
-synch_results_with_torch=RUN,</p>
-</div></blockquote>
-<p>and consolidated in the synch_with_pnl_options dict used by synch_with_psyneulink</p>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>retain_for_psyneulink()</dt><dd><p>Retains learning-specific data used and outcomes generated during execution of PyTorch model
-(TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES), that are copied to PsyNeuLink
-at the end of a call to learn(); these are specified by the user in the following arguments
-to learn():</p>
-<blockquote>
-<div><p>retain_torch_trained_outputs=MINIBATCH,
-retain_torch_targets=MINIBATCH,
-retain_torch_losses=MINIBATCH,</p>
-</div></blockquote>
-<p>and consolidated in the retain_in_pnl_options dict used by retain_for_psyneulink</p>
-</dd>
-</dl>
-</li>
-</ul>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="simple">
-<dt>Note: RESULTS is handled in an idiosyncratic way: it is specified along with the synchronization</dt><dd><p>parameters, since it is a value ordinarily generated in the execution of a Composition;
-however it’s helper parallels the retain_for_psyneulink helper methods, and it is called
-from _update_results if TRIAL is specified, in order to integrate with the standard execution
-of a Composition.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-</li>
-</ol>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._composition">
-<span class="sig-name descname"><span class="pre">_composition</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._composition" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> being wrapped.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition">Composition</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.node_wrappers">
-<span class="sig-name descname"><span class="pre">node_wrappers</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.node_wrappers" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of nodes in the PytorchCompositionWrapper corresponding to the PyTorch functions that comprise the
-forward method of the Pytorch module implemented by the PytorchCompositionWrapper. Generally these are
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> wrapped in a <code class="xref any docutils literal notranslate"><span class="pre">PytorchMechanismWrapper</span></code>, however, if the <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> Node
-being wrapped is a nested Composition, then the wrapped node is itself a <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> object.
-When the PyTorch model is executed, all of these are “flattened” into a single PyTorch module, corresponding
-to the outermost AutodiffComposition being wrapped, which can be visualized using that AutodiffComposition’s
-<a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and setting its <em>show_pytorch</em> argument to True (see
-<code class="xref any docutils literal notranslate"><span class="pre">PytorchShowGraph</span></code> for additional information).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[PytorchMechanismWrapper]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.nodes_map">
-<span class="sig-name descname"><span class="pre">nodes_map</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.nodes_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>maps PsyNeuLink <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> to PytorchCompositionWrapper nodes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[Node: PytorchMechanismWrapper or <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper">PytorchCompositionWrapper</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">projection_wrappers</span> <span class="pre">=</span> <span class="pre">List[PytorchProjectionWrapper]</span></span></dt>
-<dd><p>list of PytorchCompositionWrappers in the PytorchCompositionWrapper, each of which wraps a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>
-in the AutodiffComposition being wrapped.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.projections_map">
-<span class="sig-name descname"><span class="pre">projections_map</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.projections_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>maps <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> in the AutodiffComposition being wrapped to <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrappers</span></code> in
-the PytorchCompositionWrapper.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[Projection: PytorchProjectionWrapper]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._nodes_to_execute_after_gradient_calc">
-<span class="sig-name descname"><span class="pre">_nodes_to_execute_after_gradient_calc</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._nodes_to_execute_after_gradient_calc" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains nodes specified as <code class="xref any docutils literal notranslate"><span class="pre">exclude_from_gradient_calc</span></code> as keys, and their current variable as values</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Dict[node : torch.Tensor]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.optimizer">
-<span class="sig-name descname"><span class="pre">optimizer</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>assigned by AutodffComposition after the wrapper is created, which passes the parameters to the optimizer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>torch</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.device">
-<span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.device" title="Permalink to this definition">¶</a></dt>
-<dd><p>device used to process torch Tensors in PyTorch functions</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>torch.device</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.params">
-<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.params" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of PyTorch parameters (connection weight matrices) in the PyTorch model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>nn.ParameterList()</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.minibatch_loss">
-<span class="sig-name descname"><span class="pre">minibatch_loss</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.minibatch_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>accumulated loss over all trials (stimuli) within a batch.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>torch.Tensor</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.minibatch_loss_count">
-<span class="sig-name descname"><span class="pre">minibatch_loss_count</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.minibatch_loss_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>count of losses (trials) within batch, used to calculate average loss per batch.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_results">
-<span class="sig-name descname"><span class="pre">retained_results</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of the <a class="reference internal" href="Composition.html#id9" title="psyneulink.core.compositions.composition.Composition.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of the AutodiffComposition for ever trial executed
-in a call to <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[ndarray]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_trained_outputs">
-<span class="sig-name descname"><span class="pre">retained_trained_outputs</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_trained_outputs" title="Permalink to this definition">¶</a></dt>
-<dd><p>values of the trained <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node (i.e., ones associated with <code class="xref any docutils literal notranslate"><span class="pre">TARGET</span> <span class="pre">&lt;NodeRole.TARGET</span></code>
-Node) for each trial executed in a call to <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[ndarray]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_targets">
-<span class="sig-name descname"><span class="pre">retained_targets</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_targets" title="Permalink to this definition">¶</a></dt>
-<dd><p>values of the <code class="xref any docutils literal notranslate"><span class="pre">TARGET</span> <span class="pre">&lt;NodeRole.TARGET</span></code> Nodes for each trial executed in a call to <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[ndarray]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_losses">
-<span class="sig-name descname"><span class="pre">retained_losses</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retained_losses" title="Permalink to this definition">¶</a></dt>
-<dd><p>losses per batch, epoch or run accumulated over a call to learn()</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[ndarray]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._add_node_to_nodes_map">
-<span class="sig-name descname"><span class="pre">_add_node_to_nodes_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_wrapper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._add_node_to_nodes_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Keep nodes_map, node_wrappers and modules_dict in synch</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._early_init">
-<span class="sig-name descname"><span class="pre">_early_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._early_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Early initialization of PytorchCompositionWrapper</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._get_execution_sets">
-<span class="sig-name descname"><span class="pre">_get_execution_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._get_execution_sets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._handle_nested_comp">
-<span class="sig-name descname"><span class="pre">_handle_nested_comp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._handle_nested_comp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Flatten nested Composition and assign Projections to/from it to outermost Composition
-This method is called when a Projection is to/from a CIM in a nested Composition that is not in the current
-Composition, and is needed for learning.
-It may be overridden by a subclass (grucomposition) to handle flattening differently.
-See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._instantiate_pytorch_mechanism_wrappers">
-<span class="sig-name descname"><span class="pre">_instantiate_pytorch_mechanism_wrappers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._instantiate_pytorch_mechanism_wrappers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._instantiate_pytorch_projection_wrappers">
-<span class="sig-name descname"><span class="pre">_instantiate_pytorch_projection_wrappers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._instantiate_pytorch_projection_wrappers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate PytorchProjectionWrappers for Projections in the Composition being wrapped
-Assign Projections for outermost Composition (including any that are nested within it at any level)
-Note: Pytorch representation is “flattened” (i.e., any nested Compositions are replaced by their Nodes)
-so if any nested Compositions have Projections to/from them, they are assigned to the outermost Composition
-See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._parse_optimizer_params">
-<span class="sig-name descname"><span class="pre">_parse_optimizer_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._parse_optimizer_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign parameter-specific optimizer param groups for PyTorch GRU module</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._regenerate_torch_parameter_list">
-<span class="sig-name descname"><span class="pre">_regenerate_torch_parameter_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._regenerate_torch_parameter_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add Projection matrices to Pytorch Module’s parameter list</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._remove_node_from_nodes_map">
-<span class="sig-name descname"><span class="pre">_remove_node_from_nodes_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._remove_node_from_nodes_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Keep nodes_map, node_wrappers and modules_dict in synch</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._validate_subclass_components">
-<span class="sig-name descname"><span class="pre">_validate_subclass_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_node_wrapper_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_projection_wrapper_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_sets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper._validate_subclass_components" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sublcass instantiated nodes_map, projections_map and execution_sets, so validate these.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.copy_results_to_psyneulink">
-<span class="sig-name descname"><span class="pre">copy_results_to_psyneulink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.copy_results_to_psyneulink" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy outputs of Pytorch forward() to AutodiffComposition.results attribute.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.execute_node">
-<span class="sig-name descname"><span class="pre">execute_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.execute_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute node and store the result in the node’s value attribute
-Implemented as method (and includes optimization_num and context as args)</p>
-<blockquote>
-<div><p>so that it can be overridden by subclasses of PytorchCompositionWrapper</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forward method of the model for PyTorch and LLVM modes
-Return a dictionary {output_node:value} of output values for the model</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_for_psyneulink">
-<span class="sig-name descname"><span class="pre">retain_for_psyneulink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_in_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_for_psyneulink" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store outputs, targets, and losses from Pytorch execution for copying to PsyNeuLink at end of learn().
-:type data: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>
-:param data: specifies local data available to retain (for copying to pnl at end of run;</p>
-<blockquote>
-<div><p>keys must be one or more of the keywords OUTPUTS, TARGETS, or LOSSES; values must be a torch.Tensor</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>retain_in_pnl_options</strong> (<em>dict</em>) – specifies which data the user has requested be retained (and copied to pnl at end of run)
-keys must be OUTPUTS, TARGETS, or LOSSES; value must be a LearningScale.name or None (which suppresses copy)</p></li>
-<li><p><strong>Note</strong> (<em>does not actually copy data to pnl; that is done by _getter methods for the relevant autodiff Parameters</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_losses">
-<span class="sig-name descname"><span class="pre">retain_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_losses" title="Permalink to this definition">¶</a></dt>
-<dd><p>Track losses and copy to AutodiffComposition.pytorch_targets at end of learn().</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_results">
-<span class="sig-name descname"><span class="pre">retain_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn().</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_targets">
-<span class="sig-name descname"><span class="pre">retain_targets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_targets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Track targets and copy to AutodiffComposition.pytorch_targets at end of learn().</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_trained_outputs">
-<span class="sig-name descname"><span class="pre">retain_trained_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trained_outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.retain_trained_outputs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn().</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.synch_with_psyneulink">
-<span class="sig-name descname"><span class="pre">synch_with_psyneulink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper.synch_with_psyneulink" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
-params can be used to restrict copy to a specific (set of) param(s). If params is not specified, all are copied;</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_composition_wrapper_type">
 <span class="sig-name descname"><span class="pre">pytorch_composition_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_composition_wrapper_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.pytorchwrappers.PytorchCompositionWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.pytorchwrappers.PytorchCompositionWrapper</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.assign_ShowGraph">
-<span class="sig-name descname"><span class="pre">assign_ShowGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_graph_attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.assign_ShowGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override to replace assignment of ShowGraph class with PytorchShowGraph if torch is available</p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.pytorchwrappers.PytorchCompositionWrapper</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1239,123 +781,9 @@ Flattens nested compositions:</p>
 <li><p>excludes Projections from/to CIMs in the nested Composition
 (from input_CIMs and to output_CIMs), as those should remain identity Projections;</p></li>
 </ul>
-<p>see <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchCompositionWrapper"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code></a> for table of how Projections are handled and further details.</p>
+<p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_pytorch_backprop_pathway">
-<span class="sig-name descname"><span class="pre">_get_pytorch_backprop_pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_pytorch_backprop_pathway" title="Permalink to this definition">¶</a></dt>
-<dd><p>Breadth-first search from input_node to find all input -&gt; output pathways
-Uses queue(node, composition) to traverse all nodes in the graph
-IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
-Return a list of all pathways from input_node -&gt; output node</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._add_dependency">
-<span class="sig-name descname"><span class="pre">_add_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._add_dependency" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append dependencies to dependency list, and next node to queue used in _get_pytorch_backprop_pathway()
-This uses the Projection from node to receiver to implement the relevant dependencies for construcing the
-pathway;  however, this can be overridden by a subclass of Autodiff to implement a custom pathway
-(see example in GRUComposition).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._build_pytorch_representation">
-<span class="sig-name descname"><span class="pre">_build_pytorch_representation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._build_pytorch_representation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a Pytorch representation of the AutodiffComposition</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.autodiff_forward">
-<span class="sig-name descname"><span class="pre">autodiff_forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_in_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.autodiff_forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform forward pass of model and compute loss for a batch of trials in Pytorch mode.
-Losses are then accumulated, error is backpropagated by compositionrunner.run_learning()</p>
-<blockquote>
-<div><p>before the next time it calls run(), in a call to backward() by do_gradient_optimization()
-in _batch_inputs() or _batch_function_inputs(),</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.do_gradient_optimization">
-<span class="sig-name descname"><span class="pre">do_gradient_optimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">retain_in_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.do_gradient_optimization" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute loss and use in call to autodiff_backward() to compute gradients and update PyTorch parameters.
-Update parameters (weights) based on trial(s) executed since last optimization,
-Reinitizalize minibatch_loss and minibatch_loss_count</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.autodiff_backward">
-<span class="sig-name descname"><span class="pre">autodiff_backward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minibatch_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.autodiff_backward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate gradients and apply to PyTorch model parameters (weights)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_inputs_values">
-<span class="sig-name descname"><span class="pre">_get_autodiff_inputs_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_inputs_values" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove TARGET Nodes, and return dict with values of INPUT Nodes for single trial
-For nested Compositions, replace input to nested Composition with inputs to its INPUT Nodes
-For InuptPorts, replace with owner</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>A dict mapping INPUT Nodes -&gt; input values for a single trial</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_targets_values">
-<span class="sig-name descname"><span class="pre">_get_autodiff_targets_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_autodiff_targets_values" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return dict with input values for TARGET Nodes
-Get inputs to TARGET Nodes used for computation of loss in autodiff_forward().
-Uses input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
-If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
-and the value is determined by searching recursively for the input Node that projects to the TARGET Node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>A dict mapping TARGET Nodes -&gt; target values</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._parse_learning_spec">
-<span class="sig-name descname"><span class="pre">_parse_learning_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._parse_learning_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts learning inputs and targets to a standardized form</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code> – Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)</p></li>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Number of input sets in dict for each input node in the Composition</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._identify_target_nodes">
-<span class="sig-name descname"><span class="pre">_identify_target_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._identify_target_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively call all nested AutodiffCompositions to assign TARGET nodes for learning</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
@@ -1386,13 +814,6 @@ and _parse_synch_and_retain_args() for additonal details).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_execution_mode">
-<span class="sig-name descname"><span class="pre">_get_execution_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._get_execution_mode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse execution_mode argument and return a valid execution mode for the learn() method
-Can be overridden by subclasses to change the permitted and/or default execution mode for learning</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">inputs=None</span></em>, <em class="sig-param"><span class="pre">num_trials=None</span></em>, <em class="sig-param"><span class="pre">minibatch_size=1</span></em>, <em class="sig-param"><span class="pre">optimizations_per_minibatch=1</span></em>, <em class="sig-param"><span class="pre">do_logging=False</span></em>, <em class="sig-param"><span class="pre">scheduler=None</span></em>, <em class="sig-param"><span class="pre">termination_processing=None</span></em>, <em class="sig-param"><span class="pre">call_before_minibatch=None</span></em>, <em class="sig-param"><span class="pre">call_after_minibatch=None</span></em>, <em class="sig-param"><span class="pre">call_before_time_step=None</span></em>, <em class="sig-param"><span class="pre">call_before_pass=None</span></em>, <em class="sig-param"><span class="pre">call_after_time_step=None</span></em>, <em class="sig-param"><span class="pre">call_after_pass=None</span></em>, <em class="sig-param"><span class="pre">reset_stateful_functions_to=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em>, <em class="sig-param"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">clamp_input='soft_clamp'</span></em>, <em class="sig-param"><span class="pre">targets=None</span></em>, <em class="sig-param"><span class="pre">runtime_params=None</span></em>, <em class="sig-param"><span class="pre">execution_mode=ExecutionMode.PyTorch</span></em>, <em class="sig-param"><span class="pre">skip_initialization=False</span></em>, <em class="sig-param"><span class="pre">synch_with_pnl_options=None</span></em>, <em class="sig-param"><span class="pre">retain_in_pnl_options=None</span></em>, <em class="sig-param"><span class="pre">report_output=ReportOutput.OFF</span></em>, <em class="sig-param"><span class="pre">report_params=ReportParams.OFF</span></em>, <em class="sig-param"><span class="pre">report_progress=ReportProgress.OFF</span></em>, <em class="sig-param"><span class="pre">report_simulations=ReportSimulations.OFF</span></em>, <em class="sig-param"><span class="pre">report_to_devices=None</span></em>, <em class="sig-param"><span class="pre">report=None</span></em>, <em class="sig-param"><span class="pre">report_num=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override to execute autodiff_forward() in learning mode if execute_mode is not Python</p>
@@ -1413,14 +834,6 @@ Note: defaults for synch and retain args are NotImplemented, so that the user ca
 for details). This is distinct from the user assigning the Parameter default_values(s), which is done
 in the AutodiffComposition constructor and handled by the Parameter._specify_none attribute.</p>
 </div></blockquote>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_results">
-<span class="sig-name descname"><span class="pre">_update_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update results by appending most recent trial_output
-This is included as a helper so it can be overriden by subclasses (such as AutodiffComposition)
-that may need to do this less frequently for scallable exeuction</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1470,10 +883,115 @@ in the AutodiffComposition are saved.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters</span> <span class="pre">object&gt;</span> <span class="pre">:</span> <span class="pre">(</span> <span class="pre">	device</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='device'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execute_until_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execute_until_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execution_count</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execution_count'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	has_initializers</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='has_initializers'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_has_initializers_setter&gt;</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	input_specification</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='input_specification'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	is_finished_flag</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='is_finished_flag'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	learning_rate</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0.001)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='learning_rate'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	learning_results</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='learning_results'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	max_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(1000)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='max_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	minibatch_size</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(1)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		modulable=True</span> <span class="pre">		modulation_combination_function=None</span> <span class="pre">		name='minibatch_size'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=Time(run:</span> <span class="pre">0,</span> <span class="pre">trial:</span> <span class="pre">0,</span> <span class="pre">pass:</span> <span class="pre">0,</span> <span class="pre">time_step:</span> <span class="pre">0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	optimizations_per_minibatch</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(1)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		modulable=True</span> <span class="pre">		modulation_combination_function=None</span> <span class="pre">		name='optimizations_per_minibatch'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	optimizer</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='optimizer'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	pytorch_representation</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='pytorch_representation'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	results</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='results'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	retain_old_simulation_data</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='retain_old_simulation_data'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	retain_torch_losses</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='minibatch'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='retain_torch_losses'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	retain_torch_targets</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='minibatch'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='retain_torch_targets'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	retain_torch_trained_outputs</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='minibatch'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='retain_torch_trained_outputs'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	simulation_results</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='simulation_results'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	synch_node_values_with_torch</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='run'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='synch_node_values_with_torch'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	synch_node_variables_with_torch</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=None</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='synch_node_variables_with_torch'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	synch_projection_matrices_with_torch</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='run'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='synch_projection_matrices_with_torch'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	synch_results_with_torch</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value='run'</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='synch_results_with_torch'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	torch_losses</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_get_torch_losses&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='torch_losses'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	torch_targets</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_get_torch_targets&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='torch_targets'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	torch_trained_outputs</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		getter=&lt;function</span> <span class="pre">_get_torch_trained_outputs&gt;</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='torch_trained_outputs'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	trial_losses</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=[]</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='trial_losses'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	value</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=NotImplemented</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='value'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	variable</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		constructor_argument='default_variable'</span> <span class="pre">		default_value=array([0])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='variable'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">)</span></em><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.parameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_torch_param_to_projection_matrix">
+<span class="sig-name descname"><span class="pre">copy_torch_param_to_projection_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_torch_param_to_projection_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign torch Parameter to <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter of specified <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.
+Return torch_param as the np.ndarray assigned to <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter of
+<strong>projection</strong>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>projection</strong> (<em>str</em><em> or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – specifies <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which the torch_param is assigned as its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter;  if specified as a str, it must be the name of a
+MappingProjection in the AutodiffComposition.</p></li>
+<li><p><strong>torch_param</strong> (<em>torch.nn.Parameter</em><em>, </em><em>str</em><em> or </em><em>int</em>) – specifies torch_param to assign to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter of <strong>projection</strong>;
+if it is a torch.nn.Parameter or torch.Tensor, then the <strong>torch_module</strong> argument does not need to be
+specified; if specified as a str or int, it must be the name of a torch Parameter (used to access it in
+the state_dict) or its index (used to access it in the parameterlist) of the <strong>torch_module</strong> argument,
+which must be also specified.</p></li>
+<li><p><strong>torch_module</strong> (<em>torch.nn.Module : default None</em>) – specifies a torch.nn.Module containing <strong>torch_param</strong> assigned to the`matrix&lt;MappingProjection.matrix&gt;`
+Parameter of <strong>projection</strong>; this does not need to be specified if <strong>torch_param</strong> is a
+torch.nn.Parameter or torch.Tensor, but must be specified if <strong>torch_param</strong> is a str or int.</p></li>
+<li><p><strong>torch_slice</strong> (<em>slice : default None</em>) – <dl class="simple">
+<dt>specifies a slice of <strong>torch_param</strong> to assign to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter</dt><dd><p>of <strong>projection</strong>; if it is not specified, the entire tensor of <strong>torch_param</strong> is used.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>torch_slice</strong> should not be specified if the specification of <strong>torch_param</strong> already takes this
+into account.</p>
+</div>
+</p></li>
+<li><p><strong>validate</strong> (<em>bool : default True</em>) – <p>specifies whether to validate the <strong>projection</strong> and <strong>torch_param</strong> arguments; setting it to False
+results in more efficient processing if this method is called frequently; however, invalid arguments will
+raise standard Python exceptions rather than more informative AutodiffComposition errors, and unexpected
+results may go unnoticed.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>if validate is False, for efficiency: <strong>projection</strong> <em>must</em> be a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, <strong>torch_param</strong>
+<em>must</em> be a torch.Tensor, and both <strong>torch_module</strong> and <strong>torch_slice</strong> are ignored.</p>
+</div>
+</p></li>
+<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em> or </em><em>None : default most recent Context</em>) – specifies context to use for the value of Projection.matrix;  if it is not provided, then a default
+<a class="reference internal" href="Context.html"><span class="doc">Context</span></a> is constructed using the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.name" title="psyneulink.core.compositions.composition.Composition.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of the AutodiffComposition as the
+<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a>, commensurate with the one used bydefault for its <a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">execution</span></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_projection_matrix_to_torch_param">
+<span class="sig-name descname"><span class="pre">copy_projection_matrix_to_torch_param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.copy_projection_matrix_to_torch_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to a Pytorch Parameter.</p>
+<p>Return torch.Tensor assigned to <strong>torch_param</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>projection</strong> (<em>str</em><em> or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – specifies <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of which is assigned torch_param;
+if specified as a str, it must be the name of a MappingProjection in the AutodiffComposition.</p></li>
+<li><p><strong>torch_param</strong> (<em>torch.nn.Parameter</em><em>, </em><em>str</em><em> or </em><em>int</em>) – specifies torch Parameter to which the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> of the Projection is assigned;
+if it is a torch.nn.Parameter or torch.Tensor, then the <strong>torch_module</strong> argument does not need to be
+specified; if specified as a str or int, it must be the name of a torch Parameter (used to access it in
+the state_dict) or its index (used to access it in the parameterlist) of the <strong>torch_module</strong> argument,
+which must be also specified.</p></li>
+<li><p><strong>torch_module</strong> (<em>torch.nn.Module : default None</em>) – specifies a torch.nn.Module containing <strong>torch_param</strong> to which the <strong>projection</strong>’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter is assigned; this does not need to be specified if <strong>torch_param</strong>
+is a torch.nn.Parameter or torch.Tensor, but must be specified if <strong>torch_param</strong> is a str or int.</p></li>
+<li><p><strong>torch_slice</strong> (<em>slice : default None</em>) – <dl class="simple">
+<dt>specifies a slice of <strong>torch_param</strong> to assign to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> Parameter</dt><dd><p>of <strong>projection</strong>; if it is not specified, the entire tensor of <strong>torch_param</strong> is used.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>torch_slice</strong> should not be specified if the specification of <strong>torch_param</strong> already takes this
+into account.</p>
+</div>
+</p></li>
+<li><p><strong>validate</strong> (<em>bool : default True</em>) – <p>specifies whether to validate the <strong>projection</strong> and <strong>torch_param</strong> arguments; setting it to False
+results in more efficient processing if this method is called frequently; however, invalid arguments
+then raise standard Python exceptions rather than more informative AutodiffComposition errors,
+and unexpected results may go unnoticed.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>if validate is False, for efficiency: <strong>projection</strong> <em>must</em> be a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, <strong>torch_param</strong>
+<em>must</em> be a torch.Tensor, and both <strong>torch_module</strong> and <strong>torch_slice</strong> are ignored.</p>
+</div>
+</p></li>
+<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em> or </em><em>None : default most recent Context</em>) – specifies context to use for the value of Projection.matrix;  if it is not provided, then a default
+<a class="reference internal" href="Context.html"><span class="doc">Context</span></a> is constructed using the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.name" title="psyneulink.core.compositions.composition.Composition.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> of the AutodiffComposition as the
+<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a>, commensurate with the one used bydefault for its <a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">execution</span></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._validate_torch_param_and_projection">
+<span class="sig-name descname"><span class="pre">_validate_torch_param_and_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">torch_param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._validate_torch_param_and_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate torch and projection arguments for copying between PyTorch and AutodiffComposition.
+Return tuple of torch.Tensor and MappingProjection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.show_graph">
@@ -1538,6 +1056,7 @@ in the AutodiffComposition are saved.</p></li>
 <li><a class="reference internal" href="#no-bias-parameters"><em>No Bias Parameters</em></a></li>
 <li><a class="reference internal" href="#nesting"><em>Nesting</em></a></li>
 <li><a class="reference internal" href="#learning-rates-and-optimizer-params"><em>Learning Rates and Optimizer Params</em></a></li>
+<li><a class="reference internal" href="#exchanging-parameters-with-pytorch-modules"><em>Exchanging Parameters with Pytorch Modules</em></a></li>
 <li><a class="reference internal" href="#no-post-construction-modification"><em>No Post-construction Modification</em></a></li>
 </ul>
 </li>
