@@ -1990,9 +1990,9 @@ class AutodiffComposition(Composition):
                                                                                  projection)
         else:
             # Assume **torch_param** is passed in as a Tensor and **projection** as a Projection if validate is False
-            torch_tensor = torch_param[torch_slice] if slice else torch_param
+            torch_tensor = torch_param[torch_slice] if torch_slice else torch_param
 
-        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T.squeeze() # REMOVED CLONE
+        torch_param_as_pnl_matrix = torch_tensor.detach().cpu().numpy().T
         projection.parameters.matrix._set(torch_param_as_pnl_matrix, context)
         projection.parameter_ports['matrix'].parameters.value._set(torch_param_as_pnl_matrix, context)
         return torch_param_as_pnl_matrix
@@ -2152,7 +2152,7 @@ class AutodiffComposition(Composition):
         bias_note = ""
         if torch_param_as_pnl_matrix.ndim == 1:
             # Note: torch biases are 1d, but PNL requires matrices to be 2d
-            torch_param_as_pnl_matrix = np.atleast_2d(torch_param_as_pnl_matrix) # REMOVED CLONE
+            torch_param_as_pnl_matrix = np.atleast_2d(torch_param_as_pnl_matrix)
             bias_note = (f" [Note: torch biases, usually 1d, have already been converted to 2d "
                          f"to match PsyNeuLink BIAS Nodes Projections.]")
         if torch_param_as_pnl_matrix.shape != projection.parameters.matrix.get().shape:

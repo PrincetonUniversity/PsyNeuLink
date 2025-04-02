@@ -945,7 +945,7 @@ class GRUComposition(AutodiffComposition):
 
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh,
                               self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho],
-                             context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+                             context=context)
 
         if self.bias:
             self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
@@ -995,7 +995,7 @@ class GRUComposition(AutodiffComposition):
 
             self.biases = [self.bias_ir, self.bias_iu, self.bias_in,
                                   self.bias_hr, self.bias_hu, self.bias_hn]
-            self.add_projections(self.biases, context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+            self.add_projections(self.biases, context=context)
 
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
