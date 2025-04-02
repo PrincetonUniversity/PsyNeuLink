@@ -2434,7 +2434,7 @@ class Port_Base(Port):
         try:
             return list(itertools.chain(
                 super()._dependent_components,
-                self.efferents,
+                self.all_afferents,
             ))
         except PortError:
             return list(itertools.chain(
