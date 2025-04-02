@@ -803,26 +803,10 @@ class GRUComposition(AutodiffComposition):
         input_size = self.input_size
         hidden_size = self.hidden_size
 
-        self._construct_composition(input_size, hidden_size,
+        self._construct_pnl_composition(input_size, hidden_size,
                                     context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
-        self._assign_gru_specific_attributes()
 
-        # 2/16/25 - FIX: PUT THIS IN A METHOD: (e.g., _construct_learning_components)
-        self.gru_mech = ProcessingMechanism(name=GRU_NODE,
-                                            input_shapes=input_size,
-                                            function=MatrixTransform(
-                                                default_variable=np.zeros(input_size),
-                                                matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-        self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node: self.gru_mech}
-        self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
-        self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
-                                               name= GRU_TARGET_NODE)
-
-        # # MODIFIED 3/1/25 NEW:
-        # self.add_node(self.gru_mech, required_roles=[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.LEARNING])
-        # self.add_node(self.target_node, required_roles=[NodeRole.TARGET, NodeRole.LEARNING])
-        # self.exclude_node_roles(self.target_node, NodeRole.OUTPUT)
-        # MODIFIED 3/1/25 END
+        self._assign_gru_specific_attributes(input_size, hidden_size)
 
 
     # *****************************************************************************************************************
@@ -831,7 +815,7 @@ class GRUComposition(AutodiffComposition):
     #region
     # Construct Nodes --------------------------------------------------------------------------------
 
-    def _construct_composition(self, input_size, hidden_size, context):
+    def _construct_pnl_composition(self, input_size, hidden_size, context):
         """Construct Nodes and Projections for GRUComposition"""
         hidden_shape = np.ones(hidden_size)
 
@@ -961,7 +945,7 @@ class GRUComposition(AutodiffComposition):
 
         self.add_projections([self.wts_in, self.wts_iu, self.wts_ir, self.wts_nh,
                               self.wts_hh, self.wts_hn, self.wts_hr, self.wts_hu, self.wts_ho],
-                             context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+                             context=context)
 
         if self.bias:
             self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
@@ -1011,7 +995,7 @@ class GRUComposition(AutodiffComposition):
 
             self.biases = [self.bias_ir, self.bias_iu, self.bias_in,
                                   self.bias_hr, self.bias_hu, self.bias_hn]
-            self.add_projections(self.biases, context=Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+            self.add_projections(self.biases, context=context)
 
         self.scheduler.add_condition(self.update_node, conditions.AfterNodes(self.reset_node))
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
@@ -1021,43 +1005,22 @@ class GRUComposition(AutodiffComposition):
 
         self._analyze_graph()
 
-    def _assign_gru_specific_attributes(self):
+    def _assign_gru_specific_attributes(self, input_size, hidden_size):
         for node in self.nodes:
             node.exclude_from_show_graph = True
+        self.gru_mech = ProcessingMechanism(name=GRU_NODE,
+                                            input_shapes=input_size,
+                                            function=MatrixTransform(
+                                                default_variable=np.zeros(input_size),
+                                                matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
+        self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node: self.gru_mech}
+        self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
+        self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
+                                               name= GRU_TARGET_NODE)
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
-        # MODIFIED 2/16/25 NEW:
-        # FIX: ENSURE HERE THAT LEARNABILITY IS SAME FOR ALL PROJECTIONS CORRESPONDING
-        #      TO IH AND HH PARAMAETERS OF TORCH GRU MODULE
-        #      ADD COMPOSITION ATTRIBUTES FOR INPUT and HIDDEN LEARNING RATES AND HANDLE HERE
-        # FIX: FOR NOW, JUST USE THIS:
-        # FIX: DEAL WITH INDIVIDUAL LEARNING RATES
-        # # MODIFIED 2/16/25 OLD:
-        # learning_rate = self.enable_learning
-        #
-        # for projection in self.learnable_projections:
-        #
-        #     if self.enable_learning is False:
-        #         projection.learnable = False
-        #         continue
-        #
-        #     if learning_rate is False:
-        #         projection.learnable = False
-        #         continue
-        #
-        #     elif learning_rate is True:
-        #         # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
-        #         learning_rate = self.learning_rate
-        #
-        #     assert isinstance(learning_rate, (int, float)), \
-        #         (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
-        #
-        #     projection.learnable = True
-        #     if projection.learning_mechanism:
-        #         projection.learning_mechanism.learning_rate = learning_rate
-        # MODIFIED 2/16/25 NEW: FIX: IS THIS STILL NEEDED?
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:
@@ -1080,7 +1043,6 @@ class GRUComposition(AutodiffComposition):
             projection.learnable = True
             if projection.learning_mechanism:
                 projection.learning_mechanism.learning_rate = learning_rate
-        # MODIFIED 2/16/25 END
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)

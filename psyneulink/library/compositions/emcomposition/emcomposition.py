@@ -942,8 +942,10 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
@@ -1766,7 +1768,8 @@ class EMComposition(AutodiffComposition):
                                  self._use_storage_node,
                                  self.learn_field_weights,
                                  self.enable_learning,
-                                 self._use_gating_for_weighting)
+                                 self._use_gating_for_weighting,
+                                 context=Context(source=ContextFlags.COMMAND_LINE, string='FROM EM'))
 
         # if torch_available:
         #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
@@ -2205,6 +2208,7 @@ class EMComposition(AutodiffComposition):
                             learn_field_weights,
                             enable_learning,
                             use_gating_for_weighting,
+                            context
                             ):
         """Construct Nodes and Pathways for EMComposition"""
 
@@ -2249,17 +2253,17 @@ class EMComposition(AutodiffComposition):
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
-            self.add_nodes(self.input_nodes)
+            self.add_nodes(self.input_nodes, context=context)
             if use_storage_node:
-                self.add_node(self.storage_node)
+                self.add_node(self.storage_node, context=context)
             if self.concatenate_queries_node:
-                self.add_node(self.concatenate_queries_node)
-            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes)
+                self.add_node(self.concatenate_queries_node, context=context)
+            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes, context=context)
             if self.combined_matches_node:
-                self.add_node(self.combined_matches_node)
-            self.add_nodes([self.softmax_node] + self.retrieved_nodes)
+                self.add_node(self.combined_matches_node, context=context)
+            self.add_nodes([self.softmax_node] + self.retrieved_nodes, context=context)
             if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
+                self.add_node(self.softmax_gain_control_node, context=context)
 
         # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
@@ -2290,14 +2294,14 @@ class EMComposition(AutodiffComposition):
 
             # softmax gain control is specified:
             if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
+                self.add_node(self.softmax_gain_control_node, context=context)
 
             # field_weights -> weighted_softmax pathways
             if any(self.field_weight_nodes):
                 for i in range(self.num_keys):
                     self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
 
-            self.add_nodes(self.value_input_nodes)
+            self.add_nodes(self.value_input_nodes, context=context)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
@@ -2305,7 +2309,7 @@ class EMComposition(AutodiffComposition):
 
             # Storage Nodes
             if use_storage_node:
-                self.add_node(self.storage_node)
+                self.add_node(self.storage_node, context=context)
 
     def _construct_input_nodes(self):
         """Create one node for each input to EMComposition and identify as key or value
@@ -2776,6 +2780,30 @@ class EMComposition(AutodiffComposition):
         pass
 
     #endregion
+
+    def add_node(self, node, required_roles=None, context=None):
+        """Override if called from command line to disallow modification of EMComposition"""
+        if context is None:
+            raise CompositionError(f"Nodes cannot be added to {self.name}.")
+        super().add_node(node, required_roles, context)
+
+    # def add_projection(self, *args, **kwargs):
+    #     """Override if called from command line to disallow modification of EMComposition"""
+    #     # if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+    #     #     if 'projection' in kwargs:
+    #     #         projection = kwargs['projection']
+    #     #         sender = projection.sender
+    #     #         receiver = projection.receiver
+    #     #     else:
+    #     #         sender = kwargs['sender']
+    #     #         receiver = kwargs['receiver']
+    #     #     if isinstance(sender, OutputPort):
+    #     #         sender = sender.owner
+    #     #     if isinstance(receiver, InputPort):
+    #     #         receiver = receiver.owner
+    #     #     if not (sender in self.nodes and receiver in self.nodes):
+    #     #         raise CompositionError(f"Projections cannot be added to {self.name}.")
+    #     super().add_projection(*args, **kwargs)
 
     # *****************************************************************************************************************
     # ***************************************** Properties  **********************************************************
