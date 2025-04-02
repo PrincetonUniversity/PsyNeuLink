@@ -2043,9 +2043,9 @@ class AutodiffComposition(Composition):
 
             validate : bool : default True
                specifies whether to validate the **projection** and **torch_param** arguments; setting it to False
-               results in more efficient processing if this method is called frequently; however, invalid arguments will
-               raise standard Python exceptions rather than more informative AutodiffComposition errors, and unexpected
-               results may go unnoticed.
+               results in more efficient processing if this method is called frequently; however, invalid arguments
+               then raise standard Python exceptions rather than more informative AutodiffComposition errors,
+               and unexpected results may go unnoticed.
 
                .. warning::
                   if validate is False, for efficiency: **projection** *must* be a `MappingProjection`, **torch_param**
