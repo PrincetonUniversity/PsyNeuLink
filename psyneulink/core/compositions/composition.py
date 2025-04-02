@@ -6201,7 +6201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        name=None,
                        allow_duplicates=False,
                        context=None
-                       ):
+                       )->Projection:
         """Add **projection** to the Composition.
 
         If **projection** is not specified, and one does not already exist between **sender** and **receiver**

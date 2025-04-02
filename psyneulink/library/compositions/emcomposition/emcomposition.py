@@ -2787,23 +2787,25 @@ class EMComposition(AutodiffComposition):
             raise CompositionError(f"Nodes cannot be added to {self.name}.")
         super().add_node(node, required_roles, context)
 
-    # def add_projection(self, *args, **kwargs):
-    #     """Override if called from command line to disallow modification of EMComposition"""
-    #     # if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
-    #     #     if 'projection' in kwargs:
-    #     #         projection = kwargs['projection']
-    #     #         sender = projection.sender
-    #     #         receiver = projection.receiver
-    #     #     else:
-    #     #         sender = kwargs['sender']
-    #     #         receiver = kwargs['receiver']
-    #     #     if isinstance(sender, OutputPort):
-    #     #         sender = sender.owner
-    #     #     if isinstance(receiver, InputPort):
-    #     #         receiver = receiver.owner
-    #     #     if not (sender in self.nodes and receiver in self.nodes):
-    #     #         raise CompositionError(f"Projections cannot be added to {self.name}.")
-    #     super().add_projection(*args, **kwargs)
+    def add_projection(self, *args, **kwargs):
+        """Override if called from command line to disallow modification of EMComposition"""
+        # if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+        #     if 'projection' in kwargs:
+        #         projection = kwargs['projection']
+        #         sender = projection.sender
+        #         receiver = projection.receiver
+        #     else:
+        #         sender = kwargs['sender']
+        #         receiver = kwargs['receiver']
+        #     if isinstance(sender, OutputPort):
+        #         sender = sender.owner
+        #     if isinstance(receiver, InputPort):
+        #         receiver = receiver.owner
+        #     if not (sender in self.nodes and receiver in self.nodes):
+        #         raise CompositionError(f"Projections cannot be added to {self.name}.")
+        if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+            raise CompositionError(f"Projections cannot be added to {self.name}.")
+        return super().add_projection(*args, **kwargs)
 
     # *****************************************************************************************************************
     # ***************************************** Properties  **********************************************************
