@@ -1178,11 +1178,11 @@ class GRUComposition(AutodiffComposition):
     def add_node(self, node, required_roles=None, context=None):
         """Override if called from command line to disallow modification of GRUComposition"""
         if context is None:
-            raise CompositionError(f"Nodes cannot be added to {self.name}.")
+            raise CompositionError(f"Nodes cannot be added to a {self.componentCategory}: ('{self.name}').")
         super().add_node(node, required_roles, context)
 
     def add_projection(self, *args, **kwargs):
         """Override if called from command line to disallow modification of GRUComposition"""
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
-            raise CompositionError(f"Projections cannot be added to {self.name}.")
-        super().add_projection(*args, **kwargs)
+            raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
+        return super().add_projection(*args, **kwargs)

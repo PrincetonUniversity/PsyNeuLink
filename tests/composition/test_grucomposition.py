@@ -99,10 +99,10 @@ class TestConstruction:
         gru = GRUComposition()
         with pytest.raises(CompositionError) as error_text:
             gru.add_node(pnl.ProcessingMechanism())
-        assert 'Nodes cannot be added to GRU Composition.' in str(error_text.value)
+        assert 'Nodes cannot be added to a GRUComposition' in str(error_text.value)
         with pytest.raises(CompositionError) as error_text:
             gru.add_projection(pnl.MappingProjection())
-        assert 'Projections cannot be added to GRU Composition.' in str(error_text.value)
+        assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
     def test_solo_nested(self):
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=True)
