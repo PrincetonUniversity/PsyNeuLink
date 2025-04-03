@@ -1173,6 +1173,10 @@ class AutodiffComposition(Composition):
                                            f"likelihood), POISSONNLL (Poisson negative log likelihood, "
                                            f"and KL_DIV (KL divergence.")
 
+    def get_targets(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
+        self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
+        return super(AutodiffComposition, self).get_targets()
+
     def autodiff_forward(self, inputs, targets,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
