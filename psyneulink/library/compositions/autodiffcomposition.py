@@ -1174,6 +1174,7 @@ class AutodiffComposition(Composition):
                                            f"and KL_DIV (KL divergence.")
 
     def get_targets(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
+        """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
         return super(AutodiffComposition, self).get_targets()
 
