@@ -224,6 +224,15 @@ class TestConstruction:
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
+    def test_disallow_modification(self):
+        em = EMComposition()
+        with pytest.raises(EMCompositionError) as error_text:
+            em.add_node(pnl.ProcessingMechanism())
+        assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+        with pytest.raises(EMCompositionError) as error_text:
+            em.add_projection(pnl.MappingProjection())
+        assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+
     @pytest.mark.parametrize("softmax_choice, expected",
                              [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),
                               (pnl.ARG_MAX, [[1, .1, .1]]),

@@ -4358,14 +4358,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if get_input_from:
             # Connect from_nodes to input_nodes
             for i in range(len(get_input_from)):
-                self.add_projection(MappingProjection(sender=from_nodes[i], receiver=input_nodes[i]))
+                self.add_projection(MappingProjection(sender=from_nodes[i], receiver=input_nodes[i]), context=context)
 
         # Outputs -----------------------------------------------------------------------------------
         if send_output_to:
             # Connect output_nodes to to_nodes
             input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
             for i in range(len(send_output_to)):
-                self.add_projection(MappingProjection(sender=output_nodes[i], receiver=to_nodes[i]))
+                self.add_projection(MappingProjection(sender=output_nodes[i], receiver=to_nodes[i]), context=context)
 
         # TRANSFER required and excluded NodeRoles for imported Nodes to self =================================
 
@@ -6201,7 +6201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        name=None,
                        allow_duplicates=False,
                        context=None
-                       ):
+                       )->Projection:
         """Add **projection** to the Composition.
 
         If **projection** is not specified, and one does not already exist between **sender** and **receiver**
@@ -6355,7 +6355,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   FUNCTION:projection.function,
                                   MATRIX:projection.matrix.base,
                                   LEARNABLE:projection.learnable}}
-                return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
+                return self.add_projection(proj_spec,
+                                           sender=projection.sender,
+                                           receiver=projection.receiver,
+                                           context=context)
 
         # Create Projection if it doesn't exist
         projection = projection or default_matrix
@@ -7160,7 +7163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return pathway, pathway_name
 
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
-    def add_pathway(self, pathway):
+    def add_pathway(self, pathway, context=None):
         """Add an existing `Pathway <Composition_Pathways>` to the Composition
 
         Arguments
@@ -7188,7 +7191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # then projections
         for p in projections:
-            self.add_projection(p, p.sender.owner, p.receiver.owner)
+            self.add_projection(p, p.sender.owner, p.receiver.owner, context=context)
 
         self._analyze_graph()
 
@@ -7709,7 +7712,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Version that forbids *any* duplicate Projections between same sender and receiver
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
-                    proj_set.append(self.add_projection(duplicate))
+                    proj_set.append(self.add_projection(duplicate, context=context))
 
                 # PARSE PROJECTION SPECIFICATIONS AND INSTANTIATE PROJECTIONS
                 # IMPLEMENTATION NOTE:
@@ -7729,7 +7732,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  sender=sender,
                                                                  receiver=receiver,
                                                                  allow_duplicates=False,
-                                                                 feedback=feedback)
+                                                                 feedback=feedback,
+                                                                 context=context)
                             else:
                                 # Default is a matrix_spec
                                 assert is_matrix(default_proj_spec), \
@@ -7739,7 +7743,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                               matrix=default_proj_spec,
                                                                                               receiver=receiver),
                                                                  allow_duplicates=False,
-                                                                 feedback=feedback)
+                                                                 feedback=feedback,
+                                                                 context=context)
                             proj_set.append(projection)
 
                         except (InputPortError, ProjectionError, MappingError) as error:
@@ -7768,7 +7773,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_set.append(self.add_projection(proj,
                                                                     sender = sender_node,
                                                                     receiver = receiver_node,
-                                                                    allow_duplicates=False, feedback=feedback))
+                                                                    allow_duplicates=False,
+                                                                    feedback=feedback,
+                                                                    context=context))
                                 if default_proj_spec:
                                     # If there IS a default Projection specification, remove from node_pairs
                                     #   only the entry for the sender-receiver pair, so that the sender is assigned
@@ -7793,13 +7800,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         for sender in senders:
                                             proj_set.append(self.add_projection(
                                                 projection=MappingProjection(sender=sender, receiver=proj),
-                                                allow_duplicates=False, feedback=feedback))
+                                                allow_duplicates=False, feedback=feedback, context=context))
                                     # FIX: 4/9/22 - INCLUDE TEST FOR DEFERRED_INIT WITH ONLY SENDER SPECIFIED
                                     elif isinstance(proj, OutputPort):
                                         for receiver in receivers:
                                             proj_set.append(self.add_projection(
                                                 projection=MappingProjection(sender=proj, receiver=receiver),
-                                                allow_duplicates=False, feedback=feedback))
+                                                allow_duplicates=False, feedback=feedback, context=context))
                                     # Remove from node_pairs all pairs involving the owner of the Port
                                     #   (since all Projections to or from it have been implemented)
                                     node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
@@ -7820,7 +7827,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         sender=sender,
                                                         receiver=receiver,
                                                         allow_duplicates=False,
-                                                        feedback=feedback)
+                                                        feedback=feedback,
+                                                        context=context)
                                 proj_set.append(p)
                             except (InputPortError, ProjectionError, MappingError) as error:
                                 handle_misc_errors(proj, error)
@@ -8118,11 +8126,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                  target,
                                                                                  comparator,
                                                                                  learning_mechanism)
-        self.add_projections(learning_related_projections)
+        self.add_projections(learning_related_projections, context=context)
 
         # Create Projection to learned Projection and add to Composition
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
         # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
         # Wrap up and return
@@ -8879,10 +8887,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                  target_mechanism,
                                                                                  objective_mechanism,
                                                                                  learning_mechanism)
-        self.add_projections(learning_related_projections)
+        self.add_projections(learning_related_projections, context=context)
 
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
 
         return target_mechanism, objective_mechanism, learning_mechanism
@@ -8985,7 +8993,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_sources, error_projections = self._get_back_prop_error_sources(efferents,
                                                                                  learning_mechanism,
                                                                                  context)
-            self.add_projections(error_projections)
+            self.add_projections(error_projections, context=context)
             return learning_mechanism
 
         # If learning_mechanism does not yet exist:
@@ -9059,8 +9067,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
 
         # Add all the Projections to the Composition
-        self.add_projections([act_in_projection, act_out_projection] + error_projections)
-        self.add_projection(learning_projection, is_learning_projection=True, feedback=True)
+        self.add_projections([act_in_projection, act_out_projection] + error_projections, context=context)
+        self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
         return learning_mechanism
 
@@ -9193,7 +9201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                   name=ERROR_SIGNAL,
                                                                   context=context),
                                                         context=context)[0]
-                    self.add_projections(error_signal_input_port.path_afferents[0])
+                    self.add_projections(error_signal_input_port.path_afferents[0], context=context)
 
     def _get_deeply_nested_aux_projections(self, node):
         deeply_nested_projections = {}
