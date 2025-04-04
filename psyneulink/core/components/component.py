@@ -750,7 +750,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     """
     Component(                 \
         default_variable=None, \
-        input_shapes=None,             \
+        input_shapes=None,     \
         params=None,           \
         name=None,             \
         prefs=None,            \
@@ -1137,6 +1137,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             execution_phase=ContextFlags.IDLE,
             execution_id=None,
         )
+
+
 
         if reset_stateful_function_when is not None:
             self.reset_stateful_function_when = reset_stateful_function_when
