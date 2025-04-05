@@ -8385,6 +8385,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_target_nodes(self)->list:
         """Return a list of all `TARGET_MECHANISM <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition."""
+        target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
+        if not target_nodes:
+            if not self.learning_components:
+                warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
+                              f"but it does not (yet) have any learning pathways.")
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
         return self.get_nodes_by_role(NodeRole.TARGET)
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
@@ -10020,6 +10027,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is not None:
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
+            assert True
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
