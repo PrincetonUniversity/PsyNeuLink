@@ -414,7 +414,8 @@ class TestInputAndTargetSpecs:
         'target_mechs_in_inputs',
         'output_mechs_in_targets',
         'target_mechs_in_targets',
-        'too_many_targets'
+        'target_mechs_in_inputs_and_targets',
+        'too_many_targets',
     ])
     def test_infer_target_nodes(self, target_specs, comp_type):
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
@@ -444,6 +445,7 @@ class TestInputAndTargetSpecs:
                        execution_mode=execution_mode)
 
         elif target_specs == 'target_mechs_in_targets':
+            # Test for warning about TARGET_MECHANISMS in targets arg
             with pytest.warns(UserWarning) as warning:
                 comp.learn(inputs=inputs_arg,
                            targets=target_mechs,
@@ -456,8 +458,20 @@ class TestInputAndTargetSpecs:
                     f"obviating the need to specify the 'targets' arg."
                     in warning[0].message.args[0])
 
-        else:
-            # Test too many entries in targets arg
+        elif target_specs == 'target_mechs_in_inputs_and_targets':
+            # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
+            with pytest.warns(UserWarning) as warning:
+                inputs_arg.update(target_mechs)
+                comp.learn(inputs=inputs_arg,
+                           targets=target_mechs,
+                           execution_mode=execution_mode)
+            assert (f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' args "
+                    f"of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
+                    f"This isn't technically a problem, but it is redundant so thought you should know ;^)."
+                    in warning[1].message.args[0])
+
+        elif target_specs == 'too_many_targets':
+            # Test error for too many entries in targets arg
             with pytest.raises(CompositionError) as error_text:
                 comp.learn(inputs=inputs_arg,
                            targets={comp.nodes[0]: [[1]],
@@ -467,6 +481,7 @@ class TestInputAndTargetSpecs:
             assert (f"The number of targets (3) specified in `targets` arg of the learn method "
                     f"for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
                     in str(error_text.value))
+
 
 class TestLearningPathwayMethods:
     def test_multiple_of_same_learning_pathway(self):

@@ -3879,7 +3879,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
-        self._warned_about_target_mechs_in_targets_arg = False
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -3889,7 +3888,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
         self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
+
+        # suppress repeated warnings 
         self.warned_about_run_with_no_inputs = False
+        self._warned_about_target_mechs_in_targets_arg = False
+        self._warned_about_targets_mechs_in_inputs_and_targets = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -10027,7 +10030,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is not None:
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
-            assert True
+
+            duplicate_targets = [item.name for item in inputs if item in targets]
+            if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
+                warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
+                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "   
+                              f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
+                self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >

@@ -1424,9 +1424,9 @@ class TestControlMechanisms:
         'no_spec',                    # <- Assign state_feature_default to all Nodes
         'bad'                         # <- Mechanism not in agent_rep
     ]
-    if len(state_feature_args) != 13:
+    if len(state_features_arg) != 13:
         print("\n\n**********************************************************************************************")
-        print("*** RESTORE state_feature_args IN test_state_features_in_nested_composition_as_agent_rep() *****")
+        print("*** RESTORE state_feature_arg IN test_state_features_in_nested_composition_as_agent_rep() *****")
         print("***********************************************************************************************")
     @pytest.mark.state_features
     @pytest.mark.control
