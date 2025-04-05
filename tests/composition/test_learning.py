@@ -418,6 +418,7 @@ class TestInputAndTargetSpecs:
         'too_many_targets',
     ])
     def test_infer_target_nodes(self, target_specs, comp_type):
+        """Test for checks on the validity of the inputs and targets args of the learn() method"""
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
         output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
         output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
