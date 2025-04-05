@@ -9917,8 +9917,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `dict`:
             Dict mapping TargetMechanisms -> target values
         """
+        target_values_for_target_nodes = {}
 
         def validate_targets(target_mechs:list)->bool:
+            """Validate targets dict specification:
+            - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
+            - warn if any targets are target_mechs (OK, but OUTPUT_MECHANISMs are preferred
+            """
             num_target_mechs_in_comp = len(target_mechs)
             num_specified_targets = len(targets)
             if num_specified_targets != num_target_mechs_in_comp:
@@ -9929,44 +9934,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_mechs_as_targets = [target for target in targets.keys() if target in target_mechs]
             if not target_mechs_as_targets:
                 return False
-            warnings.warn(f"The keys of the dict specified in `targets` arg of the learn method for '{self.name}' "
-                          f"({', '.join(sorted([target.name for target in target_mechs_as_targets]))}) "
-                          f"are TARGET Nodes; while this is allowed, they can be specified more simply as entries "
-                          f"in the 'inputs' arg, along with the INPUT nodes and their values, without the need for "
-                          f"the 'targets' arg; the latter is meant to be used for specifying OUTPUT nodes, without "
-                          f" the need to identify the TARGET Nodes, which are then assigned automatically.")
+            warnings.warn(
+                f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has entries that "
+                f"are TARGET_MECHANISM(s) ({', '.join(sorted([target.name for target in target_mechs_as_targets]))}); "
+                f"while this is OK, it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond "
+                f"as they keys of the dict, obviating the need to determine the TARGET_MECHANISM(s); alternatively, "
+                f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                f"obviating the need to specify the 'targets' arg.")
             return True
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
             # target_mechs_as_targets = [target for target in targets.keys() if target in self.outputs_to_targets_map.values()]
             if validate_targets(list(self.outputs_to_targets_map.values())):
-                return targets
-            return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
-
-        ret = {}
-
-        validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
-        for node, values in targets.items():
-            if (NodeRole.TARGET not in self.get_roles_by_node(node)
-                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                comparators = [x for x in node_efferent_mechanisms
-                               if (isinstance(x, ComparatorMechanism)
-                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms
-                                if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
-
-                if len(target_nodes) != 1:
-                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
-
-                ret[target_nodes[0]] = values
+                target_values_for_target_nodes = targets
             else:
-                ret[node] = values
-        return ret
+                target_values_for_target_nodes = {self.outputs_to_targets_map[target]: value
+                                                  for target, value in targets.items()}
+
+        else:
+            validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
+            for node, values in targets.items():
+                if (NodeRole.TARGET not in self.get_roles_by_node(node)
+                        and NodeRole.LEARNING not in self.get_roles_by_node(node)):
+                    node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
+                    comparators = [x for x in node_efferent_mechanisms
+                                   if (isinstance(x, ComparatorMechanism)
+                                       and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                    comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+                    target_nodes = [t for t in comparator_afferent_mechanisms
+                                    if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                        and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+                    if len(target_nodes) != 1:
+                        # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                        raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
+
+                    target_values_for_target_nodes[target_nodes[0]] = values
+                else:
+                    target_values_for_target_nodes[node] = values
+
+        return target_values_for_target_nodes
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
         """

@@ -416,7 +416,7 @@ class TestInputAndTargetSpecs:
         'target_mechs_in_targets',
         'too_many_targets'
     ])
-    def test_get_target_nodes(self, target_specs, comp_type):
+    def test_infer_target_nodes(self, target_specs, comp_type):
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
         output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
         output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
@@ -448,12 +448,12 @@ class TestInputAndTargetSpecs:
                 comp.learn(inputs=inputs_arg,
                            targets=target_mechs,
                            execution_mode=execution_mode)
-            assert (f"The keys of the dict specified in `targets` arg of the learn method for "
-                    f"'TEST COMP' (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B) are TARGET Nodes; "
-                    f"while this is allowed, they can be specified more simply as entries in the 'inputs' arg, "
-                    f"along with the INPUT nodes and their values, without the need for the 'targets' arg; "
-                    f"the latter is meant to be used for specifying OUTPUT nodes, "
-                    f"without  the need to identify the TARGET Nodes, which are then assigned automatically."
+            assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "
+                    f"are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "
+                    f"it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "
+                    f"of the dict, obviating the need to determine the TARGET_MECHANISM(s); alternatively, "
+                    f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                    f"obviating the need to specify the 'targets' arg."
                     in warning[0].message.args[0])
 
         else:
