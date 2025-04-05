@@ -8339,7 +8339,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
-    def get_targets(self):
+    def get_target_nodes(self):
         return self.get_nodes_by_role(NodeRole.TARGET)
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
@@ -9863,9 +9863,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition is currently preparing to execute (run or learn)"""
         return ContextFlags.PREPARING in context.execution_phase
 
-    def _infer_target_nodes(self, targets: dict, execution_mode):
+    def _infer_target_nodes(self, targets: dict, execution_mode)->dict:
         """
-        Maps targets onto target mechanisms (as needed by learning)
+        Maps target values to target mechanisms (as needed by learning)
 
         Returns
         ---------
@@ -9876,8 +9876,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
-
+            # return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
+            return targets
+        #
         ret = {}
         for node, values in targets.items():
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
