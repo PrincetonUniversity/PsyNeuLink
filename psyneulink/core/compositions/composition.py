@@ -9918,9 +9918,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Dict mapping TargetMechanisms -> target values
         """
 
+        def check_for_targets_as_keys(target_mechs:list)->bool:
+            targets_as_keys = [target for target in targets.keys() if target in target_mechs]
+            if not targets_as_keys:
+                return False
+            warnings.warn(f"The keys of the dict specified in `targets` arg of the learn method for '{self.name}' "
+                          f"({', '.join([target.name for target in targets_as_keys])}) "
+                          f"are TARGET Nodes; while this is allowed, they can be specified more simply as entries "
+                          f"in the 'inputs' arg, along with the INPUT nodes and their values, without the need for "
+                          f"the 'targets' arg; the latter is meant to be used for specifying OUTPUT nodes, without "
+                          f" the need to identify the TARGET Nodes, which are then assigned automatically.")
+            if len(targets_as_keys) != len(target_mechs):
+                raise CompositionError(f"The number of targets (len(targets_as_keys) specified in `targets` arg "
+                                       f"of the learn method for '{self.name}' must equal the number of OUTPUT "
+                                       f"Nodes in the Composition.")
+            return True
+
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            targets_as_keys = [target for target in targets.keys() if target in self.outputs_to_targets_map.values()]
+            # targets_as_keys = [target for target in targets.keys() if target in self.outputs_to_targets_map.values()]
             # # MODIFIED 4/4/25 ONE ALTERNATIVE:
             # if targets_as_keys:
             #     raise CompositionError(f"Keys of dict specified in `targets` arg of the learn method for '{self.name}' "
@@ -9932,24 +9948,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
             # MODIFIED 4/4/25 ANOTHER ALTERNATIVE:
             # FIX: CHECK IF LENGTH OF targets_as_keys is same as # of TARGETS ?and OUTPUTS?
-            if targets_as_keys:
-                warnings.warn(f"The keys of the dict specified in `targets` arg of the learn method for '{self.name}' "
-                              f"({', '.join([target.name for target in targets_as_keys])}) "
-                              f"are TARGET Nodes; while this is allowed, they can be specified more simply as entries "
-                              f"in the 'inputs' arg, along with the INPUT nodes and their values, without the need for " 
-                              f"the 'targets' arg; the latter is meant to be used for specifying OUTPUT nodes, without "
-                              f" the need to identify the TARGET Nodes, which are then assigned automatically.")
+            if check_for_targets_as_keys(self.outputs_to_targets_map.values()):
                 return targets
-            if len(targets_as_keys) != len(self.outputs_to_targets_map):
-                raise CompositionError(f"The number of targets (len(targets_as_keys) specified in `targets` arg "
-                                       f"of the learn method for '{self.name}' must equal the number of OUTPUT "
-                                       f"Nodes in the Composition.")
             return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
 
             # MODIFIED 4/4/25 END
             # return targets
         #
         ret = {}
+
+        check_for_targets_as_keys(self.get_nodes_by_role(NodeRole.TARGET))
         for node, values in targets.items():
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
                     and NodeRole.LEARNING not in self.get_roles_by_node(node)):

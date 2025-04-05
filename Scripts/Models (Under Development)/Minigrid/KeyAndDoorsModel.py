@@ -132,7 +132,7 @@ controlMech = ControlMechanism(
 output = TransferMechanism(name='output')
 
 # Create Composition
-agent_comp = Composition(name='KEYS AND DOORS COMPOSITION')
+agent_comp = AutodiffComposition(name='KEYS AND DOORS COMPOSITION')
 agent_comp.add_nodes([agent_x, agent_y, door_states, key_states, holding_key, key_color, decision_mech, controlMech,
                       output])
 
@@ -144,6 +144,10 @@ agent_comp.add_projection(MappingProjection(), key_states, decision_mech)
 agent_comp.add_projection(MappingProjection(), holding_key, decision_mech)
 agent_comp.add_projection(MappingProjection(), key_color, decision_mech)
 agent_comp.add_projection(MappingProjection(), decision_mech, output)
+
+agent_comp.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch)
+targets = agent_comp.get_targets()
+assert True
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
