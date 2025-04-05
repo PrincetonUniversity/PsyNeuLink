@@ -3879,6 +3879,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
+        self._warned_about_target_mechs_in_targets_arg = False
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -9934,13 +9935,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_mechs_as_targets = [target for target in targets.keys() if target in target_mechs]
             if not target_mechs_as_targets:
                 return False
-            warnings.warn(
-                f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has entries that "
-                f"are TARGET_MECHANISM(s) ({', '.join(sorted([target.name for target in target_mechs_as_targets]))}); "
-                f"while this is OK, it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond "
-                f"as they keys of the dict, obviating the need to determine the TARGET_MECHANISM(s); alternatively, "
-                f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
-                f"obviating the need to specify the 'targets' arg.")
+            if not self._warned_about_target_mechs_in_targets_arg:
+                warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
+                              f"has entries that are TARGET_MECHANISM(s) "
+                              f"({', '.join(sorted([target.name for target in target_mechs_as_targets]))}); "
+                              f"while this is OK, it might be easier to simply use the OUTPUT_MECHANISM(s) "
+                              f"to which they correspond as they keys of the dict, obviating the need "
+                              f"to determine the TARGET_MECHANISM(s). Alternatively, TARGET_MECHANISMs "
+                              f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                              f"obviating the need to specify the 'targets' arg.")
+                self._warned_about_target_mechs_in_targets_arg = True
             return True
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
