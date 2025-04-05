@@ -408,6 +408,66 @@ class TestInputAndTargetSpecs:
         assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
 
+    @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                             ids=["Composition", "Autodiff"])
+    @pytest.mark.parametrize("target_specs", [
+        'target_mechs_in_inputs',
+        'output_mechs_in_targets',
+        'target_mechs_in_targets',
+        'too_many_targets'
+    ])
+    def test_get_target_nodes(self, target_specs, comp_type):
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
+        output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
+        output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
+        if comp_type == Composition:
+            comp = comp_type(name='TEST COMP')
+            comp.add_backpropagation_learning_pathway([input_mech, output_mech_A])
+            comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
+            execution_mode = pnl.ExecutionMode.Python
+        else:
+            comp = comp_type([input_mech,{output_mech_A, output_mech_B}], name='TEST COMP')
+            execution_mode = pnl.ExecutionMode.PyTorch
+        targets = comp.get_target_nodes()
+        inputs_arg = {'INPUT MECH': [[1]]}
+        target_mechs = {targets[0]: [[1]],
+                        targets[1]: [[2]]}
+
+        if target_specs == 'target_mechs_in_inputs':
+            inputs_arg.update(target_mechs)
+            comp.learn(inputs = inputs_arg, execution_mode=execution_mode)
+
+        elif target_specs == 'output_mechs_in_targets':
+            comp.learn(inputs=inputs_arg,
+                       targets={comp.nodes['OUTPUT MECH A']: [[1]],
+                                comp.nodes['OUTPUT MECH B']: [[2]]},
+                       execution_mode=execution_mode)
+
+        elif target_specs == 'target_mechs_in_targets':
+            with pytest.warns(UserWarning) as warning:
+                comp.learn(inputs=inputs_arg,
+                           targets=target_mechs,
+                           execution_mode=execution_mode)
+            assert (f"The keys of the dict specified in `targets` arg of the learn method for "
+                    f"'TEST COMP' (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B) are TARGET Nodes; "
+                    f"while this is allowed, they can be specified more simply as entries in the 'inputs' arg, "
+                    f"along with the INPUT nodes and their values, without the need for the 'targets' arg; "
+                    f"the latter is meant to be used for specifying OUTPUT nodes, "
+                    f"without  the need to identify the TARGET Nodes, which are then assigned automatically."
+                    in warning[0].message.args[0])
+
+        else:
+            # Test too many entries in targets arg
+            with pytest.raises(CompositionError) as error_text:
+                comp.learn(inputs=inputs_arg,
+                           targets={comp.nodes[0]: [[1]],
+                                    comp.nodes[1]: [[1]],
+                                    comp.nodes[2]: [[2]]},
+                           execution_mode=execution_mode)
+            assert (f"The number of targets (3) specified in `targets` arg of the learn method "
+                    f"for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
+                    in str(error_text.value))
+
 class TestLearningPathwayMethods:
     def test_multiple_of_same_learning_pathway(self):
         in_to_hidden_matrix = np.random.rand(2,10)
