@@ -3889,7 +3889,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
 
-        # suppress repeated warnings 
+        # suppress repeated warnings
         self.warned_about_run_with_no_inputs = False
         self._warned_about_target_mechs_in_targets_arg = False
         self._warned_about_targets_mechs_in_inputs_and_targets = False
@@ -8387,7 +8387,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_target_nodes(self)->list:
         """Return a list of all `TARGET_MECHANISM <Composition_Learning_Components>`\\s for `learning Pathways
-        <Composition_Learning_Pathway>` in the Composition."""
+        <Composition_Learning_Pathway>` in the Composition.
+        """
         target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
         if not target_nodes:
             if not self.learning_components:
@@ -10031,10 +10032,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
-            duplicate_targets = [item.name for item in inputs if item in targets]
+            duplicate_targets = sorted([item.name for item in inputs if item in targets])
             if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
                 warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
-                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "   
+                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
                               f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
                 self._warned_about_targets_mechs_in_inputs_and_targets = True
 
