@@ -417,6 +417,7 @@ class TestInputAndTargetSpecs:
         'target_mechs_in_inputs_and_targets',
         'too_many_targets',
     ])
+    @pytest.mark.pytorch
     def test_infer_target_nodes(self, target_specs, comp_type):
         """Test for checks on the validity of the inputs and targets args of the learn() method"""
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
