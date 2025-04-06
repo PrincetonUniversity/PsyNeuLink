@@ -1757,26 +1757,17 @@ class AutodiffComposition(Composition):
 
         results = super(AutodiffComposition, self).run(*args, **kwargs)
 
-        # If called from AutodiffComposition in Pytorch mode, update results after run() if specified
-        if SYNCH_WITH_PNL_OPTIONS in kwargs and RESULTS in kwargs[SYNCH_WITH_PNL_OPTIONS]:
-            pytorch_rep = self.parameters.pytorch_representation._get(kwargs[CONTEXT])
-            # self.results.append(pytorch_rep.retained_results)
-            for result in pytorch_rep.retained_results:
-                super()._update_results(results.tolist(),
-                                        result,
-                                        kwargs[EXECUTION_MODE],
-                                        kwargs[SYNCH_WITH_PNL_OPTIONS],
-                                        kwargs[CONTEXT])
-
         if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
+            # Synchronize specified outcomes at end of run
             context = kwargs[CONTEXT]
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
                 pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], RUN,context)
+
         return results
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
+        """Track results at specified frequency during learning"""
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
 
             # Check if the trial_output is atleast 3D
