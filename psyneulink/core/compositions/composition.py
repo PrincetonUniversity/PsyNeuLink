@@ -742,6 +742,11 @@ Learning in a Composition
 - `Comparison of Learning Modes <Composition_Compilation_Table>`
 - `Composition_Learning_UDF`
 
+.. _Composition_Learning_Overview:
+
+*Learning Overview*
+~~~~~~~~~~~~~~~~~~~
+
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
 `learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
@@ -749,12 +754,15 @@ associations between representations in the Mechanisms) within a `Pathway`.  If 
 Composition, it can be executed by calling the Composition's `learn <Composition.learn>` method (see
 `Composition_Learning_Execution` and `Composition_Execution` for additional details). The rate at which learning
 occurs is determined by the learning_rate parameter, which can be assigned in various ways and is described under
-`Composition_Learning_Rate` at the end of this section.
+`Composition_Learning_Rate` at the end of this section. For `supervised learning <Composition_Learning_Supervised>`,
+the targets for training must be specified along with the inputs to the Composition in its `learn()
+<Composition.learn>` method (see `Target inputs for learning <Composition_Target_Inputs>` for details).
+
 
 .. _Composition_Learning_Configurations:
 
 *Configuring Learning in a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=======================================
 
 There are three ways of configuring learning in a Composition, using:
 
@@ -893,12 +901,13 @@ constructor or one of its `learning methods <Composition_Learning_Methods>`, it 
 and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
-    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `OUTPUT_MECHANISM`, that is
-      used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal (see above);  that value must be
-      specified as an input to the TARGET_MECHANISM, either in the **inputs** argument of the Composition's `learn
-      <Composition.learn>` method, or in its **targets** argument in an entry for either the *TARGET_MECHANISM* or
-      the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (see `below <Composition_Target_Inputs>`); the Mechanism is assigned
-      the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+
+    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `OUTPUT_MECHANISM
+      <OUTPUT_MECHANISM>`, that is used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal
+      (see above);  that value must be specified as an input to the *TARGET_MECHANISM*, either in the **inputs**
+      argument of the Composition's `learn <Composition.learn>` method, or in its **targets** argument in an entry
+      for either the *TARGET_MECHANISM* or the *OUTPUT_MECHANISM* (see `below <Composition_Target_Inputs>`); the
+      Mechanism is assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -907,6 +916,7 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
       `InputPort  <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
     ..
     .. _OBJECTIVE_MECHANISM:
+
     * *OBJECTIVE_MECHANISM* -- usually a `ComparatorMechanism`, used to `calculate an error signal
       <ComparatorMechanism_Execution>` (i.e., loss) for the sequence by comparing the value received by
       the ComparatorMechanism's *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `output
@@ -916,28 +926,33 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
       -- see below); this is assigned the `NodeRole` `LEARNING` in the Composition.
     ..
     .. _LEARNING_MECHANISMS:
+
     * *LEARNING_MECHANISMS* -- a `LearningMechanism` for each MappingProjection in the sequence, each of which
       calculates the `learning_signal <LearningMechanism.learning_signal>` used to modify the `matrix
       <MappingProjection.matrix>` parameter for the coresponding MappingProjection, along with a `LearningSignal`
       and `LearningProjection` that convey the `learning_signal <LearningMechanism.learning_signal>` to the
-      MappingProjection's *MATRIX* `ParameterPort<Mapping_Matrix_ParameterPort>`;  depending on learning method,
-      additional MappingProjections may be created to and/or from the LearningMechanism -- see
+      MappingProjection's *MATRIX* `ParameterPort <MappingProjection_Matrix_ParameterPort>`;  depending on learning
+      method, additional MappingProjections may be created to and/or from the LearningMechanism -- see
       `LearningMechanism_Learning_Configurations` for details); these are assigned the `NodeRole` `LEARNING` in
       the Composition.
     ..
     .. _LEARNING_FUNCTION:
-    * *LEARNING_FUNCTION* -- the `LearningFunction` used by each of the `LEARNING_MECHANISMS` in the learning pathway.
+
+    * *LEARNING_FUNCTION* -- the `LearningFunction` used by each of the `LEARNING_MECHANISMS <LEARNING_MECHANISMS>`
+      in the learning pathway.
     ..
     .. _LEARNED_PROJECTIONS:
+
     * *LEARNED_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
-      for which it modifies it s`matrix <MappingProjection.matrix>` parameter.
+      for which it modifies its `matrix <MappingProjection.matrix>` parameter.
 
 It also assigns the following item to the list of `learning_components` for the pathway:
 
     .. _OUTPUT_MECHANISM:
+
     * *OUTPUT_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
-      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM`; the Node is assigned
-      the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
+      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM <TARGET_MECHANISM>`;
+      the Node is assigned the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
 
 The items with names listed above are placed in a dict that is assigned to the `learning_components
 <Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
@@ -945,7 +960,7 @@ they key for each item in the dict is the name of the item (as listed above), an
 are its value (see `LearningMechanism_Single_Layer_Learning` for a more detailed description and figure showing these
 Components).
 
-If the learning Pathway <Composition_Learning_Pathway>` involves more than two ProcessingMechanisms (e.g. using
+If the `learning Pathway <Composition_Learning_Pathway>` involves more than two ProcessingMechanisms (e.g. using
 `add_backpropagation_learning_pathway` for a multilayered neural network), then multiple LearningMechanisms are
 created, along with MappingProjections that provide them with the `error_signal <LearningMechanism.error_signal>`
 from the preceding LearningMechanism, and `LearningProjections <LearningProjection>` that modify the corresponding
@@ -1354,6 +1369,12 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 *Input Dictionary*
 ==================
 
+``Composition_Input_Dictionary_Input_Values`
+`Composition_Input_Dictionary_Node_Entries`
+`Composition_Input_Dictionary_InputPort_Entries`
+`Composition_Input_Labels`
+`Composition_Target_Inputs`
+
 .. _Composition_Input_Dictionary_Entries:
 
 The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
@@ -1503,17 +1524,31 @@ dictionary for that Mechanism generates and error.
 
 .. _Composition_Target_Inputs:
 
-*Target Inputs for learning*. Inputs must also be specified for the `TARGET_MECHANISM <Composition_Learning_Components>`
-of each `learning Pathway <Composition_Learning_Pathway>` in the Composition. This can be done in either the **inputs**
-argument or **targets** argument of the `learn <Composition.learn>` method.  If the **inputs** argument is used,
-it must include an entry for each `TARGET_MECHANISM <Composition_Learning_Components>`; if the **targets** argument
-is used, it must be assigned a dictionary containing entries in which the key is either an `OUTPUT_MECHANISM
-<Composition_Learning_Components>` (i.e., the final `Node <Composition_Nodes>`) of a `learning Pathway
-<Composition_Learning_Pathway>`, or the corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
-value of each entry specifies the inputs for each trial, formatted asdescribed `above <Composition_Input_Dictionary>`.
+*Target Inputs for learning*. When the `learn() <Composition.learn>` method of a Composition is used to execute
+`supervised learning <Composition_Learning_Supervised>`, the target `value(s) <Mechanism_Base.value>` of the
+`OUTPUT <NodeRole.OUTPUT>` `Node(s) <Composition_Nodes>` used to compute the error for training must be specified.
+This can be done in either the **targets** argument of the Composition's `learn() <Composition.learn>`,
+or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
 
+  * **targets** (dict): this is the simplest way of specifying target values; the key for each entry is an
+    `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>` of a `learning Pathway
+    <Composition_Learning_Pathway>` or the `OutputPort` of one), and the value is the target value used to
+    compute the error for that Pathway;
+
+  * **inputs** (dict): this can include, along with entries for the `INPUT` `Nodes <Composition_Nodes>`, entries
+    for `TARGET_MECHANISM <Composition_Learning_Components>`\\s, that receive as input the target value for each
+    `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` in a `learning Pathway <Composition_Learning_Pathway>` of the Composition;
+    a list of the TARGET_MECHANISMs for a Composition can be obtained using its `get_target_nodes()
+    <Composition.get_target_nodes>` method.
+
+  .. note::
+     `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict,
+     alt though this will elicit a warning indicating that the standard way to specify targets is one of the above.
+
+In either case, the target values in the dict must be formatted as described in under <Composition_Input_Dictionary>`.
 The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
 can be seen using its `get_input_format <Composition.get_input_format>` method.
+
 
 .. _Composition_Programmatic_Inputs:
 
@@ -3175,15 +3210,15 @@ class NodeRole(enum.Enum):
     LEARNING_OUTPUT
         A `Node <Composition_Nodes>` that is last one in a `learning Pathway <Composition_Learning_Pathway>`,
         the desired `value <Mechanism_Base.value>` of which is provided as input to the `TARGET_MECHANISM
-        <Composition_Learning_Components>` for that pathway (see `OUTPUT_MECHANISM
-        <Composition_Learning_Components>`. This role can, but generally should not be modified programmatically.
+        <Composition_Learning_Components>` for that pathway (see `OUTPUT_MECHANISM <OUTPUT_MECHANISM>`.
+        This role can, but generally should not be modified programmatically.
     COMMENT
 
     TARGET
-        A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathway>` specifying the desired output of the `OUTPUT_MECHANISM
-        <Composition_Learning_Components>` for that pathway (see `TARGET_MECHANISM <Composition_Learning_Components>`).
-        This role can, but generally should not be modified programmatically.
+        A `Node <Composition_Nodes>` that receives the target for a `learning pathway <Composition_Learning_Pathway>`
+        specifying the desired output of the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` for that pathway
+        (see `TARGET_MECHANISM <Composition_Learning_Components>`). This role can, but generally should not
+        be modified programmatically.
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
@@ -3853,7 +3888,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
         self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
+
+        # suppress repeated warnings
         self.warned_about_run_with_no_inputs = False
+        self._warned_about_target_mechs_in_targets_arg = False
+        self._warned_about_targets_mechs_in_inputs_and_targets = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -7974,15 +8013,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
         algorithms.
 
-        The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
-            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`
-            *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
-            *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
+        The `learning components <Composition_Learning_Components>` created are placed in a dict
+        with the following entries:
+
+            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`)
+
+            *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
+
+            *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
+
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
-            *LEARNING_FUNCTION*: `LearningFunction` used by all LEARNING_MECHSNISMS in the `Pathway`
-            *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
-        that is assigned to the `learning_components <Pathway.learning_components>` attribute of the `Pathway`
-        returned.
+
+            *LEARNING_FUNCTION*: `LearningFunction` used by all `LEARNING_MECHANISMS <LEARNING_MECHANISMS>*
+            in the `Pathway`
+
+            *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`] that is assigned to
+            the `learning_components <Pathway.learning_components>` attribute of the `Pathway` returned.
 
         Arguments
         ---------
@@ -8339,7 +8385,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
-    def get_targets(self):
+    def get_target_nodes(self)->list:
+        """Return a list of all `TARGET_MECHANISM <Composition_Learning_Components>`\\s for `learning Pathways
+        <Composition_Learning_Pathway>` in the Composition.
+        """
+        target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
+        if not target_nodes:
+            if not self.learning_components:
+                warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
+                              f"but it does not (yet) have any learning pathways.")
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
         return self.get_nodes_by_role(NodeRole.TARGET)
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
@@ -9863,9 +9919,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition is currently preparing to execute (run or learn)"""
         return ContextFlags.PREPARING in context.execution_phase
 
-    def _infer_target_nodes(self, targets: dict, execution_mode):
+    def _infer_target_nodes(self, targets: dict, execution_mode)->dict:
         """
-        Maps targets onto target mechanisms (as needed by learning)
+        Maps target values to target mechanisms (as needed by learning)
 
         Returns
         ---------
@@ -9873,32 +9929,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `dict`:
             Dict mapping TargetMechanisms -> target values
         """
+        target_values_for_target_nodes = {}
+
+        def validate_targets(target_mechs:list)->bool:
+            """Validate targets dict specification:
+            - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
+            - warn if any targets are target_mechs (OK, but OUTPUT_MECHANISMs are preferred
+            """
+            num_target_mechs_in_comp = len(target_mechs)
+            num_specified_targets = len(targets)
+            if num_specified_targets != num_target_mechs_in_comp:
+                raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
+                                       f"`targets` arg of the learn method for '{self.name}' must equal "
+                                       f"the number of OUTPUT Nodes in the Composition ({num_target_mechs_in_comp}).")
+            # Check for target_mechs in targets
+            target_mechs_as_targets = [target for target in targets.keys() if target in target_mechs]
+            if not target_mechs_as_targets:
+                return False
+            if not self._warned_about_target_mechs_in_targets_arg:
+                warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
+                              f"has entries that are TARGET_MECHANISM(s) "
+                              f"({', '.join(sorted([target.name for target in target_mechs_as_targets]))}); "
+                              f"while this is OK, it might be easier to simply use the OUTPUT_MECHANISM(s) "
+                              f"to which they correspond as they keys of the dict, obviating the need "
+                              f"to determine the TARGET_MECHANISM(s). Alternatively, TARGET_MECHANISMs "
+                              f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                              f"obviating the need to specify the 'targets' arg.")
+                self._warned_about_target_mechs_in_targets_arg = True
+            return True
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            return {self.outputs_to_targets_map[target]: value for target, value in targets.items()}
-
-        ret = {}
-        for node, values in targets.items():
-            if (NodeRole.TARGET not in self.get_roles_by_node(node)
-                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                comparators = [x for x in node_efferent_mechanisms
-                               if (isinstance(x, ComparatorMechanism)
-                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms
-                                if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
-
-                if len(target_nodes) != 1:
-                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
-
-                ret[target_nodes[0]] = values
+            # target_mechs_as_targets = [target for target in targets.keys() if target in self.outputs_to_targets_map.values()]
+            if validate_targets(list(self.outputs_to_targets_map.values())):
+                target_values_for_target_nodes = targets
             else:
-                ret[node] = values
-        return ret
+                target_values_for_target_nodes = {self.outputs_to_targets_map[target]: value
+                                                  for target, value in targets.items()}
+
+        else:
+            validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
+            for node, values in targets.items():
+                if (NodeRole.TARGET not in self.get_roles_by_node(node)
+                        and NodeRole.LEARNING not in self.get_roles_by_node(node)):
+                    node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
+                    comparators = [x for x in node_efferent_mechanisms
+                                   if (isinstance(x, ComparatorMechanism)
+                                       and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                    comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+                    target_nodes = [t for t in comparator_afferent_mechanisms
+                                    if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                        and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+                    if len(target_nodes) != 1:
+                        # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                        raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
+
+                    target_values_for_target_nodes[target_nodes[0]] = values
+                else:
+                    target_values_for_target_nodes[node] = values
+
+        return target_values_for_target_nodes
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
         """
@@ -9940,6 +10031,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is not None:
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
+
+            duplicate_targets = sorted([item.name for item in inputs if item in targets])
+            if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
+                warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
+                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
+                              f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
+                self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
@@ -11483,12 +11581,15 @@ _
                    values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
 
             targets: {`Node <Composition_Nodes>`:list }
-                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition that
-                receives target values as input to the Composition for training `learning pathways
-                <Composition_Learning_Pathway>`. The key of each entry can be either the `TARGET_MECHANISM
-                <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
-                the value is the target value used for that Node on each trial (see `target inputs
-                <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition
+                that receives target values as input to the Composition for training `learning pathways
+                <Composition_Learning_Pathway>`. The key of each entry can be either the `OUTPUT_MECHANISM
+                <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>`) of a `learning pathway
+                <Composition_Learning_Components>` in the Composition, or the `TARGET_MECHANISM
+                <Composition_Learning_Components>` for that pathway, and the value is the target value used for that
+                Node on each trial (see `target inputs <Composition_Target_Inputs>` for additional details concerning
+                the formatting of targets); a list of the TARGET_MECHANISMs for a Composition can be obtained using
+                its `get_target_nodes() <Composition.get_target_nodes>` method.
 
             num_trials : int (default=None)
                 typically, the Composition infers the number of trials to execute from the length of its input
@@ -11501,7 +11602,7 @@ _
 
             learning_rate : float : default None
                 specifies the learning_rate used by all `learning pathways <Composition_Learning_Pathway>`
-                when the Composition's learn method is called.  This overrides the `learning_rate specified
+                when the Composition's learn method is called.  This overrides the `learning_rate` specified
                 for any individual Pathways at construction, but only applies for the current execution of
                 the learn method (see `Composition_Learning_Rate` for additional details).
 
