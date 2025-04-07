@@ -75,6 +75,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   device=device,
                                                   context=context)
         if not composition.is_nested:
+        # source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
+        # if not composition.is_nested or source is None:
             node._is_input = True
 
         return [(node, pytorch_node)]
