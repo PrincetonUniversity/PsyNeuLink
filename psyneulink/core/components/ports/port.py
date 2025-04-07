@@ -1272,6 +1272,7 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.projection import _parse_connection_specs
 
+
         default_projection_type = self.projection_type
 
         # If specification is not a list, wrap it in one for consistency of treatment below
@@ -1306,6 +1307,7 @@ class Port_Base(Port):
                 projection = projection_spec
                 projection_type = projection.__class__
 
+
             # Projection specification dictionary:
             elif isinstance(projection_spec, dict):
                 # Instantiate Projection
@@ -1314,6 +1316,7 @@ class Port_Base(Port):
                 projection_spec[FEEDBACK]
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 projection = projection_type(**projection_spec)
+
 
             else:
                 raise PortError(
@@ -1480,6 +1483,7 @@ class Port_Base(Port):
                 new_projections.append(projection)
 
             self.owner._projection_added(projection, context)
+
 
         return new_projections
 

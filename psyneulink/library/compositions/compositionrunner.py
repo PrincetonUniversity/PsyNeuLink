@@ -193,8 +193,8 @@ class CompositionRunner():
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                node._composition_wrapper_owner.execute_node(node, variable, optimization_num,
-                                                                             synch_with_pnl_options, context)
+                                node.composition_wrapper.execute_node(node, variable, optimization_num,
+                                                                      synch_with_pnl_options, context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
@@ -230,10 +230,6 @@ class CompositionRunner():
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
-
-        if execution_mode is ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
 
     def _batch_function_inputs(self,
                                inputs: dict,
@@ -457,26 +453,21 @@ class CompositionRunner():
             skip_initialization = True
 
             if execution_mode is ExecutionMode.PyTorch:
-                # MODIFIED 2/16/25 OLD:
-                # pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
-                #                copy_weights_to_psyneulink(context))
-                # MODIFIED 2/16/25 NEW:
                 pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
                 if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                    pytorch_rep.copy_weights_to_psyneulink(context)
-                # MODIFIED 2/16/25 END
+                    pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
+
         # assign results from last *epoch* to learning_results
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
-        # return result of last *trial* (as usual for a call to run)
 
         if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
-            pytorch_rep.copy_weights_to_psyneulink(context)
+            pytorch_rep._copy_weights_to_psyneulink(context)
 
+        # return result of last *trial* (as usual for a call to run)
         return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):
