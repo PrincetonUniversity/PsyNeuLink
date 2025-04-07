@@ -3689,8 +3689,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` of the last epoch of learning executed in a call to
         `learn <Composition.learn>`. Each item in the outermost list is a list of values for a given trial; each item
-        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism
-        for that trial.
+        within a trial corresponds to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT_MECHANI`
+        SM <OUTPUT_MECHANISM>` for that trial.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
