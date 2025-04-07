@@ -350,6 +350,21 @@ def test_autodiff_forward(autodiff_mode):
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
     np.testing.assert_allclose(outputs, [[0.9479085241082691]])
 
+@pytest.mark.pytorch
+@pytest.mark.composition
+def test_retain_results(autodiff_mode):
+    """Test that results from calls to learning() are added to results list (from retained_results)"""
+    inputs = [[-0.8104468, -0.40517032, 0.75040168]]
+    input_mech = pnl.ProcessingMechanism(input_shapes=3)
+    output_mech = pnl.ProcessingMechanism(input_shapes=3)
+    input_node = input_mech
+    comp = AutodiffComposition([input_mech, output_mech])
+    comp.run(inputs={input_node:inputs}, num_trials=1)
+    comp.learn(inputs={input_node:inputs},num_trials=2)
+    comp.run(inputs={input_node:inputs}, num_trials=3)
+    comp.learn(inputs={input_node:inputs},num_trials=4)
+    assert len(comp.results) == 10
+
 
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
