@@ -1121,25 +1121,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
             node_wrapper.log_value()
 
     def copy_results_to_psyneulink(self, current_condition, context=None):
-        """Copy outputs of Pytorch forward() to AutodiffComposition.results attribute."""
+        """Append outputs of Pytorch forward() to AutodiffComposition.results attribute."""
         # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
-        # # MODIFIED 4/6/25 OLD:
-        # if current_condition in {EPOCH, RUN}:
-        #     self.composition.parameters.results._set(convert_to_np_array(self.retained_results), context)
-        # MODIFIED 4/6/25 NEW:
         if current_condition in {EPOCH, RUN}:
             results_param = self.composition.parameters.results
             prev_results = results_param._get(context)
-            # if len(self.retained_results):
             curr_results = convert_to_np_array(self.retained_results)
             if len(prev_results):
                 new_results = np.append(prev_results, curr_results, 0)
             else:
-                new_results = self.retained_results
+                new_results = curr_results
             self.retained_results = []
-            results_param._set(convert_to_np_array(new_results), context)
-        # MODIFIED 4/6/25 END
+            results_param._set(new_results, context)
 
 
 
