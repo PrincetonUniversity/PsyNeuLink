@@ -451,7 +451,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
 
         # Do calculations for internal state values
-        x = input
+        x = input.detach()
         h = hidden_state
         r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
         z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
