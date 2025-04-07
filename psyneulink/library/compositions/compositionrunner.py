@@ -206,10 +206,6 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        if execution_mode is ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
-
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,
@@ -432,16 +428,16 @@ class CompositionRunner():
                     pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
+
         # assign results from last *epoch* to learning_results
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
-        # return result of last *trial* (as usual for a call to run)
 
         if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
             pytorch_rep._copy_weights_to_psyneulink(context)
 
+        # return result of last *trial* (as usual for a call to run)
         return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):

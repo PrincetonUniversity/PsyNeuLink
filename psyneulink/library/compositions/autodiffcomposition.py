@@ -1755,17 +1755,19 @@ class AutodiffComposition(Composition):
             kwargs[SYNCH_WITH_PNL_OPTIONS] = synch_with_pnl_options
             kwargs[RETAIN_IN_PNL_OPTIONS] = retain_in_pnl_options
 
-        # If called from AutodiffComposition in Pytorch mode, provide chance to update results after run()
         results = super(AutodiffComposition, self).run(*args, **kwargs)
+
         if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
+            # Synchronize specified outcomes at end of run
             context = kwargs[CONTEXT]
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
-                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], RUN,context)
+                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], RUN, context)
+
         return results
 
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
+        """Track results at specified frequency during learning"""
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
 
             # Check if the trial_output is atleast 3D
@@ -1786,11 +1788,12 @@ class AutodiffComposition(Composition):
             elif (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
+                pytorch_rep = self.parameters.pytorch_representation._get(context)
                 if not self.batched_results and is_output_3d:
                     for out in trial_output:
-                        self.parameters.pytorch_representation._get(context).retain_results(out)
+                        pytorch_rep.retain_results(out)
                 else:
-                    self.parameters.pytorch_representation._get(context).retain_results(trial_output)
+                    pytorch_rep.retain_results(trial_output)
         else:
             super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
