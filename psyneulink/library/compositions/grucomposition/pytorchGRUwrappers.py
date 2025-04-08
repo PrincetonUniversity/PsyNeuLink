@@ -68,10 +68,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _instantiate_GRU_pytorch_mechanism_wrappers(self, composition, device, context):
+    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
-        node = composition.gru_mech
-        pytorch_node = PytorchGRUMechanismWrapper(mechanism=node,
+        gru_mech = gru_comp.gru_mech
+        pytorch_node = PytorchGRUMechanismWrapper(mechanism=gru_mech,
                                                   composition_wrapper=self,
                                                   component_idx=0,
                                                   use=[LEARNING, SHOW_PYTORCH],
@@ -79,25 +79,25 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   device=device,
                                                   context=context)
         # MODIFIED 4/7/25 OLD:
-        if not composition.is_nested:
-            node._is_input = True
+        if not gru_comp.is_nested:
+            gru_mech._is_input = True
         # # # MODIFIED 4/7/25 NEW:
-        source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
-        if not composition.is_nested or source is None:
-            node._is_input = True
+        source = gru_comp.input_CIM._get_source_node_for_input_CIM(gru_comp.input_node.afferents[0].sender)
+        if not gru_comp.is_nested or source is None:
+            gru_mech._is_input = True
             pytorch_node._is_input = True
         # # MODIFIED 4/7/25 END
 
         # FIX: 4/7/25 - CONSOLIDATE WITH IF STATEMENT ABOVE
         # Check if there is no source Node for the InputPort of the GRUComposition.input_CIM
-        if not composition.input_CIM._get_source_node_for_input_CIM(composition.input_node.afferents[0].sender):
+        if not gru_comp.input_CIM._get_source_node_for_input_CIM(gru_comp.input_node.afferents[0].sender):
             # If that is the case, GRUComposition is nested and the GRU Node is the INPUT Node of the outer Composition:
-            assert composition.is_nested
-            pytorch_node._is_input = True
-            # pytorch_node.afferents = composition.input_node.path_afferents
+            # assert gru_comp.is_nested
+            # pytorch_node._is_input = True
+            # pytorch_node.afferents = gru_comp.input_node.path_afferents
             pytorch_node.afferents = INPUT
 
-        return [(node, pytorch_node)]
+        return [(gru_mech, pytorch_node)]
 
     def _instantiate_GRU_pytorch_projection_wrappers(self, torch_gru, device, context):
         """Create PytorchGRUProjectionWrappers for each learnable Projection of GRUComposition
@@ -514,7 +514,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             except ValueError:
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
 
-            # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+            # Set values of nodes in pnl gru_comp to the result of the corresponding computations in the PyTorch module
             pnl_comp = self.composition_wrapper.composition
             pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
