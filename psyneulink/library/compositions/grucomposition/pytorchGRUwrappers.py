@@ -394,13 +394,13 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
-        if self.mechanism._is_input:
-            assert self.afferents == INPUT, \
-                f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
+        if self.afferents == INPUT:
+            # GRUComposition is nested in an outer Composition, and GRU is INPUT Node of that Composition
+            assert self.mechanism._is_input, \
+                f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
             input_port = self.composition_wrapper.composition.input_node.input_port
             curr_val = inputs[input_port]
-
             if type(curr_val) == torch.Tensor:
                 ip_res = [curr_val[:, 0, ...]]
             else:
