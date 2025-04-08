@@ -27,6 +27,7 @@ from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, NodeRole
@@ -252,7 +253,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
+                        # MODIFIED 4/7/25 OLD:
                         pytorch_node._is_input = pytorch_node.mechanism in composition._get_input_receivers(type=NODE)
+                        # # MODIFIED 4/7/25 NEW:
+                        # pytorch_node._is_input = (pytorch_node._is_input or
+                        #                           pytorch_node.mechanism in composition._get_input_receivers(type=NODE))
+                        # MODIFIED 4/7/25 END
                     else:
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
@@ -1002,7 +1008,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                 variable.append(val)
                             elif not input_port.internal_only:
                                 # otherwise, use the node's input_port's afferents
-                                variable.append(node.collect_afferents(batch_size=self._batch_size, port=i))
+                                variable.append(node.collect_afferents(batch_size=self._batch_size,
+                                                                       port=i,
+                                                                       inputs=inputs))
 
                         # We now need to stack these so the batch dimension is first
                         try:
@@ -1014,7 +1022,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             variable = [[inp[b] for inp in variable] for b in range(batch_size)]
                 else:
                     # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.collect_afferents(batch_size=self._batch_size)
+                    variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs)
                 variable = node.execute_input_ports(variable)
 
                 # Node is excluded from gradient calculations, so cache for later execution
@@ -1305,7 +1313,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
-    def collect_afferents(self, batch_size, port=None):
+    def collect_afferents(self, batch_size:int, port:Optional[Port]=None, inputs:Optional[dict]=None):
         """
         Return afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)

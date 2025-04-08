@@ -767,7 +767,7 @@ class InputPort(Port_Base):
         *not* required or allowed.
 
     shadow_inputs : InputPort
-        identifies the InputPort of another `Mechanism` that is being shadowed by this InputPort.
+        identifies the InputPort of another `Mechanism` being `shadowed <InputPort_Shadow_Inputs>` by this InputPort.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is

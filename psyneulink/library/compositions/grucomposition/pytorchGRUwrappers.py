@@ -14,6 +14,7 @@ import graph_scheduler
 import torch
 from typing import Union, Optional, Literal, Tuple
 
+from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
@@ -21,7 +22,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
-    ALL, CONTEXT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper']
@@ -56,8 +57,23 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               Context()),
                          context=context)
 
-        self.gru_pytorch_node = gru_pytorch_node
+        # # MODIFIED 4/7/25 NEW:
+        # if composition.is_nested:
+        #     composition.require_node_roles(composition.gru_mech, [NodeRole.INPUT],
+        #     composition.exclude_node_roles(composition.input_node, NodeRole.INPUT))
+        # # MODIFIED 4/7/25 END:
+        # FIX:
+        #    - IF GRU COMP IS INPUT NODE OF OUTER COMP
+        #      (i.e., composition.input_CIM._get_source_node_for_input_CIM(composition.input_node.afferents[0].sender) == None
+        #       or composition.input_CIM._get_source_node_for_input_CIM(composition.input_node) == None)
+        #    - THEN MAKE composition.input_node ACCESSIBLE TO gru_pytorch_node
+        #      SO IT CAN USE ITS INPUTS IN collect_afferents
+
+        # FIX 4/7/25 - MOVE TO ABOVE:
         self.torch_gru = torch_gru
+        # FIX 4/7/25 - MOVE TO self._instantiate_GRU_pytorch_mechanism_wrappers():
+        self.gru_pytorch_node = gru_pytorch_node
+
         # Note: this has to be done after call to super, so that projections_map has been populated
         self.copy_weights_to_torch_gru(context)
 
@@ -74,10 +90,22 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   dtype=self.torch_dtype,
                                                   device=device,
                                                   context=context)
+        # MODIFIED 4/7/25 OLD:
         if not composition.is_nested:
-        # source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
-        # if not composition.is_nested or source is None:
             node._is_input = True
+        # # # MODIFIED 4/7/25 NEW:
+        source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
+        if not composition.is_nested or source is None:
+            node._is_input = True
+        #     pytorch_node._is_input = True
+        # # MODIFIED 4/7/25 END
+
+        # FIX: 4/7/25 - CONSOLIDATE WITH IF STATEMENT ABOVE
+        if not composition.input_CIM._get_source_node_for_input_CIM(composition.input_node.afferents[0].sender):
+            assert composition.is_nested
+            # FIX: 4/7/25 - IF GRU COMP IS INPUT NODE OF OUTER COMP
+            pytorch_node._is_input = True
+            pytorch_node.afferents = composition.input_node.path_afferents
 
         return [(node, pytorch_node)]
 
@@ -364,7 +392,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         return self.output
 
-    def collect_afferents(self, batch_size, port=None)->torch.Tensor:
+    def collect_afferents(self, batch_size, port=None, inputs:dict=None)->torch.Tensor:
         """
         Return afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
@@ -376,10 +404,19 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
-        assert self.afferents,\
-            f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
+        # self.composition_wrapper.composition.wrapped_nodes
+        try:
+            source = self.afferents[0]
+        except:
+            assert False, f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
-        proj_wrapper = self.afferents[0]
+        if self.mechanism._is_input:
+            input_port = self.composition_wrapper.composition.input_node.input_port
+            curr_val = inputs[input_port]
+
+        # FIX: CONTINUE WITH ELSE HERE IF CURR_VAL ASSIGNED ABOVE
+        proj_wrapper = source
+
         curr_val = proj_wrapper.sender_wrapper.output
         if curr_val is not None:
             # proj_wrapper._curr_sender_value = proj_wrapper.sender_wrapper.output[proj_wrapper._value_idx]

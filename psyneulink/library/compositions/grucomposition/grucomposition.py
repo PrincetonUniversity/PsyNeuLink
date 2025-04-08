@@ -1136,14 +1136,35 @@ class GRUComposition(AutodiffComposition):
         """
         # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:
         if self._pytorch_projections:
+            assert len(self._pytorch_projections) == 2, \
+                (f"PROGRAM ERROR: {self.name}._pytorch_projections should have only two Projections, but has "
+                 f"{len(self._pytorch_projections)}: {' ,'.join([proj.name for proj in self._pytorch_projections])}.")
             direct_proj_in = self._pytorch_projections[0]
             direct_proj_out = self._pytorch_projections[1]
+
         else:
             try:
+                # # MODIFIED 4/7/25 OLD:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",
                                                    sender=sender,
                                                    receiver=self.gru_mech,
                                                    learnable=projection.learnable)
+                # # MODIFIED 4/7/25 NEW:
+                # if sender == self.input_node:
+                #     # GRUComposition must be INPUT Node of outer Composition, otherwise there would be an external sender
+                #     assert self.is_nested, \
+                #         f"PROGRAM ERROR: {self.name}._add_dependency: sender is input_node, but {self.name} is not nested."
+                #     # sender = self.input_CIM.input_ports[0].path_afferents[0].sender.owner
+                #     self.gru_mech.add_ports(self.input_node.input_port)
+                #     self.gru_mech.remove_ports(self.gru_mech.input_port)
+                #     sender = self.input_CIM
+                #     direct_proj_in = self.gru_mech.afferents[0]
+                # else:
+                #     direct_proj_in = MappingProjection(name="Projection to GRU COMP",
+                #                                        sender=sender,
+                #                                        receiver=self.gru_mech,
+                #                                        learnable=projection.learnable)
+                # # MODIFIED 4/7/25 END
                 self._pytorch_projections.append(direct_proj_in)
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
@@ -1186,3 +1207,4 @@ class GRUComposition(AutodiffComposition):
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
             raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
         return super().add_projection(*args, **kwargs)
+
