@@ -82,10 +82,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         if not composition.is_nested:
             node._is_input = True
         # # # MODIFIED 4/7/25 NEW:
-        # source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
+        source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
         if not composition.is_nested or source is None:
             node._is_input = True
-        #     pytorch_node._is_input = True
+            pytorch_node._is_input = True
         # # MODIFIED 4/7/25 END
 
         # FIX: 4/7/25 - CONSOLIDATE WITH IF STATEMENT ABOVE
@@ -394,42 +394,45 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
-        # self.composition_wrapper.composition.wrapped_nodes
-        try:
-            source = self.afferents
-        except:
-            assert False, f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
-
         if self.mechanism._is_input:
-            assert source == INPUT
+            assert self.afferents == INPUT, \
+                f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
+
             input_port = self.composition_wrapper.composition.input_node.input_port
             curr_val = inputs[input_port]
 
-        # FIX: CONTINUE WITH ELSE HERE IF CURR_VAL ASSIGNED ABOVE
-        proj_wrapper = source
-
-        curr_val = proj_wrapper.sender_wrapper.output
-        if curr_val is not None:
-            # proj_wrapper._curr_sender_value = proj_wrapper.sender_wrapper.output[proj_wrapper._value_idx]
             if type(curr_val) == torch.Tensor:
-                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                ip_res = [curr_val[:, 0, ...]]
             else:
-                val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                val = [batch_elem[0] for batch_elem in curr_val]
                 val = torch.stack(val)
-                proj_wrapper._curr_sender_value = val
+                ip_res = [val]
+            res = []
+
         else:
-            val = torch.tensor(proj_wrapper.default_value)
+            proj_wrapper = self.afferents[0]
 
-            # We need to add the batch dimension to default values.
-            val = val[None, ...].expand(batch_size, *val.shape)
+            curr_val = proj_wrapper.sender_wrapper.output
+            if curr_val is not None:
+                if type(curr_val) == torch.Tensor:
+                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                else:
+                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                    val = torch.stack(val)
+                    proj_wrapper._curr_sender_value = val
+            else:
+                val = torch.tensor(proj_wrapper.default_value)
 
-            proj_wrapper._curr_sender_value = val
+                # We need to add the batch dimension to default values.
+                val = val[None, ...].expand(batch_size, *val.shape)
 
-        proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+                proj_wrapper._curr_sender_value = val
 
-        res = []
-        input_port = self.mechanism.input_port
-        ip_res = [proj_wrapper.execute(proj_wrapper._curr_sender_value)]
+            proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+
+            res = []
+            input_port = self.mechanism.input_port
+            ip_res = [proj_wrapper.execute(proj_wrapper._curr_sender_value)]
 
         # Stack the results for this input port on the second dimension, we want to preserve
         # the first dimension as the batch
