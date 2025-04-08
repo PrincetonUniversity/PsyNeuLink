@@ -57,18 +57,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               Context()),
                          context=context)
 
-        # # MODIFIED 4/7/25 NEW:
-        # if composition.is_nested:
-        #     composition.require_node_roles(composition.gru_mech, [NodeRole.INPUT],
-        #     composition.exclude_node_roles(composition.input_node, NodeRole.INPUT))
-        # # MODIFIED 4/7/25 END:
-        # FIX:
-        #    - IF GRU COMP IS INPUT NODE OF OUTER COMP
-        #      (i.e., composition.input_CIM._get_source_node_for_input_CIM(composition.input_node.afferents[0].sender) == None
-        #       or composition.input_CIM._get_source_node_for_input_CIM(composition.input_node) == None)
-        #    - THEN MAKE composition.input_node ACCESSIBLE TO gru_pytorch_node
-        #      SO IT CAN USE ITS INPUTS IN collect_afferents
-
         # FIX 4/7/25 - MOVE TO ABOVE:
         self.torch_gru = torch_gru
         # FIX 4/7/25 - MOVE TO self._instantiate_GRU_pytorch_mechanism_wrappers():
@@ -94,18 +82,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         if not composition.is_nested:
             node._is_input = True
         # # # MODIFIED 4/7/25 NEW:
-        source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
+        # source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
         if not composition.is_nested or source is None:
             node._is_input = True
         #     pytorch_node._is_input = True
         # # MODIFIED 4/7/25 END
 
         # FIX: 4/7/25 - CONSOLIDATE WITH IF STATEMENT ABOVE
+        # Check if there is no source Node for the InputPort of the GRUComposition.input_CIM
         if not composition.input_CIM._get_source_node_for_input_CIM(composition.input_node.afferents[0].sender):
+            # If that is the case, GRUComposition is nested and the GRU Node is the INPUT Node of the outer Composition:
             assert composition.is_nested
-            # FIX: 4/7/25 - IF GRU COMP IS INPUT NODE OF OUTER COMP
             pytorch_node._is_input = True
-            pytorch_node.afferents = composition.input_node.path_afferents
+            # pytorch_node.afferents = composition.input_node.path_afferents
+            pytorch_node.afferents = INPUT
 
         return [(node, pytorch_node)]
 
@@ -406,11 +396,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         """
         # self.composition_wrapper.composition.wrapped_nodes
         try:
-            source = self.afferents[0]
+            source = self.afferents
         except:
             assert False, f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
         if self.mechanism._is_input:
+            assert source == INPUT
             input_port = self.composition_wrapper.composition.input_node.input_port
             curr_val = inputs[input_port]
 
