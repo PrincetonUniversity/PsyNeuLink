@@ -11060,7 +11060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
-_
+
             * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
