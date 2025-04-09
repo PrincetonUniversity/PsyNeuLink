@@ -1086,9 +1086,6 @@ class GRUComposition(AutodiffComposition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
-        # FIX: 3/15/25
-        # if self.gru_mech:
-        #     return [self.target_node]
 
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
@@ -1144,27 +1141,10 @@ class GRUComposition(AutodiffComposition):
 
         else:
             try:
-                # # MODIFIED 4/7/25 OLD:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",
                                                    sender=sender,
                                                    receiver=self.gru_mech,
                                                    learnable=projection.learnable)
-                # # MODIFIED 4/7/25 NEW:
-                # if sender == self.input_node:
-                #     # GRUComposition must be INPUT Node of outer Composition, otherwise there would be an external sender
-                #     assert self.is_nested, \
-                #         f"PROGRAM ERROR: {self.name}._add_dependency: sender is input_node, but {self.name} is not nested."
-                #     # sender = self.input_CIM.input_ports[0].path_afferents[0].sender.owner
-                #     self.gru_mech.add_ports(self.input_node.input_port)
-                #     self.gru_mech.remove_ports(self.gru_mech.input_port)
-                #     sender = self.input_CIM
-                #     direct_proj_in = self.gru_mech.afferents[0]
-                # else:
-                #     direct_proj_in = MappingProjection(name="Projection to GRU COMP",
-                #                                        sender=sender,
-                #                                        receiver=self.gru_mech,
-                #                                        learnable=projection.learnable)
-                # # MODIFIED 4/7/25 END
                 self._pytorch_projections.append(direct_proj_in)
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"

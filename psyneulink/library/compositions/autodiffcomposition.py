@@ -921,27 +921,14 @@ class AutodiffComposition(Composition):
         dependency_dict = {}      # Dictionary of previous component for each component in every pathway
         queue = deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
-        # MODIFIED 3/5/25 NEW:
-        # FIX:  NEEDED FOR GRUComposition,
-        #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-        # self._build_pytorch_representation(context)
-        # MODIFIED 3/5/25 END
-
-        # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
-        #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
-        #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
-        #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
-        #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
         def create_pathway(current_comp, node)->list:
             """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
             pathway = []
             entry = node
             while entry in dependency_dict:
-                # MODIFIED 2/22/25 NEW:
                 # Prevent cycle from recurrent pathway
                 if entry in pathway:
                     break
-                # MODIFIED 2/22/25 END
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
@@ -1267,13 +1254,8 @@ class AutodiffComposition(Composition):
         all_output_values = []
         for item in outputs_idx_port_node_comp:
             idx, port, node, comp = item
-            # MODIFIED 4/9/25 OLD:
-            # if self._trained_comp_nodes_to_pytorch_nodes_map:
-            #     node = self._trained_comp_nodes_to_pytorch_nodes_map[node]
-            # MODIFIED 4/9/25 NEW:
             if comp._trained_comp_nodes_to_pytorch_nodes_map:
                 node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
-            # MODIFIED 4/9/25 END
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
                 output = outputs[:, idx, ...]

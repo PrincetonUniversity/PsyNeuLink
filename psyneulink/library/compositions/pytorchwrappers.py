@@ -253,12 +253,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
-                        # MODIFIED 4/7/25 OLD:
                         pytorch_node._is_input = pytorch_node.mechanism in composition._get_input_receivers(type=NODE)
-                        # # MODIFIED 4/7/25 NEW:
-                        # pytorch_node._is_input = (pytorch_node._is_input or
-                        #                           pytorch_node.mechanism in composition._get_input_receivers(type=NODE))
-                        # MODIFIED 4/7/25 END
                     else:
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
@@ -274,6 +269,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
         for node in nodes_to_remove:
             self._remove_node_from_nodes_map(node)
+
+        self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
 
         # Get projections from flattened set, so that they are all in the outer Composition
         #   and visible by _regenerate_torch_parameter_list;
@@ -488,17 +485,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Replace rcvr_mech (input_CIM) with the node in the nested Composition that receives the projection
             nested_rcvr_port, nested_rcvr_mech, _ = \
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
-            # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
-            nested_pytorch_comp = self.nodes_map[rcvr_mech.composition]
+            nested_pytorch_comp_wrapper = self.nodes_map[rcvr_mech.composition]
             proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
-                nested_pytorch_comp._flatten_for_pytorch(projection,
-                                                         sndr_mech, rcvr_mech,
-                                                         nested_rcvr_port,
-                                                         nested_rcvr_mech,
-                                                         self.composition,
-                                                         self,
-                                                         ENTER_NESTED,
-                                                         context))
+                nested_pytorch_comp_wrapper._flatten_for_pytorch(projection,
+                                                                 sndr_mech, rcvr_mech,
+                                                                 nested_rcvr_port,
+                                                                 nested_rcvr_mech,
+                                                                 self.composition,
+                                                                 self,
+                                                                 ENTER_NESTED,
+                                                                 context))
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
 
@@ -512,17 +508,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Replace sndr_mech (output_CIM) with the node in the nested Composition that sends the projection
             nested_sndr_port, nested_sndr_mech, _ = \
                 sndr_mech._get_source_info_from_output_CIM(projection.sender)
-            # FIX: ?CAN THIS BE GOTTEN MORE DIRECTLY:
-            nested_pytorch_comp = self.nodes_map[sndr_mech.composition]
+            nested_pytorch_comp_wrapper = self.nodes_map[sndr_mech.composition]
             proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
-                nested_pytorch_comp._flatten_for_pytorch(projection,
-                                                         sndr_mech, rcvr_mech,
-                                                         nested_sndr_port,
-                                                         nested_sndr_mech,
-                                                         self.composition,
-                                                         self,
-                                                         EXIT_NESTED,
-                                                         context))
+                nested_pytorch_comp_wrapper._flatten_for_pytorch(projection,
+                                                                 sndr_mech, rcvr_mech,
+                                                                 nested_sndr_port,
+                                                                 nested_sndr_mech,
+                                                                 self.composition,
+                                                                 self,
+                                                                 EXIT_NESTED,
+                                                                 context))
             if proj_rcvr_wrapper is None:
                 proj_rcvr_wrapper = self.nodes_map[rcvr_mech]
         return proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
@@ -598,7 +593,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  f"(to '{nested_port.efferents[0].receiver.owner.name}') is not the same as its "
                  f"Projection to '{projection.sender.owner.composition.name}.output_CIM'."
                  f"One for this reason may be that these Components belong to different Compositions.")
-            # FIX: 3/17/25 - IS THIS CORRECT, OR SHOULD IT REMAIN AS ASSIGNED ABOVE;  IF THE LATTER, DELETED PRECEDING
             pnl_proj = projection
 
             # Construct direct Projection from sender in nested Composition to receiver in outer Composition,
@@ -1046,13 +1040,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 assert 'DEBUGGING BREAK POINT'
 
-                # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
-                # BREADCRUMB:
-                #  FAILS TO GET OUTPUT FOR GRU AS OUTPUT NODE:
-                #  MAKE THIS CONTINGENT ON NEW ATTRIBUTE OF node WRAPPER: ._is_output
-                if (node._is_output or node.mechanism in self.composition.get_nested_output_nodes_at_all_levels()):
+                if node._is_output or node.mechanism in self.output_nodes:
                     outputs[node.mechanism] = node.output
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
@@ -1367,7 +1357,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
             for input_port in self.mechanism.input_ports:
                 ip_res = []
                 for proj_wrapper in self.afferents:
-                    # 3/8/25 - FIX FOR GRU:
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
 
@@ -1521,7 +1510,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
             else:
                 value = self.output.detach().cpu().numpy()
 
-            # FIX: 3/14/25 - MIGHT BE BETTER TO JUST ASSIGN VARIABLES (PER METHOD ABOVE) AND THEN EXECUTE MECHANISMS?
             # Set pnl_mech's value
             pnl_mech.parameters.value._set(value, context)
 
@@ -1743,7 +1731,6 @@ class PytorchProjectionWrapper():
                                                           projection=self.projection,
                                                           validate=False,
                                                           context=context)
-    # MODIFIED 3/30/25 END
 
     def log_matrix(self):
         if self.projection.parameters.matrix.log_condition != LogCondition.OFF:

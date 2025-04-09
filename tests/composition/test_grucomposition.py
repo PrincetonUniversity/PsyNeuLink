@@ -142,6 +142,7 @@ class TestConstruction:
             outer_comp.run(inputs=inputs)
         else:
             outer_comp.learn(inputs=inputs, targets=targets)
+        assert True
 
 
 @pytest.mark.pytorch

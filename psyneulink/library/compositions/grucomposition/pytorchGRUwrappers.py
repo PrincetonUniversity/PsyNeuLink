@@ -57,9 +57,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               Context()),
                          context=context)
 
-        # FIX 4/7/25 - MOVE TO ABOVE:
+        # These have to be after super(), so that they can be assigned as attributes of torch.nn.module
         self.torch_gru = torch_gru
-        # FIX 4/7/25 - MOVE TO self._instantiate_GRU_pytorch_mechanism_wrappers():
         self.gru_pytorch_node = gru_pytorch_node
 
         # Note: this has to be done after call to super, so that projections_map has been populated
