@@ -1049,6 +1049,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # 7/20/24 FIX: CACHE get_nested_output_nodes_at_all_levels() IN composition
                 # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                 #  note: these may be different than for actual Composition, as they are flattened
+                # BREADCRUMB:
+                #  FAILS TO GET OUTPUT FOR GRU AS OUTPUT NODE:
+                #  MAKE THIS CONTINGENT ON NEW ATTRIBUTE OF node WRAPPER: ._is_output
                 if (node.mechanism in self.composition.get_nested_output_nodes_at_all_levels()):
                     outputs[node.mechanism] = node.output
 
