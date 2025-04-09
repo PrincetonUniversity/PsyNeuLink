@@ -1267,8 +1267,13 @@ class AutodiffComposition(Composition):
         all_output_values = []
         for item in outputs_idx_port_node_comp:
             idx, port, node, comp = item
-            if self._trained_comp_nodes_to_pytorch_nodes_map:
-                node = self._trained_comp_nodes_to_pytorch_nodes_map[node]
+            # MODIFIED 4/9/25 OLD:
+            # if self._trained_comp_nodes_to_pytorch_nodes_map:
+            #     node = self._trained_comp_nodes_to_pytorch_nodes_map[node]
+            # MODIFIED 4/9/25 NEW:
+            if comp._trained_comp_nodes_to_pytorch_nodes_map:
+                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
+            # MODIFIED 4/9/25 END
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
                 output = outputs[:, idx, ...]

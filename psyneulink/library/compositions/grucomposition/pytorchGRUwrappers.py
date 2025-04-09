@@ -88,6 +88,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             gru_mech._is_input = True
             pytorch_node._is_input = True
             pytorch_node.afferents = INPUT
+        destination = gru_comp.output_CIM._get_destination_info_for_output_CIM(gru_comp.output_node.efferents[
+                                                                                   0].receiver)
+        if destination is None or not gru_comp.is_nested:
+            pytorch_node._is_output = True
 
         return [(gru_mech, pytorch_node)]
 

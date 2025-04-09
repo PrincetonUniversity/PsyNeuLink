@@ -1052,7 +1052,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # BREADCRUMB:
                 #  FAILS TO GET OUTPUT FOR GRU AS OUTPUT NODE:
                 #  MAKE THIS CONTINGENT ON NEW ATTRIBUTE OF node WRAPPER: ._is_output
-                if (node.mechanism in self.composition.get_nested_output_nodes_at_all_levels()):
+                if (node._is_output or node.mechanism in self.composition.get_nested_output_nodes_at_all_levels()):
                     outputs[node.mechanism] = node.output
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
@@ -1273,6 +1273,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._context = context
         self._is_input = False
         self._is_bias = False
+        self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
