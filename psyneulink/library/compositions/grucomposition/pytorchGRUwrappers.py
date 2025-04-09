@@ -78,23 +78,15 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                   dtype=self.torch_dtype,
                                                   device=device,
                                                   context=context)
-        # MODIFIED 4/7/25 OLD:
-        if not gru_comp.is_nested:
-            gru_mech._is_input = True
-        # # # MODIFIED 4/7/25 NEW:
+
+        # Check if there is no source Node for the InputPort of the GRUComposition.input_CIM
         source = gru_comp.input_CIM._get_source_node_for_input_CIM(gru_comp.input_node.afferents[0].sender)
-        if not gru_comp.is_nested or source is None:
+        if source is None or not gru_comp.is_nested:
+            # If either the GRUComposition is not nested,
+            # or it does not receive any Projections from the outer Composition,
+            # then treat it as an INPUT Node (that receives inputs to the outer Composition in collect_afferents()
             gru_mech._is_input = True
             pytorch_node._is_input = True
-        # # MODIFIED 4/7/25 END
-
-        # FIX: 4/7/25 - CONSOLIDATE WITH IF STATEMENT ABOVE
-        # Check if there is no source Node for the InputPort of the GRUComposition.input_CIM
-        if not gru_comp.input_CIM._get_source_node_for_input_CIM(gru_comp.input_node.afferents[0].sender):
-            # If that is the case, GRUComposition is nested and the GRU Node is the INPUT Node of the outer Composition:
-            # assert gru_comp.is_nested
-            # pytorch_node._is_input = True
-            # pytorch_node.afferents = gru_comp.input_node.path_afferents
             pytorch_node.afferents = INPUT
 
         return [(gru_mech, pytorch_node)]
@@ -392,11 +384,11 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.
 
-        FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
 
         if self.afferents == INPUT:
             # GRUComposition is nested in an outer Composition, and GRU is INPUT Node of that Composition
+            #  so get input specified for GRUComposition.input_node from the inputs dict provided in the learn() method
             assert self.mechanism._is_input, \
                 f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
             input_port = self.composition_wrapper.composition.input_node.input_port
