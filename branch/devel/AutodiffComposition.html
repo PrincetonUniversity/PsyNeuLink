@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+55.g8a63bd7d2 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+56.g0eb0ae5c7 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+55
+                  0.16.1.0+56
                 </div>
               
             
@@ -324,12 +324,13 @@ cause an error if the <a class="reference internal" href="#psyneulink.library.co
 <section id="learning-rates-and-optimizer-params">
 <span id="autodiffcomposition-learning-rates"></span><h3><em>Learning Rates and Optimizer Params</em><a class="headerlink" href="#learning-rates-and-optimizer-params" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>optimizer_params</strong> argument of the constructor can be used to specify parameters for the optimizer used for
-learning by the AutodiffComposition. At present, this is restricted to overriding the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> Parameter of the Composition (used as the default by the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimizer</span></code></a>) to assign individual learning_rates to specific Projections. This is done by
-specifying <strong>optimizer_params</strong> as a dict, each key of which is a reference to a learnable <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
-in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition
-may involve different forms of specification and/or support other parameters for the optimizer.  Any Projections
-for which there is no entry in <strong>optimizer_params</strong> use, in order of precedence: the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> specified in the call to the AutodiffComposition’s <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method, the <strong>learning_rate</strong> argument of its constructor, or the default value for the
-AutodiffComposition.</p>
+learning by the AutodiffComposition. At present, this is restricted to overriding the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> Parameter of the Composition (used as the default by the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimizer</span></code></a>) to assign individual learning rates to specific Projections. This is done by
+specifying <strong>optimizer_params</strong> as a dict, in which each key is a reference to a learnable <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
+in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition may
+involve different forms of specification and/or support other parameters for the optimizer. Projections that are not
+sepcified in <strong>optimizer_params</strong> use, in order of precedence: the <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>
+specified in the call to the AutodiffComposition’s <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method, the <strong>learning_rate</strong>
+argument of its constructor, or the default value for the AutodiffComposition.</p>
 </section>
 <section id="exchanging-parameters-with-pytorch-modules">
 <span id="autodiffcomposition-exchange-with-torch-parameters"></span><h3><em>Exchanging Parameters with Pytorch Modules</em><a class="headerlink" href="#exchanging-parameters-with-pytorch-modules" title="Permalink to this headline">¶</a></h3>
@@ -581,8 +582,8 @@ have not been specified (for how to do the latter, see <a class="reference inter
 <p class="admonition-title">Hint</p>
 <p>To disable updating of a particular <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> in an AutodiffComposition, specify either the
 <strong>learnable</strong> parameter of its constructor or its learning_rate specification in the <strong>optimizer_params</strong>
-argument of the AutodiffComposition’s constructor to False; this applies to MappingProjections at any
-level of <a class="reference internal" href="#autodiffcomposition-nesting"><span class="std std-ref">nesting</span></a>.</p>
+argument of the AutodiffComposition’s constructor to False  (see <a class="reference internal" href="#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates and Optimizer Params</span></a>);
+this applies to MappingProjections at any level of <a class="reference internal" href="#autodiffcomposition-nesting"><span class="std std-ref">nesting</span></a></p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
