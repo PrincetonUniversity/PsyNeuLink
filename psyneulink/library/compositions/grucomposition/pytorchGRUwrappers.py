@@ -615,8 +615,6 @@ class PytorchGRUFunctionWrapper(torch.nn.Module):
         self.name = f"PytorchFunctionWrapper[GRU NODE]"
         self._context = context
         self.function = function
-        # list(self.named_parameters()).append(list(function.named_parameters()))
-        assert True
 
     def __repr__(self):
         return "PytorchWrapper for: " + self._pnl_function.__repr__()
