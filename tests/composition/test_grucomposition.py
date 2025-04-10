@@ -135,6 +135,8 @@ class TestConstruction:
             pathway = [input_mech, gru]
             input_node = input_mech
             target_node = gru.gru_mech
+        else:
+            raise ValueError("Invalid pathway_type")
         outer_comp = pnl.AutodiffComposition(pathway)
         inputs = {input_node: [[.1, .2, .3]]}
         targets = {target_node: [[1,1,1,1,1]]}
