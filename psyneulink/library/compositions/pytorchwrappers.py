@@ -646,12 +646,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 f"PROGRAM ERROR: {param} not in state_dict for '{self.name}'"
             if composition.enable_learning is False:
                 param.requires_grad = False
-                param.requires_grad = False
-                param.requires_grad = False
-                param.requires_grad = False
             else:
                 if learning_rate is not False:
-                    # If input_weights_learning_rate is True, use composition.learning_rate, else specified value
+                    # If learning_rate is True, use composition.learning_rate, else specified value
                     lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
                     param.requires_grad = True
                     self._optimizer_param_groups.append({'params': param, 'lr': lr})
@@ -1325,7 +1322,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         for proj_wrapper in self.afferents:
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
-                # proj_wrapper._curr_sender_value = proj_wrapper.sender_wrapper.output[proj_wrapper._value_idx]
                 if type(curr_val) == torch.Tensor:
                     proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
                 else:
@@ -1344,8 +1340,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
 
         # Specific port is specified
-        # FIX: USING _sender_port_idx TO INDEX INTO sender.value GETS IT WRONG IF THE MECHANISM HAS AN OUTPUT PORT
-        #      USED BY A PROJECTION NOT IN THE CURRENT COMPOSITION
         if port is not None:
             res = [
                 proj_wrapper.execute(proj_wrapper._curr_sender_value)
@@ -1712,7 +1706,7 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # 2/16/25 - FIX: USE Projection ITSELF AS KEY RATHER THAN ITS NAME?
+        # Use Projection's name as key to align with name of torch Parameter
         self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
         # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
         #           cf _parse_optimizer_params():

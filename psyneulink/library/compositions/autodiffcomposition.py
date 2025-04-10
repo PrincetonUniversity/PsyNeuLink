@@ -139,14 +139,13 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 The **optimizer_params** argument of the constructor can be used to specify parameters for the optimizer used for
 learning by the AutodiffComposition. At present, this is restricted to overriding the `learning_rate
 <AutodiffComposition.learning_rate>` Parameter of the Composition (used as the default by the `optimizer
-<AutodiffComposition.optimizer>`) to assign individual learning_rates to specific Projections. This is done by
-specifying **optimizer_params** as a dict, each key of which is a reference to a learnable `MappingProjection`
-in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition
-may involve different forms of specification and/or support other parameters for the optimizer.  Any Projections
-for which there is no entry in **optimizer_params** use, in order of precedence: the `learning_rate
-<AutodiffComposition.learning_rate>` specified in the call to the AutodiffComposition's `learn
-<AutodiffComposition.learn>` method, the **learning_rate** argument of its constructor, or the default value for the
-AutodiffComposition.
+<AutodiffComposition.optimizer>`) to assign individual learning rates to specific Projections. This is done by
+specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
+in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition may
+involve different forms of specification and/or support other parameters for the optimizer. Projections that are not
+sepcified in **optimizer_params** use, in order of precedence: the `learning_rate <AutodiffComposition.learning_rate>`
+specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
+argument of its constructor, or the default value for the AutodiffComposition.
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
@@ -563,8 +562,8 @@ class AutodiffComposition(Composition):
         .. hint::
            To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify either the
            **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
-           argument of the AutodiffComposition's constructor to False; this applies to MappingProjections at any
-           level of `nesting <AutodiffComposition_Nesting>`.
+           argument of the AutodiffComposition's constructor to False  (see `AutodiffComposition_Learning_Rates`);
+           this applies to MappingProjections at any level of `nesting <AutodiffComposition_Nesting>`
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
