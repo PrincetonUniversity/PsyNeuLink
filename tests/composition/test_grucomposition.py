@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink import CompositionError
+from psyneulink import CompositionError, AutodiffComposition
 
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
@@ -92,6 +92,7 @@ def _pytorch_gru_module_values_hook(module, input, output):
 
 # Unit tests for functions of GRUComposition class
 
+
 @pytest.mark.pytorch
 @pytest.mark.composition
 class TestConstruction:
@@ -104,11 +105,47 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
-    def test_solo_nested(self):
-        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=True)
-        outer_comp = pnl.AutodiffComposition(name='Outer Comp',pathways=[gru])
-        target_mech = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        assert target_mech[0].name == 'TARGET for PYTORCH GRU NODE'
+    @pytest.mark.parametrize('execution_type', [
+        'run',
+        'learn'
+    ])
+    @pytest.mark.parametrize('pathway_type', [
+        'solo',
+        'gru_as_input',
+        'gru_as_hidden',
+        'gru_as_output'
+    ])
+    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
+        input_mech = pnl.ProcessingMechanism(input_shapes=3)
+        output_mech = pnl.ProcessingMechanism(input_shapes=5)
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        if pathway_type == 'solo':
+            pathway = [gru]
+            input_node = gru
+            target_node = gru.gru_mech
+        elif pathway_type == 'gru_as_input':
+            pathway = [gru, output_mech]
+            input_node = gru
+            target_node = output_mech
+        elif pathway_type == 'gru_as_hidden':
+            pathway = [input_mech, gru, output_mech]
+            input_node = input_mech
+            target_node = output_mech
+        elif pathway_type == 'gru_as_output':
+            pathway = [input_mech, gru]
+            input_node = input_mech
+            target_node = gru.gru_mech
+        else:
+            raise ValueError("Invalid pathway_type")
+        outer_comp = pnl.AutodiffComposition(pathway)
+        inputs = {input_node: [[.1, .2, .3]]}
+        targets = {target_node: [[1,1,1,1,1]]}
+        if execution_type == 'run':
+            outer_comp.run(inputs=inputs)
+        else:
+            outer_comp.learn(inputs=inputs, targets=targets)
+        assert True
+
 
 @pytest.mark.pytorch
 @pytest.mark.composition

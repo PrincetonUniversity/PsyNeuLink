@@ -139,14 +139,13 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 The **optimizer_params** argument of the constructor can be used to specify parameters for the optimizer used for
 learning by the AutodiffComposition. At present, this is restricted to overriding the `learning_rate
 <AutodiffComposition.learning_rate>` Parameter of the Composition (used as the default by the `optimizer
-<AutodiffComposition.optimizer>`) to assign individual learning_rates to specific Projections. This is done by
-specifying **optimizer_params** as a dict, each key of which is a reference to a learnable `MappingProjection`
-in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition
-may involve different forms of specification and/or support other parameters for the optimizer.  Any Projections
-for which there is no entry in **optimizer_params** use, in order of precedence: the `learning_rate
-<AutodiffComposition.learning_rate>` specified in the call to the AutodiffComposition's `learn
-<AutodiffComposition.learn>` method, the **learning_rate** argument of its constructor, or the default value for the
-AutodiffComposition.
+<AutodiffComposition.optimizer>`) to assign individual learning rates to specific Projections. This is done by
+specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
+in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition may
+involve different forms of specification and/or support other parameters for the optimizer. Projections that are not
+sepcified in **optimizer_params** use, in order of precedence: the `learning_rate <AutodiffComposition.learning_rate>`
+specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
+argument of its constructor, or the default value for the AutodiffComposition.
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
@@ -563,8 +562,8 @@ class AutodiffComposition(Composition):
         .. hint::
            To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify either the
            **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
-           argument of the AutodiffComposition's constructor to False; this applies to MappingProjections at any
-           level of `nesting <AutodiffComposition_Nesting>`.
+           argument of the AutodiffComposition's constructor to False  (see `AutodiffComposition_Learning_Rates`);
+           this applies to MappingProjections at any level of `nesting <AutodiffComposition_Nesting>`
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
@@ -921,27 +920,14 @@ class AutodiffComposition(Composition):
         dependency_dict = {}      # Dictionary of previous component for each component in every pathway
         queue = deque([(input_node, self)])  # Queue of nodes to visit in breadth-first search
 
-        # MODIFIED 3/5/25 NEW:
-        # FIX:  NEEDED FOR GRUComposition,
-        #  BUT CRASHES test_autodiffcomposition.TestNestedLearning.test_1_input_to_1_nested_hidden_one_to_many_2_outputs
-        # self._build_pytorch_representation(context)
-        # MODIFIED 3/5/25 END
-
-        # FIX:  9/17/23 - THIS VERSION FLATTENS NESTED COMPOSITIONS;  MAY NOT STILL BE NEEDED
-        #                 SINCE EXECUTION SETS ARE NOW FLATTENED IN PytorchCompositionWrapper
-        #                 ?? REVERT TO OLD VERSION (IN PRE-"CLEAN_UP" VERSIONS, OR ON DEVEL?),
-        #                 THOUGH DOING SO PREVIOUSLY SEEMED TO LOSE TARGET NODE.
-        #                 MAYBE NOT NOW THAT THEY ARE CONSTRUCTED EXPLICITLY BELOW?
         def create_pathway(current_comp, node)->list:
             """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
             pathway = []
             entry = node
             while entry in dependency_dict:
-                # MODIFIED 2/22/25 NEW:
                 # Prevent cycle from recurrent pathway
                 if entry in pathway:
                     break
-                # MODIFIED 2/22/25 END
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
@@ -1267,8 +1253,8 @@ class AutodiffComposition(Composition):
         all_output_values = []
         for item in outputs_idx_port_node_comp:
             idx, port, node, comp = item
-            if self._trained_comp_nodes_to_pytorch_nodes_map:
-                node = self._trained_comp_nodes_to_pytorch_nodes_map[node]
+            if comp._trained_comp_nodes_to_pytorch_nodes_map:
+                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
                 output = outputs[:, idx, ...]
@@ -1774,8 +1760,6 @@ class AutodiffComposition(Composition):
             is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
                                                       isinstance(trial_output[0, 0], (np.ndarray, list)))
 
-            # FIX: FOR NOW, USE THIS FOR BOTH TRIAL AND MINIBATCH, SINCE CURRENTLY NO DIFFERENCE;
-            #      NEED TO FIGURE OUT WHAT TO DO ABOUT UPDATING RESULTS ONCE TRUE BATCHING IS IMPLEMENTED
             if (RESULTS in synch_with_pnl_options
                     and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
@@ -1786,7 +1770,7 @@ class AutodiffComposition(Composition):
                     super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
             elif (RESULTS in synch_with_pnl_options
-                    and synch_with_pnl_options[RESULTS] == RUN):
+                  and synch_with_pnl_options[RESULTS] == RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
                 pytorch_rep = self.parameters.pytorch_representation._get(context)
                 if not self.batched_results and is_output_3d:

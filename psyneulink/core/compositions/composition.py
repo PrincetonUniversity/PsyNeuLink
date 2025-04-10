@@ -4681,7 +4681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_input_receivers(self,
                              comp=None,
                              type:Union[PORT,NODE]=PORT,
-                             comp_as_node:Union[bool,ALL]=False):
+                             comp_as_node:Union[bool,ALL]=False)->list:
         """Return all INPUT Nodes [or their InputPorts] of comp, including those for any nested Compositions.
         If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
         If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:

@@ -14,6 +14,7 @@ import graph_scheduler
 import torch
 from typing import Union, Optional, Literal, Tuple
 
+from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
@@ -21,7 +22,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
-    ALL, CONTEXT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper']
@@ -56,30 +57,42 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               Context()),
                          context=context)
 
-        self.gru_pytorch_node = gru_pytorch_node
+        # These have to be after super(), so that they can be assigned as attributes of torch.nn.module
         self.torch_gru = torch_gru
+        self.gru_pytorch_node = gru_pytorch_node
+
         # Note: this has to be done after call to super, so that projections_map has been populated
         self.copy_weights_to_torch_gru(context)
 
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _instantiate_GRU_pytorch_mechanism_wrappers(self, composition, device, context):
+    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
-        node = composition.gru_mech
-        pytorch_node = PytorchGRUMechanismWrapper(mechanism=node,
+        gru_mech = gru_comp.gru_mech
+        pytorch_node = PytorchGRUMechanismWrapper(mechanism=gru_mech,
                                                   composition_wrapper=self,
                                                   component_idx=0,
                                                   use=[LEARNING, SHOW_PYTORCH],
                                                   dtype=self.torch_dtype,
                                                   device=device,
                                                   context=context)
-        if not composition.is_nested:
-        # source = composition.afferents[0].sender.owner._get_source_node_for_input_CIM(composition.afferents[0].sender)
-        # if not composition.is_nested or source is None:
-            node._is_input = True
 
-        return [(node, pytorch_node)]
+        # Check if there is no source Node for the InputPort of the GRUComposition.input_CIM
+        source = gru_comp.input_CIM._get_source_node_for_input_CIM(gru_comp.input_node.afferents[0].sender)
+        if source is None or not gru_comp.is_nested:
+            # If either the GRUComposition is not nested,
+            # or it does not receive any Projections from the outer Composition,
+            # then treat it as an INPUT Node (that receives inputs to the outer Composition in collect_afferents()
+            gru_mech._is_input = True
+            pytorch_node._is_input = True
+            pytorch_node.afferents = INPUT
+        destination = gru_comp.output_CIM._get_destination_info_for_output_CIM(gru_comp.output_node.efferents[
+                                                                                   0].receiver)
+        if destination is None or not gru_comp.is_nested:
+            pytorch_node._is_output = True
+
+        return [(gru_mech, pytorch_node)]
 
     def _instantiate_GRU_pytorch_projection_wrappers(self, torch_gru, device, context):
         """Create PytorchGRUProjectionWrappers for each learnable Projection of GRUComposition
@@ -364,7 +377,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         return self.output
 
-    def collect_afferents(self, batch_size, port=None)->torch.Tensor:
+    def collect_afferents(self, batch_size, port=None, inputs:dict=None)->torch.Tensor:
         """
         Return afferent projections for input_port(s) of the Mechanism
         If there is only one input_port, return the sum of its afferents (for those in Composition)
@@ -374,34 +387,47 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.
 
-        FIX: AUGMENT THIS TO SUPPORT InputPort's function
         """
-        assert self.afferents,\
-            f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
-        proj_wrapper = self.afferents[0]
-        curr_val = proj_wrapper.sender_wrapper.output
-        if curr_val is not None:
-            # proj_wrapper._curr_sender_value = proj_wrapper.sender_wrapper.output[proj_wrapper._value_idx]
+        if self.afferents == INPUT:
+            # GRUComposition is nested in an outer Composition, and GRU is INPUT Node of that Composition
+            #  so get input specified for GRUComposition.input_node from the inputs dict provided in the learn() method
+            assert self.mechanism._is_input, \
+                f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
+            input_port = self.composition_wrapper.composition.input_node.input_port
+            curr_val = inputs[input_port]
             if type(curr_val) == torch.Tensor:
-                proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                ip_res = [curr_val[:, 0, ...]]
             else:
-                val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                val = [batch_elem[0] for batch_elem in curr_val]
                 val = torch.stack(val)
-                proj_wrapper._curr_sender_value = val
+                ip_res = [val]
+            res = []
+
         else:
-            val = torch.tensor(proj_wrapper.default_value)
+            proj_wrapper = self.afferents[0]
 
-            # We need to add the batch dimension to default values.
-            val = val[None, ...].expand(batch_size, *val.shape)
+            curr_val = proj_wrapper.sender_wrapper.output
+            if curr_val is not None:
+                if type(curr_val) == torch.Tensor:
+                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                else:
+                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
+                    val = torch.stack(val)
+                    proj_wrapper._curr_sender_value = val
+            else:
+                val = torch.tensor(proj_wrapper.default_value)
 
-            proj_wrapper._curr_sender_value = val
+                # We need to add the batch dimension to default values.
+                val = val[None, ...].expand(batch_size, *val.shape)
 
-        proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+                proj_wrapper._curr_sender_value = val
 
-        res = []
-        input_port = self.mechanism.input_port
-        ip_res = [proj_wrapper.execute(proj_wrapper._curr_sender_value)]
+            proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+
+            res = []
+            input_port = self.mechanism.input_port
+            ip_res = [proj_wrapper.execute(proj_wrapper._curr_sender_value)]
 
         # Stack the results for this input port on the second dimension, we want to preserve
         # the first dimension as the batch
@@ -483,7 +509,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             except ValueError:
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
 
-            # Set values of nodes in pnl composition to the result of the corresponding computations in the PyTorch module
+            # Set values of nodes in pnl gru_comp to the result of the corresponding computations in the PyTorch module
             pnl_comp = self.composition_wrapper.composition
             pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
             pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
@@ -585,12 +611,10 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
 class PytorchGRUFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
         super().__init__()
-        self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[GRU NODE]"
         self._context = context
+        self._pnl_function = function
         self.function = function
-        # list(self.named_parameters()).append(list(function.named_parameters()))
-        assert True
 
     def __repr__(self):
         return "PytorchWrapper for: " + self._pnl_function.__repr__()
