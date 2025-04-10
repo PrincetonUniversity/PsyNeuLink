@@ -319,15 +319,14 @@ class TestConstruction:
                                                          learn_field_weights,
                                                          target_fields)}
     test_field_map_and_args_assignment_data = [
-        ('args', None, field_names, field_weights, learn_field_weights, target_fields),
-        ('dict-subdict', dict_subdict, None, None, None, None),
-        ('dict-tuple', dict_tuple, None, None, None, None)]
-    field_arg_names = "format, fields, field_names, field_weights, learn_field_weights, target_fields"
+        pytest.param(None, field_names, field_weights, learn_field_weights, target_fields, id='args'),
+        pytest.param(dict_subdict, None, None, None, None, id='dict-subdict'),
+        pytest.param(dict_tuple, None, None, None, None, id='dict-tuple'),
+    ]
 
-    @pytest.mark.parametrize(field_arg_names, test_field_map_and_args_assignment_data,
-                             ids=[x[0] for x in test_field_map_and_args_assignment_data])
+    @pytest.mark.parametrize("fields, field_names, field_weights, learn_field_weights, target_fields",
+                             test_field_map_and_args_assignment_data)
     def test_field_args_and_map_assignments(self,
-                                            format,
                                             fields,
                                             field_names,
                                             field_weights,
