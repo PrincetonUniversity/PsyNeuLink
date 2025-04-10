@@ -1797,9 +1797,9 @@ class PytorchProjectionWrapper():
 class PytorchFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
         super().__init__()
-        self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[{function.name}]"
         self._context = context
+        self._pnl_function = function
         self.function = _get_pytorch_function(function, device, context)
 
     def __repr__(self):
