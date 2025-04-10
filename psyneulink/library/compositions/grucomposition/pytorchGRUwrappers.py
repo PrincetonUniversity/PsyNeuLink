@@ -611,9 +611,9 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
 class PytorchGRUFunctionWrapper(torch.nn.Module):
     def __init__(self, function, device, context=None):
         super().__init__()
-        self._pnl_function = function
         self.name = f"PytorchFunctionWrapper[GRU NODE]"
         self._context = context
+        self._pnl_function = function
         self.function = function
 
     def __repr__(self):
