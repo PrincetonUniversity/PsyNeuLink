@@ -355,6 +355,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.nodes_map[node] = node_wrapper
         if node not in self.node_wrappers:
             self.node_wrappers.append(node_wrapper)
+        # FIX: CAUSES RECURSION ERROR FOR state_dict()
+        #      (WHEN node_wrapper = GRUMechanismWrapper for PYTORCH GRU NODE)
         self._modules_dict[node.name] = node_wrapper
 
     def _remove_node_from_nodes_map(self, node):
@@ -640,6 +642,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if param:
                 optimizer_params[param] = optimizer_params.pop(param_name)
 
+        # FIX: NOT ALL PROJECTIONS FOR WHICH learning_rate COULD BE SET ARE IN
+        #      _pnl_refs_to_torch_params_map (SEE ABOVE) AND THEREFORE FINDABLE BELOW (INCLUDING IN state_dict())
         # Parse learning rate specs in optimizer_params
         for param, learning_rate in optimizer_params.items():
             assert any(param is state_param for state_param in self.state_dict().values()), \

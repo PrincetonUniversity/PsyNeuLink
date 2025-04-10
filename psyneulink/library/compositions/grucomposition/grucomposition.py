@@ -1187,4 +1187,3 @@ class GRUComposition(AutodiffComposition):
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
             raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
         return super().add_projection(*args, **kwargs)
-
