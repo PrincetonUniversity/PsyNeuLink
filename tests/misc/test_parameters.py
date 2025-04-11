@@ -57,8 +57,9 @@ def test_parameter_propagation(ancestor, child):
         assert param.name in child_params
 
 
+@pytest.mark.usefixtures("reset_variable")
 @pytest.mark.parametrize('ancestor, child, should_override', ancestor_child_data)
-def test_parameter_values_overriding(ancestor, child, should_override, reset_variable):
+def test_parameter_values_overriding(ancestor, child, should_override):
     original_child_variable = child.parameters.variable.default_value
 
     # ancestor updates
