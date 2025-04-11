@@ -17,8 +17,9 @@ RAND0_1 = np.random.random()
 RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
-def SimpleIntFun(init, value, iterations, noise, rate, offset, **kwargs):
+def SimpleIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
+
     if np.isscalar(noise):
         if "initializer" in kwargs:
             return [4.91845218, 4.78766907, 4.73758993, 5.04920442, 4.09842889,
@@ -44,7 +45,7 @@ def SimpleIntFun(init, value, iterations, noise, rate, offset, **kwargs):
             return [4.7398811, 4.33354877, 3.23128239, 4.14249424, 2.05951504,
                     3.8008388, 2.14580932, 4.9102284,  3.69882314, 2.91676163]
 
-def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
+def AdaptiveIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -72,7 +73,7 @@ def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
             return [3.59649986, 3.28818534, 2.45181396, 3.14321808, 1.56270704,
                     2.88397872, 1.62818492, 3.72575501, 2.80657186, 2.2131637]
 
-def DriftIntFun(init, value, iterations, noise, **kwargs):
+def DriftIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -97,7 +98,7 @@ def DriftIntFun(init, value, iterations, noise, **kwargs):
                      2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
                     [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
-def LeakyFun(init, value, iterations, noise, **kwargs):
+def LeakyFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -118,7 +119,7 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
         else:
             return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395, 2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
-def AccumulatorFun(init, value, iterations, noise, **kwargs):
+def AccumulatorFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -149,7 +150,7 @@ def AccumulatorFun(init, value, iterations, noise, **kwargs):
             return [[1.67373165, 1.42936784, 0.97944456, 1.41185147, 0.51221934,
                      1.20867833, 0.54474727, 1.62918182, 1.06390014, 0.92255587]]
 
-def DriftOnASphereFun(init, value, iterations, noise, **kwargs):
+def DriftOnASphereFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
