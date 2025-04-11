@@ -2161,7 +2161,9 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             if normalize:
                 return dot_product_with_normalization
             else:
-                return lambda x, y : torch.matmul(x, y)
+                def matmul(x, y):
+                    return torch.matmul(x, y)
+                return matmul
 
         elif operation is L0:
             if normalize:

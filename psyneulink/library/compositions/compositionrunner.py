@@ -385,7 +385,8 @@ class CompositionRunner():
             if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
                 stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
                                                                                       targets=stim_target,
-                                                                                      execution_mode=execution_mode)
+                                                                                      execution_mode=execution_mode,
+                                                                                      context=context)
             else:
                 num_trials = len(stim_input)
 
