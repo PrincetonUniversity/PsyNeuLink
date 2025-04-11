@@ -106,13 +106,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         _projection_wrapper_pairs = []
 
         # Pytorch parameter info
-        torch_params = torch_gru.state_dict()
         hid_len = pnl.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
 
-        w_ih = torch_params['weight_ih_l0']
-        w_hh = torch_params['weight_hh_l0']
+        w_ih = torch_gru.state_dict()['weight_ih_l0']
+        w_hh = torch_gru.state_dict()['weight_hh_l0']
         torch_gru_wts_indices = [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
                                  (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]
         pnl_proj_wts = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
@@ -128,8 +127,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
-            b_ih = torch_params['bias_ih_l0']
-            b_hh = torch_params['bias_hh_l0']
+            b_ih = torch_gru.state_dict()['bias_ih_l0']
+            b_hh = torch_gru.state_dict()['bias_hh_l0']
             torch_gru_bias_indices = [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
                                       (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
@@ -267,12 +266,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         z_idx = hid_len
         n_idx = 2 * hid_len
 
-        torch_gru_weights = torch_gru.state_dict()
-        wts_ih = torch_gru_weights['weight_ih_l0']
+        wts_ih = torch_gru.state_dict()['weight_ih_l0']
         wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
         wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
-        wts_hh = torch_gru_weights['weight_hh_l0']
+        wts_hh = torch_gru.state_dict()['weight_hh_l0']
         wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
         wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
@@ -281,11 +279,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         biases = None
         if torch_gru.bias:
             # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-            b_ih = torch_gru_weights['bias_ih_l0']
+            b_ih = torch_gru.state_dict()['bias_ih_l0']
             b_ir = torch.atleast_2d(b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             b_iu = torch.atleast_2d(b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             b_in = torch.atleast_2d(b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hh = torch_gru_weights['bias_hh_l0']
+            b_hh = torch_gru.state_dict()['bias_hh_l0']
             b_hr = torch.atleast_2d(b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             b_hu = torch.atleast_2d(b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
