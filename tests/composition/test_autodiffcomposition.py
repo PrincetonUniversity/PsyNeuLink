@@ -352,7 +352,7 @@ def test_autodiff_forward(autodiff_mode):
 
 @pytest.mark.pytorch
 @pytest.mark.composition
-def test_retain_results(autodiff_mode):
+def test_retain_results():
     """Test that results from calls to learning() are added to results list (from retained_results)"""
     inputs = [[-0.8104468, -0.40517032, 0.75040168]]
     input_mech = pnl.ProcessingMechanism(input_shapes=3)
