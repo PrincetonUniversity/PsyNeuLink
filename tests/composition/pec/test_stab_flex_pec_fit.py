@@ -95,7 +95,6 @@ def make_stab_flex(
     lca_noise=0.0,
     scale=0.2,
     ddm_time_step_size=0.01,
-    rng_seed=None,
 ):
 
     GAIN = gain
