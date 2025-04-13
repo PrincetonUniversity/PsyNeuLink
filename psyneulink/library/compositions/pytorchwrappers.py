@@ -272,6 +272,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._remove_node_from_nodes_map(node)
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
+        # MODIFIED 4/11/25 NEW:
+        # self.composition.pytorch_representation = self
+        # MODIFIED 4/11/25 END
 
         # Get projections from flattened set, so that they are all in the outer Composition
         #   and visible by _regenerate_torch_parameter_list;
@@ -395,13 +398,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism
             else:
-                pytorch_node_wrapper = PytorchMechanismWrapper(mechanism=node,
-                                                               composition=composition,
-                                                               component_idx=self.composition._get_node_index(node),
-                                                               use=[LEARNING, SYNCH, SHOW_PYTORCH],
-                                                               dtype=self.torch_dtype,
-                                                               device=device,
-                                                               context=context)
+                pytorch_node_wrapper = \
+                    self.composition.pytorch_mechanism_wrapper_type(
+                        mechanism=node,
+                        composition=composition,
+                        component_idx=self.composition._get_node_index(node),
+                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
+                        dtype=self.torch_dtype,
+                        device=device,
+                        context=context)
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)

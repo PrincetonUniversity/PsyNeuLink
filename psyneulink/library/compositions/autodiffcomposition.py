@@ -651,8 +651,9 @@ class AutodiffComposition(Composition):
 
     componentCategory = AUTODIFF_COMPOSITION
     if torch_available:
-        from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+        from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
         pytorch_composition_wrapper_type = PytorchCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchMechanismWrapper
 
     class Parameters(Composition.Parameters):
         pytorch_representation = None

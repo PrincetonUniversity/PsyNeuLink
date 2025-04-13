@@ -644,8 +644,10 @@ class GRUComposition(AutodiffComposition):
     componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import \
+            PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchGRUMechanismWrapper
 
     class Parameters(AutodiffComposition.Parameters):
         """

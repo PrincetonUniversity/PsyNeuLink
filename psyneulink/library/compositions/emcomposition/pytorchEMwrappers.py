@@ -64,6 +64,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
+        # IMPLEMENTATION NOTE:
+        #    This is needed for access by subcomponents to the PytorchCompositionWrapper to which they belong,
+        #    and is done like this instead of assigning it as an attribute on them directly,
+        #    since the latter introduces recursion when torch.nn.module.state_dict() is called on them.
+        # MODIFIED 4/11/25 NEW: FIX: ?CHECK FIRST IF pytorch_representation IS NONE?
+        self.composition.pytorch_representation = self
+
+
     # FIX: MOVE THIS TO MECHANISM WRAPPER:
     # # 4/11/25 OLD:
     # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context):
@@ -90,6 +98,20 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                                for j in range(num_fields)])
                                   for i in range(memory_capacity)]))
 
+
+class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
+    """Wrapper for EMStorageMechanism as a Pytorch Module"""
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
+        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
+        if self.mechanism is self.composition.storage_node:
+            # Only execute store after last optimization repetition for current mini-batch
+            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
+            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+                self.store_memory(variable, context)
+        else:
+            super().execute(variable, optimization_num, synch_with_pnl_options, context)
+
     # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
     # @torch.jit.script_method
     # MODIFIED 7/29/24 END
@@ -113,12 +135,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         :return: List[2d tensor] updated memories
         """
+        pytorch_rep = self.composition.pytorch_representation
 
-        memory = self.memory
-        assert memory is not None, f"PROGRAM ERROR: '{self.name}'.memory is None"
+        memory = pytorch_rep.memory
+        assert memory is not None, f"PROGRAM ERROR: '{pytorch_rep.name}'.memory is None"
 
         # Get current parameter values from EMComposition's EMStorageMechanism
-        mech = self.storage_node.mechanism
+        mech = self.mechanism
         random_state = mech.function.parameters.random_state._get(context)
         decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter
         storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
@@ -144,9 +167,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         idx_of_weakest_memory = torch.argmin(row_norms)
 
         values = []
-        for field_projection in self.match_projection_wrappers + self.retrieve_projection_wrappers:
-            field_idx = self.composition._field_index_map[field_projection._pnl_proj]
-            if field_projection in self.match_projection_wrappers:
+        for field_projection in pytorch_rep.match_projection_wrappers + pytorch_rep.retrieve_projection_wrappers:
+            field_idx = pytorch_rep.composition._field_index_map[field_projection._pnl_proj]
+            if field_projection in pytorch_rep.match_projection_wrappers:
                 # For match projections:
                 # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
                 entry_to_store = field_projection.sender_wrapper.output
@@ -170,28 +193,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.matrix
 
-            field_projection.matrix = self.storage_node.function(entry_to_store,
-                                                                 memory_matrix=field_memory_matrix,
-                                                                 axis=axis,
-                                                                 storage_location=idx_of_weakest_memory,
-                                                                 storage_prob=storage_prob,
-                                                                 decay_rate=decay_rate,
-                                                                 random_state=random_state)
+            field_projection.matrix = self.function(entry_to_store,
+                                                    memory_matrix=field_memory_matrix,
+                                                    axis=axis,
+                                                    storage_location=idx_of_weakest_memory,
+                                                    storage_prob=storage_prob,
+                                                    decay_rate=decay_rate,
+                                                    random_state=random_state)
             values.append(field_projection.matrix)
 
-        self.storage_node.value = values
+        self.value = values
         return values
-
-
-class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
-    """Wrapper for EMStorageMechanism as a Pytorch Module"""
-
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
-        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-        if self is self.storage_node:
-            # Only execute store after last optimization repetition for current mini-batch
-            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
-                self.store_memory(variable, context)
-        else:
-            super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)

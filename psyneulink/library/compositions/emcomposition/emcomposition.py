@@ -1465,8 +1465,10 @@ class EMComposition(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers import \
+            PytorchEMCompositionWrapper, PytorchEMMechanismWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper
 
 
     class Parameters(AutodiffComposition.Parameters):
@@ -1770,10 +1772,6 @@ class EMComposition(AutodiffComposition):
                                  self.enable_learning,
                                  self._use_gating_for_weighting,
                                  context=Context(source=ContextFlags.COMMAND_LINE, string='FROM EM'))
-
-        # if torch_available:
-        #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
-        #     self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
