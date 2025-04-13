@@ -7604,24 +7604,18 @@ class TestNodeRoles:
         comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
         assert B.output_port in comp.output_CIM.port_map
 
-    params = [  # id     allow_probes  include_probes_in_output  err_msg
-        (
-            "allow_probes_True", True, False, None
-         ),
-        (
-            "allow_probes_True", True, True, None
-         ),
-        (
-            "allow_probes_False", False, False,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         ),
-        (
-            "allow_probes_CONTROL", "CONTROL", True,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         )
+    params = [        # allow_probes  include_probes_in_output  err_msg
+        pytest.param(True, False, None, id="allow_probes_True"),
+        pytest.param(True, True, None, id="allow_probes_True"),
+        pytest.param(False, False,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT.",
+                     id="allow_probes_False"),
+        pytest.param("CONTROL", True,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT.",
+                     id="allow_probes_CONTROL"),
     ]
-    @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
-    def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+    @pytest.mark.parametrize('allow_probes, include_probes_in_output, err_msg', params)
+    def test_nested_PROBES(self, allow_probes, include_probes_in_output, err_msg):
         """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
 
         A = ProcessingMechanism(name='A')
@@ -7634,9 +7628,7 @@ class TestNodeRoles:
         Z = ProcessingMechanism(name='Z')
         mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
 
-        O = ProcessingMechanism(name='O',
-                                input_ports=[B, Y]
-                                )
+        O = ProcessingMechanism(name='O', input_ports=[B, Y])
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',

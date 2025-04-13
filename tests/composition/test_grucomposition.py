@@ -22,7 +22,7 @@ from psyneulink.library.compositions.grucomposition.grucomposition import GRUCom
 # ---------------------
 # HOOK FOR torch.GRU module for use in debugging internal calculations
 
-def _pytorch_gru_module_values_hook(module, input, output):
+def _pytorch_gru_module_values_hook(module, input):
     import torch
     in_len = module.input_size
     hid_len = module.hidden_size
