@@ -1084,9 +1084,7 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
-            model = self.pytorch_composition_wrapper_type(composition=self,
-                                                          device=self.device,
-                                                          context=context)
+            model = self.pytorch_composition_wrapper_type(composition=self, device=self.device, context=context)
 
         # Set up optimizer function
         learning_rate = self._runtime_learning_rate or self.learning_rate
