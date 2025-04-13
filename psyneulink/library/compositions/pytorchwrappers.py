@@ -158,8 +158,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
     Attributes
     ----------
 
-    _composition: Composition
-        `AutodiffComposition` being wrapped.
+    composition : AutodiffComposition
+        The `AutodiffComposition` for which the PytorchCompositionWrapper is the `pytorch_representation
+        <AutodiffComposition.pytorch_representation>`.
 
     node_wrappers : List[PytorchMechanismWrapper]
         list of nodes in the PytorchCompositionWrapper corresponding to the PyTorch functions that comprise the
@@ -358,7 +359,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # FIX: CAUSES RECURSION ERROR FOR state_dict()
         #      (WHEN node_wrapper = GRUMechanismWrapper for PYTORCH GRU NODE)
         self._modules_dict[node.name] = node_wrapper
-        self.state_dict()
+        # self.state_dict()
 
     def _remove_node_from_nodes_map(self, node):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""
@@ -395,7 +396,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Wrap Mechanism
             else:
                 pytorch_node_wrapper = PytorchMechanismWrapper(mechanism=node,
-                                                               composition_wrapper=self,
+                                                               composition=composition,
                                                                component_idx=self.composition._get_node_index(node),
                                                                use=[LEARNING, SYNCH, SHOW_PYTORCH],
                                                                dtype=self.torch_dtype,
@@ -457,9 +458,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                             sender_port_idx=sender_port_idx,
                                                             use=use,
                                                             device=device,
-                                                            composition_wrapper=self,
                                                             sender_wrapper=proj_sndr,
                                                             receiver_wrapper=proj_rcvr,
+                                                            composition=composition,
                                                             context=context)
             proj_sndr.add_efferent(pytorch_proj_wrapper)
             proj_rcvr.add_afferent(pytorch_proj_wrapper)
@@ -579,9 +580,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_port_idx=None,  # is only being used for SHOW_PYTORCH
                                                         use=[SHOW_PYTORCH],
                                                         device=self.device,
-                                                        composition_wrapper=self,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
+                                                        # FIX: 4/11/25 - ?SHOULD THIS BE outer_comp:
+                                                        composition=self.composition,
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
                 outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
@@ -619,9 +621,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         sender_port_idx=None,  # is only being used for SHOW_PYTORCH
                                                         use=[SHOW_PYTORCH],
                                                         device=self.device,
-                                                        composition_wrapper=self,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
+                                                        # FIX: 4/11/25 - ?SHOULD THIS BE outer_comp:
+                                                        composition=self.composition,
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
                 outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
@@ -1035,10 +1038,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
 
                 # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
-                # wrapper to which it belongs; this is to support override of the execute_node method by subclasses of
+                # to which it belongs; this is to support override of the execute_node method by subclasses of
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                node.composition_wrapper.execute_node(node, variable, optimization_num,
-                                                             synch_with_pnl_options, context)
+                # # MODIFIED 4/11/25 OLD:
+                # node.composition_wrapper.execute_node(node, variable, optimization_num,
+                #                                              synch_with_pnl_options, context)
+                # # MODIFIED 4/11/25 NEW:
+                # pytorch_rep = node.composition.parameters.pytorch_representation.get(context)
+                # pytorch_rep.execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
+                # MODIFIED 4/11/25 NEWER:
+                node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                # MODIFIED 4/11/25 END
 
                 assert 'DEBUGGING BREAK POINT'
 
@@ -1058,12 +1068,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Return outputs of the outermost Composition
         return outputs
 
-    def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
-        """Execute node and store the result in the node's value attribute
-        Implemented as method (and includes optimization_num and context as args)
-          so that it can be overridden by subclasses of PytorchCompositionWrapper
-        """
-        value = node.execute(variable, context)
+    # MODIFIED 4/11/25 OLD:
+    # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
+    #     """Execute node and store the result in the node's value attribute
+    #     Implemented as method (and includes optimization_num and context as args)
+    #       so that it can be overridden by subclasses of PytorchCompositionWrapper
+    #     """
+    #     value = node.execute(variable, context)
+    # MODIFIED 4/11/25 END
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
@@ -1201,6 +1213,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
     mechanism : Mechanism
         the PsyNeuLink `Mechanism` being wrapped.
 
+    composition : AutodiffComposition
+        the `AutodiffComposition` to which the `Mechanism` being wrapped belongs
+        (and for which the PytorchCompositionWrapper -- to which the PytorchMechanismWrapper
+        belongs -- is the pytorch_representation).
+
     afferents : List[PytorchProjectionWrapper]
         list of `PytorchProjectionWrapper` objects that project to the PytorchMechanismWrapper.
 
@@ -1248,7 +1265,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     def __init__(self,
                  mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
-                 composition_wrapper:PytorchCompositionWrapper, # one node belongs to (for executingnested Compositions)
+                 composition,                                   # one to which mech belongs (for nested executions)
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
                  dtype:torch.dtype,                             # needed for Pytorch
@@ -1269,7 +1286,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
-        self.composition_wrapper = composition_wrapper
+
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        assert isinstance(composition, AutodiffComposition), \
+            f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
+        self.composition = composition
         self.torch_dtype = dtype
 
         self.input = None
@@ -1295,6 +1316,13 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
+    def add_afferent(self, afferent):
+        """Add ProjectionWrapper for afferent to MechanismWrapper.
+        For use in call to collect_afferents
+        """
+        assert afferent not in self.afferents
+        self.afferents.append(afferent)
+
     def add_efferent(self, efferent):
         """Add ProjectionWrapper for efferent from MechanismWrapper.
         Implemented for completeness;  not currently used
@@ -1302,12 +1330,52 @@ class PytorchMechanismWrapper(torch.nn.Module):
         assert efferent not in self.efferents
         self.efferents.append(efferent)
 
-    def add_afferent(self, afferent):
-        """Add ProjectionWrapper for afferent to MechanismWrapper.
-        For use in call to collect_afferents
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+        """Execute Mechanism's _gen_pytorch version of function on variable.
+        Enforce result to be 2d, and assign to self.output
         """
-        assert afferent not in self.afferents
-        self.afferents.append(afferent)
+        def execute_function(function, variable, fct_has_mult_args=False):
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            If fct_has_mult_args is True, treat each item in variable as an arg to the function
+            If False, compute function for each item in variable and return results in a list
+            """
+            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+            if fct_has_mult_args:
+                res = function(*variable)
+            # variable is ragged
+            elif isinstance(variable, list):
+                # res = [function(variable[i]) for i in range(len(variable))]
+                res = [function(torch.stack([batch_elem[i] for batch_elem in variable])) for i in range(len(variable[0]))]
+
+                # Reshape to batch dimension first
+                batch_size = res[0].shape[0]
+                res = [[inp[b] for inp in res] for b in range(batch_size)]
+
+            else:
+                # Functions handle batch dimensions, just run the
+                # function with the variable and get back a tensor.
+                res = function(variable)
+            # TransformFunction can reduce output to single item from
+            # multi-item input
+            if isinstance(function._pnl_function, TransformFunction):
+                res = res.unsqueeze(1)
+            return res
+
+        # If mechanism has an integrator_function and integrator_mode is True,
+        #   execute it first and use result as input to the main function;
+        #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
+        if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
+            variable = execute_function(self.integrator_function,
+                                        [self.integrator_previous_value, variable],
+                                        fct_has_mult_args=True)
+            # Keep track of previous value in Pytorch node for use in next forward pass
+            self.integrator_previous_value = variable
+
+        self.input = variable
+
+        # Compute main function of mechanism and return result
+        self.output = execute_function(self.function, variable)
+        return self.output
 
     def collect_afferents(self, batch_size:int, port:Optional[Port]=None, inputs:Optional[dict]=None):
         """
@@ -1417,53 +1485,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
             res = [[inp[b] for inp in res] for b in range(batch_size)]
 
         return res
-
-    def execute(self, variable, context):
-        """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.output
-        """
-        def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
-            If fct_has_mult_args is True, treat each item in variable as an arg to the function
-            If False, compute function for each item in variable and return results in a list
-            """
-            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-            if fct_has_mult_args:
-                res = function(*variable)
-            # variable is ragged
-            elif isinstance(variable, list):
-                # res = [function(variable[i]) for i in range(len(variable))]
-                res = [function(torch.stack([batch_elem[i] for batch_elem in variable])) for i in range(len(variable[0]))]
-
-                # Reshape to batch dimension first
-                batch_size = res[0].shape[0]
-                res = [[inp[b] for inp in res] for b in range(batch_size)]
-
-            else:
-                # Functions handle batch dimensions, just run the
-                # function with the variable and get back a tensor.
-                res = function(variable)
-            # TransformFunction can reduce output to single item from
-            # multi-item input
-            if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(1)
-            return res
-
-        # If mechanism has an integrator_function and integrator_mode is True,
-        #   execute it first and use result as input to the main function;
-        #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
-        if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function,
-                                        [self.integrator_previous_value, variable],
-                                        fct_has_mult_args=True)
-            # Keep track of previous value in Pytorch node for use in next forward pass
-            self.integrator_previous_value = variable
-
-        self.input = variable
-
-        # Compute main function of mechanism and return result
-        self.output = execute_function(self.function, variable)
-        return self.output
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -1628,6 +1649,11 @@ class PytorchProjectionWrapper():
     projection : Projection
         PsyNeuLink `Projection` being wrapped.
 
+    composition : AutodiffComposition
+        the `AutodiffComposition` to which the `Projection` being wrapped belongs
+        (and for which the PytorchCompositionWrapper -- to which the PytorchProjectionWrapper
+        belongs -- is the `pytorch_representation <AutodiffComposition.pytorch_representation>`).
+
     matrix : torch.nn.Parameter
         Pytorch parameter for the matrix of the Projection.
 
@@ -1668,9 +1694,9 @@ class PytorchProjectionWrapper():
                  sender_port_idx:Optional[int],                 # index in the sender's Mechanism.output_ports
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]],
                  device:str,
-                 composition_wrapper:PytorchCompositionWrapper=None,
                  sender_wrapper:PytorchMechanismWrapper=None,
                  receiver_wrapper:PytorchMechanismWrapper=None,
+                 composition:Composition=None,
                  context=None):
 
         self.projection = projection  # Projection being wrapped (may *not* be the one being learned; see note above)
@@ -1683,9 +1709,9 @@ class PytorchProjectionWrapper():
         self._curr_sender_value = None
 
         self.name = f"PytorchProjectionWrapper[{projection.name}]"
-        self.composition_wrapper = composition_wrapper # PytorchCompositionWrapper to which ProjectionWrapper belongs
-        self.sender_wrapper = sender_wrapper          # PytorchMechanismWrapper to which Projection's sender is mapped
-        self.receiver_wrapper = receiver_wrapper      # PytorchMechanismWrapper to which Projection's receiver is mapped
+        self.composition = composition            # Composition to which CompositionWrapper belongs
+        self.sender_wrapper = sender_wrapper      # PytorchMechanismWrapper to which Projection's sender is mapped
+        self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
         if projection.parameters.has_initializers._get(context) and projection.parameters.value.initializer:
@@ -1725,7 +1751,7 @@ class PytorchProjectionWrapper():
         return self.function(variable, self.matrix)
 
     def _copy_torch_params_to_pnl_proj(self, context):
-        composition = self.composition_wrapper.composition
+        composition = self.composition
         composition.copy_torch_param_to_projection_matrix(torch_param=self.matrix.detach().cpu().T,
                                                           projection=self.projection,
                                                           validate=False,

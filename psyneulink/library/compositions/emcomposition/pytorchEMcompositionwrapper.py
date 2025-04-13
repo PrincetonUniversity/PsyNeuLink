@@ -30,8 +30,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
-        self.storage_node = [node for node in self.nodes_map.values()
-                             if isinstance(node.mechanism, EMStorageMechanism)][0]
+        # # MODIFIED 4/11/25 OLD:
+        # get_storage_node = [node for node in self.nodes_map.values()
+        #                 if isinstance(node.mechanism, EMStorageMechanism)]
+        # assert len(get_storage_node) == 1, f"PROGRAM ERROR: {self.name} should have only one EMStorageMechanism"
+        # self.storage_node = get_storage_node[0]
+        # MODIFIED 4/11/25 NEW:
+        self.storage_node = self.nodes_map[self.composition.storage_node]
+        # MODIFIED 4/11/25 END
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
         self.storage_node.exclude_from_gradient_calc = AFTER
@@ -58,15 +64,18 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
-    def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context):
-        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-        if node is self.storage_node:
-            # Only execute store after last optimization repetition for current mini-batch
-            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
-                self.store_memory(variable, context)
-        else:
-            super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
+    # FIX: MOVE THIS TO MECHANISM WRAPPER:
+    # # 4/11/25 OLD:
+    # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context):
+    #     """Override to handle storage of entry to memory_matrix by EMStorage Function"""
+    #     if node is self.storage_node:
+    #         # Only execute store after last optimization repetition for current mini-batch
+    #         # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
+    #         if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+    #             self.store_memory(variable, context)
+    #     else:
+    #         super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
+     # 4/11/25 END
 
     @property
     def memory(self)->Optional[torch.Tensor]:
@@ -172,3 +181,17 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         self.storage_node.value = values
         return values
+
+
+class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
+    """Wrapper for EMStorageMechanism as a Pytorch Module"""
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
+        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
+        if self is self.storage_node:
+            # Only execute store after last optimization repetition for current mini-batch
+            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
+            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+                self.store_memory(variable, context)
+        else:
+            super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
