@@ -359,7 +359,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if node not in self.node_wrappers:
             self.node_wrappers.append(node_wrapper)
         self._modules_dict[node.name] = node_wrapper
-        self.state_dict()
 
     def _remove_node_from_nodes_map(self, node):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""

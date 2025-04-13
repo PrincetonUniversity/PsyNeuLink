@@ -328,7 +328,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.synch_with_pnl = False
 
     def _assign_GRU_pytorch_function(self, mechanism, device, context):
-        # Assign PytorchGRUFunctionWrapper of Pytorch GRU module as function of GRU Node
+        # Assign PytorchFunctionWrapper of Pytorch GRU module as function of GRU Node
         input_size = self.composition.parameters.input_size.get(context)
         hidden_size = self.composition.parameters.hidden_size.get(context)
         bias = self.composition.parameters.bias.get(context)
@@ -343,7 +343,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.function = function_wrapper
         mechanism.function = function_wrapper.function
 
-        # Assign input_port functions of GRU Node to PytorchGRUFunctionWrapper
+        # Assign input_port functions of GRU Node to PytorchFunctionWrapper
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
