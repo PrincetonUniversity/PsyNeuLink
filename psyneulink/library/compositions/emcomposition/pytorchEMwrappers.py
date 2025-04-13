@@ -30,14 +30,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
-        # # MODIFIED 4/11/25 OLD:
-        # get_storage_node = [node for node in self.nodes_map.values()
-        #                 if isinstance(node.mechanism, EMStorageMechanism)]
-        # assert len(get_storage_node) == 1, f"PROGRAM ERROR: {self.name} should have only one EMStorageMechanism"
-        # self.storage_node = get_storage_node[0]
-        # MODIFIED 4/11/25 NEW:
         self.storage_node = self.nodes_map[self.composition.storage_node]
-        # MODIFIED 4/11/25 END
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
         self.storage_node.exclude_from_gradient_calc = AFTER
@@ -65,26 +58,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
         # IMPLEMENTATION NOTE:
-        #    This is needed for access by subcomponents to the PytorchCompositionWrapper to which they belong,
-        #    when EMComposition is nested and _build_pytorch_representation is not called on it;
-        #    it must be done like this, instead of assigning it as an attribute on them directly,
-        #    since the latter introduces recursion when torch.nn.module.state_dict() is called on them.
-        # # MODIFIED 4/11/25 NEW: FIX: ?CHECK FIRST IF pytorch_representation IS NONE?
-        self.composition.pytorch_representation = self
-
-
-    # FIX: MOVE THIS TO MECHANISM WRAPPER:
-    # # 4/11/25 OLD:
-    # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context):
-    #     """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-    #     if node is self.storage_node:
-    #         # Only execute store after last optimization repetition for current mini-batch
-    #         # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-    #         if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
-    #             self.store_memory(variable, context)
-    #     else:
-    #         super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
-     # 4/11/25 END
+        #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itelf;
+        #    access must be provided via EMComposition's pytorch_representation, rather than directly assigning
+        #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
+        #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.
+        if self.composition.pytorch_representation is None:
+            self.composition.pytorch_representation = self
 
     @property
     def memory(self)->Optional[torch.Tensor]:

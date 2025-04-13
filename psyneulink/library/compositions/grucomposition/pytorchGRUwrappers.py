@@ -58,10 +58,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               Context()),
                          context=context)
 
-        # These have to be after super(), so that they can be assigned as attributes of torch.nn.module
-        # # MODIFIED 4/11/25 NEW: FIX: ?CHECK FIRST IF pytorch_representation IS NONE?
-        self.composition.pytorch_representation = self
-        # MODIFIED 4/11/25 END
+        # The following have to be after super(), so that they can be assigned as attributes of torch.nn.module
+
+        # IMPLEMENTATION NOTE:
+        #    This is needed for access by subcomponents to PytorchGRUCompositionWrapper when GRUComposition is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not GRUComposition itelf;
+        #    access must be provided via GRUComposition's pytorch_representation, rather than directly assigning
+        #    PytorchGRUCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
+        #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.
+        if self.composition.pytorch_representation is None:
+            self.composition.pytorch_representation = self
         self.torch_gru = torch_gru
         self.gru_pytorch_node = gru_pytorch_node
 
@@ -221,7 +227,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         """
 
-        # FIX 4/11/25: CF COMMENT BELOW RE: ADDING THIS TO PytorchCompositionWrapper AND CALLING BEFORE node.execute
         self._set_synch_with_pnl(synch_with_pnl_options)
 
         # Get input from GRUComposition's INPUT_NODE
@@ -235,18 +240,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
         return {self.composition.gru_mech: output}
-
-    # MODIFIED 4/11/25 OLD:
-    # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
-    #     """Override to set GRU Node's synch_with_pnl option if GRUComposition is a nested Composition
-    #     This is called if GRUComposition is in a nested Composition, rather than its forward method.
-    #     Treats GRUComposition as a single node in the PytorchCompositionWrapper's graph, inputs
-    #       received from other node(s) that project to the GRUComposition, and its outputs used by the
-    #       collect_afferents method(s) of the other node(s) that receive Projections from the  GRUComposition.
-    #     """
-    #     self._set_synch_with_pnl(synch_with_pnl_options)
-    #     super().execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
-    # MODIFIED 4/11/25 END
 
     def _set_synch_with_pnl(self, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
@@ -363,17 +356,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
 
-        # MODIFIED 4/11/25 NEW:
-        # # FIX: 4/11/25 - NEEDS ACCESS TO PytorchGRUMechanismWrapper's PytorchCompositionWrapper
-        # #                BUT self.composition.pytorch_representation = None (SET THAT WHEN CREATED?)
-        # #               ?OR SHOULD BE RETURNED TO PytorchCompositionWrapper (execute_node)?
-        # if hasattr(pytorch_wrapper.node_wrappers[0], '_set_synch_with_pnl'):
-        #     pytorch_wrapper.node_wrappers[0]._set_synch_with_pnl(synch_with_pnl_options)
-        # else:
-        #     assert False
-        # MODIFIED 4/11/25 NEWER:
         self.composition.pytorch_representation._set_synch_with_pnl(synch_with_pnl_options)
-        # MODIFIED 4/11/25 END
 
         self.input = variable
 

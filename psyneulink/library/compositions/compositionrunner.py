@@ -168,15 +168,7 @@ class CompositionRunner():
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                # # MODIFIED 4/11/25 OLD:
-                                # node.composition_wrapper.execute_node(node, variable, optimization_num,
-                                #                                       synch_with_pnl_options, context)
-                                # # MODIFIED 4/11/25 NEW:
-                                # pytorch_rep = node.composition.parameters.pytorch_representation.get(context)
-                                # pytorch_rep.execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
-                                # # MODIFIED 4/11/25 NEWER:
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                                # MODIFIED 4/11/25 END
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,

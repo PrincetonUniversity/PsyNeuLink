@@ -1087,7 +1087,6 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
-            # self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
         learning_rate = self._runtime_learning_rate or self.learning_rate

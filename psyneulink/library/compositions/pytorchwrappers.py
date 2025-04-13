@@ -272,10 +272,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._remove_node_from_nodes_map(node)
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
-        # MODIFIED 4/11/25 NEW:  ??FIX: REMOVE ASSIGNMENT IN autodiffcomposition??
-        # self.composition.pytorch_representation = self
+
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
-        # MODIFIED 4/11/25 END
 
         # Get projections from flattened set, so that they are all in the outer Composition
         #   and visible by _regenerate_torch_parameter_list;
@@ -360,8 +358,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.nodes_map[node] = node_wrapper
         if node not in self.node_wrappers:
             self.node_wrappers.append(node_wrapper)
-        # FIX: CAUSES RECURSION ERROR FOR state_dict()
-        #      (WHEN node_wrapper = GRUMechanismWrapper for PYTORCH GRU NODE)
         self._modules_dict[node.name] = node_wrapper
         self.state_dict()
 
@@ -588,7 +584,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
-                                                        # FIX: 4/11/25 - ?SHOULD THIS BE outer_comp:
                                                         composition=self.composition,
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
@@ -629,7 +624,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                         device=self.device,
                                                         sender_wrapper=proj_sndr_wrapper,
                                                         receiver_wrapper=proj_rcvr_wrapper,
-                                                        # FIX: 4/11/25 - ?SHOULD THIS BE outer_comp:
                                                         composition=self.composition,
                                                         context=context)
                 outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
@@ -1046,15 +1040,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
                 # to which it belongs; this is to support override of the execute_node method by subclasses of
                 # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                # # MODIFIED 4/11/25 OLD:
-                # node.composition_wrapper.execute_node(node, variable, optimization_num,
-                #                                              synch_with_pnl_options, context)
-                # # MODIFIED 4/11/25 NEW:
-                # pytorch_rep = node.composition.parameters.pytorch_representation.get(context)
-                # pytorch_rep.execute_node(node, variable, optimization_num, synch_with_pnl_options, context)
-                # MODIFIED 4/11/25 NEWER:
                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                # MODIFIED 4/11/25 END
 
                 assert 'DEBUGGING BREAK POINT'
 
@@ -1073,15 +1059,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Return outputs of the outermost Composition
         return outputs
-
-    # MODIFIED 4/11/25 OLD:
-    # def execute_node(self, node, variable, optimization_num, synch_with_pnl_options, context=None):
-    #     """Execute node and store the result in the node's value attribute
-    #     Implemented as method (and includes optimization_num and context as args)
-    #       so that it can be overridden by subclasses of PytorchCompositionWrapper
-    #     """
-    #     value = node.execute(variable, context)
-    # MODIFIED 4/11/25 END
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
