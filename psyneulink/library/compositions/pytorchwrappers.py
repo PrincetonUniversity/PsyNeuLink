@@ -272,8 +272,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._remove_node_from_nodes_map(node)
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
-        # MODIFIED 4/11/25 NEW:
-        # self.composition.pytorch_representation = self
+        # MODIFIED 4/11/25 NEW:  ??FIX: REMOVE ASSIGNMENT IN autodiffcomposition??
+        self.composition.pytorch_representation = self
         # MODIFIED 4/11/25 END
 
         # Get projections from flattened set, so that they are all in the outer Composition
