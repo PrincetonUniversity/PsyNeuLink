@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.16.1.0+72.g27049a15f documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.16.1.0+73.gc2fca5a9c documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+72
+                  0.16.1.0+73
                 </div>
               
             
@@ -1467,12 +1467,6 @@ followed by value_input_nodes; used primarily for internal computations.</p>
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper">
 <em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PytorchEMCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for EMComposition as a Pytorch Module</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node">
-<span class="sig-name descname"><span class="pre">execute_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override to handle storage of entry to memory_matrix by EMStorage Function</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.memory">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">memory</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.memory" title="Permalink to this definition">¶</a></dt>
@@ -1485,9 +1479,15 @@ These are derived from the matrix parameters of the afferent Projections to the 
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PytorchEMMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_specifies_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for EMStorageMechanism as a Pytorch Module</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.store_memory">
-<span class="sig-name descname"><span class="pre">store_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_to_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.store_memory" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper.store_memory">
+<span class="sig-name descname"><span class="pre">store_memory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory_to_store</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper.store_memory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store variable in memory_matrix (parallel EMStorageMechanism._execute)</p>
 <p>For each node in query_input_nodes and value_input_nodes,
 assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
@@ -1522,7 +1522,13 @@ store_memory (corresponds to EMStorageMechanism._execute)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_composition_wrapper_type">
 <span class="sig-name descname"><span class="pre">pytorch_composition_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_composition_wrapper_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper" title="psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper.PytorchEMCompositionWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper.PytorchEMCompositionWrapper</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper" title="psyneulink.library.compositions.emcomposition.pytorchEMwrappers.PytorchEMCompositionWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.emcomposition.pytorchEMwrappers.PytorchEMCompositionWrapper</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type">
+<span class="sig-name descname"><span class="pre">pytorch_mechanism_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper" title="psyneulink.library.compositions.emcomposition.pytorchEMwrappers.PytorchEMMechanismWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.emcomposition.pytorchEMwrappers.PytorchEMMechanismWrapper</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">

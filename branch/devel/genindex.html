@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.16.1.0+72.g27049a15f documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.16.1.0+73.gc2fca5a9c documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+72
+                  0.16.1.0+73
                 </div>
               
             
@@ -266,6 +266,8 @@
       <li><a href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort._assign_variable_from_projection">_assign_variable_from_projection() (psyneulink.core.components.ports.inputport.InputPort method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._build_variable_for_input_CIM">_build_variable_for_input_CIM() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
+      <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper._calculate_torch_gru_internal_state_values">_calculate_torch_gru_internal_state_values() (psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper method)</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component._check_args">_check_args() (psyneulink.core.components.component.Component method)</a>
 </li>
@@ -1025,6 +1027,8 @@
 </li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_ports_for_controller">_update_state_input_ports_for_controller() (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper._use">_use (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       <li><a href="Component.html#psyneulink.core.components.component.Component._validate">_validate() (psyneulink.core.components.component.Component method)</a>
 
       <ul>
@@ -1297,6 +1301,8 @@
       </ul></li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator">AdaptiveIntegrator (class in psyneulink.core.components.functions.stateful.integratorfunctions)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_afferent">add_afferent() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper method)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_backpropagation_learning_pathway">add_backpropagation_learning_pathway() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition">add_condition() (psyneulink.core.scheduling.condition.ConditionSet method)</a>
@@ -1312,6 +1318,8 @@
 </li>
       </ul></li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.add_controller">add_controller() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_efferent">add_efferent() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper method)</a>
 </li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.add_graph_edge">add_graph_edge() (psyneulink.core.scheduling.scheduler.Scheduler method)</a>
 </li>
@@ -1407,6 +1415,8 @@
         <li><a href="Mechanism.html#id8">(psyneulink.core.components.mechanisms.mechanism.Mechanism_Base property)</a>
 </li>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.afferents">(psyneulink.core.compositions.composition.Composition attribute)</a>
+</li>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.afferents">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
 </li>
       </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterCall">AfterCall (class in psyneulink.core.scheduling.condition)</a>
@@ -1538,6 +1548,8 @@
       <li><a href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">AutoAssociativeProjection (class in psyneulink.library.components.projections.pathway.autoassociativeprojection)</a>
 </li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">AutodiffComposition (class in psyneulink.library.compositions.autodiffcomposition)</a>
+</li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper">AutodiffComposition.PytorchMechanismWrapper (class in psyneulink.library.compositions.autodiffcomposition)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1693,6 +1705,12 @@
 </li>
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip">clip (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.collect_afferents">collect_afferents() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper method)</a>
+
+      <ul>
+        <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper.collect_afferents">(psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper method)</a>
+</li>
+      </ul></li>
       <li><a href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function">combination_function (psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism attribute)</a>
 
       <ul>
@@ -1755,6 +1773,8 @@
       </ul></li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.COMPOSITION">COMPOSITION (psyneulink.core.globals.context.ContextFlags attribute)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.composition">composition (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._CompilationData">Composition._CompilationData (class in psyneulink.core.compositions.composition)</a>
 </li>
       <li><a href="CompositionFunctionApproximator.html#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator">CompositionFunctionApproximator (class in psyneulink.core.compositions.compositionfunctionapproximator)</a>
@@ -1799,10 +1819,10 @@
       </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.conditions_basic">conditions_basic (psyneulink.core.scheduling.condition.ConditionSet attribute)</a>
 </li>
-      <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.conditions_structural">conditions_structural (psyneulink.core.scheduling.condition.ConditionSet attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.conditions_structural">conditions_structural (psyneulink.core.scheduling.condition.ConditionSet attribute)</a>
+</li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet">ConditionSet (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.configure_learning">configure_learning() (psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism method)</a>
@@ -2234,10 +2254,14 @@
 </li>
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.efferents">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.efferents">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       </ul></li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition">EMComposition (class in psyneulink.library.compositions.emcomposition.emcomposition)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper">EMComposition.PytorchEMCompositionWrapper (class in psyneulink.library.compositions.emcomposition.emcomposition)</a>
+</li>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper">EMComposition.PytorchEMMechanismWrapper (class in psyneulink.library.compositions.emcomposition.emcomposition)</a>
 </li>
       <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMCompositionError">EMCompositionError</a>
 </li>
@@ -2329,6 +2353,8 @@
 </li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME">EXACT_TIME (psyneulink.core.scheduling.scheduler.SchedulingMode attribute)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.exclude_from_gradient_calc">exclude_from_gradient_calc (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       <li><a href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.exclude_in_autodiff">exclude_in_autodiff (psyneulink.core.components.projections.projection.Projection_Base attribute)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.exclude_node_roles">exclude_node_roles() (psyneulink.core.compositions.composition.Composition method)</a>
@@ -2344,11 +2370,7 @@
 </li>
         <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
-      </ul></li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.execute_node">execute_node() (psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper method)</a>
-
-      <ul>
-        <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.execute_node">(psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper method)</a>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper method)</a>
 </li>
       </ul></li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.execute_until_finished">execute_until_finished (psyneulink.core.components.component.Component attribute)</a>
@@ -2578,6 +2600,8 @@
 </li>
         <li><a href="PredictionErrorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function">(psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism attribute)</a>
 </li>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.function">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -2771,6 +2795,8 @@
 </li>
       <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper">GRUComposition.PytorchGRUCompositionWrapper (class in psyneulink.library.compositions.grucomposition.grucomposition)</a>
 </li>
+      <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper">GRUComposition.PytorchGRUMechanismWrapper (class in psyneulink.library.compositions.grucomposition.grucomposition)</a>
+</li>
       <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUCompositionError">GRUCompositionError</a>
 </li>
   </ul></td>
@@ -2955,6 +2981,8 @@
 </li>
       <li><a href="Pathway.html#psyneulink.core.compositions.pathway.PathwayRole.INPUT">INPUT (psyneulink.core.compositions.pathway.PathwayRole attribute)</a>
 </li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.input">input (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       <li><a href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity">input_activity (psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism attribute)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM">input_CIM (psyneulink.core.compositions.composition.Composition attribute)</a>
@@ -3034,7 +3062,11 @@
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate">integration_rate (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function">integrator_function (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
+
+      <ul>
+        <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.integrator_function">(psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
 </li>
+      </ul></li>
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode">integrator_mode (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction">IntegratorFunction (class in psyneulink.core.components.functions.stateful.integratorfunctions)</a>
@@ -3547,6 +3579,8 @@
         <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist.mean">(psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist attribute)</a>
 </li>
       </ul></li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.mechanism">mechanism (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
+</li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base">Mechanism_Base (class in psyneulink.core.components.mechanisms.mechanism)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.mechanisms">mechanisms (psyneulink.core.compositions.composition.Composition attribute)</a>
@@ -4307,6 +4341,8 @@
       <li><a href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.output">output (psyneulink.core.compositions.pathway.Pathway attribute)</a>
 </li>
       <li><a href="Pathway.html#psyneulink.core.compositions.pathway.PathwayRole.OUTPUT">OUTPUT (psyneulink.core.compositions.pathway.PathwayRole attribute)</a>
+</li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.output">output (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper attribute)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.output_CIM">output_CIM (psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
@@ -5496,6 +5532,14 @@
         <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_composition_wrapper_type">(psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition attribute)</a>
 </li>
       </ul></li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_mechanism_wrapper_type">pytorch_mechanism_wrapper_type (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition attribute)</a>
+
+      <ul>
+        <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.pytorch_mechanism_wrapper_type">(psyneulink.library.compositions.emcomposition.emcomposition.EMComposition attribute)</a>
+</li>
+        <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_mechanism_wrapper_type">(psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation">pytorch_representation (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition attribute)</a>
 </li>
   </ul></td>
@@ -6018,6 +6062,12 @@
         <li><a href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions">(psyneulink.core.globals.log.Log method)</a>
 </li>
       </ul></li>
+      <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values">set_pnl_variable_and_values() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper method)</a>
+
+      <ul>
+        <li><a href="GRUComposition.html#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper.set_pnl_variable_and_values">(psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUMechanismWrapper method)</a>
+</li>
+      </ul></li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.set_weights">set_weights() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 
       <ul>
@@ -6236,7 +6286,7 @@
       </ul></li>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory.store">store() (psyneulink.core.components.functions.stateful.memoryfunctions.ContentAddressableMemory method)</a>
 </li>
-      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper.store_memory">store_memory() (psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMCompositionWrapper method)</a>
+      <li><a href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper.store_memory">store_memory() (psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.PytorchEMMechanismWrapper method)</a>
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.Context.string">string (psyneulink.core.globals.context.Context attribute)</a>
 </li>

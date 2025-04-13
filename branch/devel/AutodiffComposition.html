@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+72.g27049a15f documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.16.1.0+73.gc2fca5a9c documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+72
+                  0.16.1.0+73
                 </div>
               
             
@@ -764,10 +764,197 @@ specified by <a class="reference internal" href="#psyneulink.library.composition
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">PytorchMechanismWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_specifies_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for a Mechanism in a PytorchCompositionWrapper
+These comprise nodes of the PytorchCompositionWrapper, and generally correspond to functions in a Pytorch model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.mechanism">
+<span class="sig-name descname"><span class="pre">mechanism</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>the PsyNeuLink <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> being wrapped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Mechanism</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.composition">
+<span class="sig-name descname"><span class="pre">composition</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.composition" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a> to which the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> being wrapped belongs
+(and for which the PytorchCompositionWrapper – to which the PytorchMechanismWrapper
+belongs – is the pytorch_representation).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">AutodiffComposition</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.afferents">
+<span class="sig-name descname"><span class="pre">afferents</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code> objects that project to the PytorchMechanismWrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[PytorchProjectionWrapper]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.input">
+<span class="sig-name descname"><span class="pre">input</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.input" title="Permalink to this definition">¶</a></dt>
+<dd><p>most recent input to the PytorchMechanismWrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pytorch version of the Mechanism’s function assigned in its __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>_gen_pytorch_fct</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.integrator_function">
+<span class="sig-name descname"><span class="pre">integrator_function</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.integrator_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pytorch version of the Mechanism’s integrator_function assigned in its __init__ if Mechanism
+has an integrator_function;  this assumes the Mechanism also has an integrator_mode attribute
+that is used to determine whether to execute the integrator_function first, and use its result
+as the input to its function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>_gen_pytorch_fct</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.output">
+<span class="sig-name descname"><span class="pre">output</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>most recent output of the PytorchMechanismWrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.efferents">
+<span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.efferents" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of <code class="xref any docutils literal notranslate"><span class="pre">PytorchProjectionWrapper</span></code> objects that project from the PytorchMechanismWrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[PytorchProjectionWrapper]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.exclude_from_gradient_calc">
+<span class="sig-name descname"><span class="pre">exclude_from_gradient_calc</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.exclude_from_gradient_calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
+the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
+<code class="xref any docutils literal notranslate"><span class="pre">update_learning_parameters</span></code> method.  BEFORE is not currently supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool or str[BEFORE | AFTER]: False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper._use">
+<span class="sig-name descname"><span class="pre">_use</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper._use" title="Permalink to this definition">¶</a></dt>
+<dd><p>designates the uses of the Mechanism, specified by the following keywords (see
+PytorchCompositionWrapper <code class="xref any docutils literal notranslate"><span class="pre">docstring</span></code> for additional details):</p>
+<ul class="simple">
+<li><p><em>LEARNING</em>: inputs and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> Parameters) are used
+for actual execution of the corresponding Pytorch Module;</p></li>
+<li><p><em>SYNCH</em>: used to store results of executing a Pytorch module that are then transferred to
+the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> Parameter of the PytorchMechanismWrappers <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.mechanism" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mechanism</span></code></a>;</p></li>
+<li><p><em>SHOW_PYTORCH</em>:  <code class="xref any docutils literal notranslate"><span class="pre">Mechanism</span></code> is included when the
+<code class="xref any docutils literal notranslate"><span class="pre">AutoDiffComposition</span></code>s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method to used with the
+<code class="docutils literal notranslate"><span class="pre">show_pytorch</span></code> option to display its <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pytorch_representation</span></code></a>;
+if it is not specified, the <code class="xref any docutils literal notranslate"><span class="pre">Mechanism</span></code> is not displayed when the
+<code class="xref any docutils literal notranslate"><span class="pre">AutoDiffComposition</span></code>s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method is called, even if the
+<code class="docutils literal notranslate"><span class="pre">show_pytorch</span></code> option is specified.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[LEARNING, SYNCH]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_afferent">
+<span class="sig-name descname"><span class="pre">add_afferent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">afferent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_afferent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add ProjectionWrapper for afferent to MechanismWrapper.
+For use in call to collect_afferents</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_efferent">
+<span class="sig-name descname"><span class="pre">add_efferent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">efferent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.add_efferent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add ProjectionWrapper for efferent from MechanismWrapper.
+Implemented for completeness;  not currently used</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.collect_afferents">
+<span class="sig-name descname"><span class="pre">collect_afferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.collect_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return afferent projections for input_port(s) of the Mechanism
+If there is only one input_port, return the sum of its afferents (for those in Composition)
+If there are multiple input_ports, return a tensor (or list of tensors if input ports are ragged) of shape:</p>
+<p>(batch, input_port, projection, …)</p>
+<p>Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.</p>
+<p>FIX: AUGMENT THIS TO SUPPORT InputPort’s function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute Mechanism’s _gen_pytorch version of function on variable.
+Enforce result to be 2d, and assign to self.output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values">
+<span class="sig-name descname"><span class="pre">set_pnl_variable_and_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.set_pnl_variable_and_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the state of the PytorchMechanismWrapper’s Mechanism
+Note: if execute_mech=True requires that variable=True</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_composition_wrapper_type">
 <span class="sig-name descname"><span class="pre">pytorch_composition_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_composition_wrapper_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.pytorchwrappers.PytorchCompositionWrapper</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_mechanism_wrapper_type">
+<span class="sig-name descname"><span class="pre">pytorch_mechanism_wrapper_type</span></span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_mechanism_wrapper_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper" title="psyneulink.library.compositions.pytorchwrappers.PytorchMechanismWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.library.compositions.pytorchwrappers.PytorchMechanismWrapper</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
