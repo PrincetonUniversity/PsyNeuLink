@@ -273,7 +273,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
         # MODIFIED 4/11/25 NEW:  ??FIX: REMOVE ASSIGNMENT IN autodiffcomposition??
-        self.composition.pytorch_representation = self
+        # self.composition.pytorch_representation = self
+        self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         # MODIFIED 4/11/25 END
 
         # Get projections from flattened set, so that they are all in the outer Composition
@@ -362,7 +363,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # FIX: CAUSES RECURSION ERROR FOR state_dict()
         #      (WHEN node_wrapper = GRUMechanismWrapper for PYTORCH GRU NODE)
         self._modules_dict[node.name] = node_wrapper
-        # self.state_dict()
+        self.state_dict()
 
     def _remove_node_from_nodes_map(self, node):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""

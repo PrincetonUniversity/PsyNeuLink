@@ -64,12 +64,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
-        # # IMPLEMENTATION NOTE:
-        # #    This is needed for access by subcomponents to the PytorchCompositionWrapper to which they belong,
-        # #    and is done like this instead of assigning it as an attribute on them directly,
-        # #    since the latter introduces recursion when torch.nn.module.state_dict() is called on them.
+        # IMPLEMENTATION NOTE:
+        #    This is needed for access by subcomponents to the PytorchCompositionWrapper to which they belong,
+        #    when EMComposition is nested and _build_pytorch_representation is not called on it;
+        #    it must be done like this, instead of assigning it as an attribute on them directly,
+        #    since the latter introduces recursion when torch.nn.module.state_dict() is called on them.
         # # MODIFIED 4/11/25 NEW: FIX: ?CHECK FIRST IF pytorch_representation IS NONE?
-        # self.composition.pytorch_representation = self
+        self.composition.pytorch_representation = self
 
 
     # FIX: MOVE THIS TO MECHANISM WRAPPER:

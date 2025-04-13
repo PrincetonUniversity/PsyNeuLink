@@ -60,7 +60,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         # These have to be after super(), so that they can be assigned as attributes of torch.nn.module
         # # MODIFIED 4/11/25 NEW: FIX: ?CHECK FIRST IF pytorch_representation IS NONE?
-        # self.composition.pytorch_representation = self
+        self.composition.pytorch_representation = self
         # MODIFIED 4/11/25 END
         self.torch_gru = torch_gru
         self.gru_pytorch_node = gru_pytorch_node
