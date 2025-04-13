@@ -5,7 +5,7 @@ __all__ = list(emcomposition.__all__)
 
 try:
     import torch
-    from .pytorchEMcompositionwrapper import *
+    from .pytorchEMwrappers import *
     __all__.extend(pytorchEMcompositionwrapper.__all__)
 except:
     pass

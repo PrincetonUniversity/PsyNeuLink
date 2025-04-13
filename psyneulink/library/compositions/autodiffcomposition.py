@@ -651,8 +651,9 @@ class AutodiffComposition(Composition):
 
     componentCategory = AUTODIFF_COMPOSITION
     if torch_available:
-        from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+        from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
         pytorch_composition_wrapper_type = PytorchCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchMechanismWrapper
 
     class Parameters(Composition.Parameters):
         pytorch_representation = None
@@ -1086,7 +1087,6 @@ class AutodiffComposition(Composition):
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context)
-            self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
         learning_rate = self._runtime_learning_rate or self.learning_rate
