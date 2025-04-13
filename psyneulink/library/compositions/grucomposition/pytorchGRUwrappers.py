@@ -335,9 +335,11 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
                                  bias=bias).to(dtype=self.torch_dtype)
+        torch_GRU.name =  f"PytorchFunctionWrapper[GRU NODE]"
+        torch_GRU._gen_pytorch_fct = lambda x,y : torch_GRU
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)
 
-        function_wrapper = PytorchGRUFunctionWrapper(torch_GRU, device, context)
+        function_wrapper = PytorchFunctionWrapper(torch_GRU, device, context)
         self.function = function_wrapper
         mechanism.function = function_wrapper.function
 
@@ -613,19 +615,3 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
             detached_matrix = self.matrix.detach().cpu().numpy()
             self.projection.parameters.matrix._set(detached_matrix, context=self._context)
             self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
-
-
-# class PytorchGRUFunctionWrapper(PytorchFunctionWrapper):
-class PytorchGRUFunctionWrapper(torch.nn.Module):
-    def __init__(self, function, device, context=None):
-        super().__init__()
-        self.name = f"PytorchFunctionWrapper[GRU NODE]"
-        self._context = context
-        self._pnl_function = function
-        self.function = function
-
-    def __repr__(self):
-        return "PytorchWrapper for: " + self._pnl_function.__repr__()
-
-    def __call__(self, *args, **kwargs):
-        return self.function(*args, **kwargs)
