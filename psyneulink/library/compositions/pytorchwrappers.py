@@ -700,20 +700,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #     optimizer_params_parsed[pnl_param_name]
                 # MODIFIED 4/14/25 NEW:
                 if isinstance(param, tuple):
-                    param = self.state_dict()[param[0]][param[1]]
+                    param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param[1]]
                 elif param in self.state_dict():
-                    optimizer_params[self.state_dict()[param]] = optimizer_params_parsed[pnl_param_name]
+                    param = self.state_dict()[param]
                 else:
                     assert False, f"PROGRAM ERROR: {self.__class__.__name__}._parse_optimizer_params: " \
                         f"parameter {param} is not in state_dict()"
+                optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
 
                 # MODIFIED 4/14/25 END
 
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
-            param = self.state_dict()[param]
-            if hasattr(composition, 'enable_learning') and composition.enable_learning is False:
+            # param = self.state_dict()[param]
+            if (learning_rate is False or
+                    hasattr(composition, 'enable_learning') and composition.enable_learning is False):
                 # Learning disabled for the Composition
                 param.requires_grad = False
             else:
