@@ -681,11 +681,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
         composition = self.composition
 
-        # Replace any Projections in optimizer_params with their names
+        # Replace any Projections in optimizer_params with their names -> optimizer_params_parsed
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
                                    for k, v in self.composition._optimizer_params.items()}
 
-        # Replace pnl names with refs to torch params in state_dict
+        # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
         for pnl_param_name in optimizer_params_parsed:
@@ -695,20 +695,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if torch_param_name not in torch_param_name_to_state_dict_key_map:
                     raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
                                                    f"in {self.composition.name}.")
-                # FIX: NEED TO USE SLICE INFO AND PARAM NAME FOR PARAMS SPECIFIED AS TUPLES
-                optimizer_params[torch_param_name_to_state_dict_key_map[torch_param_name]] = \
-                    optimizer_params_parsed[pnl_param_name]
-        assert True
+                # MODIFIED 4/14/25 OLD:
+                # optimizer_params[torch_param_name_to_state_dict_key_map[torch_param_name]] = \
+                #     optimizer_params_parsed[pnl_param_name]
+                # MODIFIED 4/14/25 NEW:
+                if isinstance(param, tuple):
+                    param = self.state_dict()[param[0]][param[1]]
+                elif param in self.state_dict():
+                    optimizer_params[self.state_dict()[param]] = optimizer_params_parsed[pnl_param_name]
+                else:
+                    assert False, f"PROGRAM ERROR: {self.__class__.__name__}._parse_optimizer_params: " \
+                        f"parameter {param} is not in state_dict()"
 
-        # Parse learning rate specs in optimizer_params
+
+                # MODIFIED 4/14/25 END
+
+        # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
-            assert any(param is state_param for state_param in self.state_dict().values()), \
-                f"PROGRAM ERROR: {param} not in state_dict for '{self.name}'"
-            if composition.enable_learning is False:
+            param = self.state_dict()[param]
+            if hasattr(composition, 'enable_learning') and composition.enable_learning is False:
+                # Learning disabled for the Composition
                 param.requires_grad = False
             else:
+                # Learning is not disabled for the Projection
                 if learning_rate is not False:
-                    # If learning_rate is True, use composition.learning_rate, else specified value
+                    # If learning_rate = ``True``, use composition.learning_rate, else specified value
                     lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
                     param.requires_grad = True
                     self._optimizer_param_groups.append({'params': param, 'lr': lr})
