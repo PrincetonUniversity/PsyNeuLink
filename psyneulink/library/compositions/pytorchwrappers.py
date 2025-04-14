@@ -697,19 +697,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
-        error_msg = (f"Parameter specified in 'optimizer_params' arg of constructor for "
-                     f"'{self.composition.name}' is not for a Projection associated with a Pytorch parameter ")
         for pnl_param_name in optimizer_params_parsed:
             # Get torch parameter specification for Projection names specified in optimizer_params_parsed
             try:
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
             except KeyError:
-                raise AutodiffCompositionError(error_msg + f"('{pnl_param_name}').")
+                raise AutodiffCompositionError(
+                    f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+                    f"('{pnl_param_name}') is not associated with a Pytorch parameter.")
             # If param spec is tuple, param name from first item (second is slice)
             torch_param_name = param.name if isinstance(param, TorchParam) else param
             if torch_param_name not in torch_param_name_to_state_dict_key_map:
-                raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
-                                               f"in {self.composition.name}.")
+                raise AutodiffCompositionError(
+                    f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+                    f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
             if isinstance(param, tuple):
                 # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
                 param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
@@ -717,11 +718,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Otherwise, param should be one specified in state_dict()
                 param = self.state_dict()[param]
             else:
-                assert False, f"PROGRAM ERROR: " + error_msg + f"('{pnl_param_name}')."
+                assert False, (f"PROGRAM ERROR: {param} retrieved from {self.name}._pnl_refs_to_torch_params_map() "
+                               f"for {pnl_param_name} is not a recognizable specification of a torch parameter.")
             optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
+            if not isinstance(learning_rate, (int, float)):
+                raise AutodiffCompositionError(
+                    f"Learning rate specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+                    f"('{learning_rate}') must be an int or float.")
             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                     or learning_rate is False):
                 # Learning disabled for the Composition or the Projection
