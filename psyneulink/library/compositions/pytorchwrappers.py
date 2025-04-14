@@ -692,8 +692,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
+        # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
         for pnl_param_name in optimizer_params_parsed:
+            # Get torch parameter specification for Projection names specified in optimizer_params_parsed
             param = self._pnl_refs_to_torch_params_map.get(pnl_param_name, None)
             if param is not None:
                 # If param spec is tuple, param name from first item (second is slice)
@@ -702,13 +704,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
                                                    f"in {self.composition.name}.")
                 if isinstance(param, tuple):
-                    # If param spec is tuple, use param name (from above) to get from state_dict() & apply slice
+                    # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
                     param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
                 elif param in self.state_dict():
+                    # Otherwise, param should be one specified in state_dict()
                     param = self.state_dict()[param]
                 else:
-                    assert False, f"PROGRAM ERROR: {self.__class__.__name__}._parse_optimizer_params: " \
-                        f"parameter {param} is not in state_dict()"
+                    assert False, (f"PROGRAM ERROR: Parameter specified in 'optimizer_params' arg of constructor "
+                                   f"for {self.composition.name} ({param}) is not one of its torch parameters.")
                 optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
         # Create parameter groups and assign learning rates
