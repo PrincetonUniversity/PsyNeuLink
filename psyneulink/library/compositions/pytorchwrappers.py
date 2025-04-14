@@ -437,7 +437,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
-                pnl_proj, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, device, context)
+                pnl_proj, proj_name, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, device, context)
                 # # use = [LEARNING, SYNCH, SHOW_PYTORCH]
                 # use = [LEARNING, SYNCH]
 
@@ -446,6 +446,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
                 pnl_proj = projection
+                proj_name = pnl_proj.name
                 use = [LEARNING, SYNCH, SHOW_PYTORCH]
 
             else:
@@ -467,6 +468,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_rcvr.add_afferent(pytorch_proj_wrapper)
 
             proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
+            # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
+            # MODIFIED 4/13/25 OLD:
+            # self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.matrix})
+            # MODIFIED 4/13/25 NEW:
+            self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.name})
+            # MODIFIED 4/13/25 END
 
         return proj_wrappers_pairs
 
@@ -503,6 +510,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
 
+            # Get name of the direct afferent to the nested INPUT Node,
+            # to use as key in _pnl_refs_to_torch_params_map, as that is the name the User will use
+            source_port = projection.sender
+            destination_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
+            direct_proj = [proj for proj in destination_port.path_afferents if proj in source_port.efferents]
+            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {source_port.owner.name} has more than one efferent"
+                                           f" that projects to {destination_port.owner.name}")
+            proj_name = direct_proj[0].name if direct_proj else projection.name
+
         # EXIT_NESTED
         # output_cim of nested Composition:
         #    - projection is from output_CIM that is not in current Composition so must be from a nested one;
@@ -525,7 +541,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                  context))
             if proj_rcvr_wrapper is None:
                 proj_rcvr_wrapper = self.nodes_map[rcvr_mech]
-        return proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
+
+            # Get name of the direct efferent from the nested OUTPUT Node
+            # to use as key in _pnl_refs_to_torch_params_map, as that is the name the User will use
+            destination_port = projection.receiver
+            source_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
+            direct_proj = [proj for proj in source_port.efferents if proj in destination_port.path_afferents]
+            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {desintation_port.owner.name} has more than one afferent"
+                                           f" that projects to it from {source_port.owner.name}")
+            proj_name = direct_proj[0].name if direct_proj else projection.name
+
+        return proj, proj_name, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
     def _flatten_for_pytorch(self,
                              projection,
@@ -638,15 +664,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
         composition = self.composition
 
-        # Replace pnl names with actual torch params as keys in optimizer_params
-        optimizer_params = self.composition._optimizer_params
-        for param_name in optimizer_params.copy():
-            param = self._pnl_refs_to_torch_params_map.get(param_name, None)
-            if param:
-                optimizer_params[param] = optimizer_params.pop(param_name)
 
-        # FIX: NOT ALL PROJECTIONS FOR WHICH learning_rate COULD BE SET ARE IN
-        #      _pnl_refs_to_torch_params_map (SEE ABOVE) AND THEREFORE FINDABLE BELOW (INCLUDING IN state_dict())
+        # Replace any Projections in optimizer_params with their names
+        optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
+                                   for k, v in self.composition._optimizer_params.items()}
+
+        # Replace pnl names with actual torch params as keys in optimizer_params
+        optimizer_params = {}
+        for param_name in optimizer_params_parsed:
+            param = self._pnl_refs_to_torch_params_map.get(param_name, None)
+            if param is not None:
+                optimizer_params[param] = optimizer_params_parsed[param_name]
+
+
+        # for param_name in optimizer_params_parsed:
+        #     param = self._pnl_refs_to_torch_params_map.get(param_name, None)
+        #     if param is not None:
+        #         optimizer_params[param] = optimizer_params.pop(param_name)
+
         # Parse learning rate specs in optimizer_params
         for param, learning_rate in optimizer_params.items():
             assert any(param is state_param for state_param in self.state_dict().values()), \
@@ -1719,9 +1754,7 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # Use Projection's name as key to align with name of torch Parameter
-        self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
-        # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
+        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
         #           cf _parse_optimizer_params():
         if projection.learnable is False:
             self.matrix.requires_grad = False

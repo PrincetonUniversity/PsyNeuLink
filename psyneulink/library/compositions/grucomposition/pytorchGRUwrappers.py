@@ -119,37 +119,50 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         hid_len = pnl.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
-
-        w_ih = torch_gru.state_dict()['weight_ih_l0']
-        w_hh = torch_gru.state_dict()['weight_hh_l0']
-        torch_gru_wts_indices = [(w_ih, slice(None, z_idx)), (w_ih, slice(z_idx, n_idx)),(w_ih, slice(n_idx, None)),
-                                 (w_hh, slice(None, z_idx)), (w_hh, slice(z_idx, n_idx)), (w_hh, slice(n_idx, None))]
-        pnl_proj_wts = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
-        for pnl_proj, torch_matrix in zip(pnl_proj_wts, torch_gru_wts_indices):
-            _projection_wrapper_pairs.append((pnl_proj,
-                                             PytorchGRUProjectionWrapper(projection=pnl_proj,
-                                                                         torch_parameter=torch_matrix,
-                                                                         use=SYNCH,
-                                                                         composition=self.composition,
-                                                                         device=device)))
-        self._pnl_refs_to_torch_params_map = {'w_ih': w_ih, 'w_hh':  w_hh}
+        w_ih_name = 'weight_ih_l0'
+        w_hh_name = 'weight_hh_l0'
+        torch_gru_param_specs = [(w_ih_name, slice(None, z_idx)),
+                                 (w_ih_name, slice(z_idx, n_idx)),
+                                 (w_ih_name, slice(n_idx, None)),
+                                 (w_hh_name, slice(None, z_idx)),
+                                 (w_hh_name, slice(z_idx, n_idx)),
+                                 (w_hh_name, slice(n_idx, None))]
+        pnl_projections = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
+        for pnl_proj, torch_param_spec in zip(pnl_projections, torch_gru_param_specs):
+            torch_param_tuple = (torch_gru.state_dict()[torch_param_spec[0]], torch_param_spec[1])
+            pytorch_wrapper = PytorchGRUProjectionWrapper(projection=pnl_proj,
+                                                          torch_parameter=torch_param_tuple,
+                                                          use=SYNCH,
+                                                          composition=self.composition,
+                                                          device=device)
+            _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
+            # MODIFIED 4/13/25 NEW:
+            self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
+        # MODIFIED 4/13/25 OLD:
+        # self._pnl_refs_to_torch_params_map.update({'w_ih': w_ih, 'w_hh':  w_hh})
+        # MODIFIED 4/13/25 END
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
-            b_ih = torch_gru.state_dict()['bias_ih_l0']
-            b_hh = torch_gru.state_dict()['bias_hh_l0']
-            torch_gru_bias_indices = [(b_ih, slice(None, z_idx)), (b_ih, slice(z_idx, n_idx)),(b_ih, slice(n_idx, None)),
-                                      (b_hh, slice(None, z_idx)), (b_hh, slice(z_idx, n_idx)), (b_hh, slice(n_idx, None))]
+            b_ih_name = 'bias_ih_l0'
+            b_hh_name = 'bias_hh_l0'
+            torch_gru_bias_specs = [(b_ih_name, slice(None, z_idx)),
+                                      (b_ih_name, slice(z_idx, n_idx)),
+                                      (b_ih_name, slice(n_idx, None)),
+                                      (b_hh_name, slice(None, z_idx)),
+                                      (b_hh_name, slice(z_idx, n_idx)),
+                                      (b_hh_name, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
-            for pnl_bias_proj, torch_bias in zip(pnl_biases, torch_gru_bias_indices):
-                _projection_wrapper_pairs.append((pnl_bias_proj,
-                                                  PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
-                                                                              torch_parameter=torch_bias,
-                                                                              use=SYNCH,
-                                                                              composition=pnl,
-                                                                              device=device)))
-            self._pnl_refs_to_torch_params_map.update({'b_ih': b_ih, 'b_hh':  b_hh})
+            for pnl_bias_proj, torch_bias_spec in zip(pnl_biases, torch_gru_bias_specs):
+                torch_bias_tuple = (torch_gru.state_dict()[torch_bias_spec[0]], torch_bias_spec[1])
+                pytorch_wrapper = PytorchGRUProjectionWrapper(projection=pnl_bias_proj,
+                                                              torch_parameter=torch_bias_tuple,
+                                                              use=SYNCH,
+                                                              composition=pnl,
+                                                              device=device)
+                _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
+                self._pnl_refs_to_torch_params_map.update({pnl_bias_proj.name: torch_bias_spec})
 
         return _projection_wrapper_pairs
 
@@ -175,9 +188,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             try:
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
-                                             sender=pnl_proj.sender,
-                                             receiver=self.composition.gru_mech,
-                                             learnable=pnl_proj.learnable)
+                                                sender=pnl_proj.sender,
+                                                receiver=self.composition.gru_mech,
+                                                learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.afferents[0]
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
