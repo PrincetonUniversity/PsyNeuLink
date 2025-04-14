@@ -684,35 +684,41 @@ class PytorchCompositionWrapper(torch.nn.Module):
             4) Assign optimizer_params to self._optimizer_param_groups
             5) Assign optimizer_params to self.optimizer
         """
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
         composition = self.composition
 
         # Replace any Projections in optimizer_params with their names -> optimizer_params_parsed
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
                                    for k, v in self.composition._optimizer_params.items()}
 
-        # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
-        optimizer_params = {}
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
+
+        # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
+        optimizer_params = {}
+        error_msg = (f"Parameter specified in 'optimizer_params' arg of constructor for "
+                     f"'{self.composition.name}' is not for a Projection associated with a Pytorch parameter ")
         for pnl_param_name in optimizer_params_parsed:
             # Get torch parameter specification for Projection names specified in optimizer_params_parsed
-            param = self._pnl_refs_to_torch_params_map.get(pnl_param_name, None)
-            if param is not None:
-                # If param spec is tuple, param name from first item (second is slice)
-                torch_param_name = param.name if isinstance(param, TorchParam) else param
-                if torch_param_name not in torch_param_name_to_state_dict_key_map:
-                    raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
-                                                   f"in {self.composition.name}.")
-                if isinstance(param, tuple):
-                    # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
-                    param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
-                elif param in self.state_dict():
-                    # Otherwise, param should be one specified in state_dict()
-                    param = self.state_dict()[param]
-                else:
-                    assert False, (f"PROGRAM ERROR: Parameter specified in 'optimizer_params' arg of constructor "
-                                   f"for {self.composition.name} ({param}) is not one of its torch parameters.")
-                optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
+            try:
+                param = self._pnl_refs_to_torch_params_map[pnl_param_name]
+            except KeyError:
+                raise AutodiffCompositionError(error_msg + f"('{pnl_param_name}').")
+            # If param spec is tuple, param name from first item (second is slice)
+            torch_param_name = param.name if isinstance(param, TorchParam) else param
+            if torch_param_name not in torch_param_name_to_state_dict_key_map:
+                raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
+                                               f"in {self.composition.name}.")
+            if isinstance(param, tuple):
+                # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
+                param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
+            elif param in self.state_dict():
+                # Otherwise, param should be one specified in state_dict()
+                param = self.state_dict()[param]
+            else:
+                assert False, f"PROGRAM ERROR: " + error_msg + f"('{pnl_param_name}')."
+            optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
