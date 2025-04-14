@@ -19,7 +19,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
-    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, SUBCLASS_WRAPPERS
+    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, SUBCLASS_WRAPPERS, TorchParam
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
@@ -121,12 +121,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         n_idx = 2 * hid_len
         w_ih_name = 'weight_ih_l0'
         w_hh_name = 'weight_hh_l0'
-        torch_gru_param_specs = [(w_ih_name, slice(None, z_idx)),
-                                 (w_ih_name, slice(z_idx, n_idx)),
-                                 (w_ih_name, slice(n_idx, None)),
-                                 (w_hh_name, slice(None, z_idx)),
-                                 (w_hh_name, slice(z_idx, n_idx)),
-                                 (w_hh_name, slice(n_idx, None))]
+        torch_gru_param_specs = [TorchParam(w_ih_name, slice(None, z_idx)),
+                                 TorchParam(w_ih_name, slice(z_idx, n_idx)),
+                                 TorchParam(w_ih_name, slice(n_idx, None)),
+                                 TorchParam(w_hh_name, slice(None, z_idx)),
+                                 TorchParam(w_hh_name, slice(z_idx, n_idx)),
+                                 TorchParam(w_hh_name, slice(n_idx, None))]
         pnl_projections = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
         for pnl_proj, torch_param_spec in zip(pnl_projections, torch_gru_param_specs):
             torch_param_tuple = (torch_gru.state_dict()[torch_param_spec[0]], torch_param_spec[1])
@@ -143,12 +143,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
             b_ih_name = 'bias_ih_l0'
             b_hh_name = 'bias_hh_l0'
-            torch_gru_bias_specs = [(b_ih_name, slice(None, z_idx)),
-                                      (b_ih_name, slice(z_idx, n_idx)),
-                                      (b_ih_name, slice(n_idx, None)),
-                                      (b_hh_name, slice(None, z_idx)),
-                                      (b_hh_name, slice(z_idx, n_idx)),
-                                      (b_hh_name, slice(n_idx, None))]
+            torch_gru_bias_specs = [TorchParam(b_ih_name, slice(None, z_idx)),
+                                    TorchParam(b_ih_name, slice(z_idx, n_idx)),
+                                    TorchParam(b_ih_name, slice(n_idx, None)),
+                                    TorchParam(b_hh_name, slice(None, z_idx)),
+                                    TorchParam(b_hh_name, slice(z_idx, n_idx)),
+                                    TorchParam(b_hh_name, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
             for pnl_bias_proj, torch_bias_spec in zip(pnl_biases, torch_gru_bias_specs):
                 torch_bias_tuple = (torch_gru.state_dict()[torch_bias_spec[0]], torch_bias_spec[1])

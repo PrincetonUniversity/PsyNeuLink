@@ -8,6 +8,8 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
+from h5py.h5f import namedtuple
+
 from psyneulink._typing import Optional, Literal, Union
 
 import graph_scheduler
@@ -44,11 +46,14 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
-           'ENTER_NESTED', 'EXIT_NESTED', 'SUBCLASS_WRAPPERS']
+           'ENTER_NESTED', 'EXIT_NESTED', 'SUBCLASS_WRAPPERS', 'TorchParam']
 
 SUBCLASS_WRAPPERS = 'subclass_wrappers'
 ENTER_NESTED = 0
 EXIT_NESTED = 1
+
+TorchParam = namedtuple("TorchParam", "name slice")
+
 
 class DataTypeEnum(Enum):
 
@@ -691,16 +696,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for pnl_param_name in optimizer_params_parsed:
             param = self._pnl_refs_to_torch_params_map.get(pnl_param_name, None)
             if param is not None:
-                torch_param_name = param[0] if isinstance(param, tuple) else param
+                # If param spec is tuple, param name from first item (second is slice)
+                torch_param_name = param.name if isinstance(param, TorchParam) else param
                 if torch_param_name not in torch_param_name_to_state_dict_key_map:
                     raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
                                                    f"in {self.composition.name}.")
-                # MODIFIED 4/14/25 OLD:
-                # optimizer_params[torch_param_name_to_state_dict_key_map[torch_param_name]] = \
-                #     optimizer_params_parsed[pnl_param_name]
-                # MODIFIED 4/14/25 NEW:
                 if isinstance(param, tuple):
-                    param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param[1]]
+                    # If param spec is tuple, use param name (from above) to get from state_dict() & apply slice
+                    param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
                 elif param in self.state_dict():
                     param = self.state_dict()[param]
                 else:
@@ -708,18 +711,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"parameter {param} is not in state_dict()"
                 optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
-
-                # MODIFIED 4/14/25 END
-
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
-            # param = self.state_dict()[param]
-            if (learning_rate is False or
-                    hasattr(composition, 'enable_learning') and composition.enable_learning is False):
-                # Learning disabled for the Composition
+            if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
+                    or learning_rate is False):
+                # Learning disabled for the Composition or the Projection
                 param.requires_grad = False
             else:
-                # Learning is not disabled for the Projection
+                # Learning is enabled for the Projection
                 if learning_rate is not False:
                     # If learning_rate = ``True``, use composition.learning_rate, else specified value
                     lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
