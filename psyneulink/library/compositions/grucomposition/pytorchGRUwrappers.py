@@ -136,11 +136,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           composition=self.composition,
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
-            # MODIFIED 4/13/25 NEW:
             self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
-        # MODIFIED 4/13/25 OLD:
-        # self._pnl_refs_to_torch_params_map.update({'w_ih': w_ih, 'w_hh':  w_hh})
-        # MODIFIED 4/13/25 END
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE

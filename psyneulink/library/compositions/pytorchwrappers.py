@@ -266,6 +266,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 self.projections_map.update(node_wrapper.projections_map)
                 for k, v in node_wrapper.nodes_map.items():
                     self._add_node_to_nodes_map(k, v)
+                self._pnl_refs_to_torch_params_map.update(node_wrapper._pnl_refs_to_torch_params_map)
         # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
         nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
         for node in nodes_to_remove:
@@ -661,26 +662,43 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
     def _parse_optimizer_params(self, context):
-        """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
+        """Assign parameter-specific optimizer param groups for PyTorch GRU module
+        Relevant objects:
+            self.composition._optimizer_params: {Projection or Projection.name: lr}
+            optimizer_params_parsed: {Projection.name: lr}
+            self.states_dict(): {Torch parameter reference : torch param}
+            self._pnl_refs_to_torch_params_map: {Projection.name: PytorchWrapper or torch param tuple (name, slice)}
+            optimizer_params:  {Torch parameter ref: lr}
+        Design pattern:
+            1) Parse optimizer_params to replace Projections with their names -> optimizer_params_parsed
+            2) Replace Projection names in optimizer_params_parsed with torch Parameter refs -> optimizer_params:
+                 use self._pnl_refs_to_torch_params_map:
+                  Projection.name -> Torch parameter name or (name, slice)
+                      if Torch parameter name, find it in state_dict()
+                      if tuple, use name to find it in state_dict(), ?and create new parameter using slice?
+            4) Assign optimizer_params to self._optimizer_param_groups
+            5) Assign optimizer_params to self.optimizer
+        """
         composition = self.composition
-
 
         # Replace any Projections in optimizer_params with their names
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
                                    for k, v in self.composition._optimizer_params.items()}
 
-        # Replace pnl names with actual torch params as keys in optimizer_params
+        # Replace pnl names with refs to torch params in state_dict
         optimizer_params = {}
-        for param_name in optimizer_params_parsed:
-            param = self._pnl_refs_to_torch_params_map.get(param_name, None)
+        torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
+        for pnl_param_name in optimizer_params_parsed:
+            param = self._pnl_refs_to_torch_params_map.get(pnl_param_name, None)
             if param is not None:
-                optimizer_params[param] = optimizer_params_parsed[param_name]
-
-
-        # for param_name in optimizer_params_parsed:
-        #     param = self._pnl_refs_to_torch_params_map.get(param_name, None)
-        #     if param is not None:
-        #         optimizer_params[param] = optimizer_params.pop(param_name)
+                torch_param_name = param[0] if isinstance(param, tuple) else param
+                if torch_param_name not in torch_param_name_to_state_dict_key_map:
+                    raise AutodiffCompositionError(f"{pnl_param_name} is not the name of a learnable Projection "
+                                                   f"in {self.composition.name}.")
+                # FIX: NEED TO USE SLICE INFO AND PARAM NAME FOR PARAMS SPECIFIED AS TUPLES
+                optimizer_params[torch_param_name_to_state_dict_key_map[torch_param_name]] = \
+                    optimizer_params_parsed[pnl_param_name]
+        assert True
 
         # Parse learning rate specs in optimizer_params
         for param, learning_rate in optimizer_params.items():
@@ -740,6 +758,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
+            # self.register_parameter(proj_wrapper.projection.name, proj_wrapper.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
