@@ -307,7 +307,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
         self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
-        self._pnl_refs_to_torch_params_map = {} # API for PNL refs to PyTorch params (used by _parse_optimizer_params)
+        self._pnl_refs_to_torch_params_map = {} # API for PNL refs to PyTorch params (used in _update_optimizer_params)
 
         self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.minibatch_loss_count = 0  # Count of losses within batch
@@ -666,12 +666,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
-    def _parse_optimizer_params(self, context):
-        """Assign parameter-specific optimizer param groups for PyTorch GRU module
+    def _update_optimizer_params(self, optimizer, optimizer_param_specs:dict, context):
+        """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
         Relevant objects:
             self.composition._optimizer_params: {Projection or Projection.name: lr}
             optimizer_params_parsed: {Projection.name: lr}
-            self.states_dict(): {Torch parameter reference : torch param}
+            self.named_parameters(): (Torch parameter reference, torch param)
             self._pnl_refs_to_torch_params_map: {Projection.name: PytorchWrapper or torch param tuple (name, slice)}
             optimizer_params:  {Torch parameter ref: lr}
         Design pattern:
@@ -679,8 +679,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             2) Replace Projection names in optimizer_params_parsed with torch Parameter refs -> optimizer_params:
                  use self._pnl_refs_to_torch_params_map:
                   Projection.name -> Torch parameter name or (name, slice)
-                      if Torch parameter name, find it in state_dict()
-                      if tuple, use name to find it in state_dict(), ?and create new parameter using slice?
+                      if Torch parameter name, find it in named_parameters()
+                      if tuple, use name to find it in named_parameters(), and create a new parameter using slice?
             4) Assign optimizer_params to self._optimizer_param_groups
             5) Assign optimizer_params to self.optimizer
         """
@@ -690,7 +690,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Replace any Projections in optimizer_params with their names -> optimizer_params_parsed
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
-                                   for k, v in self.composition._optimizer_params.items()}
+                                   for k, v in optimizer_param_specs.items()}
 
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
@@ -707,19 +707,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     f"('{pnl_param_name}') is not associated with a Pytorch parameter.")
             # If param spec is tuple, param name from first item (second is slice)
             torch_param_name = param.name if isinstance(param, TorchParam) else param
+            torch_param_slice = param.slice if isinstance(param, TorchParam) else None
             if torch_param_name not in torch_param_name_to_state_dict_key_map:
                 raise AutodiffCompositionError(
                     f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
-            if isinstance(param, tuple):
+
+            # if isinstance(param, tuple):
+            #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
+            #     param = torch.nn.Parameter(
+            #         self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice])
+            # elif param in self.state_dict():
+            #     # Otherwise, param should be one specified in state_dict()
+            #     param = torch.nn.Parameter(self.state_dict()[param])
+            # else:
+            #     assert False, (f"PROGRAM ERROR: {param} retrieved from {self.name}._pnl_refs_to_torch_params_map() "
+            #                    f"for {pnl_param_name} is not a recognizable specification of a torch parameter.")
+
+            # Get torch parameter for specified param_ref in named_parameters()
+            param = next((p[1] for p in self.named_parameters()
+                          if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
+            assert param is not None, (f"PROGRAM ERROR: {torch_param_name} not found in {self.name}.named_parameters() "
+                                       f"even though it was found in its state_dict().")
+            if torch_param_slice:
                 # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
-                param = self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice]
-            elif param in self.state_dict():
-                # Otherwise, param should be one specified in state_dict()
-                param = self.state_dict()[param]
-            else:
-                assert False, (f"PROGRAM ERROR: {param} retrieved from {self.name}._pnl_refs_to_torch_params_map() "
-                               f"for {pnl_param_name} is not a recognizable specification of a torch parameter.")
+                param = torch.nn.Parameter(param[torch_param_slice])
             optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
         # Create parameter groups and assign learning rates
@@ -738,7 +750,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # If learning_rate = ``True``, use composition.learning_rate, else specified value
                     lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
                     param.requires_grad = True
-                    self._optimizer_param_groups.append({'params': param, 'lr': lr})
+                    # FIX: 4/14/25 - CHECK IF ANY GROUPS ALREADY EXIST (IN CASE IT IS CALLED FROM learn()?
+                    self._optimizer_param_groups.append({'params': [param], 'lr': lr})
+
+        for param_group in self._optimizer_param_groups:
+            for param in param_group['params']:
+                for opt_param_group in optimizer.param_groups:
+                    if param in set(opt_param_group['params']):
+                        opt_param_group['params'].remove(param)
+            optimizer.add_param_group(param_group)
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
@@ -1801,7 +1821,7 @@ class PytorchProjectionWrapper():
                                          device=device,
                                          dtype=torch.double))
         # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
-        #           cf _parse_optimizer_params():
+        #           cf _update_optimizer_params():
         if projection.learnable is False:
             self.matrix.requires_grad = False
 

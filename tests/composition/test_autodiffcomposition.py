@@ -288,6 +288,7 @@ class TestAutodiffConstructor:
         # comp = AutodiffComposition()
         # assert comp.patience == 10
 
+
 # Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
 @pytest.mark.composition
 def test_autodiff_without_torch():
@@ -3023,7 +3024,6 @@ class TestMiscTrainingFunctionality:
         # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
-
     @pytest.mark.parametrize(
         'loss, expected', [
             (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
@@ -3087,7 +3087,6 @@ class TestMiscTrainingFunctionality:
         xor.learn(inputs={"inputs": {xor_in: xor_inputs}, "targets": {xor_out: xor_targets}, "epochs": 10},
                   execution_mode=autodiff_mode)
 
-
     @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
         'learning_rate, weight_decay, optimizer_type, expected', [
@@ -3141,6 +3140,30 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
+    no_learning_expected = [[0]]
+    test_specs = [('constructor', learning_expected),
+                 ('learn_method', learning_expected),
+                 ('none', learning_expected)] # <- FIX FOR CURRENT TESTING, SHOULD FAIL
+    @pytest.mark.parametrize("spec_loc, expected", test_specs)
+    def test_optimizer_params_for_custom_learning_rates(self, spec_loc, expected):
+        input_mech = pnl.ProcessingMechanism(input_shapes=3)
+        output_mech = pnl.ProcessingMechanism(input_shapes=5)
+        # Use GRU to test tuple specifications for "subfields" of named parameters
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        input_proj = pnl.MappingProjection(input_mech, gru.input_node)
+        output_proj = pnl.MappingProjection(gru.output_node, output_mech)
+        optimizer_params = {gru.projections[6]: .95,
+                            input_proj: .66,
+                            output_proj: 1.5}
+        outer = pnl.AutodiffComposition([input_mech, input_proj, gru, output_proj, output_mech],
+                                        optimizer_params=optimizer_params if spec_loc == 'constructor' else None)
+        results = outer.learn(inputs={input_mech: [[.1, .2, .3]]},
+                              targets={output_mech: [[1,1,1,1,1]]},
+                              optimizer_params=optimizer_params if spec_loc == 'learn_method' else None,
+                              num_trials=2)
+        np.testing.assert_allclose(expected, results)
+        assert True
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):

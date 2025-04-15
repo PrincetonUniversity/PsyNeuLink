@@ -1079,7 +1079,7 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None, refresh=None):
+    def _build_pytorch_representation(self, optimizer_params=None, context=None, refresh=None):
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
@@ -1090,7 +1090,7 @@ class AutodiffComposition(Composition):
         learning_rate = self._runtime_learning_rate or self.learning_rate
         old_opt = self.parameters.optimizer._get(context)
         if (old_opt is None or refresh) and refresh is not False:
-            self._instantiate_optimizer(refresh, learning_rate, context)
+            self._instantiate_optimizer(refresh, learning_rate, optimizer_params, context)
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1102,7 +1102,7 @@ class AutodiffComposition(Composition):
 
         return self.parameters.pytorch_representation._get(context)
 
-    def _instantiate_optimizer(self, refresh, learning_rate, context):
+    def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context):
         if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError("Learning rate must be an integer or float value.")
         if self.optimizer_type not in ['sgd', 'adam']:
@@ -1115,11 +1115,9 @@ class AutodiffComposition(Composition):
             opt = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             opt = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-
-        pytorch_rep._parse_optimizer_params(context)
-        for param_group in pytorch_rep._optimizer_param_groups:
-            opt.add_param_group(param_group)
-
+        pytorch_rep._update_optimizer_params(optimizer,
+                                             optimizer_params if optimizer_params else self._optimizer_params,
+                                             context)
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
         self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
         pytorch_rep.optimizer = opt
@@ -1599,6 +1597,7 @@ class AutodiffComposition(Composition):
                 base_context=Context(execution_id=None),
                 clamp_input=SOFT_CLAMP,
                 targets=None,
+                optimizer_params:dict=None,
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
@@ -1649,7 +1648,7 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                self._build_pytorch_representation(context)
+                self._build_pytorch_representation(optimizer_params=optimizer_params, context=context)
                 trained_output_values, all_output_values = \
                                                 self.autodiff_forward(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
@@ -1688,6 +1687,7 @@ class AutodiffComposition(Composition):
                                                         context=context,
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,
+                                                        optimizer_params=optimzer_params,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
                                                         report=report,
