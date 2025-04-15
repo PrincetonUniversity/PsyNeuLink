@@ -3143,7 +3143,6 @@ class TestMiscTrainingFunctionality:
     constructor_expected = [[0.23468929, 0.18062271, 0.1672971, 0.27192594, -0.1862485]]
     learning_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
-
     test_specs = [('constructor', 6, constructor_expected),
                   ('constructor', 7, constructor_expected),
                   ('learn_method', 6, learning_expected),
