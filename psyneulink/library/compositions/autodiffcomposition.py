@@ -136,16 +136,17 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 *Learning Rates and Optimizer Params*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **optimizer_params** argument of the constructor can be used to specify parameters for the optimizer used for
-learning by the AutodiffComposition. At present, this is restricted to overriding the `learning_rate
-<AutodiffComposition.learning_rate>` Parameter of the Composition (used as the default by the `optimizer
-<AutodiffComposition.optimizer>`) to assign individual learning rates to specific Projections. This is done by
-specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
-in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition may
-involve different forms of specification and/or support other parameters for the optimizer. Projections that are not
-sepcified in **optimizer_params** use, in order of precedence: the `learning_rate <AutodiffComposition.learning_rate>`
+The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used to
+specify parameters for the optimizer used for learning by the AutodiffComposition. At present, this is restricted to
+overriding the `learning_rate <AutodiffComposition.learning_rate>` Parameter of the AutodiffComposition (used as the
+default by the `optimizer <AutodiffComposition.optimizer>`), to assign individual learning rates to specific
+`Projection`\\s. This is done by specifying **optimizer_params** as a dict, in which each key is a reference to a
+learnable `MappingProjection` in the AutodiffComposition, and the associated value specifies its learning_rate. This
+can be specified in the constructor, in which case it is used for all executions of the learn method, or in the call can
+`learn <AutodiffComposition.learn>` method, in which case it is used only for that execution. Projections that are not
+sepcified in **optimizer_params** use, in order of precedence: the `learning_rate<AutodiffComposition.learning_rate>`
 specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
-argument of its constructor, or the default value for the AutodiffComposition.
+argument of its constructor, or the default value for AutodiffComposition.
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
@@ -471,9 +472,9 @@ class AutodiffComposition(Composition):
         <AutdodiffComposition.learn>` method of the AutodiffComposition;
         see `learning_rate <AutodiffComposition.learning_rate>` for additional details.
 
-    optimizer_params : Dict[str: value]
-        specifies parameters for the optimizer used for learning by the GRUComposition
-        (see `AutodiffComposition_Learning_Rates` for details of specification.
+    optimizer_params : Dict[str or Projection: int or float] : default None
+        specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
+        parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -1437,6 +1438,40 @@ class AutodiffComposition(Composition):
         Note: defaults for synch and retain args are set to NotImplemented, so that the user can specify None if
               they want to locally override the default values for the AutodiffComposition (see docstrings for run()
               and _parse_synch_and_retain_args() for additonal details).
+
+        Arguments:
+
+        optimizer_params : Dict[str or Projection: int or float] : default None
+            specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
+            parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
+
+        synch_projection_matrices_with_torch : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `synch_projection_matrices_with_torch
+            <AutodiffComposition.synch_projection_matrices_with_torch>` for additional details.
+
+        synch_node_variables_with_torch : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `synch_node_variables_with_torch
+            <AutodiffComposition.synch_node_variables_with_torch>` for additional details.
+
+        synch_node_values_with_torch : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `synch_node_values_with_torch
+            <AutodiffComposition.synch_node_values_with_torch>` for additional details.
+
+        synch_results_with_torch : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `synch_results_with_torch
+            <AutodiffComposition.synch_results_with_torch>` for additional details.
+
+        retain_torch_trained_outputs : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_trained_outputs
+            <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+
+        retain_torch_targets : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_targets
+            <AutodiffComposition.retain_torch_targets>` for additional details.
+
+        retain_torch_losses : [LEARNING_SCALE_LITERALS] : Default None
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_losses
+            <AutodiffComposition.retain_torch_losses>` for additional details.
         """
 
         context = kwargs[CONTEXT]

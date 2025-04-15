@@ -11618,7 +11618,7 @@ _
                 default value.
 
                 .. hint::
-                   This can be used to implement the `backprop-to-activation proceedure
+                   This can be used to implement the `backprop-to-activation procedure
                    <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
                    learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
                    for a pattern of activation in response to a given input (or set of inputs) that is useful for some
