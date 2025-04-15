@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.16.1.0+74.gdd4fc7a63 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.16.1.0+75.g213c1e713 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+74
+                  0.16.1.0+75
                 </div>
               
             
@@ -519,15 +519,15 @@ Mechanisms (see <a class="reference internal" href="Composition.html#composition
 <li><p><strong>is_finished()</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</p></li>
 </ul>
 <ul class="simple" id="component-execute-until-finished">
-<li><p><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method returns True.
+<li><p><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method returns True.
 If it is False, then the Component executes only once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method,
-irrespective of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p></li>
+irrespective of its <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
+<a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p></li>
 </ul>
 <ul class="simple" id="component-num-executions-before-finished">
 <li><p><strong>num_executions_before_finished</strong> – contains the number of times the Component has executed prior to finishing
 (and since it last finished);  depending upon the class, these may all be within a single call to the Component’s
-<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evaluates
+<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evaluates
 to True. Note that this is distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes.</p></li>
 </ul>
 <ul class="simple" id="component-max-executions-before-finished">
