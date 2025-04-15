@@ -3142,9 +3142,10 @@ class TestMiscTrainingFunctionality:
 
     learning_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
+
     test_specs = [('constructor', learning_expected),
                  ('learn_method', learning_expected),
-                 ('none', learning_expected)] # <- FIX FOR CURRENT TESTING, SHOULD FAIL
+                 ('none', no_learning_expected)] # <- FIX FOR CURRENT TESTING, SHOULD FAIL
     @pytest.mark.parametrize("spec_loc, expected", test_specs)
     def test_optimizer_params_for_custom_learning_rates(self, spec_loc, expected):
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
