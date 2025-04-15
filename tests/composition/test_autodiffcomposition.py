@@ -3143,18 +3143,22 @@ class TestMiscTrainingFunctionality:
     learning_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
 
-    test_specs = [('constructor', learning_expected),
-                 ('learn_method', learning_expected),
-                 ('none', no_learning_expected)] # <- FIX FOR CURRENT TESTING, SHOULD FAIL
-    @pytest.mark.parametrize("spec_loc, expected", test_specs)
-    def test_optimizer_params_for_custom_learning_rates(self, spec_loc, expected):
+    test_specs = [('constructor', 6, learning_expected),
+                  ('constructor', 7, learning_expected),
+                  ('learn_method', 6, learning_expected),
+                  ('learn_method', 7, learning_expected),
+                  ('none', 6, no_learning_expected)]
+    @pytest.mark.parametrize("spec_loc, gru_proj_num, expected", test_specs,
+                             ids=[f"{x[0]}_{x[1]}" for x in test_specs])
+    def test_optimizer_params_for_custom_learning_rates(self, spec_loc, gru_proj_num, expected):
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
         # Use GRU to test tuple specifications for "subfields" of named parameters
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
-        optimizer_params = {gru.projections[6]: .95,
+        gru_proj = gru.projections[gru_proj_num]
+        optimizer_params = {gru_proj: .95,
                             input_proj: .66,
                             output_proj: 1.5}
         outer = pnl.AutodiffComposition([input_mech, input_proj, gru, output_proj, output_mech],

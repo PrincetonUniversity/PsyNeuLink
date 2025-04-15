@@ -714,17 +714,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
 
-            # if isinstance(param, tuple):
-            #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
-            #     param = torch.nn.Parameter(
-            #         self.state_dict()[torch_param_name_to_state_dict_key_map[torch_param_name]][param.slice])
-            # elif param in self.state_dict():
-            #     # Otherwise, param should be one specified in state_dict()
-            #     param = torch.nn.Parameter(self.state_dict()[param])
-            # else:
-            #     assert False, (f"PROGRAM ERROR: {param} retrieved from {self.name}._pnl_refs_to_torch_params_map() "
-            #                    f"for {pnl_param_name} is not a recognizable specification of a torch parameter.")
-
             # Get torch parameter for specified param_ref in named_parameters()
             param = next((p[1] for p in self.named_parameters()
                           if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
