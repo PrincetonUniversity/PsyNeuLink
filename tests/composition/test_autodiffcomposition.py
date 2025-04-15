@@ -3140,13 +3140,15 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    constructor_expected = [[0.23468929, 0.18062271, 0.1672971, 0.27192594, -0.1862485]]
     learning_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
 
-    test_specs = [('constructor', 6, learning_expected),
-                  ('constructor', 7, learning_expected),
+    test_specs = [('constructor', 6, constructor_expected),
+                  ('constructor', 7, constructor_expected),
                   ('learn_method', 6, learning_expected),
                   ('learn_method', 7, learning_expected),
+                  ('both', 6, learning_expected), # Test that learning_method params supercede constructor params
                   ('none', 6, no_learning_expected)]
     @pytest.mark.parametrize("spec_loc, gru_proj_num, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
@@ -3158,15 +3160,19 @@ class TestMiscTrainingFunctionality:
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
         gru_proj = gru.projections[gru_proj_num]
-        optimizer_params = {gru_proj: .95,
-                            input_proj: .66,
-                            output_proj: 1.5}
-        outer = pnl.AutodiffComposition([input_mech, input_proj, gru, output_proj, output_mech],
-                                        optimizer_params=optimizer_params if spec_loc == 'constructor' else None)
-        results = outer.learn(inputs={input_mech: [[.1, .2, .3]]},
-                              targets={output_mech: [[1,1,1,1,1]]},
-                              optimizer_params=optimizer_params if spec_loc == 'learn_method' else None,
-                              num_trials=2)
+        constructor_optimizer_params = {gru_proj: .3,
+                    input_proj: 2.9,
+                    output_proj: .5}
+        learning_method_optimizer_params = {gru_proj: .95,
+                                            input_proj: .66,
+                                            output_proj: 1.5}
+        outer = pnl.AutodiffComposition(
+            [input_mech, input_proj, gru, output_proj, output_mech],
+            optimizer_params=constructor_optimizer_params if spec_loc in {'constructor', 'both'} else None)
+        results = outer.learn(
+            inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+            optimizer_params=learning_method_optimizer_params if spec_loc in {'learn_method', 'both'} else None,
+            num_trials=2)
         np.testing.assert_allclose(expected, results)
         assert True
 
