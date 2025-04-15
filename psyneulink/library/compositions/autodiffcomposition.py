@@ -1112,15 +1112,15 @@ class AutodiffComposition(Composition):
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
         if self.optimizer_type == 'sgd':
-            opt = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
+            optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
-            opt = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
+            optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
         pytorch_rep._update_optimizer_params(optimizer,
                                              optimizer_params if optimizer_params else self._optimizer_params,
                                              context)
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
-        self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
-        pytorch_rep.optimizer = opt
+        self.parameters.optimizer._set(optimizer, context, skip_history=True, skip_log=True)
+        pytorch_rep.optimizer = optimizer
 
     def _get_loss(self, loss_spec):
         if not isinstance(self.loss_spec, (str, Loss)):

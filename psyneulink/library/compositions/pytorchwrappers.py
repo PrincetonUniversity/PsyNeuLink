@@ -298,6 +298,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
+        # FIX 4/15/25: ?STILL NEEDED
         self._optimizer_param_groups = []
 
         self.composition = composition
@@ -746,19 +747,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param.requires_grad = False
             else:
                 # Learning is enabled for the Projection
-                if learning_rate is not False:
-                    # If learning_rate = ``True``, use composition.learning_rate, else specified value
-                    lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
-                    param.requires_grad = True
-                    # FIX: 4/14/25 - CHECK IF ANY GROUPS ALREADY EXIST (IN CASE IT IS CALLED FROM learn()?
-                    self._optimizer_param_groups.append({'params': [param], 'lr': lr})
-
-        for param_group in self._optimizer_param_groups:
-            for param in param_group['params']:
-                for opt_param_group in optimizer.param_groups:
-                    if param in set(opt_param_group['params']):
-                        opt_param_group['params'].remove(param)
-            optimizer.add_param_group(param_group)
+                param.requires_grad = True
+                # If learning_rate = ``True``, use composition.learning_rate, else specified value
+                lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
+                # FIX: 4/14/25 - CHECK IF ANY GROUPS ALREADY EXIST (IN CASE IT IS CALLED FROM learn()?
+                #                REMOVE PARAM FROM EXISTING GROUPS
+                # Check if param is already in an existing param_group on the optimizer
+                for param_group in optimizer.param_groups:
+                    for p in param_group['params']:
+                        # If it is already in a group, but being assigned a new lr, remove from that group
+                        if p is param and param_group['lr'] != lr:
+                            param_group['params'].remove(p)
+                            optimizer.add_param_group({'params': [param], 'lr': lr})
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
