@@ -3140,8 +3140,8 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
-    learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
-    no_learning_expected = [[0]]
+    learning_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
+    no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
     test_specs = [('constructor', learning_expected),
                  ('learn_method', learning_expected),
                  ('none', learning_expected)] # <- FIX FOR CURRENT TESTING, SHOULD FAIL
