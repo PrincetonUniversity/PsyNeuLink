@@ -348,10 +348,10 @@ class TestExecution:
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     no_learning_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
     test_specs = [
-        # ('constructor', 6, constructor_expected),
-        # ('constructor', 7, constructor_expected),
-        # ('learn_method', 6, learning_expected),
-        # ('learn_method', 6, learning_expected),
+        ('constructor', 6, constructor_expected),
+        ('constructor', 7, constructor_expected),
+        ('learn_method', 6, learning_expected),
+        ('learn_method', 6, learning_expected),
         ('both', 6, learning_expected), # Test that learning_method params supercede constructor params
         # ('none', 6, no_learning_expected)
     ]
