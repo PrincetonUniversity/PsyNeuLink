@@ -753,10 +753,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
                 # Check if param is already in an existing param_group on the optimizer
                 for param_group in optimizer.param_groups.copy():
-                    for p in param_group['params']:
+                    for i, p in enumerate(param_group['params'].copy()):
                         # If it is already in a group, but being assigned a new lr, remove from that group
                         if p is param and param_group['lr'] != lr:
-                            param_group['params'].remove(p)
+                            # param_group['params'].remove(p)
+                            del param_group['params'][i]
                             optimizer.add_param_group({'params': [param], 'lr': lr})
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)

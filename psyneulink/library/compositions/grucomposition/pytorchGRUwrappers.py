@@ -32,6 +32,10 @@ W_IH_NAME = 'weight_ih_l0'
 W_HH_NAME = 'weight_hh_l0'
 INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
 HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
+B_IH_NAME = 'bias_ih_l0'
+B_HH_NAME = 'bias_hh_l0'
+BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
+BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
 
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
@@ -101,11 +105,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                           f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
                                           f"use '{HIDDEN_TO_HIDDEN}' to set learning rate for all such weights.")
 
-        # Replace key phrases with name of torch parameter (in state_dict() to
-        if INPUT_TO_HIDDEN in optimizer_param_specs:
-            optimizer_param_specs[W_IH_NAME] = optimizer_param_specs.pop(INPUT_TO_HIDDEN)
-        if HIDDEN_TO_HIDDEN in optimizer_param_specs:
-            optimizer_param_specs[W_HH_NAME] = optimizer_param_specs.pop(HIDDEN_TO_HIDDEN)
+        # # Replace key phrases with name of torch parameter (in state_dict() to
+        # if INPUT_TO_HIDDEN in optimizer_param_specs:
+        #     optimizer_param_specs[W_IH_NAME] = optimizer_param_specs.pop(INPUT_TO_HIDDEN)
+        # if HIDDEN_TO_HIDDEN in optimizer_param_specs:
+        #     optimizer_param_specs[W_HH_NAME] = optimizer_param_specs.pop(HIDDEN_TO_HIDDEN)
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -165,18 +169,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
             self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
+        self._pnl_refs_to_torch_params_map.update({INPUT_TO_HIDDEN: W_IH_NAME})
+        self._pnl_refs_to_torch_params_map.update({HIDDEN_TO_HIDDEN: W_HH_NAME})
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
             assert torch_gru.bias, f"PROGRAM ERROR: '{pnl.name}' has bias=True but {GRU_NODE}.bias=False. "
-            b_ih_name = 'bias_ih_l0'
-            b_hh_name = 'bias_hh_l0'
-            torch_gru_bias_specs = [TorchParam(b_ih_name, slice(None, z_idx)),
-                                    TorchParam(b_ih_name, slice(z_idx, n_idx)),
-                                    TorchParam(b_ih_name, slice(n_idx, None)),
-                                    TorchParam(b_hh_name, slice(None, z_idx)),
-                                    TorchParam(b_hh_name, slice(z_idx, n_idx)),
-                                    TorchParam(b_hh_name, slice(n_idx, None))]
+            torch_gru_bias_specs = [TorchParam(B_IH_NAME, slice(None, z_idx)),
+                                    TorchParam(B_IH_NAME, slice(z_idx, n_idx)),
+                                    TorchParam(B_IH_NAME, slice(n_idx, None)),
+                                    TorchParam(B_HH_NAME, slice(None, z_idx)),
+                                    TorchParam(B_HH_NAME, slice(z_idx, n_idx)),
+                                    TorchParam(B_HH_NAME, slice(n_idx, None))]
             pnl_biases = [pnl.bias_ir, pnl.bias_iu, pnl.bias_in, pnl.bias_hr, pnl.bias_hu, pnl.bias_hn]
             for pnl_bias_proj, torch_bias_spec in zip(pnl_biases, torch_gru_bias_specs):
                 torch_bias_tuple = (torch_gru.state_dict()[torch_bias_spec[0]], torch_bias_spec[1])
@@ -187,6 +191,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                               device=device)
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
                 self._pnl_refs_to_torch_params_map.update({pnl_bias_proj.name: torch_bias_spec})
+            self._pnl_refs_to_torch_params_map.update({BIAS_INPUT_TO_HIDDEN: B_IH_NAME})
+            self._pnl_refs_to_torch_params_map.update({BIAS_HIDDEN_TO_HIDDEN: B_HH_NAME})
 
         return _projection_wrapper_pairs
 

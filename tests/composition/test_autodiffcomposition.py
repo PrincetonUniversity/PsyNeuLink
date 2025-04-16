@@ -3145,8 +3145,6 @@ class TestMiscTrainingFunctionality:
     no_learning_expected = [[1.07514919, 0.23385803, 1.30053929, 1.0519367, 0.60906278]]
     test_specs = [
         ('constructor', constructor_expected),
-        ('constructor', constructor_expected),
-        ('learn_method', learn_method_expected),
         ('learn_method', learn_method_expected),
         ('both', learn_method_expected), # Test that learning_method params supercede constructor params
         ('none', no_learning_expected)
