@@ -304,9 +304,17 @@ from psyneulink.core.globals.keywords import (
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.llvm import ExecutionMode
 
-__all__ = ['GRUComposition', 'GRUCompositionError',
-           'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE',
-           'UPDATE_NODE', 'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES', 'GRU_NODE', 'GRU_TARGET_NODE']
+__all__ = ['GRUComposition', 'GRUCompositionError', 'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE', 'UPDATE_NODE',
+           'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES', 'GRU_NODE', 'GRU_TARGET_NODE', 'INPUT_TO_RESET',
+           'INPUT_TO_UPDATE', 'INPUT_TO_NEW', 'INPUT_TO_HIDDEN_WEIGHTS', 'HIDDEN_TO_RESET', 'HIDDEN_TO_UPDATE',
+           'HIDDEN_TO_NEW', 'HIDDEN_TO_HIDDEN_WEIGHTS', 'NEW_TO_HIDDEN', 'HIDDEN_RECURRENT', 'HIDDEN_TO_OUTPUT']
+
+BIAS_INPUT_TO_RESET
+BIAS_INPUT_TO_UPDATE
+BIAS_INPUT_TO_NEW
+BIAS_HIDDEN_TO_RESET
+BIAS_HIDDEN_TO_UPDATE
+BIAS_HIDDEN_TO_NEW
 
 # Node names
 INPUT_NODE = 'INPUT'
@@ -318,6 +326,33 @@ OUTPUT_NODE = 'OUTPUT'
 GRU_INTERNAL_STATE_NAMES = [NEW_NODE, RESET_NODE, UPDATE_NODE, HIDDEN_LAYER]
 GRU_NODE = 'PYTORCH GRU NODE'
 GRU_TARGET_NODE = 'GRU TARGET NODE'
+BIAS_NODE_INPUT_TO_NEW = 'BIAS NODE IN'
+BIAS_NODE_INPUT_TO_UPDATE = 'BIAS NODE IU'
+BIAS_NODE_INPUT_TO_RESET = 'BIAS NODE IR'
+BIAS_NODE_HIDDEN_TO_NEW = 'BIAS NODE HN'
+BIAS_NODE_HIDDEN_TO_RESET = 'BIAS NODE HR'
+BIAS_NODE_HIDDEN_TO_UPDATE = 'BIAS NODE HU'
+
+# Projection names
+INPUT_TO_RESET = 'INPUT TO RESET WEIGHTS'
+INPUT_TO_UPDATE = 'INPUT TO UPDATE WEIGHTS'
+INPUT_TO_NEW = 'INPUT TO NEW WEIGHTS'
+INPUT_TO_HIDDEN_WEIGHTS = [INPUT_TO_RESET, INPUT_TO_UPDATE, INPUT_TO_NEW, ]
+HIDDEN_TO_RESET = 'HIDDEN TO RESET WEIGHTS'
+HIDDEN_TO_UPDATE = 'HIDDEN TO UPDATE WEIGHTS'
+HIDDEN_TO_NEW = 'HIDDEN TO NEW WEIGHTS'
+HIDDEN_TO_HIDDEN_WEIGHTS = [HIDDEN_TO_RESET, HIDDEN_TO_UPDATE, HIDDEN_TO_NEW]
+NEW_TO_HIDDEN = 'NEW TO HIDDEN WEIGHTS'
+HIDDEN_RECURRENT = 'HIDDEN RECURRENT WEIGHTS'
+HIDDEN_TO_OUTPUT = 'HIDDEN TO OUTPUT WEIGHTS'
+BIAS_INPUT_TO_RESET = 'BIAS IR',
+BIAS_INPUT_TO_UPDATE = 'BIAS IU',
+BIAS_INPUT_TO_NEW = 'BIAS IN',
+INPUT_TO_HIDDEN_BIASES = [BIAS_INPUT_TO_RESET, BIAS_INPUT_TO_UPDATE, BIAS_INPUT_TO_NEW]
+BIAS_HIDDEN_TO_RESET = 'BIAS HR',
+BIAS_HIDDEN_TO_UPDATE = 'BIAS HU',
+BIAS_HIDDEN_TO_NEW = 'BIAS HN',
+HIDDEN_TO_HIDDEN_BIASES = [BIAS_HIDDEN_TO_RESET, BIAS_HIDDEN_TO_UPDATE, BIAS_HIDDEN_TO_NEW]
 
 class GRUCompositionError(CompositionError):
     pass
@@ -888,55 +923,55 @@ class GRUComposition(AutodiffComposition):
             return np.random.uniform(-sqrt_val, sqrt_val, (sender_size, receiver_size))
 
         # Learnable: wts_in, wts_iu, wts_ir, wts_hn, wts_hu,, wts_hr
-        self.wts_in = MappingProjection(name='INPUT TO NEW WEIGHTS',
+        self.wts_in = MappingProjection(name=INPUT_TO_NEW,
                                         sender=self.input_node,
                                         receiver=self.new_node.input_ports['FROM INPUT'],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-        self.wts_iu = MappingProjection(name='INPUT TO UPDATE WEIGHTS',
+        self.wts_iu = MappingProjection(name=INPUT_TO_UPDATE,
                                         sender=self.input_node,
                                         receiver=self.update_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-        self.wts_ir = MappingProjection(name='INPUT TO RESET WEIGHTS',
+        self.wts_ir = MappingProjection(name=INPUT_TO_RESET,
                                         sender=self.input_node,
                                         receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
-        self.wts_nh = MappingProjection(name='NEW TO HIDDEN WEIGHTS',
+        self.wts_nh = MappingProjection(name=NEW_TO_HIDDEN,
                                         sender=self.new_node,
                                         receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
-        self.wts_hh = MappingProjection(name='HIDDEN RECURRENT WEIGHTS',
+        self.wts_hh = MappingProjection(name=HIDDEN_RECURRENT,
                                         sender=self.hidden_layer_node,
                                         receiver=self.hidden_layer_node.input_ports['RECURRENT'],
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
-        self.wts_hn = MappingProjection(name='HIDDEN TO NEW WEIGHTS',
+        self.wts_hn = MappingProjection(name=HIDDEN_TO_NEW,
                                         sender=self.hidden_layer_node,
                                         receiver=self.new_node.input_ports['FROM HIDDEN'],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
-        self.wts_hr = MappingProjection(name='HIDDEN TO RESET WEIGHTS',
+        self.wts_hr = MappingProjection(name=HIDDEN_TO_RESET,
                                         sender=self.hidden_layer_node,
                                         receiver=self.reset_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
-        self.wts_hu = MappingProjection(name='HIDDEN TO UPDATE WEIGHTS',
+        self.wts_hu = MappingProjection(name=HIDDEN_TO_UPDATE,
                                         sender=self.hidden_layer_node,
                                         receiver=self.update_node.input_ports[OUTCOME],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
-        self.wts_ho = MappingProjection(name='HIDDEN TO OUTPUT WEIGHTS',
+        self.wts_ho = MappingProjection(name=HIDDEN_TO_OUTPUT,
                                         sender=self.hidden_layer_node,
                                         receiver=self.output_node,
                                         learnable=False,

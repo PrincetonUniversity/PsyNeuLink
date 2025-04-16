@@ -780,7 +780,7 @@ class AutodiffComposition(Composition):
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
-        self._optimizer_params = optimizer_params or {}
+        self._optimizer_constructor_params = optimizer_params or {}
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
@@ -1087,11 +1087,15 @@ class AutodiffComposition(Composition):
         if self.parameters.pytorch_representation._get(context=context) is None or refresh:
             model = self.pytorch_composition_wrapper_type(composition=self, device=self.device, context=context)
 
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+
         # Set up optimizer function
         learning_rate = self._runtime_learning_rate or self.learning_rate
         old_opt = self.parameters.optimizer._get(context)
         if (old_opt is None or refresh) and refresh is not False:
             self._instantiate_optimizer(refresh, learning_rate, optimizer_params, context)
+        else:
+            pytorch_rep._update_optimizer_params(old_opt, optimizer_params, context)
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1101,7 +1105,7 @@ class AutodiffComposition(Composition):
         else:
             self.loss_function = self._get_loss(self.loss_spec)
 
-        return self.parameters.pytorch_representation._get(context)
+        return pytorch_rep
 
     def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context):
         if not is_numeric_scalar(learning_rate):
@@ -1116,9 +1120,10 @@ class AutodiffComposition(Composition):
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-        pytorch_rep._update_optimizer_params(optimizer,
-                                             optimizer_params if optimizer_params else self._optimizer_params,
-                                             context)
+        default_param_groups = optimizer.param_groups.copy()
+        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        self._optimizer_default_param_groups = (
+            optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
         self.parameters.optimizer._set(optimizer, context, skip_history=True, skip_log=True)
         pytorch_rep.optimizer = optimizer
@@ -1439,7 +1444,8 @@ class AutodiffComposition(Composition):
               they want to locally override the default values for the AutodiffComposition (see docstrings for run()
               and _parse_synch_and_retain_args() for additonal details).
 
-        Arguments:
+        Arguments
+        ---------
 
         optimizer_params : Dict[str or Projection: int or float] : default None
             specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports

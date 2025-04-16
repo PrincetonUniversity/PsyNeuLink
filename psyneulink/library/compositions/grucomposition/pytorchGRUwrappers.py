@@ -77,6 +77,17 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
+    def _update_optimizer_params(self, optimizer, optimizer_param_specs:dict, context):
+        """Override to filter for specifications of slices"""
+
+        input_to_hidden = []
+        hidden_to_hidden =
+
+        if optimizer_param_specs:
+            if any([spec in optimizer_param_specs for spec in ['weight_ih_l0', 'weight_hh_l0']]):
+
+        super()._update_optimizer_params(self, optimizer, optimizer_param_specs:dict, context)
+
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
         gru_mech = gru_comp.gru_mech

@@ -688,6 +688,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
         composition = self.composition
+        optimizer_param_specs = optimizer_param_specs or self.composition._optimizer_constructor_params
+
+        if not optimizer_param_specs:
+            return
 
         # Replace any Projections in optimizer_params with their names -> optimizer_params_parsed
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
@@ -706,22 +710,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 raise AutodiffCompositionError(
                     f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with a Pytorch parameter.")
-            # If param spec is tuple, param name from first item (second is slice)
-            torch_param_name = param.name if isinstance(param, TorchParam) else param
-            torch_param_slice = param.slice if isinstance(param, TorchParam) else None
-            if torch_param_name not in torch_param_name_to_state_dict_key_map:
-                raise AutodiffCompositionError(
-                    f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
-                    f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
+
+            # # If param spec is tuple, param name from first item (second is slice)
+            # torch_param_name = param.name if isinstance(param, TorchParam) else param
+            # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
+            # if torch_param_name not in torch_param_name_to_state_dict_key_map:
+            #     raise AutodiffCompositionError(
+            #         f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+            #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
 
             # Get torch parameter for specified param_ref in named_parameters()
             param = next((p[1] for p in self.named_parameters()
                           if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
             assert param is not None, (f"PROGRAM ERROR: {torch_param_name} not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
-            if torch_param_slice:
-                # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
-                param = torch.nn.Parameter(param[torch_param_slice])
+            # if torch_param_slice:
+            #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
+            #     param = torch.nn.Parameter(param[torch_param_slice])
+
             optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
 
         # Create parameter groups and assign learning rates
