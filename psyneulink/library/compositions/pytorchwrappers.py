@@ -697,6 +697,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
                                    for k, v in optimizer_param_specs.items()}
 
+        self._validate_and_parse_optimizer_param_specs(optimizer_params_parsed)
+
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
 
@@ -718,10 +720,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #     raise AutodiffCompositionError(
             #         f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
             #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
+            # # Get torch parameter for specified param_ref in named_parameters()
+            # param = next((p[1] for p in self.named_parameters()
+            #               if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
 
-            # Get torch parameter for specified param_ref in named_parameters()
+            # # Get torch parameter for specified param_ref in named_parameters()
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
+                          if p[0] == torch_param_name_to_state_dict_key_map[param]), None)
+
             assert param is not None, (f"PROGRAM ERROR: {torch_param_name} not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
             # if torch_param_slice:
@@ -745,15 +751,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param.requires_grad = True
                 # If learning_rate = ``True``, use composition.learning_rate, else specified value
                 lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
-                # FIX: 4/14/25 - CHECK IF ANY GROUPS ALREADY EXIST (IN CASE IT IS CALLED FROM learn()?
-                #                REMOVE PARAM FROM EXISTING GROUPS
                 # Check if param is already in an existing param_group on the optimizer
-                for param_group in optimizer.param_groups:
+                for param_group in optimizer.param_groups.copy():
                     for p in param_group['params']:
                         # If it is already in a group, but being assigned a new lr, remove from that group
                         if p is param and param_group['lr'] != lr:
                             param_group['params'].remove(p)
                             optimizer.add_param_group({'params': [param], 'lr': lr})
+                    if not param_group['params']:
+                        optimizer.param_groups.remove(param_group)
+
+    def _validate_and_parse_optimizer_param_specs(self, optimizer_param_specs:dict):
+        """Allows override by subclasses for custom handling of optimizer_param_specs (e.g., pytorchGRUWrappers)"""
+
+        for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
+                                            if isinstance(node_wrapper, PytorchCompositionWrapper)]:
+            nested_composition_wrapper._validate_and_parse_optimizer_param_specs(optimizer_param_specs)
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""

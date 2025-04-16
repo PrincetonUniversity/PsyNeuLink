@@ -77,16 +77,29 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _update_optimizer_params(self, optimizer, optimizer_param_specs:dict, context):
+    def _validate_and_parse_optimizer_param_specs(self, optimizer_param_specs:dict):
         """Override to filter for specifications of slices"""
+        from psyneulink.library.compositions.grucomposition.grucomposition import (
+            GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
 
-        input_to_hidden = []
-        hidden_to_hidden =
+        # Raise error attempt to specify individual input to hidden or hidden to hidden Projections
+        for spec in optimizer_param_specs:
+            bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
+            if bad_ih_specs:
+                raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
+                                          f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
+                                          f"use 'INPUT TO HIDDEN' to set learning rate for all such weights.")
+            bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
+            if bad_hh_specs:
+                raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
+                                          f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
+                                          f"use 'HIDDEN TO HIDDEN' to set learning rate for all such weights.")
 
-        if optimizer_param_specs:
-            if any([spec in optimizer_param_specs for spec in ['weight_ih_l0', 'weight_hh_l0']]):
-
-        super()._update_optimizer_params(self, optimizer, optimizer_param_specs:dict, context)
+        # Replace key phrases with name of torch parameter (in state_dict() to
+        if 'INPUT TO HIDDEN' in optimizer_param_specs:
+            optimizer_param_specs[w_ih_name] = optimizer_param_specs.pop('INPUT TO HIDDEN')
+        if 'HIDDEN TO HIDDEN' in optimizer_param_specs:
+            optimizer_param_specs[w_hh_name] = optimizer_param_specs.pop('HIDDEN TO HIDDEN')
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -285,11 +298,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         z_idx = hid_len
         n_idx = 2 * hid_len
 
-        wts_ih = torch_gru.state_dict()['weight_ih_l0']
+        wts_ih = torch_gru.state_dict()[w_ih_name]
         wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
         wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
-        wts_hh = torch_gru.state_dict()['weight_hh_l0']
+        wts_hh = torch_gru.state_dict()[w_hh_name]
         wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
         wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
