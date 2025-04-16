@@ -307,14 +307,11 @@ from psyneulink.core.llvm import ExecutionMode
 __all__ = ['GRUComposition', 'GRUCompositionError', 'INPUT_NODE', 'HIDDEN_LAYER', 'RESET_NODE', 'UPDATE_NODE',
            'NEW_NODE', 'OUTPUT_NODE', 'GRU_INTERNAL_STATE_NAMES', 'GRU_NODE', 'GRU_TARGET_NODE', 'INPUT_TO_RESET',
            'INPUT_TO_UPDATE', 'INPUT_TO_NEW', 'INPUT_TO_HIDDEN_WEIGHTS', 'HIDDEN_TO_RESET', 'HIDDEN_TO_UPDATE',
-           'HIDDEN_TO_NEW', 'HIDDEN_TO_HIDDEN_WEIGHTS', 'NEW_TO_HIDDEN', 'HIDDEN_RECURRENT', 'HIDDEN_TO_OUTPUT']
-
-BIAS_INPUT_TO_RESET
-BIAS_INPUT_TO_UPDATE
-BIAS_INPUT_TO_NEW
-BIAS_HIDDEN_TO_RESET
-BIAS_HIDDEN_TO_UPDATE
-BIAS_HIDDEN_TO_NEW
+           'HIDDEN_TO_NEW', 'HIDDEN_TO_HIDDEN_WEIGHTS', 'NEW_TO_HIDDEN', 'HIDDEN_RECURRENT', 'HIDDEN_TO_OUTPUT',
+           'BIAS_NODE_INPUT_TO_NEW', 'BIAS_NODE_INPUT_TO_UPDATE', 'BIAS_NODE_INPUT_TO_RESET', 'BIAS_NODE_HIDDEN_TO_NEW',
+           'BIAS_NODE_HIDDEN_TO_RESET', 'BIAS_NODE_HIDDEN_TO_UPDATE', 'BIAS_INPUT_TO_RESET', 'BIAS_INPUT_TO_UPDATE',
+           'BIAS_INPUT_TO_NEW', 'BIAS_HIDDEN_TO_RESET', 'BIAS_HIDDEN_TO_UPDATE', 'BIAS_HIDDEN_TO_NEW'
+           ]
 
 # Node names
 INPUT_NODE = 'INPUT'
@@ -353,6 +350,20 @@ BIAS_HIDDEN_TO_RESET = 'BIAS HR',
 BIAS_HIDDEN_TO_UPDATE = 'BIAS HU',
 BIAS_HIDDEN_TO_NEW = 'BIAS HN',
 HIDDEN_TO_HIDDEN_BIASES = [BIAS_HIDDEN_TO_RESET, BIAS_HIDDEN_TO_UPDATE, BIAS_HIDDEN_TO_NEW]
+RESET_GATE = 'RESET GATE'
+RECURRENT_GATE = 'RECURRENT GATE'
+NEW_GATE = 'NEW GATE'
+
+# Port names
+NEW_INPUT = 'NEW INPUT'
+RECURRENT = 'RECURRENT'
+FROM_INPUT = 'FROM INPUT'
+FROM_HIDDEN = 'FROM HIDDEN'
+TO_HIDDEN_LAYER_INPUT = 'TO HIDDEN LAYER INPUT'
+RESET_GATING_SIGNAL = 'RESET GATING SIGNAL'
+RECURRENT_GATING_SIGNAL = 'RECURRENT GATING SIGNAL'
+NEW_GATING_SIGNAL = 'NEW GATING SIGNAL'
+
 
 class GRUCompositionError(CompositionError):
     pass
@@ -864,9 +875,9 @@ class GRUComposition(AutodiffComposition):
         self.hidden_layer_node = ProcessingMechanism(name=HIDDEN_LAYER,
                                                      input_shapes=[hidden_size, hidden_size],
                                                      input_ports=[
-                                                         InputPort(name='NEW INPUT',
+                                                         InputPort(name=NEW_INPUT,
                                                                    function=LinearCombination(scale=hidden_shape)),
-                                                         InputPort(name='RECURRENT',
+                                                         InputPort(name=RECURRENT,
                                                                    function=LinearCombination(scale=hidden_shape))],
                                                      function=LinearCombination(operation=SUM))
 
@@ -875,11 +886,11 @@ class GRUComposition(AutodiffComposition):
         # And then Tanh is assigend as the function of the OutputPort to do the nonlinear transform
         self.new_node = ProcessingMechanism(name=NEW_NODE,
                                             input_shapes=[hidden_size, hidden_size],
-                                            input_ports=['FROM INPUT',
-                                                         InputPort(name='FROM HIDDEN',
+                                            input_ports=[FROM_INPUT,
+                                                         InputPort(name=FROM_HIDDEN,
                                                                    function=LinearCombination(scale=hidden_shape))],
                                             function=LinearCombination,
-                                            output_ports=[OutputPort(name='TO HIDDEN LAYER INPUT',
+                                            output_ports=[OutputPort(name=TO_HIDDEN_LAYER_INPUT,
                                                                      function=Tanh)])
 
         # Gates input to hidden_layer_node from its recurrent Projection and from new_node
@@ -887,27 +898,27 @@ class GRUComposition(AutodiffComposition):
                                            default_allocation=hidden_shape,
                                            function=Logistic,
                                            gating_signals=[
-                                               GatingSignal(name='RECURRENT GATING SIGNAL',
+                                               GatingSignal(name=RECURRENT_GATING_SIGNAL,
                                                             default_allocation=hidden_shape,
-                                                            gate=self.hidden_layer_node.input_ports['RECURRENT']),
-                                               GatingSignal(name='NEW GATING SIGNAL',
+                                                            gate=self.hidden_layer_node.input_ports[RECURRENT]),
+                                               GatingSignal(name=NEW_GATING_SIGNAL,
                                                             default_allocation=hidden_shape,
                                                             transfer_function=Linear(scale=-1,offset=1),
-                                                            gate=self.hidden_layer_node.input_ports['NEW INPUT'])])
-        self.new_gate = self.update_node.gating_signals['NEW GATING SIGNAL'].efferents[0]
-        self.new_gate.name = 'NEW GATE'
-        self.recurrent_gate = self.update_node.gating_signals['RECURRENT GATING SIGNAL'].efferents[0]
-        self.recurrent_gate.name = 'RECURRENT GATE'
+                                                            gate=self.hidden_layer_node.input_ports[NEW_INPUT])])
+        self.new_gate = self.update_node.gating_signals[NEW_GATING_SIGNAL].efferents[0]
+        self.new_gate.name = NEW_GATE
+        self.recurrent_gate = self.update_node.gating_signals[RECURRENT_GATING_SIGNAL].efferents[0]
+        self.recurrent_gate.name = RECURRENT_GATE
 
         self.reset_node = GatingMechanism(name=RESET_NODE,
                                           default_allocation=hidden_shape,
                                           function=Logistic,
                                           gating_signals=[
-                                              GatingSignal(name='RESET GATING SIGNAL',
+                                              GatingSignal(name=RESET_GATING_SIGNAL,
                                                            default_allocation=hidden_shape,
-                                                           gate=self.new_node.input_ports['FROM HIDDEN'])])
-        self.reset_gate = self.reset_node.gating_signals['RESET GATING SIGNAL'].efferents[0]
-        self.reset_gate.name = 'RESET GATE'
+                                                           gate=self.new_node.input_ports[FROM_HIDDEN])])
+        self.reset_gate = self.reset_node.gating_signals[RESET_GATING_SIGNAL].efferents[0]
+        self.reset_gate.name = RESET_GATE
 
         self.output_node = ProcessingMechanism(name=OUTPUT_NODE,
                                                input_shapes=hidden_size,
@@ -925,7 +936,7 @@ class GRUComposition(AutodiffComposition):
         # Learnable: wts_in, wts_iu, wts_ir, wts_hn, wts_hu,, wts_hr
         self.wts_in = MappingProjection(name=INPUT_TO_NEW,
                                         sender=self.input_node,
-                                        receiver=self.new_node.input_ports['FROM INPUT'],
+                                        receiver=self.new_node.input_ports[FROM_INPUT],
                                         learnable=True,
                                         matrix=init_wts(input_size, hidden_size))
 
@@ -943,19 +954,19 @@ class GRUComposition(AutodiffComposition):
 
         self.wts_nh = MappingProjection(name=NEW_TO_HIDDEN,
                                         sender=self.new_node,
-                                        receiver=self.hidden_layer_node.input_ports['NEW INPUT'],
+                                        receiver=self.hidden_layer_node.input_ports[NEW_INPUT],
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
         self.wts_hh = MappingProjection(name=HIDDEN_RECURRENT,
                                         sender=self.hidden_layer_node,
-                                        receiver=self.hidden_layer_node.input_ports['RECURRENT'],
+                                        receiver=self.hidden_layer_node.input_ports[RECURRENT],
                                         learnable=False,
                                         matrix=IDENTITY_MATRIX)
 
         self.wts_hn = MappingProjection(name=HIDDEN_TO_NEW,
                                         sender=self.hidden_layer_node,
-                                        receiver=self.new_node.input_ports['FROM HIDDEN'],
+                                        receiver=self.new_node.input_ports[FROM_HIDDEN],
                                         learnable=True,
                                         matrix=init_wts(hidden_size, hidden_size))
 
@@ -985,38 +996,44 @@ class GRUComposition(AutodiffComposition):
                              context=context)
 
         if self.bias:
-            self.bias_in_node = ProcessingMechanism(name='BIAS NODE IN', default_variable=[1])
-            self.bias_in = MappingProjection(name='BIAS IN',
+            self.bias_in_node = ProcessingMechanism(name=BIAS_NODE_INPUT_TO_NEW,
+                                                    default_variable=[1])
+            self.bias_in = MappingProjection(name=BIAS_INPUT_TO_NEW,
                                              sender=self.bias_in_node,
-                                             receiver=self.new_node.input_ports['FROM INPUT'],
+                                             receiver=self.new_node.input_ports[FROM_INPUT],
                                              learnable=True)
 
-            self.bias_iu_node = ProcessingMechanism(name='BIAS NODE IU', default_variable=[1])
-            self.bias_iu = MappingProjection(name='BIAS IU',
+            self.bias_iu_node = ProcessingMechanism(name=BIAS_NODE_INPUT_TO_UPDATE,
+                                                    default_variable=[1])
+            self.bias_iu = MappingProjection(name=BIAS_INPUT_TO_UPDATE,
                                              sender=self.bias_iu_node,
                                              receiver=self.update_node.input_ports[OUTCOME],
                                              learnable=True)
 
-            self.bias_ir_node = ProcessingMechanism(name='BIAS NODE IR', default_variable=[1])
-            self.bias_ir = MappingProjection(name='BIAS IR',
+            self.bias_ir_node = ProcessingMechanism(name=BIAS_NODE_INPUT_TO_RESET,
+                                                    default_variable=[1])
+            self.bias_ir = MappingProjection(name=BIAS_INPUT_TO_RESET,
                                              sender=self.bias_ir_node,
                                              receiver=self.reset_node.input_ports[OUTCOME],
                                              learnable=True)
 
-            self.bias_hn_node = ProcessingMechanism(name='BIAS NODE HN', default_variable=[1])
-            self.bias_hn = MappingProjection(name='BIAS HN',
+            self.bias_hn_node = ProcessingMechanism(name=BIAS_NODE_HIDDEN_TO_NEW,
+                                                    default_variable=[1])
+            self.bias_hn = MappingProjection(name=BIAS_HIDDEN_TO_NEW,
                                              sender=self.bias_hn_node,
-                                             receiver=self.new_node.input_ports['FROM HIDDEN'],
+                                             receiver=self.new_node.input_ports[FROM_HIDDEN],
                                              learnable=True)
 
-            self.bias_hr_node = ProcessingMechanism(name='BIAS NODE HR', default_variable=[1])
-            self.bias_hr = MappingProjection(name='BIAS HR',
+            self.bias_hr_node = ProcessingMechanism(name=BIAS_NODE_HIDDEN_TO_RESET,
+                                                    default_variable=[1])
+            self.bias_hr = MappingProjection(name=BIAS_HIDDEN_TO_RESET,
                                              sender=self.bias_hr_node,
                                              receiver=self.reset_node.input_ports[OUTCOME],
                                              learnable=True)
 
-            self.bias_hu_node = ProcessingMechanism(name='BIAS NODE HU', default_variable=[1])
-            self.bias_hu = MappingProjection(name='BIAS HU',
+            self.bias_hu_node = ProcessingMechanism(name=BIAS_NODE_HIDDEN_TO_UPDATE,
+                                                    default_variable=[1])
+            self.bias_hu = MappingProjection(name=BIAS_HIDDEN_TO_UPDATE,
                                              sender=self.bias_hu_node,
                                              receiver=self.update_node.input_ports[OUTCOME],
                                              learnable=True)
