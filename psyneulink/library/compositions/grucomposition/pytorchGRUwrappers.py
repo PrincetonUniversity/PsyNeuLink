@@ -28,6 +28,12 @@ from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper']
 
+W_IH_NAME = 'weight_ih_l0'
+W_HH_NAME = 'weight_hh_l0'
+INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
+HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
+
+
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for GRUComposition as a Pytorch Module
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
@@ -88,18 +94,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if bad_ih_specs:
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
                                           f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
-                                          f"use 'INPUT TO HIDDEN' to set learning rate for all such weights.")
+                                          f"use '{INPUT_TO_HIDDEN}' to set learning rate for all such weights.")
             bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
             if bad_hh_specs:
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
                                           f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
-                                          f"use 'HIDDEN TO HIDDEN' to set learning rate for all such weights.")
+                                          f"use '{HIDDEN_TO_HIDDEN}' to set learning rate for all such weights.")
 
         # Replace key phrases with name of torch parameter (in state_dict() to
-        if 'INPUT TO HIDDEN' in optimizer_param_specs:
-            optimizer_param_specs[w_ih_name] = optimizer_param_specs.pop('INPUT TO HIDDEN')
-        if 'HIDDEN TO HIDDEN' in optimizer_param_specs:
-            optimizer_param_specs[w_hh_name] = optimizer_param_specs.pop('HIDDEN TO HIDDEN')
+        if INPUT_TO_HIDDEN in optimizer_param_specs:
+            optimizer_param_specs[W_IH_NAME] = optimizer_param_specs.pop(INPUT_TO_HIDDEN)
+        if HIDDEN_TO_HIDDEN in optimizer_param_specs:
+            optimizer_param_specs[W_HH_NAME] = optimizer_param_specs.pop(HIDDEN_TO_HIDDEN)
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
@@ -143,14 +149,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         hid_len = pnl.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
-        w_ih_name = 'weight_ih_l0'
-        w_hh_name = 'weight_hh_l0'
-        torch_gru_param_specs = [TorchParam(w_ih_name, slice(None, z_idx)),
-                                 TorchParam(w_ih_name, slice(z_idx, n_idx)),
-                                 TorchParam(w_ih_name, slice(n_idx, None)),
-                                 TorchParam(w_hh_name, slice(None, z_idx)),
-                                 TorchParam(w_hh_name, slice(z_idx, n_idx)),
-                                 TorchParam(w_hh_name, slice(n_idx, None))]
+        torch_gru_param_specs = [TorchParam(W_IH_NAME, slice(None, z_idx)),
+                                 TorchParam(W_IH_NAME, slice(z_idx, n_idx)),
+                                 TorchParam(W_IH_NAME, slice(n_idx, None)),
+                                 TorchParam(W_HH_NAME, slice(None, z_idx)),
+                                 TorchParam(W_HH_NAME, slice(z_idx, n_idx)),
+                                 TorchParam(W_HH_NAME, slice(n_idx, None))]
         pnl_projections = [pnl.wts_ir, pnl.wts_iu, pnl.wts_in, pnl.wts_hr, pnl.wts_hu, pnl.wts_hn]
         for pnl_proj, torch_param_spec in zip(pnl_projections, torch_gru_param_specs):
             torch_param_tuple = (torch_gru.state_dict()[torch_param_spec[0]], torch_param_spec[1])
@@ -298,11 +302,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         z_idx = hid_len
         n_idx = 2 * hid_len
 
-        wts_ih = torch_gru.state_dict()[w_ih_name]
+        wts_ih = torch_gru.state_dict()[W_IH_NAME]
         wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
         wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
-        wts_hh = torch_gru.state_dict()[w_hh_name]
+        wts_hh = torch_gru.state_dict()[W_HH_NAME]
         wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
         wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
         wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
