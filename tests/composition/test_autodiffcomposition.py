@@ -3147,12 +3147,10 @@ class TestMiscTrainingFunctionality:
         ('constructor', constructor_expected),  # Test spects in constructor
         ('learn_method', learn_method_expected),# Test spects in learn() method
         ('both', learn_method_expected),        # Test that learn() method params supercede constructor params
-        ('none', no_learning_expected),
-        ('bad_proj', None),
-        ('input_proj_not_learnable', None),     # Test projection to nested Composition
-        ('hidden_proj_not_learnable', None),    # Test projection within nested Composition
-        ('output_proj_not_learnable', None),    # Test projection fron nested Composition
-        ('bad_lr', None)
+        ('projs_not_learnable', None),# Test warning for non-learnable Projection to, within and fron nested Composition
+        ('bad_proj', None),         # Test error bad Projection specification
+        ('bad_lr', None),             # Test error bad learning_rate spec
+        ('none', no_learning_expected)
     ]
     @pytest.mark.parametrize("condition, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
@@ -3171,45 +3169,48 @@ class TestMiscTrainingFunctionality:
         constructor_optimizer_params = {input_proj: 2.9, output_proj: .5}
         learning_method_optimizer_params = {input_proj: .66, output_proj: 1.5}
 
-        if condition in {'bad_proj',
-                         'input_proj_not_learnable',
-                         'hidden_proj_not_learnable',
-                         'output_proj_not_learnable',
-                         'bad_lr'}:
+        if condition in {'bad_proj', 'bad_lr'}:
             if condition == 'bad_proj':
                 err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the constructor for "
                            f"'autodiff_composition-1' is not in that Composition or any nested within it: 'bad_proj'.")
                 opt_params = {condition: .66}
-            elif condition == 'input_proj_not_learnable':
-                input_proj.learnable = False
-                opt_params = {input_proj: .66}
-                err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
-                           f"'autodiff_composition-1' ('MappingProjection from input_mech[OutputPort-0] "
-                           f"to nested_1[InputPort-0]') is not learnable.")
-            elif condition == 'hidden_proj_not_learnable':
-                hidden_proj.learnable = False
-                opt_params = {hidden_proj: 21.6}
-                err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
-                           f"'autodiff_composition-1' ('MappingProjection from nested_1[OutputPort-0] "
-                           f"to nested_2[InputPort-0]') is not learnable.")
-            elif condition == 'output_proj_not_learnable':
-                output_proj.learnable = False
-                opt_params = {output_proj: 3.99}
-                err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
-                           f"'autodiff_composition-1' ('MappingProjection from nested_2[OutputPort-0] "
-                           f"to output_mech[InputPort-0]') is not learnable.")
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
                 err_msg = (f"Learning rate specified in 'optimizer_params' arg of constructor for "
                            f"'autodiff_composition-1' ('bad_lr') must be an int or float.")
-            else:
-                assert False, "Bad condition spec"
+
             with pytest.raises(AutodiffCompositionError) as error_text:
                 outer_comp = pnl.AutodiffComposition(
                     [input_mech, input_proj, nested_comp, output_proj, output_mech],
                 )
                 outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
             assert err_msg in str(error_text.value)
+            return
+
+        elif condition == 'projs_not_learnable':
+            input_proj.learnable = False
+            hidden_proj.learnable = False
+            output_proj.learnable = False
+            opt_params = {input_proj: 1.16, hidden_proj: 21.6, output_proj: 3.99}
+            warning_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
+                           f"'autodiff_composition-1' ('MappingProjection from nested_2[OutputPort-0] "
+                           f"to output_mech[InputPort-0]') is not learnable.")
+
+            with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
+                outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
+                outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+            (warnings.list[2].message.args[0] ==
+             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+              f"('MappingProjection from input_mech[OutputPort-0] to nested_1[InputPort-0]') is not learnable; "
+              f"check that is 'learnable' attribute is set to True."))
+            (warnings.list[3].message.args[0] ==
+             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+              f"('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') is not learnable; "
+              f"check that is 'learnable' attribute is set to True."))
+            (warnings.list[4].message.args[0] ==
+             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+              f"('MappingProjection from nested_2[OutputPort-0] to output_mech[InputPort-0]') is not learnable; "
+              f"check that is 'learnable' attribute is set to True."))
             return
 
         outer_comp = pnl.AutodiffComposition(
@@ -3234,7 +3235,6 @@ class TestMiscTrainingFunctionality:
             assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
             assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
-
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):
