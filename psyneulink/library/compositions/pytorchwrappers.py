@@ -702,10 +702,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._validate_optimizer_param_specs(optimizer_params_parsed, context)
 
-        torch_param_names = [p[0] for p in self.named_parameters()]
-
-        # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
-        torch_param_name_to_names_in_named_params_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
+        # Map short (local) names of torch Parameters to their full (hierachcial) names in torch.nn.named_parameters()
+        #    which may include prefixes for nested PytorchCompositionWrappers
+        torch_param_short_to_long_names_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
@@ -718,21 +717,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     f"Projection specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with a learnable Pytorch parameter.")
 
+            # IMPLEMENTATION NOTE:
+            #    This allows torch Parameters to be specified using tuples of their name and a slice
+            #    (currently this is not supported by Pytorch, as learning_rates can only be specified
+            #     for torch.nn.Parameter objects and not Tensors)
             # # If param spec is tuple, param name from first item (second is slice)
             # torch_param_name = param.name if isinstance(param, TorchParam) else param
             # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
-            # if torch_param_name not in torch_param_name_to_names_in_named_params_map:
+            # if torch_param_name not in torch_param_short_to_long_names_map:
             #     raise AutodiffCompositionError(
             #         f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
             #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
             # # Get torch parameter for specified param_ref in named_parameters()
             # param = next((p[1] for p in self.named_parameters()
-            #               if p[0] == torch_param_name_to_names_in_named_params_map[torch_param_name]), None)
+            #               if p[0] == torch_param_short_to_long_names_map[torch_param_name]), None)
 
             # # Get torch parameter for specified param_ref in named_parameters()
             torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == torch_param_name_to_names_in_named_params_map[torch_param_name]), None)
+                          if p[0] == torch_param_short_to_long_names_map[torch_param_name]), None)
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
 
@@ -747,6 +750,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     assert False, (f"PROGRAM ERROR: {torch_param_name} is not a learnable torch parameter even though "
                                    f"it is associated with a learnable Projection ('{pnl_param_name}').")
 
+            # IMPLEMENTATION NOTE: see above
             # if torch_param_slice:
             #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
             #     param = torch.nn.Parameter(param[torch_param_slice])
