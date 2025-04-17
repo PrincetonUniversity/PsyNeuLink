@@ -3291,12 +3291,11 @@ class TestMiscTrainingFunctionality:
         # Set up Torch optimizer
         torch_model = TorchModel()
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
-        # FIX: OPTIMIZER_PARAMS
-        # del torch_optimizer.param_groups[0]
-        # torch_param_names_map = {p[0]:p[1] for p in torch_model.named_parameters()}
-        # torch_optimizer.add_param_group({'params': torch_param_names_map['input.weight'], 'lr': INPUT_LEARNING_RATE})
-        # torch_optimizer.add_param_group({'params': torch_param_names_map['hidden.weight'], 'lr': HIDDEN_LEARNING_RATE})
-        # torch_optimizer.add_param_group({'params': torch_param_names_map['output.weight'], 'lr': OUTPUT_LEARNING_RATE})
+        del torch_optimizer.param_groups[0]
+        torch_param_names_map = {p[0]:p[1] for p in torch_model.named_parameters()}
+        torch_optimizer.add_param_group({'params': torch_param_names_map['input.weight'], 'lr': INPUT_LEARNING_RATE})
+        torch_optimizer.add_param_group({'params': torch_param_names_map['hidden.weight'], 'lr': HIDDEN_LEARNING_RATE})
+        torch_optimizer.add_param_group({'params': torch_param_names_map['output.weight'], 'lr': OUTPUT_LEARNING_RATE})
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
         # Get initial weights (to initialize autodiff below with same initial conditions)
@@ -3339,8 +3338,7 @@ class TestMiscTrainingFunctionality:
             name='OUTER COMP',
             pathways=[input_mech, input_proj, nested_comp, output_proj, output_mech],
             learning_rate = LEARNING_RATE,
-            # FIX: OPTIMIZER_PARAMS
-            # optimizer_params=optimizer_params
+            optimizer_params=optimizer_params
         )
 
         # Assign initial weights from TorchModel to PNL:
