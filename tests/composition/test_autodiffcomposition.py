@@ -17,6 +17,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
+from tests.mdf.stroop_conflict_monitoring import output
 
 logger = logging.getLogger(__name__)
 
@@ -3235,6 +3236,142 @@ class TestMiscTrainingFunctionality:
             assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
             assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
+
+    @pytest.mark.parametrize("bias", [False, True])
+    def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
+        """Test ideinticality with assignment of learning rates in optimizer_params of nested Composition"""
+        import torch
+        entry_torch_dtype = torch.get_default_dtype()
+        torch.set_default_dtype(torch.float64)
+
+        INPUT_SIZE = 3
+        HIDDEN_SIZE = 2
+        NESTED_1_SIZE = 3
+        NESTED_2_SIZE = 2
+        OUTPUT_SIZE = 5
+        LEARNING_RATE = .001
+        INPUT_LEARNING_RATE = 1.414
+        HIDDEN_LEARNING_RATE = 6.02
+        OUTPUT_LEARNING_RATE = 2.7
+        input_stim = [[1.,2.,3.]]
+        target_stim = [[1.,1.,1.,1.,1.]]
+
+        #  TorchModel:
+        #  input_wts      hidden_wts       output_wts
+        #    ->     input     ->    hidden    ->    output
+        #        INPUT_SIZE       HIDDEN_SIZE     OUTPUT_SIZE
+        #
+        #  PNL Model:
+        #       input_proj          nested_proj          output_proj
+        #  input    ->    [ nested_1    ->     nested_2 ]   ->     output
+        # INPUT_SIZE       INPUT_SIZE        HIDDEN_SIZE         OUTPUT_SIZE
+        #
+        # Mapping of weights between models:
+        #   Torch           PNL
+        # input_wts   ->   input_proj
+        # hidden_wts  ->   nested_proj
+        # output_wts  ->   output_proj
+
+        # Set up and run torch model ----------------------------------------------------------------------
+
+        # Set up torch model
+        class TorchModel(torch.nn.Module):
+            def __init__(self):
+                super(TorchModel, self).__init__()
+                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
+                self.hidden = torch.nn.Linear(INPUT_SIZE, HIDDEN_SIZE, bias=False)
+                self.output = torch.nn.Linear(HIDDEN_SIZE, OUTPUT_SIZE, bias=False)
+
+            def forward(self, x):
+                after_input = self.input(x)
+                after_hidden = self.hidden(after_input)
+                after_output = self.output(after_hidden)
+                return after_output
+
+        # Set up Torch optimizer
+        torch_model = TorchModel()
+        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
+        # FIX: OPTIMIZER_PARAMS
+        # del torch_optimizer.param_groups[0]
+        # torch_param_names_map = {p[0]:p[1] for p in torch_model.named_parameters()}
+        # torch_optimizer.add_param_group({'params': torch_param_names_map['input.weight'], 'lr': INPUT_LEARNING_RATE})
+        # torch_optimizer.add_param_group({'params': torch_param_names_map['hidden.weight'], 'lr': HIDDEN_LEARNING_RATE})
+        # torch_optimizer.add_param_group({'params': torch_param_names_map['output.weight'], 'lr': OUTPUT_LEARNING_RATE})
+        loss_fct = torch.nn.MSELoss(reduction='mean')
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = torch_model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
+        torch_hidden_initial_weights = torch_model.state_dict()['hidden.weight'].T.detach().cpu().numpy().copy()
+        torch_output_initial_weights = torch_model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
+
+        # Execute model without learning
+        torch_result_before_learning = torch_model(torch.tensor(np.array(input_stim)))
+
+        # Compute loss and update weights
+        torch_optimizer.zero_grad()
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(target_stim))
+        torch_loss.backward()
+        torch_optimizer.step()
+
+        # Get output after learning
+        torch_result_after_learning = torch_model(torch.tensor(np.array(input_stim)))
+
+        # Set up and run PNL Autodiff model ------------------------------------------------------------
+
+        # Nested Composition
+        nested_hidden_mech_1 = pnl.ProcessingMechanism(input_shapes=INPUT_SIZE, name='nested_1')
+        nested_hidden_mech_2 = pnl.ProcessingMechanism(input_shapes=HIDDEN_SIZE, name='nested_2')
+        nested_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2,
+                                            matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, nested_proj, nested_hidden_mech_2],
+                                              name='NESTED COMP')
+        # Outer Composition
+        input_mech = pnl.ProcessingMechanism(input_shapes=INPUT_SIZE, name='input_mech')
+        output_mech = pnl.ProcessingMechanism(input_shapes=OUTPUT_SIZE, name='output_mech')
+        input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech_1, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        inputs={input_mech: input_stim}
+        targets={output_mech: target_stim}
+        optimizer_params={input_proj: INPUT_LEARNING_RATE,
+                          nested_proj: HIDDEN_LEARNING_RATE,
+                          output_proj: OUTPUT_LEARNING_RATE}
+        outer_comp = pnl.AutodiffComposition(
+            name='OUTER COMP',
+            pathways=[input_mech, input_proj, nested_comp, output_proj, output_mech],
+            learning_rate = LEARNING_RATE,
+            # FIX: OPTIMIZER_PARAMS
+            # optimizer_params=optimizer_params
+        )
+
+        # Assign initial weights from TorchModel to PNL:
+        #   Torch           PNL
+        # input_wts   ->   input_proj
+        # hidden_wts  ->   nested_proj
+        # output_wts  ->   output_proj
+        outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
+        nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
+        outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
+        target_mechs = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
+        # Execute autodiff with learning (but not weight updates yet)
+        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
+                                                              execution_mode=pnl.ExecutionMode.PyTorch,
+                                                              # optimizer_params=optimizer_params
+                                                              )
+        # Get results after learning (with weight updates)
+        autodiff_result_after_learning = outer_comp.run(inputs={input_mech:input_stim},
+                                                        execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Compare results ------------------------------------------------------------
+
+        # Test of forward pass (without effects of learning yet):
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
+                                   autodiff_result_before_learning, atol=1e-6)
+
+        # Test of execution after backward pass (learning):
+        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses.squeeze())
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   autodiff_result_after_learning, atol=1e-6)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):

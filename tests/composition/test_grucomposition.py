@@ -183,7 +183,7 @@ class TestExecution:
         targets = [[1.,1.,1.,1.,1.]]
         INPUT_SIZE = 3
         HIDDEN_SIZE = 5
-        LEARNING_RATE = .001
+        LEARNING_RATE = .1
 
         # Set up and run torch model -------------------------------------
 
@@ -243,7 +243,7 @@ class TestExecution:
         targets = [[1.,1.,1.,1.,1.]]
         INPUT_SIZE = 3
         HIDDEN_SIZE = 5
-        LEARNING_RATE = .001
+        LEARNING_RATE = 6.1
 
         # Set up and run TORCH GRU model
         class TorchModel(torch.nn.Module):
@@ -290,8 +290,7 @@ class TestExecution:
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
-        input_mech_to_gru_projection = autodiff_comp.projections[0]
-        autodiff_comp.set_weights(input_mech_to_gru_projection, torch_input_initial_weights)
+        autodiff_comp.set_weights( autodiff_comp.projections[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
@@ -393,7 +392,6 @@ class TestExecution:
                 num_trials=2)
             np.testing.assert_allclose(expected, results)
 
-
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_optimizer_params_unnested(self, bias):
         import torch
@@ -470,6 +468,7 @@ class TestExecution:
 
         torch.set_default_dtype(entry_torch_dtype)
 
+    # Note:  if this is ever deprecated or removed, ensure version in test_autodiffcomposition is in use
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
         import torch
@@ -561,8 +560,7 @@ class TestExecution:
                                                 learning_rate = LEARNING_RATE,
                                                 optimizer_params=optimizer_params
                                                 )
-        input_mech_to_gru_projection = autodiff_comp.projections[0]
-        autodiff_comp.set_weights(input_mech_to_gru_projection, torch_input_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
