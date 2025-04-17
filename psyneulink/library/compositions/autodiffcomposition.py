@@ -142,11 +142,14 @@ overriding the `learning_rate <AutodiffComposition.learning_rate>` Parameter of 
 default by the `optimizer <AutodiffComposition.optimizer>`), to assign individual learning rates to specific
 `Projection`\\s. This is done by specifying **optimizer_params** as a dict, in which each key is a reference to a
 learnable `MappingProjection` in the AutodiffComposition, and the associated value specifies its learning_rate. This
-can be specified in the constructor, in which case it is used for all executions of the learn method, or in the call can
-`learn <AutodiffComposition.learn>` method, in which case it is used only for that execution. Projections that are not
+can be specified in the constructor, in which case it is used for all executions of the learn method, or in the call to
+`learn() <AutodiffComposition.learn>`, in which case it is used only for that execution. Projections that are not
 sepcified in **optimizer_params** use, in order of precedence: the `learning_rate<AutodiffComposition.learning_rate>`
 specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
-argument of its constructor, or the default value for AutodiffComposition.
+argument of its constructor, or the default value for AutodiffComposition. A warning is issued if a learning_rate is
+specified for a Projection in **optimizer_params** with a `learnable <MappingProjection.learnable>` attribute that is
+set to ``False``;  an error is generated if a learning_rate is set for a Projection associated with a Torch Parameter
+that is not learnable.
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
