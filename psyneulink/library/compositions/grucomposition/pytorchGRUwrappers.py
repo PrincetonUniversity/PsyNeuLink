@@ -27,8 +27,8 @@ from psyneulink.core.globals.keywords import (
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
-           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN',
-           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN']
+           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN', 'B_IH_NAME', 'B_HH_NAME',
+           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN', 'W_IH_NAME', 'W_HH_NAME']
 
 INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
 HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'

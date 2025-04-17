@@ -728,10 +728,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #               if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
 
             # # Get torch parameter for specified param_ref in named_parameters()
+            torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == torch_param_name_to_state_dict_key_map[param]), None)
-
-            assert param is not None, (f"PROGRAM ERROR: {torch_param_name} not found in {self.name}.named_parameters() "
+                          if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
+            assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
 
             if not param.requires_grad:

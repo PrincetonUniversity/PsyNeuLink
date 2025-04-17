@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink import CompositionError, AutodiffComposition
+from psyneulink import CompositionError, AutodiffComposition, HIDDEN_TO_HIDDEN
 
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
@@ -393,5 +393,80 @@ class TestExecution:
                 num_trials=2)
             np.testing.assert_allclose(expected, results)
 
-    def test_pytorch_identicality_of_optimizer_params(self):
-        pass
+
+    @pytest.mark.parametrize("bias", [False, True])
+    def test_pytorch_identicality_of_optimizer_params(self, bias):
+        # FIX 4/17/25: INCLUDE INPUT_TO_HIDDEN AND BIAS_XXX
+
+        import torch
+        entry_torch_dtype = torch.get_default_dtype()
+        torch.set_default_dtype(torch.float64)
+
+        inputs = [[1.,2.,3.]]
+        targets = [[1.,1.,1.,1.,1.]]
+        INPUT_SIZE = 3
+        HIDDEN_SIZE = 5
+        LEARNING_RATE = .001
+        W_IH_LEARNING_RATE = 1.414
+        W_HH_LEARNING_RATE = 6.02
+        B_IH_LEARNING_RATE = 6.26
+        B_HH_LEARNING_RATE = 2.7
+
+        # Set up and run torch model -------------------------------------
+
+        # Set up torch model
+        torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
+        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_gru.parameters())
+        del torch_optimizer.param_groups[0]
+        w_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_IH_NAME][0]
+        w_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_HH_NAME][0]
+        torch_optimizer.add_param_group({'params': [w_ih_param], 'lr': W_IH_LEARNING_RATE})
+        torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
+        if bias:
+            b_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_IH_NAME][0]
+            b_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_HH_NAME][0]
+            torch_optimizer.add_param_group({'params': [b_ih_param], 'lr': B_IH_LEARNING_RATE})
+            torch_optimizer.add_param_group({'params': [b_hh_param], 'lr': B_HH_LEARNING_RATE})
+        loss_fct = torch.nn.MSELoss(reduction='mean')
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_gru)
+
+        # Execute model without learning
+        h0 = torch.tensor([[0.,0.,0.,0.,0.]])
+        torch_result_before_learning, hn = torch_gru(torch.tensor(np.array(inputs)),h0)
+
+        # Compute loss and update weights
+        torch_optimizer.zero_grad()
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(targets))
+        torch_loss.backward()
+        torch_optimizer.step()
+
+        # Get output after learning
+        torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
+
+        # Set up and run PNL Autodiff model -------------------------------------
+
+        # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
+        optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        if bias:
+            optimizer_params.update({pnl.BIAS_INPUT: B_IH_LEARNING_RATE, pnl.BIAS_HIDDEN: B_HH_LEARNING_RATE})
+        pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE,
+                                 optimizer_params=optimizer_params)
+        pnl_gru.set_weights(*torch_gru_initial_weights)
+        target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
+        # Execute PNL GRUComposition
+        # Corresponds to forward and then backward passes of torch model, but results do not yet reflect weight updates
+        pnl_result_before_learning = pnl_gru.learn(inputs={pnl_gru.input_node:[[1.,2.,3.]],
+                                                           target_node[0]: [[1.,1.,1.,1.,1.]]},
+                                                   execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Need to run it one more time (due to lazy updating) to see the effects of learning
+        pnl_result_after_learning = pnl_gru.run(inputs={pnl_gru.input_node:[[1.,2.,3.]]})
+
+        # Compare results from before learning:
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
+        # Compare results from after learning:
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   pnl_result_after_learning, atol=1e-6)
+
+        torch.set_default_dtype(entry_torch_dtype)
