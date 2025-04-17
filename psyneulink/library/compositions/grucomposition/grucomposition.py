@@ -52,7 +52,6 @@ than `AutodiffComposition`:
 .. _GRUComposition_Configuration:
 
 *Configuration*
-~~~~~~~~~~~~~~~
 
 **input_size** (int) specifies the length of the input array to the GRUComposition, and the size
 of the `input_node <GRUComposition.input_node>`, which can be different than **hidden_size**.
@@ -67,9 +66,7 @@ bias vectors in its computations.
 
 .. _GRUComposition_Learning_Arguments:
 
-
 *Learning Arguments*
-~~~~~~~~~~~~~~~~~~~~
 
 **enable_learning** (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
 no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called.
@@ -128,6 +125,8 @@ values specify their learning_rates (see `AutodiffComposition_Learning_Rates` fo
 
 COMMENT:
     FIX: 4/17/25: CHECK THAT THESE ARE ALL TRUE:
+COMMENT
+
   **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
 
     - *int or float*: the value is used as the learning_rate;
