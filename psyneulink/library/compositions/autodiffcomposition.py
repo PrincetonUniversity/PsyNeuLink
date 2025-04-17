@@ -1728,7 +1728,7 @@ class AutodiffComposition(Composition):
                                                         context=context,
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,
-                                                        optimizer_params=optimzer_params,
+                                                        optimizer_params=optimizer_params,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
                                                         report=report,
