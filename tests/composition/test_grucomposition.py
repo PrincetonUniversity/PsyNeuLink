@@ -448,7 +448,8 @@ class TestExecution:
         # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
         optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
         if bias:
-            optimizer_params.update({pnl.BIAS_INPUT: B_IH_LEARNING_RATE, pnl.BIAS_HIDDEN: B_HH_LEARNING_RATE})
+            optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                     pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
         pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE,
                                  optimizer_params=optimizer_params)
         pnl_gru.set_weights(*torch_gru_initial_weights)

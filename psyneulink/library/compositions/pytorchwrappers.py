@@ -702,8 +702,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self._validate_optimizer_param_specs(optimizer_params_parsed, context)
 
+        torch_param_names = [p[0] for p in self.named_parameters()]
+
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
-        torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
+        # torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
+        torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
