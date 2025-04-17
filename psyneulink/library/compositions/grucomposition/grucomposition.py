@@ -14,8 +14,8 @@ Contents
 
   * `GRUComposition_Overview`
   * `GRUComposition_Creation`
-     - `Structure <GRUComposition_Configuration>`
-     - `Learning Specifications <GRUComposition_Learning_Arguments>`
+     - `Configuration <GRUComposition_Configuration>`
+     - `Learning Arguments <GRUComposition_Learning_Arguments>`
   * `GRUComposition_Structure`
   * `GRUComposition_Execution`
      - `Processing <GRUComposition_Processing>`
@@ -51,6 +51,9 @@ than `AutodiffComposition`:
 
 .. _GRUComposition_Configuration:
 
+*Configuration*
+~~~~~~~~~~~~~~~
+
 **input_size** (int) specifies the length of the input array to the GRUComposition, and the size
 of the `input_node <GRUComposition.input_node>`, which can be different than **hidden_size**.
 
@@ -63,6 +66,10 @@ and, correspondingly, the `GRU <https://pytorch.org/docs/stable/generated/torch.
 bias vectors in its computations.
 
 .. _GRUComposition_Learning_Arguments:
+
+
+*Learning Arguments*
+~~~~~~~~~~~~~~~~~~~~
 
 **enable_learning** (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
 no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called.
