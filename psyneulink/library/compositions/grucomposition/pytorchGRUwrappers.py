@@ -94,8 +94,18 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
 
-        # Raise error attempt to specify individual input_to_hidden or hidden_to_hidden Projections
         for spec in optimizer_param_specs:
+            # Raise error for attempt to specify bias parameters when bias=False
+            if not self.bias:
+                bias_specs = [spec for spec in optimizer_param_specs
+                              if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
+                if bias_specs:
+                    raise GRUCompositionError(f"Attempt to set Learning rate for bias(es) of GRU in 'optimizer_params' "
+                                              f"arg for {source} of {self.composition.name} when bias=Fase: "
+                                              f"({' ,'.join(bad_ih_specs)});  the spec(s) must be removed or "
+                                              f"bias set to True.")
+
+            # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
             bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
             if bad_ih_specs:
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
