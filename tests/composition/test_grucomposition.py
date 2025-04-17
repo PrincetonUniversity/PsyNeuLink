@@ -491,24 +491,52 @@ class TestExecution:
         # Set up and run torch model -------------------------------------
 
         # Set up torch model
-        torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
-        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_gru.parameters())
+        class TorchModel(torch.nn.Module):
+            def __init__(self, bias):
+                super(TorchModel, self).__init__()
+                # Note:  input and output modules don't use biases in PNL version, so match that here
+                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
+                self.gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
+                self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
+
+            def forward(self, x, hidden):
+                after_input = self.input(x)
+                after_gru, hidden_state = self.gru(after_input, hidden)
+                after_output = self.output(after_gru)
+                return after_output, hidden_state
+
+        torch_model = TorchModel(bias)
+        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
+        loss_fct = torch.nn.MSELoss(reduction='mean')
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = torch_model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_model.gru)
+        torch_output_initial_weights = torch_model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
+
+        # Assign learning rates to IH and HH parameters
         del torch_optimizer.param_groups[0]
-        w_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_IH_NAME][0]
-        w_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_HH_NAME][0]
+        torch_param_short_to_long_names_map = {k.split('.')[-1]:k
+                                               for k in [p[0] for p in torch_model.named_parameters()]}
+
+        # w_ih_param = [p[1] for p in torch_model.named_parameters() if p[0]==pnl.W_IH_NAME][0]
+        w_ih_param = [p[1] for p in torch_model.named_parameters()
+                      if p[0]== torch_param_short_to_long_names_map[pnl.W_IH_NAME]][0]
+        w_hh_param = [p[1] for p in torch_model.named_parameters()
+                      if p[0]== torch_param_short_to_long_names_map[pnl.W_HH_NAME]][0]
         torch_optimizer.add_param_group({'params': [w_ih_param], 'lr': W_IH_LEARNING_RATE})
         torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
         if bias:
-            b_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_IH_NAME][0]
-            b_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_HH_NAME][0]
+            b_ih_param = [p[1] for p in torch_model.named_parameters()
+                      if p[0]== torch_param_short_to_long_names_map[pnl.B_IH_NAME]][0]
+            b_hh_param = [p[1] for p in torch_model.named_parameters()
+                      if p[0]== torch_param_short_to_long_names_map[pnl.B_HH_NAME]][0]
             torch_optimizer.add_param_group({'params': [b_ih_param], 'lr': B_IH_LEARNING_RATE})
             torch_optimizer.add_param_group({'params': [b_hh_param], 'lr': B_HH_LEARNING_RATE})
-        loss_fct = torch.nn.MSELoss(reduction='mean')
-        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(torch_gru)
 
         # Execute model without learning
-        h0 = torch.tensor([[0.,0.,0.,0.,0.]])
-        torch_result_before_learning, hn = torch_gru(torch.tensor(np.array(inputs)),h0)
+        hidden_init = torch.tensor([[0.,0.,0.,0.,0.]])
+        torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_init)
 
         # Compute loss and update weights
         torch_optimizer.zero_grad()
@@ -517,33 +545,36 @@ class TestExecution:
         torch_optimizer.step()
 
         # Get output after learning
-        torch_result_after_learning, hn = torch_gru(torch.tensor(np.array(inputs)),hn)
+        torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_state)
 
-        # Set up and run PNL Autodiff model -------------------------------------
+        # Set up and run PNL Autodiff model
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
+        gru = GRUComposition(name='GRU COMP',
+                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
+        autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
+                                   pathways=[input_mech, gru, output_mech],
+                                                learning_rate = LEARNING_RATE)
+        input_mech_to_gru_projection = autodiff_comp.projections[0]
+        autodiff_comp.set_weights(input_mech_to_gru_projection, torch_input_initial_weights)
+        autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
+        target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
-        # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
-        optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
-        if bias:
-            optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                     pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
-        pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE,
-                                 optimizer_params=optimizer_params)
-        pnl_gru.set_weights(*torch_gru_initial_weights)
-        target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        # Execute autodiff with learning (but not weight updates yet)
+        autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
+                                                              execution_mode=pnl.ExecutionMode.PyTorch)
+        # Get results after learning (with weight updates)
+        autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
+                                                           execution_mode=pnl.ExecutionMode.PyTorch)
 
-        # Execute PNL GRUComposition
-        # Corresponds to forward and then backward passes of torch model, but results do not yet reflect weight updates
-        pnl_result_before_learning = pnl_gru.learn(inputs={pnl_gru.input_node:[[1.,2.,3.]],
-                                                           target_node[0]: [[1.,1.,1.,1.,1.]]},
-                                                   execution_mode=pnl.ExecutionMode.PyTorch)
+        # Test of forward pass (without effects of learning yet):
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
+                                   autodiff_result_before_learning, atol=1e-6)
 
-        # Need to run it one more time (due to lazy updating) to see the effects of learning
-        pnl_result_after_learning = pnl_gru.run(inputs={pnl_gru.input_node:[[1.,2.,3.]]})
-
-        # Compare results from before learning:
-        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(), pnl_result_before_learning, atol=1e-6)
-        # Compare results from after learning:
+        # Test of execution after backward pass (learning):
+        np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   pnl_result_after_learning, atol=1e-6)
+                                   autodiff_result_after_learning, atol=1e-6)
 
         torch.set_default_dtype(entry_torch_dtype)
