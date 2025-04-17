@@ -4850,6 +4850,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
 
+    def _get_all_projections(self):
+        """Return list of all Projections in Composition and any nested within it"""
+        projections = ContentAddressableList(component_type=Projection, list=self.projections)
+        for comp in self._get_nested_compositions():
+            projections += comp.projections
+            # projections += comp._get_all_projections()
+        return projections
+
     def _is_in_composition(self, component, nested=True):
         """Return True if component is in Composition, including any nested Compositions if **nested** is True
         Include input_CIM and output_CIM for self and all nested Compositions

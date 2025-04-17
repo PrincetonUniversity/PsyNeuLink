@@ -1267,7 +1267,7 @@ class ContentAddressableList(UserList):
 
     key : str : default `name`
         specifies the attribute of **component_type** used to key items in the list by content;
-        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
+        **component_type** must have this attribute or, if it is not provided, a 'name' attribute.
 
     list : List : default None
         specifies a list used to initialize the list;
