@@ -347,14 +347,12 @@ class TestExecution:
     learn_method_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
-    test_specs = [
-        ('constructor', "INPUT TO HIDDEN", constructor_expected),
-        ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
-        ('learn_method', "HIDDEN TO HIDDEN", learn_method_expected),
-        ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
-        ('both', "HIDDEN TO HIDDEN", learn_method_expected),
-        ('none', "HIDDEN TO HIDDEN", none_expected),
-    ]
+    test_specs = [('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
+                  ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
+                  ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+                  ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
+                  ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+                  ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
     def test_optimizer_params_for_custom_learning_rates(self, condition, gru_proj, expected):
@@ -372,7 +370,7 @@ class TestExecution:
 
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
             error_msg = ("GRUComposition does not support setting of learning rates for individual "
-                         "hidden_to_hidden Projections (HIDDEN TO UPDATE WEIGHTS); use 'HIDDEN TO HIDDEN' "
+                         "hidden_to_hidden Projections (HIDDEN TO UPDATE WEIGHTS); use 'HIDDEN_TO_HIDDEN' "
                          "to set learning rate for all such weights.")
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
@@ -394,3 +392,6 @@ class TestExecution:
                 optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
             np.testing.assert_allclose(expected, results)
+
+    def test_pytorch_identicality_of_optimizer_params(self):
+        pass

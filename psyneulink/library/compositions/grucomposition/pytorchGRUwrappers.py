@@ -26,16 +26,18 @@ from psyneulink.core.globals.keywords import (
     ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper']
+__all__ = ['PytorchGRUCompositionWrapper',
+           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN',
+           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN']
 
-W_IH_NAME = 'weight_ih_l0'
-W_HH_NAME = 'weight_hh_l0'
 INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
 HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
-B_IH_NAME = 'bias_ih_l0'
-B_HH_NAME = 'bias_hh_l0'
 BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
 BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
+W_IH_NAME = 'weight_ih_l0'
+W_HH_NAME = 'weight_hh_l0'
+B_IH_NAME = 'bias_ih_l0'
+B_HH_NAME = 'bias_hh_l0'
 
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
@@ -98,12 +100,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if bad_ih_specs:
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
                                           f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
-                                          f"use '{INPUT_TO_HIDDEN}' to set learning rate for all such weights.")
+                                          f"use 'INPUT_TO_HIDDEN' to set learning rate for all such weights.")
             bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
             if bad_hh_specs:
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
                                           f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
-                                          f"use '{HIDDEN_TO_HIDDEN}' to set learning rate for all such weights.")
+                                          f"use 'HIDDEN_TO_HIDDEN' to set learning rate for all such weights.")
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
