@@ -79,11 +79,11 @@ COMMENT
 **optimizer_params** (dict): used to specify parameter-specific learning rates, which supercede the value of the
 GRUCompositon's `learning_rate <GRUComposition.learning_rate>`. Keys of the dict must reference parameters of the
 `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, and values their learning_rates,
-as described below.
+as described below (see `AutodiffComposition_Learning_Rates` for additional information):
 
   **Keys** for specifying individual parameters in the **optimizer_params** dict:
 
-    - *`w_ih`*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
+    - *INPUT_TO_HIDDEN*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
       <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
       efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
       <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
