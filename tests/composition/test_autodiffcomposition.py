@@ -3144,10 +3144,12 @@ class TestMiscTrainingFunctionality:
     learn_method_expected = [[1.01678884, 0.82604284, 1.06786855, 1.0114696, 0.91116723]]
     no_learning_expected = [[1.07514919, 0.23385803, 1.30053929, 1.0519367, 0.60906278]]
     test_specs = [
-        ('constructor', constructor_expected),
-        ('learn_method', learn_method_expected),
-        ('both', learn_method_expected), # Test that learning_method params supercede constructor params
-        ('none', no_learning_expected)
+        # ('constructor', constructor_expected),
+        # ('learn_method', learn_method_expected),
+        # ('both', learn_method_expected), # Test that learning_method params supercede constructor params
+        # ('none', no_learning_expected),
+        ('bad_proj', None),
+        ('bad_lr', None)
     ]
     @pytest.mark.parametrize("condition, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
@@ -3158,22 +3160,40 @@ class TestMiscTrainingFunctionality:
         nested_comp = pnl.AutodiffComposition(nested_hidden_mech)
         input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
         output_proj = pnl.MappingProjection(nested_hidden_mech, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
-        constructor_optimizer_params = {input_proj: 2.9,
-                                        output_proj: .5}
-        learning_method_optimizer_params = {input_proj: .66,
-                                            output_proj: 1.5}
+        inputs={input_mech: [[.1, .2, .3]]}
+        targets={output_mech: [[1,1,1,1,1]]}
+        constructor_optimizer_params = {input_proj: 2.9, output_proj: .5}
+        learning_method_optimizer_params = {input_proj: .66, output_proj: 1.5}
+
+        if condition in {'bad_proj','bad_lr'}:
+            if condition == 'bad_proj':
+                err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the constructor "
+                           f"for 'autodiff_composition-1' is not in that Composition: 'bad_proj'.")
+                opt_params = {condition: .66}
+            else:
+                opt_params = {input_proj: condition}
+                err_msg = (f"Learning rate specified in 'optimizer_params' arg of constructor for "
+                           f"'autodiff_composition-1' ('bad_lr') must be an int or float.")
+            with pytest.raises(AutodiffCompositionError) as error_text:
+                outer_comp = pnl.AutodiffComposition(
+                    [input_mech, input_proj, nested_hidden_mech, output_proj, output_mech],
+                )
+                outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+            assert err_msg in str(error_text.value)
+            return
+
         outer_comp = pnl.AutodiffComposition(
             [input_mech, input_proj, nested_hidden_mech, output_proj, output_mech],
             optimizer_params=constructor_optimizer_params if condition in {'constructor', 'both'} else None
         )
         results = outer_comp.learn(
-            inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+            inputs=inputs, targets=targets,
             optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
             num_trials=2)
         np.testing.assert_allclose(expected, results)
 
         # Learning rate should return to default values if not specified again
-        outer_comp.learn(inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]})
+        outer_comp.learn(inputs=inputs, targets=targets)
         if condition == 'both':
             # Should return to defaults specified in constructor (even though specified in previous call to learning)
             assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 2

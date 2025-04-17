@@ -87,12 +87,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _validate_and_parse_optimizer_param_specs(self, optimizer_param_specs:dict):
-        """Override to filter for specifications of slices"""
+    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context):
+        """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
 
-        # Raise error attempt to specify individual input to hidden or hidden to hidden Projections
+        # Raise error attempt to specify individual input_to_hidden or hidden_to_hidden Projections
         for spec in optimizer_param_specs:
             bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
             if bad_ih_specs:
@@ -104,12 +104,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
                                           f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
                                           f"use '{HIDDEN_TO_HIDDEN}' to set learning rate for all such weights.")
-
-        # # Replace key phrases with name of torch parameter (in state_dict() to
-        # if INPUT_TO_HIDDEN in optimizer_param_specs:
-        #     optimizer_param_specs[W_IH_NAME] = optimizer_param_specs.pop(INPUT_TO_HIDDEN)
-        # if HIDDEN_TO_HIDDEN in optimizer_param_specs:
-        #     optimizer_param_specs[W_HH_NAME] = optimizer_param_specs.pop(HIDDEN_TO_HIDDEN)
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""

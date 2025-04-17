@@ -1095,7 +1095,7 @@ class AutodiffComposition(Composition):
         if (old_opt is None or refresh) and refresh is not False:
             self._instantiate_optimizer(refresh, learning_rate, optimizer_params, context)
         else:
-            pytorch_rep._update_optimizer_params(old_opt, optimizer_params, context)
+            pytorch_rep._update_optimizer_params(old_opt, optimizer_params, Context(source=ContextFlags.METHOD))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1121,7 +1121,7 @@ class AutodiffComposition(Composition):
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
         default_param_groups = optimizer.param_groups.copy()
-        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, Context(source=ContextFlags.CONSTRUCTOR))
         self._optimizer_default_param_groups = (
             optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper

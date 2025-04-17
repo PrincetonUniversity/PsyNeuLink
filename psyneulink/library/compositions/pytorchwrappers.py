@@ -687,9 +687,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
-        composition = self.composition
-        optimizer_param_specs = optimizer_param_specs or self.composition._optimizer_constructor_params
+        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
+        composition = self.composition
+
+        optimizer_param_specs = optimizer_param_specs or self.composition._optimizer_constructor_params
         if not optimizer_param_specs:
             return
 
@@ -697,7 +699,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
                                    for k, v in optimizer_param_specs.items()}
 
-        self._validate_and_parse_optimizer_param_specs(optimizer_params_parsed)
+        self._validate_optimizer_param_specs(optimizer_params_parsed, source)
 
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
         torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
@@ -710,8 +712,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
             except KeyError:
                 raise AutodiffCompositionError(
-                    f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
-                    f"('{pnl_param_name}') is not associated with a Pytorch parameter.")
+                    f"Projection specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
+                    f"('{pnl_param_name}') is not associated with a learnable Pytorch parameter.")
 
             # # If param spec is tuple, param name from first item (second is slice)
             # torch_param_name = param.name if isinstance(param, TorchParam) else param
@@ -740,7 +742,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float)):
                 raise AutodiffCompositionError(
-                    f"Learning rate specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+                    f"Learning rate specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
                     f"('{learning_rate}') must be an int or float.")
             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                     or learning_rate is False):
@@ -762,12 +764,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)
 
-    def _validate_and_parse_optimizer_param_specs(self, optimizer_param_specs:dict):
+    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, source):
         """Allows override by subclasses for custom handling of optimizer_param_specs (e.g., pytorchGRUWrappers)"""
-
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
                                             if isinstance(node_wrapper, PytorchCompositionWrapper)]:
-            nested_composition_wrapper._validate_and_parse_optimizer_param_specs(optimizer_param_specs)
+            nested_composition_wrapper._validate_optimizer_param_specs(optimizer_param_specs, source)
+        bad_proj_specs = ([proj_name for proj_name in optimizer_param_specs
+                          if proj_name not in self.composition.projections.names])
+        if bad_proj_specs:
+            if len(bad_proj_specs) == 1:
+                err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the {source} for "
+                           f"'{self.composition.name}' is not in that Composition: '{bad_proj_specs[0]}'.")
+            else:
+                err_msg = (f"The following Projections specified in the 'optimizer_params' arg of the {source} for "
+                           f"'{self.composition.name}' are not in that Composition: '{', '.join(bad_proj_specs)}'.")
+            raise AutodiffCompositionError(err_msg)
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""

@@ -349,9 +349,9 @@ class TestExecution:
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
     test_specs = [
         ('constructor', "INPUT TO HIDDEN", constructor_expected),
-        ('constructor', "HIDDEN TO UPDATE WEIGHTS", constructor_expected),
+        ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
         ('learn_method', "HIDDEN TO HIDDEN", learn_method_expected),
-        ('learn_method', "HIDDEN TO UPDATE WEIGHTS", learn_method_expected),
+        ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
         ('both', "HIDDEN TO HIDDEN", learn_method_expected),
         ('none', "HIDDEN TO HIDDEN", none_expected),
     ]
