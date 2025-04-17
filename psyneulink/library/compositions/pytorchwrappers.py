@@ -705,8 +705,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         torch_param_names = [p[0] for p in self.named_parameters()]
 
         # Parse keys in state_dict() to get param names (which may include prefixes of nesting Compositions)
-        # torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in self.state_dict()}
-        torch_param_name_to_state_dict_key_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
+        torch_param_name_to_names_in_named_params_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
@@ -722,18 +721,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # # If param spec is tuple, param name from first item (second is slice)
             # torch_param_name = param.name if isinstance(param, TorchParam) else param
             # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
-            # if torch_param_name not in torch_param_name_to_state_dict_key_map:
+            # if torch_param_name not in torch_param_name_to_names_in_named_params_map:
             #     raise AutodiffCompositionError(
             #         f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
             #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
             # # Get torch parameter for specified param_ref in named_parameters()
             # param = next((p[1] for p in self.named_parameters()
-            #               if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
+            #               if p[0] == torch_param_name_to_names_in_named_params_map[torch_param_name]), None)
 
             # # Get torch parameter for specified param_ref in named_parameters()
             torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == torch_param_name_to_state_dict_key_map[torch_param_name]), None)
+                          if p[0] == torch_param_name_to_names_in_named_params_map[torch_param_name]), None)
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
 
