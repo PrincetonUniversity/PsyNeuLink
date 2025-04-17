@@ -269,6 +269,10 @@ occur the following conditions must obtain:
   - **execution_mode** argument of the `learn <AutodiffComposition.learn>` method must `ExecutionMode.PyTorch`
     (the default).
 
+COMMENT:
+FIX 4/17/25: CORRECT TO STATE THAT THIS WILL OCCUR BY DEFAULT, AND WARNING WILL BE ISSUED
+COMMENT
+
   .. note:: Because a GRUComposition uses the PyTorch `GRU
      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module to implement its computations during
      learning, its `learn <AutodiffComposition.learn>` method can only be called with the **execution_mode**
