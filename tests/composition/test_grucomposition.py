@@ -472,8 +472,6 @@ class TestExecution:
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
-        # FIX 4/17/25: INCLUDE INPUT_TO_HIDDEN AND BIAS_XXX
-
         import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)
@@ -550,11 +548,19 @@ class TestExecution:
         # Set up and run PNL Autodiff model
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
+        optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        if bias:
+            optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                     pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
         gru = GRUComposition(name='GRU COMP',
-                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
+                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE,
+                             # FIX: 4/17/25 -- HANDLE AND TEST THIS:
+                             # optimizer_params=optimizer_params
+                             )
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
-                                   pathways=[input_mech, gru, output_mech],
-                                                learning_rate = LEARNING_RATE)
+                                                pathways=[input_mech, gru, output_mech],
+                                                learning_rate = LEARNING_RATE,
+                                                optimizer_params=optimizer_params)
         input_mech_to_gru_projection = autodiff_comp.projections[0]
         autodiff_comp.set_weights(input_mech_to_gru_projection, torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)

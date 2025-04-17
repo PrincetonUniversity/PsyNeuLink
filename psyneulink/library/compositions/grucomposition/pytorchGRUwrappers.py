@@ -96,7 +96,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         for spec in optimizer_param_specs:
             # Raise error for attempt to specify bias parameters when bias=False
-            if not self.bias:
+            if not self.composition.bias:
                 bias_specs = [spec for spec in optimizer_param_specs
                               if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
                 if bias_specs:
