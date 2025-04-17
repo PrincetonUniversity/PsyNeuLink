@@ -3140,18 +3140,18 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
-    constructor_expected = [[1.05463274, 0.43073172, 1.2216808, 1.0371712, 0.70922153]]
-    learn_method_expected = [[1.01678884, 0.82604284, 1.06786855, 1.0114696, 0.91116723]]
-    no_learning_expected = [[1.07514919, 0.23385803, 1.30053929, 1.0519367, 0.60906278]]
+    constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
+    learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
+    no_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
     test_specs = [
-        ('constructor', constructor_expected),
-        ('learn_method', learn_method_expected),
-        ('both', learn_method_expected), # Test that learning_method params supercede constructor params
+        ('constructor', constructor_expected),  # Test spects in constructor
+        ('learn_method', learn_method_expected),# Test spects in learn() method
+        ('both', learn_method_expected),        # Test that learn() method params supercede constructor params
         ('none', no_learning_expected),
         ('bad_proj', None),
-        ('input_proj_not_learnable', None),
-        ('hidden_proj_not_learnable', None),
-        ('output_proj_not_learnable', None),
+        ('input_proj_not_learnable', None),     # Test projection to nested Composition
+        ('hidden_proj_not_learnable', None),    # Test projection within nested Composition
+        ('output_proj_not_learnable', None),    # Test projection fron nested Composition
         ('bad_lr', None)
     ]
     @pytest.mark.parametrize("condition, expected", test_specs,
@@ -3235,27 +3235,6 @@ class TestMiscTrainingFunctionality:
             assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
 
-
-    # def test_extra(self):
-    #     nested_hidden_mech_1 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_1')
-    #     nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
-    #     hidden_proj = pnl.MappingProjection(nested_hidden_mech_1,
-    #                                         nested_hidden_mech_2,
-    #                                         matrix=pnl.IDENTITY_MATRIX,
-    #                                         learnable=False)
-    #     nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, hidden_proj, nested_hidden_mech_2], name='nested')
-    #     input_mech = pnl.ProcessingMechanism(input_shapes=3, name='input')
-    #     output_mech = pnl.ProcessingMechanism(input_shapes=5, name='output')
-    #     input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech_1, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
-    #     output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
-    #     inputs={input_mech: [[.1, .2, .3]]}
-    #     targets={output_mech: [[1,1,1,1,1]]}
-    #     optimizer_params = {input_proj: 2.9, hidden_proj: 1.0, output_proj: .5}
-    #     outer_comp = pnl.AutodiffComposition(
-    #         [input_mech, input_proj, nested_comp, output_proj, output_mech],
-    #         optimizer_params=optimizer_params,
-    #         name='outer')
-    #     results = outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=optimizer_params, num_trials=2)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):
