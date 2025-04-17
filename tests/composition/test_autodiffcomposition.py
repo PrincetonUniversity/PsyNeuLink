@@ -3149,34 +3149,55 @@ class TestMiscTrainingFunctionality:
         ('both', learn_method_expected), # Test that learning_method params supercede constructor params
         ('none', no_learning_expected),
         ('bad_proj', None),
-        ('proj_not_learnable', None),
+        ('input_proj_not_learnable', None),
+        ('hidden_proj_not_learnable', None),
+        ('output_proj_not_learnable', None),
         ('bad_lr', None)
     ]
     @pytest.mark.parametrize("condition, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
     def test_optimizer_params_for_custom_learning_rates(self, condition, expected):
-        input_mech = pnl.ProcessingMechanism(input_shapes=3)
-        nested_hidden_mech = pnl.ProcessingMechanism(function=Logistic, input_shapes=4)
-        output_mech = pnl.ProcessingMechanism(input_shapes=5)
-        nested_comp = pnl.AutodiffComposition(nested_hidden_mech)
-        input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
-        output_proj = pnl.MappingProjection(nested_hidden_mech, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        nested_hidden_mech_1 = pnl.ProcessingMechanism(function=pnl.Linear, input_shapes=4, name='nested_1')
+        nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
+        hidden_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2,
+                                            matrix=pnl.IDENTITY_MATRIX)
+        nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, hidden_proj, nested_hidden_mech_2])
+        input_mech = pnl.ProcessingMechanism(input_shapes=3, name='input_mech')
+        output_mech = pnl.ProcessingMechanism(input_shapes=5, name='output_mech')
+        input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech_1, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
         inputs={input_mech: [[.1, .2, .3]]}
         targets={output_mech: [[1,1,1,1,1]]}
         constructor_optimizer_params = {input_proj: 2.9, output_proj: .5}
         learning_method_optimizer_params = {input_proj: .66, output_proj: 1.5}
 
-        if condition in {'bad_proj', 'proj_not_learnable', 'bad_lr'}:
+        if condition in {'bad_proj',
+                         'input_proj_not_learnable',
+                         'hidden_proj_not_learnable',
+                         'output_proj_not_learnable',
+                         'bad_lr'}:
             if condition == 'bad_proj':
                 err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the constructor for "
                            f"'autodiff_composition-1' is not in that Composition or any nested within it: 'bad_proj'.")
                 opt_params = {condition: .66}
-            elif condition == 'proj_not_learnable':
+            elif condition == 'input_proj_not_learnable':
                 input_proj.learnable = False
                 opt_params = {input_proj: .66}
                 err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
-                           f"'autodiff_composition-1' ('MappingProjection from ProcessingMechanism-0[OutputPort-0] to "
-                           f"ProcessingMechanism-1[InputPort-0]') is not learnable.")
+                           f"'autodiff_composition-1' ('MappingProjection from input_mech[OutputPort-0] "
+                           f"to nested_1[InputPort-0]') is not learnable.")
+            elif condition == 'hidden_proj_not_learnable':
+                hidden_proj.learnable = False
+                opt_params = {hidden_proj: 21.6}
+                err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
+                           f"'autodiff_composition-1' ('MappingProjection from nested_1[OutputPort-0] "
+                           f"to nested_2[InputPort-0]') is not learnable.")
+            elif condition == 'output_proj_not_learnable':
+                output_proj.learnable = False
+                opt_params = {output_proj: 3.99}
+                err_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
+                           f"'autodiff_composition-1' ('MappingProjection from nested_2[OutputPort-0] "
+                           f"to output_mech[InputPort-0]') is not learnable.")
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
                 err_msg = (f"Learning rate specified in 'optimizer_params' arg of constructor for "
@@ -3185,14 +3206,14 @@ class TestMiscTrainingFunctionality:
                 assert False, "Bad condition spec"
             with pytest.raises(AutodiffCompositionError) as error_text:
                 outer_comp = pnl.AutodiffComposition(
-                    [input_mech, input_proj, nested_hidden_mech, output_proj, output_mech],
+                    [input_mech, input_proj, nested_comp, output_proj, output_mech],
                 )
                 outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
             assert err_msg in str(error_text.value)
             return
 
         outer_comp = pnl.AutodiffComposition(
-            [input_mech, input_proj, nested_hidden_mech, output_proj, output_mech],
+            [input_mech, input_proj, nested_comp, output_proj, output_mech],
             optimizer_params=constructor_optimizer_params if condition in {'constructor', 'both'} else None
         )
         results = outer_comp.learn(
@@ -3205,14 +3226,14 @@ class TestMiscTrainingFunctionality:
         outer_comp.learn(inputs=inputs, targets=targets)
         if condition == 'both':
             # Should return to defaults specified in constructor (even though specified in previous call to learning)
-            assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 2
-            assert outer_comp.pytorch_representation.optimizer.param_groups[0]['lr'] == 2.9
-            assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == 0.5
+            assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
+            assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == 2.9
+            assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 0.5
         elif condition == 'learn_method':
             # Should return to default for optimizer (since none specified for constructor)
-            assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 2
-            assert outer_comp.pytorch_representation.optimizer.param_groups[0]['lr'] == .66
-            assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == 1.5
+            assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
+            assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
+            assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
 
 
     # def test_extra(self):

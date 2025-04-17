@@ -734,8 +734,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                        f"even though it was found in its state_dict().")
 
             if not param.requires_grad:
-                # if not self.composition.projections[pnl_param_name].learnable:
-                if not self.composition._get_all_projections()[pnl_param_name].learnable:
+                # projection = self.composition._get_all_projections()[pnl_param_name]
+                # if not projection.learnable:
+                proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
+                proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
+                if not proj_wrapper.projection.learnable:
                     raise AutodiffCompositionError(f"Projection specified in 'optimizer_params' arg of {source} for "
                                                    f"'{self.composition.name}' ('{pnl_param_name}') is not learnable.")
                 else:

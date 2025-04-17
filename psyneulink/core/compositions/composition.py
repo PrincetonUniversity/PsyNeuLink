@@ -4852,7 +4852,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_all_projections(self):
         """Return list of all Projections in Composition and any nested within it"""
-        projections = ContentAddressableList(component_type=Projection, list=self.projections)
+        projections = ContentAddressableList(component_type=Projection, list=self.projections,
+                                             name=f"return of {self.name}._get_all_projections()")
         for comp in self._get_nested_compositions():
             projections += comp.projections
             # projections += comp._get_all_projections()
