@@ -151,6 +151,11 @@ specified for a Projection in **optimizer_params** with a `learnable <MappingPro
 set to ``False``;  an error is generated if a learning_rate is set for a Projection associated with a Torch Parameter
 that is not learnable.
 
+  .. note::
+     If **optimizer_params** are specified in the constructor for a nested AutodiffComposition, they will be promoted
+     to and used by the outer Composition;  however, if specifications for any of the same Projections appear in the
+     the **optimizer_params** arg of the constructor for the outer AutodiffComposition, those will take precedence.
+
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
 *Exchanging Parameters with Pytorch Modules*

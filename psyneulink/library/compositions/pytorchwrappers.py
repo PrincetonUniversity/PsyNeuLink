@@ -273,6 +273,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 for k, v in node_wrapper.nodes_map.items():
                     self._add_node_to_nodes_map(k, v)
                 self._pnl_refs_to_torch_params_map.update(node_wrapper._pnl_refs_to_torch_params_map)
+                # Get any optimizer_constructor_params from nested Compositon, but give precedence to any in outer comp
+                for k, v in node_wrapper.composition._optimizer_constructor_params.items():
+                    if k not in self.composition._optimizer_constructor_params:
+                        self.composition._optimizer_constructor_params[k] = v
+
         # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
         nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
         for node in nodes_to_remove:
@@ -299,9 +304,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
-        # FIX 4/15/25: ?STILL NEEDED
-        self._optimizer_param_groups = []
-
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass

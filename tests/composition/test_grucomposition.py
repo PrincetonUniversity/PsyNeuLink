@@ -353,13 +353,16 @@ class TestExecution:
                   ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
                   ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
                   ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+                  ('specs_to_nested', pnl.INPUT_TO_HIDDEN, constructor_expected),
                   ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
     def test_optimizer_params_for_custom_learning_rates(self, condition, gru_proj, expected):
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
-        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False,
+                                 optimizer_params={gru_proj: 0.3} if condition=='specs_to_nested' else None
+                                 )
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
         constructor_optimizer_params = {gru_proj: .3,
@@ -369,6 +372,7 @@ class TestExecution:
                                             input_proj: .66,
                                             output_proj: 1.5}
 
+        # Test for error on attempt to set individual Projection learning rate
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
             error_msg = ("GRUComposition does not support setting of learning rates for individual "
                          "hidden_to_hidden Projections (HIDDEN TO UPDATE WEIGHTS); use 'HIDDEN_TO_HIDDEN' "
@@ -383,6 +387,7 @@ class TestExecution:
                     optimizer_params=learning_method_optimizer_params if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
+        # Test for error on attempt to set BIAS learning rate if bias option is False
         elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
             bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
             error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
@@ -398,11 +403,25 @@ class TestExecution:
                     optimizer_params=learning_method_optimizer_params if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
+        # Test for assignment of optimizer_param to nested Composition on its construction
+        elif condition == 'specs_to_nested':
+            outer = pnl.AutodiffComposition(
+                [input_mech, input_proj, gru, output_proj, output_mech],
+                 # Exclude gru_proj from optimizer_params since it was set on nested gru above
+                optimizer_params={input_proj: 2.9, output_proj: .5})
+            results = outer.learn(
+                inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+                num_trials=2
+            )
+            np.testing.assert_allclose(expected, results)
+
         else:
+            # Test assignment of optimizer_param on constructdion
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
                 optimizer_params=constructor_optimizer_params if condition in {'constructor'} else None
             )
+            # Test assignment of optimizer_param on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
