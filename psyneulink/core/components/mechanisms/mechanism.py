@@ -1098,7 +1098,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import \
-    REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
+    PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 # TODO: remove unused keywords
@@ -3816,7 +3816,7 @@ class Mechanism_Base(Mechanism):
                 OUTPUT_PORTS: instantiated_output_ports}
 
     @beartype
-    def remove_ports(self, ports, context=REMOVE_PORTS):
+    def remove_ports(self, ports):
         """
         remove_ports(ports)
 

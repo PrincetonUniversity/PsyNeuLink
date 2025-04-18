@@ -837,7 +837,7 @@ PROJECTION_SPECIFIC_PARAMS = 'PROJECTION_SPECIFIC_PARAMS'
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
-REMOVE_PORTS = 'REMOVE_PORTS'
+
 
 def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
