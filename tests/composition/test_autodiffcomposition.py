@@ -3256,29 +3256,29 @@ class TestMiscTrainingFunctionality:
     no_learning_expected = [[1.07518731, 0.2334628, 1.30069345, 1.05196273, 0.60886095]]
     test_specs = [
          #    condition       constructor   learn()  c in_prj  c out_prj  l in_prj  l out_prj   results
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('composition_default',     False,   False,      None,     None,    None,    None,    default_expected),
-        # # Test specs in constructor
-        # ('constructor_only',        True,    False,      2.9,      .5,      None,    None,    constructor_expected),
-        # # Test specs in learn() method
-        # ('learn_method_only',       False,   True,       None,     None,    .66,      1.5,    learn_method_expected),
-        # # Test that learn() method params supercede constructor params
-        # ('both',                    True,    True,       2.9,      .5,      .66,      1.5,    learn_method_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_True',        True,    False,      True,     True,    None,    None,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_True',       False,   True,       None,     None,    True,    True,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_None',        True,    False,      None,     None,    None,    None,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_None',       False,   True,       None,     None,    None,    None,    default_expected),
-        # # Test that no learning occurs
-        # ('constructor_False',       True,    False,      False,    False,   None,    None,    no_learning_expected),
-        # # Test that no learning occurs
-        # ('learn_method_False',      False,   True,       None,     None,    False,   False,   no_learning_expected),
-        # # Test that learning *does* occur
-        # ('cstrctr_False_learn_val', True,    True,      False,     False,    .66,      1.5,   learn_method_expected),
-        # # Test that learning does *not* occur
+        # Test that AutodiffComposition.learning_rate is used
+        ('composition_default',     False,   False,      None,     None,    None,    None,    default_expected),
+        # Test specs in constructor
+        ('constructor_only',        True,    False,      2.9,      .5,      None,    None,    constructor_expected),
+        # Test specs in learn() method
+        ('learn_method_only',       False,   True,       None,     None,    .66,      1.5,    learn_method_expected),
+        # Test that learn() method params supercede constructor params
+        ('both',                    True,    True,       2.9,      .5,      .66,      1.5,    learn_method_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_True',        True,    False,      True,     True,    None,    None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_True',       False,   True,       None,     None,    True,    True,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_None',        True,    False,      None,     None,    None,    None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_None',       False,   True,       None,     None,    None,    None,    default_expected),
+        # Test that no learning occurs
+        ('constructor_False',       True,    False,      False,    False,   None,    None,    no_learning_expected),
+        # Test that no learning occurs
+        ('learn_method_False',      False,   True,       None,     None,    False,   False,   no_learning_expected),
+        # Test that learning *does* occur
+        ('cstrctr_False_learn_val', True,    True,      False,     False,    .66,      1.5,   learn_method_expected),
+        # Test that learning does *not* occur
         ('cstrctr_val_learn_False', True,    True,       2.9,      .5,       False,   False,  no_learning_expected),
         # Test warning for non-learnable Projection to, within & fron nested Composition
         ('projs_not_learnable',     True,    True,       2.9,      .5,      .66,      1.5,          None),

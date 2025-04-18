@@ -698,8 +698,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if not optimizer_param_specs:
             return
 
+        torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
         # Replace any Projections in optimizer_params with their names -> optimizer_params_parsed
-        optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): v
+        optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): torch_param_tuple(k, v)
                                    for k, v in optimizer_param_specs.items()}
 
         self._validate_optimizer_param_specs(optimizer_params_parsed, context)
@@ -710,7 +711,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
-        for pnl_param_name, param_val in optimizer_params_parsed.items():
+        for pnl_param_name, param_tuple in optimizer_params_parsed.items():
+            param_val = param_tuple.value
+            param_orig_spec = param_tuple.orig_spec
             # Get torch parameter specification for Projection names specified in optimizer_params_parsed
             try:
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
@@ -742,8 +745,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                        f"even though it was found in its state_dict().")
 
             if not param.requires_grad and param_val is not False:
-                # FIX: 4/18/25:  FIRST CHECK THAT self.composition._optimizer_constructor_params didn't wasn't set to
-                #  False;  if that is the case, reverse it;  otherwise proceed with warnings / errors
+                # If param was set to False in previous call to learn() but was not False at construction
+                if (source == 'learn() method'
+                        and param_orig_spec in self.composition._optimizer_constructor_params
+                        and self.composition._optimizer_constructor_params[param_orig_spec] is not False):
+                    # Turn gradient back on
+                    param.requires_grad = True
+                    return
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
@@ -759,7 +767,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
             #     param = torch.nn.Parameter(param[torch_param_slice])
 
-            optimizer_params[param] = optimizer_params_parsed[pnl_param_name]
+            optimizer_params[param] = optimizer_params_parsed[pnl_param_name].value
 
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
