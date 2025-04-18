@@ -82,6 +82,11 @@ COMMENT:
 if it is False, then learning will occur only for parameters for which an explicit learning_rate
 has been specified in the **optimizer_params** argument of the GRUComposition's constructor or in the call to its
 `learn <AutodiffComposition.learn>` method as described below.
+# FIX: ALTERNATIVE:
+if it is ``False``, then its `enable_learning <GRUComposition.enable_learning>` attribute is set to False, and
+no learning will occur;  if it is ``True``, then learning will occur only for Parameters for which an explicit
+learning_rate has been specified  in the **optimizer_params** argument of the GRUComposition's constructor or
+in the call to its `learn <AutodiffComposition.learn>` method as described below.
 COMMENT
 
 .. _GRUComposition_Individual_Learning_Rates:
@@ -122,19 +127,6 @@ values specify their learning_rates (see `AutodiffComposition_Learning_Rates` fo
      The learning_rates for individual Projections in the GRUComposition cannot be specified, as they do not have
      corresponding torch.nn.Parameters in the `named_parameters()` list of the  PyTorch `GRU
      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module; specifying them will raise an error.
-
-COMMENT:
-    FIX: 4/17/25: CHECK THAT THESE ARE ALL TRUE:
-COMMENT
-
-  **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
-
-    - *int or float*: the value is used as the learning_rate;
-
-    - *True or None*: the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>` is used;
-
-    - *False*: the parameter is not learned.
-
 
 .. _GRUComposition_Structure:
 

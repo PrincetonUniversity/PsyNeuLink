@@ -158,6 +158,16 @@ in order of precedence: i) the **learning_rate** specified in the AutodiffCompos
      are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
      **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
 
+  **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
+
+    - *int or float*: the value is used as the learning_rate;
+
+    - *True or None*: the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>` is used;
+
+    - *False*: the parameter is not learned (i.e., its `learnable <MappingProjection.learnable>` attribute is set to
+      False and the requires_grad attribute of the corresponding PyTorch Parameter is set to False).
+
+
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
 *Exchanging Parameters with Pytorch Modules*

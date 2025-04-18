@@ -3141,17 +3141,26 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    default_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
     constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
     learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
     no_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
     test_specs = [
-        ('constructor', constructor_expected),  # Test spects in constructor
-        ('learn_method', learn_method_expected),# Test spects in learn() method
-        ('both', learn_method_expected),        # Test that learn() method params supercede constructor params
-        ('projs_not_learnable', None),# Test warning for non-learnable Projection to, within and fron nested Composition
-        ('bad_proj', None),         # Test error bad Projection specification
-        ('bad_lr', None),             # Test error bad learning_rate spec
-        ('none', no_learning_expected)
+        ('comp_default', default_learning_expected),      # Test that AutodiffComposition.learning_rate is used
+        ('constructor', constructor_expected),            # Test specs in constructor
+        ('learn_method', learn_method_expected),          # Test specs in learn() method
+        ('both', learn_method_expected),                  # Test that learn() method params supercede constructor params
+        # ('constructor_True', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
+        # ('learn_method_True', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
+        # ('constructor_None', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
+        # ('learn_method_None', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
+        # ('constructor_False', no_learning_expected),      # Test that no learning occurs
+        # ('learn_method_False', no_learning_expected),     # Test that no learning occurs
+        # ('constructor_False_learn_val', default_learning_expected),  # Test that learning *does* occur
+        # ('constructor_val_learn_False', no_learning_expected),       # Test that learning does *not* occur
+        ('projs_not_learnable', None), # Test warning for non-learnable Projection to, within & fron nested Composition
+        ('bad_proj', None),            # Test error bad Projection specification
+        ('bad_lr', None),              # Test error bad learning_rate spec
     ]
     @pytest.mark.parametrize("condition, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
@@ -3213,6 +3222,9 @@ class TestMiscTrainingFunctionality:
               f"('MappingProjection from nested_2[OutputPort-0] to output_mech[InputPort-0]') is not learnable; "
               f"check that is 'learnable' attribute is set to True."))
             return
+
+        elif condition == 'False':
+            opt_params = {condition: .66}
 
         outer_comp = pnl.AutodiffComposition(
             [input_mech, input_proj, nested_comp, output_proj, output_mech],
