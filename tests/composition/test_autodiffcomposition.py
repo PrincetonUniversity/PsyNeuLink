@@ -3364,12 +3364,12 @@ class TestMiscTrainingFunctionality:
 
         # Test of forward pass (without effects of learning yet):
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
-                                   autodiff_result_before_learning, atol=1e-6)
+                                   autodiff_result_before_learning, atol=1e-8)
 
         # Test of execution after backward pass (learning):
         np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses.squeeze())
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   autodiff_result_after_learning, atol=1e-6)
+                                   autodiff_result_after_learning, atol=1e-8)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):

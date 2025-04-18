@@ -506,6 +506,7 @@ class TestExecution:
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
+        # FIX: OPTIMIZER PARAMS
         # Assign learning rates to IH and HH parameters
         torch_param_short_to_long_names_map = {k.split('.')[-1]:k
                                                for k in [p[0] for p in torch_model.named_parameters()]}
@@ -513,7 +514,13 @@ class TestExecution:
                       if p[0]== torch_param_short_to_long_names_map[pnl.W_IH_NAME]][0]
         w_hh_param = [p[1] for p in torch_model.named_parameters()
                       if p[0]== torch_param_short_to_long_names_map[pnl.W_HH_NAME]][0]
-        del torch_optimizer.param_groups[0]
+        param_group = torch_optimizer.param_groups[0]
+        for i, p in enumerate(param_group['params'].copy()):
+            if p is w_ih_param:
+                del param_group['params'][i]
+        for i, p in enumerate(param_group['params'].copy()):
+            if p is w_hh_param:
+                del param_group['params'][i]
         torch_optimizer.add_param_group({'params': [w_ih_param], 'lr': W_IH_LEARNING_RATE})
         torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
         if bias:
@@ -521,6 +528,12 @@ class TestExecution:
                       if p[0]== torch_param_short_to_long_names_map[pnl.B_IH_NAME]][0]
             b_hh_param = [p[1] for p in torch_model.named_parameters()
                       if p[0]== torch_param_short_to_long_names_map[pnl.B_HH_NAME]][0]
+            for i, p in enumerate(param_group['params'].copy()):
+                if p is b_ih_param:
+                    del param_group['params'][i]
+            for i, p in enumerate(param_group['params'].copy()):
+                if p is b_hh_param:
+                    del param_group['params'][i]
             torch_optimizer.add_param_group({'params': [b_ih_param], 'lr': B_IH_LEARNING_RATE})
             torch_optimizer.add_param_group({'params': [b_hh_param], 'lr': B_HH_LEARNING_RATE})
 
@@ -558,6 +571,7 @@ class TestExecution:
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                                 pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE,
+                                                # FIX: OPTIMIZER PARAMS
                                                 optimizer_params=optimizer_params
                                                 )
         autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
@@ -578,11 +592,11 @@ class TestExecution:
 
         # Test of forward pass (without effects of learning yet):
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
-                                   autodiff_result_before_learning, atol=1e-6)
+                                   autodiff_result_before_learning, atol=1e-8)
 
         # Test of execution after backward pass (learning):
         np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   autodiff_result_after_learning, atol=1e-6)
+                                   autodiff_result_after_learning, atol=1e-8)
 
         torch.set_default_dtype(entry_torch_dtype)
