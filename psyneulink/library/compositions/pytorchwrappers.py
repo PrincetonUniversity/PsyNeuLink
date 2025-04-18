@@ -742,6 +742,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                        f"even though it was found in its state_dict().")
 
             if not param.requires_grad and param_val is not False:
+                # FIX: 4/18/25:  FIRST CHECK THAT self.composition._optimizer_constructor_params didn't wasn't set to
+                #  False;  if that is the case, reverse it;  otherwise proceed with warnings / errors
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
