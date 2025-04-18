@@ -304,12 +304,12 @@ class TestExecution:
 
         # Test of forward pass (without effects of learning yet):
         np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
-                                   autodiff_result_before_learning, atol=1e-6)
+                                   autodiff_result_before_learning, atol=1e-8)
 
         # Test of execution after backward pass (learning):
         np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
-                                   autodiff_result_after_learning, atol=1e-6)
+                                   autodiff_result_after_learning, atol=1e-8)
 
         if not bias:
             # Test synchronization of values
@@ -317,24 +317,24 @@ class TestExecution:
             np.testing.assert_allclose(autodiff_comp.nodes['INPUT MECH'].parameters.variable.get('OUTER COMP'),
                                        np.array([[1., 2., 3.]]))
             np.testing.assert_allclose(autodiff_comp.nodes['OUTPUT MECH'].parameters.variable.get('OUTER COMP'),
-                                       np.array([[-0.23692851, 0.09497075, 0.08103833, -0.32070243, 0.17565629]]),
+                                       np.array([[0.8578478, 1.0700558, 0.46894508, 0.73393936, 0.35604749]]),
                                        atol=1e-8)
             # GRU Comp
             GRU_comp_nodes = autodiff_comp.nodes['GRU COMP'].nodes
             np.testing.assert_allclose(GRU_comp_nodes['INPUT'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.88201173, 1.82952986, -0.43124228]]),
+                                       np.array([[0.90319426,  3.09532846, 11.46387165]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['RESET'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.52954788, 0.42252649, 0.54021425, 0.64730422, 0.3475345 ]]),
+                                       np.array([[0.03300054, 0.40847909, 0.04398941, 0.10445835, 0.30668056]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['UPDATE'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.48432402, 0.65252951, 0.73358667, 0.32417801, 0.51246621]]),
+                                       np.array([[0.66483663, 0.11608262, 0.13153948, 0.97442451, 0.97814372]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['NEW'].parameters.value.get('OUTER COMP'),
-                                       np.array([[-0.2687626, -0.01417762, 0.67483992, 0.76314636,-0.81250713]]),
+                                       np.array([[-7.10650456, -0.64283666, -4.00117146, 4.19362381, 4.91683601]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
-                                       np.array([[-0.21116122, -0.02223958, 0.32373588, 0.57829492, -0.5174555]]),
+                                       np.array([[-0.43922832, -0.50410907, -0.83792679, 0.45777554, -0.34143725]]),
                                        atol=1e-8)
             torch_gru = autodiff_comp.pytorch_representation.node_wrappers[2].node_wrappers[0]
             np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
@@ -469,7 +469,7 @@ class TestExecution:
         torch.set_default_dtype(entry_torch_dtype)
 
     # Note:  if this is ever deprecated or removed, ensure version in test_autodiffcomposition is in use
-    @pytest.mark.parametrize("bias", [False, True])
+    @pytest.mark.parametrize("bias", [False, True], ids=['no_bias','bias'])
     def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
         import torch
         entry_torch_dtype = torch.get_default_dtype()
@@ -506,7 +506,6 @@ class TestExecution:
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
-        # FIX: OPTIMIZER PARAMS
         # Assign learning rates to IH and HH parameters
         torch_param_short_to_long_names_map = {k.split('.')[-1]:k
                                                for k in [p[0] for p in torch_model.named_parameters()]}
@@ -564,16 +563,11 @@ class TestExecution:
             optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
                                      pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
         gru = GRUComposition(name='GRU COMP',
-                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE,
-                             # FIX: 4/17/25 -- HANDLE AND TEST THIS:
-                             # optimizer_params=optimizer_params
-                             )
+                             input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                                 pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE,
-                                                # FIX: OPTIMIZER PARAMS
-                                                optimizer_params=optimizer_params
-                                                )
+                                                optimizer_params=optimizer_params)
         autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
@@ -581,9 +575,7 @@ class TestExecution:
 
         # Execute autodiff with learning (but not weight updates yet)
         autodiff_result_before_learning = autodiff_comp.learn(inputs={input_mech:inputs, target_mechs[0]: targets},
-                                                              execution_mode=pnl.ExecutionMode.PyTorch,
-                                                              # optimizer_params=optimizer_params
-                                                              )
+                                                              execution_mode=pnl.ExecutionMode.PyTorch)
         # Get results after learning (with weight updates)
         autodiff_result_after_learning = autodiff_comp.run(inputs={input_mech:inputs},
                                                            execution_mode=pnl.ExecutionMode.PyTorch)
