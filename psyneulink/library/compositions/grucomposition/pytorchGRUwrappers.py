@@ -20,7 +20,7 @@ from psyneulink.core.components.projections.projection import DuplicateProjectio
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, SUBCLASS_WRAPPERS, TorchParam
-from psyneulink.core.globals.context import Context, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
     ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
@@ -94,16 +94,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
 
+        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
+
         for spec in optimizer_param_specs:
             # Raise error for attempt to specify bias parameters when bias=False
             if not self.composition.bias:
                 bias_specs = [spec for spec in optimizer_param_specs
                               if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
                 if bias_specs:
-                    raise GRUCompositionError(f"Attempt to set Learning rate for bias(es) of GRU in 'optimizer_params' "
-                                              f"arg for {source} of {self.composition.name} when bias=Fase: "
-                                              f"({' ,'.join(bad_ih_specs)});  the spec(s) must be removed or "
-                                              f"bias set to True.")
+                    bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
+                    bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
+                    raise GRUCompositionError(f"Attempt to set learning rate for bias(es) of GRU using "
+                                              f"'{' ,'.join(bias_specs)}' in the 'optimizer_params' arg of "
+                                              f"the {source} for '{self.composition.name}' when its bias option "
+                                              f"is set to False; the spec(s) must be removed or bias set to True.")
 
             # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
             bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]

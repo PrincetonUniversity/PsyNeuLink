@@ -350,6 +350,8 @@ class TestExecution:
                   ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
                   ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
                   ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
+                  ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
+                  ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
                   ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
                   ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
@@ -371,6 +373,21 @@ class TestExecution:
             error_msg = ("GRUComposition does not support setting of learning rates for individual "
                          "hidden_to_hidden Projections (HIDDEN TO UPDATE WEIGHTS); use 'HIDDEN_TO_HIDDEN' "
                          "to set learning rate for all such weights.")
+            with pytest.raises(pnl.GRUCompositionError) as error_text:
+                outer = pnl.AutodiffComposition(
+                    [input_mech, input_proj, gru, output_proj, output_mech],
+                    optimizer_params=constructor_optimizer_params if condition in {'constructor'} else None
+                )
+                outer.learn(
+                    inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+                    optimizer_params=learning_method_optimizer_params if condition in {'learn_method'} else None)
+            assert error_msg in str(error_text.value)
+
+        elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
+            bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
+            error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
+                         f"'optimizer_params' arg of the constructor for 'GRU Composition' when its bias option "
+                         f"is set to False; the spec(s) must be removed or bias set to True.")
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
