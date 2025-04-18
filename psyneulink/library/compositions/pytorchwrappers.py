@@ -710,7 +710,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Replace Projection names with refs to torch params in state_dict() -> optimizer_params
         optimizer_params = {}
-        for pnl_param_name in optimizer_params_parsed:
+        for pnl_param_name, param_val in optimizer_params_parsed.items():
             # Get torch parameter specification for Projection names specified in optimizer_params_parsed
             try:
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
@@ -741,7 +741,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
 
-            if not param.requires_grad:
+            if not param.requires_grad and param_val is not False:
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
@@ -761,7 +761,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
-            if not isinstance(learning_rate, (int, float)):
+            if not isinstance(learning_rate, (int, float, bool, type(None))):
                 raise AutodiffCompositionError(
                     f"Learning rate specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
                     f"('{learning_rate}') must be an int or float.")
@@ -772,8 +772,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 # Learning is enabled for the Projection
                 param.requires_grad = True
-                # If learning_rate = ``True``, use composition.learning_rate, else specified value
-                lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
+                # If learning_rate = True or None, use composition.learning_rate, else use specified value
+                lr = composition.learning_rate if learning_rate in {True, None} else learning_rate
                 # Check if param is already in an existing param_group on the optimizer
                 for param_group in optimizer.param_groups.copy():
                     for i, p in enumerate(param_group['params'].copy()):

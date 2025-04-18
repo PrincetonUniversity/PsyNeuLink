@@ -3141,30 +3141,162 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
-    default_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
+    # FIX: 4/18/25 ORIG:
+    # default_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
+    # constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
+    # learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
+    # no_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
+    # test_specs = [
+    #     ('comp_default', default_learning_expected),      # Test that AutodiffComposition.learning_rate is used
+    #     ('constructor', constructor_expected),            # Test specs in constructor
+    #     ('learn_method', learn_method_expected),          # Test specs in learn() method
+    #     ('both', learn_method_expected),                  # Test that learn() method params supercede constructor params
+    #     ('constructor_True', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
+    #     ('learn_method_True', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
+    #     ('constructor_None', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
+    #     ('learn_method_None', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
+    #     ('constructor_False', no_learning_expected),      # Test that no learning occurs
+    #     ('learn_method_False', no_learning_expected),     # Test that no learning occurs
+    #     ('constructor_False_learn_val', default_learning_expected),  # Test that learning *does* occur
+    #     ('constructor_val_learn_False', no_learning_expected),       # Test that learning does *not* occur
+    #     ('projs_not_learnable', None), # Test warning for non-learnable Projection to, within & fron nested Composition
+    #     ('bad_proj', None),            # Test error bad Projection specification
+    #     ('bad_lr', None),              # Test error bad learning_rate spec
+    # ]
+    # @pytest.mark.parametrize("condition, expected", test_specs,
+    #                          ids=[f"{x[0]}_{x[1]}" for x in test_specs])
+    # def test_optimizer_params_for_custom_learning_rates(self, condition, expected):
+    #     nested_hidden_mech_1 = pnl.ProcessingMechanism(function=pnl.Linear, input_shapes=4, name='nested_1')
+    #     nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
+    #     hidden_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2,
+    #                                         matrix=pnl.IDENTITY_MATRIX)
+    #     nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, hidden_proj, nested_hidden_mech_2])
+    #     input_mech = pnl.ProcessingMechanism(input_shapes=3, name='input_mech')
+    #     output_mech = pnl.ProcessingMechanism(input_shapes=5, name='output_mech')
+    #     input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech_1, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+    #     output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+    #     inputs={input_mech: [[.1, .2, .3]]}
+    #     targets={output_mech: [[1,1,1,1,1]]}
+    #     constructor_optimizer_params = {input_proj: 2.9, output_proj: .5}
+    #     learning_method_optimizer_params = {input_proj: .66, output_proj: 1.5}
+    #
+    #     if condition in {'bad_proj', 'bad_lr'}:
+    #         if condition == 'bad_proj':
+    #             err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the constructor for "
+    #                        f"'autodiff_composition-1' is not in that Composition or any nested within it: 'bad_proj'.")
+    #             opt_params = {condition: .66}
+    #         elif condition == 'bad_lr':
+    #             opt_params = {input_proj: condition}
+    #             err_msg = (f"Learning rate specified in 'optimizer_params' arg of constructor for "
+    #                        f"'autodiff_composition-1' ('bad_lr') must be an int or float.")
+    #
+    #         with pytest.raises(AutodiffCompositionError) as error_text:
+    #             outer_comp = pnl.AutodiffComposition(
+    #                 [input_mech, input_proj, nested_comp, output_proj, output_mech],
+    #             )
+    #             outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+    #         assert err_msg in str(error_text.value)
+    #         return
+    #
+    #     elif condition == 'projs_not_learnable':
+    #         input_proj.learnable = False
+    #         hidden_proj.learnable = False
+    #         output_proj.learnable = False
+    #         opt_params = {input_proj: 1.16, hidden_proj: 21.6, output_proj: 3.99}
+    #         warning_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
+    #                        f"'autodiff_composition-1' ('MappingProjection from nested_2[OutputPort-0] "
+    #                        f"to output_mech[InputPort-0]') is not learnable.")
+    #
+    #         with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
+    #             outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
+    #             outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+    #         (warnings.list[2].message.args[0] ==
+    #          (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+    #           f"('MappingProjection from input_mech[OutputPort-0] to nested_1[InputPort-0]') is not learnable; "
+    #           f"check that is 'learnable' attribute is set to True."))
+    #         (warnings.list[3].message.args[0] ==
+    #          (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+    #           f"('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') is not learnable; "
+    #           f"check that is 'learnable' attribute is set to True."))
+    #         (warnings.list[4].message.args[0] ==
+    #          (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+    #           f"('MappingProjection from nested_2[OutputPort-0] to output_mech[InputPort-0]') is not learnable; "
+    #           f"check that is 'learnable' attribute is set to True."))
+    #         return
+    #
+    #     elif condition == 'False':
+    #         opt_params = {condition: .66}
+    #
+    #     outer_comp = pnl.AutodiffComposition(
+    #         [input_mech, input_proj, nested_comp, output_proj, output_mech],
+    #         optimizer_params=constructor_optimizer_params if condition in {'constructor', 'both'} else None
+    #     )
+    #     results = outer_comp.learn(
+    #         inputs=inputs, targets=targets,
+    #         optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
+    #         num_trials=2)
+    #     np.testing.assert_allclose(expected, results)
+    #
+    #     # Learning rate should return to default values if not specified again
+    #     outer_comp.learn(inputs=inputs, targets=targets)
+    #     if condition == 'both':
+    #         # Should return to defaults specified in constructor (even though specified in previous call to learning)
+    #         assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
+    #         assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == 2.9
+    #         assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 0.5
+    #     elif condition == 'learn_method':
+    #         # Should return to default for optimizer (since none specified for constructor)
+    #         assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
+    #         assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
+    #         assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
+
+    default_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
     constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
     learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
-    no_learning_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]
+    no_learning_expected = [[1.07518731, 0.2334628, 1.30069345, 1.05196273, 0.60886095]]
     test_specs = [
-        ('comp_default', default_learning_expected),      # Test that AutodiffComposition.learning_rate is used
-        ('constructor', constructor_expected),            # Test specs in constructor
-        ('learn_method', learn_method_expected),          # Test specs in learn() method
-        ('both', learn_method_expected),                  # Test that learn() method params supercede constructor params
-        # ('constructor_True', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_True', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_None', default_learning_expected),  # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_None', default_learning_expected), # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_False', no_learning_expected),      # Test that no learning occurs
-        # ('learn_method_False', no_learning_expected),     # Test that no learning occurs
-        # ('constructor_False_learn_val', default_learning_expected),  # Test that learning *does* occur
-        # ('constructor_val_learn_False', no_learning_expected),       # Test that learning does *not* occur
-        ('projs_not_learnable', None), # Test warning for non-learnable Projection to, within & fron nested Composition
-        ('bad_proj', None),            # Test error bad Projection specification
-        ('bad_lr', None),              # Test error bad learning_rate spec
+         #    condition       constructor   learn()  c in_prj  c out_prj  l in_prj  l out_prj   results
+        # # Test that AutodiffComposition.learning_rate is used
+        # ('composition_default',     False,   False,      None,     None,    None,    None,    default_expected),
+        # # Test specs in constructor
+        # ('constructor_only',        True,    False,      2.9,      .5,      None,    None,    constructor_expected),
+        # # Test specs in learn() method
+        # ('learn_method_only',       False,   True,       None,     None,    .66,      1.5,    learn_method_expected),
+        # # Test that learn() method params supercede constructor params
+        # ('both',                    True,    True,       2.9,      .5,      .66,      1.5,    learn_method_expected),
+        # # Test that AutodiffComposition.learning_rate is used
+        # ('constructor_True',        True,    False,      True,     True,    None,    None,    default_expected),
+        # # Test that AutodiffComposition.learning_rate is used
+        # ('learn_method_True',       False,   True,       None,     None,    True,    True,    default_expected),
+        # # Test that AutodiffComposition.learning_rate is used
+        # ('constructor_None',        True,    False,      None,     None,    None,    None,    default_expected),
+        # # Test that AutodiffComposition.learning_rate is used
+        # ('learn_method_None',       False,   True,       None,     None,    None,    None,    default_expected),
+        # # Test that no learning occurs
+        # ('constructor_False',       True,    False,      False,    False,   None,    None,    no_learning_expected),
+        # # Test that no learning occurs
+        # ('learn_method_False',      False,   True,       None,     None,    False,   False,   no_learning_expected),
+        # # Test that learning *does* occur
+        # ('cstrctr_False_learn_val', True,    True,      False,     False,    .66,      1.5,   learn_method_expected),
+        # # Test that learning does *not* occur
+        ('cstrctr_val_learn_False', True,    True,       2.9,      .5,       False,   False,  no_learning_expected),
+        # Test warning for non-learnable Projection to, within & fron nested Composition
+        ('projs_not_learnable',     True,    True,       2.9,      .5,      .66,      1.5,          None),
+        # Test error bad Projection specification
+        ('bad_proj',                True,    True,       2.9,      .5,      .66,      1.5,          None),
+        # Test error bad learning_rate spec
+        ('bad_lr',                  True,    True,       2.9,      .5,      .66,      1.5,          None),
     ]
-    @pytest.mark.parametrize("condition, expected", test_specs,
-                             ids=[f"{x[0]}_{x[1]}" for x in test_specs])
-    def test_optimizer_params_for_custom_learning_rates(self, condition, expected):
+    @pytest.mark.parametrize("condition, use_constructor, use_learn_method, "
+                             "constructuor_input_proj, constructor_output_proj,"
+                             "learn_method_input_proj, learn_method_output_proj,"
+                             "expected", test_specs,
+                             ids=[f"{x[0]}" for x in test_specs])
+    def test_optimizer_params_for_custom_learning_rates(self, condition,
+                                                        use_constructor, use_learn_method,
+                                                        constructuor_input_proj, constructor_output_proj,
+                                                        learn_method_input_proj, learn_method_output_proj,
+                                                        expected):
         nested_hidden_mech_1 = pnl.ProcessingMechanism(function=pnl.Linear, input_shapes=4, name='nested_1')
         nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
         hidden_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2,
@@ -3176,8 +3308,8 @@ class TestMiscTrainingFunctionality:
         output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
         inputs={input_mech: [[.1, .2, .3]]}
         targets={output_mech: [[1,1,1,1,1]]}
-        constructor_optimizer_params = {input_proj: 2.9, output_proj: .5}
-        learning_method_optimizer_params = {input_proj: .66, output_proj: 1.5}
+        constructor_optimizer_params = {input_proj: constructuor_input_proj, output_proj: constructor_output_proj}
+        learning_method_optimizer_params = {input_proj: learn_method_input_proj, output_proj: learn_method_output_proj}
 
         if condition in {'bad_proj', 'bad_lr'}:
             if condition == 'bad_proj':
@@ -3223,16 +3355,15 @@ class TestMiscTrainingFunctionality:
               f"check that is 'learnable' attribute is set to True."))
             return
 
-        elif condition == 'False':
-            opt_params = {condition: .66}
-
         outer_comp = pnl.AutodiffComposition(
             [input_mech, input_proj, nested_comp, output_proj, output_mech],
-            optimizer_params=constructor_optimizer_params if condition in {'constructor', 'both'} else None
+            # optimizer_params=constructor_optimizer_params if condition in {'constructor_only', 'both'} else None
+            optimizer_params=constructor_optimizer_params if use_constructor else None
         )
         results = outer_comp.learn(
             inputs=inputs, targets=targets,
-            optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
+            # optimizer_params=learning_method_optimizer_params if condition in {'learn_method_only', 'both'} else None,
+            optimizer_params=learning_method_optimizer_params if use_learn_method else None,
             num_trials=2)
         np.testing.assert_allclose(expected, results)
 
