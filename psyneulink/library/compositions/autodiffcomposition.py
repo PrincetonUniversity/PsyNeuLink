@@ -136,25 +136,27 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 *Learning Rates and Optimizer Params*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used to
-specify parameters for the optimizer used for learning by the AutodiffComposition. At present, this is restricted to
-overriding the `learning_rate <AutodiffComposition.learning_rate>` Parameter of the AutodiffComposition (used as the
-default by the `optimizer <AutodiffComposition.optimizer>`), to assign individual learning rates to specific
-`Projection`\\s. This is done by specifying **optimizer_params** as a dict, in which each key is a reference to a
-learnable `MappingProjection` in the AutodiffComposition, and the associated value specifies its learning_rate. This
-can be specified in the constructor, in which case it is used for all executions of the learn method, or in the call to
-`learn() <AutodiffComposition.learn>`, in which case it is used only for that execution. Projections that are not
-sepcified in **optimizer_params** use, in order of precedence: the `learning_rate<AutodiffComposition.learning_rate>`
-specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
-argument of its constructor, or the default value for AutodiffComposition. A warning is issued if a learning_rate is
-specified for a Projection in **optimizer_params** with a `learnable <MappingProjection.learnable>` attribute that is
-set to ``False``;  an error is generated if a learning_rate is set for a Projection associated with a Torch Parameter
-that is not learnable.
+The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used
+to specify parameters for the `optimizer <AutodiffComposition.optimizer>` that is used for learning by the
+AutodiffComposition. Currently this is restricted to overriding the `learning_rate <AutodiffComposition.learning_rate>`
+Parameter of the AutodiffComposition (used as the default by the `optimizer <AutodiffComposition.optimizer>`), to
+assign individual learning_rates to specific `Projection`\\s (and the corresponding PyTorch weight parameters. This is
+done by specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
+in the AutodiffComposition, and the associated value specifies its `learning_rate <MappingProjection.learning_rate>`.
+This can be specified in: i) the constructor for the AutodiffComposition, in which case it is used for all executions
+of its learn() method for which a learning_rate has not been specified; or ii) in the call to the `learn()
+<AutodiffComposition.learn>` itself, in which case it is used only for that execution. A warning is issued if a
+learning_rate is specified for a Projection in **optimizer_params** with a `learnable <MappingProjection.learnable>`
+attribute that is set to ``False``; an error is generated if a learning_rate is set for a Projection associated with a
+PyTorch Parameter that is not learnable. For Projections that are *not* sepcified in **optimizer_params**, they use,
+in order of precedence: i) the **learning_rate** specified in the AutodiffComposition's `learn
+<AutodiffComposition.learn>` method; ii) the **learning_rate** argument of its constructor; or iii) the default
+`learning_rate <AutodiffComposition.learning_rate>` value for AutodiffComposition.
 
   .. note::
-     If **optimizer_params** are specified in the constructor for a nested AutodiffComposition, they will be promoted
-     to and used by the outer Composition;  however, if specifications for any of the same Projections appear in the
-     the **optimizer_params** arg of the constructor for the outer AutodiffComposition, those will take precedence.
+     If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
+     are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
+     **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
