@@ -71,10 +71,12 @@ bias vectors in its computations.
 **enable_learning** (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
 no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called.
 
-**learning_rate** (bool or float): specifies the default learning_rate for the parameters of the Pytorch `GRU
+**learning_rate** (float or bool): specifies the default learning_rate for the parameters of the Pytorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified for individual
 parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its `learn
-<AutodiffComposition.learn>` method. If it is an int or a float, that is used as the default learning rate for the
+<AutodiffComposition.learn>` method (see `AutodiffComposition_Learning_Rates` for details of specification).
+
+If it is an int or a float, that is used as the default learning rate for the
 GRUComposition; if it is None or True, the GRUComposition's default `learning_rate <GRUComposition.learning_rate>`
 (.001) is used;
 COMMENT:
@@ -1087,8 +1089,7 @@ class GRUComposition(AutodiffComposition):
                                                name= GRU_TARGET_NODE)
 
     def _set_learning_attributes(self):
-        """Set learning-related attributes for Node and Projections
-        """
+        """Set learning-related attributes for Node and Projections"""
         learning_rate = self.enable_learning
 
         for projection in self.learnable_projections:

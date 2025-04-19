@@ -1058,7 +1058,7 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
         changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
         they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
-The Compositon's `learn <Composition.learn>` method takes all of the same arguments as its `run <Composition.run>`
+The Composition's `learn <Composition.learn>` method takes all of the same arguments as its `run <Composition.run>`
 method, as well as additonal ones that are specific to learning.  Also like `run <Composition.run>`, it returns the
 `output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
 last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
@@ -3670,7 +3670,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.learning_components>` attribute.
 
     is_nested : bool
-        True of Composition is `nested <Composition_Nested>` in another (outer) Compositon.
+        True of Composition is `nested <Composition_Nested>` in another (outer) Composition.
 
     results : list[list[list]]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
@@ -4850,13 +4850,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
 
-    def _get_all_projections(self):
-        """Return list of all Projections in Composition and any nested within it"""
-        projections = ContentAddressableList(component_type=Projection, list=self.projections,
-                                             name=f"return of {self.name}._get_all_projections()")
-        for comp in self._get_nested_compositions():
-            projections += comp.projections
-            # projections += comp._get_all_projections()
+    def _get_all_projections(self, start_comp=None)->dict:
+        """Return dict of {Projection: Composition} with all Projections in and nested within start_comp"""
+        # projections = ContentAddressableList(component_type=Projection, list=self.projections,
+        #                                      name=f"return of {self.name}._get_all_projections()")
+        # for comp in self._get_nested_compositions():
+        #     projections += comp.projections
+        #     # projections += comp._get_all_projections()
+        # return projections
+        comp = start_comp or self
+        projections = {proj: comp for proj in comp.projections}
+        for nested_comp in comp._get_nested_compositions():
+            nested_projections = {proj: nested_comp for proj in nested_comp.projections}
+            projections = nested_projections.update(projections)
         return projections
 
     def _is_in_composition(self, component, nested=True):
@@ -12672,7 +12678,7 @@ _
         form : DICT or TEXT : default DICT
             specifies the form in which the exampple is returned; DICT (the default) returns a dict (with
             **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`)
-            formatted for use as the **inputs** arg of the Compositon's `run <Composition.run>` method;
+            formatted for use as the **inputs** arg of the Composition's `run <Composition.run>` method;
             TEXT returns a user-readable text description of the format (optionally with inputs required for
             `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of any `nested Compositions <Composition_Nested>`
             (see **show_nested_input_nodes** below).

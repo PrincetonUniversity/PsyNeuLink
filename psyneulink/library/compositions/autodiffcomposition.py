@@ -135,6 +135,7 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 *Learning Rates and Optimizer Params*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FIX 4/17/25 ADD EXPLANATION OF COMPOSITION LEARNING RATE HERE
 
 The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used
 to specify parameters for the `optimizer <AutodiffComposition.optimizer>` that is used for learning by the
@@ -233,7 +234,7 @@ AutoDiffCompositions in learning. Although it is best suited for use with `super
 
     .. note::
        While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
-       causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
+       causes it to use PyTorch for training, specifying this in the `run <Composition.run>` method causes it to be
        executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
 
@@ -571,17 +572,18 @@ class AutodiffComposition(Composition):
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     learning_rate : float or bool
-        determines the default learning_rate passed the optimizer, that is applied to all `Projections <Projection>`
-        in the AutodiffComposition that are `learnable <MappingProjection.learnable>`, and for which individual rates
-        have not been specified (for how to do the latter, see `AutodiffComposition_Learning_Rates`).
+        determines the default learning_rate passed the `optimizer <AutodiffComposition.optimizer>`, that is applied
+        to all `Projections <Projection>` in the AutodiffComposition that are `learnable <MappingProjection.learnable>`,
+        and for which individual rates have not been specified (for how to do the latter,
+        see `AutodiffComposition_Learning_Rates`).
 
         .. note::
-           At present, an outermost Compositon's learning rate is applied to any `nested Compositions
+           An outermost Composition's learning rate is applied to any `nested Compositions
            <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
            <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
 
         .. hint::
-           To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify either the
+           To disable learning for a particular `MappingProjection` in an AutodiffComposition, specify either the
            **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
            argument of the AutodiffComposition's constructor to False  (see `AutodiffComposition_Learning_Rates`);
            this applies to MappingProjections at any level of `nesting <AutodiffComposition_Nesting>`
@@ -1100,7 +1102,11 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, optimizer_params=None, context=None, refresh=None):
+    def _build_pytorch_representation(self,
+                                      learning_rate=None,
+                                      optimizer_params=None,
+                                      context=None,
+                                      refresh=None):
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
@@ -1110,10 +1116,11 @@ class AutodiffComposition(Composition):
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer function
-        learning_rate = self._runtime_learning_rate or self.learning_rate
+        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
+        default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
         old_opt = self.parameters.optimizer._get(context)
         if (old_opt is None or refresh) and refresh is not False:
-            self._instantiate_optimizer(refresh, learning_rate, optimizer_params, context)
+            self._instantiate_optimizer(refresh, default_learning_rate, optimizer_params, context)
         else:
             pytorch_rep._update_optimizer_params(old_opt, optimizer_params, Context(source=ContextFlags.METHOD))
         # Set up loss function
@@ -1134,8 +1141,16 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
+
+        self._get_all_projections()
+
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
+        if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator
+            assert len(list(params)) == 0, (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
+                                            f"but no entries in its state_dict()")
+            warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
+            return
         if self.optimizer_type == 'sgd':
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
@@ -1709,7 +1724,9 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                self._build_pytorch_representation(optimizer_params=optimizer_params, context=context)
+                self._build_pytorch_representation(optimizer_params=optimizer_params,
+                                                   learning_rate=self.learning_rate,
+                                                   context=context)
                 trained_output_values, all_output_values = \
                                                 self.autodiff_forward(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,

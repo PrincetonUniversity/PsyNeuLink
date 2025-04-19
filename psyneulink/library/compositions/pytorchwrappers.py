@@ -273,7 +273,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 for k, v in node_wrapper.nodes_map.items():
                     self._add_node_to_nodes_map(k, v)
                 self._pnl_refs_to_torch_params_map.update(node_wrapper._pnl_refs_to_torch_params_map)
-                # Get any optimizer_constructor_params from nested Compositon, but give precedence to any in outer comp
+                # Get any optimizer_constructor_params from nested Composition, but give precedence to any in outer comp
                 for k, v in node_wrapper.composition._optimizer_constructor_params.items():
                     if k not in self.composition._optimizer_constructor_params:
                         self.composition._optimizer_constructor_params[k] = v
@@ -479,11 +479,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
             # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
-            # MODIFIED 4/13/25 OLD:
-            # self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.matrix})
-            # MODIFIED 4/13/25 NEW:
             self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.name})
-            # MODIFIED 4/13/25 END
 
         return proj_wrappers_pairs
 
@@ -694,6 +690,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition = self.composition
 
+        # Use current optimizer specifications if passed, else ones that were specified at construction, else defaults
         optimizer_param_specs = optimizer_param_specs or self.composition._optimizer_constructor_params
         if not optimizer_param_specs:
             return
