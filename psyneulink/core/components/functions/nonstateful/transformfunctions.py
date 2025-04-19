@@ -2155,7 +2155,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
         def diff_with_normalization(vector, matrix):
             normalize = torch.sum(torch.abs(vector - matrix))
-            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
+            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0, keepdim=True)
 
         if operation is DOT_PRODUCT:
             if normalize:
