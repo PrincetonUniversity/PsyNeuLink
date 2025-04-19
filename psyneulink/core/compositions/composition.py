@@ -4862,7 +4862,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = {proj: comp for proj in comp.projections}
         for nested_comp in comp._get_nested_compositions():
             nested_projections = {proj: nested_comp for proj in nested_comp.projections}
-            projections = nested_projections.update(projections)
+            nested_projections.update(projections)
+            projections = nested_projections
         return projections
 
     def _is_in_composition(self, component, nested=True):
@@ -10449,7 +10450,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node_name = node_spec.name
                 else:
                     node_name = node_spec.full_name
-                error_base_msg = f"Input for '{node_name}' of {self.name} ({_inputs}) "
+                error_base_msg = f"Input for '{node_name}' of '{self.name}' ({_inputs}) "
 
                 if isinstance(_inputs, dict):
                     # entry is dict for a nested Composition, which will be handled recursively

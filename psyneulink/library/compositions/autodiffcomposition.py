@@ -1142,6 +1142,7 @@ class AutodiffComposition(Composition):
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
 
+        # FIX: 4/19/25 ?KEEP AND USE:
         self._get_all_projections()
 
         pytorch_rep = self.parameters.pytorch_representation._get(context)
