@@ -2211,7 +2211,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                     #      Also need to deal with column- (or row-) wise zeros which cause div by zero
                     #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                     # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
-                    matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+                    matrix = matrix / np.linalg.norm(matrix, axis=0, keepdims=True)
             result = np.dot(vector, matrix)
 
         elif operation == L0:
