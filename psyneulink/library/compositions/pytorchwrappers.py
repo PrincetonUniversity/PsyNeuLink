@@ -1571,7 +1571,12 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 ip_res = []
                 for proj_wrapper in self.afferents:
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
+                        # MODIFIED 4/19/25 OLD:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
+                        # # MODIFIED 4/19/25 NEW:
+                        # result = proj_wrapper.execute(proj_wrapper._curr_sender_value)
+                        # ip_res.append(torch.atleast_2d(result))
+                        # MODIFIED 4/19/25 END
 
                 # Stack the results for this input port on the second dimension, we want to preserve
                 # the first dimension as the batch

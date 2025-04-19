@@ -116,7 +116,7 @@ instruct_em = EMComposition(name="instruct_em", memory_template=[[0], [0], [0]*n
                                                TARGET_FIELD: True},
                                     },
                             softmax_choice=WEIGHTED_AVG,
-                            normalize_memories=True,
+                            normalize_memories=False,
                             enable_learning=True,
                             softmax_gain=1.0)
 
