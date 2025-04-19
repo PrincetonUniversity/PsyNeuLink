@@ -1570,6 +1570,9 @@ class Parameter(ParameterBase):
             skip_delivery=skip_delivery,
             compilation_sync=compilation_sync,
         )
+
+        assert 'DEBUGGING BREAKPOINT: PARAMETER SETTING'
+
         return value
 
     def _set_value(

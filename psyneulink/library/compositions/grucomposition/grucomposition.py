@@ -644,8 +644,10 @@ class GRUComposition(AutodiffComposition):
     componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import \
+            PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchGRUMechanismWrapper
 
     class Parameters(AutodiffComposition.Parameters):
         """
@@ -1086,9 +1088,6 @@ class GRUComposition(AutodiffComposition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
-        # FIX: 3/15/25
-        # if self.gru_mech:
-        #     return [self.target_node]
 
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
@@ -1136,8 +1135,12 @@ class GRUComposition(AutodiffComposition):
         """
         # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:
         if self._pytorch_projections:
+            assert len(self._pytorch_projections) == 2, \
+                (f"PROGRAM ERROR: {self.name}._pytorch_projections should have only two Projections, but has "
+                 f"{len(self._pytorch_projections)}: {' ,'.join([proj.name for proj in self._pytorch_projections])}.")
             direct_proj_in = self._pytorch_projections[0]
             direct_proj_out = self._pytorch_projections[1]
+
         else:
             try:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",

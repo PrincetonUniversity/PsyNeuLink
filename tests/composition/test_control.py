@@ -943,56 +943,44 @@ class TestControlSpecification:
 @pytest.mark.control
 class TestControlMechanisms:
 
-    # id, agent_rep, state_feat, mon_for_ctl, allow_probes, obj_mech err_type, error_msg
+    # agent_rep, state_feat, mon_for_ctl, allow_probes, obj_mech err_type, error_msg
     params = [
-        ("allowable1",
-         "icomp", "I", "I", True, None, None, None
-         ),
-        ("allowable2",
-         "mcomp", "Ii A", "I B", True, None, None, None
-         ),
-        ("state_features_test_internal",
-         "icomp", "B", "I", True, None, pnl.CompositionError,
-         "Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP "
-         "that is not an INPUT Node of that Composition is not currently supported."
-         ),
-        ("state_features_test_not_in_agent_rep",
-         "icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
-        '\'OCM\' has \'state_features\' specified ([\'SHADOWED INPUT OF A[InputPort-0] FOR I[InputPort-0]\']) '
-        'that are missing from both its `agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' '
-        'and any Compositions nested within it.'
-         ),
-        ("monitor_for_control_test_not_in_agent_rep",
-         "icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,
-         "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
-         "that do not belong to its agent_rep (INNER COMP): ['B']."
-         ),
-        ("monitor_for_control_with_obj_mech_test",
-         "icomp", "I", None, True, True, pnl.OptimizationControlMechanismError,
-         "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
-         "that do not belong to its agent_rep (INNER COMP): ['B']."
-         ),
-        ("probe_error_test",
-         "mcomp", "I", "B", False, None, pnl.CompositionError,
-         "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without "
-         "required NodeRole.OUTPUT. Try setting 'allow_probes' argument of OCM to 'True'."
-         ),
-        ("probe_error_obj_mech_test",
-         "mcomp", "I", None, False, True, pnl.CompositionError,
-         "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
-         "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
-         ),
-        ("cfa_as_agent_rep_error",
-         "cfa", "dict", None, False, True, pnl.OptimizationControlMechanismError,
-         'The agent_rep specified for OCM is a CompositionFunctionApproximator, so its \'state_features\' argument '
-         'must be a list, not a dict ({(ProcessingMechanism A): (InputPort InputPort-0), '
-         '(ProcessingMechanism B): (InputPort InputPort-0)}).'
-         )
+        pytest.param("icomp", "I", "I", True, None, None, None, id="allowable1"),
+        pytest.param("mcomp", "Ii A", "I B", True, None, None, None, id="allowable2"),
+        pytest.param("icomp", "B", "I", True, None, pnl.CompositionError,
+                     "Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP "
+                     "that is not an INPUT Node of that Composition is not currently supported.",
+                     id="state_features_test_internal"),
+        pytest.param("icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
+                     '\'OCM\' has \'state_features\' specified ([\'SHADOWED INPUT OF A[InputPort-0] FOR I[InputPort-0]\']) '
+                     'that are missing from both its `agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' '
+                     'and any Compositions nested within it.',
+                     id="state_features_test_not_in_agent_rep"),
+        pytest.param("icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,
+                     "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+                     "that do not belong to its agent_rep (INNER COMP): ['B'].",
+                     id="monitor_for_control_test_not_in_agent_rep"),
+        pytest.param("icomp", "I", None, True, True, pnl.OptimizationControlMechanismError,
+                     "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+                     "that do not belong to its agent_rep (INNER COMP): ['B'].",
+                     id="monitor_for_control_with_obj_mech_test"),
+        pytest.param("mcomp", "I", "B", False, None, pnl.CompositionError,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without "
+                     "required NodeRole.OUTPUT. Try setting 'allow_probes' argument of OCM to 'True'.",
+                     id="probe_error_test"),
+        pytest.param("mcomp", "I", None, False, True, pnl.CompositionError,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
+                     "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'.",
+                     id="probe_error_obj_mech_test"),
+        pytest.param("cfa", "dict", None, False, True, pnl.OptimizationControlMechanismError,
+                     'The agent_rep specified for OCM is a CompositionFunctionApproximator, so its \'state_features\' argument '
+                     'must be a list, not a dict ({(ProcessingMechanism A): (InputPort InputPort-0), '
+                     '(ProcessingMechanism B): (InputPort InputPort-0)}).',
+                     id="cfa_as_agent_rep_error"),
     ]
-    @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, '
-                             'objective_mechanism, error_type, err_msg',
-                             params, ids=[x[0] for x in params])
-    def test_args_specific_to_ocm(self, id, agent_rep, state_features, monitor_for_control,
+    @pytest.mark.parametrize('agent_rep, state_features, monitor_for_control, allow_probes, '
+                             'objective_mechanism, error_type, err_msg', params)
+    def test_args_specific_to_ocm(self, agent_rep, state_features, monitor_for_control,
                                   allow_probes, objective_mechanism, error_type,err_msg):
         """Test args specific to OptimizationControlMechanism
         NOTE: state_features and associated warning and errors tested more fully in
