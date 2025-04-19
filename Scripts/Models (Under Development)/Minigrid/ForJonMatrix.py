@@ -28,16 +28,27 @@ state_input = ProcessingMechanism(name='STATE INPUT',
                                   default_variable=[[0], [0], [0] * num_doors, [0] * num_keys, [0], [0]])
 #target_mech = ProcessingMechanism(name='TARGET MECHANISM')
 
-agent_x = TransferMechanism(name="AGENT X")
-agent_y = TransferMechanism(name="AGENT Y")
-door_states = TransferMechanism(name="DOOR STATES")
-key_states = TransferMechanism(name="KEY STATES")
-holding_key = TransferMechanism(name="HOLDING KEY")
-key_color = TransferMechanism(name="KEY COLOR")
-dx = TransferMechanism(name="DX")
-dy = TransferMechanism(name="DY")
-open_action = TransferMechanism(name="OPEN ACTION")
-pickup = TransferMechanism(name="PICKUP")
+# agent_x = TransferMechanism(name="AGENT X")
+# agent_y = TransferMechanism(name="AGENT Y")
+# door_states = TransferMechanism(name="DOOR STATES")
+# key_states = TransferMechanism(name="KEY STATES")
+# holding_key = TransferMechanism(name="HOLDING KEY")
+# key_color = TransferMechanism(name="KEY COLOR")
+# dx = TransferMechanism(name="DX")
+# dy = TransferMechanism(name="DY")
+# open_action = TransferMechanism(name="OPEN ACTION")
+# pickup = TransferMechanism(name="PICKUP")
+agent_x = ProcessingMechanism(name="AGENT X")
+agent_y = ProcessingMechanism(name="AGENT Y")
+door_states = ProcessingMechanism(name="DOOR STATES")
+key_states = ProcessingMechanism(name="KEY STATES")
+holding_key = ProcessingMechanism(name="HOLDING KEY")
+key_color = ProcessingMechanism(name="KEY COLOR")
+dx = ProcessingMechanism(name="DX")
+dy = ProcessingMechanism(name="DY")
+open_action = ProcessingMechanism(name="OPEN ACTION")
+pickup = ProcessingMechanism(name="PICKUP")
+
 
 #output = ProcessingMechanism(name="OUTPUT", default_variable=[[0, 0, 0, 0]])
 output_dx = ProcessingMechanism(name="OUTPUT DX")
@@ -212,16 +223,16 @@ state_to_em_pickup = [state_input,
 
 # Create Composition
 agent_comp = AutodiffComposition([state_to_em_agent_x,
-                          state_to_em_agent_y,
-                          state_to_em_door_states,
-                          state_to_em_key_states,
-                          state_to_em_holding_key,
-                          state_to_em_key_color,
-                          state_to_em_dx,
-                          state_to_em_dy,
-                          state_to_em_open,
-                          state_to_em_pickup],
-                         name='KEYS AND DOORS COMPOSITION')
+                                  state_to_em_agent_y,
+                                  state_to_em_door_states,
+                                  state_to_em_key_states,
+                                  state_to_em_holding_key,
+                                  state_to_em_key_color,
+                                  state_to_em_dx,
+                                  state_to_em_dy,
+                                  state_to_em_open,
+                                  state_to_em_pickup],
+                                 name='KEYS AND DOORS COMPOSITION')
 
 
 # *********************************************************************************************************************
