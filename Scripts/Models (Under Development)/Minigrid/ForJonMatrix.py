@@ -290,8 +290,12 @@ def main():
             else:
                 BIN_EXECUTE = 'Python'
             # Format
-            input_array = [[observation[0]], [observation[1]], [-1], [-1],
-                           [observation[4]], [observation[5]]]
+            # input_array = [[observation[0]], [observation[1]], [-1], [-1],
+            #                [observation[4]], [observation[5]]]
+            # FIX: JDC TEMP FIX ("()" and "False" in observation[4] and observation[5])
+            #      TO AVOID FOLLOWING ERROR:
+            #      "Input for 'STATE INPUT' of KEYS AND DOORS COMPOSITION ([[0], [3], [-1], [-1], [()],[False]]) badly shaped for multiple InputPorts"
+            input_array = [[observation[0]], [observation[1]], [-1], [-1], [0], [0]]
             if num_doors > 1:
                 input_array[2] = (x for x in observation[2])
             if num_keys > 1:
