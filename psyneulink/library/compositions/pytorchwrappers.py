@@ -1556,6 +1556,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 proj_wrapper._curr_sender_value = val
 
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+            assert True
 
         # Specific port is specified
         if port is not None:
