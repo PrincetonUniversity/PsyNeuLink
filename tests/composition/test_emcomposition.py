@@ -837,6 +837,46 @@ class TestExecution:
                 expected = memory_template[1]
             np.testing.assert_allclose(result, expected)
 
+    def test_normalization_with_scalar_fields(self, ):
+        # Test that field.shape(1,1) x memory(5,1) is handled properly when normalized using Torch (PyTorch) (for EM)
+        external_input = pnl.ProcessingMechanism(name='EXTERNAL INPUT',
+                                                 default_variable=[[0], [0]])
+    
+        em = pnl.EMComposition(name="em",
+                               memory_template=[[0], [0]],
+                               memory_capacity=5,
+                               fields={"FIELD 1": {pnl.FIELD_WEIGHT: 1,
+                                                   pnl.LEARN_FIELD_WEIGHT: True,
+                                                   pnl.TARGET_FIELD: True},
+                                       "FIELD 2": {pnl.FIELD_WEIGHT: 1,
+                                                   pnl.LEARN_FIELD_WEIGHT: True,
+                                                   pnl.TARGET_FIELD: True}},
+                               softmax_choice=pnl.WEIGHTED_AVG,
+                               normalize_memories=True,
+                               enable_learning=True,
+                               softmax_gain=1.0)
+        input_to_em_field_1 = [external_input,
+                               pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
+                                                     sender=external_input.output_ports[0],
+                                                     receiver=em.nodes["FIELD 1 [QUERY]"],
+                                                     learnable=True),
+                               em]
+        input_to_em_field_2 = [external_input,
+                               pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
+                                                     sender=external_input.output_ports[1],
+                                                     receiver=em.nodes["FIELD 2 [QUERY]"],
+                                                     learnable=True),
+                               em]
+        # Create Composition
+        outer_comp = pnl.AutodiffComposition([input_to_em_field_1, input_to_em_field_2],
+                                             name='OUTER COMP')
+    
+        input_array = [[0], [0]]
+        targets = outer_comp.get_target_nodes()
+        inputs = {external_input: input_array,
+                  targets[0]: [1],
+                  targets[1]: [1]}
+        outer_comp.learn(inputs=inputs, epochs=1)
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
