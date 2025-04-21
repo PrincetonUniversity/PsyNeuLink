@@ -881,7 +881,6 @@ FUNCTIONS = 'functions'
 
 #region ------------------------------------------  AUTODIFF COMPOSITION  ----------------------------------------------
 
-LEARNING_RATE = "learning_rate"
 TRAINING_SET = 'training set'
 TRAINED_OUTPUTS = 'trained_outputs'
 SHOW_GRAPH = 'SHOW_GRAPH'
@@ -1102,6 +1101,7 @@ RECEIVER_ARG = 'receiver'
 FEEDBACK = 'feedback'
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 LEARNABLE = 'learnable'
+LEARNING_RATE = "learning_rate"
 MATRIX_WEIGHTS = 'matrix_weights'
 AUTO = 'auto'
 HETERO = 'hetero'

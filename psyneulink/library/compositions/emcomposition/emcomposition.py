@@ -2583,6 +2583,8 @@ class EMComposition(AutodiffComposition):
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         """
+
+        # FIX: 4/20/25 — RECONCILE WITH AutodiffComposition _update_optimizer_params
         # 7/10/24 FIX: SHOULD THIS ALSO BE CONSTRAINED BY VALUE OF field_weights FOR CORRESPONDING FIELD?
         #         (i.e., if it is zero then not learnable? or is that a valid initial condition?)
         for projection in self.projections:

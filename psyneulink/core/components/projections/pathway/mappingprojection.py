@@ -251,6 +251,14 @@ execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
 *Learning*
 ~~~~~~~~~~
 
+COMMENT:
+FIX 4/20/25 - ADD:
+ - MENTION learning_rate AND POINT TO Composition FOR FUll DISCUSSION (including relationship to optimizer_params
+ - learnable is a toggle, allowing learning_rate to be set but to disable learning, but...
+ - learning_rate = False -> learnable = False; and...
+ - learnable must be True to set learning_rate;  if it is False, raise error
+COMMENT
+
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
 of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`.
 This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
@@ -304,6 +312,7 @@ from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'MappingError', 'MappingProjection'
@@ -367,6 +376,9 @@ class MappingProjection(PathwayProjection_Base):
         specifies whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
         `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
 
+    learning_rate : float, int or bool : default None
+         specifies Projection-specific learning_rate (see `Composition_Learning_Rate` for description of options).
+
 
     Attributes
     ----------
@@ -389,6 +401,13 @@ class MappingProjection(PathwayProjection_Base):
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
+    learnable : bool
+        determines whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
+        `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
+
+    learning_rate : float, int or bool
+         determines Projection-specific learning_rate (see `Composition_Learning_Rate` for additional details).
+
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
@@ -407,6 +426,7 @@ class MappingProjection(PathwayProjection_Base):
     componentType = MAPPING_PROJECTION
     className = componentType
     suffix = " " + className
+    classPreferenceLevel = PreferenceLevel.TYPE
 
     class Parameters(PathwayProjection_Base.Parameters):
         """
@@ -419,19 +439,26 @@ class MappingProjection(PathwayProjection_Base):
                     :default value: `MatrixTransform`
                     :type: `Function`
 
+                learning_rate
+                    see `learning_rate <MappingProjection.learning_rate>`
+
+                    :default value: None
+                    :type: ``float``
+
                 matrix
                     see `matrix <MappingProjection.matrix>`
 
                     :default value: `AUTO_ASSIGN_MATRIX`
                     :type: ``str``
-        """
-        function = Parameter(MatrixTransform, stateful=False, loggable=False)
-        matrix = FunctionParameter(
-            DEFAULT_MATRIX,
-            setter=_mapping_projection_matrix_setter
-        )
 
-    classPreferenceLevel = PreferenceLevel.TYPE
+        """
+        learning_rate = Parameter(None, stateful=True)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
+        matrix = FunctionParameter(DEFAULT_MATRIX, setter=_mapping_projection_matrix_setter
+        )
+        def _validate_learning_rate(self, val):
+            if val is not None and not is_numeric_scalar(val):
+                return 'must be a float, int or a bool'
 
     @property
     def _loggable_items(self):
@@ -459,6 +486,7 @@ class MappingProjection(PathwayProjection_Base):
                  matrix=None,
                  function=None,
                  learnable=True,
+                 learning_rate=None,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -474,6 +502,16 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
         self.learnable = bool(learnable)
+        # MODIFIED 4/20/25 OLD:
+        # FIX: IF  is_numeric_scalar IS MODIFIED TO RETURN False FOR False, REVERT TO THIS:
+        # if is_numeric_scalar(learning_rate) and and not self.learnable:
+        # MODIFIED 4/20/25 NEW:
+        if not self.learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
+        # MODIFIED 4/20/25 END
+            raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
+                               f"float or int when 'learnable' is False.")
+        elif learning_rate is False:
+            self.learnable = False
 
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
@@ -485,6 +523,7 @@ class MappingProjection(PathwayProjection_Base):
                          weight=weight,
                          exponent=exponent,
                          matrix=matrix,
+                         learning_rate=learning_rate,
                          function=function,
                          params=params,
                          name=name,

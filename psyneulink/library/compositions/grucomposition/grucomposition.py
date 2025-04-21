@@ -1092,6 +1092,8 @@ class GRUComposition(AutodiffComposition):
         """Set learning-related attributes for Node and Projections"""
         learning_rate = self.enable_learning
 
+        # FIX: 4/20/25 — RECONCILE WITH AutodiffComposition _update_optimizer_params
+
         for projection in self.learnable_projections:
 
             if self.enable_learning is False:
@@ -1213,7 +1215,8 @@ class GRUComposition(AutodiffComposition):
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",
                                                    sender=sender,
                                                    receiver=self.gru_mech,
-                                                   learnable=projection.learnable)
+                                                   learnable=projection.learnable,
+                                                   learning_rate=projection.learning_rate)
                 self._pytorch_projections.append(direct_proj_in)
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"

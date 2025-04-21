@@ -135,7 +135,7 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 *Learning Rates and Optimizer Params*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# FIX 4/17/25 ADD EXPLANATION OF COMPOSITION LEARNING RATE HERE
+# FIX 4/17/25 ADD REFERENCE TO Composition_Learning_Rate HERE, WITH MENTION OF LIST OF VALUES AND PRECEDENCE TABLE
 
 The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used
 to specify parameters for the `optimizer <AutodiffComposition.optimizer>` that is used for learning by the
@@ -153,20 +153,6 @@ PyTorch Parameter that is not learnable. For Projections that are *not* sepcifie
 in order of precedence: i) the **learning_rate** specified in the AutodiffComposition's `learn
 <AutodiffComposition.learn>` method; ii) the **learning_rate** argument of its constructor; or iii) the default
 `learning_rate <AutodiffComposition.learning_rate>` value for AutodiffComposition.
-
-  .. note::
-     If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
-     are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
-     **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
-
-  **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
-
-    - *int or float*: the value is used as the learning_rate;
-
-    - *True or None*: the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>` is used;
-
-    - *False*: the parameter is not learned (i.e., its `learnable <MappingProjection.learnable>` attribute is set to
-      False and the requires_grad attribute of the corresponding PyTorch Parameter is set to False).
 
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
@@ -1141,10 +1127,6 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
-
-        # FIX: 4/19/25 ?KEEP AND USE:
-        self._get_all_projections()
-
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
         if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator

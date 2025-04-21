@@ -230,9 +230,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 direct_proj = MappingProjection(name="Projection to GRU COMP",
                                                 sender=pnl_proj.sender,
                                                 receiver=self.composition.gru_mech,
-                                                learnable=pnl_proj.learnable)
+                                                learnable=pnl_proj.learnable,
+                                                learning_rate=projection.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.afferents[0]
+                # FIX 4/20/25 - NEED TO SET learnable AND learning_rate HERE
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
@@ -243,9 +245,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 direct_proj = MappingProjection(name="Projection from GRU COMP",
                                                 sender=self.composition.gru_mech,
                                                 receiver=pnl_proj.receiver,
-                                                learnable=pnl_proj.learnable)
+                                                learnable=pnl_proj.learnable,
+                                                learning_rate=projection.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.efferents[0]
+                # FIX 4/20/25 - NEED TO SET learnable AND learning_rate HERE
             # gru_mech has only one output_port
             sender_port_idx = 0
 

@@ -1096,6 +1096,21 @@ a LearningMechanism interacts with any specifications of the `learning_rate <Lea
 for additional details).
 COMMENT
 
+
+  **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
+
+    - *int or float*: the value is used as the learning_rate;
+
+    - *True or None*: the value of the GRUComposition's `learning_rate <GRUComposition.learning_rate>` is used;
+
+    - *False*: the parameter is not learned (i.e., its `learnable <MappingProjection.learnable>` attribute is set to
+      False and the requires_grad attribute of the corresponding PyTorch Parameter is set to False).
+
+  .. note::
+     If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
+     are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
+     **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
+
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
 .. table::
@@ -1103,11 +1118,17 @@ COMMENT
    +-------------------------------------------------------------------------------------------------------------------------------------+
    |                          **Learning Rate Precedence Hierarchy**                                                                     |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |  **Highest**:  |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
+   |  **Highest**:  |  Assignment to MappingProjection `learning_rate.MappingProjection.learning_rate>` Parameter (after construction)   |
+   |                |    ``my_projecition.parameters.learning_rate.set(val)``                                                            |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
    |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
    |                |  Call to `Composition.learn` method (execution)                                                                    |
    |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment in `MappingProjection` constructor                                                                     |
+   |                |    ``my_learning_mechanimsm=MappingProjection(learning_rate=val)``                                                 |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
    |                |  Assignment in `LearningMechanism` constructor                                                                     |
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                 |
@@ -3080,7 +3101,7 @@ from psyneulink.core.globals.keywords import \
      DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
      INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
      LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
-     LEARNING_SIGNAL, Loss,
+     LEARNING_RATE, LEARNING_SIGNAL, Loss,
      MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM,
      NAME, NESTED, NO_CLAMP, NODE, NODES,
      OBJECTIVE_MECHANISM, ONLINE, ONLY, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE,
@@ -6409,7 +6430,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               PROJECTION_PARAMS:{
                                   FUNCTION:projection.function,
                                   MATRIX:projection.matrix.base,
-                                  LEARNABLE:projection.learnable}}
+                                  LEARNABLE:projection.learnable,
+                                  LEARNING_RATE:projection.learning_rate}
+                             }
                 return self.add_projection(proj_spec,
                                            sender=projection.sender,
                                            receiver=projection.receiver,
