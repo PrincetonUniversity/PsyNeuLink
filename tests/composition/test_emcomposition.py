@@ -841,7 +841,7 @@ class TestExecution:
         # Test that field.shape(1,1) x memory(5,1) is handled properly when normalized using Torch (PyTorch) (for EM)
         external_input = pnl.ProcessingMechanism(name='EXTERNAL INPUT',
                                                  default_variable=[[0], [0]])
-    
+
         em = pnl.EMComposition(name="em",
                                memory_template=[[0], [0]],
                                memory_capacity=5,
@@ -870,7 +870,7 @@ class TestExecution:
         # Create Composition
         outer_comp = pnl.AutodiffComposition([input_to_em_field_1, input_to_em_field_2],
                                              name='OUTER COMP')
-    
+
         input_array = [[0], [0]]
         targets = outer_comp.get_target_nodes()
         inputs = {external_input: input_array,
