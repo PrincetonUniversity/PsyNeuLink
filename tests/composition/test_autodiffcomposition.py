@@ -3251,7 +3251,7 @@ class TestMiscTrainingFunctionality:
         targets={output_mech: [[1,1,1,1,1]]}
         constructor_optimizer_params = {input_proj: constructor_lr_input_proj,
                                         output_proj: constructor_lr_output_proj}
-        learning_method_optimizer_params = {input_proj: learn_method_lr_input_proj, 
+        learning_method_optimizer_params = {input_proj: learn_method_lr_input_proj,
                                             output_proj: learn_method_lr_output_proj}
 
         if condition in {'bad_proj', 'bad_lr'}:

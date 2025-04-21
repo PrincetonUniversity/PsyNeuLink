@@ -231,7 +231,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 sender=pnl_proj.sender,
                                                 receiver=self.composition.gru_mech,
                                                 learnable=pnl_proj.learnable,
-                                                learning_rate=projection.learning_rate)
+                                                learning_rate=pnl_proj.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.afferents[0]
                 # FIX 4/20/25 - NEED TO SET learnable AND learning_rate HERE
@@ -246,7 +246,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 sender=self.composition.gru_mech,
                                                 receiver=pnl_proj.receiver,
                                                 learnable=pnl_proj.learnable,
-                                                learning_rate=projection.learning_rate)
+                                                learning_rate=pnl_proj.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.efferents[0]
                 # FIX 4/20/25 - NEED TO SET learnable AND learning_rate HERE
