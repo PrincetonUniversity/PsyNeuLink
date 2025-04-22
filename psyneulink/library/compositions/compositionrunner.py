@@ -291,6 +291,7 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
+                     skip_initialization=False,
                      **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
@@ -345,8 +346,6 @@ class CompositionRunner():
             epochs = inf_yield_val(epochs)
         elif epochs is None:
             epochs = inf_yield_val(1)
-
-        skip_initialization = False
 
         # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 

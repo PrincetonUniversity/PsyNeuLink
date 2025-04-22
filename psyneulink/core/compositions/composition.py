@@ -11558,6 +11558,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch=None,
             context: Optional[Context] = None,
             *args,
+            base_context: Context = Context(execution_id=None),
+            skip_initialization: bool = False,
             **kwargs
     )->list:
         """
@@ -11682,6 +11684,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         from psyneulink.library.compositions import CompositionRunner
         from psyneulink.library.compositions import AutodiffComposition
+
+        if (
+            not skip_initialization
+            and (
+                context is None
+                or ContextFlags.SIMULATION_MODE not in context.runmode
+            )
+        ):
+            self._initialize_from_context(context, base_context, override=False)
+
         runner = CompositionRunner(self)
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
@@ -11719,6 +11731,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch=call_after_minibatch,
             context=context,
             execution_mode=execution_mode,
+            skip_initialization=skip_initialization,
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
