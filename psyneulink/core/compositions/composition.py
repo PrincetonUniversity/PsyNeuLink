@@ -8154,80 +8154,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Handle BackPropagation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
-            return self._create_backpropagation_learning_pathway(pathway,
-                                                                 learning_rate,
-                                                                 error_function,
-                                                                 loss_spec,
-                                                                 learning_update,
-                                                                 name=pathway_name,
-                                                                 default_projection_matrix=default_projection_matrix,
-                                                                 context=context)
+            learning_pathway = (
+                self._create_backpropagation_learning_pathway(pathway,
+                                                              learning_rate,
+                                                              error_function,
+                                                              loss_spec,
+                                                              learning_update,
+                                                              name=pathway_name,
+                                                              default_projection_matrix=default_projection_matrix,
+                                                              context=context))
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
-
-        # Processing Components
-        try:
-            input_source, output_source, learned_projection = \
-                self._unpack_processing_components_of_learning_pathway(pathway, default_projection_matrix)
-        except CompositionError as e:
-            raise CompositionError(e.args[0].replace('this method',
+        else:
+            # Processing Components
+            try:
+                input_source, output_source, learned_projection = \
+                    self._unpack_processing_components_of_learning_pathway(pathway, default_projection_matrix)
+            except CompositionError as e:
+                raise CompositionError(e.args[0].replace('this method',
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
-        # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
+            # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
+            self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
-        learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
-                                                              default_projection_matrix=default_projection_matrix,
-                                                              name=pathway_name,
-                                                              # context=context)
-                                                              context=context)
+            learning_pathway = self.add_linear_processing_pathway(pathway=[input_source,
+                                                                           learned_projection,
+                                                                           output_source],
+                                                                  default_projection_matrix=default_projection_matrix,
+                                                                  name=pathway_name,
+                                                                  # context=context)
+                                                                  context=context)
 
-        input_source_output_port = learned_projection.sender
-        output_source_input_port = learned_projection.receiver
-        # Learning Components
-        target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source_output_port,
-                                                                                          output_source_input_port,
-                                                                                          error_function,
-                                                                                          learning_function,
-                                                                                          learned_projection,
-                                                                                          learning_rate,
-                                                                                          learning_update)
+            input_source_output_port = learned_projection.sender
+            output_source_input_port = learned_projection.receiver
+            # Learning Components
+            target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source_output_port,
+                                                                                              output_source_input_port,
+                                                                                              error_function,
+                                                                                              learning_function,
+                                                                                              learned_projection,
+                                                                                              learning_rate,
+                                                                                              learning_update)
 
-        # Suppress warning regarding no efferent projections from Comparator (since it is a TERMINAL node)
-        for s in comparator.output_ports:
-            s.parameters.require_projection_in_composition.set(False,
-                                                               override=True)
-        # Add nodes to Composition
-        self.add_nodes([(target, NodeRole.TARGET),
-                        (comparator, NodeRole.LEARNING_OBJECTIVE),
-                         learning_mechanism],
-                       required_roles=NodeRole.LEARNING,
-                       context=context)
+            # Suppress warning regarding no efferent projections from Comparator (since it is a TERMINAL node)
+            for s in comparator.output_ports:
+                s.parameters.require_projection_in_composition.set(False,
+                                                                   override=True)
+            # Add nodes to Composition
+            self.add_nodes([(target, NodeRole.TARGET),
+                            (comparator, NodeRole.LEARNING_OBJECTIVE),
+                             learning_mechanism],
+                           required_roles=NodeRole.LEARNING,
+                           context=context)
 
-        # Create Projections to and among learning-related Mechanisms and add to Composition
-        learning_related_projections = self._create_learning_related_projections(input_source_output_port,
-                                                                                 output_source_input_port,
-                                                                                 target,
-                                                                                 comparator,
-                                                                                 learning_mechanism)
-        self.add_projections(learning_related_projections, context=context)
+            # Create Projections to and among learning-related Mechanisms and add to Composition
+            learning_related_projections = self._create_learning_related_projections(input_source_output_port,
+                                                                                     output_source_input_port,
+                                                                                     target,
+                                                                                     comparator,
+                                                                                     learning_mechanism)
+            self.add_projections(learning_related_projections, context=context)
 
-        # Create Projection to learned Projection and add to Composition
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
+            # Create Projection to learned Projection and add to Composition
+            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+            self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
-        # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
-        # Wrap up and return
-        learning_related_components = {OUTPUT_MECHANISM: output_source,
-                                       TARGET_MECHANISM: target,
-                                       OBJECTIVE_MECHANISM: comparator,
-                                       LEARNING_MECHANISMS: learning_mechanism,
-                                       LEARNED_PROJECTIONS: learned_projection,
-                                       LEARNING_FUNCTION: learning_function}
-        learning_pathway.learning_components = learning_related_components
-        # Update graph in case method is called again
-        self._analyze_graph()
+            # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
+            # Wrap up and return
+            learning_related_components = {OUTPUT_MECHANISM: output_source,
+                                           TARGET_MECHANISM: target,
+                                           OBJECTIVE_MECHANISM: comparator,
+                                           LEARNING_MECHANISMS: learning_mechanism,
+                                           LEARNED_PROJECTIONS: learned_projection,
+                                           LEARNING_FUNCTION: learning_function}
+            learning_pathway.learning_components = learning_related_components
+            # Update graph in case method is called again
+            self._analyze_graph()
+
+        # Assign any Projection-specific learning_rates
+        learning_mechanisms = learning_pathway.learning_components[LEARNING_MECHANISMS]
+        for learnable_projection in [lp for lp in learning_pathway.learning_components[LEARNED_PROJECTIONS]
+                                     if lp.learnable and lp.learning_rate is not None]:
+            learning_mech = learnable_projection.parameter_ports['matrix'].mod_afferents[0].sender.owner
+            assert learning_mech in learning_mechanisms, \
+                (f"PROGRAM ERROR: LearningMechanism that projects to '{learnable_projection.name}' is not in "
+                 f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
+            # FIX: USE CONTEXT HERE:
+            learning_mech.parameters.learning_rate.set(learnable_projection.learning_rate)
+
         return learning_pathway
 
     @beartype

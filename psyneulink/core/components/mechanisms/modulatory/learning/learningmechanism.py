@@ -1135,7 +1135,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             prefs=prefs,
             **kwargs
         )
-        # If default to value assigned to its function, so any later assignments can be detected
+        # Set default value, so any later assignments can be detected
         #    (e.g., in CompositionRunner.run_learning)
         self.defaults.learning_rate = self.parameters.learning_rate.get()
 
