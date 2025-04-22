@@ -293,10 +293,15 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |history_max_length|       1       |the maximum length of the stored history    |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-| fallback_default |     False     |if False, the Parameter will return None if |                                         |
-|                  |               |a requested value is not present for a given|                                         |
-|                  |               |execution context; if True, the Parameter's |                                         |
-|                  |               |default_value will be returned instead      |                                         |
+| fallback_value   | ParameterNo   | indicates the behavior of calls to         |                                         |
+|                  | ValueError    | `Parameter.get` or `Parameter._get` when   |                                         |
+|                  |               | the Parameter has no value in the          |                                         |
+|                  |               | requested context. The default behavior is |                                         |
+|                  |               | to raise a ParameterNoValueError. If set   |                                         |
+|                  |               | to the keyword DEFAULT='default', the      |                                         |
+|                  |               | Parameter's default value will be          |                                         |
+|                  |               | returned. If set to some other value, that |                                         |
+|                  |               | value will be returned.                    |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 
 
@@ -320,7 +325,7 @@ import toposort
 
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
-from psyneulink.core.globals.keywords import SHARED_COMPONENT_TYPES
+from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import (
     call_with_pruned_args,
@@ -348,6 +353,17 @@ logger = logging.getLogger(__name__)
 
 class ParameterError(Exception):
     pass
+
+
+class ParameterNoValueError(ParameterError):
+    def __init__(self, param=None, execution_id=None):
+        message = "{0} '{1}'{2} has no value for execution_id {3}".format(
+            type(param).__name__,
+            param.name,
+            param._owner_string,
+            execution_id if not isinstance(execution_id, str) else f"'{execution_id}'"
+        )
+        super().__init__(message)
 
 
 class ParameterInvalidSourceError(ParameterError):
@@ -963,11 +979,16 @@ class Parameter(ParameterBase):
 
             :default: 0
 
-        fallback_default
-            if False, the Parameter will return None if a requested value is not present for a given execution context;
-            if True, the Parameter's default_value will be returned instead.
+        fallback_value
+            indicates the behavior of calls to `Parameter.get` or
+            `Parameter._get` when the Parameter has no value in the
+            requested context. The default behavior is to raise a
+            ParameterNoValueError. If set to the keyword
+            DEFAULT='default', the Parameter's default value will be
+            returned. If set to some other value, that value will be
+            returned.
 
-            :default: False
+            :default: ParameterNoValueError
 
         retain_old_simulation_data
             if False, the Parameter signals to other PNL objects that any values generated during simulations may be
@@ -1036,7 +1057,7 @@ class Parameter(ParameterBase):
         'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
         'modulation_combination_function', 'valid_types', 'initializer'
     }
-    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
+    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_value', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
@@ -1078,7 +1099,7 @@ class Parameter(ParameterBase):
         history=None,
         history_max_length=1,
         history_min_length=0,
-        fallback_default=False,
+        fallback_value=ParameterNoValueError,
         retain_old_simulation_data=False,
         constructor_argument=None,
         spec=None,
@@ -1144,7 +1165,7 @@ class Parameter(ParameterBase):
             history=history,
             history_max_length=history_max_length,
             history_min_length=history_min_length,
-            fallback_default=fallback_default,
+            fallback_value=fallback_value,
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
             spec=spec,
@@ -1411,7 +1432,7 @@ class Parameter(ParameterBase):
         return call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
     @handle_external_context()
-    def get(self, context=None, **kwargs):
+    def get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
         """
             Gets the value of this `Parameter` in the context of **context**
             If no context is specified, attributes on the associated `Component` will be used
@@ -1421,17 +1442,21 @@ class Parameter(ParameterBase):
 
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a Composition, uses **context**.default_execution_id
+
+                fallback_value:
+                    overrides `Parameter.fallback_value` for this call
+
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        base_val = self._get(context, **kwargs)
+        base_val = self._get(context, fallback_value, **kwargs)
         if self._scalar_converted:
             base_val = try_extract_0d_array_item(base_val)
         if is_array_like(base_val):
             base_val = copy_parameter_value(base_val)
         return base_val
 
-    def _get(self, context=None, **kwargs):
+    def _get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
@@ -1452,12 +1477,16 @@ class Parameter(ParameterBase):
         else:
             try:
                 return self.values[execution_id]
-            except KeyError:
-                logger.info('Parameter \'{0}\' has no value for execution_id {1}'.format(self.name, execution_id))
-                if self.fallback_default:
+            except KeyError as e:
+                if fallback_value is ParameterNoValueError:
+                    fallback_value = self.fallback_value
+
+                if fallback_value is ParameterNoValueError:
+                    raise ParameterNoValueError(self, execution_id) from e
+                elif fallback_value == DEFAULT:
                     return self.default_value
                 else:
-                    return None
+                    return fallback_value
 
     @handle_external_context()
     def get_previous(
@@ -1735,6 +1764,9 @@ class Parameter(ParameterBase):
             pass
 
         self.clear_log(context.execution_id)
+
+    def _has_value(self, context: Context):
+        return context.execution_id in self.values
 
     def _log_value(self, value, context=None):
         # manual logging
@@ -2036,17 +2068,11 @@ class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
 
 
 def _SharedParameter_default_getter(self, context=None):
-    try:
-        return self.source._get(context)
-    except (AttributeError, TypeError, IndexError):
-        return None
+    return self.source._get(context)
 
 
 def _SharedParameter_default_setter(value, self, context=None):
-    try:
-        return self.source._set(value, context)
-    except AttributeError:
-        return None
+    return self.source._set(value, context)
 
 
 class SharedParameter(Parameter):

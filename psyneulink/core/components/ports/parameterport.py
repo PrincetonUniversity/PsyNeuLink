@@ -387,6 +387,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import (
     ParameterAlias,
     ParameterInvalidSourceError,
+    ParameterNoValueError,
     SharedParameter,
     check_user_specified,
 )
@@ -1040,7 +1041,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 if not isinstance(p._owner._owner, ComponentsMeta):
                     raise
                 func = None
-            except ParameterInvalidSourceError:
+            except (ParameterInvalidSourceError, ParameterNoValueError):
                 func = None
 
             if func is None:
@@ -1070,7 +1071,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         res = obj
         for p in param_list[0:index + 1]:
             param = getattr(res.parameters, p)
-            func = param._get(context)
+            func = param._get(context, fallback_value=None)
 
             if func is None:
                 func = param.default_value

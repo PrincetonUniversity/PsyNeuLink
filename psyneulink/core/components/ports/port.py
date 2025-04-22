@@ -2431,15 +2431,12 @@ class Port_Base(Port):
 
     @property
     def _dependent_components(self):
+        res = super()._dependent_components
         try:
-            return list(itertools.chain(
-                super()._dependent_components,
-                self.all_afferents,
-            ))
-        except PortError:
-            return list(itertools.chain(
-                super()._dependent_components,
-            ))
+            res.extend(self.all_afferents)
+        except AttributeError:
+            pass
+        return res
 
 
 def _instantiate_port_list(owner,

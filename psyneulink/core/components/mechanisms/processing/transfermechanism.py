@@ -849,7 +849,7 @@ from psyneulink.core.globals.keywords import \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter, FunctionParameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -882,7 +882,7 @@ class TransferError(MechanismError):
 
 def _integrator_mode_setter(value, owning_component=None, context=None, *, compilation_sync=False):
     if value and not compilation_sync:
-        if not owning_component.parameters.integrator_mode._get(context):
+        if not owning_component.parameters.integrator_mode._get(context, fallback_value=None):
             # when first creating parameters, integrator_function is not
             # instantiated yet
             if (
@@ -906,14 +906,18 @@ def _integrator_mode_setter(value, owning_component=None, context=None, *, compi
     return value
 
 def _clip_setter(value, owning_component=None, context=None):
+    try:
+        comp_function = owning_component.function
+    except ParameterNoValueError:
+        comp_function = None
 
     if (value is not None
-            and owning_component.function
-            and hasattr(owning_component.function, 'range')
-            and owning_component.function.range is not None
-            and isinstance(owning_component.function.range, tuple)
-            and owning_component.function.range != (None, None)):
-        range = owning_component.function.range
+            and comp_function
+            and hasattr(comp_function, 'range')
+            and comp_function.range is not None
+            and isinstance(comp_function.range, tuple)
+            and comp_function.range != (None, None)):
+        range = comp_function.range
         if range[0] is None:
             lower_bound = -np.inf
         else:

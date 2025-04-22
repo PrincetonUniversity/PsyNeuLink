@@ -4301,7 +4301,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1, 1]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)
@@ -4345,7 +4345,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[0.5, 0.5]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)
@@ -4390,7 +4390,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[0.5, 0.5]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)

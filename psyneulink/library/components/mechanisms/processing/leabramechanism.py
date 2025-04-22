@@ -300,7 +300,7 @@ class LeabraFunction(Function_Base):
 
 
 def _training_flag_setter(value, self=None, owning_component=None, context=None):
-    if value is not self._get(context):
+    if value is not self._get(context, fallback_value=None):
         try:
             set_training(owning_component.parameters.network._get(context), value)
         except (AttributeError, ParameterInvalidSourceError):

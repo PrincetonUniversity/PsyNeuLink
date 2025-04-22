@@ -527,15 +527,39 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
-from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, DETERMINISTIC, EXECUTE_UNTIL_FINISHED, \
-    FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
-    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_METADATA, \
-    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MODEL_SPEC_ID_MDF_VARIABLE, \
-    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RANDOM, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
+from psyneulink.core.globals.keywords import (
+    CONTEXT,
+    CONTROL_PROJECTION,
+    DEFERRED_INITIALIZATION,
+    DETERMINISTIC,
+    EXECUTE_UNTIL_FINISHED,
+    FUNCTION,
+    FUNCTION_PARAMS,
+    INIT_FULL_EXECUTE_METHOD,
+    INPUT_PORTS,
+    LEARNING,
+    LEARNING_PROJECTION,
+    MATRIX,
+    MAX_EXECUTIONS_BEFORE_FINISHED,
+    MODEL_SPEC_ID_PSYNEULINK,
+    MODEL_SPEC_ID_METADATA,
+    MODEL_SPEC_ID_INPUT_PORTS,
+    MODEL_SPEC_ID_OUTPUT_PORTS,
+    MODEL_SPEC_ID_MDF_VARIABLE,
+    MODULATORY_SPEC_KEYWORDS,
+    NAME,
+    OUTPUT_PORTS,
+    OWNER,
+    PARAMS,
+    PREFS_ARG,
+    RANDOM,
+    RESET_STATEFUL_FUNCTION_WHEN,
+    INPUT_SHAPES,
+    VALUE,
+    VARIABLE,
+    SHARED_COMPONENT_TYPES,
+    DEFAULT,
+)
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.parameters import (
     Defaults,
@@ -1044,11 +1068,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                     read_only=True,
                                     loggable=False,
                                     stateful=False,
-                                    fallback_default=True,
+                                    fallback_value=DEFAULT,
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True)
         execute_until_finished = Parameter(True, pnl_internal=True)
-        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False, pnl_internal=True)
+        num_executions = Parameter(
+            Time(),
+            read_only=True,
+            modulable=False,
+            loggable=False,
+            fallback_value=DEFAULT,
+            pnl_internal=True
+        )
         num_executions_before_finished = Parameter(0, read_only=True, modulable=False, pnl_internal=True)
         max_executions_before_finished = Parameter(1000, modulable=False, pnl_internal=True)
 
@@ -2383,7 +2414,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
             # set default to None context to ensure it exists
             if (
-                p._get(context) is None and p.getter is None
+                p._get(context, fallback_value=None) is None and p.getter is None
                 or context.execution_id not in p.values
             ):
                 if p._user_specified:
@@ -4425,9 +4456,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 self._parameter_components.add(param_value)
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> Iterable['Component']:
         """
-            Returns a set of Components that will be executed if this Component is executed
+            Returns:
+                Components that must have values in a given Context for
+                this Component to execute in that Context
         """
         return list(self._parameter_components)
 

@@ -429,6 +429,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import (
     Parameter,
     ParameterInvalidSourceError,
+    ParameterNoValueError,
     check_user_specified,
     copy_parameter_value,
 )
@@ -1228,7 +1229,7 @@ class Projection_Base(Projection):
 
         if (
             simple_edge_format
-            and self.function is not None
+            and self.parameters.function.get(fallback_value=None) is not None
             and not self.function._is_identity(defaults=True)
         ):
             edge_node = ProcessingMechanism(
@@ -1278,7 +1279,7 @@ class Projection_Base(Projection):
             metadata = self._mdf_metadata
             try:
                 metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict(self.function.as_mdf_model())
-            except AttributeError:
+            except (AttributeError, ParameterNoValueError):
                 # projection is in deferred init, special handling here?
                 pass
 

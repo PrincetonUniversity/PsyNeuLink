@@ -1016,7 +1016,10 @@ def _memory_getter(owning_component=None, context=None)->list:
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    if owning_component.field_weights is None:
+    if (
+        not owning_component.parameters.field_weights._has_value(context)
+        or owning_component.parameters.field_weights._get(context) is None
+    ):
         return field_weights
     elif len(field_weights) != len(owning_component.field_weights):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "

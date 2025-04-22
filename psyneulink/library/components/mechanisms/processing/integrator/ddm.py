@@ -380,9 +380,10 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OWNER_VALUE, \
-    THRESHOLD, VARIABLE, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import (
+    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OWNER_VALUE,
+    THRESHOLD, VARIABLE, PREFERENCE_SET_NAME, DEFAULT,
+)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -740,7 +741,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],

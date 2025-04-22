@@ -380,11 +380,13 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, EXECUTION_MODE,
-                                              LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
-                                              RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL)
+from psyneulink.core.globals.keywords import (
+    AUTODIFF_COMPOSITION, EXECUTION_MODE,
+    LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
+    Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
+    OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
+    RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL, DEFAULT,
+)
 from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -659,14 +661,14 @@ class AutodiffComposition(Composition):
     class Parameters(Composition.Parameters):
         pytorch_representation = None
         optimizer = None
-        learning_rate = Parameter(.001, fallback_default=True)
-        synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
-        synch_node_variables_with_torch = Parameter(None, fallback_default=True)
-        synch_node_values_with_torch = Parameter(RUN, fallback_default=True)
-        synch_results_with_torch = Parameter(RUN, fallback_default=True)
-        retain_torch_trained_outputs = Parameter(MINIBATCH, fallback_default=True)
-        retain_torch_targets = Parameter(MINIBATCH, fallback_default=True)
-        retain_torch_losses = Parameter(MINIBATCH, fallback_default=True)
+        learning_rate = Parameter(.001, fallback_value=DEFAULT)
+        synch_projection_matrices_with_torch = Parameter(RUN, fallback_value=DEFAULT)
+        synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
+        synch_node_values_with_torch = Parameter(RUN, fallback_value=DEFAULT)
+        synch_results_with_torch = Parameter(RUN, fallback_value=DEFAULT)
+        retain_torch_trained_outputs = Parameter(MINIBATCH, fallback_value=DEFAULT)
+        retain_torch_targets = Parameter(MINIBATCH, fallback_value=DEFAULT)
+        retain_torch_losses = Parameter(MINIBATCH, fallback_value=DEFAULT)
         torch_trained_outputs = Parameter([], getter=_get_torch_trained_outputs)
         torch_targets = Parameter([], getter=_get_torch_targets)
         torch_losses = Parameter([], getter=_get_torch_losses)
@@ -1084,7 +1086,7 @@ class AutodiffComposition(Composition):
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.parameters.pytorch_representation._get(context=context) is None or refresh:
+        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
             model = self.pytorch_composition_wrapper_type(composition=self,
                                                           device=self.device,
                                                           context=context,
