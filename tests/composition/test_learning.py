@@ -3160,6 +3160,71 @@ def validate_learning_mechs(comp):
                           REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
 
+baseline_expected = [[5.74485534, 5.74485534, 5.74485534, 5.74485534, 5.74485534]]
+expected = baseline_expected
+test_args = [
+    #  condition     constructor_lr  learn_method_lr    hidden_lr    input_lr        expected
+    (  "baseline",       .001,            .001,           .001,       .001,     baseline_expected),
+]
+@pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, hidden_lr, input_lr, expected", test_args,
+                         ids=[f"{x[0]}" for x in test_args])
+def test_projection_specific_learning_rates(condition, constructor_lr, learn_method_lr, hidden_lr, input_lr, expected):
+    in_shape = 4
+    hidden_1_shape = 3
+    hidden_2_shape = 2
+    out_shape = 5
+    input_stims = [[.1,.2,.3,.4]]
+    target_vals = [[1,1,1,1,1]]
+    num_trials = 3
+
+    # Python VERSION: ------------------------------------------------------------------
+
+    mech_1 = pnl.ProcessingMechanism(name='Mech 1', input_shapes=in_shape)
+    mech_2 = pnl.ProcessingMechanism(name='Mech 2', input_shapes=hidden_1_shape)
+    input_proj = pnl.MappingProjection(mech_1, mech_2,learning_rate=input_lr,name="INPUT PROJECTION")
+    mech_3 = pnl.ProcessingMechanism(name='Mech 3', input_shapes=hidden_2_shape)
+    hidden_proj = pnl.MappingProjection(mech_2, mech_3,learning_rate=hidden_lr,name="HIDDEN PROJECTION")
+    mech_4 = pnl.ProcessingMechanism(name='Mech 4', input_shapes=out_shape)
+    comp = pnl.Composition(name='Comp', synch_node_variables_with_torch=pnl.RUN, learning_rate=constructor_lr)
+    learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
+                                                  hidden_proj, mech_3, mech_4])
+    comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
+                             num_trials=num_trials,
+                             learning_rate = learn_method_lr)
+    assert True
+    np.testing.assert_allclose(comp_result, expected)
+
+    try:
+        import torch
+
+        # PyTorch VERSION (using nested Comp) ------------------------------------------------------------------
+
+        inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=hidden_1_shape)
+        inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=hidden_2_shape)
+        hidden_proj = pnl.MappingProjection(inner_mech_1,inner_mech_2,learning_rate=hidden_lr,name="INNER PROJECTION")
+        inner_comp = pnl.AutodiffComposition(name='Inner Comp',
+                                         pathways=[inner_mech_1, inner_mech_2],
+                                         synch_node_variables_with_torch=RUN,
+                                         learning_rate = constructor_lr
+                                         )
+        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=in_shape)
+        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=out_shape)
+        input_proj = pnl.MappingProjection(outer_mech_in,inner_mech_1,learning_rate=input_lr,name="OUTER PROJECTION")
+        outer_comp = AutodiffComposition(name='Outer Comp',
+                                         pathways=[outer_mech_in, inner_comp, outer_mech_out],
+                                         synch_node_variables_with_torch=RUN,
+                                         learning_rate = constructor_lr)
+        targets = outer_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
+        pytorch_result = outer_comp.learn(inputs={outer_mech_in:input_stims, targets[0]: target_vals},
+                                  num_trials=num_trials,
+                                  execution_mode=ExecutionMode.PyTorch,
+                                  learning_rate=learn_method_lr)
+        assert True
+        np.testing.assert_allclose(pytorch_result, expected)
+    except:
+        pass
+
+
 class TestRumelhartSemanticNetwork:
     r"""
     Tests construction and training of network with both convergent and divergent pathways
