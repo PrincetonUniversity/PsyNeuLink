@@ -144,6 +144,13 @@ class CompositionRunner():
                 # Get the length of each sequence for each trial for this input
                 lengths = torch.tensor([trial_inp[k].shape[0] for trial_inp in inputs])
 
+                dims = [trial_inp[k].ndim for trial_inp in inputs]
+
+                # For any input that isn't 3D (seq_len, input_port, variable), we need to add the input port dimension.
+                # We know that this messing dimension is the input port because this is a sequence input (a list of dicts)
+                for i, dim in enumerate(dims):
+                    inputs[i][k] = inputs[i][k][:, None, :]
+
                 # If all the lengths are the same, just stack them into one tensor, no need to pad
                 if all(length == lengths[0] for length in lengths):
                     packed_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
