@@ -3900,7 +3900,7 @@ class Mechanism_Base(Mechanism):
                                               category=category,
                                               component=port)
 
-        self.defaults.variable = self.input_values
+        self.defaults.variable = [copy_parameter_value(ip.defaults.value) for ip in self.input_ports]
 
     def _delete_mechanism(mechanism):
         mechanism.remove_ports(mechanism.input_ports)
