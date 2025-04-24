@@ -708,7 +708,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    for k, v in optimizer_param_specs.items()}
 
         if optimizer_params_parsed:
-            self._validate_optimizer_param_specs(optimizer_params_parsed, context)
+            self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
 
         # Get any Projection.learning_rates (in same format as optimizer_params_parsed)
         # projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
@@ -845,26 +845,39 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)
 
-    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context):
+    def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
         """Allows override by subclasses for custom handling of optimizer_param_specs (e.g., pytorchGRUWrappers)"""
 
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
-        validated_specs = optimizer_param_specs.copy()
+        for proj_spec in specs_to_validate.copy():
+            if proj_spec in specs_to_validate:
+                specs_to_validate.remove(proj_spec)
 
-        # Call _validate_optimizer_param_specs() recursively on any nested *sub*classes but the same class
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-        for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
-                                           if (isinstance(node_wrapper, PytorchCompositionWrapper)
-                                               and type(node_wrapper) is not PytorchCompositionWrapper)]:
-            nested_composition_wrapper._validate_optimizer_param_specs(validated_specs, context)
+        if specs_to_validate:
+            # Give subclasses a chance to identify specs by calling _validate_optimizer_param_specs()
+            #   recursively on any nested PytorchCompositionWrappers
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
+                                               if (isinstance(node_wrapper, PytorchCompositionWrapper)
+                                                   # MODIFIED 4/22/25 OLD:
+                                                   # and type(node_wrapper) is not PytorchCompositionWrapper
+                                                   # MODIFIED 4/22/25 END
+                                               )]:
+                specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
+                                                                                               context,
+                                                                                               nested=True)
 
-        for proj_spec in validated_specs.keys():
-            bad_proj_specs = ([proj_name for proj_name in validated_specs
-                              if proj_name not in self._pnl_refs_to_torch_params_map])
-
-        if bad_proj_specs:
-            if len(bad_proj_specs) == 1:
+        if nested:
+            return specs_to_validate
+        # for proj_spec in specs_to_validate.keys():
+        #     # proj_name = proj_spec._proxy_for.name if proj_spec._proxy_for else proj_name
+        #     bad_proj_specs = ([proj_name for proj_name in specs_to_validate
+        #                       if proj_name not in self._pnl_refs_to_torch_params_map])
+        #
+        # if bad_proj_specs:
+        if specs_to_validate:
+            if len(specs_to_validate) == 1:
                 err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the {source} for "
                            f"'{self.composition.name}' is not in that Composition or any nested within it: "
                            f"'{bad_proj_specs[0]}'.")
@@ -873,7 +886,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                            f"'{self.composition.name}' are not in that Composition or any nested within it: "
                            f"'{', '.join(bad_proj_specs)}'.")
             raise AutodiffCompositionError(err_msg)
-
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
@@ -911,6 +923,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             execution_sets[index:index] = exec_sets
 
         return execution_sets, execution_context
+
+    def _get_all_projection_wrappers(self, start_wrapper=None)->dict:
+        """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and nested."""
+        comp_wrapper = start_wrapper or self
+        proj_wrappers = {proj_wrapper: comp_wrapper for proj_wrapper in comp_wrapper.projection_wrappers}
+        for wrapper in [w for w in comp_wrapper.node_wrappers if isinstance(w, PytorchCompositionWrapper)]:
+            proj_wrappers.update(wrapper._get_all_projection_wrappers())
+        return proj_wrappers
 
     __deepcopy__ = get_deepcopy_with_shared()
 

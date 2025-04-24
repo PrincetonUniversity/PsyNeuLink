@@ -306,8 +306,7 @@ from psyneulink.core.components.projections.projection import ProjectionError, p
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, \
-    MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_PORT, VALUE
+    MAPPING_PROJECTION, MATRIX, OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -315,8 +314,15 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
-    'MappingError', 'MappingProjection'
+    'MappingError', 'MappingProjection',
+    # # MODIFIED 4/24/25 NEW:
+    # 'PROXY_FOR'
+    # MODIFIED 4/24/25 END
 ]
+
+# # MODIFIED 4/24/25 NEW:
+# PROXY_FOR = 'proxy_for'
+# MODIFIED 4/24/25 END
 
 parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
@@ -512,6 +518,12 @@ class MappingProjection(PathwayProjection_Base):
                                f"float or int when 'learnable' is False.")
         elif learning_rate is False:
             self.learnable = False
+        # # MODIFIED 4/24/25 NEW:
+        # if PROXY_FOR in kwargs:
+        #     # Identifies Projection into or out of a nested Composition for which this is the proxy
+        #     #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
+        #     self._proxy_for = kwargs.pop(PROXY_FOR)
+        # MODIFIED 4/24/25 END
 
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:

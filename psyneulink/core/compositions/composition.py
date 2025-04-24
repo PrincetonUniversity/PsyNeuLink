@@ -3084,7 +3084,9 @@ from psyneulink.core.components.ports.port import Port, PortError
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+# # MODIFIED 4/24/25 NEW:
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError#, PROXY_FOR
+# # MODIFIED 4/24/25 END
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
     Projection_Base, ProjectionError, DuplicateProjectionError
@@ -4873,12 +4875,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_all_projections(self, start_comp=None)->dict:
         """Return dict of {Projection: Composition} with all Projections in and nested within start_comp"""
-        # projections = ContentAddressableList(component_type=Projection, list=self.projections,
-        #                                      name=f"return of {self.name}._get_all_projections()")
-        # for comp in self._get_nested_compositions():
-        #     projections += comp.projections
-        #     # projections += comp._get_all_projections()
-        # return projections
         comp = start_comp or self
         projections = {proj: comp for proj in comp.projections}
         for nested_comp in comp._get_nested_compositions():
@@ -6431,7 +6427,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   FUNCTION:projection.function,
                                   MATRIX:projection.matrix.base,
                                   LEARNABLE:projection.learnable,
-                                  LEARNING_RATE:projection.learning_rate}
+                                  LEARNING_RATE:projection.learning_rate,
+                                  # # # MODIFIED 4/24/25 NEW:
+                                  # PROXY_FOR:projection
+                                  # MODIFIED 4/24/25 END
+                                  }
                              }
                 return self.add_projection(proj_spec,
                                            sender=projection.sender,

@@ -3160,15 +3160,29 @@ def validate_learning_mechs(comp):
                           REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
 
-baseline_expected = [[5.74485534, 5.74485534, 5.74485534, 5.74485534, 5.74485534]]
-expected = baseline_expected
+# DESIDERATA:
+# CONSTRUCTOR DEFAULTS
+
+baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
+learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
+input_lr_only = [[1.47947025, 1.47947025, 1.47947025, 1.47947025, 1.47947025]]
+hidden_lr_only = [[0.93689875, 0.93689875, 0.93689875, 0.93689875, 0.93689875]]
 test_args = [
-    #  condition     constructor_lr  learn_method_lr    hidden_lr    input_lr        expected
-    (  "baseline",       .001,            .001,           .001,       .001,     baseline_expected),
+    #    condition        constructor_lr  learn_method_lr  input_lr  hidden_lr  opt_param     expected
+    # Can't use all Nones, since default learning_rates are diff. for Composition (.05) and AutodiffComposition (.001)
+    # (  "all_nones",          None,           None,        None,      None
+    (  "baseline",             .01,            None,         None,      None,      False,     baseline),
+    (  "learn_method",         None,            .1,          None,      None,      False,     learn_method),
+    (  "learn_override",       .01,             .1,          None,      None,      False,     learn_method),
+    (  "input_lr_only",        .01,            None,         .1,        None,      False,     input_lr_only),
+    (  "input_lr_only_learn",  .01,            None,         .1,        None,      True,      input_lr_only),
+    (  "hidden_lr_only",       .01,            None,         None,       .1,       False,     hidden_lr_only),
+    (  "hidden_lr_only_learn", .01,            None,         None,       .1,       True,      hidden_lr_only),
 ]
-@pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, hidden_lr, input_lr, expected", test_args,
-                         ids=[f"{x[0]}" for x in test_args])
-def test_projection_specific_learning_rates(condition, constructor_lr, learn_method_lr, hidden_lr, input_lr, expected):
+@pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, input_lr, hidden_lr, opt_param, expected",
+                         test_args, ids=[f"{x[0]}" for x in test_args])
+def test_projection_specific_learning_rates(
+        condition, constructor_lr, learn_method_lr, input_lr, hidden_lr, opt_param, expected):
     in_shape = 4
     hidden_1_shape = 3
     hidden_2_shape = 2
@@ -3191,7 +3205,6 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
     comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
                              num_trials=num_trials,
                              learning_rate = learn_method_lr)
-    assert True
     np.testing.assert_allclose(comp_result, expected)
 
     try:
@@ -3201,27 +3214,37 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
 
         inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=hidden_1_shape)
         inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=hidden_2_shape)
-        hidden_proj = pnl.MappingProjection(inner_mech_1,inner_mech_2,learning_rate=hidden_lr,name="INNER PROJECTION")
-        inner_comp = pnl.AutodiffComposition(name='Inner Comp',
-                                         pathways=[inner_mech_1, inner_mech_2],
-                                         synch_node_variables_with_torch=RUN,
-                                         learning_rate = constructor_lr
-                                         )
+        hidden_proj = pnl.MappingProjection(inner_mech_1, inner_mech_2, name="INNER PROJECTION",
+                                            learning_rate=None if opt_param else hidden_lr)
+        inner_comp = pnl.AutodiffComposition(name='Inner Comp', pathways=[inner_mech_1, hidden_proj, inner_mech_2],)
         outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=in_shape)
         outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=out_shape)
-        input_proj = pnl.MappingProjection(outer_mech_in,inner_mech_1,learning_rate=input_lr,name="OUTER PROJECTION")
-        outer_comp = AutodiffComposition(name='Outer Comp',
-                                         pathways=[outer_mech_in, inner_comp, outer_mech_out],
-                                         synch_node_variables_with_torch=RUN,
-                                         learning_rate = constructor_lr)
-        targets = outer_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
+        input_proj = pnl.MappingProjection(outer_mech_in, inner_mech_1, name="OUTER PROJECTION",
+                                           learning_rate=None if opt_param else input_lr)
+
+        constructor_opt_params = None
+        learning_opt_params = None
+        if opt_param:
+            optimizer_params = {input_proj: input_lr,
+                                hidden_proj: hidden_lr}
+            if "constructor" in condition:
+                constructor_opt_params = optimizer_params
+            if "learn" in condition:
+                learning_opt_params = optimizer_params
+
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                             pathways=[outer_mech_in, input_proj, inner_comp, outer_mech_out],
+                                             optimizer_params = constructor_opt_params,
+                                             learning_rate = constructor_lr)
+        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         pytorch_result = outer_comp.learn(inputs={outer_mech_in:input_stims, targets[0]: target_vals},
-                                  num_trials=num_trials,
-                                  execution_mode=ExecutionMode.PyTorch,
-                                  learning_rate=learn_method_lr)
-        assert True
+                                          num_trials=num_trials,
+                                          optimizer_params = learning_opt_params,
+                                          execution_mode=pnl.ExecutionMode.PyTorch,
+                                          learning_rate=learn_method_lr)
         np.testing.assert_allclose(pytorch_result, expected)
-    except:
+
+    except ModuleNotFoundError:
         pass
 
 
