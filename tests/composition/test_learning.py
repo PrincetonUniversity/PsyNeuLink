@@ -3172,9 +3172,10 @@ hidn_override_lrn = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.491
 default_lr = .01
 
 test_args = [
-    #    condition            constructor_lr  learn_method_lr  input_lr  hidden_lr  opt_param     expected
-    # Have to always explicity specify default_lr in constructorhere,
-    #    since default learning_rates are diff. for Composition (.05) and  AutodiffComposition (.001)
+    # NOTE Have to always explicity specify default_lr in constructor here (when it is expected to have an effect),
+    #      since default learning_rates are diff. for Composition (.05) and  AutodiffComposition (.001)
+
+    #    condition          constructor_lr  learn_method_lr  input_lr  hidden_lr  opt_param     expected
     ("baseline",              default_lr,        None,         None,     None,      False,     baseline),
     # learning_rate specified in learn() method
     ("learn_method",           None,              .1,          None,     None,      False,     learn_method),
