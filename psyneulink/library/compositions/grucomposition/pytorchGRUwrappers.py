@@ -89,7 +89,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context):
+    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context, nested=False):
         """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
@@ -178,7 +178,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           composition=self.composition,
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
-            self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
+            # self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
         self._pnl_refs_to_torch_params_map.update({INPUT_TO_HIDDEN: W_IH_NAME})
         self._pnl_refs_to_torch_params_map.update({HIDDEN_TO_HIDDEN: W_HH_NAME})
 
@@ -200,7 +200,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                               composition=pnl,
                                                               device=device)
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
-                self._pnl_refs_to_torch_params_map.update({pnl_bias_proj.name: torch_bias_spec})
+                # self._pnl_refs_to_torch_params_map.update({pnl_bias_proj.name: torch_bias_spec})
             self._pnl_refs_to_torch_params_map.update({BIAS_INPUT_TO_HIDDEN: B_IH_NAME})
             self._pnl_refs_to_torch_params_map.update({BIAS_HIDDEN_TO_HIDDEN: B_HH_NAME})
 

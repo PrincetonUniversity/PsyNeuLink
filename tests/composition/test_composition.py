@@ -722,7 +722,7 @@ class TestCompositionPathwayArgsAndAdditionMethods:
         assert l.output == G
         assert l.target == c.nodes['TARGET for G']
         assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
-               c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
+               [c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']]
         assert l.learning_objective == c.nodes['Comparator']
         assert all(p in {p1, p2, p3, l} for p in c.pathways)
 
@@ -8010,7 +8010,7 @@ class TestNodeRoles:
         learning_pathway = comp.pathways[0]
         target = learning_pathway.target
         objective= learning_pathway.learning_objective
-        learning_mech = learning_pathway.learning_components[LEARNING_MECHANISMS]
+        learning_mech = learning_pathway.learning_components[LEARNING_MECHANISMS][0]
         learning = {learning_mech}
         learning.add(target)
         learning.add(objective)

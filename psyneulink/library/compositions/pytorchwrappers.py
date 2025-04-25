@@ -757,8 +757,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
                           if p[0] == torch_param_short_to_long_names_map[torch_param_name]), None)
-            assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
-                                       f"even though it was found in its state_dict().")
+            assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in "
+                                       f"{self.name}.named_parameters() even though it was found in its state_dict().")
 
             if not param.requires_grad and param_val is not False:
                 # If param was set to False in previous call to learn() but was not False at construction
@@ -844,7 +844,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
         for proj_spec in specs_to_validate.copy():
-            if proj_spec in specs_to_validate:
+            if proj_spec in self._pnl_refs_to_torch_params_map:
                 specs_to_validate.remove(proj_spec)
 
         if specs_to_validate:
@@ -873,11 +873,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if len(specs_to_validate) == 1:
                 err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the {source} for "
                            f"'{self.composition.name}' is not in that Composition or any nested within it: "
-                           f"'{bad_proj_specs[0]}'.")
+                           f"'{list(specs_to_validate)[0]}'.")
             else:
                 err_msg = (f"The following Projections specified in the 'optimizer_params' arg of the {source} for "
                            f"'{self.composition.name}' are not in that Composition or any nested within it: "
-                           f"'{', '.join(bad_proj_specs)}'.")
+                           f"'{', '.join(list(specs_to_validate))}'.")
             raise AutodiffCompositionError(err_msg)
 
     def _get_execution_sets(self, composition, base_context)->list:

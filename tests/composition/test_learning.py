@@ -801,8 +801,8 @@ class TestReinforcement:
         comp = pnl.Composition(name='comp')
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                       learning_rate=0.05)
-        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS][0]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS][0]
         target_mechanism = learning_pathway.target
         comparator_mechanism = learning_pathway.learning_objective
 
@@ -1643,8 +1643,8 @@ class TestReinforcement:
         comp = pnl.Composition(name='comp')
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                       learning_rate=0.05)
-        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS][0]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS][0]
         target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
         comparator_mechanism = learning_pathway.learning_components[pnl.OBJECTIVE_MECHANISM]
 
