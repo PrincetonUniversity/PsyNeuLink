@@ -8220,13 +8220,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
             self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
-            # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
-            # Wrap up and return
             learning_related_components = {OUTPUT_MECHANISM: output_source,
                                            TARGET_MECHANISM: target,
                                            OBJECTIVE_MECHANISM: comparator,
-                                           LEARNING_MECHANISMS: learning_mechanism,
-                                           LEARNED_PROJECTIONS: learned_projection,
+                                           LEARNING_MECHANISMS: [learning_mechanism],
+                                           LEARNED_PROJECTIONS: [learned_projection],
                                            LEARNING_FUNCTION: learning_function}
             learning_pathway.learning_components = learning_related_components
             # Update graph in case method is called again
