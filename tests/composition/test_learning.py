@@ -3165,19 +3165,32 @@ def validate_learning_mechs(comp):
 
 baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
 learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
-input_lr_only = [[1.47947025, 1.47947025, 1.47947025, 1.47947025, 1.47947025]]
-hidden_lr_only = [[0.93689875, 0.93689875, 0.93689875, 0.93689875, 0.93689875]]
+input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
+hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
+inpt_override_lrn = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
+hidn_override_lrn = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+default_lr = .01
+
 test_args = [
-    #    condition        constructor_lr  learn_method_lr  input_lr  hidden_lr  opt_param     expected
-    # Can't use all Nones, since default learning_rates are diff. for Composition (.05) and AutodiffComposition (.001)
-    # (  "all_nones",          None,           None,        None,      None
-    (  "baseline",             .01,            None,         None,      None,      False,     baseline),
-    (  "learn_method",         None,            .1,          None,      None,      False,     learn_method),
-    (  "learn_override",       .01,             .1,          None,      None,      False,     learn_method),
-    (  "input_lr_only",        .01,            None,         .1,        None,      False,     input_lr_only),
-    (  "input_lr_only_learn",  .01,            None,         .1,        None,      True,      input_lr_only),
-    (  "hidden_lr_only",       .01,            None,         None,       .1,       False,     hidden_lr_only),
-    (  "hidden_lr_only_learn", .01,            None,         None,       .1,       True,      hidden_lr_only),
+    #    condition            constructor_lr  learn_method_lr  input_lr  hidden_lr  opt_param     expected
+    # Have to always explicity specify default_lr in constructorhere,
+    #    since default learning_rates are diff. for Composition (.05) and  AutodiffComposition (.001)
+    ("baseline",              default_lr,        None,         None,     None,      False,     baseline),
+    # learning_rate specified in learn() method
+    ("learn_method",           None,              .1,          None,     None,      False,     learn_method),
+    # learning_rate specified in learn() method overrides specification in constructor
+    ("learn_override",        default_lr,         .1,          None,     None,      False,     learn_method),
+    # learning_rate specified on Projection itself (in constructor)
+    ("input_proj",            default_lr,        None,          .2,      None,      False,     input_proj),
+    ("hidden_proj",           default_lr,        None,         None,      .2,       False,     hidden_proj),
+    # learning_rate for Projections specified in optimizer_param in autodiff learn_method
+    ("input_opt_param_learn",  default_lr,        None,         .2,      None,      True,      input_proj),
+    ("hidden_opt_param_learn", default_lr,        None,        None,      .2,       True,      hidden_proj),
+    # Projection specification overrides learn() method specification
+    ("inpt_override_lrn",      default_lr,         .1,          .2,      None,      False,     inpt_override_lrn),
+    ("hidn_override_lrn",      default_lr,         .1,         None,      .2,       False,     hidn_override_lrn),
+    ("inpt_ovrd_learn_opt",    default_lr,         .1,          .2,      None,      True,      inpt_override_lrn),
+    ("hidn_ovrd_learn_opt",    default_lr,         .1,         None,      .2,       True,      hidn_override_lrn),
 ]
 @pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, input_lr, hidden_lr, opt_param, expected",
                          test_args, ids=[f"{x[0]}" for x in test_args])
@@ -3195,10 +3208,11 @@ def test_projection_specific_learning_rates(
 
     mech_1 = pnl.ProcessingMechanism(name='Mech 1', input_shapes=in_shape)
     mech_2 = pnl.ProcessingMechanism(name='Mech 2', input_shapes=hidden_1_shape)
-    input_proj = pnl.MappingProjection(mech_1, mech_2,learning_rate=input_lr,name="INPUT PROJECTION")
     mech_3 = pnl.ProcessingMechanism(name='Mech 3', input_shapes=hidden_2_shape)
-    hidden_proj = pnl.MappingProjection(mech_2, mech_3,learning_rate=hidden_lr,name="HIDDEN PROJECTION")
     mech_4 = pnl.ProcessingMechanism(name='Mech 4', input_shapes=out_shape)
+    input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=input_lr, name="INPUT PROJECTION")
+    hidden_proj = pnl.MappingProjection(mech_2, mech_3, learning_rate=hidden_lr, name="HIDDEN PROJECTION")
+    # output_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=default_lr,name="OUTPUT PROJECTION")
     comp = pnl.Composition(name='Comp', synch_node_variables_with_torch=pnl.RUN, learning_rate=constructor_lr)
     learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                   hidden_proj, mech_3, mech_4])
@@ -3209,43 +3223,48 @@ def test_projection_specific_learning_rates(
 
     try:
         import torch
-
-        # PyTorch VERSION (using nested Comp) ------------------------------------------------------------------
-
-        inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=hidden_1_shape)
-        inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=hidden_2_shape)
-        hidden_proj = pnl.MappingProjection(inner_mech_1, inner_mech_2, name="INNER PROJECTION",
-                                            learning_rate=None if opt_param else hidden_lr)
-        inner_comp = pnl.AutodiffComposition(name='Inner Comp', pathways=[inner_mech_1, hidden_proj, inner_mech_2],)
-        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=in_shape)
-        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=out_shape)
-        input_proj = pnl.MappingProjection(outer_mech_in, inner_mech_1, name="OUTER PROJECTION",
-                                           learning_rate=None if opt_param else input_lr)
-
-        constructor_opt_params = None
-        learning_opt_params = None
-        if opt_param:
-            optimizer_params = {input_proj: input_lr,
-                                hidden_proj: hidden_lr}
-            if "constructor" in condition:
-                constructor_opt_params = optimizer_params
-            if "learn" in condition:
-                learning_opt_params = optimizer_params
-
-        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
-                                             pathways=[outer_mech_in, input_proj, inner_comp, outer_mech_out],
-                                             optimizer_params = constructor_opt_params,
-                                             learning_rate = constructor_lr)
-        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        pytorch_result = outer_comp.learn(inputs={outer_mech_in:input_stims, targets[0]: target_vals},
-                                          num_trials=num_trials,
-                                          optimizer_params = learning_opt_params,
-                                          execution_mode=pnl.ExecutionMode.PyTorch,
-                                          learning_rate=learn_method_lr)
-        np.testing.assert_allclose(pytorch_result, expected)
-
     except ModuleNotFoundError:
-        pass
+        return
+
+    # PyTorch VERSION (using nested Comp) ------------------------------------------------------------------
+
+    inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=hidden_1_shape)
+    inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=hidden_2_shape)
+    hidden_proj = pnl.MappingProjection(inner_mech_1, inner_mech_2, name="INNER PROJECTION",
+                                        learning_rate=None if opt_param else hidden_lr)
+    inner_comp = pnl.AutodiffComposition(name='Inner Comp', pathways=[inner_mech_1, hidden_proj, inner_mech_2],)
+    outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=in_shape)
+    outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=out_shape)
+    input_proj = pnl.MappingProjection(outer_mech_in, inner_mech_1,
+                                       name="OUTER INPUT PROJECTION",
+                                       learning_rate=None if opt_param else input_lr)
+    # output_proj = pnl.MappingProjection(inner_mech_2, outer_mech_out,
+    #                                     learning_rate=default_lr,
+    #                                     name="OUTER OUTPUT PROJECTION")
+    pathway = [outer_mech_in, input_proj, inner_comp, outer_mech_out]
+
+    constructor_opt_params = None
+    learning_opt_params = None
+    if opt_param:
+        optimizer_params = {input_proj: input_lr,
+                            hidden_proj: hidden_lr}
+        if "constructor" in condition:
+            constructor_opt_params = optimizer_params
+        if "learn" in condition:
+            learning_opt_params = optimizer_params
+
+    outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                         pathways=pathway,
+                                         optimizer_params = constructor_opt_params,
+                                         learning_rate = constructor_lr)
+    targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+    pytorch_result = outer_comp.learn(inputs={outer_mech_in:input_stims, targets[0]: target_vals},
+                                      num_trials=num_trials,
+                                      optimizer_params = learning_opt_params,
+                                      execution_mode=pnl.ExecutionMode.PyTorch,
+                                      learning_rate=learn_method_lr)
+    np.testing.assert_allclose(pytorch_result, expected)
+
 
 
 class TestRumelhartSemanticNetwork:

@@ -711,9 +711,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
 
         # Get any Projection.learning_rates (in same format as optimizer_params_parsed)
-        # projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
-        #                        self.composition._get_all_projections()
-        #                        if proj.learnable and proj.learning_rate not in {True, None}}
         projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
                                [p.projection for p in self.projection_wrappers
                                if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
@@ -763,8 +760,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in {self.name}.named_parameters() "
                                        f"even though it was found in its state_dict().")
 
-
-
             if not param.requires_grad and param_val is not False:
                 # If param was set to False in previous call to learn() but was not False at construction
                 if (source == 'learn() method'
@@ -792,10 +787,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             optimizer_params[param] = projection_lr_specs[pnl_param_name].value
 
 
-
-
-
-        # FIX: from GRU:
+        # FIX: 4/24/25 from GRU, RECONCILE WITH ABOVE
         # for projection in self.learnable_projections:
         #
         #     if self.enable_learning is False:
@@ -833,7 +825,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Learning is enabled for the Projection
                 param.requires_grad = True
                 # If learning_rate = True or None, use composition.learning_rate, else use specified value
-                lr = composition.learning_rate if learning_rate in {True, None} else learning_rate
+                default_learning_rate = self.composition._runtime_learning_rate or composition.learning_rate
+                lr = default_learning_rate if learning_rate in {True, None} else learning_rate
                 # Check if param is already in an existing param_group on the optimizer
                 for param_group in optimizer.param_groups.copy():
                     for i, p in enumerate(param_group['params'].copy()):
