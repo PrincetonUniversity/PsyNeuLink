@@ -294,42 +294,53 @@ baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
 learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
 input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
 hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
-inpt_override_lrn = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
-hidn_override_lrn = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+input_opt_cnstrtr = [[3.2844555, 3.2844555, 3.2844555, 3.2844555, 3.2844555]]
+hidden_opt_cnstrtr = [[11.45824471, 11.45824471, 11.45824471, 11.45824471, 11.45824471]]
+inpt_ovrd_cnstrtr = [[0.12288, 0.12288, 0.12288, 0.12288, 0.12288]]
+hidn_ovrd_cnstrtr = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+inpt_ovrd_learn = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
+hidn_ovrd_learn = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
 default_lr = .01
 
 test_args = [
     # NOTE Have to explicity specify default_lr in constructor here (when it is expected to have an effect),
     #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
-
-    #   condition          constructor_lr  learn_method_lr  input_lr  hidden_lr  inp_param  hid_param   expected
-    ("baseline",              default_lr,        None,         None,     None,      None,     None,      baseline),
+    #   condition          constructor_lr  learn_method_lr  input_lr  hidden_lr  constr_opt  learn_opt   expected
+    ("baseline",               default_lr,        None,         None,    None,      None,     None,      baseline),
     # learning_rate specified in learn() method
-    ("learn_method",           None,              .1,          None,     None,      None,     None,     learn_method),
+    ("lrn_method",              None,              .1,          None,    None,      None,     None,     learn_method),
     # learning_rate specified in learn() method overrides specification in constructor
-    ("learn_override",        default_lr,         .1,          None,     None,      None,     None,     learn_method),
+    ("lrn_override",           default_lr,         .1,          None,    None,      None,     None,     learn_method),
     # learning_rate specified on Projection itself (in constructor)
-    ("input_proj",            default_lr,        None,          .2,      None,      None,     None,      input_proj),
-    ("hidden_proj",           default_lr,        None,         None,      .2,       None,     None,      hidden_proj),
-    # learning_rates specified in optimizer_param learn_method override direct Projection specification
-    ("input_opt_param_learn",  default_lr,        None,         .3,      None,       .2,      None,      input_proj),
-    ("hidden_opt_param_learn", default_lr,        None,        None,      .3,       None,      .2,       hidden_proj),
-    # Projection specification (direct and via optimizer_params) overrides learn() method specification
-    ("inpt_override_lrn",      default_lr,         .1,          .2,      None,      None,     None,  inpt_override_lrn),
-    ("hidn_override_lrn",      default_lr,         .1,         None,      .2,       None,     None,  hidn_override_lrn),
-    ("inpt_ovrd_learn_opt",    default_lr,         .1,          .3,      None,       .2,      None,  inpt_override_lrn),
-    ("hidn_ovrd_learn_opt",    default_lr,         .1,         None,      .3,       None,      .2,   hidn_override_lrn),
-    # FIX 4/25/25:  ADD TESTS FOR OPT_PARAM OVERRIDE OF CONSTRUCTOR SPECIFICATION
+    ("input_proj",             default_lr,        None,         .2,      None,      None,     None,      input_proj),
+    ("hidden_proj",            default_lr,        None,         None,     .2,       None,     None,      hidden_proj),
+    # learning_rates specified in constructor optimizer_param arg override direct Projection specification
+    ("input_opt_constructor",  default_lr,        None,         .2,      None,    'input',    None,  input_opt_cnstrtr),
+    ("hidden_opt_constructor", default_lr,        None,        None,      .2,     'hidden',   None, hidden_opt_cnstrtr),
+    ("input_opt_learn_method", default_lr,        None,         .3,      None,      None,   'input',  input_proj),
+    ("hidden_opt_learn_method",default_lr,        None,        None,      .3,       None,   'hidden', hidden_proj),
+    # Projection specification (direct and via optimizer_params in constructor) overrides constructor lr specification
+    ("inpt_override_lrn",      default_lr,         .1,          .2,      None,      None,     None,  inpt_ovrd_learn),
+    ("hidn_override_lrn",      default_lr,         .1,         None,      .2,       None,     None,  hidn_ovrd_learn),
+    ("inpt_ovrd_constructor",  default_lr,         .1,          .2,      None,    'input',    None,  inpt_ovrd_cnstrtr),
+    ("hidn_ovrd_constructdor", default_lr,         .1,         None,      .2,     'hidden',   None,  hidn_ovrd_cnstrtr),
+    # learning_rates specified in learn() method optimizer_params override direct Projection and constructor specs
+    ("in_ovrd_learn_method3",  default_lr,         .1,          .3,      None,      None,   'input',  inpt_ovrd_learn),
+    ("hid_ovrd_learn_method3", default_lr,         .1,         None,      .3,       None,   'hidden', hidn_ovrd_learn),
+    ("in_ovrd_learn_method5",  default_lr,         .1,          .5,      None,      None,   'input',  inpt_ovrd_learn),
+    ("hid_ovrd_learn_method5", default_lr,         .1,         None,      .5,       None,   'hidden', hidn_ovrd_learn),
+    ("inpt_learn_constructor", default_lr,         .1,          .4,      None,    'input',  'input',  inpt_ovrd_learn),
+    ("hidn_learn_constructor", default_lr,         .1,         None,      .4,     'hidden', 'hidden', hidn_ovrd_learn),
 ]
 # NOTE: this should be kept consistent with test_learning/test_projection_specific_learning_rates()
 #       to additionally test for identicality of effects with Python learning
 @pytest.mark.pytorch
 @pytest.mark.composition
 @pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, "
-                         "input_lr, hidden_lr, input_param, hidden_param, expected",
+                         "input_lr, hidden_lr, constructor_opt_param, learn_opt_param, expected",
                          test_args, ids=[f"{x[0]}" for x in test_args])
 def test_projection_specific_learning_rates(condition, constructor_lr, learn_method_lr, input_lr, hidden_lr,
-                                            input_param, hidden_param, expected):
+                                            constructor_opt_param, learn_opt_param, expected):
     in_shape = 4
     hidden_1_shape = 3
     hidden_2_shape = 2
@@ -348,24 +359,23 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
     input_proj = pnl.MappingProjection(outer_mech_in, inner_mech_1,
                                        name="OUTER INPUT PROJECTION",
                                        learning_rate=input_lr)
-    # output_proj = pnl.MappingProjection(inner_mech_2, outer_mech_out,
-    #                                     learning_rate=default_lr,
-    #                                     name="OUTER OUTPUT PROJECTION")
     pathway = [outer_mech_in, input_proj, inner_comp, outer_mech_out]
 
-    optimizer_params = {input_proj: input_param,
-                        hidden_proj: hidden_param}
+    constructor_optimizer_params = {input_proj: .3 if constructor_opt_param == 'input' else None,
+                                    hidden_proj: .3 if constructor_opt_param == 'hidden' else None}
+    learn_method_optimizer_params = {input_proj: .2 if learn_opt_param == 'input' else None,
+                                     hidden_proj: .2 if learn_opt_param == 'hidden' else None}
 
     outer_comp = pnl.AutodiffComposition(
         name='Outer Comp',
         pathways=pathway,
-        optimizer_params = optimizer_params if "constructor" in condition else None,
+        optimizer_params = constructor_optimizer_params if "constructor" in condition else None,
         learning_rate = constructor_lr)
     targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
     pytorch_result = outer_comp.learn(
         inputs={outer_mech_in:input_stims, targets[0]: target_vals},
         num_trials=num_trials,
-        optimizer_params = optimizer_params if "learn" in condition else None,
+        optimizer_params = learn_method_optimizer_params if "learn" in condition else None,
         execution_mode=pnl.ExecutionMode.PyTorch,
         learning_rate=learn_method_lr)
     np.testing.assert_allclose(pytorch_result, expected)
