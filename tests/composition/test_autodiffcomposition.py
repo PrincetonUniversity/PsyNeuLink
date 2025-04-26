@@ -3550,6 +3550,8 @@ class TestMiscTrainingFunctionality:
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-8)
 
+        torch.set_default_dtype(entry_torch_dtype)
+
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):
         if autodiff_mode is not pnl.ExecutionMode.PyTorch:

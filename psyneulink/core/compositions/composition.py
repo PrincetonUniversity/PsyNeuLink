@@ -3839,7 +3839,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
             disable_learning: bool = False,
-            learning_rate:Optional[Union[float, int]] = None,
+            learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
             controller: ControlMechanism = None,
@@ -8093,7 +8093,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
-            of the `LearningMechanism` in the **pathway** (see `Composition_Learning_Rate` for
+            of the `LearningMechanism`\\(s) in the **pathway** (see `Composition_Learning_Rate` for
             additional details).
 
         error_function : function : default LinearCombination
@@ -8244,7 +8244,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert learning_mech in learning_mechanisms, \
                 (f"PROGRAM ERROR: LearningMechanism that projects to '{learnable_projection.name}' is not in "
                  f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
-            # FIX: USE CONTEXT HERE:
+            # FIX: 4/25/25 USE CONTEXT HERE:
             learning_mech.parameters.learning_rate.set(learnable_projection.learning_rate)
 
         return learning_pathway

@@ -741,8 +741,10 @@ class AutodiffComposition(Composition):
                  optimizer_type='sgd',
                  loss_spec=Loss.MSE,
                  weight_decay=0,
-                 learning_rate=None,
+                 learning_rate:Optional[Union[float,int,bool,dict,]]=None,
+                 # MODIFIED 4/26/25 OLD:
                  optimizer_params:dict=None,
+                 # MODIFIED 4/26/25 END
                  disable_learning=False,
                  force_no_retain_graph=False,
                  refresh_losses=False,
@@ -764,6 +766,12 @@ class AutodiffComposition(Composition):
         #                                    '`pip install torch` or `pip3 install torch`')
         #
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
+
+        # # MODIFIED 4/26/25 NEW:
+        # if isinstance(learning_rate, dict):
+        #     optimizer_params = learning_rate
+        #     learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE)
+        # MODIFIED 4/26/25 END
 
         super(AutodiffComposition, self).__init__(
             name = name,
