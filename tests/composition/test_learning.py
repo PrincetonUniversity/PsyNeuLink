@@ -91,14 +91,14 @@ class TestStructral:
                               REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
     # Expected results for test_projection_specific_learning_rates()
-    # NOTE: these should be the same as used in test_autodiffcomposition/test_projection_specific_learning_rates()
+    # NOTE: these should be kept the same as used in test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
     baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
     learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
     input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
     hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
-    inpt_override_lrn = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
-    hidn_override_lrn = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+    inpt_learn_ovrd = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
+    hid_learn_ovrd = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
     default_lr = .01
 
     test_args = [
@@ -114,12 +114,9 @@ class TestStructral:
         # learning_rate specified on Projection itself (in constructor)
         ("input_proj",             default_lr,        None,          .2,      None,     input_proj),
         ("hidden_proj",            default_lr,        None,         None,      .2,      hidden_proj),
-        # learning_rate for Projections specified in optimizer_param in autodiff learn_method
-        ("input_override_constr",  default_lr,        None,         .2,       None,     input_proj),
-        ("hidden_override_constr", default_lr,        None,        None,       .2,      hidden_proj),
         # Projection specification overrides learn() method specification
-        ("inpt_override_lr",       default_lr,         .1,          .2,       None,     inpt_override_lrn),
-        ("hidn_override_lr",       default_lr,         .1,         None,       .2,      hidn_override_lrn),
+        ("inpt_override_lr",       default_lr,         .1,          .2,       None,     inpt_learn_ovrd),
+        ("hidn_override_lr",       default_lr,         .1,         None,       .2,      hid_learn_ovrd),
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
