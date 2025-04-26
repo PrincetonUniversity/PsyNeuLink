@@ -115,13 +115,11 @@ class TestStructral:
         ("input_proj",             default_lr,        None,          .2,      None,     input_proj),
         ("hidden_proj",            default_lr,        None,         None,      .2,      hidden_proj),
         # learning_rate for Projections specified in optimizer_param in autodiff learn_method
-        ("input_opt_param_learn",  default_lr,        None,         .2,       None,     input_proj),
-        ("hidden_opt_param_learn", default_lr,        None,        None,       .2,      hidden_proj),
+        ("input_override_constr",  default_lr,        None,         .2,       None,     input_proj),
+        ("hidden_override_constr", default_lr,        None,        None,       .2,      hidden_proj),
         # Projection specification overrides learn() method specification
-        ("inpt_override_lrn",      default_lr,         .1,          .2,       None,     inpt_override_lrn),
-        ("hidn_override_lrn",      default_lr,         .1,         None,       .2,      hidn_override_lrn),
-        ("inpt_ovrd_learn_opt",    default_lr,         .1,          .2,       None,     inpt_override_lrn),
-        ("hidn_ovrd_learn_opt",    default_lr,         .1,         None,       .2,      hidn_override_lrn),
+        ("inpt_override_lr",       default_lr,         .1,          .2,       None,     inpt_override_lrn),
+        ("hidn_override_lr",       default_lr,         .1,         None,       .2,      hidn_override_lrn),
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.

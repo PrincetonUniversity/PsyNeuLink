@@ -480,14 +480,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
             # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
-            # # MODIFIED 4/20/25 OLD:
-            # self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.name})
-            # MODIFIED 4/20/25 NEW:
             # Add entries for both pnl_proj (user-specifie one) and projection (to input_CIM / from output_CIM)
             #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimization_params())
             self._pnl_refs_to_torch_params_map.update({proj_name: pytorch_proj_wrapper.name,
                                                        projection.name: pytorch_proj_wrapper.name})
-            # MODIFIED 4/20/25 END
 
         return proj_wrappers_pairs
 
@@ -851,11 +847,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   recursively on any nested PytorchCompositionWrappers
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
-                                               if (isinstance(node_wrapper, PytorchCompositionWrapper)
-                                                   # MODIFIED 4/22/25 OLD:
-                                                   # and type(node_wrapper) is not PytorchCompositionWrapper
-                                                   # MODIFIED 4/22/25 END
-                                               )]:
+                                               if (isinstance(node_wrapper, PytorchCompositionWrapper))]:
                 specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
                                                                                                context,
                                                                                                nested=True)

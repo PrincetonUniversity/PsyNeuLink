@@ -387,12 +387,13 @@ from psyneulink.core.compositions.composition import Composition, NodeRole, Comp
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context, CONTEXT
-from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, EXECUTION_MODE,
-                                              LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-                                              Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
-                                              OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
-                                              RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL)
-from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array
+from psyneulink.core.globals.keywords import (AUTODIFF_COMPOSITION, DEFAULT_LEARNING_RATE, EXECUTION_MODE, 
+                                              LEARNING_RATE, LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES,
+                                              LEARNING_SCALE_VALUES, Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, 
+                                              NODE_VALUES, NODE_VARIABLES, OPTIMIZATION_STEP, RESULTS, RUN,
+                                              SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS, RETAIN_IN_PNL_OPTIONS, TARGETS,
+                                              TRAINED_OUTPUTS, TRIAL)
+from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array, deprecation_warning
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -403,8 +404,10 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition'
+    'AutodiffComposition', 'OPTIMIZER_PARAMS'
 ]
+
+OPTIMIZER_PARAMS = 'optimizer_params'
 
 def _get_torch_trained_outputs(owning_component=None, context=None):
     if not context.execution_id:
@@ -628,6 +631,10 @@ class AutodiffComposition(Composition):
         if this is nota specified in the call to `learn <AutodiffComposition.learn>`
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
+    torch_parameters : List[Tuple[str, torch.nn.parameter]]
+        list of PyTorch named_parameters() for `pytorch_representation <AutodiffComposition.pytorch_representation>`
+        of AutodiffComposition.
+
     torch_trained_outputs : List[ndarray]
         stores the outputs (converted to np arrays) of the Pytorch model trained during learning, at the frequency
         specified by `retain_torch_trained_outputs <AutodiffComposition.retain_torch_trained_outputs>` if it is set
@@ -742,9 +749,6 @@ class AutodiffComposition(Composition):
                  loss_spec=Loss.MSE,
                  weight_decay=0,
                  learning_rate:Optional[Union[float,int,bool,dict,]]=None,
-                 # MODIFIED 4/26/25 OLD:
-                 optimizer_params:dict=None,
-                 # MODIFIED 4/26/25 END
                  disable_learning=False,
                  force_no_retain_graph=False,
                  refresh_losses=False,
@@ -761,17 +765,23 @@ class AutodiffComposition(Composition):
                  name="autodiff_composition",
                  **kwargs):
 
-        # if not torch_available:
-        #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-        #                                    '`pip install torch` or `pip3 install torch`')
-        #
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
 
-        # # MODIFIED 4/26/25 NEW:
-        # if isinstance(learning_rate, dict):
-        #     optimizer_params = learning_rate
-        #     learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE)
-        # MODIFIED 4/26/25 END
+        if OPTIMIZER_PARAMS in kwargs:
+            # Deal with deprecated arg
+            opt_params_arg = deprecation_warning(self, kwargs,
+                                                 deprecated_args={OPTIMIZER_PARAMS:LEARNING_RATE},
+                                                 additional_msg=" Other torch.nn.optimizer parameters are not "
+                                                                "currently supported, but will be in a future version.")
+            if learning_rate is not None:
+                opt_params_arg[DEFAULT_LEARNING_RATE] = learning_rate
+            learning_rate = opt_params_arg.pop(LEARNING_RATE)
+
+        if isinstance(learning_rate, dict):
+            self._optimizer_constructor_params = learning_rate
+            learning_rate = self._optimizer_constructor_params.pop(DEFAULT_LEARNING_RATE, None)
+        else:
+            self._optimizer_constructor_params = {}
 
         super(AutodiffComposition, self).__init__(
             name = name,
@@ -796,7 +806,6 @@ class AutodiffComposition(Composition):
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
-        self._optimizer_constructor_params = optimizer_params or {}
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
@@ -852,7 +861,6 @@ class AutodiffComposition(Composition):
         self.execution_mode_warned_about_default = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
-        # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
         # ShowGraph
         self.assign_ShowGraph(show_graph_attributes)
@@ -1028,7 +1036,6 @@ class AutodiffComposition(Composition):
                         if efferent_proj in current_comp.projections:
                             output_CIM_output_port = output_CIM.port_map[efferent_proj.sender][1]
                         elif efferent_proj in current_comp._pytorch_projections:
-                            # FIX: 3/8/25 - THERE MUST BE AN EASIER WAY TO GET THIS MORE DIRECTLY
                             output_CIM_output_port = \
                                 (output_CIM.port_map)[efferent_proj.receiver.path_afferents[0].sender][1]
 
@@ -1153,39 +1160,6 @@ class AutodiffComposition(Composition):
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
         self.parameters.optimizer._set(optimizer, context, skip_history=True, skip_log=True)
         pytorch_rep.optimizer = optimizer
-
-    def _get_loss(self, loss_spec):
-        if not isinstance(self.loss_spec, (str, Loss)):
-            return self.loss_spec
-        elif loss_spec == Loss.MSE:
-            return nn.MSELoss(reduction='mean')
-        elif loss_spec == Loss.SSE:
-            return nn.MSELoss(reduction='sum')
-        elif loss_spec == Loss.CROSS_ENTROPY:
-            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
-                return nn.CrossEntropyLoss()
-            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
-            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
-            # and where target is a 1d vector of type long specifying the index to the target category. This
-            # formatting is different from most other loss functions available to autodiff compositions,
-            # and therefore requires a wrapper function to properly package inputs.
-            return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
-        elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
-            return nn.BCELoss()
-        elif loss_spec == Loss.L1:
-            return nn.L1Loss(reduction='sum')
-        elif loss_spec == Loss.NLL:
-            return nn.NLLLoss(reduction='sum')
-        elif loss_spec == Loss.POISSON_NLL:
-            return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_spec == Loss.KL_DIV:
-            return nn.KLDivLoss(reduction='sum')
-        else:
-            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. 'loss_function' argument must be a "
-                                           f"Loss enum or function. Currently, the recognized loss types are: "
-                                           f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
-                                           f"likelihood), POISSONNLL (Poisson negative log likelihood, "
-                                           f"and KL_DIV (KL divergence.")
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
         """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
@@ -1360,6 +1334,39 @@ class AutodiffComposition(Composition):
         else:
             return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
 
+    def _get_loss(self, loss_spec):
+        if not isinstance(self.loss_spec, (str, Loss)):
+            return self.loss_spec
+        elif loss_spec == Loss.MSE:
+            return nn.MSELoss(reduction='mean')
+        elif loss_spec == Loss.SSE:
+            return nn.MSELoss(reduction='sum')
+        elif loss_spec == Loss.CROSS_ENTROPY:
+            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
+                return nn.CrossEntropyLoss()
+            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
+            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
+            # and where target is a 1d vector of type long specifying the index to the target category. This
+            # formatting is different from most other loss functions available to autodiff compositions,
+            # and therefore requires a wrapper function to properly package inputs.
+            return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
+        elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
+            return nn.BCELoss()
+        elif loss_spec == Loss.L1:
+            return nn.L1Loss(reduction='sum')
+        elif loss_spec == Loss.NLL:
+            return nn.NLLLoss(reduction='sum')
+        elif loss_spec == Loss.POISSON_NLL:
+            return nn.PoissonNLLLoss(reduction='sum')
+        elif loss_spec == Loss.KL_DIV:
+            return nn.KLDivLoss(reduction='sum')
+        else:
+            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. 'loss_function' argument must be a "
+                                           f"Loss enum or function. Currently, the recognized loss types are: "
+                                           f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
+                                           f"likelihood), POISSONNLL (Poisson negative log likelihood, "
+                                           f"and KL_DIV (KL divergence.")
+
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
@@ -1513,6 +1520,27 @@ class AutodiffComposition(Composition):
 
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         context.execution_phase = execution_phase_at_entry
+
+        # Deal with deprecated arg (can't use deprecation_warning() since that is for constructors)
+        if OPTIMIZER_PARAMS in kwargs:
+            default_learning_rate = kwargs.pop(LEARNING_RATE, None)
+            learning_rate = deprecation_warning(self, kwargs,
+                                                deprecated_args={OPTIMIZER_PARAMS:LEARNING_RATE},
+                                                method="learn() method",
+                                                additional_msg=" Other torch.nn.optimizer parameters are not "
+                                                               "currently supported, but will be in a future version.")
+            kwargs.update(learning_rate)
+            # Move learning_rate spec into optimizer_params dict
+            if default_learning_rate is not None:
+                if kwargs[LEARNING_RATE]:
+                    kwargs[LEARNING_RATE].update({DEFAULT_LEARNING_RATE: default_learning_rate})
+                else:
+                    kwargs[LEARNING_RATE] = {DEFAULT_LEARNING_RATE: default_learning_rate}
+
+        if LEARNING_RATE in kwargs and isinstance(kwargs[LEARNING_RATE], dict):
+            kwargs[OPTIMIZER_PARAMS] = kwargs[LEARNING_RATE]
+            kwargs[LEARNING_RATE] = kwargs[OPTIMIZER_PARAMS].pop(DEFAULT_LEARNING_RATE, None)
+        assert True
 
         any_nested_comps = [node for node in self.nodes if isinstance(node, Composition)]
         if any_nested_comps:
@@ -2226,3 +2254,14 @@ class AutodiffComposition(Composition):
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
         return self._show_graph.show_graph(*args, **kwargs)
+
+    @property
+    def torch_parameters(self):
+        """Return Pytorch Parameters for pytorch_representation of AutodiffComposition"""
+        try:
+            if self.pytorch_representation is None:
+                self._build_pytorch_representation()
+            return list(self.pytorch_representation.named_parameters())
+        except:
+            raise AutodiffCompositionError(
+                f"PROGRAM ERROR:  problem accessing torch.named_parameters() for '{self.name}'.")
