@@ -698,7 +698,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
         composition = self.composition
 
-
         # Use current optimizer specifications if passed, else ones that were specified at construction, else defaults
         optimizer_param_specs = optimizer_param_specs or self.composition._optimizer_constructor_params
 

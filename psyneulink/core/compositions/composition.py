@@ -1118,21 +1118,27 @@ COMMENT
    +-------------------------------------------------------------------------------------------------------------------------------------+
    |                          **Learning Rate Precedence Hierarchy**                                                                     |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |  **Highest**:  |  Assignment to MappingProjection `learning_rate.MappingProjection.learning_rate>` Parameter (after construction)   |
+   |  **Highest**:  |  Call to `Composition.learn` method (execution) specifying Projection-specific learning_rate(s)                    |
+   |                |    ``my_composition.learn(learning_rate={my_projection:val}`` (applies only during that execution)                 |
+   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                |  Call to `Composition.learn` method (execution) specifying default learning_rate for Composition                   |
+   |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE:val}`` (applies only during that execution)  |
+   |                +--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment to MappingProjection `learning_rate.MappingProjection.learning_rate>` Parameter (after construction)   |
    |                |    ``my_projecition.parameters.learning_rate.set(val)``                                                            |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
-   |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
-   |                |  Call to `Composition.learn` method (execution)                                                                    |
-   |                |    ``my_composition.learn(learning_rate=val)``                                                                     |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                +--------------------------------------------------------------------------------------------------------------------+
    |                |  Assignment in `MappingProjection` constructor                                                                     |
    |                |    ``my_learning_mechanimsm=MappingProjection(learning_rate=val)``                                                 |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                +--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment to specific Projection(s) in Composition constructor                                                   |
+   |                |    ``my_composition=Composition(learning_rate={my_projection_val})``                                               |
+   |                +--------------------------------------------------------------------------------------------------------------------+
+   |                |  Assignment to LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)  |
+   |                |    ``my_learning_mechanism.parameters.learning_rate.set(val)``                                                     |
+   |                +--------------------------------------------------------------------------------------------------------------------+
    |                |  Assignment in `LearningMechanism` constructor                                                                     |
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                 |
-   +----------------+--------------------------------------------------------------------------------------------------------------------+
+   |                +--------------------------------------------------------------------------------------------------------------------+
    |                |  Assignment in `learning pathway <Composition_Learning_Pathway>` constructor                                       |
    |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                               |
    +----------------+--------------------------------------------------------------------------------------------------------------------+
