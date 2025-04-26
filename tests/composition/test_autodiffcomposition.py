@@ -331,7 +331,7 @@ test_args = [
     ("inpt_ovrd_constructor",  default_lr,         .1,          .2,      None,    'input',    None,   inp_cnstr_ovrd),
     ("hid_ovrd_constructor",   default_lr,         .1,         None,      .2,     'hidden',   None,   hid_cnstr_ovrd),
     # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
-    #                                           (use two different Projection lr's to be sure they don't matter)
+    #                                (use two different Projection lr's to be sure they don't matter)
     ("in_ovrd_learn_method3",  default_lr,         .1,          .3,      None,      None,   'input',  inpt_learn_ovrd),
     ("hid_ovrd_learn_method3", default_lr,         .1,         None,      .3,       None,   'hidden', hid_learn_ovrd),
     ("in_ovrd_learn_method5",  default_lr,         .1,          .5,      None,      None,   'input',  inpt_learn_ovrd),
