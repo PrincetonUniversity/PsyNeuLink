@@ -1103,12 +1103,15 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
       `learn <Composition.learn>` method, which overrides all other specifications, but applies only for that execution.
 
   COMMENT:
-  # FIX 4/26/25:  REWORK FOR NESTED COMPOSITION
   .. note::
      If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
      are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
      **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
   COMMENT
+
+  # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
+  # BREADCRUMB: 4/27/25:  ADD NOTE ABOUT ASSIGINING Projection.learning_rate AFTER Composition construction
+
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
@@ -1126,11 +1129,11 @@ precedence in determining the learning_rate for a Projection used at execution.
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
    |                +---------------------------------------------------------------------------------------------------------------------+
-   |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (after construction)               |
-   |                |    ``my_projection.learning_rate=val``                                                                              |
-   |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  MappingProjection in Composition constructor dict                                                                  |
    |                |    ``my_composition=Composition(learning_rate={my_projection: val})``                                               |
+   |                +---------------------------------------------------------------------------------------------------------------------+
+   |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (before Composition construction)  |
+   |                |    ``my_projection.learning_rate=val``                                                                              |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `MappingProjection` constructor                                                                                    |
    |                |    ``my_learning_mechanimsm=MappingProjection(learning_rate=val)``                                                  |

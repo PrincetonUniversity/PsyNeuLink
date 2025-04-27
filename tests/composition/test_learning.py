@@ -133,10 +133,6 @@ class TestStructral:
         # BREADCRUMB:
         #  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
         #  TEST FOR DICT ENTRY ERRORS
-        #  TEST FOR PRECEDENCE (and modify table in docstring if necessary) OF:
-        #     > Composition(learning_rate={my_projection=lr}) (i.e., in Composition constructor)
-        #       vs.
-        #     > my_projection.learning_rate = lr (post Composition and MappingProjection construction)
         #  TEST precedence of pathway lr specification
 
 
