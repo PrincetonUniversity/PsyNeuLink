@@ -139,17 +139,29 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 *Learning Rates*
 ~~~~~~~~~~~~~~~~
 
-The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used
-both to specify a `learning_rate <Projection.learning_rate>` for the entire AutodiffComposition and/or individual
-Projections (see `Composition_Learning_rate` for details of specification). The latter are passed to the corresponding
-parameters of the AutodiffComposition's  `pytorch_representation <AutodiffComposition.pytorch_representation>` when it
-is executed. If learning_rates are specified in the constructor for the AutodiffComposition, they are used for all
-executions of its learn() method; if they are specified in the call to the `learn() <AutodiffComposition.learn>`
-itself, they are used only for that execution. A warning is issued if a learning_rate is specified for a Projection
-with a `learnable <MappingProjection.learnable>` attribute that is set to ``False``; an error is generated if a
-learning_rate is set for a Projection associated with a PyTorch Parameter that is not learnable. See
-`Composition_Learning_rate` for additional information about specifying learning_rates, including how the
-`learning_rate <Projection.learning_rate>` is determined for Projections that are not expliclity specified.
+The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used to
+specify both a `learning_rate <AutodiffComposition.learning_rate>` for the entire AutodiffComposition and/or individual
+MappingProjections within it (see `Composition_Learning_rate` for details of specification). Learning_rates specified
+for individual MappingProjections are passed to the corresponding parameters of the AutodiffComposition's
+`pytorch_representation <AutodiffComposition.pytorch_representation>` when it is executed. Specifications made in the
+constructor for the AutodiffComposition are used for all executions of its `learn <AutodiffComposition.learn>`
+method. Specifications made in the call to the `learn() <AutodiffComposition.learn>` method itself are used only for
+that execution. A warning is issued if a learning_rate is specified for a Projection with a `learnable
+<MappingProjection.learnable>` attribute set to ``False``, and an error is generated if the Projection is associated
+with a PyTorch Parameter that is not learnable. See `Composition_Learning_rate` for additional information about
+specifying learning_rates, including how the `learning_rate <MappingProjection.learning_rate>` is determined for
+MappingProjections that are not expliclity specified.
+
+.. note::
+   An outermost AutodiffComposition's learning rate is applied to any `nested AutodiffCompositions
+   <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
+   <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
+
+.. hint::
+   To disable learning for a particular `MappingProjection` in an AutodiffComposition, specify either the
+   **learnable** parameter of its constructor or its learning_rate specification in the **learning_rate**
+   argument of the AutodiffComposition's constructor to False; this applies to MappingProjections at any level of
+   `nesting <AutodiffComposition_Nesting>`.
 
 COMMENT:
 .. _AutodiffComposition_Optimizer:
@@ -488,14 +500,16 @@ class AutodiffComposition(Composition):
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
-    learning_rate : float : default 0.001
-        specifies the learning rate passed to the optimizer if none is specified in the `learn
-        <AutdodiffComposition.learn>` method of the AutodiffComposition;
-        see `learning_rate <AutodiffComposition.learning_rate>` for additional details.
+    learning_rate : float, int, bool or dict : default 0.001
+        specifies the learning rate(s) passed to the optimizer; overridden by any specified in the `learn
+        <AutdodiffComposition.learn>` method of the AutodiffComposition; see `learning_rate
+        <AutodiffComposition.learning_rate>` and `AutodiffComposition_Learning_Rate` for additional details.
 
+    COMMENT:
     optimizer_params : Dict[str or Projection: int or float] : default None
         specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
         parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
+    COMMENT
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -574,19 +588,8 @@ class AutodiffComposition(Composition):
     learning_rate : float or bool
         determines the default learning_rate passed the `optimizer <AutodiffComposition.optimizer>`, that is applied
         to all `Projections <Projection>` in the AutodiffComposition that are `learnable <MappingProjection.learnable>`,
-        and for which individual rates have not been specified (for how to do the latter,
-        see `AutodiffComposition_Learning_Rates`).
-
-        .. note::
-           An outermost Composition's learning rate is applied to any `nested Compositions
-           <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
-           <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
-
-        .. hint::
-           To disable learning for a particular `MappingProjection` in an AutodiffComposition, specify either the
-           **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
-           argument of the AutodiffComposition's constructor to False  (see `AutodiffComposition_Learning_Rates`);
-           this applies to MappingProjections at any level of `nesting <AutodiffComposition_Nesting>`
+        and for which individual rates have not been specified (see `AutodiffComposition_Learning_Rates` for
+        additional details).
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`

@@ -11751,6 +11751,12 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
+        if not isinstance(self, AutodiffComposition) and isinstance(learning_rate, dict):
+            raise CompositionError(f"The 'learning_rate' arg in a call to learn for '{self.name}' is a dict, which "
+                                   f"which is not currently supported for a Composition; use an AutodiffComposition, "
+                                   f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
+                                   f"argument the constructor(s) for the corresponding MappingProjection(s).")
+
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
