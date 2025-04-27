@@ -20,6 +20,9 @@ Contents
           - `AutodiffComposition_Bias_Parameters`
           - `AutodiffComposition_Nesting`
           - `AutodiffComposition_Learning_Rates`
+          COMMENT:
+          - `AutodiffComposition_Optimizer`
+          COMMENT
           - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
@@ -133,27 +136,35 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 .. _AutodiffComposition_Learning_Rates:
 
-*Learning Rates and Optimizer Params*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# FIX 4/17/25 ADD REFERENCE TO Composition_Learning_Rate HERE, WITH MENTION OF LIST OF VALUES AND PRECEDENCE TABLE
+*Learning Rates*
+~~~~~~~~~~~~~~~~
 
-The **optimizer_params** argument of the constructor or `learn <AutodiffComposition.learn>` method can be used
-to specify parameters for the `optimizer <AutodiffComposition.optimizer>` that is used for learning by the
-AutodiffComposition. Currently this is restricted to overriding the `learning_rate <AutodiffComposition.learning_rate>`
-Parameter of the AutodiffComposition (used as the default by the `optimizer <AutodiffComposition.optimizer>`), to
-assign individual learning_rates to specific `Projection`\\s (and the corresponding PyTorch weight parameters. This is
-done by specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
-in the AutodiffComposition, and the associated value specifies its `learning_rate <MappingProjection.learning_rate>`.
-This can be specified in: i) the constructor for the AutodiffComposition, in which case it is used for all executions
-of its learn() method for which a learning_rate has not been specified; or ii) in the call to the `learn()
-<AutodiffComposition.learn>` itself, in which case it is used only for that execution. A warning is issued if a
-learning_rate is specified for a Projection in **optimizer_params** with a `learnable <MappingProjection.learnable>`
-attribute that is set to ``False``; an error is generated if a learning_rate is set for a Projection associated with a
-PyTorch Parameter that is not learnable. For Projections that are *not* sepcified in **optimizer_params**, they use,
-in order of precedence: i) the **learning_rate** specified in the AutodiffComposition's `learn
-<AutodiffComposition.learn>` method; ii) the **learning_rate** argument of its constructor; or iii) the default
-`learning_rate <AutodiffComposition.learning_rate>` value for AutodiffComposition.
+The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used
+both to specify a `learning_rate <Projection.learning_rate>` for the entire AutodiffComposition and/or individual
+Projections (see `Composition_Learning_rate` for details of specification). The latter are passed to the corresponding
+parameters of the AutodiffComposition's  `pytorch_representation <AutodiffComposition.pytorch_representation>` when it
+is executed. If learning_rates are specified in the constructor for the AutodiffComposition, they are used for all
+executions of its learn() method; if they are specified in the call to the `learn() <AutodiffComposition.learn>`
+itself, they are used only for that execution. A warning is issued if a learning_rate is specified for a Projection
+with a `learnable <MappingProjection.learnable>` attribute that is set to ``False``; an error is generated if a
+learning_rate is set for a Projection associated with a PyTorch Parameter that is not learnable. See
+`Composition_Learning_rate` for additional information about specifying learning_rates, including how the
+`learning_rate <Projection.learning_rate>` is determined for Projections that are not expliclity specified.
 
+COMMENT:
+.. _AutodiffComposition_Optimizer:
+
+*Optimizer*
+~~~~~~~~~~~
+
+In addition to `learning_rate <Projection.learning_rate>`, other parameters can be customized by constructing
+a `torch.nn.optimizer <https://pytorch.org/docs/main/optim.html>`_ and assigining it to the **optimizer** argument
+of either the AutodiffComposition's constructor or `learn <AutodiffComposition.learn>` method.  This requires creating
+and adding ``param_groups`` for the `torch.nn.Parameters
+<https://pytorch.org/docs/stable/generated/torch.nn.parameter.Parameter.html>`_ corresponding to the Projections to be
+specified, which are listed in the AutodiffComposition's `torch_parameters <AutodiffComposition.torch_parameters>`
+attribute.
+COMMENT
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 

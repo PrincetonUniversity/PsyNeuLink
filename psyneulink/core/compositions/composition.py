@@ -1071,6 +1071,8 @@ Learning Rate
 COMMENT:
 Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
+
+COMMENT:
 The rate at which learning occurs in a `learning pathway <Composition_Learning_Pathway>` is determined by the
 `learning_rate <LearningMechanism_Learning_Rate>` Parameter of the `LearningMechanism(s) <LearningMechanism>` in that
 Pathway.  If it is not specified, then the `default value <Parameter_Defaults>` for the LearningMechanism's `function
@@ -1085,16 +1087,12 @@ in which case it applies to all learning pathways during that (and only that) ex
 specifications made at construction. It can also be specified for one or more individual LearningMechanisms (which
 applies to the `matrix <MappingProjection.matrix>` parameter ("connection weights") of the `MappingProjection` for
 which each LearningMechanism is responsible), by assigning a value directly to the LearningMechanism's `learning_rate
-<LearningMechanism.learning_rate>` Parameter.  This supersedes any other specifications of learning_rate, including
-in the Composition's learn() method, and applies to all subsequent executions of learning, allowing different
-LearningMechanisms (and their corresponding MappingProjections) within a Composition to be assigned different
+<LearningMechanism.learning_rate>` Parameter. Finally, it can be specified for the individual Projections, the
+`matrix <MappingProjection.matrix>` Parameters of which are being learned. The latter supersedes any other
+specifications of learning_rate, including in the Composition's learn() method.  The Learnin
+, and applies to all subsequent
+executions of learning, allowing different MappingProjections within a Composition to be assigned different
 learning_rates.  The table below shows the precedence for the specificadtion of learning_rates.
-COMMENT:
-Finally, the `learning_rate <LearningSignal.learning_rate>` for
-a LearningMechanism interacts with any specifications of the `learning_rate <LearningSignal.learning_rate>` for its
-`learning_projections <LearningMechanism.learning_projections>` (see `LearningProjection_Function`
-for additional details).
-COMMENT
 
 
   **Values** for specifying an individual parameter's learning_rate in the **optimizer_params** dict
@@ -1110,8 +1108,50 @@ COMMENT
      If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
      are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
      **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
+COMMENT
+
+The rate at which learning occurs for a `learnable <MappingProjection.learnable>` `MappingProjection` is determined
+by its `learning_rate <MappingProjection.learning_rate>` Parameter, or the `learning_rate <Composition.learning_rate>`
+Parameter of the Composition to which it belongs. `LearningMechanisms <LearningMechanism>` and their `LearningSignals
+<LearningSignal>` also have learning_rate Parameters, but these apply only to `Python execution
+<Composition_Learning_Configurations>`, and it is generally simpler to assign learning_rates directly to a
+MappingProjection or to the Composition. This can be done using the **learning_rate** argument of the constructor for
+a MappingProjection, the Composition to which it belongs, and/or that Composition's `learn <Composition.learn>`
+method. The **learning_rate** argument can be sepcified in any of the following ways:
+
+
+.. _Composition_Learning_Rate_Specification:
+
+    * *int or float*: the value is used as the learning_rate.
+
+    * *True or None*: if used to specify the learning_rate for a MappingProjection, it is assigned the value of the
+       Composition's `learning_rate <Composition.learning_rate>`;  if used to specify the learning_rate for a
+       Composition, the Composition's default learning_rate is used.
+
+    * *False*: causes the MappingProjection or Composition to not be learnable (i.e., sets the `learnable
+      <MappingProjection.learnable>` attribute of the corresponding MappingProjection(s) to False).
+
+    * *dict*: {Projection or Projection name: learning_rate}; this can be used in a Composition's constructor and/or
+      its `learn <Composition.learn>` method to specify the learning_rate for individual Projections. The key for
+      each entry must be a `Projection` or its `name <Projection.name>`, and the value can be any of those listed
+      above. An entry with the key *DEFAULT_LEARNING_RATE* can be used to specify the default learning rate for the
+      Composition. If this is used in the constructor for a Composition, its values override any specifications for the
+      corresponding MappingProjections (i.e., in their constructors), and apply to all executions of the Composition's
+      `learn <Composition.learn>` method; a dict can also be used to specify the **learning_rate** argument of the
+      `learn <Composition.learn>` method, which overrides all other specifications, but applies only for that execution.
+
+  COMMENT:
+  # FIX 4/26/25:  REWORK FOR NESTED COMPOSITION
+  .. note::
+     If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
+     are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
+     **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
+  COMMENT
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
+
+As noted above, learning_rates can be specified in several places.  Below is a complete listing indicating their
+precedence in determining the actual learning_rate used at execution.
 
 .. table::
 
