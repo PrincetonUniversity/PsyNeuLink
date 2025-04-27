@@ -106,29 +106,40 @@ class TestStructral:
         # NOTE Have to explicity specify default_lr in constructor here (when it is expected to have an effect),
         #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
 
-        #    condition       composition_lr    learn_lr   proj_constr_lr  expected
-        ("baseline",           default_lr,       None,        None,       baseline),
+        #    condition       composition_lr    learn_lr   proj_constr_lr   post_constr   expected
+        ("baseline",           default_lr,       None,        None,           False,     baseline),
         # learn()
-        ("learn_method",        None,             .1,         None,       learn_method),
+        ("learn_method",        None,             .1,         None,           False,     learn_method),
         # learn() lr overrides constructor lr
-        ("learn_override",     default_lr,        .1,         None,       learn_method),
+        ("learn_override",     default_lr,        .1,         None,           False,     learn_method),
         # Projection constructor lr
-        ("input_proj",         default_lr,       None,      "input",      input_proj),
-        ("hidden_proj",        default_lr,       None,      "hidden",     hidden_proj),
+        ("input_proj",         default_lr,       None,      "input",          False,     input_proj),
+        ("hidden_proj",        default_lr,       None,      "hidden",         False,     hidden_proj),
         # Projection lr overrides learn()
-        ("inpt_override_lr",   default_lr,        .1,       "input",      inpt_learn_ovrd),
-        ("hidn_override_lr",   default_lr,        .1,       "hidden",     hid_learn_ovrd),
+        ("inpt_override_lr",   default_lr,        .1,       "input",          False,     inpt_learn_ovrd),
+        ("hidn_override_lr",   default_lr,        .1,       "hidden",         False,     hid_learn_ovrd),
+        ("inpt_override_lr",   default_lr,        .1,       "input",          True,      inpt_learn_ovrd),
+        ("hidn_override_lr",   default_lr,        .1,       "hidden",         True,      hid_learn_ovrd),
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
     @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
-    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, expected",
+    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
     def test_projection_specific_learning_rates(self,
                                                 condition, comp_lr, learn_method_lr,
-                                                proj_constr, comp_constuctor_lr_dict, expected):
+                                                proj_constr, comp_constuctor_lr_dict, post_constr, expected):
 
-        # BREADCRUMB:  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
+        # BREADCRUMB:
+        #  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
+        #  TEST FOR DICT ENTRY ERRORS
+        #  TEST FOR PRECEDENCE (and modify table in docstring if necessary) OF:
+        #     > Composition(learning_rate={my_projection=lr}) (i.e., in Composition constructor)
+        #       vs.
+        #     > my_projection.learning_rate = lr (post Composition and MappingProjection construction)
+        #  TEST precedence of pathway lr specification
+
+
         in_shape = 4
         hidden_1_shape = 3
         hidden_2_shape = 2
@@ -157,6 +168,10 @@ class TestStructral:
                                learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
+        if post_constr:
+            input_proj.learning_rate = .9
+            hidden_proj.learning_rate = .7
+
         comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
                                  num_trials=num_trials,
                                  learning_rate=learn_method_lr)

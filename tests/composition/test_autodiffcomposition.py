@@ -309,46 +309,49 @@ test_args = [
     #   Have to explicity specify default_lr in constructor here (when it is expected to have an effect),
     #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
     #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
-    #   condition          constructor_lr  learn_method_lr  input_lr  hidden_lr  cnstr_dict  learn_dict  expected
-    ("baseline",               default_lr,        None,         None,    None,      None,     None,      baseline),
+    #   condition          constructor_lr   learn_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
+    ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
     # learn() lr
-    ("lrn_method",              None,              .1,          None,    None,      None,     None,     learn_method),
+    ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
     # learn() lr overrides constructor lr
-    ("lrn_override",           default_lr,         .1,          None,    None,      None,     None,     learn_method),
+    ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
     # Projection lr (in constructor)
-    ("input_proj",             default_lr,        None,         .2,      None,      None,     None,     input_proj),
-    ("hidden_proj",            default_lr,        None,         None,     .2,       None,     None,     hidden_proj),
+    ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
+    ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
     # Projection lr overrides learn() lr
-    ("inpt_override_lrn",      default_lr,         .1,          .2,      None,      None,     None,   inpt_learn_ovrd),
-    ("hidn_override_lrn",      default_lr,         .1,         None,      .2,       None,     None,   hid_learn_ovrd),
+    ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
+    ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
     # learning_rate dict in Autodiff constructor overrides Projection lr
-    ("input_dict_constructor", default_lr,        None,         .2,      None,    'input',    None,   input_dict_cnstr),
-    ("hidden_dict_constructor",default_lr,        None,        None,      .2,     'hidden',   None,   hid_dict_constr),
+    ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
+    ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
     # learning_rate dict in learn() overrides Projection lr
-    ("input_dict_learn",       default_lr,        None,         .3,      None,      None,   'input',  input_proj),
-    ("hidden_dict_learn",      default_lr,        None,        None,      .3,       None,   'hidden', hidden_proj),
+    ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
+    ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
     # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
-    ("inpt_ovrd_constructor",  default_lr,         .1,          .2,      None,    'input',    None,   inp_cnstr_ovrd),
-    ("hid_ovrd_constructor",   default_lr,         .1,         None,      .2,     'hidden',   None,   hid_cnstr_ovrd),
+    ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,   inp_cnstr_ovrd),
+    ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,   hid_cnstr_ovrd),
     # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
     #                                (use two different Projection lr's to be sure they don't matter)
-    ("in_ovrd_learn_method3",  default_lr,         .1,          .3,      None,      None,   'input',  inpt_learn_ovrd),
-    ("hid_ovrd_learn_method3", default_lr,         .1,         None,      .3,       None,   'hidden', hid_learn_ovrd),
-    ("in_ovrd_learn_method5",  default_lr,         .1,          .5,      None,      None,   'input',  inpt_learn_ovrd),
-    ("hid_ovrd_learn_method5", default_lr,         .1,         None,      .5,       None,   'hidden', hid_learn_ovrd),
+    ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False,   inpt_learn_ovrd),
+    ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,   hid_learn_ovrd),
+    ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False,   inpt_learn_ovrd),
+    ("hid_ovrd_learn_method5", default_lr,     .1,     None,     .5,    None,    'hidden',  False,   hid_learn_ovrd),
     # Projection spec in learning_rate dict in learn() overrides everything else, including constructor dict
-    ("inpt_learn_constructor", default_lr,         .1,          .4,      None,    'input',  'input',  inpt_learn_ovrd),
-    ("hid_learn_constructor",  default_lr,         .1,         None,      .4,     'hidden', 'hidden', hid_learn_ovrd),
+    ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   False,   inpt_learn_ovrd),
+    ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  False,   hid_learn_ovrd),
+    # Projection spec made after AutodiffComposition contruction
+    ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,   inpt_learn_ovrd),
+    ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,   hid_learn_ovrd),
 ]
 # NOTE: this should be kept consistent with test_learning/test_projection_specific_learning_rates()
 #       to additionally test for identicality of effects with Python learning
 @pytest.mark.pytorch
 @pytest.mark.composition
 @pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, "
-                         "input_lr, hidden_lr, constructor_dict_param, learn_dicdt_param, expected",
+                         "input_lr, hidden_lr, constructor_dict_param, learn_dicdt_param, post_constr, expected",
                          test_args, ids=[f"{x[0]}" for x in test_args])
 def test_projection_specific_learning_rates(condition, constructor_lr, learn_method_lr, input_lr, hidden_lr,
-                                            constructor_dict_param, learn_dicdt_param, expected):
+                                            constructor_dict_param, learn_dicdt_param, post_constr, expected):
     in_shape = 4
     hidden_1_shape = 3
     hidden_2_shape = 2
@@ -380,6 +383,10 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
                                          pathways=pathway,
                                          learning_rate = (constructor_learning_rate_dict if "constructor" in condition
                                                           else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
+
+    if post_constr:
+        input_proj.learning_rate = .9
+        hidden_proj.learning_rate = .7
 
     targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
     pytorch_result = outer_comp.learn(
