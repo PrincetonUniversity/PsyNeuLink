@@ -502,8 +502,9 @@ class AutodiffComposition(Composition):
 
     learning_rate : float, int, bool or dict : default 0.001
         specifies the learning rate(s) passed to the optimizer; overridden by any specified in the `learn
-        <AutdodiffComposition.learn>` method of the AutodiffComposition; see `learning_rate
-        <AutodiffComposition.learning_rate>` and `AutodiffComposition_Learning_Rate` for additional details.
+        <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
+        not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
+        (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
     COMMENT:
     optimizer_params : Dict[str or Projection: int or float] : default None
@@ -518,23 +519,23 @@ class AutodiffComposition(Composition):
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
         `Projection matrices <MappingProjection.matrix>` (connection weights), which can be overridden by specifying
-        the **synch_projection_matrices_with_torch** argument in the `learn <Composition.learn>` method;
-        see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
-        for additional details.
+        the **synch_projection_matrices_with_torch** argument in the `learn <Composition.learn>` method
+        (see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
+        for additional details).
 
     synch_node_variables_with_torch : `LearningScale` : default None
         specifies the default for the AutodiffComposition for when to copy the current input to Pytorch nodes
         to the PsyNeuLink `variable <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes
         <Composition_Node>`, which can be overridden by specifying the **synch_node_variables_with_torch** argument
-        in the `learn <Composition.learn>` method; see `synch_node_variables_with_torch
-        <AutodiffComposition.synch_node_variables_with_torch>` for additional details.
+        in the `learn <Composition.learn>` method (see `synch_node_variables_with_torch
+        <AutodiffComposition.synch_node_variables_with_torch>` for additional details).
 
     synch_node_values_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the current output of Pytorch nodes to the
         PsyNeuLink `value <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
         which can be overridden by specifying the **synch_node_values_with_torch** argument in the `learn
-        <Composition.learn>` method; see `synch_node_values_with_torch
-        <AutodiffComposition.synch_node_values_with_torch>` for additional details.
+        <Composition.learn>` method (see `synch_node_values_with_torch
+        <AutodiffComposition.synch_node_values_with_torch>` for additional details).
 
     synch_results_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model
@@ -542,9 +543,9 @@ class AutodiffComposition(Composition):
         specifying the **synch_results_with_torch** argument in the `learn <Composition.learn>` method.
         Note that this differs from **retain_torch_trained_outputs**, which specifies the frequency at which
         the outputs of the PyTorch model are tracked, all of which are stored in the AutodiffComposition's
-        `torch_trained_outputs <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run;
-        see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
-        additional details.
+        `torch_trained_outputs <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run
+        (see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
+        additional details).
 
     retain_torch_trained_outputs : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for scale at which the outputs of the Pytorch
@@ -552,20 +553,20 @@ class AutodiffComposition(Composition):
         <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run; this can be overridden
         by specifying the **retain_torch_trained_outputs** argument in the `learn <Composition.learn>` method.
         Note that this differs from **synch_results_with_torch**, which specifies the frequency with
-        which values are called to the AutodiffComposition's `results` attribute; see `retain_torch_trained_outputs
-        <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+        which values are called to the AutodiffComposition's `results` attribute (see `retain_torch_trained_outputs
+        <AutodiffComposition.retain_torch_trained_outputs>` for additional details).
 
     retain_torch_targets : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for when to copy the targets used for training the
         Pytorch model to the AutodiffComposition's `torch_targets <Composition.torch_targets>` attribute, which can be
-        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>` method;
-        see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details.
+        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>` method
+        (see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details).
 
     retain_torch_losses : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for the scale at which the losses of the Pytorch model
         are tracked, all of which are stored in the AutodiffComposition's `torch_losses <Composition.torch_losses>`
-        attribute at the end of the run; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for
-        additional details.
+        attribute at the end of the run (see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for
+        additional details).
 
     device : torch.device : default device-dependent
         specifies the device on which the model is run. If None, the device is set to 'cuda' if available,
@@ -1494,9 +1495,18 @@ class AutodiffComposition(Composition):
         Arguments
         ---------
 
+        COMMENT:
         optimizer_params : Dict[str or Projection: int or float] : default None
             specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
             parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
+        COMMENT
+
+        learning_rate : float, int, bool or dict : default 0.001
+            specifies the learning rate(s) passed to the optimizer, that overrides any learning_rate specifications
+            made in AutodiffComposition constructor and/or individual MappingProjections. A dict can be used to specify
+            `MappingProjection`\\-specific learning_rate(s); if the dict is used, and it does not contain a
+            *DEFAULT_LEARNING_RATE* entry, then the default indicated above is used for all other MappingProjections
+            (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
         synch_projection_matrices_with_torch : [LEARNING_SCALE_LITERALS] : Default None
             overrides specification(s) made in Autodiff constructor; see `synch_projection_matrices_with_torch

@@ -2516,7 +2516,6 @@ class BackPropagation(LearningFunction):
                                     f"must include '{ERROR_MATRIX}' in params arg.")
 
         self.parameters.error_matrix._set(error_matrix, context)
-        # self._check_args(variable=variable, context=context, params=params, context=context)
 
         # If learning_rate was not specified for instance or composition or in params, use default value
         if params and LEARNING_RATE in params and params[LEARNING_RATE] is not None:

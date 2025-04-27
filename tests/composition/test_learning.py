@@ -5,6 +5,7 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
+from psyneulink import DEFAULT_LEARNING_RATE
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -105,26 +106,29 @@ class TestStructral:
         # NOTE Have to explicity specify default_lr in constructor here (when it is expected to have an effect),
         #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
 
-        #    condition           constructor_lr  learn_method_lr  input_lr  hidden_lr   expected
-        ("baseline",               default_lr,        None,         None,     None,     baseline),
-        # learning_rate specified in learn() method
-        ("learn_method",            None,              .1,          None,     None,     learn_method),
-        # learning_rate specified in learn() method overrides specification in constructor
-        ("learn_override",         default_lr,         .1,          None,     None,     learn_method),
-        # learning_rate specified on Projection itself (in constructor)
-        ("input_proj",             default_lr,        None,          .2,      None,     input_proj),
-        ("hidden_proj",            default_lr,        None,         None,      .2,      hidden_proj),
-        # Projection specification overrides learn() method specification
-        ("inpt_override_lr",       default_lr,         .1,          .2,       None,     inpt_learn_ovrd),
-        ("hidn_override_lr",       default_lr,         .1,         None,       .2,      hid_learn_ovrd),
+        #    condition       composition_lr    learn_lr   proj_constr_lr  expected
+        ("baseline",           default_lr,       None,        None,       baseline),
+        # learn()
+        ("learn_method",        None,             .1,         None,       learn_method),
+        # learn() lr overrides constructor lr
+        ("learn_override",     default_lr,        .1,         None,       learn_method),
+        # Projection constructor lr
+        ("input_proj",         default_lr,       None,      "input",      input_proj),
+        ("hidden_proj",        default_lr,       None,      "hidden",     hidden_proj),
+        # Projection lr overrides learn()
+        ("inpt_override_lr",   default_lr,        .1,       "input",      inpt_learn_ovrd),
+        ("hidn_override_lr",   default_lr,        .1,       "hidden",     hid_learn_ovrd),
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
-    @pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, input_lr, hidden_lr, expected",
+    @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
+    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
     def test_projection_specific_learning_rates(self,
-                                                condition, constructor_lr, learn_method_lr, input_lr, hidden_lr,
-                                                expected):
+                                                condition, comp_lr, learn_method_lr,
+                                                proj_constr, comp_constuctor_lr_dict, expected):
+
+        # BREADCRUMB:  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
         in_shape = 4
         hidden_1_shape = 3
         hidden_2_shape = 2
@@ -133,19 +137,29 @@ class TestStructral:
         target_vals = [[1,1,1,1,1]]
         num_trials = 3
 
+        input_lr = .2 if proj_constr == 'input' else None
+        hidden_lr = .2 if proj_constr == 'hidden' else None
+
         mech_1 = pnl.ProcessingMechanism(name='Mech 1', input_shapes=in_shape)
         mech_2 = pnl.ProcessingMechanism(name='Mech 2', input_shapes=hidden_1_shape)
         mech_3 = pnl.ProcessingMechanism(name='Mech 3', input_shapes=hidden_2_shape)
         mech_4 = pnl.ProcessingMechanism(name='Mech 4', input_shapes=out_shape)
         input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=input_lr, name="INPUT PROJECTION")
         hidden_proj = pnl.MappingProjection(mech_2, mech_3, learning_rate=hidden_lr, name="HIDDEN PROJECTION")
+
+        comp_lr_dict = {DEFAULT_LEARNING_RATE: comp_lr,
+                        input_proj: input_lr,
+                        hidden_proj: hidden_lr}
+
         # output_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=default_lr,name="OUTPUT PROJECTION")
-        comp = pnl.Composition(name='Comp', synch_node_variables_with_torch=pnl.RUN, learning_rate=constructor_lr)
+        comp = pnl.Composition(name='Comp',
+                               synch_node_variables_with_torch=pnl.RUN,
+                               learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
         comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
                                  num_trials=num_trials,
-                                 learning_rate = learn_method_lr)
+                                 learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
 
 

@@ -1073,14 +1073,14 @@ Add explanation of how learning_rate applies to Unsupervised forms of learning
 COMMENT
 
 The rate at which learning occurs for a `learnable <MappingProjection.learnable>` `MappingProjection` is determined
-by its `learning_rate <MappingProjection.learning_rate>` Parameter, or the `learning_rate <Composition.learning_rate>`
-Parameter of the Composition to which it belongs. `LearningMechanisms <LearningMechanism>` and their `LearningSignals
+by its `learning_rate <MappingProjection.learning_rate>` Parameter. This can be specified in a number of ways,
+including directly for the Projection (in its constructor), the `learning Pathway <Composition_Learning_Pathway>` to
+which in belongs, or for the entire Composition.  `LearningMechanisms <LearningMechanism>` and their `LearningSignals
 <LearningSignal>` also have learning_rate Parameters, but these apply only to `Python execution
 <Composition_Learning_Configurations>`, and it is generally simpler to assign learning_rates directly to a
-MappingProjection or to the Composition. This can be done using the **learning_rate** argument of the constructor for
-a MappingProjection, the Composition to which it belongs, and/or that Composition's `learn <Composition.learn>`
-method. The **learning_rate** argument can be sepcified in any of the following ways:
-
+MappingProjection, learning Pathways, or to the Composition. These can be specified using the **learning_rate**
+argument for any of these in their constructor, and/or that Composition's `learn <Composition.learn>`
+method (their precedence is shown in the `table <Composition_Learning_Rate_Precedence_Hierarchy> below):
 
 .. _Composition_Learning_Rate_Specification:
 
@@ -1129,11 +1129,11 @@ precedence in determining the learning_rate for a Projection used at execution.
    |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (after construction)               |
    |                |    ``my_projection.learning_rate=val``                                                                              |
    |                +---------------------------------------------------------------------------------------------------------------------+
-   |                |  `MappingProjection` constructor                                                                                    |
-   |                |    ``my_learning_mechanimsm=MappingProjection(learning_rate=val)``                                                  |
-   |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  MappingProjection in Composition constructor dict                                                                  |
    |                |    ``my_composition=Composition(learning_rate={my_projection: val})``                                               |
+   |                +---------------------------------------------------------------------------------------------------------------------+
+   |                |  `MappingProjection` constructor                                                                                    |
+   |                |    ``my_learning_mechanimsm=MappingProjection(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  LearningMechanism `learning_rate <LearningMechanism_Learning_Rate>` Parameter (after construction)                 |
    |                |    ``my_learning_mechanism.learning_rate=val``                                                                      |
@@ -3119,7 +3119,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
     (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY,
-     DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
+     DEFAULT, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
      INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
      LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
      LEARNING_RATE, LEARNING_SIGNAL, Loss,
@@ -3915,7 +3915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parsed_inputs = False
 
         self.disable_learning = disable_learning
-        self.learning_rate = learning_rate
+        self.learning_rate = self._parse_and_validate_learning_rate(learning_rate)
         self._runtime_learning_rate = None
 
         # graph and scheduler status attributes
@@ -7952,6 +7952,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nodes[nodes.index(n)] = n[0]
                     # MODIFIED 12/22/24 END
 
+        self._assign_learning_rates(projections, context)
+
         specified_pathway = pathway
         # interleave (sets of) Nodes and (sets or lists of) Projections
         parsed_pathway = [node_entries[0]]
@@ -8102,8 +8104,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_rate : float : default 0.05
             specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
-            of the `LearningMechanism`\\(s) in the **pathway** (see `Composition_Learning_Rate` for
-            additional details).
+            of the `LearningMechanism`\\(s) in the **pathway** (see `Composition_Learning_Rate` for additional details).
 
         error_function : function : default LinearCombination
             specifies the function assigned to Mechanism used to compute the error from the target and the output
@@ -8425,7 +8426,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_rate = learning_rate if learning_rate is not None \
             else self.learning_rate if self.learning_rate is not None \
             else None
-            # else 0.05
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=BackPropagation,
@@ -9194,6 +9194,52 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
         return learning_mechanism
+
+    def _parse_and_validate_learning_rate(self, learning_rate):
+        """Parse and validate learning_rate specified in Composition constructor"""
+        if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
+            raise CompositionError(
+                f"The 'learning_rate' arg for '{self.name}' must be a float, int or dict: '{learning_rate}'")
+        if isinstance(learning_rate, dict):
+            learning_rates_dict = learning_rate
+            # Check that the learning_rate specification(s) are all legal
+            bad_vals = [(spec, val) for spec, val in learning_rates_dict.items()
+                        if not isinstance(val, (float, int, bool, type(None)))]
+            if bad_vals:
+                raise CompositionError(f"The learning rate(s) specified in 'learning_rate' arg for '{self.name}' "
+                                       f"must each be a float, int, bool, or None: '{', '.join(repr(bad_vals))}'.")
+            # Get default learning rate if there is one
+            learning_rate = learning_rates_dict.pop(DEFAULT_LEARNING_RATE, None)
+            # Check that all keys in remaining entries are a Projection or a name (str)
+            bad_keys = [spec for spec in learning_rates_dict.keys() if not isinstance(spec, (str, MappingProjection))]
+            if bad_keys:
+                raise CompositionError(f"The keys for all entries of the dict specified in 'learning_rate' "
+                                       f"arg for '{self.name}' must all be MappingProjections or names of ones: "
+                                       f"'{', '.join(bad_key)}'.")
+            # Convert all remaining entries to Projection names for consistency in later processing
+            self._learning_rates_dict = {(k.name if isinstance(k, MappingProjection) else k): v
+                                        for k,v in learning_rates_dict.items()}
+        else:
+            self._learning_rates_dict = None
+
+        return learning_rate
+
+    def _assign_learning_rates(self, projections, context):
+        if not self._learning_rates_dict:
+            return
+        not_learnable = []
+        for proj in projections:
+            # Get learning_rate spec if there is one;  use NotImplemented
+            try:
+                proj.learning_rate = self._learning_rates_dict.pop(proj.name)
+                if not proj.learnable:
+                    not_learnable.append(proj.name)
+            except KeyError:
+                pass
+        if not_learnable:
+            raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' "
+                                   f"arg of '{self.name}' are not learnable; check that their 'learnable'"
+                                   f" attribute is set to True: '{', '.join(repr(not_learnable))}'.")
 
     def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
@@ -11667,10 +11713,10 @@ _
             epochs : int (default=1)
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
-            learning_rate : float : default None
-                specifies the learning_rate used by all `learning pathways <Composition_Learning_Pathway>`
-                when the Composition's learn method is called.  This overrides the `learning_rate` specified
-                for any individual Pathways at construction, but only applies for the current execution of
+            learning_rate : float, int or bool : default None
+                specifies the learning_rate used by all `learnable <MappingProjection.learnable>` MappingProjections
+                in the Composition when its learn() method is called.  This overrides the `learning_rate` specified
+                for any individual Projections at construction, but only applies for the current execution of
                 the learn method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
@@ -11751,11 +11797,18 @@ _
         from psyneulink.library.compositions import AutodiffComposition
         runner = CompositionRunner(self)
 
-        if not isinstance(self, AutodiffComposition) and isinstance(learning_rate, dict):
-            raise CompositionError(f"The 'learning_rate' arg in a call to learn for '{self.name}' is a dict, which "
-                                   f"which is not currently supported for a Composition; use an AutodiffComposition, "
-                                   f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
-                                   f"argument the constructor(s) for the corresponding MappingProjection(s).")
+        if not isinstance(self, AutodiffComposition):
+            if isinstance(learning_rate, dict):
+                # learning_rate dict specification is not (yet) allowed for learn() method of Composition
+                raise CompositionError(f"The 'learning_rate' arg in a call to learn for '{self.name}' is a dict, which "
+                                       f"which is not currently supported for a Composition; use an AutodiffComposition, "
+                                       f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
+                                       f"argument the constructor(s) for the corresponding MappingProjection(s).")
+            if self._learning_rates_dict:
+                # dict should be empty if all specifications were valid and
+                #   thus dispatched in calls to_assign_learning_rates()
+                warnings.warn(f"The following Projection(s) were assigned learning_rate(s) that do not seem to be "
+                              f"included in '{self.name}':  '{' ,'.join[self._learning_rates.keys()]}'")
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
