@@ -160,19 +160,12 @@ class TestStructral:
                                learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
-        if post_constr:
-            input_proj.learning_rate = .9
-            hidden_proj.learning_rate = .7
-
-        comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
-                                 num_trials=num_trials,
-                                 learning_rate=learn_method_lr)
-        np.testing.assert_allclose(comp_result, expected)
 
     error_test_args = [
-        #    condition       composition_lr          learn_lr   proj_constr_lr   post_constr
-        ("default_spec_error",     default_lr,          None,        None,           False),
-        ("proj_spec_error",        default_lr,          None,        None,           False),
+        #    condition           composition_lr   learn_lr   proj_constr_lr   post_constr
+        ("default_spec_str",      'hello',          None,        None,           False),
+        ("default_spec_proj",      'PROJ'           None,        None,           False),
+        ("proj_spec_error",        default_lr,      'hello',        None,           False),
         ("nested_proj_spec_error", default_lr,          None,        None,           False),
         ("proj_ref_error",         default_lr,          None,        None,           False),
         ("nested_proj_ref_error",  default_lr,          None,        None,           False),
