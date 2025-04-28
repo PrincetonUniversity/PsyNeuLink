@@ -252,8 +252,8 @@ execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
 ~~~~~~~~~~
 
 COMMENT:
-FIX 4/20/25 - ADD:
- - MENTION learning_rate AND POINT TO Composition FOR FUll DISCUSSION (including relationship to optimizer_params
+BREADCRUMB 4/20/25 - ADD:
+ - MENTION learning_rate AND POINT TO Composition FOR FUll DISCUSSION
  - learnable is a toggle, allowing learning_rate to be set but to disable learning, but...
  - learning_rate = False -> learnable = False; and...
  - learnable must be True to set learning_rate;  if it is False, raise error

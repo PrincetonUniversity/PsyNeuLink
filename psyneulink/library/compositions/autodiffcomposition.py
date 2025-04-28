@@ -472,7 +472,6 @@ class AutodiffComposition(Composition):
         loss_spec=Loss.MSE,
         weight_decay=0,
         learning_rate=0.001,
-        optimizer_params=None,
         disable_learning=False,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
@@ -505,12 +504,6 @@ class AutodiffComposition(Composition):
         <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
-
-    COMMENT:
-    optimizer_params : Dict[str or Projection: int or float] : default None
-        specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
-        parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
-    COMMENT
 
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning when run in `learning mode
@@ -782,8 +775,8 @@ class AutodiffComposition(Composition):
 
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
 
+        # Deal with deprecated arg
         if OPTIMIZER_PARAMS in kwargs:
-            # Deal with deprecated arg
             opt_params_arg = deprecation_warning(self, kwargs,
                                                  deprecated_args={OPTIMIZER_PARAMS:LEARNING_RATE},
                                                  additional_msg=" Other torch.nn.optimizer parameters are not "
@@ -792,6 +785,7 @@ class AutodiffComposition(Composition):
                 opt_params_arg[DEFAULT_LEARNING_RATE] = learning_rate
             learning_rate = opt_params_arg.pop(LEARNING_RATE)
 
+        # Move learning_rate to optimizer_params if it is a dict, and extract default learning_rate for Composition
         if isinstance(learning_rate, dict):
             self._optimizer_constructor_params = learning_rate
             learning_rate = self._optimizer_constructor_params.pop(DEFAULT_LEARNING_RATE, None)
@@ -1495,12 +1489,6 @@ class AutodiffComposition(Composition):
         Arguments
         ---------
 
-        COMMENT:
-        optimizer_params : Dict[str or Projection: int or float] : default None
-            specifies parameters for the optimizer used for learning by the AutodiffComposition; currently only supports
-            parameter-specific learning rates (see `AutodiffComposition_Learning_Rates` for details of specification).
-        COMMENT
-
         learning_rate : float, int, bool or dict : default 0.001
             specifies the learning rate(s) passed to the optimizer, that overrides any learning_rate specifications
             made in AutodiffComposition constructor and/or individual MappingProjections. A dict can be used to specify
@@ -1564,7 +1552,6 @@ class AutodiffComposition(Composition):
         if LEARNING_RATE in kwargs and isinstance(kwargs[LEARNING_RATE], dict):
             kwargs[OPTIMIZER_PARAMS] = kwargs[LEARNING_RATE]
             kwargs[LEARNING_RATE] = kwargs[OPTIMIZER_PARAMS].pop(DEFAULT_LEARNING_RATE, None)
-        assert True
 
         any_nested_comps = [node for node in self.nodes if isinstance(node, Composition)]
         if any_nested_comps:

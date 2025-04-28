@@ -3332,12 +3332,12 @@ class TestMiscTrainingFunctionality:
                              "projection_lr_input_proj, projection_lr_output_proj,"
                              "expected", test_specs,
                              ids=[f"{x[0]}" for x in test_specs])
-    def test_optimizer_params_for_custom_learning_rates(self, condition,
-                                                        use_constructor, use_learn_method,
-                                                        constructor_lr_input_proj, constructor_lr_output_proj,
-                                                        learn_method_lr_input_proj, learn_method_lr_output_proj,
-                                                        projection_lr_input_proj, projection_lr_output_proj,
-                                                        expected):
+    def test_learning_rate_assignments(self, condition,
+                                   use_constructor, use_learn_method,
+                                   constructor_lr_input_proj, constructor_lr_output_proj,
+                                   learn_method_lr_input_proj, learn_method_lr_output_proj,
+                                   projection_lr_input_proj, projection_lr_output_proj,
+                                   expected):
         nested_hidden_mech_1 = pnl.ProcessingMechanism(function=pnl.Linear, input_shapes=4, name='nested_1')
         nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
         hidden_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2, matrix=pnl.IDENTITY_MATRIX)
@@ -3357,9 +3357,9 @@ class TestMiscTrainingFunctionality:
         inputs={input_mech: [[.1, .2, .3]]}
         targets={output_mech: [[1,1,1,1,1]]}
         constructor_learning_rate_dict = {input_proj: constructor_lr_input_proj,
-                                        output_proj: constructor_lr_output_proj}
-        learning_method_optimizer_params = {input_proj: learn_method_lr_input_proj,
-                                            output_proj: learn_method_lr_output_proj}
+                                          output_proj: constructor_lr_output_proj}
+        learning_method_learning_rate_dict = {input_proj: learn_method_lr_input_proj,
+                                              output_proj: learn_method_lr_output_proj}
 
         if condition in {'bad_proj', 'bad_lr'}:
             if condition == 'bad_proj':
@@ -3413,7 +3413,7 @@ class TestMiscTrainingFunctionality:
             name="OUTER")
         results = outer_comp.learn(
             inputs=inputs, targets=targets,
-            learning_rate=learning_method_optimizer_params if use_learn_method else None,
+            learning_rate=learning_method_learning_rate_dict if use_learn_method else None,
             num_trials=2)
         np.testing.assert_allclose(expected, results)
 
@@ -3431,8 +3431,8 @@ class TestMiscTrainingFunctionality:
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
 
     @pytest.mark.parametrize("bias", [False, True])
-    def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
-        """Test ideinticality with assignment of learning rates in optimizer_params of nested Composition"""
+    def test_pytorch_identicality_of_learning_rates_nested(self, bias):
+        """Test ideinticality with assignment of learning rates in learning_rate of nested Composition"""
         import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)

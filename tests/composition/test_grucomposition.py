@@ -357,7 +357,7 @@ class TestExecution:
                   ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
-    def test_optimizer_params_for_custom_learning_rates(self, condition, gru_proj, expected):
+    def test_learning_rate_assignments(self, condition, gru_proj, expected):
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False,
@@ -365,12 +365,12 @@ class TestExecution:
                                  )
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
-        constructor_optimizer_params = {gru_proj: .3,
+        constructor_learning_rates = {gru_proj: .3,
                                         input_proj: 2.9,
                                         output_proj: .5}
-        learning_method_optimizer_params = {gru_proj: .95,
-                                            input_proj: .66,
-                                            output_proj: 1.5}
+        learning_method_learning_rates = {gru_proj: .95,
+                                          input_proj: .66,
+                                          output_proj: 1.5}
 
         # Test for error on attempt to set individual Projection learning rate
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
@@ -380,11 +380,11 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
+                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
                 )
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_optimizer_params if condition in {'learn_method'} else None)
+                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
         # Test for error on attempt to set BIAS learning rate if bias option is False
@@ -396,18 +396,18 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
+                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
                 )
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_optimizer_params if condition in {'learn_method'} else None)
+                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
         # Test for assignment of optimizer_param to nested Composition on its construction
         elif condition == 'specs_to_nested':
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                 # Exclude gru_proj from learning_rate since it was set on nested gru above
+                # Exclude gru_proj from learning_rate since it was set on nested gru above
                 learning_rate={input_proj: 2.9, output_proj: .5})
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
@@ -419,17 +419,17 @@ class TestExecution:
             # Test assignment of optimizer_param on constructdion
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
+                learning_rate=constructor_learning_rates if condition in {'constructor'} else None
             )
             # Test assignment of optimizer_param on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                learning_rate=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
+                learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
             np.testing.assert_allclose(expected, results)
 
     @pytest.mark.parametrize("bias", [False, True])
-    def test_pytorch_identicality_of_optimizer_params_unnested(self, bias):
+    def test_pytorch_identicality_of_learning_rates_unnested(self, bias):
         import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)
@@ -506,7 +506,7 @@ class TestExecution:
 
     # Note:  if this is ever deprecated or removed, ensure version in test_autodiffcomposition is in use
     @pytest.mark.parametrize("bias", [False, True], ids=['no_bias','bias'])
-    def test_pytorch_identicality_of_optimizer_params_nested(self, bias):
+    def test_pytorch_identicality_of_learning_rates_nested(self, bias):
         import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)

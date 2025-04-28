@@ -105,7 +105,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                     bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
                     bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
                     raise GRUCompositionError(f"Attempt to set learning rate for bias(es) of GRU using "
-                                              f"'{' ,'.join(bias_specs)}' in the 'optimizer_params' arg of "
+                                              f"'{' ,'.join(bias_specs)}' in the 'learning_rate' arg of "
                                               f"the {source} for '{self.composition.name}' when its bias option "
                                               f"is set to False; the spec(s) must be removed or bias set to True.")
 
