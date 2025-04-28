@@ -340,8 +340,8 @@ test_args = [
     ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   False,   inpt_learn_ovrd),
     ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  False,   hid_learn_ovrd),
     # Projection spec made after AutodiffComposition contruction
-    ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,   inpt_learn_ovrd),
-    ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,   hid_learn_ovrd),
+    ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,    inpt_learn_ovrd),
+    ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,    hid_learn_ovrd),
 ]
 # NOTE: this should be kept consistent with test_learning/test_projection_specific_learning_rates()
 #       to additionally test for identicality of effects with Python learning
