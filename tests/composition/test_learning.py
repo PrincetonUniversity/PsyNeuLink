@@ -103,7 +103,7 @@ class TestStructral:
     default_lr = .01
 
     test_args = [
-        # NOTE Have to explicity specify default_lr in constructor here (when it is expected to have an effect),
+        # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
         #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
 
         #    condition       composition_lr    learn_lr   proj_constr_lr   post_constr   expected
@@ -130,11 +130,7 @@ class TestStructral:
                                                 condition, comp_lr, learn_method_lr,
                                                 proj_constr, comp_constuctor_lr_dict, post_constr, expected):
 
-        # BREADCRUMB:
-        #  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
-        #  TEST FOR DICT ENTRY ERRORS
         #  TEST precedence of pathway lr specification
-
 
         in_shape = 4
         hidden_1_shape = 3
@@ -173,6 +169,46 @@ class TestStructral:
                                  learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
 
+    error_test_args = [
+        #    condition       composition_lr          learn_lr   proj_constr_lr   post_constr
+        ("default_spec_error",     default_lr,          None,        None,           False),
+        ("proj_spec_error",        default_lr,          None,        None,           False),
+        ("nested_proj_spec_error", default_lr,          None,        None,           False),
+        ("proj_ref_error",         default_lr,          None,        None,           False),
+        ("nested_proj_ref_error",  default_lr,          None,        None,           False),
+        ("non_learnable_error",    default_lr,          None,        None,           False),
+        ("learn_method_use_error", default_lr,          None,        None,           False),
+    ]
+    # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
+    #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
+    @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
+    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
+                             test_args, ids=[f"{x[0]}" for x in test_args])
+    def test_learning_rate_specification_errors(self):
+        # Test for error with learning_rate specified in Composition constructor and in learn() method
+        # BREADCRUMB:
+        #  TEST FOR DICT ENTRY ERRORS
+        #  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
+        mech_1 = pnl.ProcessingMechanism(name='Mech 1')
+        mech_2 = pnl.ProcessingMechanism(name='Mech 2')
+        mech_3 = pnl.ProcessingMechanism(name='Mech 3')
+        input_proj = pnl.MappingProjection(mech_1, mech_2, name="INPUT PROJECTION")
+        hidden_proj = pnl.MappingProjection(mech_2, mech_3, name="HIDDEN PROJECTION")
+
+        comp_lr_dict = {DEFAULT_LEARNING_RATE: comp_lr ,
+                        input_proj: input_lr,
+                        hidden_proj: hidden_lr}
+
+        # output_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=default_lr,name="OUTPUT PROJECTION")
+        comp = pnl.Composition(name='Comp',
+                               synch_node_variables_with_torch=pnl.RUN,
+                               learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
+        learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
+                                                      hidden_proj, mech_3, mech_4])
+
+        comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
+                                 num_trials=num_trials,
+                                 learning_rate=learn_method_lr)
 
     class TestInputAndTargetSpecs:
 

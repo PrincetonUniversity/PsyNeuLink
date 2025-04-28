@@ -403,7 +403,7 @@ class TestExecution:
                     learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
-        # Test for assignment of optimizer_param to nested Composition on its construction
+        # Test for assignment of learning_rates to nested Composition on its construction
         elif condition == 'specs_to_nested':
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
@@ -416,12 +416,12 @@ class TestExecution:
             np.testing.assert_allclose(expected, results)
 
         else:
-            # Test assignment of optimizer_param on constructdion
+            # Test assignment of learning_rate on construction
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
                 learning_rate=constructor_learning_rates if condition in {'constructor'} else None
             )
-            # Test assignment of optimizer_param on learning
+            # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
