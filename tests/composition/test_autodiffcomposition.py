@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from numpy.ma.core import ones_like
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -383,7 +382,6 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
                                          pathways=pathway,
                                          learning_rate = (constructor_learning_rate_dict if "constructor" in condition
                                                           else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
-
     if post_constr:
         input_proj.learning_rate = .9
         hidden_proj.learning_rate = .7
@@ -392,7 +390,6 @@ def test_projection_specific_learning_rates(condition, constructor_lr, learn_met
     pytorch_result = outer_comp.learn(
         inputs={outer_mech_in:input_stims, targets[0]: target_vals},
         num_trials=num_trials,
-        # optimizer_params = learn_method_learning_rate_dict if "learn" in condition else None,
         execution_mode=pnl.ExecutionMode.PyTorch,
         # learning_rate=learn_method_lr
         learning_rate=(learn_method_learning_rate_dict if "learn" in condition
@@ -3366,13 +3363,13 @@ class TestMiscTrainingFunctionality:
 
         if condition in {'bad_proj', 'bad_lr'}:
             if condition == 'bad_proj':
-                err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the constructor "
+                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the constructor "
                            f"for 'OUTER' is not in that Composition or any nested within it: 'bad_proj'.")
 
                 opt_params = {condition: .66}
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
-                err_msg = (f"Learning rate specified in 'optimizer_params' arg of constructor "
+                err_msg = (f"Learning rate specified in 'learning_rate' arg of constructor "
                            f"for 'OUTER' ('bad_lr') must be an int or float.")
 
             with pytest.raises(AutodiffCompositionError) as error_text:
@@ -3380,7 +3377,7 @@ class TestMiscTrainingFunctionality:
                     [input_mech, input_proj, nested_comp, output_proj, output_mech],
                     name='OUTER'
                 )
-                outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+                outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
             assert err_msg in str(error_text.value)
             return
 
@@ -3389,36 +3386,34 @@ class TestMiscTrainingFunctionality:
             hidden_proj.learnable = False
             output_proj.learnable = False
             opt_params = {input_proj: 1.16, hidden_proj: 21.6, output_proj: 3.99}
-            warning_msg = (f"Projection specified in 'optimizer_params' arg of constructor for "
+            warning_msg = (f"Projection specified in 'learning_rate' arg of constructor for "
                            f"'autodiff_composition-1' ('MappingProjection from nested_2[OutputPort-0] "
                            f"to output_mech[InputPort-0]') is not learnable.")
 
             with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
                 outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
-                outer_comp.learn(inputs=inputs, targets=targets, optimizer_params=opt_params)
+                outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
             (warnings.list[2].message.args[0] ==
-             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+             (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
               f"('MappingProjection from input_mech[OutputPort-0] to nested_1[InputPort-0]') is not learnable; "
               f"check that is 'learnable' attribute is set to True."))
             (warnings.list[3].message.args[0] ==
-             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+             (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
               f"('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') is not learnable; "
               f"check that is 'learnable' attribute is set to True."))
             (warnings.list[4].message.args[0] ==
-             (f"Projection specified in 'optimizer_params' arg of constructor for 'autodiff_composition-1' "
+             (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
               f"('MappingProjection from nested_2[OutputPort-0] to output_mech[InputPort-0]') is not learnable; "
               f"check that is 'learnable' attribute is set to True."))
             return
 
         outer_comp = pnl.AutodiffComposition(
             [input_mech, input_proj, nested_comp, output_proj, output_mech],
-            # optimizer_params=constructor_learning_rate_dict if condition in {'constructor_only', 'both'} else None
-            optimizer_params=constructor_learning_rate_dict if use_constructor else None,
+            learning_rate=constructor_learning_rate_dict if use_constructor else None,
             name="OUTER")
         results = outer_comp.learn(
             inputs=inputs, targets=targets,
-            # optimizer_params=learning_method_optimizer_params if condition in {'learn_method_only', 'both'} else None,
-            optimizer_params=learning_method_optimizer_params if use_learn_method else None,
+            learning_rate=learning_method_optimizer_params if use_learn_method else None,
             num_trials=2)
         np.testing.assert_allclose(expected, results)
 
@@ -3529,14 +3524,14 @@ class TestMiscTrainingFunctionality:
         output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
         inputs={input_mech: input_stim}
         targets={output_mech: target_stim}
-        optimizer_params={input_proj: INPUT_LEARNING_RATE,
-                          nested_proj: HIDDEN_LEARNING_RATE,
-                          output_proj: OUTPUT_LEARNING_RATE}
+        learning_rate={pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                       input_proj: INPUT_LEARNING_RATE,
+                       nested_proj: HIDDEN_LEARNING_RATE,
+                       output_proj: OUTPUT_LEARNING_RATE}
         outer_comp = pnl.AutodiffComposition(
             name='OUTER COMP',
             pathways=[input_mech, input_proj, nested_comp, output_proj, output_mech],
-            learning_rate = LEARNING_RATE,
-            optimizer_params=optimizer_params
+            learning_rate=learning_rate
         )
 
         # Assign initial weights from TorchModel to PNL:
@@ -3551,9 +3546,8 @@ class TestMiscTrainingFunctionality:
 
         # Execute autodiff with learning (but not weight updates yet)
         autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
-                                                              execution_mode=pnl.ExecutionMode.PyTorch,
-                                                              # optimizer_params=optimizer_params
-                                                              )
+                                                           execution_mode=pnl.ExecutionMode.PyTorch,
+                                                           )
         # Get results after learning (with weight updates)
         autodiff_result_after_learning = outer_comp.run(inputs={input_mech:input_stim},
                                                         execution_mode=pnl.ExecutionMode.PyTorch)

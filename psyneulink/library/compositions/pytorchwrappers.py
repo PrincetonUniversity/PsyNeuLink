@@ -730,7 +730,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
             except KeyError:
                 raise AutodiffCompositionError(
-                    f"Projection specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
+                    f"Projection specified in 'learning_rate' arg of {source} for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with a learnable Pytorch parameter.")
 
             # IMPLEMENTATION NOTE:
@@ -742,7 +742,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
             # if torch_param_name not in torch_param_short_to_long_names_map:
             #     raise AutodiffCompositionError(
-            #         f"Projection specified in 'optimizer_params' arg of constructor for '{self.composition.name}' "
+            #         f"Projection specified in 'learning_rate' arg of constructor for '{self.composition.name}' "
             #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
             # # Get torch parameter for specified param_ref in named_parameters()
             # param = next((p[1] for p in self.named_parameters()
@@ -766,7 +766,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
-                    warnings.warn(f"Projection specified in 'optimizer_params' arg of {source} for "
+                    warnings.warn(f"Projection specified in 'learning_rate' arg of {source} for "
                                   f"'{self.composition.name}' ('{pnl_param_name}') is not learnable; "
                                   f"check that is 'learnable' attribute is set to True.")
                 else:
@@ -810,7 +810,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float, bool, type(None))):
                 raise AutodiffCompositionError(
-                    f"Learning rate specified in 'optimizer_params' arg of {source} for '{self.composition.name}' "
+                    f"Learning rate specified in 'learning_rate' arg of {source} for '{self.composition.name}' "
                     f"('{learning_rate}') must be an int or float.")
             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                     or learning_rate is False):
@@ -862,11 +862,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # if bad_proj_specs:
         if specs_to_validate:
             if len(specs_to_validate) == 1:
-                err_msg = (f"The following Projection specified in the 'optimizer_params' arg of the {source} for "
+                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source} for "
                            f"'{self.composition.name}' is not in that Composition or any nested within it: "
                            f"'{list(specs_to_validate)[0]}'.")
             else:
-                err_msg = (f"The following Projections specified in the 'optimizer_params' arg of the {source} for "
+                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the {source} for "
                            f"'{self.composition.name}' are not in that Composition or any nested within it: "
                            f"'{', '.join(list(specs_to_validate))}'.")
             raise AutodiffCompositionError(err_msg)

@@ -361,7 +361,7 @@ class TestExecution:
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False,
-                                 optimizer_params={gru_proj: 0.3} if condition=='specs_to_nested' else None
+                                 learning_rate={gru_proj: 0.3} if condition=='specs_to_nested' else None
                                  )
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
@@ -380,35 +380,35 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    optimizer_params=constructor_optimizer_params if condition in {'constructor'} else None
+                    learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
                 )
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    optimizer_params=learning_method_optimizer_params if condition in {'learn_method'} else None)
+                    learning_rate=learning_method_optimizer_params if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
         # Test for error on attempt to set BIAS learning rate if bias option is False
         elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
             bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
             error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
-                         f"'optimizer_params' arg of the constructor for 'GRU Composition' when its bias option "
+                         f"'learning_rate' arg of the constructor for 'GRU Composition' when its bias option "
                          f"is set to False; the spec(s) must be removed or bias set to True.")
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    optimizer_params=constructor_optimizer_params if condition in {'constructor'} else None
+                    learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
                 )
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    optimizer_params=learning_method_optimizer_params if condition in {'learn_method'} else None)
+                    learning_rate=learning_method_optimizer_params if condition in {'learn_method'} else None)
             assert error_msg in str(error_text.value)
 
         # Test for assignment of optimizer_param to nested Composition on its construction
         elif condition == 'specs_to_nested':
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                 # Exclude gru_proj from optimizer_params since it was set on nested gru above
-                optimizer_params={input_proj: 2.9, output_proj: .5})
+                 # Exclude gru_proj from learning_rate since it was set on nested gru above
+                learning_rate={input_proj: 2.9, output_proj: .5})
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 num_trials=2
@@ -419,12 +419,12 @@ class TestExecution:
             # Test assignment of optimizer_param on constructdion
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                optimizer_params=constructor_optimizer_params if condition in {'constructor'} else None
+                learning_rate=constructor_optimizer_params if condition in {'constructor'} else None
             )
             # Test assignment of optimizer_param on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                optimizer_params=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
+                learning_rate=learning_method_optimizer_params if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
             np.testing.assert_allclose(expected, results)
 
@@ -478,12 +478,12 @@ class TestExecution:
         # Set up and run PNL Autodiff model -------------------------------------
 
         # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
-        optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
         if bias:
-            optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                     pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
-        pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=LEARNING_RATE,
-                                 optimizer_params=optimizer_params)
+            learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                                  pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                  pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+        pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=learning_rate)
         pnl_gru.set_weights(*torch_gru_initial_weights)
         target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
@@ -594,16 +594,16 @@ class TestExecution:
 
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-        optimizer_params={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
         if bias:
-            optimizer_params.update({pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                     pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+            learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                                  pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                  pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
         gru = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                                 pathways=[input_mech, gru, output_mech],
-                                                learning_rate = LEARNING_RATE,
-                                                optimizer_params=optimizer_params)
+                                                learning_rate=learning_rate)
         autodiff_comp.set_weights(autodiff_comp.projections[0], torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
