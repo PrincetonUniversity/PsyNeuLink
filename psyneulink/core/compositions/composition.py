@@ -1103,15 +1103,28 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
       `learn <Composition.learn>` method, which overrides all other specifications, but applies only for that execution.
 
   COMMENT:
+  # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
   .. note::
      If **optimizer_params** is specified in the constructor for a nested AutodiffComposition, those specifications
      are promoted to and used by the outer Composition; however, any specifications for the same Projections in the
      **optimizer_params** argument of the constructor for the outer AutodiffComposition, those take precedence.
   COMMENT
 
-  # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
-  # BREADCRUMB: 4/27/25:  ADD NOTE ABOUT ASSIGINING Projection.learning_rate AFTER Composition construction
+  .. _Composition_Learning_Rate_Assignment_After_Construction:
 
+  .. note::
+     Specification of the learning_rate for an individual Projection made after it has been included in a
+     Composition has no effect; it must be made either to the MappingProjection (in its constructor or directly
+     to its `learning_rate <MappingProection.learning_rate>` Parameter before being added to the Composition, or
+     in the Composition's constructor (or, for some Composition subclasses, its `learn <Composition.learn>` method),
+     using the dict format described above.
+
+  .. technical_note::
+     The foregoing is because the learning_rate for a Projection is used to construct the components of the
+     Composition responsible for learning, which can only be modified via the Composition once constructed;
+     currently this is not possuible for a standard Compositions, but can be done for an AutodiffCompositions
+     by assignment to the **learning_rate** argument of its `learn AutodiffComposition.learn` method (see
+     `AutodiffComposition_Learning_Rate` for details).
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
@@ -1152,6 +1165,9 @@ precedence in determining the learning_rate for a Projection used at execution.
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  Nested Composition constructor                                                                                     |
    |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
+   +----------------+---------------------------------------------------------------------------------------------------------------------+
+   |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (*after* Composition assginment)   |
+   | **No effect**: |    ``my_projection.learning_rate=val`` (see `note <Composition_Learning_Rate_Assignment_After_Construction>` above) |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
 
 .. _Composition_Learning_AutodiffComposition:
