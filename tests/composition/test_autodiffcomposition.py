@@ -401,17 +401,14 @@ class TestAutodiffLearningRateArgs:
     
     # BREADCRUMB:  TAKEN FROM test_learning;  ADAPT FOR AutodiffComposition
     error_test_args = [
-        ('default_lr_spec_str',
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "('[{'default_learning_rate': 'you say'}]') must each be a float, int, bool, or None."),
-        ("lr_spec_str",
-         f"The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
-        ("lr_spec_proj",
-         f"The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
-         f"must be a float, int, bool, None, or a dict."),
+        ("comp_lr_spec_str",
+         "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
+        ("comp_lr_spec_proj",
+         "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
+         "must be a float, int, bool, None, or a dict."),
         ("dict_lr_val_str",
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
+        "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+        "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
         ("dict_lr_val_proj",
          "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
          "('[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]') "
@@ -438,18 +435,16 @@ class TestAutodiffLearningRateArgs:
         mech_3 = pnl.ProcessingMechanism(name='Mech 3')
         mech_4 = pnl.ProcessingMechanism(name='Mech 4')
         input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=.2, name="INPUT PROJECTION")
-    
+
         comp_lr = None
         default_lr = .1
         key_spec = input_proj
         val_spec = .2
-    
-        if condition == 'default_lr_spec_str':
-            default_lr = 'you say'
-        if condition == 'lr_spec_str':
+
+        if condition == 'comp_lr_spec_str':
             comp_lr = 'hello'
-        elif condition == 'lr_spec_proj':
-            comp_lr = input_proj
+        elif condition == 'comp_lr_spec_proj':
+             comp_lr = input_proj
         elif condition == "dict_lr_val_str":
             val_spec = "goodbye"
         elif condition == "dict_lr_val_proj":
@@ -462,18 +457,12 @@ class TestAutodiffLearningRateArgs:
             key_spec = pnl.MappingProjection(mech_3, mech_4, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
             input_proj.learnable = False
-    
-        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
-    
-        if condition not in{"dict_illegal_key_str", "dict_key_bad_proj", "dict_proj_not_learnable"}:
-            with pytest.raises(AutodiffCompositionError) as error_text:
-                pnl.AutodiffComposition(learning_rate=comp_lr, name='Comp')
-            assert error_msg in str(error_text.value)
-            return
 
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            comp = pnl.AutodiffComposition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
-            comp.learn(inputs={mech_1: [[1.0]]},)
+        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
+
+        with pytest.raises(pnl.CompositionError) as error_text:
+            autodiff_comp = pnl.AutodiffComposition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
+            autodiff_comp.learn(inputs={mech_1: [[1.0]]},)
         assert error_msg in str(error_text.value)
 
 

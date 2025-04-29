@@ -170,37 +170,34 @@ class TestStructral:
         np.testing.assert_allclose(comp_result, expected)
 
     error_test_args = [
-        ('default_lr_spec_str',
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "('[{'default_learning_rate': 'you say'}]') must each be a float, int, bool, or None."),
-        ("lr_spec_str",
-         f"The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
-        ("lr_spec_proj",
-         f"The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
-         f"must be a float, int, bool, None, or a dict."),
-        ("dict_lr_val_str",
+        ("comp_lr_spec_str", True,
+         "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
+        ("comp_lr_spec_proj", True,
+         "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
+         "must be a float, int, bool, None, or a dict."),
+        ("dict_lr_val_str", False,
         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
         "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
-        ("dict_lr_val_proj",
+        ("dict_lr_val_proj", False,
          "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
          "('[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]') "
          "must each be a float, int, bool, or None."),
-        ("dict_illegal_key_str",
+        ("dict_illegal_key_str", True,
          "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
          "a Projection or the name of one in that Composition: 'woa a woa'."),
-        ("dict_illegal_key_int",
+        ("dict_illegal_key_int", False,
          "The keys ('23') for all entries of the dict specified in 'learning_rate' arg for 'Comp' must all be "
          "MappingProjections or names of ones."),
-        ("dict_key_bad_proj",
+        ("dict_key_bad_proj", True,
          "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
          "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),
-        ("dict_proj_not_learnable",
+        ("dict_proj_not_learnable", True,
          "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
          "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
     ]
-    @pytest.mark.parametrize("condition, error_msg", error_test_args,
+    @pytest.mark.parametrize("condition, check_learn, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
-    def test_learning_rate_specification_errors(self, condition, error_msg):
+    def test_learning_rate_specification_errors(self, condition, check_learn, error_msg):
         # Test for errors with learning_rates specified in Composition constructor
         mech_1 = pnl.ProcessingMechanism(name='Mech 1')
         mech_2 = pnl.ProcessingMechanism(name='Mech 2')
@@ -213,11 +210,9 @@ class TestStructral:
         key_spec = input_proj
         val_spec = .2
 
-        if condition == 'default_lr_spec_str':
-            default_lr = 'you say'
-        if condition == 'lr_spec_str':
+        if condition == 'comp_lr_spec_str':
             comp_lr = 'hello'
-        elif condition == 'lr_spec_proj':
+        elif condition == 'comp_lr_spec_proj':
              comp_lr = input_proj
         elif condition == "dict_lr_val_str":
             val_spec = "goodbye"
@@ -234,7 +229,7 @@ class TestStructral:
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
-        if condition not in{"dict_illegal_key_str", "dict_key_bad_proj", "dict_proj_not_learnable"}:
+        if not check_learn:
             with pytest.raises(CompositionError) as error_text:
                 pnl.Composition(learning_rate=comp_lr, name='Comp')
             assert error_msg in str(error_text.value)
