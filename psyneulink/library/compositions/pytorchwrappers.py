@@ -811,7 +811,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if not isinstance(learning_rate, (int, float, bool, type(None))):
                 raise AutodiffCompositionError(
                     f"Learning rate specified in 'learning_rate' arg of {source} for '{self.composition.name}' "
-                    f"('{learning_rate}') must be an int or float.")
+                    f"('{learning_rate}') must be an int, float or bool.")
             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                     or learning_rate is False):
                 # Learning disabled for the Composition or the Projection
@@ -854,12 +854,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if nested:
             return specs_to_validate
-        # for proj_spec in specs_to_validate.keys():
-        #     # proj_name = proj_spec._proxy_for.name if proj_spec._proxy_for else proj_name
-        #     bad_proj_specs = ([proj_name for proj_name in specs_to_validate
-        #                       if proj_name not in self._pnl_refs_to_torch_params_map])
-        #
-        # if bad_proj_specs:
         if specs_to_validate:
             if len(specs_to_validate) == 1:
                 err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source} for "
