@@ -170,67 +170,80 @@ class TestStructral:
         np.testing.assert_allclose(comp_result, expected)
 
     error_test_args = [
+        ('default_lr_spec_str',
+         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+         "('[{'default_learning_rate': 'you say'}]') must each be a float, int, bool, or None."),
         ("lr_spec_str",
          f"The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
         ("lr_spec_proj",
          f"The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
          f"must be a float, int, bool, None, or a dict."),
         ("dict_lr_val_str",
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "('[{(MappingProjection INPUT PROJECTION): 'hello'}]') must each be a float, int, bool, or None."),
+        "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+        "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
         ("dict_lr_val_proj",
          "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
          "('[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]') "
          "must each be a float, int, bool, or None."),
         ("dict_illegal_key_str",
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp'"
-         "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
+         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
+         "a Projection or the name of one in that Composition: 'woa a woa'."),
         ("dict_illegal_key_int",
-         f"XYZ"),
+         "The keys ('23') for all entries of the dict specified in 'learning_rate' arg for 'Comp' must all be "
+         "MappingProjections or names of ones."),
         ("dict_key_bad_proj",
-         f"XYZ"),
+         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
+         "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),
         ("dict_proj_not_learnable",
-         f"XYZ"),
+         "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
+         "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
     ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
     def test_learning_rate_specification_errors(self, condition, error_msg):
-        # Test for error with learning_rate specified in Composition constructor and in learn() method
-        # BREADCRUMB:
-        #  TEST FOR DICT ENTRY ERRORS
-        #  TEST FOR ERROR ON USE OF DICT IN learn() METHOD
-
+        # Test for errors with learning_rates specified in Composition constructor
         mech_1 = pnl.ProcessingMechanism(name='Mech 1')
         mech_2 = pnl.ProcessingMechanism(name='Mech 2')
         mech_3 = pnl.ProcessingMechanism(name='Mech 3')
         mech_4 = pnl.ProcessingMechanism(name='Mech 4')
         input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=.2, name="INPUT PROJECTION")
-        bad_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=.4, name="BAD PROJECTION")
 
         comp_lr = None
+        default_lr = .1
+        key_spec = input_proj
+        val_spec = .2
+
+        if condition == 'default_lr_spec_str':
+            default_lr = 'you say'
         if condition == 'lr_spec_str':
             comp_lr = 'hello'
         elif condition == 'lr_spec_proj':
              comp_lr = input_proj
         elif condition == "dict_lr_val_str":
-            bad_spec = "hello"
+            val_spec = "goodbye"
         elif condition == "dict_lr_val_proj":
-            bad_spec = input_proj
+            val_spec = input_proj
         elif condition == "dict_illegal_key_str":
-            bad_spec = "goodbye"
+            key_spec = "woa a woa"
         elif condition == "dict_illegal_key_int":
-            bad_spec = 23
+            key_spec = 23
         elif condition == "dict_key_bad_proj":
-            bad_spec = bad_proj
+            key_spec = pnl.MappingProjection(mech_3, mech_4, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
-            input_proj.learnable == False
+            input_proj.learnable = False
 
-        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: .1, input_proj: bad_spec}
+        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
+
+        if condition not in{"dict_illegal_key_str", "dict_key_bad_proj", "dict_proj_not_learnable"}:
+            with pytest.raises(CompositionError) as error_text:
+                pnl.Composition(learning_rate=comp_lr, name='Comp')
+            assert error_msg in str(error_text.value)
+            return
 
         with pytest.raises(CompositionError) as error_text:
-            comp = pnl.Composition(name='Comp', learning_rate=comp_lr)
+            comp = pnl.Composition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
+            comp.learn(inputs={mech_1: [[1.0]]},)
         assert error_msg in str(error_text.value)
-        return
 
 
     class TestInputAndTargetSpecs:

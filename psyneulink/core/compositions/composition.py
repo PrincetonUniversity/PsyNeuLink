@@ -9233,9 +9233,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Check that all keys in remaining entries are a Projection or a name (str)
             bad_keys = [spec for spec in learning_rates_dict.keys() if not isinstance(spec, (str, MappingProjection))]
             if bad_keys:
-                raise CompositionError(f"The keys for all entries of the dict specified in 'learning_rate' "
-                                       f"arg for '{self.name}' must all be MappingProjections or names of ones: "
-                                       f"'{', '.join(bad_keys)}'.")
+                raise CompositionError(f"The keys "
+                                       f"('{', '.join([str(k) if not isinstance(k, str) else k for k in bad_keys])}') "
+                                       f"for all entries of the dict specified in 'learning_rate' arg for "
+                                       f"'{self.name}' must all be MappingProjections or names of ones.")
             # Convert all remaining entries to Projection names for consistency in later processing
             self._learning_rates_dict = {(k.name if isinstance(k, MappingProjection) else k): v
                                         for k,v in learning_rates_dict.items()}
@@ -9257,9 +9258,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except KeyError:
                 pass
         if not_learnable:
-            raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' "
-                                   f"arg of '{self.name}' are not learnable; check that their 'learnable'"
-                                   f" attribute is set to True: '{', '.join(repr(not_learnable))}'.")
+            raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
+                                   f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
+                                   f"'learnable' attribute is set to True or remove them from the dict.")
+
 
     def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
@@ -11826,9 +11828,15 @@ _
                                        f"argument the constructor(s) for the corresponding MappingProjection(s).")
             if self._learning_rates_dict:
                 # dict should be empty if all specifications were valid and
-                #   thus dispatched in calls to_assign_learning_rates()
-                warnings.warn(f"The following Projection(s) were assigned learning_rate(s) that do not seem to be "
-                              f"included in '{self.name}':  '{' ,'.join[self._learning_rates.keys()]}'")
+                # thus dispatched in calls to_assign_learning_rates()
+                if len(self._learning_rates_dict) == 1:
+                    err_msg = (f"The following entry appears in the dict specified for the 'learning_rate' arg of "
+                               f"'{self.name}' but its key is not a Projection or the name of one in that Composition:")
+                else:
+                    err_msg = (f"The following entries appear in the dict specified for the 'learning_rate' arg "
+                               f"of '{self.name}' but their keys are not Projections or the names of ones in that "
+                               f"Composition:")
+                raise CompositionError(err_msg + f" '{' ,'.join(list(self._learning_rates_dict.keys()))}'.")
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
