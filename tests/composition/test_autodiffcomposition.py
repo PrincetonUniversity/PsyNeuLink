@@ -430,11 +430,12 @@ class TestAutodiffLearningRateArgs:
                              ids=[f"{x[0]}" for x in error_test_args])
     def test_learning_rate_specification_errors(self, condition, error_msg):
         # Test for errors with learning_rates specified in Composition constructor
-        mech_1 = pnl.ProcessingMechanism(name='Mech 1')
-        mech_2 = pnl.ProcessingMechanism(name='Mech 2')
-        mech_3 = pnl.ProcessingMechanism(name='Mech 3')
-        mech_4 = pnl.ProcessingMechanism(name='Mech 4')
+        mech_1 = pnl.ProcessingMechanism(name='INPUT NODE')
+        mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 1')
+        mech_3 = pnl.ProcessingMechanism(name='NESTED NODE 2')
+        mech_4 = pnl.ProcessingMechanism(name='OUTPUT NODE')
         input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=.2, name="INPUT PROJECTION")
+        nested_proj = pnl.MappingProjection(mech_2, mech_3, learning_rate=.3, name="NESTED PROJECTION")
 
         comp_lr = None
         default_lr = .1
@@ -458,11 +459,14 @@ class TestAutodiffLearningRateArgs:
         elif condition == "dict_proj_not_learnable":
             input_proj.learnable = False
 
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[mech_2, input_proj, mech_3],)
+
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
         with pytest.raises(pnl.CompositionError) as error_text:
-            autodiff_comp = pnl.AutodiffComposition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
-            autodiff_comp.learn(inputs={mech_1: [[1.0]]},)
+            outer_comp = pnl.AutodiffComposition([mech_1, input_proj, nested_comp, mech_4],
+                                                 learning_rate=comp_lr, name='Outer Comp')
+            outer_comp.learn(inputs={mech_1: [[1.0]]},)
         assert error_msg in str(error_text.value)
 
 
