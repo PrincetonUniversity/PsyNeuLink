@@ -160,24 +160,30 @@ class TestStructral:
                                learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
+        if post_constr:
+            input_proj.learning_rate = .9
+            hidden_proj.learning_rate = .7
+
+        comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
+                                 num_trials=num_trials,
+                                 learning_rate=learn_method_lr)
+        np.testing.assert_allclose(comp_result, expected)
+
 
     error_test_args = [
-        #    condition           composition_lr   learn_lr   proj_constr_lr   post_constr
-        ("default_spec_str",      'hello',          None,        None,           False),
-        ("default_spec_proj",      'PROJ'           None,        None,           False),
-        ("proj_spec_error",        default_lr,      'hello',        None,           False),
-        ("nested_proj_spec_error", default_lr,          None,        None,           False),
-        ("proj_ref_error",         default_lr,          None,        None,           False),
-        ("nested_proj_ref_error",  default_lr,          None,        None,           False),
-        ("non_learnable_error",    default_lr,          None,        None,           False),
-        ("learn_method_use_error", default_lr,          None,        None,           False),
+        #    condition            proj_constr_lr  composition_lr   learn_lr
+        ("default_spec_str",          None,         'hello',         None   ),
+        ("default_spec_proj",         None,         'PROJ',          None   ),
+        ("default_spec_proj",         None,        default_lr,       None   ),
+        ("learn_spec_error",          None,        default_lr,      'hello' ),
+        ("proj_spec_error_inp",      "input",      default_lr,       None   ),
+        ("proj_ref_error_nested",    "hidden",     default_lr,       None   ),
+        ("non_learnable_error",       False,       default_lr,        0.2   ),
+        ("learn_method_use_error",    None,        default_lr,       None   ),
     ]
-    # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
-    #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
-    @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
-    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
+    @pytest.mark.parametrize("condition, proj_constructor_lr, composition_lr, learn_method_lr",
                              test_args, ids=[f"{x[0]}" for x in test_args])
-    def test_learning_rate_specification_errors(self):
+    def test_learning_rate_specification_errors(self, condition, proj_constructor_lr, composition_lr, learn_method_lr):
         # Test for error with learning_rate specified in Composition constructor and in learn() method
         # BREADCRUMB:
         #  TEST FOR DICT ENTRY ERRORS
@@ -185,17 +191,18 @@ class TestStructral:
         mech_1 = pnl.ProcessingMechanism(name='Mech 1')
         mech_2 = pnl.ProcessingMechanism(name='Mech 2')
         mech_3 = pnl.ProcessingMechanism(name='Mech 3')
-        input_proj = pnl.MappingProjection(mech_1, mech_2, name="INPUT PROJECTION")
-        hidden_proj = pnl.MappingProjection(mech_2, mech_3, name="HIDDEN PROJECTION")
+        mech_4 = pnl.ProcessingMechanism(name='Mech 4')
+        input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=input_proj_lr, name="INPUT PROJECTION")
+        hidden_proj = pnl.MappingProjection(mech_2, mech_3, learning_rate=hidden_proj_lr, name="HIDDEN PROJECTION")
 
-        comp_lr_dict = {DEFAULT_LEARNING_RATE: comp_lr ,
-                        input_proj: input_lr,
-                        hidden_proj: hidden_lr}
+        comp_lr_dict = {DEFAULT_LEARNING_RATE: composition_lr,
+                        input_proj: input_comp_lr,
+                        hidden_proj: hidden_comp_lr}
 
         # output_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=default_lr,name="OUTPUT PROJECTION")
         comp = pnl.Composition(name='Comp',
                                synch_node_variables_with_torch=pnl.RUN,
-                               learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
+                               learning_rate=comp_lr_dict if comp_lr_dict else composition_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
 
