@@ -176,12 +176,15 @@ class TestStructral:
          f"The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
          f"must be a float, int, bool, None, or a dict."),
         ("dict_lr_val_str",
-         f"The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         f"('[{(MappingProjection INPUT PROJECTION): 'hello'}]') must each be a float, int, bool, or None."),
+         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+         "('[{(MappingProjection INPUT PROJECTION): 'hello'}]') must each be a float, int, bool, or None."),
         ("dict_lr_val_proj",
-         f"XYZ"),
+         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+         "('[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]') "
+         "must each be a float, int, bool, or None."),
         ("dict_illegal_key_str",
-         f"XYZ"),
+         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp'"
+         "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
         ("dict_illegal_key_int",
          f"XYZ"),
         ("dict_key_bad_proj",
