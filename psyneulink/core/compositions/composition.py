@@ -9218,15 +9218,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Parse and validate learning_rate specified in Composition constructor"""
         if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
             raise CompositionError(
-                f"The 'learning_rate' arg for '{self.name}' must be a float, int or dict: '{learning_rate}'")
+                f"The 'learning_rate' arg for '{self.name}' ('{learning_rate}') "
+                f"must be a float, int, bool, None, or a dict.")
         if isinstance(learning_rate, dict):
             learning_rates_dict = learning_rate
             # Check that the learning_rate specification(s) are all legal
-            bad_vals = [(spec, val) for spec, val in learning_rates_dict.items()
+            bad_vals = [{spec: val} for spec, val in learning_rates_dict.items()
                         if not isinstance(val, (float, int, bool, type(None)))]
             if bad_vals:
-                raise CompositionError(f"The learning rate(s) specified in 'learning_rate' arg for '{self.name}' "
-                                       f"must each be a float, int, bool, or None: '{', '.join(repr(bad_vals))}'.")
+                raise CompositionError(f"The values of the entries in the dict specified for the 'learning_rate' arg "
+                                       f"of '{self.name}' ('{bad_vals}') must each be a float, int, bool, or None.")
             # Get default learning rate if there is one
             learning_rate = learning_rates_dict.pop(DEFAULT_LEARNING_RATE, None)
             # Check that all keys in remaining entries are a Projection or a name (str)
@@ -9234,7 +9235,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if bad_keys:
                 raise CompositionError(f"The keys for all entries of the dict specified in 'learning_rate' "
                                        f"arg for '{self.name}' must all be MappingProjections or names of ones: "
-                                       f"'{', '.join(bad_key)}'.")
+                                       f"'{', '.join(bad_keys)}'.")
             # Convert all remaining entries to Projection names for consistency in later processing
             self._learning_rates_dict = {(k.name if isinstance(k, MappingProjection) else k): v
                                         for k,v in learning_rates_dict.items()}
