@@ -424,7 +424,10 @@ class TestAutodiffLearningRateArgs:
         ("dict_proj_not_learnable",
          "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
          "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
-    ]
+        # "Bad Projection specification in 'pathway' arg for add_linear_processing_pathway method of 'Outer Comp' ")
+    #     "((MappingProjection INPUT PROJECTION)): The 'learning_rate' argument (0.2) "
+    #     "cannot be specified as a float or int when 'learnable' is False.")
+         ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
     def test_learning_rate_specification_errors(self, condition, error_msg):
@@ -463,6 +466,7 @@ class TestAutodiffLearningRateArgs:
             key_spec = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
             input_proj.learnable = False
+            # error_type = pnl.CompositionError
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
