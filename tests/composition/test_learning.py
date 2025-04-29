@@ -170,7 +170,7 @@ class TestStructral:
         np.testing.assert_allclose(comp_result, expected)
 
     error_test_args = [
-        #    condition       composition_lr          learn_lr   proj_constr_lr   post_constr
+        #    condition           composition_lr      learn_lr   proj_constr_lr    post_constr
         ("default_spec_error",     default_lr,          None,        None,           False),
         ("proj_spec_error",        default_lr,          None,        None,           False),
         ("nested_proj_spec_error", default_lr,          None,        None,           False),
