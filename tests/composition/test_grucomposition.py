@@ -391,7 +391,7 @@ class TestExecution:
         elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
             bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
             error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
-                         f"'learning_rate' arg of the constructor for 'GRU Composition' when its bias option "
+                         f"'learning_rate' arg of the learn() method for 'GRU Composition' when its bias option "
                          f"is set to False; the spec(s) must be removed or bias set to True.")
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
