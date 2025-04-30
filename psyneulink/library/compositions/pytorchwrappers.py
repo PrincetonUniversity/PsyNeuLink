@@ -766,9 +766,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
-                    warnings.warn(f"Projection specified in 'learning_rate' arg of {source} for "
-                                  f"'{self.composition.name}' ('{pnl_param_name}') is not learnable; "
-                                  f"check that is 'learnable' attribute is set to True.")
+                    raise AutodiffCompositionError(f"Projection specified in 'learning_rate' arg of {source} for "
+                                                   f"'{self.composition.name}' ('{pnl_param_name}') is not learnable; "
+                                                   f"check that its 'learnable' attribute is set to True.")
                 else:
                     assert False, (f"PROGRAM ERROR: {torch_param_name} is not a learnable torch parameter even though "
                                    f"it is associated with a learnable Projection ('{pnl_param_name}').")
@@ -810,8 +810,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float, bool, type(None))):
                 raise AutodiffCompositionError(
-                    f"Learning rate specified in 'learning_rate' arg of {source} for '{self.composition.name}' "
-                    f"('{learning_rate}') must be an int, float or bool.")
+                    f"The value ('{learning_rate}') for '{param}' in the dict specified for the 'learning_rate' arg "
+                    f"of {source} of '{self.composition.name}' must be an int, float or bool.")
             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                     or learning_rate is False):
                 # Learning disabled for the Composition or the Projection

@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 import pytest
+from fontTools.mtiLib import parseSingleSubst
 
 import psyneulink as pnl
 
@@ -401,32 +402,32 @@ class TestAutodiffLearningRateArgs:
     
     # BREADCRUMB:  TAKEN FROM test_learning;  ADAPT FOR AutodiffComposition
     error_test_args = [
-        # ("comp_lr_spec_str",
-        #  "The 'learning_rate' arg for 'Outer Comp' ('hello') must be a float, int, bool, None, or a dict."),
-        # ("comp_lr_spec_proj",
-        #  "The 'learning_rate' arg for 'Outer Comp' ('(MappingProjection INPUT PROJECTION)') "
-        #  "must be a float, int, bool, None, or a dict."),
-        # ("dict_lr_val_str",
-        #  "Learning rate specified in 'learning_rate' arg of constructor for 'Outer Comp' ('goodbye') "
-        #  "must be an int, float or bool."),
-        # ("dict_lr_val_proj",
-        #  "Learning rate specified in 'learning_rate' arg of constructor for 'Outer Comp' "
-        #  "('(MappingProjection INPUT PROJECTION)') must be an int, float or bool."),
-        # ("dict_illegal_key_str",
-        #  "The following Projection specified in the 'learning_rate' arg of the constructor for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: 'woa a woa'."),
-        # ("dict_illegal_key_int",
-        #  "The following Projection specified in the 'learning_rate' arg of the constructor for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: '23'."),
-        # ("dict_key_bad_proj",
-        #  "The following Projection specified in the 'learning_rate' arg of the constructor for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
+        ("comp_lr_spec_str",
+         "Value ('hello') specified in 'learning_rate' arg of learn() method for 'Outer Comp' "
+         "must be an int, float, bool or dict."),
+        ("comp_lr_spec_proj",
+         "Value ('(MappingProjection INPUT PROJECTION)') specified in 'learning_rate' arg of learn() method for "
+         "'Outer Comp' must be an int, float, bool or dict."),
+        ("dict_lr_val_str",
+         "The value ('goodbye') for 'Parameter containing:\\ntensor([[1.]], dtype=torch.float64, requires_grad=True)' "
+         "in the dict specified for the 'learning_rate' arg of learn() method of 'Outer Comp' "
+         "must be an int, float or bool."),
+        ("dict_lr_val_proj",
+         "The value ('(MappingProjection INPUT PROJECTION)') for 'Parameter containing:\\ntensor([[1.]], "
+         "dtype=torch.float64, requires_grad=True)' in the dict specified for the 'learning_rate' arg of learn() "
+         "method of 'Outer Comp' must be an int, float or bool."),
+        ("dict_illegal_key_str",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'woa a woa'."),
+        ("dict_illegal_key_int",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: '23'."),
+        ("dict_key_bad_proj",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
         ("dict_proj_not_learnable",
-         "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
-         "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
-        # "Bad Projection specification in 'pathway' arg for add_linear_processing_pathway method of 'Outer Comp' ")
-    #     "((MappingProjection INPUT PROJECTION)): The 'learning_rate' argument (0.2) "
-    #     "cannot be specified as a float or int when 'learnable' is False.")
+         "Projection specified in 'learning_rate' arg of learn() method for 'Outer Comp' ('INPUT PROJECTION') "
+         "is not learnable; check that its 'learnable' attribute is set to True.")
          ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -439,7 +440,9 @@ class TestAutodiffLearningRateArgs:
 
         outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
         outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
-        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1, learning_rate=.2, name="INPUT PROJECTION")
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1,
+                                           learning_rate=False if condition == 'dict_proj_not_learnable' else .2,
+                                           name="INPUT PROJECTION")
         pathway = [outer_mech_in, input_proj, nested_comp, outer_mech_out]
 
         comp_lr = None
@@ -465,14 +468,17 @@ class TestAutodiffLearningRateArgs:
         elif condition == "dict_key_bad_proj":
             key_spec = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
-            input_proj.learnable = False
-            # error_type = pnl.CompositionError
+            error_type = pnl.CompositionError
+            comp_lr = None
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
         with pytest.raises(error_type) as error_text:
-            outer_comp = pnl.AutodiffComposition(pathway, learning_rate=comp_lr, name='Outer Comp')
-            outer_comp.learn(inputs={outer_mech_in: [[1.0]]},)
+            # outer_comp = pnl.AutodiffComposition(pathway, learning_rate=comp_lr, name='Outer Comp')
+            outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
+            # input_proj.learnable = False
+            # outer_comp.learn(inputs={outer_mech_in: [[1.0]]})
+            outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
         assert error_msg in str(error_text.value)
 
 

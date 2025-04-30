@@ -1145,8 +1145,11 @@ class AutodiffComposition(Composition):
         return pytorch_rep
 
     def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context):
+        source = ContextFlags.LEARNING if context.runmode == ContextFlags.LEARNING_MODE else ContextFlags.CONSTRUCTOR
+        source_str = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
         if not is_numeric_scalar(learning_rate):
-            raise AutodiffCompositionError("Learning rate must be an integer or float value.")
+            raise AutodiffCompositionError(f"Value ('{learning_rate}') specified in 'learning_rate' arg of {source_str} "
+                                           f"for '{self.name}' must be an int, float, bool or dict.")
         if self.optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
@@ -1163,7 +1166,7 @@ class AutodiffComposition(Composition):
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
         default_param_groups = optimizer.param_groups.copy()
-        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, Context(source=ContextFlags.CONSTRUCTOR))
+        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, Context(source))
         self._optimizer_default_param_groups = (
             optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
         # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
