@@ -1071,8 +1071,6 @@ class GRUComposition(AutodiffComposition):
         self.scheduler.add_condition(self.new_node, conditions.AfterNodes(self.update_node))
         self.scheduler.add_condition(self.hidden_layer_node, conditions.AfterNodes(self.new_node))
 
-        self._set_learning_attributes()
-
         self._analyze_graph()
 
     def _assign_gru_specific_attributes(self, input_size, hidden_size):
@@ -1087,39 +1085,6 @@ class GRUComposition(AutodiffComposition):
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
-
-    def _set_learning_attributes(self):
-        """Set learning-related attributes for Node and Projections"""
-        learning_rate = self.enable_learning
-
-        # BREADCRUMB: 4/20/25 — RECONCILE WITH AutodiffComposition _update_optimizer_params
-
-        for projection in self.learnable_projections:
-
-            # if self.enable_learning is False:
-            #     projection.learnable = False
-            #     continue
-            #
-            # if learning_rate is False:
-            #     projection.learnable = False
-            #     continue
-
-            # If enable_learning and a learning_rate for the GRUComposition have not both been set for learning,
-            #     set Projection learning_rate to False
-            if not ((self.enable_learning == True) and (self.learning_rate is not False)):
-                projection.learnable = False
-                continue
-
-            if learning_rate is True:
-                # Default (GRUComposition's) learning_rate is used for all field_weight Projections:
-                learning_rate = self.learning_rate
-
-            assert isinstance(learning_rate, (int, float)), \
-                (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
-
-            projection.learnable = True
-            if projection.learning_mechanism:
-                projection.learning_mechanism.learning_rate = learning_rate
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
