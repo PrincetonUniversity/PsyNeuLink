@@ -2603,7 +2603,7 @@ class EMComposition(AutodiffComposition):
                 learning_rate = self.learn_field_weights
             # Individual learning_rates specified for each field (i.e., self.learn_field_weights is a list )
             else:
-                assert isinstance(self.learn_field_weights, list), \
+                assert isinstance(self.learn_field_weights, (list, np.ndarray)), \
                     (f"PROGRAM ERROR: expected 'self.field_weights' ({self.learn_field_weights}) "
                      f"for {self.name} to be a list.")
                 learning_rate = self.learn_field_weights[self._field_index_map[projection]]
