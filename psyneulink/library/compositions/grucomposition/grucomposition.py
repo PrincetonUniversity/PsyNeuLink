@@ -1092,7 +1092,7 @@ class GRUComposition(AutodiffComposition):
         """Set learning-related attributes for Node and Projections"""
         learning_rate = self.enable_learning
 
-        # FIX: 4/20/25 — RECONCILE WITH AutodiffComposition _update_optimizer_params
+        # BREADCRUMB: 4/20/25 — RECONCILE WITH AutodiffComposition _update_optimizer_params
 
         for projection in self.learnable_projections:
 

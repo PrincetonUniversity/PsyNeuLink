@@ -213,7 +213,7 @@ class TestStructral:
         if condition == 'comp_lr_spec_str':
             comp_lr = 'hello'
         elif condition == 'comp_lr_spec_proj':
-             comp_lr = input_proj
+            comp_lr = input_proj
         elif condition == "dict_lr_val_str":
             val_spec = "goodbye"
         elif condition == "dict_lr_val_proj":

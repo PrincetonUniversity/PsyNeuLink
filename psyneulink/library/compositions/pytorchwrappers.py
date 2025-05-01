@@ -730,7 +730,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param = self._pnl_refs_to_torch_params_map[pnl_param_name]
             except KeyError:
                 raise AutodiffCompositionError(
-                    f"Projection specified in 'learning_rate' arg of {source} for '{self.composition.name}' "
+                    f"Projection specified in 'learning_rate' arg of the {source} for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with a learnable Pytorch parameter.")
 
             # IMPLEMENTATION NOTE:
@@ -766,9 +766,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_wrapper_name = self._pnl_refs_to_torch_params_map[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
-                    raise AutodiffCompositionError(f"Projection specified in 'learning_rate' arg of {source} for "
-                                                   f"'{self.composition.name}' ('{pnl_param_name}') is not learnable; "
-                                                   f"check that its 'learnable' attribute is set to True.")
+                    raise AutodiffCompositionError(f"Projection ('{pnl_param_name}') specified in the dict for the "
+                                                   f"'learning_rate' arg of the {source} for '{self.composition.name}' "
+                                                   f"is not learnable; check that its 'learnable' attribute is set to "
+                                                   f"True or remove from the dict.")
                 else:
                     assert False, (f"PROGRAM ERROR: {torch_param_name} is not a learnable torch parameter even though "
                                    f"it is associated with a learnable Projection ('{pnl_param_name}').")

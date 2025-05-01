@@ -400,14 +400,13 @@ class TestAutodiffLearningRateArgs:
                            else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
         np.testing.assert_allclose(pytorch_result, expected)
 
-    # BREADCRUMB:  TAKEN FROM test_learning;  ADAPT FOR AutodiffComposition
     error_test_args = [
         ("comp_lr_spec_str",
-         "Value ('hello') specified in 'learning_rate' arg of learn() method for 'Outer Comp' "
+         "Value ('hello') specified in 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "must be an int, float, bool or dict."),
         ("comp_lr_spec_proj",
-         "Value ('(MappingProjection INPUT PROJECTION)') specified in 'learning_rate' arg of learn() method for "
-         "'Outer Comp' must be an int, float, bool or dict."),
+         "Value ('(MappingProjection INPUT PROJECTION)') specified in 'learning_rate' arg "
+         "of the learn() method for 'Outer Comp' must be an int, float, bool or dict."),
         ("dict_lr_val_str",
          "The value ('goodbye') for 'Parameter containing:\\ntensor([[1.]], dtype=torch.float64, requires_grad=True)' "
          "in the dict specified for the 'learning_rate' arg of learn() method of 'Outer Comp' "
@@ -426,8 +425,8 @@ class TestAutodiffLearningRateArgs:
          "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
         ("dict_proj_not_learnable",
-         "Projection specified in 'learning_rate' arg of learn() method for 'Outer Comp' ('INPUT PROJECTION') "
-         "is not learnable; check that its 'learnable' attribute is set to True.")
+         "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
+         "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to True or remove from the dict.")
          ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -3482,23 +3481,6 @@ class TestMiscTrainingFunctionality:
             (("Projection specified in 'learning_rate' arg of learn() method for 'autodiff_composition' "
               "('INPUT PROJECTION') is not learnable; check that its 'learnable' attribute is set to True.")
              in str(error_text.value))
-
-            #
-            # with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
-            #     outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
-            #     outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
-            # (warnings.list[2].message.args[0] ==
-            #  (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
-            #   f"('MappingProjection from input_mech[OutputPort-0] to nested_1[InputPort-0]') is not learnable; "
-            #   f"check that is 'learnable' attribute is set to True."))
-            # (warnings.list[3].message.args[0] ==
-            #  (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
-            #   f"('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') is not learnable; "
-            #   f"check that is 'learnable' attribute is set to True."))
-            # (warnings.list[4].message.args[0] ==
-            #  (f"Projection specified in 'learning_rate' arg of constructor for 'autodiff_composition-1' "
-            #   f"('MappingProjection from nested_2[OutputPort-0] to output_mech[InputPort-0]') is not learnable; "
-            #   f"check that is 'learnable' attribute is set to True."))
             return
 
         outer_comp = pnl.AutodiffComposition(
