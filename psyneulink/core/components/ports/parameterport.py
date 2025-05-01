@@ -384,7 +384,12 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
-from psyneulink.core.globals.parameters import ParameterAlias, SharedParameter, check_user_specified
+from psyneulink.core.globals.parameters import (
+    ParameterAlias,
+    ParameterInvalidSourceError,
+    SharedParameter,
+    check_user_specified,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -1034,6 +1039,8 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             except (AttributeError, FunctionError, TypeError):
                 if not isinstance(p._owner._owner, ComponentsMeta):
                     raise
+                func = None
+            except ParameterInvalidSourceError:
                 func = None
 
             if func is None:

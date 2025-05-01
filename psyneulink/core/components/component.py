@@ -537,8 +537,18 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RANDOM, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
+from psyneulink.core.globals.parameters import (
+    Defaults,
+    Parameter,
+    ParameterAlias,
+    ParameterError,
+    ParameterInvalidSourceError,
+    ParametersBase,
+    SharedParameter,
+    check_user_specified,
+    copy_parameter_value,
+    is_array_like,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1406,9 +1416,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
-            return p.name not in blacklist and \
-                   (p.name in whitelist or isinstance(p.get(), Component)) and \
-                   self._is_compilable_param(p)
+            return (
+                p.name not in blacklist
+                # check before p.get to avoid possible SharedParameter exceptions
+                and self._is_compilable_param(p)
+                and (p.name in whitelist or isinstance(p.get(), Component))
+            )
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -3336,7 +3349,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._instantiate_value(context)
 
         for p in self.parameters._in_dependency_order:
-            val = p._get(context)
+            try:
+                val = p._get(context)
+            except ParameterInvalidSourceError:
+                continue
+
             if (
                 not p.reference
                 and isinstance(val, Function)
@@ -4394,7 +4411,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
-            param_value = p._get(context)
+            try:
+                param_value = p._get(context)
+            except ParameterInvalidSourceError:
+                continue
+
             try:
                 param_value = param_value.__self__
             except AttributeError:

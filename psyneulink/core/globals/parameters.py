@@ -350,6 +350,39 @@ class ParameterError(Exception):
     pass
 
 
+class ParameterInvalidSourceError(ParameterError):
+    def __init__(self, param=None, detail=None):
+        from psyneulink.core.components.component import ComponentsMeta
+
+        if detail is None:
+            try:
+                owner = param._owner._owner
+            except AttributeError as e:
+                raise AssertionError() from e
+
+            attr_name = param.attribute_name
+            try:
+                attr_val = getattr(owner, attr_name)
+            except AttributeError:
+                detail = f"has no attribute '{attr_name}'"
+            else:
+                if attr_val is None:
+                    detail = f"'{attr_name}' is None"
+                elif not hasattr(attr_val, param.shared_parameter_name):
+                    detail = f"'{attr_name}' {attr_val} has no attribute '{param.shared_parameter_name}'"
+                elif isinstance(attr_val, ComponentsMeta):
+                    detail = f"'{attr_name}' {attr_val} is not yet instantiated"
+                else:
+                    detail = f"'{attr_name}' {attr_val} unspecified error"
+        message = "Invalid source for {0} '{1}'{2}: {3}".format(
+            type(param).__name__,
+            param.name,
+            param._owner_string,
+            detail
+        )
+        super().__init__(message)
+
+
 def _get_prefixed_method(obj, prefix, name, sep=''):
     try:
         return getattr(obj, f'{prefix}{sep}{name}')
@@ -517,6 +550,32 @@ def is_array_like(obj: typing.Any) -> bool:
     return hasattr(obj, 'dtype')
 
 
+def _owner_string(param_obj):
+    # Parameter or ParametersTemplate
+    try:
+        param_owner = param_obj._owner
+    except AttributeError:
+        return ''
+
+    # Parameter only (bypass its ParametersTemplate _owner)
+    try:
+        param_owner = param_owner._owner
+    except AttributeError:
+        pass
+
+    if isinstance(param_owner, type):
+        owner_string = f' of {param_owner}'
+    else:
+        owner_string = f' of {param_owner.name}'
+
+        if hasattr(param_owner, 'owner') and param_owner.owner:
+            owner_string += f' for {param_owner.owner.name}'
+            if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
+                owner_string += f' of {param_owner.owner.owner.name}'
+
+    return owner_string
+
+
 # used in Parameter._set_value. Parameter names where a change in
 # shape/type should cause deletion of corresponding compiled structs
 # even if the values are not synced
@@ -652,6 +711,10 @@ class ParametersTemplate:
         except TypeError:
             self._owner_ref = value
 
+    @property
+    def _owner_string(self):
+        return _owner_string(self)
+
     def _dependency_order_key(self, names=False):
         """
         Args:
@@ -757,6 +820,10 @@ class ParameterBase(types.SimpleNamespace):
 
     def __hash__(self):
         return object.__hash__(self)
+
+    @property
+    def _owner_string(self):
+        return _owner_string(self)
 
 
 class Parameter(ParameterBase):
@@ -1331,6 +1398,18 @@ class Parameter(ParameterBase):
     def _default_setter_kwargs(self):
         return self._default_getter_kwargs
 
+    def _call_getter(self, context, **kwargs):
+        kwargs = {**self._default_getter_kwargs, **kwargs}
+        return call_with_pruned_args(self.getter, context=context, **kwargs)
+
+    def _call_setter(self, value, context, compilation_sync, **kwargs):
+        kwargs = {
+            **self._default_setter_kwargs,
+            **kwargs,
+            'compilation_sync': compilation_sync,
+        }
+        return call_with_pruned_args(self.setter, value, context=context, **kwargs)
+
     @handle_external_context()
     def get(self, context=None, **kwargs):
         """
@@ -1366,8 +1445,7 @@ class Parameter(ParameterBase):
                 ) from e
 
         if self.getter is not None:
-            kwargs = {**self._default_getter_kwargs, **kwargs}
-            value = call_with_pruned_args(self.getter, context=context, **kwargs)
+            value = self._call_getter(context, **kwargs)
             if self.stateful:
                 self._set_value(value, execution_id=execution_id, context=context)
             return value
@@ -1554,12 +1632,7 @@ class Parameter(ParameterBase):
                 ) from e
 
         if self.setter is not None:
-            kwargs = {
-                **self._default_setter_kwargs,
-                **kwargs,
-                'compilation_sync':compilation_sync,
-            }
-            value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
+            value = self._call_setter(value, context, compilation_sync, **kwargs)
 
         self._set_value(
             value,
@@ -1962,6 +2035,20 @@ class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
             self._source = value
 
 
+def _SharedParameter_default_getter(self, context=None):
+    try:
+        return self.source._get(context)
+    except (AttributeError, TypeError, IndexError):
+        return None
+
+
+def _SharedParameter_default_setter(value, self, context=None):
+    try:
+        return self.source._set(value, context)
+    except AttributeError:
+        return None
+
+
 class SharedParameter(Parameter):
     """
         A Parameter that is not a "true" Parameter of a Component but a
@@ -2024,8 +2111,8 @@ class SharedParameter(Parameter):
         attribute_name=None,
         shared_parameter_name=None,
         primary=False,
-        getter=None,
-        setter=None,
+        getter=_SharedParameter_default_getter,
+        setter=_SharedParameter_default_setter,
         **kwargs
     ):
 
@@ -2039,24 +2126,6 @@ class SharedParameter(Parameter):
             _source_exists=False,
             **kwargs
         )
-
-        if getter is None:
-            def getter(self, context=None):
-                try:
-                    return self.source._get(context)
-                except (AttributeError, TypeError, IndexError):
-                    return None
-
-            self.getter = getter
-
-        if setter is None:
-            def setter(value, self, context=None):
-                try:
-                    return self.source._set(value, context)
-                except AttributeError:
-                    return None
-
-            self.setter = setter
 
     def __getattr__(self, attr):
         try:
@@ -2088,6 +2157,27 @@ class SharedParameter(Parameter):
 
         super(Parameter, self).__setattr__('name', name)
 
+    def _validate_source(self):
+        from psyneulink.core.components.component import Component, ComponentsMeta
+
+        if self.source is None:
+            raise ParameterInvalidSourceError(self)
+
+        if (
+            self.source is not None
+            and isinstance(self._owner._owner, Component)
+            and isinstance(self.source._owner._owner, ComponentsMeta)
+        ):
+            raise ParameterInvalidSourceError(self, detail=f'Instance to class {self._owner._owner} -> {self.source._owner._owner}')
+
+    def _call_getter(self, context, **kwargs):
+        self._validate_source()
+        return super()._call_getter(context, **kwargs)
+
+    def _call_setter(self, value, context, compilation_sync, **kwargs):
+        self._validate_source()
+        return super()._call_setter(value, context, compilation_sync, **kwargs)
+
     @handle_external_context()
     def get_previous(
         self,
@@ -2104,19 +2194,26 @@ class SharedParameter(Parameter):
 
     @property
     def source(self):
+        from psyneulink.core.components.component import Component, ComponentsMeta
+
         try:
-            obj = getattr(self._owner._owner.parameters, self.attribute_name)
+            owning_component = self._owner._owner
+        except AttributeError:
+            return None
+
+        try:
+            obj = getattr(owning_component.parameters, self.attribute_name)
             if obj.stateful:
                 raise ParameterError(
                     f'Parameter {type(obj._owner._owner).__name__}.{self.attribute_name}'
                     f' is the target object of {type(self).__name__}'
-                    f' {type(self._owner._owner).__name__}.{self.name} and'
+                    f' {type(owning_component).__name__}.{self.name} and'
                     f' cannot be stateful.'
                 )
             obj = obj.values[None]
         except AttributeError:
             try:
-                obj = getattr(self._owner._owner, self.attribute_name)
+                obj = getattr(owning_component, self.attribute_name)
             except AttributeError:
                 return None
         except KeyError:
@@ -2126,7 +2223,15 @@ class SharedParameter(Parameter):
             # stateful or loggable) and when either self._owner._owner
             # is a type or is in the process of instantiating a
             # Parameter for an instance of a Component
-            obj = getattr(self._owner._owner.defaults, self.attribute_name)
+            return None
+
+        if (
+            isinstance(owning_component, Component)
+            and isinstance(obj, ComponentsMeta)
+        ):
+            # don't mix Parameters on instantiated objects with
+            # those on classes
+            return None
 
         try:
             obj = getattr(obj.parameters, self.shared_parameter_name)
@@ -2288,22 +2393,8 @@ class ParametersBase(ParametersTemplate):
         self._initializing = False
 
     def _throw_attr_error(self, attr):
-        try:
-            param_owner = self._owner
-            if isinstance(param_owner, type):
-                owner_string = f' of {param_owner}'
-            else:
-                owner_string = f' of {param_owner.name}'
-
-            if hasattr(param_owner, 'owner') and param_owner.owner:
-                owner_string += f' for {param_owner.owner.name}'
-                if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
-                    owner_string += f' of {param_owner.owner.owner.name}'
-        except AttributeError:
-            owner_string = ''
-
         raise AttributeError(
-            f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
+            f"No attribute '{attr}' exists in the parameter hierarchy{self._owner_string}."
         ) from None
 
     def __getattr__(self, attr):

@@ -426,7 +426,12 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter,
+    ParameterInvalidSourceError,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -867,12 +872,20 @@ class Projection_Base(Projection):
         # If Projection has a matrix parameter, it is specified as a keyword arg in the constructor,
         #    and sender and receiver have been instantiated, then implement it:
         if hasattr(self.parameters, MATRIX) and self.parameters.matrix._user_specified:
-            matrix = self.parameters.matrix.get(context)
-            if is_matrix_keyword(matrix):
-                if self.sender_instantiated and self.receiver_instantiated:
-                    self.parameters.matrix.set(get_matrix(self.matrix, len(self.sender.value),
-                                                          len(self.receiver.variable)),
-                                               context)
+            try:
+                matrix = self.parameters.matrix._get(context)
+            except ParameterInvalidSourceError:
+                pass
+            else:
+                if (
+                    is_matrix_keyword(matrix)
+                    and self.sender_instantiated
+                    and self.receiver_instantiated
+                ):
+                    matrix = get_matrix(
+                        self.matrix, len(self.sender.value), len(self.receiver.variable)
+                    )
+                    self.parameters.matrix._set(matrix, context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
