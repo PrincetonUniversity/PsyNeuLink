@@ -1096,16 +1096,22 @@ class GRUComposition(AutodiffComposition):
 
         for projection in self.learnable_projections:
 
-            if self.enable_learning is False:
+            # if self.enable_learning is False:
+            #     projection.learnable = False
+            #     continue
+            #
+            # if learning_rate is False:
+            #     projection.learnable = False
+            #     continue
+
+            # If enable_learning and a learning_rate for the GRUComposition have not both been set for learning,
+            #     set Projection learning_rate to False
+            if not ((self.enable_learning == True) and (self.learning_rate is not False)):
                 projection.learnable = False
                 continue
 
-            if learning_rate is False:
-                projection.learnable = False
-                continue
-
-            elif learning_rate is True:
-                # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
+            if learning_rate is True:
+                # Default (GRUComposition's) learning_rate is used for all field_weight Projections:
                 learning_rate = self.learning_rate
 
             assert isinstance(learning_rate, (int, float)), \
