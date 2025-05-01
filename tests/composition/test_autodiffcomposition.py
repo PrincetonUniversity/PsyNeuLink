@@ -3455,7 +3455,7 @@ class TestMiscTrainingFunctionality:
                 opt_params = {condition: .66}
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
-                err_msg =  "The value ('bad_lr') for 'Parameter containing"
+                err_msg = "The value ('bad_lr') for 'Parameter containing"
                 err_msg_2 = (" in the dict specified for the 'learning_rate' arg of learn() method of "
                              "'OUTER' must be an int, float or bool.")
             with pytest.raises(AutodiffCompositionError) as error_text:
