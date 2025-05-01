@@ -782,31 +782,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # optimizer_params[param] = optimizer_params_parsed[pnl_param_name].value
             optimizer_params[param] = projection_lr_specs[pnl_param_name].value
 
-
-        # FIX: 4/24/25 from GRU, RECONCILE WITH ABOVE
-        # for projection in self.learnable_projections:
-        #
-        #     if self.enable_learning is False:
-        #         projection.learnable = False
-        #         continue
-        #
-        #     if learning_rate is False:
-        #         projection.learnable = False
-        #         continue
-        #
-        #     elif learning_rate is True:
-        #         # Default (GRUComposition's learning_rate) is used for all field_weight Projections:
-        #         learning_rate = self.learning_rate
-        #
-        #     assert isinstance(learning_rate, (int, float)), \
-        #         (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
-        #
-        #     projection.learnable = True
-        #     if projection.learning_mechanism:
-        #         projection.learning_mechanism.learning_rate = learning_rate
-        #
-
-
         # Create parameter groups and assign learning rates
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float, bool, type(None))):
