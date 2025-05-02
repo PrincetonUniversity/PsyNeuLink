@@ -580,10 +580,10 @@ class AutodiffComposition(Composition):
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     learning_rate : float or bool
-        determines the default learning_rate passed the `optimizer <AutodiffComposition.optimizer>`, that is applied
-        to all `Projections <Projection>` in the AutodiffComposition that are `learnable <MappingProjection.learnable>`,
-        and for which individual rates have not been specified (see `AutodiffComposition_Learning_Rates` for
-        additional details).
+        determines the default learning_rate passed the `optimizer <PytorchCompositionWrappe.optimizer>`,
+        that is applied to all `Projections <Projection>` in the AutodiffComposition that are `learnable
+        <MappingProjection.learnable>`, and for which individual rates have not been specified (see
+        `AutodiffComposition_Learning_Rates` for additional details).
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
@@ -1128,7 +1128,7 @@ class AutodiffComposition(Composition):
         # Set up optimizer function
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
         default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
-        old_opt = self.parameters.optimizer._get(context)
+        old_opt = pytorch_rep.optimizer
         if (old_opt is None or refresh) and refresh is not False:
             self._instantiate_optimizer(refresh, default_learning_rate, optimizer_params, context)
         else:
@@ -1168,8 +1168,7 @@ class AutodiffComposition(Composition):
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
         self._optimizer_default_param_groups = (
             optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
-        # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
-        self.parameters.optimizer._set(optimizer, context, skip_history=True, skip_log=True)
+        # Assign optimizer to PytorchCompositionWrapper
         pytorch_rep.optimizer = optimizer
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):

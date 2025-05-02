@@ -896,14 +896,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _get_torch_learning_rate(self, projection):
         param_info = self._get_torch_param_info(projection)
         # First look for identical id
-        # for param_group in self.composition.optimizer.param_groups:
-        #     for param in param_group['params']:
-        #         if id(param) == param_info[0]:
-        #             print(param)
-        #             return param_group['lr']
-        params=[(param, lr) for param, lr in [(group['params'], group['lr']) for group in self.optimizer.param_groups]]
-        # Otherwise, look for torch.parameter that is identical:
-        for param_group in self.composition.optimizer.param_groups:
+        for param_group in self.optimizer.param_groups:
+            for param in param_group['params']:
+                if id(param) == param_info[0]:
+                    print(param)
+                    return param_group['lr']
+        for param_group in self.optimizer.param_groups:
             for param in param_group['params']:
                 if param == param_info[1]:
                     return param_group['lr']

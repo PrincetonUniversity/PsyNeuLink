@@ -3590,14 +3590,15 @@ class TestMiscTrainingFunctionality:
 
         # Check inner_comp assignments
         inner_comp._build_pytorch_representation()
+        inner_pytorch_rep = inner_comp.pytorch_representation
         # Get parameter of inner_comp for Projection (for comparison below)
-        proj_1_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[0][1]
-        proj_2_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[1][1]
-        assert proj_1_param_in_inner in inner_comp.optimizer.param_groups[0]['params']
-        assert proj_2_param_in_inner in inner_comp.optimizer.param_groups[1]['params']
+        proj_1_param_in_inner = list(inner_pytorch_rep.named_parameters())[0][1]
+        proj_2_param_in_inner = list(inner_pytorch_rep.named_parameters())[1][1]
+        assert proj_1_param_in_inner in inner_pytorch_rep.optimizer.param_groups[0]['params']
+        assert proj_2_param_in_inner in inner_pytorch_rep.optimizer.param_groups[1]['params']
         # Ensure that it was assigned the lr for the inner_comp
-        assert inner_comp.optimizer.param_groups[0]['lr'] == expected_proj_1_inner
-        assert inner_comp.optimizer.param_groups[1]['lr'] == expected_proj_2_inner
+        assert inner_pytorch_rep.optimizer.param_groups[0]['lr'] == expected_proj_1_inner
+        assert inner_pytorch_rep.optimizer.param_groups[1]['lr'] == expected_proj_2_inner
 
         # Construct outer Composition with nested inner
         outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
@@ -3606,28 +3607,29 @@ class TestMiscTrainingFunctionality:
 
         # Check outer_comp assignments
         outer_comp._build_pytorch_representation()
+        outer_pytorch_rep = outer_comp.pytorch_representation
         # Get parameter for Projection assigned to outer_comp
-        proj_1_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[0][1]
-        proj_2_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[1][1]
-        proj_3_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[2][1]
+        proj_1_param_in_outer = list(outer_pytorch_rep.named_parameters())[0][1]
+        proj_2_param_in_outer = list(outer_pytorch_rep.named_parameters())[1][1]
+        proj_3_param_in_outer = list(outer_pytorch_rep.named_parameters())[2][1]
         # Get parameter of outer_comp for Projection
-        assert proj_1_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
-        assert proj_2_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
-        assert proj_3_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        assert proj_1_param_in_outer in outer_pytorch_rep.optimizer.param_groups[0]['params']
+        assert proj_2_param_in_outer in outer_pytorch_rep.optimizer.param_groups[0]['params']
+        assert proj_3_param_in_outer in outer_pytorch_rep.optimizer.param_groups[0]['params']
         # Ensure inner and outer are the same
         # assert proj_1_param_in_outer == proj_1_param_in_inner
         # Ensure that it was assigned the lr for the outer_comp
-        assert outer_comp.pytorch_representation._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
-        assert outer_comp.pytorch_representation._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert outer_comp.pytorch_representation._get_torch_learning_rate(outer_proj) == outer_comp_lr
+        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
+        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
+        assert outer_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_comp_lr
 
         # Check outer_comp assignments with learning_rate specified in learn()
         outer_comp.learn(inputs={inner_node_input:[[1]]},
                          learning_rate={inner_proj_1: outer_learn_lr, outer_proj: outer_learn_lr})
-        assert (outer_comp.pytorch_representation._get_torch_learning_rate(inner_proj_1) ==
+        assert (outer_pytorch_rep._get_torch_learning_rate(inner_proj_1) ==
                 outer_learn_lr if outer_learn_lr else outer_comp_lr)
-        assert outer_comp.pytorch_representation._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert (outer_comp.pytorch_representation._get_torch_learning_rate(outer_proj) ==
+        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
+        assert (outer_pytorch_rep._get_torch_learning_rate(outer_proj) ==
                 outer_learn_lr if outer_learn_lr else outer_comp_lr)
 
     @pytest.mark.parametrize("bias", [False, True])
