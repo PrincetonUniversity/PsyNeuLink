@@ -113,17 +113,7 @@ class PytorchShowGraph(ShowGraph):
     def _get_projections(self, composition, context):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            # projections = list(self.pytorch_rep.projections_map.keys())
-            # # MODIFIED 5/1/25 OLD:
-            # projections = [proj for proj in self.pytorch_rep.projections_map
-            #                if SHOW_PYTORCH in self.pytorch_rep.projections_map[proj]._use]
-            # MODIFIED 5/1/25 NEW:
             projections = self.pytorch_rep.composition._pytorch_projections
-            # BREADCRUMB: 5/1/25 - FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
-            # nested_projections = [proj for proj in self.pytorch_rep.projections_map
-            #                       if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-            #                        or isinstance(proj.receiver.owner, CompositionInterfaceMechanism))]
-            # MODIFIED 5/1/25 END
             # Add any Projections to TARGET nodes
             projections += [afferent
                             for node in self.composition.learning_components

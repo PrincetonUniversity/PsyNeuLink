@@ -421,8 +421,6 @@ class TestExecution:
                 [input_mech, input_proj, gru, output_proj, output_mech],
                 learning_rate=constructor_learning_rates if condition in {'constructor'} else None
             )
-            # BREADCRUMB: 5/1/25 -REMOVE->
-            outer.show_graph(show_pytorch=True)
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
