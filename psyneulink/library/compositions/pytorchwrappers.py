@@ -557,7 +557,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             destination_port = projection.receiver
             source_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
             direct_proj = [proj for proj in source_port.efferents if proj in destination_port.path_afferents]
-            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {desintation_port.owner.name} has more than one afferent"
+            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {destination_port.owner.name} has more than one afferent"
                                            f" that projects to it from {source_port.owner.name}")
             proj_name = direct_proj[0].name if direct_proj else projection.name
 
@@ -885,6 +885,28 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for wrapper in [w for w in comp_wrapper.node_wrappers if isinstance(w, PytorchCompositionWrapper)]:
             proj_wrappers.update(wrapper._get_all_projection_wrappers())
         return proj_wrappers
+
+    def _get_torch_param_info(self, projection)->(int, torch.Tensor):
+        param_name = self._pnl_refs_to_torch_params_map[projection.name]
+        for param_tuple in self.named_parameters():
+            if param_name == param_tuple[0]:
+                param_id = id(param_tuple[1])
+                return (param_id, param_tuple[1])
+
+    def _get_torch_learning_rate(self, projection):
+        param_info = self._get_torch_param_info(projection)
+        # First look for identical id
+        # for param_group in self.composition.optimizer.param_groups:
+        #     for param in param_group['params']:
+        #         if id(param) == param_info[0]:
+        #             print(param)
+        #             return param_group['lr']
+        params=[(param, lr) for param, lr in [(group['params'], group['lr']) for group in self.optimizer.param_groups]]
+        # Otherwise, look for torch.parameter that is identical:
+        for param_group in self.composition.optimizer.param_groups:
+            for param in param_group['params']:
+                if param == param_info[1]:
+                    return param_group['lr']
 
     __deepcopy__ = get_deepcopy_with_shared()
 
