@@ -143,7 +143,7 @@ class TestNested:
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff
 
-    expected_output_for_nested_autodiff_with_input_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff HIDDEN 1" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 2" [color=red penwidth=3 rank=same shape=oval]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_autodiff_with_input_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff HIDDEN 1" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff HIDDEN 1" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_input_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -160,7 +160,7 @@ class TestNested:
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff_with_input_node
 
-    expected_output_for_nested_autodiff_with_output_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 1" [color=red penwidth=3 rank=same shape=oval]\n\t"autodiff HIDDEN 2" [color=red penwidth=3 rank=same shape=oval]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_autodiff_with_output_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 1" [color=red penwidth=3 rank=same shape=oval]\n\t"autodiff INPUT" -> "autodiff HIDDEN 1" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_output_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -177,7 +177,7 @@ class TestNested:
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff_with_output_node
 
-    expected_output_for_nested_autodiff_with_singleton_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 2" [color=red penwidth=3 rank=same shape=oval]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n\t"autodiff HIDDEN 1" [color=brown penwidth=3 rank=same shape=oval]\n}\n'
+    expected_output_for_nested_autodiff_with_singleton_node = 'digraph "autodiff COMP" {\n\tgraph [label="autodiff COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"autodiff INPUT" [color=green penwidth=3 rank=source shape=oval]\n\t"autodiff HIDDEN 2" [color=black penwidth=1 rank=same shape=oval]\n\t"autodiff INPUT" -> "autodiff HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff HIDDEN 2" -> "autodiff OUTPUT" [label="" arrowhead=normal color=orange penwidth=1]\n\t"autodiff OUTPUT" [color=red penwidth=3 rank=max shape=oval]\n\t"autodiff HIDDEN 1" [color=brown penwidth=3 rank=same shape=oval]\n}\n'
     @pytest.mark.pytorch
     def test_autodiff_pytorch_rep_with_nested_singleton_node(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -194,7 +194,7 @@ class TestNested:
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff_with_singleton_node
 
-    expected_output_for_nested_gru_composition = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"PYTORCH GRU NODE" [color=red penwidth=3 rank=same shape=oval]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_for_nested_gru_composition = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"PYTORCH GRU NODE" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"PYTORCH GRU NODE" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "PYTORCH GRU NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     @pytest.mark.pytorch
     def test_nested_gru_composition(self):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition

@@ -1200,7 +1200,7 @@ class GRUComposition(AutodiffComposition):
                                                     learnable=False)
                 self._pytorch_projections.append(direct_proj_out)
             except DuplicateProjectionError:
-                assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
+                assert False, "PROGRAM ERROR: Duplicate Projection from GRU COMP"
 
         # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner

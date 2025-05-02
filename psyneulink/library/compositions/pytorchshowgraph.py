@@ -68,7 +68,7 @@ class PytorchShowGraph(ShowGraph):
         return super().show_graph(*args, **kwargs)
 
     def _get_processing_graph(self, composition, context):
-        """Helper method that creates dependencies graph for nodes of autodiffcomposition used in Pytorch mode"""
+        """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode"""
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
@@ -80,11 +80,11 @@ class PytorchShowGraph(ShowGraph):
                     receiver = projection.receiver.owner
                     if node is receiver:
                         dependencies.add(sender)
-                    # FIX: 3/9/25 - HANDLE NODE THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
+                    # BREADCRUMB - FIX: 3/9/25 - HANDLE NODE THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                     elif (isinstance(receiver, CompositionInterfaceMechanism) and
                           # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
-                          # FIX: SUPPOSED TO RETRIEVE GRU NODE HERE,
+                          # BREADCRUMB - FIX: SUPPOSED TO RETRIEVE GRU NODE HERE,
                           #      BUT NEED TO DEAL WITH INTERFERING PROJECTION FROM OUTPUT NODE
                           receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
                         dependencies.add(sender)
@@ -114,9 +114,16 @@ class PytorchShowGraph(ShowGraph):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
             # projections = list(self.pytorch_rep.projections_map.keys())
-            projections = [proj for proj in self.pytorch_rep.projections_map
-                           if SHOW_PYTORCH in self.pytorch_rep.projections_map[proj]._use]
-            # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
+            # # MODIFIED 5/1/25 OLD:
+            # projections = [proj for proj in self.pytorch_rep.projections_map
+            #                if SHOW_PYTORCH in self.pytorch_rep.projections_map[proj]._use]
+            # MODIFIED 5/1/25 NEW:
+            projections = self.pytorch_rep.composition._pytorch_projections
+            # BREADCRUMB: 5/1/25 - FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
+            # nested_projections = [proj for proj in self.pytorch_rep.projections_map
+            #                       if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+            #                        or isinstance(proj.receiver.owner, CompositionInterfaceMechanism))]
+            # MODIFIED 5/1/25 END
             # Add any Projections to TARGET nodes
             projections += [afferent
                             for node in self.composition.learning_components
