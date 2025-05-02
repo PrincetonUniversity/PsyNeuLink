@@ -3340,28 +3340,15 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
-    def test_learning_rate_inheritance_in_nested_comp(self):
-        inner = AutodiffComposition([pnl.ProcessingMechanism(), pnl.ProcessingMechanism()],
-                                    learning_rate=6.02, name="INNER")
-        outer = AutodiffComposition([inner], learning_rate=2.7, name="OUTER")
-        inner._build_pytorch_representation()
-        # Get parameter for sole Projection (between two ProcessingMechanisms in inner)
-        proj_param_in_inner = list(inner.pytorch_representation.named_parameters())[0][1]
-        assert proj_param_in_inner in inner.optimizer.param_groups[0]['params']
-        assert inner.optimizer.param_groups[0]['lr'] == 6.02
-        outer._build_pytorch_representation()
-        proj_param_in_outer = list(outer.pytorch_representation.named_parameters())[0][1]
-        assert proj_param_in_outer == proj_param_in_inner
-        assert proj_param_in_outer in outer.optimizer.param_groups[0]['params']
-        assert outer.optimizer.param_groups[0]['lr'] == 2.7
 
+    # Data for test_learning_rate_assignments():
     default_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]      # lr = .0001
     proj_expected = [[1.01985553, 0.78611892, 1.08238162, 1.013176, 0.89058437]]
     constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
     learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
     no_learning_expected = [[1.07518731, 0.2334628, 1.30069345, 1.05196273, 0.60886095]]
 
-    test_specs = [
+    test_specs_for_learning_rates = [
         #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
         #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
         #                  |   learning_rate     | projection |  projection  |  projection |     results
@@ -3415,8 +3402,8 @@ class TestMiscTrainingFunctionality:
                              "constructor_lr_input_proj, constructor_lr_output_proj,"
                              "learn_method_lr_input_proj, learn_method_lr_output_proj,"
                              "projection_lr_input_proj, projection_lr_output_proj,"
-                             "expected", test_specs,
-                             ids=[f"{x[0]}" for x in test_specs])
+                             "expected", test_specs_for_learning_rates,
+                             ids=[f"{x[0]}" for x in test_specs_for_learning_rates])
     def test_learning_rate_assignments(self, condition,
                                    use_constructor, use_learn_method,
                                    constructor_lr_input_proj, constructor_lr_output_proj,
@@ -3505,6 +3492,50 @@ class TestMiscTrainingFunctionality:
             assert len(outer_comp.pytorch_representation.optimizer.param_groups) == 3
             assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
+
+    test_specs_for_learning_rate_inheritance = [
+        #   condition       proj_lr    inner_comp_lr  outer_comp_lr  expected_proj  expected_inner  expected_outer
+        ('comp_default',     1.414,       6.02,          2.7,            1.414,       6.02,             2.7)
+    ]
+    @pytest.mark.parametrize("condition, proj_lr, inner_comp_lr, outer_comp_lr,"
+                             " expected_proj, expected_inner, expected_outer", test_specs_for_learning_rate_inheritance,
+                             ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
+    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_lr, inner_comp_lr, outer_comp_lr,
+                                                      expected_proj, expected_inner, expected_outer):
+        inner_comp_lr = 6.02
+        outer_comp_lr = 2.7
+        proj_lr = 1.414
+
+        inner_node_input = pnl.ProcessingMechanism(name="INPUT NODE")
+        inner_node_output = pnl.ProcessingMechanism(name="OUTPUT NODE")
+        inner_proj = pnl.MappingProjection(inner_node_input, inner_node_output, name="INNER PROJECTION")
+        inner_comp = AutodiffComposition([inner_node_input, inner_proj, inner_node_output],
+                                         learning_rate=inner_comp_lr,
+                                         name="INNER COMP")
+        # Construct outer Composition with nested inner
+        outer_comp = AutodiffComposition([inner_comp], learning_rate=outer_comp_lr, name="OUTER COMP")
+
+        # Check inner_comp assignments
+        inner_comp._build_pytorch_representation()
+        # Get parameter of inner_comp for Projection (for comparison below)
+        proj_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[0][1]
+        assert proj_param_in_inner in inner_comp.optimizer.param_groups[0]['params']
+        # Ensure that it was assigned the lr for the inner_comp
+        assert inner_comp.optimizer.param_groups[0]['lr'] == inner_comp_lr
+
+        inner_comp.pytorch_representation._pnl_refs_to_torch_params_map[inner_proj.name]
+
+        # Check outer_comp assignments
+        outer_comp._build_pytorch_representation()
+        # Get parameter for Projection assigned to outer_comp
+        proj_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+        # Get parameter of outer_comp for Projection
+        proj_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+        assert proj_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        # Ensure inner and outer are the same
+        assert proj_param_in_outer == proj_param_in_inner
+        # Ensure that it was assigned the lr for the outer_comp
+        assert outer_comp.optimizer.param_groups[0]['lr'] == outer_comp_lr
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_nested(self, bias):
