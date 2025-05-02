@@ -3493,51 +3493,137 @@ class TestMiscTrainingFunctionality:
             assert outer_comp.pytorch_representation.optimizer.param_groups[1]['lr'] == .66
             assert outer_comp.pytorch_representation.optimizer.param_groups[2]['lr'] == 1.5
 
+    # test_specs_for_learning_rate_inheritance = [
+    #     #   condition       proj_lr    inner_comp_lr  outer_comp_lr  expected_inner  expected_outer
+    #     # Projection-specific lr always takes precedence
+    #     ('proj_lr',          1.414,      6.02,          2.7,          1.414,           1.414),
+    #     # inner is promoted to outer if the latter is not specified
+    #     ('promote_inner',    None,       6.02,          None,          6.02,            6.02),
+    #     # outer takes precedence over inner
+    #     ('inner',            None,       6.02,          2.7,          6.02,             2.7),
+    #     ('outer',            None,       None,          2.7,          .001,             2.7),
+    #     # use autodiff default everywhere if nothing is specified
+    #     ('default',          None,       None,          None,         .001,             .001)
+    # ]
+    # @pytest.mark.parametrize("condition, proj_lr, inner_comp_lr, outer_comp_lr,"
+    #                          "expected_inner, expected_outer", test_specs_for_learning_rate_inheritance,
+    #                          ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
+    # def test_learning_rate_inheritance_in_nested_comp_ORIG(self, condition, proj_lr, inner_comp_lr, outer_comp_lr,
+    #                                                        expected_inner, expected_outer):
+    #
+    #     inner_node_input = pnl.ProcessingMechanism(name="INPUT NODE")
+    #     inner_node_output = pnl.ProcessingMechanism(name="OUTPUT NODE")
+    #     inner_proj_1 = pnl.MappingProjection(inner_node_input,
+    #                                        inner_node_output,
+    #                                        learning_rate = proj_lr,
+    #                                        name="INNER PROJECTION")
+    #     inner_comp = AutodiffComposition([inner_node_input, inner_proj, inner_node_output],
+    #                                      learning_rate=inner_comp_lr,
+    #                                      name="INNER COMP")
+    #     # Construct outer Composition with nested inner
+    #     outer_comp = AutodiffComposition([inner_comp], learning_rate=outer_comp_lr, name="OUTER COMP")
+    #
+    #     # Check inner_comp assignments
+    #     inner_comp._build_pytorch_representation()
+    #     # Get parameter of inner_comp for Projection (for comparison below)
+    #     proj_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[0][1]
+    #     assert proj_param_in_inner in inner_comp.optimizer.param_groups[0]['params']
+    #     # Ensure that it was assigned the lr for the inner_comp
+    #     assert inner_comp.optimizer.param_groups[0]['lr'] == expected_inner
+    #
+    #     inner_comp.pytorch_representation._pnl_refs_to_torch_params_map[inner_proj.name]
+    #
+    #     # Check outer_comp assignments
+    #     outer_comp._build_pytorch_representation()
+    #     # Get parameter for Projection assigned to outer_comp
+    #     proj_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+    #     # Get parameter of outer_comp for Projection
+    #     proj_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+    #     assert proj_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+    #     # Ensure inner and outer are the same
+    #     assert proj_param_in_outer == proj_param_in_inner
+    #     # Ensure that it was assigned the lr for the outer_comp
+    #     assert outer_comp.optimizer.param_groups[0]['lr'] == expected_outer
+
+
     test_specs_for_learning_rate_inheritance = [
-        #   condition       proj_lr    inner_comp_lr  outer_comp_lr  expected_inner  expected_outer
-        ('proj_lr',          1.414,      6.02,          2.7,          1.414,           1.414),
-        ('inner',            None,       6.02,          2.7,          6.02,             2.7),
-        ('outer',            None,       None,          2.7,          .001,             2.7)
+        #    condition  p_1_lr  p_2_lr  in_comp_lr  out_comp_lr  out_lrn_lr  exp_p_1_in  exp_p_1_out exp_p2_in exp_p2_out
+        # Projection-specific lr always takes precedence
+        ('proj_lr',          1.414,      6.62,     6.02,         2.7,           3.14,          1.414,    1.414),
+        # inner is promoted to outer if the latter is not specified
+        ('promote_inner',    None,       6.62,     6.02,         None,          3.14,          6.02,     6.02),
+        # outer takes precedence over inner
+        ('inner',            None,       6.62,     6.02,          2.7,          3.14,          6.02,     2.7),
+        ('outer',            None,       None,     None,          2.7,          3.14,          .001,     2.7),
+        # use autodiff default everywhere if nothing is specified
+        ('default',          None,       None,     None,          None,         3.14,          .001,     .001)
     ]
-    @pytest.mark.parametrize("condition, proj_lr, inner_comp_lr, outer_comp_lr,"
+    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, inner_comp_lr, outer_comp_lr, outer_learn_lr, "
                              "expected_inner, expected_outer", test_specs_for_learning_rate_inheritance,
                              ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
-    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_lr, inner_comp_lr, outer_comp_lr,
+    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_1_lr, proj_2_lr,
+                                                      inner_comp_lr, outer_comp_lr, outer_learn_lr,
                                                       expected_inner, expected_outer):
 
+        # Construct inner Composition
         inner_node_input = pnl.ProcessingMechanism(name="INPUT NODE")
+        inner_node_hidden = pnl.ProcessingMechanism(name="HIDDEN NODE")
         inner_node_output = pnl.ProcessingMechanism(name="OUTPUT NODE")
-        inner_proj = pnl.MappingProjection(inner_node_input,
+        inner_proj_1 = pnl.MappingProjection(inner_node_input,
+                                           inner_node_hidden,
+                                           learning_rate = proj_1_lr,
+                                           name="INNER PROJECTION 1")
+        inner_proj_2 = pnl.MappingProjection(inner_node_hidden,
                                            inner_node_output,
-                                           learning_rate = proj_lr,
-                                           name="INNER PROJECTION")
-        inner_comp = AutodiffComposition([inner_node_input, inner_proj, inner_node_output],
+                                           learning_rate = proj_2_lr,
+                                           name="INNER PROJECTION 2")
+        inner_comp = AutodiffComposition([inner_node_input,
+                                          inner_proj_1,
+                                          inner_node_hidden,
+                                          inner_proj_2,
+                                          inner_node_output],
                                          learning_rate=inner_comp_lr,
                                          name="INNER COMP")
-        # Construct outer Composition with nested inner
-        outer_comp = AutodiffComposition([inner_comp], learning_rate=outer_comp_lr, name="OUTER COMP")
 
         # Check inner_comp assignments
         inner_comp._build_pytorch_representation()
         # Get parameter of inner_comp for Projection (for comparison below)
-        proj_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[0][1]
-        assert proj_param_in_inner in inner_comp.optimizer.param_groups[0]['params']
+        proj_1_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[0][1]
+        proj_2_param_in_inner = list(inner_comp.pytorch_representation.named_parameters())[1][1]
+        assert proj_1_param_in_inner in inner_comp.optimizer.param_groups[0]['params']
+        assert proj_2_param_in_inner in inner_comp.optimizer.param_groups[1]['params']
         # Ensure that it was assigned the lr for the inner_comp
         assert inner_comp.optimizer.param_groups[0]['lr'] == expected_inner
+        assert inner_comp.optimizer.param_groups[1]['lr'] == expected_inner
 
-        inner_comp.pytorch_representation._pnl_refs_to_torch_params_map[inner_proj.name]
+        # Construct outer Composition with nested inner
+        outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
+        outer_comp = AutodiffComposition([inner_comp, outer_node], learning_rate=outer_comp_lr, name="OUTER COMP")
+        outer_proj = outer_comp.nodes[-1].afferents[0]
 
         # Check outer_comp assignments
         outer_comp._build_pytorch_representation()
         # Get parameter for Projection assigned to outer_comp
-        proj_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+        proj_1_param_in_outer = list(outer_comp.pytorch_representation.named_parameters())[0][1]
         # Get parameter of outer_comp for Projection
-        proj_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[0][1]
-        assert proj_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        proj_1_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+        proj_2_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[1][1]
+        proj_3_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[2][1]
+        assert proj_1_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        assert proj_2_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        assert proj_3_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
         # Ensure inner and outer are the same
-        assert proj_param_in_outer == proj_param_in_inner
+        assert proj_1_param_in_outer == proj_1_param_in_inner
         # Ensure that it was assigned the lr for the outer_comp
         assert outer_comp.optimizer.param_groups[0]['lr'] == expected_outer
+        # BREADCRUMB: CHECK lr FOR PROJECTION TO outer_node
+
+        # Check outer_comp assignments with learning_rate specified in learn()
+        outer_comp.learn(learning_rate={inner_proj_1: outer_learn_lr,
+                                        inner_proj_2: outer_learn_lr})
+        proj_param_in_outer_comp = list(outer_comp.pytorch_representation.named_parameters())[0][1]
+        assert proj_param_in_outer in outer_comp.optimizer.param_groups[0]['params']
+        # BREADCRUMB: CHECK lr FOR ALL PROJECTIONS
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_nested(self, bias):

@@ -1105,9 +1105,10 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
   COMMENT:
   # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
   .. note::
-     If **learning_rate** is specified in the constructor for a nested AutodiffComposition, those specifications
-     are promoted to and used by the outer Composition; however, if there any specifications for the same Projections
-     in the **learning_rate** argument of the constructor for the outer AutodiffComposition, those take precedence.
+     If any **learning_rate** specifiations are included in the constructor for a nested AutodiffComposition, those
+     specifications are incorporated into the outer Composition; however, if there any specifications for the same
+     Projections in the **learning_rate** argument of the constructor or the learn() method for the outer Composition,
+     those take precedence.
   COMMENT
 
   .. _Composition_Learning_Rate_Assignment_After_Construction:
