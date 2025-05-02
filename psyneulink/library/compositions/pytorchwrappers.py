@@ -330,6 +330,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
+        self._store_learn_params = None
 
     def _validate_subclass_components(self, _node_wrapper_pairs, _projection_wrapper_pairs, execution_sets):
         """Sublcass instantiated nodes_map, projections_map and execution_sets, so validate these."""
@@ -808,6 +809,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             optimizer.add_param_group({'params': [param], 'lr': lr})
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)
+        
+        if self._store_learn_params:
+            self._learn_params = {proj: self._get_torch_learning_rate(proj)
+                                  for proj in [wrapper.proj for wrapper in self.projection_wrappers]}
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
         """Allows override by subclasses for custom handling of optimizer_param_specs (e.g., pytorchGRUWrappers)"""
@@ -886,24 +891,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_wrappers.update(wrapper._get_all_projection_wrappers())
         return proj_wrappers
 
-    def _get_torch_param_info(self, projection)->(int, torch.Tensor):
+    def _get_torch_param_info(self, projection:MappingProjection)->(int, torch.nn.Parameter):
+        """Return tuple of torch parameter's python id and the Parameter object
+        Use of Python id is needed since some parameters may have identical Tensors values,
+        and thus would not be distinguishable by their values"""
         param_name = self._pnl_refs_to_torch_params_map[projection.name]
         for param_tuple in self.named_parameters():
             if param_name == param_tuple[0]:
                 param_id = id(param_tuple[1])
                 return (param_id, param_tuple[1])
 
-    def _get_torch_learning_rate(self, projection):
+    def _get_torch_learning_rate(self, projection:MappingProjection)->float:
+        """Get learning rate for torch parameter corresponding to a PNL Projection"""
+        # First get parameter's python id
         param_info = self._get_torch_param_info(projection)
-        # First look for identical id
+        # Then, use that to get the learning rate from the optimizer
         for param_group in self.optimizer.param_groups:
             for param in param_group['params']:
                 if id(param) == param_info[0]:
-                    print(param)
-                    return param_group['lr']
-        for param_group in self.optimizer.param_groups:
-            for param in param_group['params']:
-                if param == param_info[1]:
                     return param_group['lr']
 
     __deepcopy__ = get_deepcopy_with_shared()
