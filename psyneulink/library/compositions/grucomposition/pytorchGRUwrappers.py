@@ -84,7 +84,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.gru_pytorch_node = gru_pytorch_node
 
         # Note: this has to be done after call to super, so that projections_map has been populated
-        self.copy_weights_to_torch_gru(context)
+        if context.source != ContextFlags.SHOW_GRAPH:
+            self.copy_weights_to_torch_gru(context)
 
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype

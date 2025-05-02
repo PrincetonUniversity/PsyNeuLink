@@ -1132,7 +1132,8 @@ class AutodiffComposition(Composition):
         if (old_opt is None or refresh) and refresh is not False:
             self._instantiate_optimizer(refresh, default_learning_rate, optimizer_params, context)
         else:
-            pytorch_rep._update_optimizer_params(old_opt, optimizer_params, Context(source=ContextFlags.METHOD))
+            if context.source is not ContextFlags.SHOW_GRAPH:
+                pytorch_rep._update_optimizer_params(old_opt, optimizer_params, Context(source=ContextFlags.METHOD))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(

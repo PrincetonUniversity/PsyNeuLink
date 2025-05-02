@@ -2596,13 +2596,16 @@ class EMComposition(AutodiffComposition):
                 continue
 
             # Use globally specified learning_rate
-            if self.learn_field_weights is None: # Default, which should be treat same as True
+            if self.learn_field_weights is None: # Default, which should be treated the same as True
                 learning_rate = True
+            # Single learning_rate specified for all field_weights
             elif isinstance(self.learn_field_weights, (bool, int, float)):
                 learning_rate = self.learn_field_weights
-            # Use individually specified learning_rate
+            # Individual learning_rates specified for each field (i.e., self.learn_field_weights is a list )
             else:
-                # FIX: THIS NEEDS TO USE field_index_map, BUT THAT DOESN'T SEEM TO HAVE THE WEIGHT PROJECTION YET
+                assert isinstance(self.learn_field_weights, (list, np.ndarray)), \
+                    (f"PROGRAM ERROR: expected 'self.field_weights' ({self.learn_field_weights}) "
+                     f"for {self.name} to be a list.")
                 learning_rate = self.learn_field_weights[self._field_index_map[projection]]
 
             if learning_rate is False:
