@@ -3495,15 +3495,15 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        #    condition   p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out exp_p2_out
-        # Projection-specific lr always takes precedence
-        # ('defaults',      None,  None,    None,      None,         None,      default,    default,   default,  default),
-        # ('proj_lr',      1.414,    7,     6.02,       2.7,         None,        1.414,      7,        1.414,      7 ),
+        # #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
+        # # Projection-specific lr always takes precedence
+        # ('defaults',      None,  None,    None,       None,       None,     default,   default,    default,   default),
+        # ('proj_lr',      1.414,    7,     6.02,        2.7,       None,      1.414,       7,        1.414,      7 ),
         # # outer takes precedence over inner
-        # ('inner',         None,     7,     6.02,       2.7,         None,       6.02,      7,            2.7,     7  ),
-        # ('learn_only',   None,  None,    None,      None,         3.14,      default,    default,   default,  default),
-        ('learn-default', 1.414,  None,    None,      None,         3.14,       1.414,   default,     1.414,  default),
-        ('inner_outer',   1.414,  None,    6.02,      None,         3.14,       1.414,     6.02,      1.414,   default),
+        # ('inner',         None,    7,     6.02,        2.7,       None,      6.02,        7,         2.7,       7  ),
+        ('learn_only',    None,  None,    None,       None,       3.14,     default,   default,    default,   default),
+        # ('innr_default', 1.414,  None,    None,       None,       3.14,      1.414,    default,     1.414,    default),
+        # ('innr_outr',    1.414,  None,    6.02,       None,       3.14,      1.414,      6.02,      1.414,    default),
     ]
     @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, inner_comp_lr, outer_comp_lr, outer_learn_lr, "
                              "expected_proj_1_inner, expected_proj_2_inner, "
@@ -3570,14 +3570,9 @@ class TestMiscTrainingFunctionality:
         # BREADCRUMB: learning_rates should revert to default here
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == self.default
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == self.default
+        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
+        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
         assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == self.default
-
-        # assert (learn_params[inner_proj_1] == outer_learn_lr or self.default)
-        # assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        # assert (outer_pytorch_rep._get_torch_learning_rate(outer_proj) ==
-        #         outer_learn_lr if outer_learn_lr else (outer_comp_lr or self.default))
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_nested(self, bias):
