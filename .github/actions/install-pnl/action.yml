@@ -111,6 +111,18 @@ runs:
       shell: bash
       run: |
         pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
+      env:
+        # Setting CXXFLAGS works around a missing include that breaks the build
+        # of onnx-1/17.0 on recent gcc/clang compilers.
+        # This should be removed once onnx wheels for Python 3.13 are available.
+        # Note that the MS Visual C equivalent option needs to start with an extra
+        # space otherwise the argument gets interpreted as a file location.
+        CXXFLAGS: ${{ startsWith(runner.os, 'windows') && ' /FI cstdint' || '-include cstdint' }}
+        # Setting TEMP works around broken onnx-1.17.0 build on windows where
+        # too long paths in default TEMP directory don't work with msbuild.
+        # This should be removed once onnx wheels for Python 3.13 are available.
+        # Note that $TEMP is only used to set pip's build location on Windows.
+        TEMP: ${{ runner.temp }}
 
     - name: Cleanup old wheels
       shell: bash
