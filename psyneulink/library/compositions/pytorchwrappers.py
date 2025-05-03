@@ -810,9 +810,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)
         
-        if self._store_learn_params:
-            self._learn_params = {proj: self._get_torch_learning_rate(proj)
-                                  for proj in [wrapper.proj for wrapper in self.projection_wrappers]}
+        # Store execution-specific learning_rates
+        self._learn_params_for_execution = {proj: self._get_torch_learning_rate(proj)
+                              for proj in [wrapper.projection for wrapper in self.projection_wrappers]}
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
         """Allows override by subclasses for custom handling of optimizer_param_specs (e.g., pytorchGRUWrappers)"""
