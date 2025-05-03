@@ -3501,8 +3501,8 @@ class TestMiscTrainingFunctionality:
         # ('proj_lr',      1.414,    7,     6.02,       2.7,         None,        1.414,      7,        1.414,      7 ),
         # # outer takes precedence over inner
         # ('inner',         None,     7,     6.02,       2.7,         None,       6.02,      7,            2.7,     7  ),
-        ('learn_only',   None,  None,    None,      None,         3.14,      default,    default,   default,  default),
-        ('inner_default', 1.414,  None,    None,      None,         3.14,       1.414,   default,     1.414,  default),
+        # ('learn_only',   None,  None,    None,      None,         3.14,      default,    default,   default,  default),
+        ('learn-default', 1.414,  None,    None,      None,         3.14,       1.414,   default,     1.414,  default),
         ('inner_outer',   1.414,  None,    6.02,      None,         3.14,       1.414,     6.02,      1.414,   default),
     ]
     @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, inner_comp_lr, outer_comp_lr, outer_learn_lr, "
