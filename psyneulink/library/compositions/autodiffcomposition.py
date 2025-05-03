@@ -681,7 +681,7 @@ class AutodiffComposition(Composition):
 
     class Parameters(Composition.Parameters):
         pytorch_representation = None
-        optimizer = None
+        # optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_default=True)
         synch_node_variables_with_torch = Parameter(None, fallback_default=True)
@@ -1164,10 +1164,16 @@ class AutodiffComposition(Composition):
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-        default_param_groups = optimizer.param_groups.copy()
+        # # MODIFIED 5/3/25 OLD:
+        # default_param_groups = optimizer.param_groups.copy()
+        # pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        # self._optimizer_default_param_groups = (
+        #     optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
+        # MODIFIED 5/3/25 NEW:
+        self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
-        self._optimizer_default_param_groups = (
-            optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
+        self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
+        # MODIFIED 5/3/25 END
         # Assign optimizer to PytorchCompositionWrapper
         pytorch_rep.optimizer = optimizer
 

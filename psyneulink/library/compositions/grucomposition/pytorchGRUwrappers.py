@@ -179,9 +179,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           composition=self.composition,
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
-            # self._pnl_refs_to_torch_params_map.update({pnl_proj.name: torch_param_spec})
-        self._pnl_refs_to_torch_params_map.update({INPUT_TO_HIDDEN: W_IH_NAME})
-        self._pnl_refs_to_torch_params_map.update({HIDDEN_TO_HIDDEN: W_HH_NAME})
+            # self._pnl_refs_to_torch_param_names.update({pnl_proj.name: torch_param_spec})
+        self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN: W_IH_NAME})
+        self._pnl_refs_to_torch_param_names.update({HIDDEN_TO_HIDDEN: W_HH_NAME})
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
@@ -201,9 +201,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                               composition=pnl,
                                                               device=device)
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
-                # self._pnl_refs_to_torch_params_map.update({pnl_bias_proj.name: torch_bias_spec})
-            self._pnl_refs_to_torch_params_map.update({BIAS_INPUT_TO_HIDDEN: B_IH_NAME})
-            self._pnl_refs_to_torch_params_map.update({BIAS_HIDDEN_TO_HIDDEN: B_HH_NAME})
+                # self._pnl_refs_to_torch_param_names.update({pnl_bias_proj.name: torch_bias_spec})
+            self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN: B_IH_NAME})
+            self._pnl_refs_to_torch_param_names.update({BIAS_HIDDEN_TO_HIDDEN: B_HH_NAME})
 
         return _projection_wrapper_pairs
 
