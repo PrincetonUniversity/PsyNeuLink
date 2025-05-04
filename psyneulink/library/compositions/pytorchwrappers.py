@@ -305,6 +305,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
+        self._previous_optimizer_param_groups = None
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -692,6 +693,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
+        # MODIFIED 5/4/25 NEW:
+        if not optimizer_param_specs and self._previous_optimizer_param_groups:
+            self.optimizer.param_groups = self._previous_optimizer_param_groups
+            return
+        # MODIFIED 5/4/25 END
+
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
         composition = self.composition
 
@@ -715,6 +722,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         projection_lr_specs.update(optimizer_params_parsed)
 
         if not projection_lr_specs:
+            # BREADCRUMP 5/4/25 - REINSTATE ANY PREVIOUS LEARNING RATES HERE
             return
 
         # Map short (local) names of torch Parameters to their full (hierachcial) names in torch.nn.named_parameters()
@@ -783,8 +791,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             optimizer_params[param] = projection_lr_specs[pnl_param_name].value
 
         # Update optimizer.param_groups with any assigned learning rates
-        # MODIFIED 5/3/25 NEW:
-        optimizer_param_groups = self.composition._optimizer_constructor_param_groups
+        # # MODIFIED 5/3/25 NEW:
+        # optimizer_param_groups = self.composition._optimizer_constructor_param_groups
+        # # MODIFIED 5/3/25 NEWER:
+        self._previous_optimizer_param_groups = self.optimizer.param_groups.copy()
         # MODIFIED 5/3/25 END
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float, bool, type(None))):
@@ -802,7 +812,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 default_learning_rate = self.composition._runtime_learning_rate or composition.learning_rate
                 lr = default_learning_rate if learning_rate in {True, None} else learning_rate
                 # Check if param is already in an existing param_group on the optimizer
-                for param_group in optimizer_param_groups.copy():
+                # # MODIFIED 5/4/25 OLD:
+                # for param_group in self.composition._optimizer_constructor_param_groups.copy():
+                # # MODIFIED 5/4/25 NEW:
+                # for param_group in self.optimizer.param_groups.copy():
+                # MODIFIED 5/4/25 NEWER:
+                for param_group in self._previous_optimizer_param_groups:
+                # MODIFIED 5/4/25 END
                     for i, p in enumerate(param_group['params'].copy()):
                         # # MODIFIED 5/3/25 NEW:
                         # self._get_torch_name_for_param(p)
