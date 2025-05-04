@@ -3567,7 +3567,7 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep._learn_params_for_execution[inner_proj_2] == self.default
         assert learn_pytorch_rep._learn_params_for_execution[outer_proj] == outer_learn_lr
 
-        # BREADCRUMB: learning_rates should revert to default here
+        # Check that learning_rates return to those at construction with another call to learn() but no learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
