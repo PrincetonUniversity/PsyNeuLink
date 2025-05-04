@@ -971,7 +971,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return candidate[0] if candidate else None
 
     def _get_projection_for_torch_id(self, projection):
-        return _torch_param_ids_to_names[id(self.projections_map[projection])]
+        return self._torch_param_ids_to_names[id(self.projections_map[projection])]
 
     def _get_param_ids_for_groups(self, groups:list)->list:
         """Return list of python ids for all parameters in the specified groups"""
