@@ -783,8 +783,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
             optimizer_params[param] = projection_lr_specs[pnl_param_name].value
 
         # Update optimizer.param_groups with any assigned learning rates
-        # MODIFIED 5/3/25 NEW:
-        optimizer_param_groups = self.composition._optimizer_constructor_param_groups
+        # # MODIFIED 5/3/25 NEW:
+        # optimizer_param_groups = self.composition._optimizer_constructor_param_groups
+        # MODIFIED 5/3/25 NEWER:
+        optimizer_param_groups = self.optimizer.param_groups
+        # These are the ones specified at construction:
+
+        # FOR DEBUGGING: --------------------------------
+        constructor_ids = self._get_param_ids_for_groups(optimizer_param_groups)
+        # These are the ones specified at construction, but carry over from last call to learn?
+        comp_wrapper_ids = self._get_param_ids_for_groups(self.optimizer.param_groups)
+        # These are the ones specified in call to learn():
+        local_ids = [self._get_torch_id_for_param(param) for param in optimizer_params.keys()]
+        # self.composition._optimizer_constructor_param_groups = self.optimizer_param_groups
+        # --------------------------------
+
         # MODIFIED 5/3/25 END
         for param, learning_rate in optimizer_params.items():
             if not isinstance(learning_rate, (int, float, bool, type(None))):
@@ -944,6 +957,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _get_projection_for_torch_id(self, projection):
         return _torch_param_ids_to_names[id(self.projections_map[projection])]
+
+    def _get_param_ids_for_groups(self, groups:list)->list:
+        """Return list of python ids for all parameters in the specified groups"""
+        param_ids = []
+        for group in groups:
+            for param in group['params']:
+                param_ids.append(id(param))
+        return param_ids
 
     __deepcopy__ = get_deepcopy_with_shared()
 
