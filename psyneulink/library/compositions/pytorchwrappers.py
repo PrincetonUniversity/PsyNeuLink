@@ -305,7 +305,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
-        self._previous_optimizer_param_groups = None
+        # # MODIFIED 5/5/25 OLD:
+        # self._previous_optimizer_param_groups = None
+        # MODIFIED 5/5/25 NEW: BREADCRUMB
+        self._constructor_param_groups = None
+        # MODIFIED 5/5/25 END
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -678,12 +682,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
-    def _update_optimizer_params(self, optimizer, optimizer_params_user_specs_in_learn_method:dict, context):
+    def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
         """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
         Relevant data structures:
             projections_learning_rates: {Projection.name: learning_rate}
             self.composition._optimizer_params: {Projection or Projection.name: lr}
-            optimizer_params_user_specs_in_learn_method: {Projection or Projection.name: lr}
+            optimizer_params_user_specs: {Projection or Projection.name: lr}
             optimizer_params_parsed: {Projection.name: (Projection or Projection.name, lr)}
             optimizer_torch_params_specified_for_learn:  {Torch parameter ref: lr}
             self._pnl_refs_to_torch_param_names: {Projection.name: PytorchWrapper.name or torch parameter name}
@@ -696,30 +700,52 @@ class PytorchCompositionWrapper(torch.nn.Module):
         LEARN_METHOD = 'learn() method'
         CONSTRUCTOR = 'constructor'
 
-        # # MODIFIED 5/4/25 OLD:
         # source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
-        # MODIFIED 5/4/25 OLD:
         source = (LEARN_METHOD if (context.source == ContextFlags.METHOD
                                    and context.runmode == ContextFlags.LEARNING_MODE)
                   else CONSTRUCTOR)
-        # MODIFIED 5/4/25 END
+        
+        # # MODIFIED 5/4/25 OLD:
+        # if not optimizer_params_user_specs and self._previous_optimizer_param_groups:
+        #     self.optimizer.param_groups = self._previous_optimizer_param_groups
+        #     return
+        # MODIFIED 5/4/25 NEW: BREADCRUMB
+        if source == LEARN_METHOD:
+            assert self._constructor_param_groups, (
+                # _constructor_param_groups should have been assigned in constructor
+                f"PROGRAM ERROR: learn() called for '{composition.name} but the _constructor_param_groups "
+                f"for its pytorch_representation have not been constructed.")
+            # revert to learning_rate assignments made in constructor
+            self.optimizer.param_groups = self._constructor_param_groups
+            if not optimizer_params_user_specs:
+                # No user-specified specs in learn method(), so nothing more to do
+                return
+        else:
+            # source is CONSTRUCTOR, so _constructor_param_groups should not yet be assigned
+            assert self._constructor_param_groups is None,(
+                f"PROGRAM ERROR: constructor called for '{composition.name}' to assign "
+                f"_constructor_param_groups but they have already been assigned.")
+            if not optimizer_params_user_specs:
+                # If user didn't provide any specs, use param_groups assigned to optimizer by default
+                self._constructor_param_groups = optimizer.param_groups
+                return
+
+        # Proceed to either construct new optimizer.param_groups (if called from constructor)
+        #   or update existing ones (if called from learn() method)
+
         composition = self.composition
 
-        # BREADCRUMB:  5/4/25 - HERE OR BELOW:
-        #              ASSIGN self.constructor_param_groups IF source == CONSTRUCTOR, BUT NOT IF == LEARN_METHOD
-        if not optimizer_params_user_specs_in_learn_method and self._previous_optimizer_param_groups:
-            self.optimizer.param_groups = self._previous_optimizer_param_groups
-            return
-        # MODIFIED 5/4/25 END
-
         # Use current optimizer specifications if passed, else ones that were specified at construction, else defaults
-        optimizer_params_user_specs_in_learn_method = (optimizer_params_user_specs_in_learn_method 
-                                                       or self.composition._optimizer_constructor_params)
+        # # MODIFIED 5/5/25 OLD: BREADCRUMB: GET RID OF DEFINITION OF self.composition._optimizer_constructor_params
+        #                        AND NO NEED FOR THE FOLLOWING BECAUSE RETURN ABOVE IF NO optimizer_params_user_specs
+        # optimizer_params_user_specs = (optimizer_params_user_specs
+        #                                                or self.composition._optimizer_constructor_params)
+        # MODIFIED 5/5/25 END
 
         torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
         # Replace any Projections in optimizer_torch_params_specified_for_learn with their names
         optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): torch_param_tuple(k, v)
-                                   for k, v in optimizer_params_user_specs_in_learn_method.items()}
+                                   for k, v in optimizer_params_user_specs.items()}
 
         if optimizer_params_parsed:
             self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
@@ -802,11 +828,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             optimizer_torch_params_specified_for_learn[param] = projection_lr_specs[pnl_param_name].value
 
-        # Update optimizer.param_groups with any assigned learning rates
         # # MODIFIED 5/3/25 NEW:
+        # Update optimizer.param_groups with any assigned learning rates
         # optimizer_param_groups = self.composition._optimizer_constructor_param_groups
-        # # MODIFIED 5/3/25 NEWER:
-        self._previous_optimizer_param_groups = self.optimizer.param_groups.copy()
+        # # # MODIFIED 5/3/25 NEWER:  BREADCRUMB
+        # self._previous_optimizer_param_groups = self.optimizer.param_groups.copy()
+        # # MODIFIED 5/3/25 NEWEST:  BREADCRUMB
+        # self._constructor_param_groups = self.optimizer.param_groups.copy()
         # MODIFIED 5/3/25 END
 
         # FOR DEBUGGING: --------------------------------
@@ -840,7 +868,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # for param_group in self.composition._optimizer_constructor_param_groups.copy():
                 # # MODIFIED 5/4/25 NEW:
                 # for param_group in self.optimizer.param_groups.copy():
-                # MODIFIED 5/4/25 NEWER:
+                # MODIFIED 5/4/25 NEWER:  BREADCRUMB
                 for param_group in self._previous_optimizer_param_groups:
                 # MODIFIED 5/4/25 END
                     for i, p in enumerate(param_group['params'].copy()):
@@ -855,13 +883,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             optimizer.add_param_group({'params': [param], 'lr': lr})
                     if not param_group['params']:
                         optimizer.param_groups.remove(param_group)
-        
+
+        if source == CONSTRUCTOR:
+            self._constructor_param_groups = self.optimizer.param_groups.copy()
+
         # Store execution-specific learning_rates
         self._learn_params_for_execution = {proj: self._get_torch_learning_rate(proj, optimizer)
                                             for proj in self.wrapped_projections}
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
-        """Allows override by subclasses for custom handling of optimizer_params_user_specs_in_learn_method (e.g., pytorchGRUWrappers)"""
+        """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
 
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
