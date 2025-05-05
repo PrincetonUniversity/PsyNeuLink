@@ -1133,7 +1133,9 @@ class AutodiffComposition(Composition):
             self._instantiate_optimizer(refresh, default_learning_rate, optimizer_params, context)
         else:
             if context.source is not ContextFlags.SHOW_GRAPH:
-                pytorch_rep._update_optimizer_params(old_opt, optimizer_params, Context(source=ContextFlags.METHOD))
+                pytorch_rep._update_optimizer_params(old_opt, optimizer_params,
+                                                     Context(source=ContextFlags.METHOD,
+                                                             runmode=context.runmode))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1172,7 +1174,8 @@ class AutodiffComposition(Composition):
         # MODIFIED 5/3/25 NEW:
         self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
-        self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
+        # self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
+        pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()
         # MODIFIED 5/3/25 END
         # Assign optimizer to PytorchCompositionWrapper
         pytorch_rep.optimizer = optimizer
