@@ -43,7 +43,7 @@ from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIAB
                                               SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
-    convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar)
+    convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
@@ -1008,8 +1008,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
             raise AutodiffCompositionError(err_msg)
 
     def _copy_torch_param_groups(self, param_groups:list)->list:
+        """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
+        NOTE: can't use deepcopy, as want to isolate the actual torch parameters in the 'params' lists;
+              assertion checks that 'params" is the only interable attribute in each param_group
+        """
         new_params_group = []
         for param_group in param_groups:
+            # Future proof by ensuring that there are no other iterable attributes in param_group other than 'params'
+            iterables = [param for param in param_group if (param != 'params' and not is_iterable(param))]
+            assert not iterables, (f"PyTorch seems to have introduced one or moreIterable params ('{iterables}') "
+                                   f"to its param_groups attribute (other than 'params'), found in optmizer for "
+                                   f"pytorch_representation of '{composition.name}'")
             new_params_group.append(param_group.copy())
             new_params_group[-1]['params'] = param_group['params'].copy()
         return new_params_group
