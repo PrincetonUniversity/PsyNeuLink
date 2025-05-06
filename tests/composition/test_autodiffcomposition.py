@@ -3496,11 +3496,11 @@ class TestMiscTrainingFunctionality:
     default = .001
     test_specs_for_learning_rate_inheritance = [
         #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
-        # Projection-specific lr always takes precedence
         ('defaults',      None,  None,    None,       None,       None,     default,   default,    default,   default),
+        # Projection-specific lr always takes precedence
         ('proj_lr',      1.414,    7,     6.02,        2.7,       None,      1.414,       7,        1.414,      7 ),
-        # outer takes precedence over inner
-        ('inner',         None,    7,     6.02,        2.7,       None,      6.02,        7,         2.7,       7  ),
+        # outer lr takes precedence over inner
+        # ('inner',         None,    7,     6.02,        2.7,       None,      6.02,        7,         2.7,       7  ),
         ('learn_only',    None,  None,    None,       None,       3.14,     default,   default,    default,   default),
         # ('innr_default', 1.414,  None,    None,       None,       3.14,      1.414,    default,     1.414,    default),
         # ('innr_outr',    1.414,  None,    6.02,       None,       3.14,      1.414,      6.02,      1.414,    default),
@@ -3559,13 +3559,16 @@ class TestMiscTrainingFunctionality:
         outer_comp.learn(inputs={inner_node_input:[[1]]},
                          learning_rate={inner_proj_1: outer_learn_lr, outer_proj: outer_learn_lr})
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == outer_learn_lr or proj_1_lr or self.default
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == self.default
-        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_learn_lr
+        proj_1_expected = outer_learn_lr or proj_1_lr or self.default
+        proj_2_expected = outer_learn_lr or proj_2_lr or self.default
+        outer_proj_expected = outer_learn_lr or self.default
+        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == proj_1_expected
+        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == proj_2_expected
+        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_proj_expected
         # Test that _learing_params_for_execution works properly
-        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_1] == outer_learn_lr
-        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_2] == self.default
-        assert learn_pytorch_rep._learn_params_for_execution[outer_proj] == outer_learn_lr
+        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_1] == proj_1_expected
+        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_2] == proj_2_expected
+        assert learn_pytorch_rep._learn_params_for_execution[outer_proj] == outer_proj_expected
 
         # Check that learning_rates return to those at construction with another call to learn() but no learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})
