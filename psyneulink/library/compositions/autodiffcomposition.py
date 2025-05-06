@@ -387,7 +387,7 @@ from psyneulink.core.globals.keywords import (
     OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
     RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL, DEFAULT,
 )
-from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array
+from psyneulink.core.globals.utilities import is_matrix_keyword, is_numeric_scalar, convert_to_np_array
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1421,13 +1421,20 @@ class AutodiffComposition(Composition):
                 target_nodes.extend(node._identify_target_nodes(context))
         return target_nodes
 
+    def _get_valid_weights_shape(self, projection):
+        pnl_wt_matrix = projection.defaults.matrix
+        if not isinstance(pnl_wt_matrix, np.ndarray):
+            assert is_matrix_keyword(pnl_wt_matrix)
+            pnl_wt_matrix = projection._get_matrix_from_keyword(pnl_wt_matrix)
+        return pnl_wt_matrix.shape
+
     @handle_external_context()
     def set_weights(self, pnl_proj, weights:Union[list, np.ndarray], context=None):
         """Set weights for specified Projection."""
-        pnl_wt_matrix = pnl_proj.parameters.matrix._get(context)
-        assert weights.shape == pnl_wt_matrix.shape, \
+        valid_shape = self._get_valid_weights_shape(pnl_proj)
+        assert weights.shape == valid_shape, \
             (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
-             f"Specified weights do not match required shape ({pnl_proj.ma.shape}).)")
+             f"Specified weights do not match required shape ({valid_shape}).)")
         pnl_proj.parameters.matrix._set(weights, context)
         pnl_proj.parameter_ports['matrix'].parameters.value._set(weights, context)
 
