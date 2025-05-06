@@ -1026,11 +1026,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         if specified_learning_rate in {True, None}:
                             specified_learning_rate = default_learning_rate
                     if specified_learning_rate != old_param_group['lr']:
-                        new_param_group['params'].remove(new_param)
-                        # del param_group['params'][i]
+                        # Removal requires the following rather than param_group.remove()
+                        #    since remove() is content-based and some parameters may have identical values
+                        del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])
+                                                           if p is new_param)]
                         optimizer.add_param_group({'params': [new_param], 'lr': specified_learning_rate})
             if not new_param_group['params']:
-                optimizer.param_groups.remove(param_group)
+                optimizer.param_groups.remove(new_param_group)
 
 
 

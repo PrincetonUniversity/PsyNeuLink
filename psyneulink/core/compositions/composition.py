@@ -1129,8 +1129,17 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
-As noted above, learning_rates can be specified in several places.  Below is a complete listing, indicating their
-precedence in determining the learning_rate for a Projection used at execution.
+As noted above, learning_rates can be specified in several places.  Precedence of specifications is determined by the
+following heuristics:
+
+  * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
+
+  * *learn()* method specifications take precedence over those made in constructors;
+
+  * *outer* Composition specifications take precedence over those for nested Compositions within it.
+
+Below is a complete listing, indicating their precedence in determining the learning_rate for a Projection used at
+execution.
 
 .. table::
 
