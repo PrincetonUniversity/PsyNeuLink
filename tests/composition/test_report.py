@@ -1,3 +1,4 @@
+import os
 import sys
 
 import numpy as np
@@ -7,8 +8,22 @@ import psyneulink as pnl
 from psyneulink.core.compositions.report import ReportOutput, ReportProgress, ReportSimulations, ReportDevices
 
 
+# width of terminal used to generated expected_output strings
+TERMINAL_WIDTH = 80
+
+
 @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
 class TestReport():
+    @pytest.fixture(autouse=True)
+    def set_terminal_width(self):
+        cols = 'COLUMNS'
+        orig = os.environ.get(cols)
+        os.environ[cols] = str(TERMINAL_WIDTH)
+        yield
+        if orig is None:
+            del os.environ[cols]
+        else:
+            os.environ[cols] = orig
 
     def test_reportOutputPref_true(self, capsys):
 
