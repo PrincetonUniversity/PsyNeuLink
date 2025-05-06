@@ -714,7 +714,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. math::
 
-        previous_value + rate * variable + noise + offset
+        previous\\_value + rate * variable + noise + offset
 
     *Modulatory Parameters:*
 
