@@ -1178,7 +1178,7 @@ class AutodiffComposition(Composition):
         # pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()
         # MODIFIED 5/5/25 NEWEST:
         # BREADCRUMB: IS ALL/ANY OF THIS NECESSARY OR IS IT / CAN IT BE TAKEN CARE OF IN _update_optimizer_params()?
-        self._constructor_param_groups = optimizer.param_groups.copy()
+        # self._constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
         self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()

@@ -3569,6 +3569,7 @@ class TestMiscTrainingFunctionality:
 
         # Check that learning_rates return to those at construction with another call to learn() but no learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})
+        opt = outer_comp.pytorch_representation.optimizer
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
