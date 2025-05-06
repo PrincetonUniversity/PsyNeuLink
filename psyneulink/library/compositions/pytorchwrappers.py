@@ -999,10 +999,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # MODIFIED 5/6/25 NEWEST:
         # Get fresh copy of param_groups and assign to optimizer_params
+        old_param_groups = optimizer.param_groups
         new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         optimizer.param_groups = new_param_groups
         # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimier)
-        for old_param_group, new_param_group in zip(optimizer.param_groups, new_param_groups):
+        for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
             # Get each param in the param_groups
             param_group_learning_rate = old_param_group['lr']
             for old_param, new_param in zip(old_param_group['params'], new_param_group['params']):
@@ -1091,6 +1092,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    f"pytorch_representation of '{composition.name}'")
             new_params_group.append(param_group.copy())
             new_params_group[-1]['params'] = param_group['params'].copy()
+            assert True
         return new_params_group
 
     def _get_torch_param_info(self, projection:MappingProjection)->(int, torch.nn.Parameter):
