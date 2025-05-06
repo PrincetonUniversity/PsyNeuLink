@@ -1032,12 +1032,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])
                                                            if p is new_param)]
                         # Check if a param_group already exists for the specified learning_rate
-                        exisintg_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
+                        exisiting_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
                                                                        if param_group['lr'] == specified_learning_rate),
                                                                       None)
-                        if existing_param_group_with_specified_lr:
+                        if exisiting_param_group_with_specified_lr:
                             # Move to exisiting param_group with specified learning_rate
-                            exisintg_param_group_with_specified_lr['params'].append(new_param)
+                            exisiting_param_group_with_specified_lr['params'].append(new_param)
                         else:
                             # Create new param_group for the specified learning_rate
                             optimizer.add_param_group({'params': [new_param], 'lr': specified_learning_rate})
