@@ -1026,11 +1026,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         if specified_learning_rate in {True, None}:
                             specified_learning_rate = default_learning_rate
                     if specified_learning_rate != old_param_group['lr']:
-                        # Removal requires the following rather than param_group.remove()
-                        #    since remove() is content-based and some parameters may have identical values
+                        # Move param from existing param_group to one for the specified learning_rate
+                        # NOTE: removal of param from param_group must be done by identity using del, since
+                        #       param_group.remove() is content-based and some parameters may have identical values
                         del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])
                                                            if p is new_param)]
-                        optimizer.add_param_group({'params': [new_param], 'lr': specified_learning_rate})
+                        # Check if a param_group already exists for the specified learning_rate
+                        exisintg_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
+                                                                       if param_group['lr'] == specified_learning_rate),
+                                                                      None)
+                        if existing_param_group_with_specified_lr:
+                            # Move to exisiting param_group with specified learning_rate
+                            exisintg_param_group_with_specified_lr['params'].append(new_param)
+                        else:
+                            # Create new param_group for the specified learning_rate
+                            optimizer.add_param_group({'params': [new_param], 'lr': specified_learning_rate})
             if not new_param_group['params']:
                 optimizer.param_groups.remove(new_param_group)
 
