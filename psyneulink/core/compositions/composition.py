@@ -1140,9 +1140,6 @@ precedence in determining the learning_rate for a Projection used at execution.
    |  **Highest**:  |  `Composition.learn` method dict specifying Projection-specific learning_rate(s)                                    |
    |                |    ``my_composition.learn(learning_rate={my_projection:val})`` (applies only during that execution)                 |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
-   |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
-   |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
-   |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  MappingProjection in Composition constructor dict                                                                  |
    |                |    ``my_composition=Composition(learning_rate={my_projection: val})``                                               |
    |                +---------------------------------------------------------------------------------------------------------------------+
@@ -1160,6 +1157,9 @@ precedence in determining the learning_rate for a Projection used at execution.
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
    |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                                |
+   |                +---------------------------------------------------------------------------------------------------------------------+
+   |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
+   |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  Outer Composition constructor                                                                                      |
    |                |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
