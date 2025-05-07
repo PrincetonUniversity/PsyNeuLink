@@ -1147,6 +1147,8 @@ higher level, more general ones;  more specifically:
 Below is a complete listing, indicating their precedence in determining the learning_rate for a Projection used at
 execution.
 
+BREADCRUMB:  NOTE RE: INNER PROJ ALWAYS USING INNER COMP LR;  IF WANT IT TO MATCH OUTER, HAS TO BE SPECIFIED EXPLICITLY
+
 .. table::
 
    +--------------------------------------------------------------------------------------------------------------------------------------+
