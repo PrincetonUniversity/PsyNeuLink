@@ -3505,7 +3505,7 @@ class TestMiscTrainingFunctionality:
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
         ('proj_lr_none', 1.414,    7,     6.02,        2.7,      None,        1.414,       7,       1.414,       7  ),
-        # outer lr takes precedence over inner
+        ('learn_only',    None,  None,    None,       None,      3.14,       default,  default,     default,  default)
         ('inr_p2_none',  1.414,  None,    None,       None,      3.14,        1.414,   default,     1.414,   default ),
         ('innr_outr',    1.414,  None,    6.02,       None,      3.14,        1.414,     6.02,      1.414,     6.02  ),
         ('inr_none_nimp', None,    7,     6.02,       None,  NotImplemented,   6.02,       7,        6.02,       7   ),
@@ -3514,7 +3514,6 @@ class TestMiscTrainingFunctionality:
         ('inr_lr_none',  1.414,    7,     6.02,       None,      None,        1.414,       7,       1.414,       7   ),
         ('outr_comp_lr',  None,    7,     6.02,        2.7,      None,         6.02,       7,        6.02,       7   ),
         ('outr_comp_lr',  None,    7,     None,        2.7,      None,       default,      7,       default,     7   ),
-        ('learn_only',    None,  None,    None,       None,      3.14,       default,  default,     default,  default)
     ]
     @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
