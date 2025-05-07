@@ -3495,17 +3495,23 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
-        ('defaults',      None,  None,    None,       None,       None,     default,   default,    default,   default),
-        # Projection-specific lr always takes precedence
-        ('proj_lr',      1.414,    7,     6.02,        2.7,       None,      1.414,       7,        1.414,      7 ),
-        # outer lr takes precedence over inner
-        # ('inner',         None,    7,     6.02,        2.7,       None,      6.02,        7,         2.7,       7  ),
-        ('learn_only',    None,  None,    None,       None,       3.14,     default,   default,    default,   default),
+        # #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
+        # ('defaults',      None,  None,    None,       None,   NotImplemented, default,   default,    default,  default),
+        # # projection-specific specs takes precedence if no learn() method specs
+        # ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,   NotImplemented,  1.414,       7,       1.414,       7  ),
+        # # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
+        # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        # ('proj_lr_none', 1.414,    7,     6.02,        2.7,       None,        1.414,       7,       1.414,        7  ),
+        # # outer lr takes precedence over inner
+        ('inner_nimp',    None,    7,     6.02,       None,   NotImplemented,   6.02,       7,        6.02,        7  ),
+        ('inner_none',    None,    7,     6.02,       None,       None,      default,       7,      default,       7  ),
+        ('outer',         None,    7,     6.02,        2.7,       None,         6.02,       7,         2.7,        7  ),
+        ('learn_only',    None,  None,    None,       None,       3.14,      default,   default,    default,   default),
         # ('innr_default', 1.414,  None,    None,       None,       3.14,      1.414,    default,     1.414,    default),
         # ('innr_outr',    1.414,  None,    6.02,       None,       3.14,      1.414,      6.02,      1.414,    default),
     ]
-    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, inner_comp_lr, outer_comp_lr, outer_learn_lr, "
+    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, "
+                             "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
                              "expected_proj_1_inner, expected_proj_2_inner, "
                              "expected_proj_1_outer, expected_proj_2_outer",
                              test_specs_for_learning_rate_inheritance,
@@ -3539,44 +3545,58 @@ class TestMiscTrainingFunctionality:
         inner_comp._build_pytorch_representation()
         inner_pytorch_rep = inner_comp.pytorch_representation
         # Ensure that params were assigned appropriate lr for the inner_comp
-        # assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_inner
-        # assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_inner
+        assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_inner
+        assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_inner
 
         # Construct outer Composition with nested inner
         outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
         outer_comp = AutodiffComposition([inner_comp, outer_node], learning_rate=outer_comp_lr, name="OUTER COMP")
-        outer_proj = outer_comp.nodes[-1].afferents[0]
 
-        # Check outer_comp assignments
+        # Check outer_comp assignments in constructor
         outer_comp._build_pytorch_representation()
         outer_pytorch_rep = outer_comp.pytorch_representation
+        outer_proj = outer_comp.nodes[-1].afferents[0]
         # Ensure inner and outer are the same
-        # assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
-        # assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
+        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
+        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
         assert outer_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_comp_lr or self.default
 
-        # Check outer_comp assignments with learning_rate specified in learn()
+        # Check outer_comp assignments in learn() method
+        if outer_learn_lr == NotImplemented:
+            learning_rate = None
+            proj_1_expected = proj_1_lr or self.default
+            proj_2_expected = proj_2_lr or self.default
+            outer_proj_expected = outer_comp_lr or self.default
+        elif outer_learn_lr is None:
+            learning_rate = {inner_proj_1: None,
+                             outer_proj: None}
+            proj_1_expected = outer_comp_lr or proj_1_lr or self.default
+            proj_2_expected = proj_2_lr or self.default
+            outer_proj_expected = outer_comp_lr or self.default
+        else:
+            learning_rate = {inner_proj_1: outer_learn_lr,
+                             outer_proj: outer_learn_lr}
+            proj_1_expected = outer_learn_lr or proj_1_lr or self.default
+            proj_2_expected = outer_learn_lr or proj_2_lr or self.default
+            outer_proj_expected = outer_comp_lr or self.default
         outer_comp.learn(inputs={inner_node_input:[[1]]},
-                         learning_rate={inner_proj_1: outer_learn_lr, outer_proj: outer_learn_lr})
+                         learning_rate=learning_rate)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        proj_1_expected = outer_learn_lr or proj_1_lr or self.default
-        proj_2_expected = outer_learn_lr or proj_2_lr or self.default
-        outer_proj_expected = outer_learn_lr or self.default
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == proj_1_expected
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == proj_2_expected
+        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
         assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_proj_expected
         # Test that _learing_params_for_execution works properly
-        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_1] == proj_1_expected
-        assert learn_pytorch_rep._learn_params_for_execution[inner_proj_2] == proj_2_expected
-        assert learn_pytorch_rep._learn_params_for_execution[outer_proj] == outer_proj_expected
+        assert learn_pytorch_rep.torch_params_for_execution[inner_proj_1] == proj_1_expected
+        assert learn_pytorch_rep.torch_params_for_execution[inner_proj_2] == expected_proj_2_outer
+        assert learn_pytorch_rep.torch_params_for_execution[outer_proj] == outer_proj_expected
 
-        # Check that learning_rates return to those at construction with another call to learn() but no learning_rates
+        # Check that learning_rates return to those at construction after another call to learn() without learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         opt = outer_comp.pytorch_representation.optimizer
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
         assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == self.default
+        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_proj_expected
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_nested(self, bias):
