@@ -1147,7 +1147,12 @@ higher level, more general ones;  more specifically:
 Below is a complete listing, indicating their precedence in determining the learning_rate for a Projection used at
 execution.
 
-BREADCRUMB:  NOTE RE: INNER PROJ ALWAYS USING INNER COMP LR;  IF WANT IT TO MATCH OUTER, HAS TO BE SPECIFIED EXPLICITLY
+BREADCRUMB: 5/7/25
+    NOTE RE: INNER PROJ ALWAYS USING INNER COMP LR;  IF WANT IT TO MATCH OUTER, HAS TO BE SPECIFIED EXPLICITLY
+    NOTE RE: PASSING OPTIMIZER PARAMS TO LEARN BEFORE _build_pytorch_representation HAS BEEN CALLED:
+             WILL STILL USE ANY PASSED TO CONSTRUCTOR (OR DEFAULTS) AS BASE VALUES, THAT WILL BE REVERTED TO
+             AFTER CALL TO LEARN() METHOD.
+
 
 .. table::
 
