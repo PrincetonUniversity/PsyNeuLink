@@ -1104,6 +1104,9 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
   COMMENT:
   # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
+
+  .. _Composition_Learning_Nested:
+
   .. note::
      If any **learning_rate** specifiations are included in the constructor for a nested AutodiffComposition, those
      specifications are incorporated into the outer Composition; however, if there any specifications for the same
@@ -1129,14 +1132,17 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
-As noted above, learning_rates can be specified in several places.  Precedence of specifications is determined by the
-following heuristics:
+As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
+general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
+higher level, more general ones;  more specifically:
 
   * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
 
   * *learn()* method specifications take precedence over those made in constructors;
 
-  * *outer* Composition specifications take precedence over those for nested Compositions within it.
+  * *inner* Composition specifications take precedence over those for ones wihtin which they are nested, for cases
+    in which learning is supported for nested Compositions (see `note <Composition_Learning_Nested>` above for
+    learning and `nested Compositions <Composition_Nested>`).
 
 Below is a complete listing, indicating their precedence in determining the learning_rate for a Projection used at
 execution.
@@ -1169,11 +1175,11 @@ execution.
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
-   |                +---------------------------------------------------------------------------------------------------------------------+
-   |                |  Outer Composition constructor                                                                                      |
-   |                |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  Nested Composition constructor                                                                                     |
+   |                |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
+   +----------------+---------------------------------------------------------------------------------------------------------------------+
+   |                |  Outer Composition constructor                                                                                      |
    |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (*after* Composition assginment)   |
