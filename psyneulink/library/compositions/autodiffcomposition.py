@@ -1130,10 +1130,17 @@ class AutodiffComposition(Composition):
         default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
         old_opt = pytorch_rep.optimizer
         if (old_opt is None or refresh) and refresh is not False:
-            self._instantiate_optimizer(refresh,
-                                        default_learning_rate,
-                                        optimizer_params or self._optimizer_constructor_params,
-                                        context)
+            # 5/7/25 BREADCRUMB: SEEMS TO NOT BE REGISTERING OPTIMIZER_PARAMS PASSED FROM LEARN() METHOD
+            if context.runmode == ContextFlags.LEARNING_MODE:
+                # If optimizer is being constructed de novo in call to learn(), instantiate it using params
+                #   specified in constructor (if any), since:
+                #   - need those implemented in a params_group that is reverted back to after execution of learn()
+                #   - the ones specified in the call to learn() will be applied in call to _update_optimizer_params()
+                opt_params = self._optimizer_constructor_params
+            else:
+                # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
+                opt_params = optimizer_params or self._optimizer_constructor_params
+            self._instantiate_optimizer(refresh, default_learning_rate, opt_params, context)
         else:
             if context.source is not ContextFlags.SHOW_GRAPH:
                 pytorch_rep._update_optimizer_params(old_opt, optimizer_params,
@@ -1151,6 +1158,7 @@ class AutodiffComposition(Composition):
         return pytorch_rep
 
     def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context):
+
         if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError(f"Value ('{learning_rate}') specified in 'learning_rate' arg of the "
                                            f"learn() method for '{self.name}' must be an int, float, bool or dict.")
