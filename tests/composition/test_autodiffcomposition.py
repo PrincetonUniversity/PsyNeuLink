@@ -3498,17 +3498,19 @@ class TestMiscTrainingFunctionality:
         # #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
         # ('defaults',      None,  None,    None,       None,   NotImplemented, default,   default,    default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
-        # ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,   NotImplemented,  1.414,       7,       1.414,       7  ),
+        # ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,   NotImplemented,  1.414,        7,     1.414,        7  ),
         # # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
-        # ('proj_lr_none', 1.414,    7,     6.02,        2.7,       None,        1.414,       7,       1.414,        7  ),
+        # ('proj_lr_none', 1.414,    7,     6.02,        2.7,       None,        1.414,        7,     1.414,         7  ),
         # # outer lr takes precedence over inner
-        ('inner_nimp',    None,    7,     6.02,       None,   NotImplemented,   6.02,       7,        6.02,        7  ),
-        ('inner_none',    None,    7,     6.02,       None,       None,      default,       7,      default,       7  ),
-        ('outer',         None,    7,     6.02,        2.7,       None,         6.02,       7,         2.7,        7  ),
-        ('learn_only',    None,  None,    None,       None,       3.14,      default,   default,    default,   default),
-        # ('innr_default', 1.414,  None,    None,       None,       3.14,      1.414,    default,     1.414,    default),
-        # ('innr_outr',    1.414,  None,    6.02,       None,       3.14,      1.414,      6.02,      1.414,    default),
+        # ('inr_none_nimp', None,    7,     6.02,       None,   NotImplemented,   6.02,         7,     6.02,         7  ),
+        ('inr_none_none', None,    7,     6.02,       None,       None,          6.02,       7,    default,       7  ),
+        ('inr_lr_nimp',  1.414,    7,     6.02,       None,   NotImplemented,  default,       7,    default,       7  ),
+        ('inr_lr_none',  1.414,    7,     6.02,       None,       None,        default,       7,    default,       7  ),
+        ('outer',         None,    7,     6.02,        2.7,       None,         6.02,         7,       2.7,        7  ),
+        ('learn_only',    None,  None,    None,       None,       3.14,        default,   default,  default,   default),
+        # ('innr_default', 1.414,  None,    None,       None,       3.14,        1.414,    default,   1.414,    default),
+        # ('innr_outr',    1.414,  None,    6.02,       None,       3.14,        1.414,      6.02,    1.414,    default),
     ]
     @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
@@ -3564,8 +3566,8 @@ class TestMiscTrainingFunctionality:
         # Check outer_comp assignments in learn() method
         if outer_learn_lr == NotImplemented:
             learning_rate = None
-            proj_1_expected = proj_1_lr or self.default
-            proj_2_expected = proj_2_lr or self.default
+            proj_1_expected = proj_1_lr or inner_comp_lr or outer_comp_lr or self.default
+            proj_2_expected = proj_2_lr or inner_comp_lr or outer_comp_lr or self.default
             outer_proj_expected = outer_comp_lr or self.default
         elif outer_learn_lr is None:
             learning_rate = {inner_proj_1: None,
