@@ -1082,13 +1082,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # If learning_rate = True or None, use composition.learning_rate, else use specified value
                     if specified_learning_rate is NotImplemented:
                         specified_learning_rate = projection.learning_rate
+                    # Otherwise, use learning_rate specified at run time or in constructor for Composition
                     if specified_learning_rate in {True, None}:
                         proj_wrapper_name = self._pnl_refs_to_torch_param_names[projection.name]
                         proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
+                        # Use either run_time learning_rate or learning_rate for Composition, giving precedence
+                        #   to one to which the Projection belongs if it is in a nested Composition
                         specified_learning_rate = (composition._runtime_learning_rate
-                                                   or composition.learning_rate # <- BREADCRUMB: IF NOT SPECIFIED IN CONSTRUCTOR SHOULD BE TREATED AS NONE RATHER THAN .001
-                                                   # BREADCRUMB 5/6/25 - NEED TO HANDLE POSSIBILITY OF INTERMEDIATE NESTED COMPS HERE
-                                                   or proj_wrapper.composition.learning_rate)
+                                                   or proj_wrapper.composition.learning_rate
+                                                   or composition.learning_rate)
                     assert specified_learning_rate not in (None, NotImplemented),\
                         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"
                 if specified_learning_rate != old_param_group['lr']:
