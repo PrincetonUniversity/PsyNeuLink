@@ -893,6 +893,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                    f"'learning_rate' arg of the {source} for '{self.composition.name}' "
                                                    f"is not learnable; check that its 'learnable' attribute is set to "
                                                    f"True or remove from the dict.")
+                elif proj_wrapper.projection.learnable:
+                    # param was set to False in call to constructor but has been assigned a learning_rate in learn()
+                    raise AutodiffCompositionError(f"The 'learning_rate' for Projection '{pnl_param_name}' was set "
+                                                   f"to 'False' in the constructor for '{self.composition.name}', "
+                                                   f"but is being assigned an active learning_rate ({param_val}) "
+                                                   f"in the {source} for the Composition; either that specification "
+                                                   f"must be removed, or the specification of the 'learning_rate' of "
+                                                   f"'False' in the constructor must be changed or removed.")
                 else:
                     assert False, (f"PROGRAM ERROR: {torch_param_name} is not a learnable torch parameter even though "
                                    f"it is associated with a learnable Projection ('{pnl_param_name}').")
