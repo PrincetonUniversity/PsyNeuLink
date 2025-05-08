@@ -409,12 +409,12 @@ class TestAutodiffLearningRateArgs:
          "of the learn() method for 'Outer Comp' must be an int, float, bool or dict."),
         ("dict_lr_val_str",
          "The value ('goodbye') for 'Parameter containing:\\ntensor([[1.]], dtype=torch.float64, requires_grad=True)' "
-         "in the dict specified for the 'learning_rate' arg of learn() method of 'Outer Comp' "
+         "in the dict specified for the 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "must be an int, float or bool."),
         ("dict_lr_val_proj",
          "The value ('(MappingProjection INPUT PROJECTION)') for 'Parameter containing:\\ntensor([[1.]], "
-         "dtype=torch.float64, requires_grad=True)' in the dict specified for the 'learning_rate' arg of learn() "
-         "method of 'Outer Comp' must be an int, float or bool."),
+         "dtype=torch.float64, requires_grad=True)' in the dict specified for the 'learning_rate' arg of the "
+         "learn() method for 'Outer Comp' must be an int, float or bool."),
         ("dict_illegal_key_str",
          "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "is not in that Composition or any nested within it: 'woa a woa'."),
@@ -426,7 +426,8 @@ class TestAutodiffLearningRateArgs:
          "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
         ("dict_proj_not_learnable",
          "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
-         "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to True or remove from the dict.")
+         "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
+         "is not 'False', or remove from it the dict.")
          ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -467,7 +468,7 @@ class TestAutodiffLearningRateArgs:
         elif condition == "dict_key_bad_proj":
             key_spec = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
-            error_type = pnl.CompositionError
+            error_type = AutodiffCompositionError
             comp_lr = None
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
@@ -3497,34 +3498,34 @@ class TestMiscTrainingFunctionality:
 
         if use_learn_method:
             input_proj_lr = (learn_method_lr_input_proj
-                             if ((learn_method_lr_input_proj and learn_method_lr_input_proj != True)
-                                 or learn_method_lr_input_proj == False)
+                             if ((learn_method_lr_input_proj and learn_method_lr_input_proj is not True)
+                                 or learn_method_lr_input_proj is False)
                              else (constructor_lr_input_proj
-                                   if (constructor_lr_input_proj and constructor_lr_input_proj != True)
+                                   if (constructor_lr_input_proj and constructor_lr_input_proj is not True)
                                    else (projection_lr_input_proj or self.default_lr)))
             hidden_proj_lr = self.default_lr
             output_proj_lr = (learn_method_lr_output_proj
-                              if ((learn_method_lr_output_proj and learn_method_lr_output_proj != True)
-                                  or learn_method_lr_output_proj == False)
+                              if ((learn_method_lr_output_proj and learn_method_lr_output_proj is not True)
+                                  or learn_method_lr_output_proj is False)
                               else (constructor_lr_output_proj
-                                    if (constructor_lr_output_proj and constructor_lr_output_proj != True)
+                                    if (constructor_lr_output_proj and constructor_lr_output_proj is not True)
                                     else (constructor_lr_output_proj or self.default_lr)))
         elif use_constructor:
             input_proj_lr = (constructor_lr_input_proj
-                             if ((constructor_lr_input_proj and constructor_lr_input_proj != True)
-                                 or constructor_lr_input_proj == False)
+                             if ((constructor_lr_input_proj and constructor_lr_input_proj is not True)
+                                 or constructor_lr_input_proj is False)
                              else (projection_lr_input_proj or self.default_lr))
             hidden_proj_lr = self.default_lr
             output_proj_lr = (constructor_lr_output_proj
-                              if ((constructor_lr_output_proj and constructor_lr_output_proj != True)
-                                  or constructor_lr_output_proj == False)
+                              if ((constructor_lr_output_proj and constructor_lr_output_proj is not True)
+                                  or constructor_lr_output_proj is False)
                               else (projection_lr_output_proj or self.default_lr))
         else:
             input_proj_lr = projection_lr_input_proj or self.default_lr
             hidden_proj_lr = self.default_lr
             output_proj_lr = projection_lr_output_proj or self.default_lr
 
-        outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER') 
+        outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER')
         assert outer_comp_pytorch_rep._get_torch_learning_rate(input_proj) == input_proj_lr
         assert outer_comp_pytorch_rep._get_torch_learning_rate(hidden_proj) == hidden_proj_lr
         assert outer_comp_pytorch_rep._get_torch_learning_rate(output_proj) == output_proj_lr
