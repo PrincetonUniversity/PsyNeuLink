@@ -1115,12 +1115,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if not param_group['params']:
                 optimizer.param_groups.remove(param_group)
 
-
-
-
         if source == CONSTRUCTOR:
             # Store constructor-specified learning_rates (for reversion after learn())
             self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+
+        assert True
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
         """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
