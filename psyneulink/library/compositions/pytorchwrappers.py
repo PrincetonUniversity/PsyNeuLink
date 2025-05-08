@@ -1209,26 +1209,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     return param_group['lr']
 
     @property
-    def _torch_param_names_to_ids(self):
+    def _torch_param_names_to_ids(self)->dict:
         """Return dict of {torch parameter}: python id for all named_parameters"""
         return {param[0]: id(param[1]) for param in list(self.named_parameters())}
 
     @property
-    def pnl_refs_to_torch_params(self):
+    def pnl_refs_to_torch_params(self)->dict:
         """Return dict of {Projection: torch parameter} for all wrapped Projections"""
         return {projection: self._get_torch_param_info(projection)[1] for projection in self.wrapped_projections}
 
     @property
-    def torch_params_to_projections(self):
+    def torch_params_to_projections(self)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections"""
         return {self._get_torch_param_info(proj)[1]: proj for proj in self.wrapped_projections}
 
     @property
     # Return execution-specific learning_rates
-    def torch_params_for_execution(self):
+    def torch_params_for_execution(self)->dict:
         return {proj: self._get_torch_learning_rate(proj) for proj in self.wrapped_projections}
 
-    def get_projection_for_torch_param(self, param):
+    def get_projection_for_torch_param(self, param)->MappingProjection:
         return self.torch_params_to_projections.get(param, None)
 
     def _get_torch_id_for_param(self, torch_param:torch.nn.Parameter)->str:
