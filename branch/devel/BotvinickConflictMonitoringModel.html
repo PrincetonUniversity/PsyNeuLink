@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -204,29 +204,32 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="conflict-monitoring-and-cognitive-control-botvinick-et-al-2001">
-<h1>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)<a class="headerlink" href="#conflict-monitoring-and-cognitive-control-botvinick-et-al-2001" title="Permalink to this headline">¶</a></h1>
+<h1>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)<a class="headerlink" href="#conflict-monitoring-and-cognitive-control-botvinick-et-al-2001" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488380">“Conflict Monitoring and Cognitive Control”</a></p>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>This implements a model concerning the role of the <a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">anterior cingulate cortex (ACC)</a> in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
 This script implements the system and plot from Figure 1 of the conflict monitoring and cognitive control paper.</p>
 <figure class="align-left" id="conflict-pnl-fig" style="width: 45%">
-<img alt="Botvinick et al., 2001 plot produced by PsyNeuLink" src="_images/conflict_PNL.svg" /></figure>
+<img alt="Botvinick et al., 2001 plot produced by PsyNeuLink" src="_images/conflict_PNL.svg" />
+</figure>
 <figure class="align-right" id="conflict-monitoring-matlab-fig" style="width: 45%">
-<img alt="Botvinick et al., 2001 plot produced by MATLAB" src="_images/conflict_monitoring_MATLAB.svg" /></figure>
+<img alt="Botvinick et al., 2001 plot produced by MATLAB" src="_images/conflict_monitoring_MATLAB.svg" />
+</figure>
 </section>
 <section id="the-model">
-<h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
+<h2>The Model<a class="headerlink" href="#the-model" title="Link to this heading">¶</a></h2>
 <p>The model is built as the bidirectional Stroop model by Cohen &amp; Huston (1994): stimulus information in two hidden
 layers (color, word &amp; neutral), and task information (color naming or word reading) are connected with each other in a
 bidirectional way. The response layer receives inputs from both hidden layers. A graph of the model is shown below.</p>
 <figure class="align-center" id="conflict-monitoring-graph" style="width: 75%">
-<img alt="Botvinick System Graph" src="_images/conflict_monitoring.svg" /></figure>
+<img alt="Botvinick System Graph" src="_images/conflict_monitoring.svg" />
+</figure>
 <section id="network-system">
-<h3>Network System<a class="headerlink" href="#network-system" title="Permalink to this headline">¶</a></h3>
+<h3>Network System<a class="headerlink" href="#network-system" title="Link to this heading">¶</a></h3>
 <p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one unit for the input of one color, respectively
 here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
 <p><strong>WORD INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong> = 3 (one unit for the input of one word, respectively,
@@ -265,16 +268,16 @@ elements.</p>
 </section>
 </section>
 <section id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
-units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_port</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
+units to 1.0 for a given trial. Conflict is computed on the <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_port</span></code></a> of the <em>RESPONSE LAYER</em>. The figure plots
 conflict over one trial for each of the three conditions.
-The <a class="reference internal" href="Log.html#module-psyneulink.core.globals.log" title="psyneulink.core.globals.log"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
+The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
 the plot of the Figure.</p>
 </section>
 <section id="please-note">
-<h2>Please note:<a class="headerlink" href="#please-note" title="Permalink to this headline">¶</a></h2>
+<h2>Please note:<a class="headerlink" href="#please-note" title="Link to this heading">¶</a></h2>
 <p>Note that this script implements a slightly different Figure than in the original Figure in the paper.
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.</p>
@@ -350,10 +353,11 @@ conflict monitoring simulations.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>&lt;no title&gt; &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>&lt;no title&gt; &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -231,7 +231,7 @@
 “text”: [</p>
 <blockquote>
 <div><p>“usage: ipykernel_launcher.py [-h] [–no-plot] [–threshold THRESHOLD]n”,
-”                             [–settle-trials SETTLE_TRIALS]n”,
+“                             [–settle-trials SETTLE_TRIALS]n”,
 “ipykernel_launcher.py: error: unrecognized arguments: -f /Users/jdc/Library/Jupyter/runtime/kernel-80749002-641a-49c5-9f4c-4376abab6a11.jsonn”</p>
 </div></blockquote>
 <p>]</p>
@@ -258,7 +258,7 @@
 “text”: [</p>
 <blockquote>
 <div><p>“/Users/jdc/anaconda/envs/python39/lib/python3.9/site-packages/IPython/core/interactiveshell.py:3452: UserWarning: To exit: use ‘exit’, ‘quit’, or Ctrl-D.n”,
-”  warn(&quot;To exit: use ‘exit’, ‘quit’, or Ctrl-D.&quot;, stacklevel=1)n”</p>
+“  warn(&quot;To exit: use ‘exit’, ‘quit’, or Ctrl-D.&quot;, stacklevel=1)n”</p>
 </div></blockquote>
 <p>]</p>
 </div></blockquote>
@@ -268,7 +268,7 @@
 “source”: [</p>
 <blockquote>
 <div><p>“from psyneulink.library.models.Beukers_et_al_2022.nback import \n”,
-”    construct_model, train_network, run_model, analyze_resultsn”,
+“    construct_model, train_network, run_model, analyze_resultsn”,
 “from psyneulink import <a href="#id1"><span class="problematic" id="id2">*</span></a>”</p>
 </div></blockquote>
 <p>],
@@ -346,12 +346,12 @@
 “NUM_NBACK_LEVELS = len(NBACK_LEVELS)n”,
 “CONTEXT_DRIFT_NOISE = 0.0                # noise used by DriftOnASphereIntegrator (function of Context mech)n”,
 “RANDOM_WEIGHTS_INITIALIZATION=\n”,
-”    RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projectionsn”,
+“    RandomMatrix(center=0.0, range=0.1)  # Matrix spec used to initialize all Projectionsn”,
 “RETRIEVAL_SOFTMAX_TEMP = 1/8             # express as gain # precision of retrieval processn”,
 “RETRIEVAL_HAZARD_RATE = 0.04             # rate of re=sampling of em following non-match in a pass through ffnn”,
 “RETRIEVAL_STIM_WEIGHT = 0.05             # weighting of stimulus field in retrieval from emn”,
 “RETRIEVAL_CONTEXT_WEIGHT \n”,
-”    = 1-RETRIEVAL_STIM_WEIGHT            # weighting of context field in retrieval from emn”,
+“    = 1-RETRIEVAL_STIM_WEIGHT            # weighting of context field in retrieval from emn”,
 “DECISION_SOFTMAX_TEMP=1”</p>
 </div></blockquote>
 <p>],
@@ -607,8 +607,8 @@
 “source”: [</p>
 <blockquote>
 <div><p>“coded_responses, stats = analyze_results(results,n”,
-”                                         num_trials=NUM_TRIALS,n”,
-”                                         nback_levels=NBACK_LEVELS)n”,
+“                                         num_trials=NUM_TRIALS,n”,
+“                                         nback_levels=NBACK_LEVELS)n”,
 “n”</p>
 </div></blockquote>
 <p>],
@@ -709,10 +709,11 @@
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compilation &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>Compilation &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="compilation">
-<h1>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h1>
+<h1>Compilation<a class="headerlink" href="#compilation" title="Link to this heading">¶</a></h1>
 <p>PsyNeulink includes a runtime compiler to improve performance of executed models.
 This section describes the overview of the compiler design and its use.
 The performance improvements varies, but it has been observed to be between
@@ -207,8 +207,8 @@ See <a class="reference external" href="http://www.cs.yale.edu/homes/abhishek/jv
 for additional information about the approach taken to compilation, and
 <a class="reference internal" href="Composition.html#composition-compilation"><span class="std std-ref">Compilation</span></a> for it use in executing a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The PsyNeuLink runtime compiler works in several steps when invoked via <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>:
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The PsyNeuLink runtime compiler works in several steps when invoked via <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.PytorchMechanismWrapper.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>:
 <em>Compilation</em>:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -229,7 +229,7 @@ for additional information about the approach taken to compilation, and
 </dl>
 </section>
 <section id="use">
-<h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
+<h2>Use<a class="headerlink" href="#use" title="Link to this heading">¶</a></h2>
 <p>Compiled form of a model can be invoked by passing one of the following values to the <code class="xref any docutils literal notranslate"><span class="pre">bin_execute</span></code> parameter of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a>, or <code class="xref any docutils literal notranslate"><span class="pre">Composition.exec</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
@@ -299,10 +299,11 @@ for additional information about the approach taken to compilation, and
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

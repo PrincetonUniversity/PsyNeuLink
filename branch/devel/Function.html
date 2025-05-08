@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Function &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>Function &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="function">
-<h1>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h1>
+<h1>Function<a class="headerlink" href="#function" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="NonStatefulFunctions.html">NonStatefulFunctions</a></li>
@@ -208,7 +208,7 @@
 </div>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-psyneulink.core.components.functions.function"></span><div class="line-block">
+<div class="line-block" id="module-psyneulink.core.components.functions.function">
 <div class="line"><br /></div>
 </div>
 <dl class="simple">
@@ -222,7 +222,7 @@
 </dd>
 </dl>
 <section id="overview">
-<span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that “packages” a function for use by other Components.
 Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
 Function’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is executed.  The <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be any callable
@@ -246,7 +246,7 @@ standards (the PsyNeuLink <code class="xref any docutils literal notranslate"><s
 </ul>
 </section>
 <section id="creating-a-function">
-<span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
+<span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Link to this heading">¶</a></h2>
 <p>A Function can be created directly by calling its constructor.  Functions are also created automatically whenever
 any other type of PsyNeuLink Component is created (and its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> is not otherwise specified). The
 constructor for a Function has an argument for its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and each of the parameters of
@@ -256,9 +256,9 @@ be used to specify the default value for that parameter; the values can later be
 below.</p>
 </section>
 <section id="structure">
-<span id="function-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="function-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <section id="core-attributes">
-<span id="function-core-attributes"></span><h3><em>Core Attributes</em><a class="headerlink" href="#core-attributes" title="Permalink to this headline">¶</a></h3>
+<span id="function-core-attributes"></span><h3><em>Core Attributes</em><a class="headerlink" href="#core-attributes" title="Link to this heading">¶</a></h3>
 <p>Every Function has the following core attributes:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> – provides the input to the Function’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
@@ -270,7 +270,7 @@ callable object (that is, a python function or method of some kind). Unlike othe
 <p>A Function also has an attribute for each of the parameters of its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 </section>
 <section id="owner">
-<h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
+<h3><em>Owner</em><a class="headerlink" href="#owner" title="Link to this heading">¶</a></h3>
 <p>If a Function has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then it also has an <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> attribute
 that refers to that Component.  The Function itself is assigned as the Component’s
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.  Each of the Function’s attributes is also assigned
@@ -279,7 +279,7 @@ as an attribute of the <a class="reference internal" href="Functions.html#psyneu
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
 </section>
 <section id="modulatory-parameters">
-<span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
+<span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Link to this heading">¶</a></h3>
 <p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code>.
 Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a> for additional
 details). For example, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> typically uses the <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> to modulate the value of a parameter
@@ -288,7 +288,7 @@ the <code class="xref any docutils literal notranslate"><span class="pre">value<
 </section>
 </section>
 <section id="execution">
-<span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>Functions are executable objects that can be called directly.  More commonly, however, they are called when
 their <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> is executed.  The parameters
 of the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
@@ -298,13 +298,14 @@ call to the <a class="reference internal" href="Functions.html#psyneulink.core.c
 <code class="xref any docutils literal notranslate"><span class="pre">Run</span></code> method of their <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </section>
 <section id="class-reference">
-<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">ArgumentTherapy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Manner.CONTRARIAN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pertinacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">ArgumentTherapy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Manner.CONTRARIAN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pertinacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="Link to this definition">¶</a></dt>
 <dd><p id="argumenttherapist">Return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">False</span></code> according to the manner of the therapist.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>boolean</em><em> or </em><em>statement that resolves to one : default class_defaults.variable</em>) – assertion for which a therapeutic response will be offered.</p></li>
 <li><p><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) – specifies preferred therapeutic manner</p></li>
@@ -320,10 +321,10 @@ arguments of the constructor.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.variable" title="Link to this definition">¶</a></dt>
 <dd><p>assertion to which a therapeutic response is made.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>boolean</p>
 </dd>
 </dl>
@@ -331,10 +332,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.propensity">
-<span class="sig-name descname"><span class="pre">propensity</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.propensity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">propensity</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.propensity" title="Link to this definition">¶</a></dt>
 <dd><p>determines therapeutic manner:  tendency to agree or disagree.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Manner value : default Manner.CONTRARIAN</p>
 </dd>
 </dl>
@@ -342,10 +343,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity">
-<span class="sig-name descname"><span class="pre">pertinacity</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pertinacity</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity" title="Link to this definition">¶</a></dt>
 <dd><p>determines consistency with which the manner complies with the propensity.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float : default 10.0</p>
 </dd>
 </dl>
@@ -353,10 +354,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.owner" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.owner" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
 </dd>
 </dl>
@@ -364,11 +365,11 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.name" title="Link to this definition">¶</a></dt>
 <dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -376,12 +377,12 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.prefs" title="Link to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
 </dd>
 </dl>
@@ -389,24 +390,24 @@ for details).</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Manner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Manner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable">
-<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Validates variable and returns validated value</p>
 <p>This overrides the class method, to perform more detailed type checking
 See explanation in class method.
 Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> – (anything but a dict) - variable to be validated:</p></li>
 <li><p><strong>context</strong> – (str)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return variable</dt>
+<dt class="field-even">Return variable<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p>validated</p></li>
 </ul>
@@ -416,29 +417,29 @@ Note: this method (or the class version) is called only if the parameter_validat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validates variable and /or params and assigns to targets</p>
 <p>This overrides the class method, to perform more detailed type checking
 See explanation in class method.
 Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>request_set</strong> – (dict) - params to be validated</p></li>
 <li><p><strong>target_set</strong> – (dict) - destination of validated params</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return none</dt>
+<dt class="field-even">Return none<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy._function">
-<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function" title="Link to this definition">¶</a></dt>
 <dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>boolean : default class_defaults.variable</em>) – an assertion to which a therapeutic response is made.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -446,10 +447,10 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>therapeutic response</strong></p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>boolean</p>
 </dd>
 </dl>
@@ -457,17 +458,17 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.ArgumentTherapy.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;psyneulink.core.components.functions.function.ArgumentTherapy.Parameters</span> <span class="pre">object&gt;</span> <span class="pre">:</span> <span class="pre">(</span> <span class="pre">	changes_shape</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='changes_shape'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	enable_output_type_conversion</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='enable_output_type_conversion'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execute_until_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execute_until_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execution_count</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execution_count'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	has_initializers</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='has_initializers'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_has_initializers_setter&gt;</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	is_finished_flag</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='is_finished_flag'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	max_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(1000)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='max_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=Time(run:</span> <span class="pre">0,</span> <span class="pre">trial:</span> <span class="pre">0,</span> <span class="pre">pass:</span> <span class="pre">0,</span> <span class="pre">time_step:</span> <span class="pre">0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	output_type</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=&lt;FunctionOutputType.DEFAULT:</span> <span class="pre">3&gt;</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='output_type'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		valid_types=(&lt;enum</span> <span class="pre">'FunctionOutputType'&gt;,)</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	pertinacity</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(10.)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='pertinacity'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	propensity</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=&lt;Manner.CONTRARIAN:</span> <span class="pre">1&gt;</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='propensity'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	value</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array([0])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='value'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	variable</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		constructor_argument='default_variable'</span> <span class="pre">		default_value=array([0])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='variable'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">)</span></em><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;psyneulink.core.components.functions.function.ArgumentTherapy.Parameters</span> <span class="pre">object&gt;</span> <span class="pre">:</span> <span class="pre">(</span> <span class="pre">	changes_shape</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='changes_shape'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	enable_output_type_conversion</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='enable_output_type_conversion'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execute_until_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execute_until_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	execution_count</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		fallback_default=True</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='execution_count'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	has_initializers</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=False</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='has_initializers'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		setter=&lt;function</span> <span class="pre">_has_initializers_setter&gt;</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	is_finished_flag</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=True</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='is_finished_flag'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	max_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(1000)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='max_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=Time(run:</span> <span class="pre">0,</span> <span class="pre">trial:</span> <span class="pre">0,</span> <span class="pre">pass:</span> <span class="pre">0,</span> <span class="pre">time_step:</span> <span class="pre">0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	num_executions_before_finished</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(0)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='num_executions_before_finished'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	output_type</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=&lt;FunctionOutputType.DEFAULT:</span> <span class="pre">3&gt;</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=False</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='output_type'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=False</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		valid_types=(&lt;enum</span> <span class="pre">'FunctionOutputType'&gt;,)</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	pertinacity</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array(10.)</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='pertinacity'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	propensity</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=&lt;Manner.CONTRARIAN:</span> <span class="pre">1&gt;</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='propensity'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=False</span> <span class="pre">		port=None</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	value</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		default_value=array([0])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='value'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">	variable</span> <span class="pre">=</span> <span class="pre">Parameter(</span> <span class="pre">		constructor_argument='default_variable'</span> <span class="pre">		default_value=array([0])</span> <span class="pre">		delivery_condition=&lt;LogCondition.OFF:</span> <span class="pre">0&gt;</span> <span class="pre">		dependencies=None</span> <span class="pre">		function_arg=True</span> <span class="pre">		history={}</span> <span class="pre">		history_max_length=1</span> <span class="pre">		history_min_length=0</span> <span class="pre">		loggable=True</span> <span class="pre">		mdf_name=None</span> <span class="pre">		name='variable'</span> <span class="pre">		parse_spec=False</span> <span class="pre">		pnl_internal=True</span> <span class="pre">		port=None</span> <span class="pre">		read_only=True</span> <span class="pre">		reference=False</span> <span class="pre">		specify_none=False</span> <span class="pre">		stateful=True</span> <span class="pre">		structural=False</span> <span class="pre">		user=True</span> <span class="pre">		values={}</span> <span class="pre">	),</span> <span class="pre">)</span></em><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">Function_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">Function_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base" title="Link to this definition">¶</a></dt>
 <dd><p>Abstract base class for Function category of Component class</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>value : default class_defaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -481,11 +482,11 @@ arguments of the constructor.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="Link to this definition">¶</a></dt>
 <dd><p>format and default value can be specified by the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
 they are specified by the Function’s <code class="xref std std-keyword docutils literal notranslate"><span class="pre">class_defaults.variable</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number</p>
 </dd>
 </dl>
@@ -493,10 +494,10 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.function" title="Link to this definition">¶</a></dt>
 <dd><p>called by the Function’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> when it is executed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>function</p>
 </dd>
 </dl>
@@ -504,10 +505,10 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.value">
-<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.value" title="Link to this definition">¶</a></dt>
 <dd><p>the result returned by calling the Function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number</p>
 </dd>
 </dl>
@@ -515,10 +516,10 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
 </dd>
 </dl>
@@ -526,11 +527,11 @@ they are specified by the Function’s <code class="xref std std-keyword docutil
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.name" title="Link to this definition">¶</a></dt>
 <dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -538,50 +539,57 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="Link to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._specified_variable_shape_flexibility">
+<span class="sig-name descname"><span class="pre">_specified_variable_shape_flexibility</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._specified_variable_shape_flexibility" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="xref any docutils literal notranslate"><span class="pre">DefaultsFlexibility</span></code> ._variable_shape_flexibility takes on
+when variable shape was manually specified</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._parse_arg_generic">
-<span class="sig-name descname"><span class="pre">_parse_arg_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._parse_arg_generic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_arg_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._parse_arg_generic" title="Link to this definition">¶</a></dt>
 <dd><p>Argument parser for any argument that does not have a specialized parser</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec">
-<span class="sig-name descname"><span class="pre">_validate_parameter_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numeric_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_parameter_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numeric_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec" title="Link to this definition">¶</a></dt>
 <dd><p>Validates function param
 Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()’s</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_model_spec_parameter_blacklist</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_model_spec_parameter_blacklist</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist" title="Link to this definition">¶</a></dt>
 <dd><p>A set of Parameter names that should not be added to the generated
 constructor string</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model">
-<span class="sig-name descname"><span class="pre">_assign_to_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_assign_to_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model" title="Link to this definition">¶</a></dt>
 <dd><p>Adds an MDF representation of this function to MDF object
 <strong>model</strong>, including all necessary auxiliary functions.
 <strong>input_id</strong> is the input to the singular MDF function or first
 function representing this psyneulink Function, if applicable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the identifier of the final MDF function representing
 this psyneulink Function</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
@@ -589,7 +597,7 @@ this psyneulink Function</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value">
-<span class="sig-name descname"><span class="pre">_get_pytorch_fct_param_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_pytorch_fct_param_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value" title="Link to this definition">¶</a></dt>
 <dd><p>Return the current value of param_name for the function
 Use default value if not yet assigned
 Convert using torch.tensor if val is an array</p>
@@ -599,7 +607,7 @@ Convert using torch.tensor if val is an array</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">RandomMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.function.</span></span><span class="sig-name descname"><span class="pre">RandomMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix" title="Link to this definition">¶</a></dt>
 <dd><p>Function that returns matrix with random elements distributed uniformly around <strong>center</strong> across <strong>range</strong>.</p>
 <p>The <strong>center</strong> and <strong>range</strong> arguments are passed at construction, and used for all subsequent calls.
 Once constructed, the function must be called with two floats, <strong>sender_size</strong> and <strong>receiver_size</strong>,
@@ -615,7 +623,7 @@ attributes specified at construction to <code class="xref any docutils literal n
 and <strong>scale</strong> arguments, respectively.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>center</strong> (<em>float</em>) – specifies the value around which the matrix elements are distributed in all calls to the function.</p></li>
 <li><p><strong>range</strong> (<em>float</em>) – specifies range over which all matrix elements are distributed in all calls to the function.</p></li>
@@ -624,10 +632,10 @@ and <strong>scale</strong> arguments, respectively.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix.center">
-<span class="sig-name descname"><span class="pre">center</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.center" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">center</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.center" title="Link to this definition">¶</a></dt>
 <dd><p>determines the center of the distribution of the matrix elements;</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -635,10 +643,10 @@ and <strong>scale</strong> arguments, respectively.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.function.RandomMatrix.range">
-<span class="sig-name descname"><span class="pre">range</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.range" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">range</span></span><a class="headerlink" href="#psyneulink.core.components.functions.function.RandomMatrix.range" title="Link to this definition">¶</a></dt>
 <dd><p>determines the range of the distribution of the matrix elements;</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -646,7 +654,6 @@ and <strong>scale</strong> arguments, respectively.</p>
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -694,6 +701,40 @@ and <strong>scale</strong> arguments, respectively.</p>
 </li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.variable"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.propensity"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.propensity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.pertinacity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.owner"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.name"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.prefs"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.Manner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy._validate_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy._validate_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy._function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy.parameters"><code class="docutils literal notranslate"><span class="pre">ArgumentTherapy.parameters</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base"><code class="docutils literal notranslate"><span class="pre">Function_Base</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable"><code class="docutils literal notranslate"><span class="pre">Function_Base.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function"><code class="docutils literal notranslate"><span class="pre">Function_Base.function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.value"><code class="docutils literal notranslate"><span class="pre">Function_Base.value</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner"><code class="docutils literal notranslate"><span class="pre">Function_Base.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.name"><code class="docutils literal notranslate"><span class="pre">Function_Base.name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.prefs"><code class="docutils literal notranslate"><span class="pre">Function_Base.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._specified_variable_shape_flexibility"><code class="docutils literal notranslate"><span class="pre">Function_Base._specified_variable_shape_flexibility</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._parse_arg_generic"><code class="docutils literal notranslate"><span class="pre">Function_Base._parse_arg_generic()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec"><code class="docutils literal notranslate"><span class="pre">Function_Base._validate_parameter_spec()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist"><code class="docutils literal notranslate"><span class="pre">Function_Base._model_spec_parameter_blacklist</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._assign_to_mdf_model"><code class="docutils literal notranslate"><span class="pre">Function_Base._assign_to_mdf_model()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base._get_pytorch_fct_param_value"><code class="docutils literal notranslate"><span class="pre">Function_Base._get_pytorch_fct_param_value()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.RandomMatrix"><code class="docutils literal notranslate"><span class="pre">RandomMatrix</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.RandomMatrix.center"><code class="docutils literal notranslate"><span class="pre">RandomMatrix.center</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.RandomMatrix.range"><code class="docutils literal notranslate"><span class="pre">RandomMatrix.range</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -711,10 +752,11 @@ and <strong>scale</strong> arguments, respectively.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

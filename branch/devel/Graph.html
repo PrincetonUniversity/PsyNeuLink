@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Graph &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>Graph &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,37 +198,37 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.core.globals.graph">
-<span id="graph"></span><h1>Graph<a class="headerlink" href="#module-psyneulink.core.globals.graph" title="Permalink to this headline">¶</a></h1>
+<span id="graph"></span><h1>Graph<a class="headerlink" href="#module-psyneulink.core.globals.graph" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">EdgeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">EdgeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK">
-<span class="sig-name descname"><span class="pre">NON_FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">NON_FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK" title="Link to this definition">¶</a></dt>
 <dd><p>A standard edge that if it exists in a cycle will only be flattened, not pruned</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.FEEDBACK">
-<span class="sig-name descname"><span class="pre">FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FEEDBACK" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">FEEDBACK</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FEEDBACK" title="Link to this definition">¶</a></dt>
 <dd><p>A “feedbacK” edge that will be immediately pruned to create an acyclic graph</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.FLEXIBLE">
-<span class="sig-name descname"><span class="pre">FLEXIBLE</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FLEXIBLE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">FLEXIBLE</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.FLEXIBLE" title="Link to this definition">¶</a></dt>
 <dd><p>An edge that will be pruned only if it exists in a cycle</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.from_any">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">from_any</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.from_any" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_any</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.from_any" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>an <a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EdgeType</span></code></a> corresponding to <strong>value</strong> if it
 exists</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType">EdgeType</a></p>
 </dd>
 </dl>
@@ -236,13 +236,13 @@ exists</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.EdgeType.has">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">has</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.has" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.graph.EdgeType.has" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>True if <strong>value</strong> corresponds to an <a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType" title="psyneulink.core.globals.graph.EdgeType"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EdgeType</span></code></a>, or
 False otherwise</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 </dl>
@@ -252,7 +252,7 @@ False otherwise</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.core.globals.graph.GraphError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">GraphError</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.GraphError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.graph.</span></span><span class="sig-name descname"><span class="pre">GraphError</span></span><a class="headerlink" href="#psyneulink.core.globals.graph.GraphError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -291,7 +291,18 @@ False otherwise</p>
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Graph</a></li>
+<li><a class="reference internal" href="#">Graph</a><ul>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType"><code class="docutils literal notranslate"><span class="pre">EdgeType</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType.NON_FEEDBACK"><code class="docutils literal notranslate"><span class="pre">EdgeType.NON_FEEDBACK</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType.FEEDBACK"><code class="docutils literal notranslate"><span class="pre">EdgeType.FEEDBACK</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType.FLEXIBLE"><code class="docutils literal notranslate"><span class="pre">EdgeType.FLEXIBLE</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType.from_any"><code class="docutils literal notranslate"><span class="pre">EdgeType.from_any()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.EdgeType.has"><code class="docutils literal notranslate"><span class="pre">EdgeType.has()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.globals.graph.GraphError"><code class="docutils literal notranslate"><span class="pre">GraphError</span></code></a></li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -307,10 +318,11 @@ False otherwise</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

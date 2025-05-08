@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,9 +198,9 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.core.components.mechanisms.processing.transfermechanism">
-<span id="transfermechanism"></span><h1>TransferMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.transfermechanism" title="Permalink to this headline">¶</a></h1>
+<span id="transfermechanism"></span><h1>TransferMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.transfermechanism" title="Link to this heading">¶</a></h1>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#transfermechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -257,7 +257,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="transfermechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="transfermechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A TransferMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that adds the ability to integrate its input.</p>
 <p>As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the shape of its
 input.  The input can be a single scalar value, a simple list or array, or a multidimensional one (regular or ragged).
@@ -272,12 +272,12 @@ neural network before passing that to its activation function). When integration
 including how it is <a class="reference internal" href="#transfermechanism-execution-integration-initialization"><span class="std std-ref">initialized</span></a> and when it <a class="reference internal" href="#transfermechanism-execution-integration-termination"><span class="std std-ref">terminates</span></a>.</p>
 </section>
 <section id="creating-a-transfermechanism">
-<span id="transfermechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
+<span id="transfermechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Link to this heading">¶</a></h2>
 <p>The primary arguments that determine the operation of a TransferMechanism are its <strong>function</strong> argument,
 that specifies the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> used to transform its input; and, if <strong>integrator</strong>
 mode is set to True, then its <em>integrator_function*</em> argument and associated ones that specify how <a class="reference internal" href="#transfermechanism-execution-with-integration"><span class="std std-ref">integration</span></a> occurs (see <a class="reference internal" href="#transfermechanism-examples"><span class="std std-ref">Examples</span></a>).</p>
 <section id="primary-function">
-<h3><em>Primary Function</em><a class="headerlink" href="#primary-function" title="Permalink to this headline">¶</a></h3>
+<h3><em>Primary Function</em><a class="headerlink" href="#primary-function" title="Link to this heading">¶</a></h3>
 <p>By default, the primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a TransferMechanism is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a>, however the
 <strong>function</strong> argument can be used to specify any subclass or instance of <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>. It can also be any
 python function or method, so long as it can take a scalar, or a list or array of numerical values as input and
@@ -285,7 +285,7 @@ produce a result that is of the same shape;  the function or method is “wrappe
 assigned as the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.</p>
 </section>
 <section id="integator-function">
-<h3><em>Integator Function</em><a class="headerlink" href="#integator-function" title="Permalink to this headline">¶</a></h3>
+<h3><em>Integator Function</em><a class="headerlink" href="#integator-function" title="Link to this heading">¶</a></h3>
 <p>By default, the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> of a
 TransferMechanism is <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AdaptiveIntegrator</span></code></a>,  however the <strong>integrator_function</strong> argument of the Mechanism’s constructor
 can be used to specify any subclass of <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, so long as it can accept as input the TransferMechanism’s
@@ -299,14 +299,14 @@ constructor, their value is used to specify the corresponding parameter of its <
 </section>
 </section>
 <section id="structure">
-<span id="transfermechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="transfermechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <section id="inputports">
-<span id="transfermechanism-inputports"></span><h3><em>InputPorts</em><a class="headerlink" href="#inputports" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-inputports"></span><h3><em>InputPorts</em><a class="headerlink" href="#inputports" title="Link to this heading">¶</a></h3>
 <p>By default, a TransferMechanism has a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;  however, more than one can be specified
 using the <strong>default_variable</strong> or <strong>input_shapes</strong> arguments of its constructor (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each InputPort is used as a separate item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and transformed independently by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 </section>
 <section id="functions">
-<span id="transfermechanism-function"></span><h3><em>Functions</em><a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-function"></span><h3><em>Functions</em><a class="headerlink" href="#functions" title="Link to this heading">¶</a></h3>
 <p>A TransferMechanism has two functions:  its primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> that transforms its
 input, and an <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> that is used to integrate the input
 before passing it to the primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is set to True. The default function for a TransferMechanism is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a>,
@@ -314,7 +314,7 @@ and the defult for its <a class="reference internal" href="#psyneulink.core.comp
 how custom functions can be assigned, as described under <a class="reference internal" href="#transfermechanism-creation"><span class="std std-ref">Creating a TransferMechanism</span></a>.</p>
 </section>
 <section id="outputports">
-<span id="transfermechanism-outputports"></span><h3><em>OutputPorts</em><a class="headerlink" href="#outputports" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-outputports"></span><h3><em>OutputPorts</em><a class="headerlink" href="#outputports" title="Link to this heading">¶</a></h3>
 <p>By default, or if the <strong>output_ports</strong> argument is specified using the keyword <em>RESULTS</em>, a TransferMechanism generates
 one <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> for each item in the outer dimension (axis 0) of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (each of which is
 the result of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (and possibly its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>) applied to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>).
@@ -338,12 +338,12 @@ to each InputPort) for which an OutputPort is needed.</p>
 </section>
 </section>
 <section id="execution">
-<span id="transfermechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="transfermechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A TransferMechanism has two modes of execution, determined by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> parameter.  By default (<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> = False) it <a class="reference internal" href="#transfermechanism-execution-without-integration"><span class="std std-ref">executes without integration</span></a>, directly transforming its input using its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and possibly adding <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> to and/or <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clipping</span></code></a> the result.  If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> = True,
 it <a class="reference internal" href="#transfermechanism-execution-with-integration"><span class="std std-ref">executes with integration</span></a>, by integrating its input before
 transforming it.  Each of these is described in more detail below.</p>
 <section id="execution-without-integration">
-<span id="transfermechanism-execution-without-integration"></span><h3><em>Execution Without Integration</em><a class="headerlink" href="#execution-without-integration" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-execution-without-integration"></span><h3><em>Execution Without Integration</em><a class="headerlink" href="#execution-without-integration" title="Link to this heading">¶</a></h3>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is False (the default), the input received over
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (assigned as <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) is passed
 directly to <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If either the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> or
@@ -352,13 +352,13 @@ directly to <a class="reference internal" href="Mechanism.html#psyneulink.core.c
 transformed value of the corresponding <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (see <a class="reference internal" href="#transfermechanism-examples-execution-without-integration"><span class="std std-ref">examples</span></a>).</p>
 </section>
 <section id="execution-with-integration">
-<span id="transfermechanism-execution-with-integration"></span><h3><em>Execution With Integration</em><a class="headerlink" href="#execution-with-integration" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-execution-with-integration"></span><h3><em>Execution With Integration</em><a class="headerlink" href="#execution-with-integration" title="Link to this heading">¶</a></h3>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True, the TransferMechanism’s input (<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) is first passed to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>,
 the result of which is then passed to its primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  The TransferMechanis has
 several <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> that, in addition to those of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>,
 can be used to configure the integration process, as described in the following subsections (also see <a class="reference internal" href="#transfermechanism-examples-execution-with-integration"><span class="std std-ref">examples</span></a>).</p>
 <section id="initialization-resetting-and-resuming-integration">
-<span id="transfermechanism-execution-integration-initialization"></span><h4><strong>Initialization, Resetting and Resuming Integration</strong><a class="headerlink" href="#initialization-resetting-and-resuming-integration" title="Permalink to this headline">¶</a></h4>
+<span id="transfermechanism-execution-integration-initialization"></span><h4><strong>Initialization, Resetting and Resuming Integration</strong><a class="headerlink" href="#initialization-resetting-and-resuming-integration" title="Link to this heading">¶</a></h4>
 <p>The staring point for integration can be initialized and reset, and also configured to resume in various ways, as
 described below (also <a class="reference internal" href="#transfermechanism-examples-initialization-and-resetting"><span class="std std-ref">examples</span></a>).</p>
 <p><em>Initializing integration</em> – by default, the the starting point for integration is the Mechanism’s <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>, and is usually an appropriately shaped array of 0’s.  However, the starting point can be
@@ -400,13 +400,13 @@ three options for this:</p>
 resuming integration;</p></li>
 <li><p><em>LAST_INTEGRATED_VALUE</em> - resume integration with whatever the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>’ <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> was when
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> was last True;</p></li>
-<li><p><em>RESET</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>s <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BayesGLM.reset" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method,
+<li><p><em>RESET</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method,
 so that integration resumes using <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_value</span></code></a> as its starting value.</p></li>
 </ul>
 </div></blockquote>
 </section>
 <section id="integration">
-<span id="transfermechanism-execution-integration"></span><h4><strong>Integration</strong><a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h4>
+<span id="transfermechanism-execution-integration"></span><h4><strong>Integration</strong><a class="headerlink" href="#integration" title="Link to this heading">¶</a></h4>
 <p>On each execution of the Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is passed to the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>, which integrates this with the function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>, using the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> and
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integration_rate</span></code></a> parameters.</p>
 <blockquote>
@@ -427,7 +427,7 @@ if specified, after which it is assigned to as the TransferMechanism’s <a clas
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.</p>
 </section>
 <section id="termination">
-<span id="transfermechanism-execution-integration-termination"></span><h4><strong>Termination</strong><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h4>
+<span id="transfermechanism-execution-integration-termination"></span><h4><strong>Termination</strong><a class="headerlink" href="#termination" title="Link to this heading">¶</a></h4>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True then, for each execution of the TransferMechanism, it
 can be configured to conduct a single step of integration, or to continue to integrate during that execution until its
 termination condition is met.  The latter is specified by the TransferMechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> as well as its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_threshold</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a>, and
@@ -507,7 +507,7 @@ set to <em>GREATER_THAN_OR_EQUAL</em>.</p>
 </section>
 </section>
 <section id="examples-of-creating-a-transfermechanism">
-<span id="transfermechanism-examples-creation"></span><h3><em>Examples of Creating a TransferMechanism</em><a class="headerlink" href="#examples-of-creating-a-transfermechanism" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-examples-creation"></span><h3><em>Examples of Creating a TransferMechanism</em><a class="headerlink" href="#examples-of-creating-a-transfermechanism" title="Link to this heading">¶</a></h3>
 <p><strong>Function Specification</strong></p>
 <p>The <strong>function</strong> of a TransferMechanism can be specified as the name of a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">psyneulink</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pnl</span>
@@ -531,9 +531,9 @@ must be set to True.</p>
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> is then used as the input to <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 </section>
 <section id="examples-of-execution">
-<span id="transfermechanism-examples-execution"></span><h3><em>Examples of Execution</em><a class="headerlink" href="#examples-of-execution" title="Permalink to this headline">¶</a></h3>
+<span id="transfermechanism-examples-execution"></span><h3><em>Examples of Execution</em><a class="headerlink" href="#examples-of-execution" title="Link to this heading">¶</a></h3>
 <section id="without-integration">
-<span id="transfermechanism-examples-execution-without-integration"></span><h4><strong>Without Integration</strong><a class="headerlink" href="#without-integration" title="Permalink to this headline">¶</a></h4>
+<span id="transfermechanism-examples-execution-without-integration"></span><h4><strong>Without Integration</strong><a class="headerlink" href="#without-integration" title="Link to this heading">¶</a></h4>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is False (the default), then the TransferMechanism updates its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>
 without using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>, as in the following example:</p>
@@ -610,7 +610,7 @@ for additional information).</p>
 <p>Note that the range specified in <strong>clip</strong> applies to all elements of the result if it is an array.</p>
 </section>
 <section id="with-integration">
-<span id="transfermechanism-examples-execution-with-integration"></span><h4><strong>With Integration</strong><a class="headerlink" href="#with-integration" title="Permalink to this headline">¶</a></h4>
+<span id="transfermechanism-examples-execution-with-integration"></span><h4><strong>With Integration</strong><a class="headerlink" href="#with-integration" title="Link to this heading">¶</a></h4>
 <p>The following examples illustate the execution of a TransferMechanism with <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> set to True. For convenience, a TransferMechanism has three <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> that
 are used by most IntegratorFunctions, and that can be used to configure integration:<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_value</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integration_rate</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a>.  If any of these are specified in the TransferMechanism’s constructor, their value is
 used to specify the corresponding parameter of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>.
@@ -647,7 +647,7 @@ result that is its <a class="reference internal" href="IntegratorFunctions.html#
 <p>In the following example, both the TransferMechanism’s <strong>integration_rate</strong> and its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>’s <strong>rate</strong> are specified:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">integrator_function</span><span class="o">=</span><span class="n">AdaptiveIntegrator</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span>
 <span class="gp">... </span>                                     <span class="n">integration_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">integration_rate</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">integration_rate</span>
 <span class="go">(TransferMechanism TransferMechanism-8):</span>
 <span class="go">    integration_rate.base: 0.3</span>
 <span class="go">    integration_rate.modulated: [0.3]</span>
@@ -663,7 +663,7 @@ this is the same as the base value if the Parameter is not subject to modulation
 modulation &lt;ModulatorySignal_Modulation&gt;`, then the modulated value will be the base value modified by any
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">modulatory signals</span></a> that project to the Mechanism for that Parameter.</p>
 <section id="initializing-resetting-and-resuming-integration">
-<span id="transfermechanism-examples-initialization-and-resetting"></span><h5><em>Initializing, Resetting and Resuming Integration</em><a class="headerlink" href="#initializing-resetting-and-resuming-integration" title="Permalink to this headline">¶</a></h5>
+<span id="transfermechanism-examples-initialization-and-resetting"></span><h5><em>Initializing, Resetting and Resuming Integration</em><a class="headerlink" href="#initializing-resetting-and-resuming-integration" title="Link to this heading">¶</a></h5>
 <p>When <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True, the state of integration can be initialized
 by specifying its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_value</span></code></a> using the <strong>initial_value</strong> argument in the
 constructor, as shown in the following example:</p>
@@ -749,7 +749,7 @@ the point at which integration was last suspended, irrespective of interverning 
 last True (in this case, where it left off in the preceding example, <code class="docutils literal notranslate"><span class="pre">0.257</span></code>).</p>
 </section>
 <section id="terminating-integration">
-<span id="transfermechanism-examples-termination"></span><h5><em>Terminating Integration</em><a class="headerlink" href="#terminating-integration" title="Permalink to this headline">¶</a></h5>
+<span id="transfermechanism-examples-termination"></span><h5><em>Terminating Integration</em><a class="headerlink" href="#terminating-integration" title="Link to this heading">¶</a></h5>
 <p><em>Termination by value</em>.  This terminates execution when the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> reaches the
 the value specified by the <strong>threshold</strong> argument.  This is implemented by specifying <strong>termination_measure</strong> with
 a function that accepts a 2d array with a <em>single entry</em> as its argument and returns a scalar.  The single
@@ -819,9 +819,9 @@ Mechanism to continue to integrate the instruction and impact stimulus processin
 <span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Response&#39;</span><span class="p">,</span> <span class="n">input_shapes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">stim_input</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">stim_percept</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">response</span><span class="p">])</span> 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">instruction_input</span><span class="p">,</span> <span class="n">attention</span><span class="p">,</span> <span class="n">stim_percept</span><span class="p">])</span> 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">WhenFinished</span><span class="p">(</span><span class="n">decision</span><span class="p">))</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">stim_input</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">stim_percept</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">response</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">instruction_input</span><span class="p">,</span> <span class="n">attention</span><span class="p">,</span> <span class="n">stim_percept</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">WhenFinished</span><span class="p">(</span><span class="n">decision</span><span class="p">))</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stim_percept</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
@@ -830,7 +830,7 @@ Mechanism to continue to integrate the instruction and impact stimulus processin
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">stim_input</span><span class="p">:</span>        <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
 <span class="gp">... </span>          <span class="n">instruction_input</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This example implements a simple model of attentional selection in perceptual decision making. In the model,
@@ -856,7 +856,7 @@ continues. On the next pass, <code class="docutils literal notranslate"><span cl
 condition has already been met, as does <code class="docutils literal notranslate"><span class="pre">decision</span></code> since its termination condition has <em>not</em> yet been met.  If
 it is met, then <code class="docutils literal notranslate"><span class="pre">response</span></code> executes and the trial ends (since all Mechanisms have now had an opportunity to
 execute). The value of the <code class="docutils literal notranslate"><span class="pre">attention</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms after each execution are shown below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span>
 <span class="go">Log for Attention:</span>
 <span class="go">Logged Item:   Time          Value</span>
 <span class="go">&#39;RESULT&#39;       0:0:0:1      [0.64565631 0.19781611]  # Trial 0</span>
@@ -872,7 +872,7 @@ execute). The value of the <code class="docutils literal notranslate"><span clas
 <span class="go">&#39;RESULT&#39;       0:1:1:1      [0.1235536  0.74936691]</span>
 <span class="go">&#39;RESULT&#39;       0:1:2:1      [0.12011584 0.75402671]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">decision</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decision</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span>
 <span class="go">Log for Decision:</span>
 <span class="go">Logged Item:   Time          Value</span>
 <span class="go">&#39;RESULT&#39;       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0</span>
@@ -884,7 +884,7 @@ execute). The value of the <code class="docutils literal notranslate"><span clas
 <span class="go">&#39;RESULT&#39;       0:1:1:3      [0.56360108 0.6367389 ]</span>
 <span class="go">&#39;RESULT&#39;       0:1:2:3      [0.54679699 0.65839718]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span>
 <span class="go">Log for Response:</span>
 <span class="go">Logged Item:   Time          Value</span>
 <span class="go">&#39;OutputPort-0&#39; 0:0:4:4      [0.65908142 0.51319226]  # Trial 0</span>
@@ -904,19 +904,20 @@ since it begins closer to its threshold in that trial.</p>
 </section>
 </section>
 <section id="class-reference">
-<span id="transfermechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="transfermechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.transfermechanism.</span></span><span class="sig-name descname"><span class="pre">TransferError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.transfermechanism.</span></span><span class="sig-name descname"><span class="pre">TransferError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.transfermechanism.</span></span><span class="sig-name descname"><span class="pre">TransferMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_resume_integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_comparison_op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.transfermechanism.</span></span><span class="sig-name descname"><span class="pre">TransferMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_resume_integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_measure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_comparison_op</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that performs a simple transform of its input.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>noise</strong> (<em>float</em><em>, </em><em>function</em><em>, or </em><em>a list</em><em> or </em><em>array containing either</em><em> or </em><em>both : default 0.0</em>) – specifies a value to be added to the result of the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
 or its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>, depending on whether <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">False</span></code> (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).
@@ -955,7 +956,7 @@ particular).</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise">
-<span class="sig-name descname"><span class="pre">noise</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">noise</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="Link to this definition">¶</a></dt>
 <dd><p>value is applied to the result of <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> if
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is False; otherwise it is passed as the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> Parameter to <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>. If
 noise is a float or function, it is added to all elements of the array being transformed; if it is a function,
@@ -975,7 +976,7 @@ specified as a float, a function with a fixed output, or an array of either of t
 is simply an offset that is the same across all elements and executions.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float, function or an array containing either or both</p>
 </dd>
 </dl>
@@ -983,7 +984,7 @@ is simply an offset that is the same across all elements and executions.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip">
-<span class="sig-name descname"><span class="pre">clip</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clip</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="Link to this definition">¶</a></dt>
 <dd><p>determines the allowable range for all elements of the result of <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.
 The 1st item (index 0) determines the minimum allowable value of the result, and the 2nd item (index 1)
 determines the maximum allowable value; any element of the result that exceeds the specified minimum or
@@ -994,7 +995,7 @@ the interval of the function’s <a class="reference internal" href="TransferFun
 <span class="math notranslate nohighlight">\(function.range(lower,upper) * scale + offset\)</span>), a warning is issued and the corresponding items of
 clip are ignored.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple(float, float)</p>
 </dd>
 </dl>
@@ -1002,12 +1003,12 @@ clip are ignored.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode">
-<span class="sig-name descname"><span class="pre">integrator_mode</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">integrator_mode</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether the TransferMechanism uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>
 to integrate its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> when it executes (see TransferMechanism_Execution for
 additional details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1015,11 +1016,11 @@ additional details).</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function">
-<span class="sig-name descname"><span class="pre">integrator_function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">integrator_function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="Link to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> used when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is set to
 <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (see <a class="reference internal" href="#transfermechanism-execution-integration"><span class="std std-ref">Integration</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction">IntegratorFunction</a></p>
 </dd>
 </dl>
@@ -1027,12 +1028,12 @@ additional details).</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value">
-<span class="sig-name descname"><span class="pre">initial_value</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initial_value</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="Link to this definition">¶</a></dt>
 <dd><p>determines the starting value for the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>
 when <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>
 (see <a class="reference internal" href="#transfermechanism-execution-integration-initialization"><span class="std std-ref">Initialization, Resetting and Resuming Integration</span></a> for additional details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>value, list or np.ndarray</p>
 </dd>
 </dl>
@@ -1040,12 +1041,12 @@ when <a class="reference internal" href="#psyneulink.core.components.mechanisms.
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate">
-<span class="sig-name descname"><span class="pre">integration_rate</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">integration_rate</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="Link to this definition">¶</a></dt>
 <dd><p>determines the rate at which the TransferMechanism’s <a class="reference internal" href="#"><span class="doc">variable</span></a> is integrated when it is
 executed with <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>; a higher value specifies
 a faster rate (see <a class="reference internal" href="#transfermechanism-execution-integration"><span class="std std-ref">Integration</span></a> for additional details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
@@ -1053,13 +1054,13 @@ a faster rate (see <a class="reference internal" href="#transfermechanism-execut
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode">
-<span class="sig-name descname"><span class="pre">on_resume_integrator_mode</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">on_resume_integrator_mode</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode" title="Link to this definition">¶</a></dt>
 <dd><p>determines value used by the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> when integration is
 resumed, and must be one of the following keywords: <em>CURRENT_VALUE</em>, <em>LAST_INTEGRATED_VALUE</em>, or
 <em>RESET</em> (see <a class="reference internal" href="#transfermechanism-execution-integration-resumption"><span class="std std-ref">resuming integration</span></a> for additional
 details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>CURRENT_VALUE, LAST_INTEGRATED_VALUE, or RESET</p>
 </dd>
 </dl>
@@ -1067,7 +1068,7 @@ details).</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure">
-<span class="sig-name descname"><span class="pre">termination_measure</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">termination_measure</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="Link to this definition">¶</a></dt>
 <dd><p>used to determine when execution of the TransferMechanism is complete (i.e., <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> is True), if
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> is True.  If it is a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>, then execution
 terminates when the value of the Mechanism’s <a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> at that TimeScale is
@@ -1081,7 +1082,7 @@ compared with <a class="reference internal" href="#psyneulink.core.components.me
 <p>A Mechanism’s previous value is distinct from the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> attribute of its <code class="xref any docutils literal notranslate"><span class="pre">integrator_function</span></code>.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>function or <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale">TimeScale</a></p>
 </dd>
 </dl>
@@ -1089,11 +1090,11 @@ compared with <a class="reference internal" href="#psyneulink.core.components.me
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value">
-<span class="sig-name descname"><span class="pre">termination_measure_value</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">termination_measure_value</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="Link to this definition">¶</a></dt>
 <dd><p>value returned by <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure</span></code></a>;  used to determine when
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> is True.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>array or scalar</p>
 </dd>
 </dl>
@@ -1101,11 +1102,11 @@ compared with <a class="reference internal" href="#psyneulink.core.components.me
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold">
-<span class="sig-name descname"><span class="pre">termination_threshold</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">termination_threshold</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="Link to this definition">¶</a></dt>
 <dd><p>value with which <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure_value</span></code></a> is compared to
 determine when execution of TransferMechanism is complete if <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> is True.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None or float</p>
 </dd>
 </dl>
@@ -1113,12 +1114,12 @@ determine when execution of TransferMechanism is complete if <a class="reference
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op">
-<span class="sig-name descname"><span class="pre">termination_comparison_op</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">termination_comparison_op</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="Link to this definition">¶</a></dt>
 <dd><p>used to compare <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_measure_value</span></code></a> with
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">termination_threshold</span></code></a> to determine when execution of
 TransferMechanism is complete if <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> is True.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Comparator</p>
 </dd>
 </dl>
@@ -1126,7 +1127,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports">
-<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports" title="Link to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to the
 <a class="reference internal" href="ProcessingMechanism.html#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
@@ -1136,35 +1137,35 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list[dict]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>instance of TransferMechanism</strong></p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism">TransferMechanism</a></p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate FUNCTION and Mechanism params</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function">
-<span class="sig-name descname"><span class="pre">_instantiate_attributes_after_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_after_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function" title="Link to this definition">¶</a></dt>
 <dd><p>Determine number of items expected by termination_measure and check clip if specified</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_output_ports">
-<span class="sig-name descname"><span class="pre">_instantiate_output_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_output_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_output_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Call Port._instantiate_output_ports to instantiate orderedDict of OutputPort(s)</p>
 <dl class="simple">
 <dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_output_ports</p>
@@ -1174,13 +1175,13 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute">
-<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute" title="Link to this definition">¶</a></dt>
 <dd><p>Execute TransferMechanism function and return transform of input</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset" title="Link to this definition">¶</a></dt>
 <dd><p>Reset <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> if Mechanisms is stateful.</p>
 <p>If the mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="#"><span class="doc">TransferMechanism</span></a>), this method
@@ -1225,20 +1226,20 @@ as well as other reinitialization steps that the reset method may carry out.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._parse_function_variable">
-<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._parse_function_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
 Function associated with this Component</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution">
-<span class="sig-name descname"><span class="pre">_report_mechanism_execution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_report_mechanism_execution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution" title="Link to this definition">¶</a></dt>
 <dd><p>Override super to report previous_input rather than input, and selected params</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished">
-<span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="Link to this definition">¶</a></dt>
 <dd><p>Returns True when value of Mechanism reaches threhsold or if threshold is None.</p>
 <dl class="simple">
 <dt>Note:  if threshold is None or Mechanism not in integartor_mode,</dt><dd><p>implements single update (cycle) per call to _execute method
@@ -1249,7 +1250,6 @@ Function associated with this Component</p>
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -1321,6 +1321,30 @@ Function associated with this Component</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferError"><code class="docutils literal notranslate"><span class="pre">TransferError</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism"><code class="docutils literal notranslate"><span class="pre">TransferMechanism</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.noise</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.clip</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.integrator_mode</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.integrator_function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.initial_value</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.integration_rate</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.on_resume_integrator_mode</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.termination_measure</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.termination_measure_value</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.termination_threshold</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.termination_comparison_op</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.standard_output_ports"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.standard_output_ports</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._validate_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._instantiate_attributes_after_function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_output_ports"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._instantiate_output_ports()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._execute()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.reset()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._parse_function_variable"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._parse_function_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution"><code class="docutils literal notranslate"><span class="pre">TransferMechanism._report_mechanism_execution()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="docutils literal notranslate"><span class="pre">TransferMechanism.is_finished()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1338,10 +1362,11 @@ Function associated with this Component</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 

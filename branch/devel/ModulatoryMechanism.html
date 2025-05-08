@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="modulatorymechanism">
-<h1>ModulatoryMechanism<a class="headerlink" href="#modulatorymechanism" title="Permalink to this headline">¶</a></h1>
+<h1>ModulatoryMechanism<a class="headerlink" href="#modulatorymechanism" title="Link to this heading">¶</a></h1>
 <div class="subclasses docutils container" id="modulatorymechanism-subtypes">
 <p><em>Subclasses</em></p>
 <div class="toctree-wrapper compound">
@@ -208,8 +208,8 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.mechanisms.modulatory.modulatorymechanism"></span><section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<section id="contents">
+<span id="module-psyneulink.core.components.mechanisms.modulatory.modulatorymechanism"></span><h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#modulatorymechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -221,7 +221,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="modulatorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="modulatorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modifies the operation of one or more other <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  In general, a ModulatoryMechanism receives its input from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, however
 this need not be the case.</p>
 <p id="modulatorymechanism-types">There are two primary types of ModulatoryMechanism:</p>
@@ -258,7 +258,7 @@ can be assigned different <a class="reference internal" href="ControlSignal.html
 assigned multiple ModulatoryProjections; however, as described  in <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-projections"><span class="std std-ref">ModulatoryProjections</span></a>, they will all
 be assigned the same <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>.</p>
 <section id="naming-conventions-for-modulatory-components">
-<span id="modulatorymechanism-naming"></span><h3><em>Naming Conventions for Modulatory Components</em><a class="headerlink" href="#naming-conventions-for-modulatory-components" title="Permalink to this headline">¶</a></h3>
+<span id="modulatorymechanism-naming"></span><h3><em>Naming Conventions for Modulatory Components</em><a class="headerlink" href="#naming-conventions-for-modulatory-components" title="Link to this heading">¶</a></h3>
 <p>Modulatory Components and their attributes are named according to the type of modulation using the following templates:</p>
 <blockquote>
 <div><ul class="simple">
@@ -292,21 +292,21 @@ be assigned the same <code class="xref any docutils literal notranslate"><span c
 </section>
 </section>
 <section id="creating-a-modulatorymechanism">
-<span id="modulatorymechanism-creation"></span><h2>Creating a ModulatoryMechanism<a class="headerlink" href="#creating-a-modulatorymechanism" title="Permalink to this headline">¶</a></h2>
+<span id="modulatorymechanism-creation"></span><h2>Creating a ModulatoryMechanism<a class="headerlink" href="#creating-a-modulatorymechanism" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryMechanism is created by calling the constructor for the desired type. ModulatoryMechanisms of the
 appropriate subtype can also be created automatically when other Components are created that require them (for
 example, one or more <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> are created when a <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">pathway</span></code> is specified for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (see <a class="reference internal" href="#modulatorymechanism-subtypes"><span class="std std-ref">subtypes</span></a> of
 ModulatoryMechanisms for more specific information about how to create them).</p>
 </section>
 <section id="structure">
-<span id="modulatorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulatorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryMechanism has the same basic structure as a <a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanism</span></a>.  In addition, every ModulatoryMechanism
 has a <code class="xref any docutils literal notranslate"><span class="pre">modulation</span></code> attribute, that determines the default method by which its
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> modify the value of the Components that they modulate (see the <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> for a description of how modulation operates, and the documentation for individual
 subtypes of ModulatoryMechanism for more specific information about their structure and modulatory operation).</p>
 </section>
 <section id="execution">
-<span id="modulatorymechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="modulatorymechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>The execution of a ModulatoryMechanism follows the same sequence of actions as a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 (<a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Execution</span></a>).  However, in the context of a Composition, its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>s are often feedback
 connections to other Mechanisms in the Composition, forming a <a class="reference internal" href="Composition.html#composition-acyclic-cyclic"><span class="std std-ref">cycle</span></a> in the Composition,
@@ -326,10 +326,11 @@ value until the Mechanism to which it belongs has executed.</p>
 </div>
 </section>
 <section id="class-reference">
-<span id="modulatorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="modulatorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> and subclasses for arguments and additional attributes.</p>
 <div class="admonition note">
@@ -339,11 +340,11 @@ They should be instantiated using the constructor for a <a class="reference inte
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation">
-<span class="sig-name descname"><span class="pre">modulation</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">modulation</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation" title="Link to this definition">¶</a></dt>
 <dd><p>determines how the output of the ModulatoryMechanism’s <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal(s)</span></a> are used to
 modulate the value of the Port(s) to which their <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a> project.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -353,10 +354,9 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</section>
 </section>
 
 
@@ -403,6 +403,11 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
 <li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base"><code class="docutils literal notranslate"><span class="pre">ModulatoryMechanism_Base</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation"><code class="docutils literal notranslate"><span class="pre">ModulatoryMechanism_Base.modulation</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError"><code class="docutils literal notranslate"><span class="pre">ModulatoryMechanismError</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -420,10 +425,11 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

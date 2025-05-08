@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PathwayProjection &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>PathwayProjection &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="pathwayprojection">
-<h1>PathwayProjection<a class="headerlink" href="#pathwayprojection" title="Permalink to this headline">¶</a></h1>
+<h1>PathwayProjection<a class="headerlink" href="#pathwayprojection" title="Link to this heading">¶</a></h1>
 <div class="subclasses docutils container">
 <p><em>Subclasses</em></p>
 <div class="toctree-wrapper compound">
@@ -209,8 +209,8 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.projections.pathway.pathwayprojection"></span><section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<section id="contents">
+<span id="module-psyneulink.core.components.projections.pathway.pathwayprojection"></span><h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#pathwayprojection-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -222,26 +222,26 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="pathwayprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="pathwayprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of one Mechanism (its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>), and does whatever conversion is needed to
 transmit that information to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another Mechanism (its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>).  The
 primary type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </section>
 <section id="creating-a-pathwayprojection">
-<span id="pathwayprojection-creation"></span><h2>Creating a PathwayProjection<a class="headerlink" href="#creating-a-pathwayprojection" title="Permalink to this headline">¶</a></h2>
+<span id="pathwayprojection-creation"></span><h2>Creating a PathwayProjection<a class="headerlink" href="#creating-a-pathwayprojection" title="Link to this heading">¶</a></h2>
 <p>A PathwayProjection can is created in the same ways as a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">Projection</span></a>.</p>
 </section>
 <section id="structure">
-<span id="pathwayprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="pathwayprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A PathwayProjection has the same structure as a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>.</p>
 </section>
 <section id="execution">
-<span id="pathwayprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="pathwayprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A PathwayProjection executes in the same was as a <a class="reference internal" href="Projection.html#projection-execution"><span class="std std-ref">Projection</span></a>.</p>
 </section>
 <section id="class-reference">
-<span id="pathwayprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="pathwayprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
 <p>See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>.</p>
 </section>
 </section>
@@ -304,10 +304,11 @@ primary type of PathwayProjection is a <a class="reference internal" href="Mappi
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

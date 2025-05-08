@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -200,7 +200,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="basics-and-primer">
-<h1>Basics and Primer<a class="headerlink" href="#basics-and-primer" title="Permalink to this headline">¶</a></h1>
+<h1>Basics and Primer<a class="headerlink" href="#basics-and-primer" title="Link to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="#basicsandprimer-basics"><span class="std std-ref">Basics</span></a></p></li>
 <li><dl class="simple">
@@ -219,7 +219,7 @@
 </li>
 </ul>
 <section id="basics">
-<span id="basicsandprimer-basics"></span><h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
+<span id="basicsandprimer-basics"></span><h2>Basics<a class="headerlink" href="#basics" title="Link to this heading">¶</a></h2>
 <p><strong>Overview</strong></p>
 <p>PsyNeuLink models are made up of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>:
 Components are objects that perform a specific function, and Compositions are used to combine Components into a model.
@@ -256,20 +256,21 @@ planned for future inclusion.  The <a class="reference internal" href="QuickRefe
 other facilities.  In the sections that follow, the Primer provides some examples of how these are used to construct
 models in PsyNeuLink.</p>
 <figure class="align-default" id="id2">
-<span id="basicsandprimer-grandview-figure"></span><img alt="_images/BasicsAndPrimer_GrandView_fig.svg" src="_images/BasicsAndPrimer_GrandView_fig.svg" /><figcaption>
+<span id="basicsandprimer-grandview-figure"></span><img alt="_images/BasicsAndPrimer_GrandView_fig.svg" src="_images/BasicsAndPrimer_GrandView_fig.svg" />
+<figcaption>
 <p><span class="caption-text"><strong>PsyNeuLink Environment.</strong>  Full-colored items are examples of currently implemented elements; dimmed
-items are examples of elements planned for future implementation.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+items are examples of elements planned for future implementation.</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="primer">
-<span id="basicsandprimer-primer"></span><h2>Primer<a class="headerlink" href="#primer" title="Permalink to this headline">¶</a></h2>
+<span id="basicsandprimer-primer"></span><h2>Primer<a class="headerlink" href="#primer" title="Link to this heading">¶</a></h2>
 <p>The examples below are intended to provide quick illustrations of some of PsyNeuLink’s basic and more advanced
 capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
 <a class="reference internal" href="index_logo_with_text.html#tutorial"><span class="std std-ref">tutorial</span></a> provides additional introductory material for those who are newer to computational modeling,
 as well as a more detailed and comprehensive introduction to the use of PsyNeuLink.</p>
 <section id="simple-configurations">
-<span id="basicsandprimer-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Link to this heading">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
 applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
 Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list –
@@ -295,11 +296,12 @@ with an appropriately-sized input array, for example:</p>
 </div>
 <p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method:</p>
 <figure class="align-default" id="id3">
-<span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_images/BasicsAndPrimer_SimplePathway_fig.svg" src="_images/BasicsAndPrimer_SimplePathway_fig.svg" width="30%" /></a>
+<span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_images/BasicsAndPrimer_SimplePathway_fig.svg" src="_images/BasicsAndPrimer_SimplePathway_fig.svg" style="width: 30%;" />
+</a>
 <figcaption>
 <p><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
 Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> node), and its output
-Mechanism is colored Red (to designate it at a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> node).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+Mechanism is colored Red (to designate it at a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> node).</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>As the name of the <code class="docutils literal notranslate"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
@@ -354,7 +356,7 @@ been accomplished by explicitly creating the recurrent connection:</p>
 </div>
 </section>
 <section id="more-elaborate-configurations">
-<span id="basicsandprimer-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Link to this heading">¶</a></h3>
 <p>Configuring more complex models is also straightforward.  For example, the script below implements a model of the
 <a class="reference external" href="https://en.wikipedia.org/wiki/Stroop_effect">Stroop task</a> by creating two feedforward neural network pathways
 – one for color naming and another for word reading – as well as a corresponding pair of pathways that determine which
@@ -399,9 +401,10 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 .</p>
 <p>The figure belows shows the model using the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.</p>
 <figure class="align-default" id="id4">
-<span id="basicsandprimer-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model.svg" src="_images/BasicsAndPrimer_Stroop_Model.svg" width="100%" /></a>
+<span id="basicsandprimer-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model.svg" src="_images/BasicsAndPrimer_Stroop_Model.svg" style="width: 100%;" />
+</a>
 <figcaption>
-<p><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Running the model is as simple as generating some inputs and then providing them to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
@@ -432,7 +435,7 @@ the response in the second trials since, by default, the <a class="reference int
 a non-zero <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> term).</p>
 </section>
 <section id="dynamics-of-execution">
-<span id="basicsandprimer-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Link to this heading">¶</a></h3>
 <p>One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
 determined by the projections between them (and shown in the <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.  In the
@@ -512,7 +515,7 @@ examples above), but Conditions can also be constructed using any Python functio
 construct virtually any schedule of execution that is logically possible.</p>
 </section>
 <section id="control">
-<span id="basicsandprimer-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-control"></span><h3>Control<a class="headerlink" href="#control" title="Link to this heading">¶</a></h3>
 <p>Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
 Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
 processing of those Mechanisms.  For example, modifications of the <code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code> shown below allow it to monitor
@@ -569,10 +572,11 @@ MappingProjections from <code class="docutils literal notranslate"><span class="
 is then added to the <code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal notranslate"><span class="pre">controller</span></code> in its constructor.
 The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method:</p>
 <figure class="align-default" id="id5">
-<span id="basicsandprimer-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_Control.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model_Control.svg" src="_images/BasicsAndPrimer_Stroop_Model_Control.svg" width="50%" /></a>
+<span id="basicsandprimer-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_Control.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model_Control.svg" src="_images/BasicsAndPrimer_Stroop_Model_Control.svg" style="width: 50%;" />
+</a>
 <figcaption>
 <p><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism added, generated
-by a call to <code class="docutils literal notranslate"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+by a call to <code class="docutils literal notranslate"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism is configured to reset at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>, and the
@@ -589,10 +593,11 @@ the next time it executes (i.e., on the next <a class="reference internal" href=
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method can be
 used to generate an animation of the Composition’s execution, as shown below:</p>
 <figure class="align-default" id="id6">
-<span id="basicsandprimer-stroop-example-animation-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_movie.gif"><img alt="_images/BasicsAndPrimer_Stroop_Model_movie.gif" src="_images/BasicsAndPrimer_Stroop_Model_movie.gif" style="width: 75%;" /></a>
+<span id="basicsandprimer-stroop-example-animation-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_movie.gif"><img alt="_images/BasicsAndPrimer_Stroop_Model_movie.gif" src="_images/BasicsAndPrimer_Stroop_Model_movie.gif" style="width: 75%;" />
+</a>
 <figcaption>
 <p><span class="caption-text"><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal notranslate"><span class="pre">Stroop_model.show_graph(show_controller)</span>
-<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>.</span><a class="headerlink" href="#id6" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Running it for four <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trials</span></code></a> produces the following output:</p>
@@ -650,7 +655,7 @@ script), or to implement <a class="reference external" href="https://royalsociet
 .. FIX: ADD LINKS TO SCRIPTS ABOVE</p>
 </section>
 <section id="parameters">
-<span id="basicsandprimer-parameters"></span><h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-parameters"></span><h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
 <p>Every Component has a set of parameters that determine how the Component operates, or that contain information about
 the state of its operation.  For example, every Component has a <a class="reference internal" href="Component.html#component-value"><span class="std std-ref">value</span></a> parameter that stores the
 result of the Component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> after it has executed. (Note here the difference in the
@@ -662,7 +667,7 @@ different contexts (often referred to as <a class="reference internal" href="Par
 previous values, and the ability to be <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulated</span></a> by other Components in PsyNeuLink.
 These features are supported by methods on the Parameter class, as described below.</p>
 <section id="accessing-parameter-values">
-<span id="basicsandprimer-accessing-parameters"></span><h4>Accessing Parameter Values<a class="headerlink" href="#accessing-parameter-values" title="Permalink to this headline">¶</a></h4>
+<span id="basicsandprimer-accessing-parameters"></span><h4>Accessing Parameter Values<a class="headerlink" href="#accessing-parameter-values" title="Link to this heading">¶</a></h4>
 <p>The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
 by using “dot notation” – that is, <code class="docutils literal notranslate"><span class="pre">&lt;Component&gt;.&lt;parameter&gt;</span></code>. For instance, the print statements in the
 <code class="docutils literal notranslate"><span class="pre">print_after</span></code> function of the example above use <code class="docutils literal notranslate"><span class="pre">output.value</span></code> and <code class="docutils literal notranslate"><span class="pre">decision.value</span></code> to access the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of the <code class="docutils literal notranslate"><span class="pre">output</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms, respectively (more specifically, they
@@ -704,7 +709,7 @@ parameter to store up to three previous values:</p>
 <p>Notice that this is the value from Trial 1 in the example above.</p>
 </section>
 <section id="setting-parameter-values">
-<span id="basicsandprimer-setting-parameters"></span><h4>Setting Parameter Values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h4>
+<span id="basicsandprimer-setting-parameters"></span><h4>Setting Parameter Values<a class="headerlink" href="#setting-parameter-values" title="Link to this heading">¶</a></h4>
 <p>There are two different ways to set parameter values in PsyNeuLink, that correspond to the two ways of accessing
 their values discussed in the preceding section:</p>
 <ul class="simple">
@@ -736,7 +741,7 @@ context. In either of these cases, any new context in which the Component execut
 newly-provided value as the Parameter’s baseline.</p>
 </div>
 <section id="example-use-cases-for-dot-notation">
-<h5>Example use-cases for dot notation<a class="headerlink" href="#example-use-cases-for-dot-notation" title="Permalink to this headline">¶</a></h5>
+<h5>Example use-cases for dot notation<a class="headerlink" href="#example-use-cases-for-dot-notation" title="Link to this heading">¶</a></h5>
 <ul>
 <li><p>Run a Composition, then change the value of a component’s parameter, then run the Composition again with the new
 parameter value:</p>
@@ -783,7 +788,7 @@ its value in the default context, which will in turn propagate to new contexts i
 </ul>
 </section>
 <section id="example-use-cases-for-parameter-set-method">
-<h5>Example use-cases for Parameter set method<a class="headerlink" href="#example-use-cases-for-parameter-set-method" title="Permalink to this headline">¶</a></h5>
+<h5>Example use-cases for Parameter set method<a class="headerlink" href="#example-use-cases-for-parameter-set-method" title="Link to this heading">¶</a></h5>
 <ul>
 <li><p>Change the value of a parameter for a context that was not the last context in which the parameter’s owner executed:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate the mechanism</span>
@@ -837,7 +842,7 @@ default context which, in turn, will propagate to new contexts in which it is ex
 </section>
 </section>
 <section id="function-parameters">
-<h4>Function Parameters<a class="headerlink" href="#function-parameters" title="Permalink to this headline">¶</a></h4>
+<h4>Function Parameters<a class="headerlink" href="#function-parameters" title="Link to this heading">¶</a></h4>
 <p>The <a class="reference internal" href="Component.html#component-parameters"><span class="std std-ref">parameters</span></a> attribute of a Component contains a list of all of its parameters. It is
 important here to recognize the difference between the parameters of a Component and those of its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>.  In the examples above, <a class="reference internal" href="Component.html#component-value"><span class="std std-ref">value</span></a> is a parameter of the <code class="docutils literal notranslate"><span class="pre">output</span></code> and
 <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms themselves.  However, each of those Mechanisms also has a <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>; and, since those are PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> which are also Compoments, those too have
@@ -853,7 +858,7 @@ Function can be accessed in either of the following ways:</p>
 </div>
 </section>
 <section id="modulable-parameters">
-<h4>Modulable Parameters<a class="headerlink" href="#modulable-parameters" title="Permalink to this headline">¶</a></h4>
+<h4>Modulable Parameters<a class="headerlink" href="#modulable-parameters" title="Link to this heading">¶</a></h4>
 <p>Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
 a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).  If the parameter
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it may be assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
@@ -904,7 +909,7 @@ the same as for non-modulable Parameters.</p>
 </section>
 </section>
 <section id="displaying-and-logging-values">
-<span id="basicsandprimer-monitoring-values"></span><h3>Displaying and Logging Values<a class="headerlink" href="#displaying-and-logging-values" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-monitoring-values"></span><h3>Displaying and Logging Values<a class="headerlink" href="#displaying-and-logging-values" title="Link to this heading">¶</a></h3>
 <p><em>Displaying values</em> The console output in the example above was generated using the <strong>call_after_trial</strong> argument in
 the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, that calls the <code class="docutils literal notranslate"><span class="pre">print_after</span></code> function defined in Python.  There
 are other similar “hooks” in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method that can be used not only to monitor values, but also
@@ -964,7 +969,7 @@ trial since it executed ten times, as specified in the Conditions described abov
 dictionary of values for each entry (using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.nparray_dictionary" title="psyneulink.core.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray_dictionary</span></code></a> method), and in <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format (using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.csv" title="psyneulink.core.globals.log.Log.csv"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">csv</span></code></a> method.</p>
 </section>
 <section id="learning">
-<span id="basicsandprimer-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Link to this heading">¶</a></h3>
 <p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
 Python-based environments.  Currently, PsyNeuLink has builtin intregration with <a class="reference external" href="https://pytorch.org">PyTorch</a>,
@@ -977,7 +982,7 @@ of the learning components of a model in PsyNeuLink can easily be translated int
 then be integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of
 specifying learning components is described below.</p>
 <section id="learningmechanisms">
-<h4>LearningMechanisms<a class="headerlink" href="#learningmechanisms" title="Permalink to this headline">¶</a></h4>
+<h4>LearningMechanisms<a class="headerlink" href="#learningmechanisms" title="Link to this heading">¶</a></h4>
 <p>PsyNeuLink has a native class – <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> – that can be used to implement various forms of learning,
 including unsupervised forms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a>) and supervised forms (such as reinforcement learning and
 backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
@@ -1010,10 +1015,11 @@ a simple three-layered neural network that learns to compute the X-OR operation:
 <p>Calling the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> with <code class="docutils literal notranslate"><span class="pre">show_learning=True</span></code> shows the network along with
 all of the learning components created by the call to <code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>:</p>
 <figure class="align-default" id="id7">
-<span id="basicsandprimer-xor-model-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_XOR_Model_fig.svg"><img alt="_images/BasicsAndPrimer_XOR_Model_fig.svg" src="_images/BasicsAndPrimer_XOR_Model_fig.svg" width="100%" /></a>
+<span id="basicsandprimer-xor-model-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_XOR_Model_fig.svg"><img alt="_images/BasicsAndPrimer_XOR_Model_fig.svg" src="_images/BasicsAndPrimer_XOR_Model_fig.svg" style="width: 100%;" />
+</a>
 <figcaption>
 <p><span class="caption-text"><strong>XOR Model.</strong>  Items in orange are learning components implemented by the call to <code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>;
-diamonds represent MappingProjections, shown as nodes so that the <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+diamonds represent MappingProjections, shown as nodes so that the <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
@@ -1069,11 +1075,12 @@ For example, the following implements a network for learning semantic representa
 </div>
 <p>The figure below shows this network with all of its <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a>:</p>
 <figure class="align-default" id="id8">
-<span id="basicsandprimer-rumelhart-network-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Rumelhart_Network.svg"><img alt="_images/BasicsAndPrimer_Rumelhart_Network.svg" src="_images/BasicsAndPrimer_Rumelhart_Network.svg" width="75%" /></a>
+<span id="basicsandprimer-rumelhart-network-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Rumelhart_Network.svg"><img alt="_images/BasicsAndPrimer_Rumelhart_Network.svg" src="_images/BasicsAndPrimer_Rumelhart_Network.svg" style="width: 75%;" />
+</a>
 <figcaption>
 <p><span class="caption-text"><strong>Rumelhart Semantic Network.</strong>  Items in orange are learning components implemented by the calls to
 <code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>; diamonds represent MappingProjections, shown as nodes so that the
-<a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id8" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Given the number of learning components, training the model above using standard PsyNeuLink components can take a
@@ -1086,7 +1093,7 @@ learning).</p>
 </section>
 </section>
 <section id="customization">
-<span id="basicsandprimer-customization"></span><h3>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h3>
+<span id="basicsandprimer-customization"></span><h3>Customization<a class="headerlink" href="#customization" title="Link to this heading">¶</a></h3>
 <p>The Mechanisms in the examples above all use PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Functions</span></a>.  However, as noted earlier, a Mechanism can be
 assigned any Python function, so long as it is compatible with the Mechanism’s type.  More specifically, its
 first argument must accept a variable that has the same shape as the Mechanism’s variable.  For most Mechanism types
@@ -1124,7 +1131,7 @@ can be assigned as the <a class="reference internal" href="Mechanism.html#psyneu
 PsyNeuLink model.</p>
 </section>
 <section id="conclusion">
-<h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">¶</a></h3>
 <p>The examples above are intended to provide a sample of PsyNeuLink’s capabilities, and how they can be used.  The
 <a class="reference internal" href="index_logo_with_text.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides a more thorough, interactive introduction to its use, and the <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides
 a more detailed description of PsyNeuLink’s organization and capabilities.</p>
@@ -1219,10 +1226,11 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

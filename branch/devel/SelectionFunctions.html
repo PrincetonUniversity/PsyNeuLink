@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.16.1.0+82.gb56117ec1 documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.16.1.0+83.ge1994dc34 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+82
+                  0.16.1.0+83
                 </div>
               
             
@@ -198,22 +198,22 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="selectionfunctions">
-<h1>SelectionFunctions<a class="headerlink" href="#selectionfunctions" title="Permalink to this headline">¶</a></h1>
+<h1>SelectionFunctions<a class="headerlink" href="#selectionfunctions" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-psyneulink.core.components.functions.selectionfunctions"></span><ul class="simple">
+<ul class="simple" id="module-psyneulink.core.components.functions.selectionfunctions">
 <li><p><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OneHot</span></code></a></p></li>
 </ul>
 <p>Functions that selects a subset of elements to maintain or transform, while nulling the others.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.SelectionFunction">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">SelectionFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.SelectionFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">SelectionFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.SelectionFunction" title="Link to this definition">¶</a></dt>
 <dd><p>Functions that selects a particular value to maintain or transform, while nulling the others.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">OneHot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indicator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tie</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.selectionfunctions.</span></span><span class="sig-name descname"><span class="pre">OneHot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indicator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tie</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot" title="Link to this definition">¶</a></dt>
 <dd><p>Return an array with one non-zero value.</p>
 <p id="onehot"><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns an array the same length as the first item in <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>,
 with all of its values zeroed except one (unless there is a tie, which is handled as specified by <strong>tie</strong>); the
@@ -289,15 +289,15 @@ if there is a tie, which elements are returned is determined by <code class="xre
 </div></blockquote>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – First (possibly only) item specifies a template for the array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is
 <em>PROB</em> then a 2nd item must be included that is a probability distribution with same length as 1st item.</p></li>
-<li><p><strong>mode</strong> (<em>DETERMINISTiC</em><em>, </em><em>PROB</em><em>, </em><em>PROB_INDICATOR</em><em>,</em>) – </p></li>
-<li><p><strong>ARG_MAX</strong> – </p></li>
-<li><p><strong>ARG_MAX_ABS</strong> – </p></li>
-<li><p><strong>ARG_MAX_INDICATOR</strong> – </p></li>
-<li><p><strong>ARG_MAX_ABS_INDICATOR</strong> – </p></li>
+<li><p><strong>mode</strong> (<em>DETERMINISTiC</em><em>, </em><em>PROB</em><em>, </em><em>PROB_INDICATOR</em><em>,</em>)</p></li>
+<li><p><strong>ARG_MAX</strong></p></li>
+<li><p><strong>ARG_MAX_ABS</strong></p></li>
+<li><p><strong>ARG_MAX_INDICATOR</strong></p></li>
+<li><p><strong>ARG_MAX_ABS_INDICATOR</strong></p></li>
 </ul>
 </dd>
 </dl>
@@ -328,7 +328,7 @@ if there is a tie, which elements are returned is determined by <code class="xre
 <div><p>(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>abs_val</strong> (<em>bool : default False</em>) – specifies whether the absolute values of the elements in the array are used to
 select the maximum or minimum value(s).
@@ -348,12 +348,12 @@ arguments of the constructor.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable" title="Link to this definition">¶</a></dt>
 <dd><p>1st item contains value to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item is a probability
 distribution, each element of which specifies the probability for selecting the corresponding element of the
 1st item.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number or np.array</p>
 </dd>
 </dl>
@@ -361,9 +361,9 @@ distribution, each element of which specifies the probability for selecting the 
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.mode">
-<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DETERMINISTIC, PROB, PROB_INDICATOR,</p>
 </dd>
 </dl>
@@ -391,11 +391,11 @@ distribution, each element of which specifies the probability for selecting the 
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.direction">
-<span class="sig-name descname"><span class="pre">direction</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">direction</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether the maximum or minimum value(s) in the array are selected.
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>MAX or MIN</p>
 </dd>
 </dl>
@@ -403,12 +403,12 @@ distribution, each element of which specifies the probability for selecting the 
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val">
-<span class="sig-name descname"><span class="pre">abs_val</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">abs_val</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether the absolute values of the elements in the array are used to
 select the maximum or minimum value(s).
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -416,11 +416,11 @@ select the maximum or minimum value(s).
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator">
-<span class="sig-name descname"><span class="pre">indicator</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">indicator</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether the selected values(s) is (are) replace with a value of 1.
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -428,11 +428,11 @@ select the maximum or minimum value(s).
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.tie">
-<span class="sig-name descname"><span class="pre">tie</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tie</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="Link to this definition">¶</a></dt>
 <dd><p>determines how a tie is handled when there is more than one element with the maximum or minimum value;
 (see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ALL, FIRST, LAST, RANDOM</p>
 </dd>
 </dl>
@@ -440,10 +440,10 @@ select the maximum or minimum value(s).
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.random_state">
-<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.random_state" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.random_state" title="Link to this definition">¶</a></dt>
 <dd><p>private pseudorandom number generator</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.RandomState</p>
 </dd>
 </dl>
@@ -451,10 +451,10 @@ select the maximum or minimum value(s).
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.owner" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.owner" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
 </dd>
 </dl>
@@ -462,11 +462,11 @@ select the maximum or minimum value(s).
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.name" title="Link to this definition">¶</a></dt>
 <dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -474,20 +474,50 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.prefs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.prefs" title="Link to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._function" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
+probabilities (i.e., elements between 0 and 1) of equal length as the 1st item.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>array with selected elements having non-zero values and all others having zeroes</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">abs_val</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">indicator</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tie</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode">
+<span class="sig-name descname"><span class="pre">_parse_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode" title="Link to this definition">¶</a></dt>
+<dd><p>Convert mode spec to corresponding options.
+Here for convenience, but mostly for backward compatibility with old mode spec.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate params and assign validated values to targets,</p>
 <p>This performs top-level type validation of params</p>
 <p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
@@ -500,44 +530,14 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository of params that have been</em>) – </p></li>
-<li><p><strong>validated</strong> – </p></li>
+<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository</em><em> of </em><em>params that have been</em>)</p></li>
+<li><p><strong>validated</strong></p></li>
 </ul>
 </dd>
-<dt class="field-even">Return none</dt>
+<dt class="field-even">Return none<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode">
-<span class="sig-name descname"><span class="pre">_parse_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert mode spec to corresponding options.
-Here for convenience, but mostly for backward compatibility with old mode spec.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.selectionfunctions.OneHot._function">
-<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._function" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – 1st item is an array to be transformed;  if <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is <em>PROB</em>, 2nd item must be an array of
-probabilities (i.e., elements between 0 and 1) of equal length as the 1st item.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>array with selected elements having non-zero values and all others having zeroes</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">abs_val</span></code></a>,
-<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">indicator</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tie</span></code></a>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -579,7 +579,26 @@ arguments of the constructor.</p></li>
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">SelectionFunctions</a></li>
+<li><a class="reference internal" href="#">SelectionFunctions</a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.SelectionFunction"><code class="docutils literal notranslate"><span class="pre">SelectionFunction</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot"><code class="docutils literal notranslate"><span class="pre">OneHot</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.variable"><code class="docutils literal notranslate"><span class="pre">OneHot.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="docutils literal notranslate"><span class="pre">OneHot.mode</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="docutils literal notranslate"><span class="pre">OneHot.direction</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="docutils literal notranslate"><span class="pre">OneHot.abs_val</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="docutils literal notranslate"><span class="pre">OneHot.indicator</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="docutils literal notranslate"><span class="pre">OneHot.tie</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.random_state"><code class="docutils literal notranslate"><span class="pre">OneHot.random_state</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.owner"><code class="docutils literal notranslate"><span class="pre">OneHot.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.name"><code class="docutils literal notranslate"><span class="pre">OneHot.name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.prefs"><code class="docutils literal notranslate"><span class="pre">OneHot.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._function"><code class="docutils literal notranslate"><span class="pre">OneHot._function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._parse_mode"><code class="docutils literal notranslate"><span class="pre">OneHot._parse_mode()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot._validate_params"><code class="docutils literal notranslate"><span class="pre">OneHot._validate_params()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -595,10 +614,11 @@ arguments of the constructor.</p></li>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=cd880d5f"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   
