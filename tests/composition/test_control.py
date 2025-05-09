@@ -1945,7 +1945,16 @@ class TestControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
-    def test_multilevel_ocm_gridsearch_maximize(self, mode, benchmark):
+    @pytest.mark.parametrize(
+        'allocation_samples, expected_results',
+        [
+            (pnl.SampleSpec(start=1.0, stop=5.0, num=5), [[70]]),
+            (pnl.SampleSpec(start=1.0, stop=10.0, num=10), [[425]]),
+        ]
+    )
+    def test_multilevel_ocm_gridsearch_maximize(
+        self, mode, benchmark, allocation_samples, expected_results
+    ):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
         ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
@@ -1979,9 +1988,8 @@ class TestControlMechanisms:
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=allocation_samples,
+                                                   )])
         )
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
@@ -1998,12 +2006,11 @@ class TestControlMechanisms:
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
                                                    variable=1.0,
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
-                                                   allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                     stop=5.0,
-                                                                                     num=5))])
+                                                   allocation_samples=allocation_samples,
+                                                   )])
         )
         result = benchmark(ocomp.run, [5], execution_mode=mode)
-        np.testing.assert_allclose(result, [[70]])
+        np.testing.assert_allclose(result, expected_results)
 
     @pytest.mark.control
     @pytest.mark.composition
