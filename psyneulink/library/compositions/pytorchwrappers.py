@@ -1273,12 +1273,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
     # def _torch_param_names_to_ids(self)->dict:
     #     """Return dict of {torch parameter}: python id for all named_parameters"""
     #     return {param[0]: id(param[1]) for param in list(self.named_parameters())}
-    #
-    # @property
-    # # Return execution-specific learning_rates
-    # def torch_params_for_execution(self)->dict:
-    #     return {proj: self._get_torch_learning_rate(proj) for proj in self.wrapped_projections}
-    #
+
+    @property
+    # Return execution-specific learning_rates
+    def torch_params_for_execution(self)->dict:
+        return {proj: self._get_torch_learning_rate(proj) for proj in self.wrapped_projections}
+
     # def get_projection_for_torch_param(self, param)->MappingProjection:
     #     return self._torch_params_to_projections.get(param, None)
     #
