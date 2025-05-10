@@ -757,7 +757,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             optimizer_params_parsed: {Projection.name: (Projection or Projection.name, lr)}
             optimizer_torch_params_specified:  {Torch parameter ref: lr}
             self._pnl_refs_to_torch_param_names: {Projection.name: PytorchWrapper.name or torch parameter name}
-            self.torch_param_short_to_long_names_map: {local name of torch param: full hierarchical name}
+            self._torch_param_short_to_long_names_map: {local name of torch param: full hierarchical name}
             self.named_parameters(): (full hierarchical name of torach param, torch param)
             self.state_dict(): (local name of torch param, Tensor)
         """
@@ -851,18 +851,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # # If param spec is tuple, param name from first item (second is slice)
             # torch_param_name = param.name if isinstance(param, TorchParam) else param
             # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
-            # if torch_param_name not in torch_param_short_to_long_names_map:
+            # if torch_param_name not in _torch_param_short_to_long_names_map:
             #     raise AutodiffCompositionError(
             #         f"Projection specified in 'learning_rate' arg of constructor for '{self.composition.name}' "
             #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
             # # Get torch parameter for specified param_ref in named_parameters()
             # param = next((p[1] for p in self.named_parameters()
-            #               if p[0] == torch_param_short_to_long_names_map[torch_param_name]), None)
+            #               if p[0] == _torch_param_short_to_long_names_map[torch_param_name]), None)
 
             # # Get torch parameter for specified param_ref in named_parameters()
             torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == self.torch_param_short_to_long_names_map[torch_param_name]), None)
+                          if p[0] == self._torch_param_short_to_long_names_map[torch_param_name]), None)
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in "
                                        f"{self.name}.named_parameters() even though it was found in its state_dict().")
 
@@ -1023,18 +1023,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if param_name == param_tuple[0]:
                 return param_tuple[1]
 
-    # BREADCRUMB: WRITE TEST FOR BELOW, INCLUDING WARNING WITH RETURN OF NotImplemented
-    def get_torch_learning_rate_for_projection(self, projection:MappingProjection, optimizer:torch.optim=None)->float:
-        """Get torch learning_rate for a Projection"""
-        optimizer = optimizer or self.optimizer
-        if not optimizer:
-            warnings.warn(f"{self.composition.name} has not yet been assigned an optimizer; try calling"
-                          f"_build_pytorch_representation() before get_torch_learning_rate_for_projection().")
-            return NotImplemented
-        # First get parameter's python id
-        param = self._get_torch_param_for_projection(projection)
-        return self._get_learning_rate_for_torch_param(param, optimizer.param_groups)
-
     def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
         """Get learning_rate for torch parameter"""
         # First get parameter's python id
@@ -1042,26 +1030,34 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for p in param_group['params']:
                 if param is p:
                     return param_group['lr']
-        # BREADCRUMB: RAISE EXCEPTION IF NOT FOUND??
 
-    # BREADCRUMB: 5/8/25 RECONCILE THIS WITH _pnl_refs_to_torch_param_names ATTRIBUTE
-    @property
-    def pnl_refs_to_torch_params(self)->dict:
-        """Return dict of {Projection: torch parameter} for all wrapped Projections"""
-        return {projection: self._get_torch_param_for_projection(projection) for projection in self.wrapped_projections}
+    # BREADCRUMB: ADD TEST FOR THIS, INCLUDING ERROR FOR NO OPTIMIZER
+    def get_torch_learning_rate_for_projection(self, projection:MappingProjection, optimizer:torch.optim=None)->float:
+        """Get torch learning_rate for a Projection"""
+        optimizer = optimizer or self.optimizer or self._optimizer_error('get_torch_learning_rate_for_projection')
+        param = self._get_torch_param_for_projection(projection)
+        return self._get_learning_rate_for_torch_param(param, optimizer.param_groups)
 
-    # BREADCRUMB: ADD TEST FOR THIS (AND ALL OTHER NON-PROTECTED METHODS)
+    # BREADCRUMB: ADD TEST FOR THIS, INCLUDING ERROR FOR NO OPTIMIZER
     def torch_params_to_projections(self, optimizer:torch.optim=None)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
         # Get optimizer if not provided
-        optimizer = optimizer or self.optimizer
-        if not optimizer:
-            warnings.warn(f"{self.composition.name} has not yet been assigned an optimizer; try calling"
-                          f"_build_pytorch_representation() before torch_params_to_projections().")
-        # Get param_groups from optimizer
-        param_groups = optimizer.param_groups if optimizer else None
+        optimizer = optimizer or self.optimizer or self._optimizer_error('torch_params_to_projections')
+        param_groups = optimizer.param_groups
         # Return dict of {torch parameter: Projection}
         return self._torch_params_to_projections(param_groups)
+
+    # BREADCRUMB: ADD TEST FOR THIS
+    def projections_to_torch_params(self)->dict:
+        """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
+        projections_to_torch_params = {}
+        for proj in self.wrapped_projections:
+                projections_to_torch_params.update({projection: self._get_torch_param_for_projection(projection)})
+        # Call recursively on any nested PytorchCompositionWrappers,
+        #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
+        for comp_wrapper in self.get_all_nested_composition_wrappers():
+            projections_to_torch_params.update(comp_wrapper._get_torch_param_for_projection(projection))
+        return projections_to_torch_params
 
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
@@ -1075,38 +1071,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return torch_params_to_projections
 
     @property
-    def torch_param_short_to_long_names_map(self)->dict:
+    def _torch_param_short_to_long_names_map(self)->dict:
         """Return map of short torch Parameter names to their full (hierarchical) names in named_parameters()
         The "full" names should include prefixes for parameters in nested PytorchCompositionWrappers."""
         return {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
-    # @property
-    # def _torch_param_names_to_ids(self)->dict:
-    #     """Return dict of {torch parameter}: python id for all named_parameters"""
-    #     return {param[0]: id(param[1]) for param in list(self.named_parameters())}
-
     @property
     # Return execution-specific learning_rates
-    def torch_params_for_execution(self)->dict:
+    def _torch_params_for_execution(self)->dict:
         return {proj: self.get_torch_learning_rate_for_projection(proj) for proj in self.wrapped_projections}
 
-    # def get_projection_for_torch_param(self, param)->MappingProjection:
-    #     return self._torch_params_to_projections.get(param, None)
-    #
-    # def _get_torch_id_for_param(self, torch_param:torch.nn.Parameter)->str:
-    #     return self._torch_param_names_to_ids[self._get_torch_name_for_param(torch_param)]
-    #
-    # def _get_torch_name_for_param(self, torch_param:torch.nn.Parameter)->str:
-    #     candidate = [param[0] for param in list(self.named_parameters()) if param[1] is torch_param]
-    #     return candidate[0] if candidate else None
-    #
-    # def _get_param_ids_for_groups(self, groups:list)->list:
-    #     """Return list of python ids for all parameters in the specified groups"""
-    #     param_ids = []
-    #     for group in groups:
-    #         for param in group['params']:
-    #             param_ids.append(id(param))
-    #     return param_ids
+    def _optimizer_error(self, method:str):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        raise AutodiffCompositionError(
+            f"{self.composition.name} has not yet been assigned an optimizer; try calling"
+            f"_build_pytorch_representation() before {method}.")
 
     __deepcopy__ = get_deepcopy_with_shared()
 

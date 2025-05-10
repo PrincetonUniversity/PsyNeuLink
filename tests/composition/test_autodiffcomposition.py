@@ -3649,9 +3649,9 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_proj_expected
         # Test that _learing_params_for_execution works properly
-        assert learn_pytorch_rep.torch_params_for_execution[inner_proj_1] == proj_1_expected
-        assert learn_pytorch_rep.torch_params_for_execution[inner_proj_2] == expected_proj_2_outer
-        assert learn_pytorch_rep.torch_params_for_execution[outer_proj] == outer_proj_expected
+        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_1] == proj_1_expected
+        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_outer
+        assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
 
         # Check that learning_rates return to those at construction after another call to learn() without learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})

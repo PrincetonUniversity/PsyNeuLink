@@ -543,12 +543,12 @@ class TestExecution:
         loss_fct = torch.nn.MSELoss(reduction='mean')
 
         # Assign learning rates to IH and HH parameters
-        torch_param_short_to_long_names_map = {k.split('.')[-1]:k
+        _torch_param_short_to_long_names_map = {k.split('.')[-1]:k
                                                for k in [p[0] for p in torch_model.named_parameters()]}
         w_ih_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== torch_param_short_to_long_names_map[pnl.W_IH_NAME]][0]
+                      if p[0]== _torch_param_short_to_long_names_map[pnl.W_IH_NAME]][0]
         w_hh_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== torch_param_short_to_long_names_map[pnl.W_HH_NAME]][0]
+                      if p[0]== _torch_param_short_to_long_names_map[pnl.W_HH_NAME]][0]
         param_group = torch_optimizer.param_groups[0]
         for i, p in enumerate(param_group['params'].copy()):
             if p is w_ih_param:
@@ -560,9 +560,9 @@ class TestExecution:
         torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
         if bias:
             b_ih_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== torch_param_short_to_long_names_map[pnl.B_IH_NAME]][0]
+                      if p[0]== _torch_param_short_to_long_names_map[pnl.B_IH_NAME]][0]
             b_hh_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== torch_param_short_to_long_names_map[pnl.B_HH_NAME]][0]
+                      if p[0]== _torch_param_short_to_long_names_map[pnl.B_HH_NAME]][0]
             for i, p in enumerate(param_group['params'].copy()):
                 if p is b_ih_param:
                     del param_group['params'][i]

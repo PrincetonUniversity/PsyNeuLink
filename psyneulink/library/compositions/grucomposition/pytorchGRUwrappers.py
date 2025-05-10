@@ -366,7 +366,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         def get_dict_entries(names):
             for projection_name in names:
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection_name]
-                torch_param_long_name = self.torch_param_short_to_long_names_map[torch_param_name]
+                torch_param_long_name = self._torch_param_short_to_long_names_map[torch_param_name]
                 torch_param = next((p[1] for p in self.named_parameters() if p[0] == torch_param_long_name),None)
                 assert torch_param is not None, (f"PROGRAM ERROR: torch parameter for {projection_name} "
                                                  f"not found in named_parameters() of {self.name}")
