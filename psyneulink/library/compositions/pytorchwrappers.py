@@ -50,6 +50,7 @@ from psyneulink.core import llvm as pnlvm
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
            'ENTER_NESTED', 'EXIT_NESTED', 'SUBCLASS_WRAPPERS', 'TorchParam']
 
+# BREADCRUMB: GET RID OF SUBCLASS_WRAPPERS?
 SUBCLASS_WRAPPERS = 'subclass_wrappers'
 ENTER_NESTED = 0
 EXIT_NESTED = 1
@@ -743,6 +744,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def projection_wrappers_map(self):
         return {wrapper: wrapper.projection for wrapper in self.projection_wrappers}
 
+    def get_all_nested_composition_wrappers(self, start_wrapper=None)->dict:
+        """Return list of all PytorchCompositionWrappers nested in start_wrapprer and within those."""
+        comp_wrapper = start_wrapper or self
+        comp_wrappers = [w for w in comp_wrapper.node_wrappers if isinstance(w, PytorchCompositionWrapper)]
+        for wrapper in comp_wrappers:
+            nested_wrappers = wrapper.get_all_nested_composition_wrappers()
+            if nested_wrappers:
+                comp_wrappers.append(nested_wrappers)
+        return comp_wrappers
+
     def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
         """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
         Relevant data structures:
@@ -825,7 +836,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if optimizer_params_parsed:
             self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
 
-        # Get any Projection.learning_rates (in same format as optimizer_params_parsed)
+        # Get any Projection.learning_rates (in same format as optimizer_params_parsed) to generate projection_lr_specs:
+        #     {Projection.name: (Projection or Projection.name, learning_rate)}
         projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
                                [p.projection for p in self.projection_wrappers
                                if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
@@ -839,14 +851,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
             return
 
-
-        # Map short (local) names of torch Parameters to their full (hierachcial) names in torch.nn.named_parameters()
-        #    which may include prefixes for nested PytorchCompositionWrappers
-        # BREADCRUMB: MAKE THIS A property
-        torch_param_short_to_long_names_map = {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
-
-        # Replace Projection names with refs to torch params in state_dict()
-        #    to generate optimizer_torch_params_specified
+        # Replace Projection names in projection_lr_specs for torch params (used in state_dict())
+        # with their actual torch parameter objects to genernate optimizer_torch_params_specified:
+        #     {torch param: learning_rate}
         optimizer_torch_params_specified = {}
         for pnl_param_name, param_tuple in projection_lr_specs.items():
             param_val = param_tuple.value
@@ -877,7 +884,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # # Get torch parameter for specified param_ref in named_parameters()
             torch_param_name = param
             param = next((p[1] for p in self.named_parameters()
-                          if p[0] == torch_param_short_to_long_names_map[torch_param_name]), None)
+                          if p[0] == self.torch_param_short_to_long_names_map[torch_param_name]), None)
             assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in "
                                        f"{self.name}.named_parameters() even though it was found in its state_dict().")
 
@@ -1070,7 +1077,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         old_param_groups = optimizer.param_groups
         new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         optimizer.param_groups = new_param_groups
-        # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimier)
+        # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimizer)
         for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
             # Get each param in the param_groups
             param_group_learning_rate = old_param_group['lr']
@@ -1090,7 +1097,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     param.requires_grad = False
                 else:
                     # Learning is enabled for the Projection
-                    projection = self.torch_params_to_projections[param]
+                    # BREADCRUMB: MAY NEED TO REPLACE THIS JUST GETTING THE LEARNING RATE AND NOT REQUIRING A
+                    # PROJECTION, SO THAT SUBCLASSES CAN "SPOOF" THE PRESENCE OF A PROJECTION
+                    projection = self._torch_params_to_projections(old_param_groups)[param]
                     # If learning_rate = True or None, use composition.learning_rate, else use specified value
                     if specified_learning_rate is NotImplemented:
                         specified_learning_rate = projection.learning_rate
@@ -1133,6 +1142,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Store constructor-specified learning_rates (for reversion after learn())
             self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
 
+        # BREADCRUMB:
         assert True
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
@@ -1208,43 +1218,84 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if id(param) == param_info[0]:
                     return param_group['lr']
 
-    @property
-    def _torch_param_names_to_ids(self)->dict:
-        """Return dict of {torch parameter}: python id for all named_parameters"""
-        return {param[0]: id(param[1]) for param in list(self.named_parameters())}
+    def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
+        """Get learning rate for torch parameter"""
+        # First get parameter's python id
+        for param_group in param_groups:
+            for p in param_group['params']:
+                if param is p:
+                    return param_group['lr']
+        # BREADCRUMB: RAISE EXCEPTION IF NOT FOUND??
 
+# BREADCRUMB: 5/8/25 RECONCILE THIS WITH _pnl_refs_to_torch_param_names ATTRIBUTE
     @property
     def pnl_refs_to_torch_params(self)->dict:
         """Return dict of {Projection: torch parameter} for all wrapped Projections"""
         return {projection: self._get_torch_param_info(projection)[1] for projection in self.wrapped_projections}
 
-    @property
-    def torch_params_to_projections(self)->dict:
+    # def _torch_params_to_projections(self, param_groups:list)->dict:
+    #     """Return dict of {torch parameter: Projection} for all wrapped Projections"""
+    #     from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+    #     # BREADCRUMB: REMOVE:
+    #     # if not param_groups:
+    #     #     raise AutodiffCompositionError(
+    #     #         f"{self.composition.name} has not yet been assigned an optimizer; try calling"
+    #     #         f"_build_pytorch_representation() before _torch_params_to_projections().")
+    #     try:
+    #         return {self._get_torch_param_info(proj)[1]: proj for proj in self.wrapped_projections}
+    #     except KeyError:
+    #         # Give subclasses a chance for custom handling of param->projection mapping
+    #         for comp_wrapper in self.get_all_nested_composition_wrappers():
+    #             return comp_wrapper._torch_params_to_projections(param_groups)
+    #     # BREADCRUMB:
+    #     assert True
+
+    def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections"""
-        return {self._get_torch_param_info(proj)[1]: proj for proj in self.wrapped_projections}
+        torch_params_to_projections = {}
+        for proj in self.wrapped_projections:
+            if proj.name in self._pnl_refs_to_torch_param_names.keys():
+                torch_params_to_projections.update({self._get_torch_param_info(proj)[1]: proj})
+        # Give subclasses a chance for custom handling of param->projection mapping
+        for comp_wrapper in self.get_all_nested_composition_wrappers():
+            torch_params_to_projections.update(comp_wrapper._torch_params_to_projections(param_groups))
+        return torch_params_to_projections
+        # BREADCRUMB:
+        assert True
 
     @property
-    # Return execution-specific learning_rates
-    def torch_params_for_execution(self)->dict:
-        return {proj: self._get_torch_learning_rate(proj) for proj in self.wrapped_projections}
+    def torch_param_short_to_long_names_map(self)->dict:
+        """Return map of short torch Parameter names to their full (hierarchical) names in named_parameters()
+        The "full" names should include prefixes for parameters in nested PytorchCompositionWrappers."""
+        return {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
-    def get_projection_for_torch_param(self, param)->MappingProjection:
-        return self.torch_params_to_projections.get(param, None)
-
-    def _get_torch_id_for_param(self, torch_param:torch.nn.Parameter)->str:
-        return self._torch_param_names_to_ids[self._get_torch_name_for_param(torch_param)]
-
-    def _get_torch_name_for_param(self, torch_param:torch.nn.Parameter)->str:
-        candidate = [param[0] for param in list(self.named_parameters()) if param[1] is torch_param]
-        return candidate[0] if candidate else None
-
-    def _get_param_ids_for_groups(self, groups:list)->list:
-        """Return list of python ids for all parameters in the specified groups"""
-        param_ids = []
-        for group in groups:
-            for param in group['params']:
-                param_ids.append(id(param))
-        return param_ids
+    # @property
+    # def _torch_param_names_to_ids(self)->dict:
+    #     """Return dict of {torch parameter}: python id for all named_parameters"""
+    #     return {param[0]: id(param[1]) for param in list(self.named_parameters())}
+    #
+    # @property
+    # # Return execution-specific learning_rates
+    # def torch_params_for_execution(self)->dict:
+    #     return {proj: self._get_torch_learning_rate(proj) for proj in self.wrapped_projections}
+    #
+    # def get_projection_for_torch_param(self, param)->MappingProjection:
+    #     return self._torch_params_to_projections.get(param, None)
+    #
+    # def _get_torch_id_for_param(self, torch_param:torch.nn.Parameter)->str:
+    #     return self._torch_param_names_to_ids[self._get_torch_name_for_param(torch_param)]
+    #
+    # def _get_torch_name_for_param(self, torch_param:torch.nn.Parameter)->str:
+    #     candidate = [param[0] for param in list(self.named_parameters()) if param[1] is torch_param]
+    #     return candidate[0] if candidate else None
+    #
+    # def _get_param_ids_for_groups(self, groups:list)->list:
+    #     """Return list of python ids for all parameters in the specified groups"""
+    #     param_ids = []
+    #     for group in groups:
+    #         for param in group['params']:
+    #             param_ids.append(id(param))
+    #     return param_ids
 
     __deepcopy__ = get_deepcopy_with_shared()
 

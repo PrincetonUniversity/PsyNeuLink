@@ -90,7 +90,7 @@ no learning will occur;  if it is ``True``, then learning will occur only for Pa
 learning_rate has been specified  in the **optimizer_params** argument of the GRUComposition's constructor or
 in the call to its `learn <AutodiffComposition.learn>` method as described below.
 COMMENT
-
+ BREADCRUMB: RECONCILE WITH NEW REFACTORING OF learning_rate INSTEAD OF optimizer_params ARG
 .. _GRUComposition_Individual_Learning_Rates:
 
 **optimizer_params** (dict): used to specify parameter-specific learning rates, which supercede the value of the

@@ -1188,25 +1188,10 @@ class AutodiffComposition(Composition):
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-        # # MODIFIED 5/3/25 OLD:
-        # default_param_groups = optimizer.param_groups.copy()
-        # pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
-        # self._optimizer_default_param_groups = (
-        #     optimizer.param_groups.copy() if self._optimizer_constructor_params else default_param_groups)
-        # # MODIFIED 5/3/25 NEW:
-        # self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
-        # pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
-        # # self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
-        # pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()
-        # MODIFIED 5/5/25 NEWEST:
-        # BREADCRUMB: IS ALL/ANY OF THIS NECESSARY OR IS IT / CAN IT BE TAKEN CARE OF IN _update_optimizer_params()?
-        # self._constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        # BREADCRUMB: IS ALL/ANY OF THIS NECESSARY OR IS IT / CAN IT BE TAKEN CARE OF IN _update_optimizer_params()?
         self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
         pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()
-        # MODIFIED 5/3/25 END
-        # # Assign optimizer to PytorchCompositionWrapper
-        # pytorch_rep.optimizer = optimizer
         return optimizer
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):

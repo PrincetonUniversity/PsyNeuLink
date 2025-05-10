@@ -34,6 +34,8 @@ INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
 HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
 BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
 BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
+HIDDEN_PROJECTION_SETS = [INPUT_TO_HIDDEN, HIDDEN_TO_HIDDEN]
+HIDDEN_BIAS_SETS = [BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN]
 W_IH_NAME = 'weight_ih_l0'
 W_HH_NAME = 'weight_hh_l0'
 B_IH_NAME = 'bias_ih_l0'
@@ -346,6 +348,36 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             b_hn = torch.atleast_2d(b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
             biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
         return weights, biases
+
+    def _torch_params_to_projections(self, param_groups:list)->dict:
+        """Return dict of {torch parameter: Projection} for all wrapped Projections"""
+        class DummyProjection:
+            def __init__(self, name, learning_rate):
+                self.name = name
+                self.learning_rate = learning_rate
+
+            def __getattr__(self, name):
+                # raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+                raise AttributeError(f"This object is used to convey the learning rate the torch parameters "
+                                     f"corresponding to the set of {self.name} Projections of a GRUComposition, "
+                                     f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
+                                     f"attributes, but no others")
+
+        torch_params_to_projections = {}
+        def get_dict_entries(names):
+            for projection_name in names:
+                torch_param_name = self._pnl_refs_to_torch_param_names[projection_name]
+                torch_param_long_name = self.torch_param_short_to_long_names_map[torch_param_name]
+                # torch_param = self.state_dict()[torch_param_long_name]
+                torch_param = next((p[1] for p in self.named_parameters() if p[0] == torch_param_long_name),None)
+                # BREADCRUMB:  CHECK THAT torch_param is not None HERE AND RAISE EXCEPTION IF SO
+                learning_rate = self._get_learning_rate_for_torch_param(torch_param, param_groups)
+                torch_params_to_projections.update({torch_param: DummyProjection(projection_name, learning_rate)})
+        get_dict_entries(HIDDEN_PROJECTION_SETS)
+        if self.composition.bias:
+            get_dict_entries(HIDDEN_BIAS_SETS)
+
+        return torch_params_to_projections
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
