@@ -1134,7 +1134,11 @@ class Projection_Base(Projection):
     @property
     def _dependent_components(self):
         res = super()._dependent_components
-        res.extend(self.parameter_ports)
+        try:
+            res.extend(self.parameter_ports)
+        except AttributeError:
+            # when in DEFERRED_INIT, _parameter_ports doesn't exist yet
+            pass
         if isinstance(self.sender, Component):
             res.append(self.sender)
         return res
