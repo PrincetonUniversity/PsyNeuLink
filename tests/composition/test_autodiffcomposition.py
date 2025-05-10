@@ -3531,9 +3531,9 @@ class TestMiscTrainingFunctionality:
             output_proj_lr = projection_lr_output_proj or self.default_lr
 
         outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER')
-        assert outer_comp_pytorch_rep._get_torch_learning_rate(input_proj) == input_proj_lr
-        assert outer_comp_pytorch_rep._get_torch_learning_rate(hidden_proj) == hidden_proj_lr
-        assert outer_comp_pytorch_rep._get_torch_learning_rate(output_proj) == output_proj_lr
+        assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
+        assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(hidden_proj) == hidden_proj_lr
+        assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
         np.testing.assert_allclose(expected, results)
 
         # Learning rate should return to default values if not specified again
@@ -3541,15 +3541,15 @@ class TestMiscTrainingFunctionality:
         if condition == 'both':
             # Should return to defaults specified in constructor (even though specified in previous call to learning)
             assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
-            assert outer_comp_pytorch_rep._get_torch_learning_rate(input_proj) == constructor_lr_input_proj or self.default_lr
-            assert outer_comp_pytorch_rep._get_torch_learning_rate(hidden_proj) == 0.001
-            assert (outer_comp_pytorch_rep._get_torch_learning_rate(output_proj) == constructor_lr_output_proj or self.default_lr)
+            assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(input_proj) == constructor_lr_input_proj or self.default_lr
+            assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(hidden_proj) == 0.001
+            assert (outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(output_proj) == constructor_lr_output_proj or self.default_lr)
         elif condition == 'learn_method':
             # Should return to default for optimizer (since none specified for constructor)
             assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
-            assert outer_comp_pytorch_rep._get_torch_learning_rate(input_proj) == self.default_lr
-            assert outer_comp_pytorch_rep._get_torch_learning_rate(hidden_proj) == self.default_lr
-            assert outer_comp_pytorch_rep._get_torch_learning_rate(output_proj) == self.default_lr
+            assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(input_proj) == self.default_lr
+            assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(hidden_proj) == self.default_lr
+            assert outer_comp_pytorch_rep._get_torch_learning_rate_for_projection(output_proj) == self.default_lr
 
 
     default = .001
@@ -3609,8 +3609,8 @@ class TestMiscTrainingFunctionality:
         inner_comp._build_pytorch_representation()
         inner_pytorch_rep = inner_comp.pytorch_representation
         # Ensure that params were assigned appropriate lr for the inner_comp
-        assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_inner
-        assert inner_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_inner
+        assert inner_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert inner_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
 
         # Construct outer Composition with nested inner
         outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
@@ -3620,9 +3620,9 @@ class TestMiscTrainingFunctionality:
         outer_comp._build_pytorch_representation()
         outer_pytorch_rep = outer_comp.pytorch_representation
         outer_proj = outer_comp.nodes[-1].afferents[0]
-        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
-        assert outer_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert outer_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_comp_lr or self.default
+        assert outer_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
+        assert outer_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
+        assert outer_pytorch_rep._get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
         # Check outer_comp assignments after learn() method
         if outer_learn_lr == NotImplemented:
@@ -3645,9 +3645,9 @@ class TestMiscTrainingFunctionality:
         outer_comp.learn(inputs={inner_node_input:[[1]]},
                          learning_rate=learning_rate)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == proj_1_expected
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_proj_expected
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_1) == proj_1_expected
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(outer_proj) == outer_proj_expected
         # Test that _learing_params_for_execution works properly
         assert learn_pytorch_rep.torch_params_for_execution[inner_proj_1] == proj_1_expected
         assert learn_pytorch_rep.torch_params_for_execution[inner_proj_2] == expected_proj_2_outer
@@ -3656,9 +3656,9 @@ class TestMiscTrainingFunctionality:
         # Check that learning_rates return to those at construction after another call to learn() without learning_rates
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_1) == expected_proj_1_outer
-        assert learn_pytorch_rep._get_torch_learning_rate(inner_proj_2) == expected_proj_2_outer
-        assert learn_pytorch_rep._get_torch_learning_rate(outer_proj) == outer_comp_lr or self.default
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
+        assert learn_pytorch_rep._get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_nested(self, bias):
