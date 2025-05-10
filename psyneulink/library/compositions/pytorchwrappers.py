@@ -802,12 +802,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 f"PROGRAM ERROR: constructor called for '{composition.name}' to assign "
                 f"_constructor_param_groups but they have already been assigned.")
 
-            # # MODIFIED 5/6/25 OLD:
-            # if not optimizer_params_user_specs:
-            # MODIFIED 5/6/25 NEW:
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers():
                 # BREADCRUMB: COULD BE projection-specific learning rates, so those need to be assigned
-            # MODIFIED 5/6/25 END
                 # If user didn't provide any specs, use param_groups assigned to optimizer by default
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
                 return
@@ -817,16 +813,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition = self.composition
 
-        # Use current optimizer specifications if passed, else ones that were specified at construction, else defaults
-        # # MODIFIED 5/5/25 OLD: BREADCRUMB: GET RID OF DEFINITION OF self.composition._optimizer_constructor_params
-        #                        AND NO NEED FOR THE FOLLOWING BECAUSE RETURN ABOVE IF NO optimizer_params_user_specs
-        # optimizer_params_user_specs = (optimizer_params_user_specs
-        #                                                or self.composition._optimizer_constructor_params)
-        # MODIFIED 5/5/25 END
-
         torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
-        # Replace any Projections in optimizer_torch_params_specified with their names
 
+        # Replace any Projections in optimizer_torch_params_specified with their names
         # BREADCRUMB: CLEAN THIS UP:
         optimizer_params_parsed = {}
         if optimizer_params_user_specs:
@@ -922,157 +911,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             optimizer_torch_params_specified[param] = projection_lr_specs[pnl_param_name].value
 
-        # # MODIFIED 5/3/25 NEW:
-        # Update optimizer.param_groups with any assigned learning rates
-        # optimizer_param_groups = self.composition._optimizer_constructor_param_groups
-        # # # MODIFIED 5/3/25 NEWER:  BREADCRUMB
-        # self._previous_optimizer_param_groups = self.optimizer.param_groups.copy()
-        # # MODIFIED 5/3/25 NEWEST:  BREADCRUMB
-        # self._constructor_param_groups = self.optimizer.param_groups.copy()
-        # MODIFIED 5/3/25 END
-
-        # # FOR DEBUGGING: --------------------------------
-        # # These are the ones specified at construction:
-        # constructor_ids = self._get_param_ids_for_groups(self.composition._optimizer_constructor_param_groups)
-        # # These are the ones specified at construction, but carry over from last call to learn?
-        # comp_wrapper_ids = self._get_param_ids_for_groups(self.optimizer.param_groups)
-        # # These are the ones specified in call to learn():
-        # local_ids = [self._get_torch_id_for_param(param) for param in optimizer_torch_params_specified.keys()]
-        # # self.composition._optimizer_constructor_param_groups = self.optimizer_param_groups
-        # --------------------------------
-
-
-        # MODIFIED 5/5/25 OLD:
-        # for param, learning_rate in optimizer_torch_params_specified.items():
-        #     if not isinstance(learning_rate, (int, float, bool, type(None))):
-        #         raise AutodiffCompositionError(
-        #             f"The value ('{learning_rate}') for '{param}' in the dict specified for the 'learning_rate' arg "
-        #             f"of {source} of '{self.composition.name}' must be an int, float or bool.")
-        #     if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
-        #             or learning_rate is False):
-        #         # Learning disabled for the Composition or the Projection
-        #         param.requires_grad = False
-        #     else:
-        #         # Learning is enabled for the Projection
-        #         param.requires_grad = True
-        #         # If learning_rate = True or None, use composition.learning_rate, else use specified value
-        #         default_learning_rate = self.composition._runtime_learning_rate or composition.learning_rate
-        #         lr = default_learning_rate if learning_rate in {True, None} else learning_rate
-        #         # Check if param is already in an existing param_group on the optimizer
-        #         # # MODIFIED 5/4/25 OLD:
-        #         # for param_group in self.composition._optimizer_constructor_param_groups.copy():
-        #         # # MODIFIED 5/4/25 NEW:
-        #         # for param_group in self.optimizer.param_groups.copy():
-        #         # MODIFIED 5/4/25 NEWER:  BREADCRUMB
-        #         for param_group in self._previous_optimizer_param_groups:
-        #         # MODIFIED 5/4/25 END
-        #             for i, p in enumerate(param_group['params'].copy()):
-        #                 # # MODIFIED 5/3/25 NEW:
-        #                 # self._get_torch_name_for_param(p)
-        #                 # self._get_torch_id_for_param(p)
-        #                 # MODIFIED 5/3/25 END
-        #                 # If it is already in a group, but being assigned a new lr, remove from that group
-        #                 if p is param and param_group['lr'] != lr:
-        #                     # param_group['params'].remove(p)
-        #                     del param_group['params'][i]
-        #                     optimizer.add_param_group({'params': [param], 'lr': lr})
-        #             if not param_group['params']:
-        #                 optimizer.param_groups.remove(param_group)
-
-        # MODIFIED 5/5/25 NEW:
-        # Start with "base" (default) parameter assignments
-        # NOTE:  for call from constructor, this is the default set of param_groups
-        #        for call from learn() method, this is self._constructor_param_groups
-        #        use copies here as may need to delete or add a param_group and/or or params within one
-        # # MODIFIED 5/6/25 OLD:
-        # for param_group in self.optimizer.param_groups.copy():
-        # # MODIFIED 5/6/25 NEW:
-        # for param_group in optimizer.param_groups.copy():
-        # # MODIFIED 5/6/25 NEWER:
-        # for param_group in self._copy_torch_param_groups(optimizer.param_groups):
-        # # MODIFIED 5/6/25 END
-        #     # Get each param in the param_group
-        #     param_group_learning_rate = param_group['lr']
-        #     for i, param in enumerate(param_group['params'].copy()):
-        #     # MODIFIED 5/6/25 END
-        #         if param in optimizer_torch_params_specified:
-        #             specified_learning_rate = optimizer_torch_params_specified[param]
-        #             if not isinstance(specified_learning_rate, (int, float, bool, type(None))):
-        #                 raise AutodiffCompositionError(
-        #                     f"The value ('{specified_learning_rate}') for '{param}' in the dict "
-        #                     f"specified for the 'learning_rate' arg of the {source} for "
-        #                     f"'{self.composition.name}' must be an int, float or bool.")
-        #             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
-        #                     or specified_learning_rate is False):
-        #                 # Learning disabled for the Composition or the Projection
-        #                 param.requires_grad = False
-        #             else:
-        #                 # Learning is enabled for the Projection
-        #                 param.requires_grad = True
-        #                 # If learning_rate = True or None, use composition.learning_rate, else use specified value
-        #                 default_learning_rate = self.composition._runtime_learning_rate or composition.learning_rate
-        #                 if specified_learning_rate in {True, None}:
-        #                     specified_learning_rate = default_learning_rate
-        #             if specified_learning_rate != param_group['lr']:
-        #                 param_group['params'].remove(param)
-        #                 # del param_group['params'][i]
-        #                 optimizer.add_param_group({'params': [param], 'lr': specified_learning_rate})
-        #     if not param_group['params']:
-        #         optimizer.param_groups.remove(param_group)
-        # # MODIFIED 5/6/25 END
-
-        # # MODIFIED 5/6/25 NEWEST:
-        # # Get fresh copy of param_groups and assign to optimizer_params
-        # old_param_groups = optimizer.param_groups
-        # new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-        # optimizer.param_groups = new_param_groups
-        # # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimier)
-        # for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
-        #     # Get each param in the param_groups
-        #     param_group_learning_rate = old_param_group['lr']
-        #     for old_param, new_param in zip(old_param_group['params'], new_param_group['params']):
-        #         if old_param in optimizer_torch_params_specified:
-        #             specified_learning_rate = optimizer_torch_params_specified[old_param]
-        #             if not isinstance(specified_learning_rate, (int, float, bool, type(None))):
-        #                 raise AutodiffCompositionError(
-        #                     f"The value ('{specified_learning_rate}') for '{old_param}' in the dict "
-        #                     f"specified for the 'learning_rate' arg of the {source} for "
-        #                     f"'{self.composition.name}' must be an int, float or bool.")
-        #             if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
-        #                     or specified_learning_rate is False):
-        #                 # Learning disabled for the Composition or the Projection
-        #                 new_param.requires_grad = False
-        #             else:
-        #                 # Learning is enabled for the Projection
-        #                 new_param.requires_grad = True
-        #                 # If learning_rate = True or None, use composition.learning_rate, else use specified value
-        #                 default_learning_rate = self.composition._runtime_learning_rate or composition.learning_rate
-        #                 if specified_learning_rate in {True, None}:
-        #                     specified_learning_rate = default_learning_rate
-        #             if specified_learning_rate != old_param_group['lr']:
-        #                 # Move param from existing param_group to one for the specified learning_rate
-        #                 # NOTE: removal of param from param_group must be done by identity using del, since
-        #                 #       param_group.remove() is content-based and some parameters may have identical values
-        #                 del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])
-        #                                                    if p is new_param)]
-        #                 # Check if a param_group already exists for the specified learning_rate
-        #                 exisiting_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
-        #                                                                if param_group['lr'] == specified_learning_rate),
-        #                                                               None)
-        #                 if exisiting_param_group_with_specified_lr:
-        #                     # Move to exisiting param_group with specified learning_rate
-        #                     exisiting_param_group_with_specified_lr['params'].append(new_param)
-        #                 else:
-        #                     # Create new param_group for the specified learning_rate
-        #                     optimizer.add_param_group({'params': [new_param], 'lr': specified_learning_rate})
-        #
-        # # Remove any remaining empty param_groups
-        # for param_group in new_param_groups.copy():
-        #     if not param_group['params']:
-        #         optimizer.param_groups.remove(param_group)
-
-        # MODIFIED 5/6/25 HOPEFULLY FINAL:
-
         # Get fresh copy of param_groups and assign to optimizer_params
         old_param_groups = optimizer.param_groups
         new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
@@ -1097,8 +935,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     param.requires_grad = False
                 else:
                     # Learning is enabled for the Projection
-                    # BREADCRUMB: MAY NEED TO REPLACE THIS JUST GETTING THE LEARNING RATE AND NOT REQUIRING A
-                    # PROJECTION, SO THAT SUBCLASSES CAN "SPOOF" THE PRESENCE OF A PROJECTION
                     projection = self._torch_params_to_projections(old_param_groups)[param]
                     # If learning_rate = True or None, use composition.learning_rate, else use specified value
                     if specified_learning_rate is NotImplemented:
@@ -1141,9 +977,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if source == CONSTRUCTOR:
             # Store constructor-specified learning_rates (for reversion after learn())
             self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-
-        # BREADCRUMB:
-        assert True
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
         """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""

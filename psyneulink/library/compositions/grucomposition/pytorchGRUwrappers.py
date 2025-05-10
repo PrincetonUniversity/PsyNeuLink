@@ -352,12 +352,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections"""
         class DummyProjection:
+            """Provide a dummy object for access to the learning rate for a torch parameter"""
             def __init__(self, name, learning_rate):
                 self.name = name
                 self.learning_rate = learning_rate
-
             def __getattr__(self, name):
-                # raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
                 raise AttributeError(f"This object is used to convey the learning rate the torch parameters "
                                      f"corresponding to the set of {self.name} Projections of a GRUComposition, "
                                      f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
@@ -368,9 +367,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             for projection_name in names:
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection_name]
                 torch_param_long_name = self.torch_param_short_to_long_names_map[torch_param_name]
-                # torch_param = self.state_dict()[torch_param_long_name]
                 torch_param = next((p[1] for p in self.named_parameters() if p[0] == torch_param_long_name),None)
-                # BREADCRUMB:  CHECK THAT torch_param is not None HERE AND RAISE EXCEPTION IF SO
+                assert torch_param is not None, (f"PROGRAM ERROR: torch parameter for {projection_name} "
+                                                 f"not found in named_parameters() of {self.name}")
                 learning_rate = self._get_learning_rate_for_torch_param(torch_param, param_groups)
                 torch_params_to_projections.update({torch_param: DummyProjection(projection_name, learning_rate)})
         get_dict_entries(HIDDEN_PROJECTION_SETS)
