@@ -1116,7 +1116,7 @@ class AutodiffComposition(Composition):
                                       learning_rate=None,
                                       optimizer_params=None,
                                       context=None,
-                                      refresh=None):
+                                      refresh=None)->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition"""
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)

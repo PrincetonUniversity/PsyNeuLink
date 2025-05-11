@@ -792,7 +792,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 f"_constructor_param_groups but they have already been assigned.")
 
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers():
-                # BREADCRUMB: COULD BE projection-specific learning rates, so those need to be assigned
+                # BREADCRUMB: THERE COULD BE projection-specific learning rates, so those need to be assigned
                 # If user didn't provide any specs, use param_groups assigned to optimizer by default
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
                 return
@@ -805,7 +805,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
 
         # Replace any Projections in optimizer_torch_params_specified with their names
-        # BREADCRUMB: CLEAN THIS UP:
         optimizer_params_parsed = {}
         if optimizer_params_user_specs:
             optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): torch_param_tuple(k, v)
@@ -1016,9 +1015,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert True
         return new_params_group
 
-    def _get_torch_param_for_projection(self, projection:MappingProjection)->(int, torch.nn.Parameter):
+    def _get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
         """Return torch Parameter for specified Projection"""
-        param_name = self._pnl_refs_to_torch_param_names[projection.name]
+        projection_name = projection.name if isinstance(projection, MappingProjection) else projection
+        param_name = self._pnl_refs_to_torch_param_names[projection_name]
         for param_tuple in self.named_parameters():
             if param_name == param_tuple[0]:
                 return param_tuple[1]
@@ -1031,14 +1031,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if param is p:
                     return param_group['lr']
 
-    # BREADCRUMB: ADD TEST FOR THIS, INCLUDING ERROR FOR NO OPTIMIZER
-    def get_torch_learning_rate_for_projection(self, projection:MappingProjection, optimizer:torch.optim=None)->float:
+    def get_torch_learning_rate_for_projection(self,
+                                               projection:Union[str, MappingProjection],
+                                               optimizer:torch.optim=None)->float:
         """Get torch learning_rate for a Projection"""
         optimizer = optimizer or self.optimizer or self._optimizer_error('get_torch_learning_rate_for_projection')
         param = self._get_torch_param_for_projection(projection)
         return self._get_learning_rate_for_torch_param(param, optimizer.param_groups)
 
-    # BREADCRUMB: ADD TEST FOR THIS, INCLUDING ERROR FOR NO OPTIMIZER
     def torch_params_to_projections(self, optimizer:torch.optim=None)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
         # Get optimizer if not provided
@@ -1047,16 +1047,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Return dict of {torch parameter: Projection}
         return self._torch_params_to_projections(param_groups)
 
-    # BREADCRUMB: ADD TEST FOR THIS
     def projections_to_torch_params(self)->dict:
         """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
         projections_to_torch_params = {}
-        for proj in self.wrapped_projections:
+        for projection in self.wrapped_projections:
                 projections_to_torch_params.update({projection: self._get_torch_param_for_projection(projection)})
         # Call recursively on any nested PytorchCompositionWrappers,
         #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():
-            projections_to_torch_params.update(comp_wrapper._get_torch_param_for_projection(projection))
+            projections_to_torch_params.update(comp_wrapper.projections_to_torch_params())
         return projections_to_torch_params
 
     def _torch_params_to_projections(self, param_groups:list)->dict:

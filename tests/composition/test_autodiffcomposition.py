@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 import pytest
+import torch.nn
 from fontTools.mtiLib import parseSingleSubst
 
 import psyneulink as pnl
@@ -486,6 +487,44 @@ class TestAutodiffLearningRateArgs:
             outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
         assert error_msg in str(error_text.value)
 
+    def test_learning_rate_utility_functions(self):
+        import torch
+        nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1')
+        nested_mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 2')
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2, learning_rate=.3, name="NESTED PROJECTION")
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[nested_mech_1, nested_proj, nested_mech_2],)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1,
+                                           learning_rate=2.5,
+                                           name="INPUT PROJECTION")
+        output_proj = pnl.MappingProjection(nested_mech_2, outer_mech_out,
+                                            learning_rate=.13,
+                                            name="OUTPUT PROJECTION")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp')
+
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection("INPUT PROJECTION") == 2.5
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 2.5
+        assert pytorch_rep.get_torch_learning_rate_for_projection('NESTED PROJECTION') == .3
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == .3
+        assert pytorch_rep.get_torch_learning_rate_for_projection("OUTPUT PROJECTION") == .13
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .13
+
+        param_to_proj_dict = pytorch_rep.torch_params_to_projections()
+        assert len(param_to_proj_dict) == 3
+        assert all(isinstance(param, torch.nn.Parameter) for param in param_to_proj_dict.keys())
+        assert all(isinstance(proj, MappingProjection) for proj in param_to_proj_dict.values())
+
+        proj_to_param_dict = pytorch_rep.projections_to_torch_params()
+        assert len(proj_to_param_dict) == 3
+        assert all(isinstance(proj, MappingProjection) for proj in proj_to_param_dict.keys())
+        assert all(isinstance(param, torch.nn.Parameter) for param in proj_to_param_dict.values())
+
+        assert set(param_to_proj_dict.values()) == set(proj_to_param_dict.keys())
+        assert set(proj_to_param_dict.values()) == set(param_to_proj_dict.keys())
 
 # Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
 @pytest.mark.composition
