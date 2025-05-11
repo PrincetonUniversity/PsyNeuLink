@@ -287,10 +287,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
 
-        # Get projections from flattened set, so that they are all in the outer Composition
-        #   and visible by _regenerate_torch_parameter_list;
-        #   needed for call to backward() in AutodiffComposition.do_gradient_optimization
-        # BREADCRUMB: MAKE THIS A PROPERTY
         self.projection_wrappers = list(self.projections_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
@@ -364,7 +360,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _construct_projection_wrapper_maps(self, _projection_wrapper_pairs):
         self.projections_map = {k:v for k,v in _projection_wrapper_pairs}
-        self.projection_wrappers = list(self.projections_map.values())
 
     def _add_node_to_nodes_map(self, node, node_wrapper):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""
@@ -792,8 +787,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 f"_constructor_param_groups but they have already been assigned.")
 
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers():
-                # BREADCRUMB: THERE COULD BE projection-specific learning rates, so those need to be assigned
-                # If user didn't provide any specs, use param_groups assigned to optimizer by default
+                # If user didn't provide any specs, and there are no learnable Projections, not much to do;
+                # just assign default optimizer.param_groups
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
                 return
 
@@ -823,7 +818,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         projection_lr_specs.update(optimizer_params_parsed)
 
         if not projection_lr_specs:
-            # BREADCRUMP 5/4/25 - REINSTATE ANY PREVIOUS LEARNING RATES HERE
             if source == CONSTRUCTOR:
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
             return
@@ -872,8 +866,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         and self.composition._optimizer_constructor_params[param_orig_spec] is not False):
                     # Turn gradient back on
                     param.requires_grad = True
-                    # # BREADCRUMB: 5/6/25 - DOES THIS BELONG HERE?  REINSTATE?
-                    # return
                 proj_wrapper_name = self._pnl_refs_to_torch_param_names[pnl_param_name]
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
