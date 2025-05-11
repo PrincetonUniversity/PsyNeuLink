@@ -2590,9 +2590,9 @@ class EMComposition(AutodiffComposition):
         # OUTLINE:
         # factors:
         # - self.enable_learning
-        # - self.learning_rate single value or dict
-        # - self.fields dict
-        # - self.learn_field_weights single value or list
+        # - self.learning_rate (single value or dict)
+        # - self.fields (dict)
+        # - self.learn_field_weights (single value or list)
 
         # 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
         # 2. if self.learning_rate is a dict:
