@@ -1474,7 +1474,9 @@ def generate_script_from_mdf(model_input, outfile=None):
             for module in module_names.copy():
                 try:
                     friendly_name = module_friendly_name_mapping[module]
-                    comp_strs[i][j] = re.sub(f'{module}\\.', f'{friendly_name}.', comp_strs[i][j])
+                    # Use '\b' "beginning of word" to avoid mangling references
+                    # to psyneulink in dill pickled strings.
+                    comp_strs[i][j] = re.sub(f'\\b{module}\\.', f'{friendly_name}.', comp_strs[i][j])
                 except KeyError:
                     pass
 
