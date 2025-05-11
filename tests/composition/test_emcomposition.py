@@ -304,7 +304,6 @@ class TestConstruction:
         assert warning_msg_2 in str(warning[1].message)
 
 
-
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
     learn_field_weights = [True, False, .01, False, False]
@@ -341,6 +340,7 @@ class TestConstruction:
                            learn_field_weights=learn_field_weights,
                            target_fields=target_fields,
                            learning_rate=0.5)
+
         assert em.num_fields == 5
         assert em.num_keys == 3
         for actual, expected in zip(em.field_weights, [0.33333333, None, 0.66666667, 0, None]):
@@ -371,9 +371,20 @@ class TestConstruction:
         #      KEY A USES COMPOSITION DEFAULT LEARNING RATE OF .5
         #      KEY B USES INDIVIDUALLY ASSIGNED LEARNING RATE OF .01
         assert em.learn_field_weights == [True, False, .01, False, False]
-        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY A'].learnable
-        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY B'].learnable
-        assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE'].learnable
+
+        proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
+        proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']
+        proj_VAL_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE']
+
+        assert proj_KEY_A.learnable
+        assert proj_KEY_B.learnable
+        assert not proj_VAL_B.learnable
+
+        pytorch_rep = em._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
+        assert len(pytorch_rep.torch_params_to_projections()) == 23
+        assert len(pytorch_rep.projections_to_torch_params()) == 23
 
         # Validate _field_index_map
         assert em._field_index_map[[k for k in em._field_index_map.keys()
@@ -495,6 +506,7 @@ class TestConstruction:
                 # Validate alignment of field with memory
                 assert len(field.memories[0]) == [2,1,3][field.index]
 
+    # def test_learning_rate_assignments(self):
 
 
 @pytest.mark.pytorch

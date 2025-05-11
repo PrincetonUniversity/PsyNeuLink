@@ -69,7 +69,8 @@ bias vectors in its computations.
 *Learning Arguments*
 
 **enable_learning** (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
-no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called.
+no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called, and learn_rates
+are specified.
 
 **learning_rate** (float or bool): specifies the default learning_rate for the parameters of the Pytorch `GRU
 <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified for individual
@@ -80,6 +81,7 @@ If it is an int or a float, that is used as the default learning rate for the
 GRUComposition; if it is None or True, the GRUComposition's default `learning_rate <GRUComposition.learning_rate>`
 (.001) is used;
 COMMENT:
+# BREADCRUMB:
 # FIX: 4/17/25 - CHECK THAT THIS IS TRUE (AND RECONCILE WITH DESCRIPTION IN _AutodiffComposition_Learning_Rates
 if it is False, then learning will occur only for parameters for which an explicit learning_rate
 has been specified in the **optimizer_params** argument of the GRUComposition's constructor or in the call to its

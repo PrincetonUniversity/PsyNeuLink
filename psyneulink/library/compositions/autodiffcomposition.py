@@ -1130,7 +1130,8 @@ class AutodiffComposition(Composition):
         default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
         old_opt = pytorch_rep.optimizer
         if (old_opt is None or refresh) and refresh is not False:
-            # 5/7/25 BREADCRUMB: ??MOVE MUCH OF THIS TO _instantiate_optimizer()
+            # Instantiate a new optimizer if there isn't one yet and refresh is not blocked,
+            #    or there is one but refresh has been called
             if context.runmode == ContextFlags.LEARNING_MODE:
                 # If optimizer is being constructed de novo in call to learn(),
                 #    instantiate it using params specified in constructor (if any) since
@@ -1153,6 +1154,7 @@ class AutodiffComposition(Composition):
                                                                     opt_params,
                                                                     context)
         else:
+            # Otherwise, just update it
             if context.source is not ContextFlags.SHOW_GRAPH:
                 pytorch_rep._update_optimizer_params(old_opt, optimizer_params,
                                                      Context(source=ContextFlags.METHOD,
@@ -1189,9 +1191,6 @@ class AutodiffComposition(Composition):
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
-        # BREADCRUMB: IS ALL/ANY OF THIS NECESSARY OR IS IT / CAN IT BE TAKEN CARE OF IN _update_optimizer_params()?
-        self._optimizer_constructor_param_groups = optimizer.param_groups.copy()
-        pytorch_rep._previous_optimizer_param_groups = optimizer.param_groups.copy()
         return optimizer
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):

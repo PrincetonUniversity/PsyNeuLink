@@ -80,12 +80,8 @@ class PytorchShowGraph(ShowGraph):
                     receiver = projection.receiver.owner
                     if node is receiver:
                         dependencies.add(sender)
-                    # BREADCRUMB - FIX: 3/9/25 - HANDLE NODE THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                     elif (isinstance(receiver, CompositionInterfaceMechanism) and
-                          # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
-                          # BREADCRUMB - FIX: SUPPOSED TO RETRIEVE GRU NODE HERE,
-                          #      BUT NEED TO DEAL WITH INTERFERING PROJECTION FROM OUTPUT NODE
                           receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
                         dependencies.add(sender)
                     else:
