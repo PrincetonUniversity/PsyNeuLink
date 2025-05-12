@@ -367,22 +367,25 @@ class TestConstruction:
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE A' in proj.name for proj in em.projections)
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE LEARN' in proj.name for proj in em.projections)
         # Learnability and learning rate for field weights
-        # FIX: ONCE LEARNING IS FULLY IMPLEMENTED FOR FIELD WEIGHTS, VALIDATE THAT:
-        #      KEY A USES COMPOSITION DEFAULT LEARNING RATE OF .5
-        #      KEY B USES INDIVIDUALLY ASSIGNED LEARNING RATE OF .01
         assert em.learn_field_weights == [True, False, .01, False, False]
 
         proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
         proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']
-        proj_VAL_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE']
+        proj_KEY_VAL = em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE']
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
-        assert not proj_VAL_B.learnable
+        # BREADCRUMB:  SHOULD EMCOMPOSITION OR PYTORCHCOMPOSITIONWRAPPER SET THIS, OR OK TO LEAVE AS LEARNABLE?
+        assert not proj_KEY_VAL.learnable
 
         pytorch_rep = em._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) == False
+        # Assert that all non-field_weight Projections are not learnable
+        # BREADCRUMB: STILL CRASHES: NEED TO EXCLUDE MEMORY PROJECTIONS FROM LIST
+        for proj in [p for p in em.projections if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == False
         assert len(pytorch_rep.torch_params_to_projections()) == 23
         assert len(pytorch_rep.projections_to_torch_params()) == 23
 

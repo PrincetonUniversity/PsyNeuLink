@@ -240,7 +240,7 @@ that is propagated through the EMComposition.
      the dict itself is not retained as a `Parameter` or attribute of the EMComposition.
 
   The specifications provided in the **fields** argument are assigned to the corresponding Parameters of
-  the EMComposition which, alternatively, can  be specified individually using the **field_names**, **field_weights**,
+  the EMComposition which, alternatively, can  be specified directly using the **field_names**, **field_weights**,
   **learn_field_weights** and **target_fields** arguments of the EMComposition's constructor, as described below.
   However, these and the **fields** argument cannot both be used together; if both are specified, a warning is issued,
   the values specified in the **fields** dict are used, and any specifications made in the **field_names**,
@@ -293,7 +293,7 @@ that is propagated through the EMComposition.
 
     .. note::
        The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
-       to its `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
+       to the `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
        key fields (i.e., that were initially assigned non-zero field_weights) can be modified; the weights for value
        fields (i.e., ones that were initially assigned a field_weight of None) cannot be modified, and doing so raises
        an error. If a field that will be used initially as a value may later need to be used as a key, it should be
@@ -949,7 +949,8 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
+    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL,
+     DEFAULT_INPUT, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
      MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
@@ -1197,6 +1198,7 @@ class EMComposition(AutodiffComposition):
         of specificaton format). The **fields** arg replaces the **field_names**, **field_weights**
         **learn_field_weights**, and **target_fields** arguments, and specifying any of these raises an error.
 
+    # BREADCRUMB: VERIFY THAT SPECIFYING THESE AND A DICT RAISES AN ERROR, VS A WARNING AND THEY ARE IGNORED
     field_names : list or tuple : default None
         specifies the names assigned to each field in the memory_template (see `field names <EMComposition_Field_Names>`
         for details). If the **fields** argument is specified, this is not necessary and specifying raises an error.
@@ -1213,8 +1215,8 @@ class EMComposition(AutodiffComposition):
 
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
-        specified in `learn_field_weights <EMComposition.learn_field_weights>` (see `learning_rate
-        <EMComposition_Field_Weights_Learning>` for additional details).
+        specified in `fields <EMComposition.fields>` or `learn_field_weights <EMComposition.learn_field_weights>`
+        (see `learning_rate <EMComposition_Field_Weights_Learning>` for additional details).
 
     normalize_field_weights : bool : default True
         specifies whether the **fields_weights** are normalized over the number of keys, or used as absolute
@@ -2584,30 +2586,11 @@ class EMComposition(AutodiffComposition):
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
+        Convert all learning_rate specifications into standard AutodiffComposition learning_rate dict format
         """
 
         # BREADCRUMB
-        # OUTLINE:
-        # factors:
-        # - self.enable_learning
-        # - self.learning_rate (single value or dict)
-        # - self.fields (dict)
-        # - self.learn_field_weights (single value or list)
-
-        # 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
-        # 2. if self.learning_rate is a dict:
-        #    - if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
-        #    - otherwise, use whichever is numeric, and raise error if both are
-        # 3. if self.learning_rate is NOT a dict:
-        #    - create one from self.learn_field_weights:
-        #      - if both self.learning_rate and self.learn_field_weights are numveric, raise error
-        #      - otherwise, assign whichever is nueric to DEFAULT_LEARNING_RATE
-        #      - if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict
-        # 4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
-        #    - set self.learning_rate to False and issue warning (don't bother if both are False)
-
-        assert True
-
+        # # MODIFIED 5/11/25 OLD:
         for projection in self.projections:
 
             # Only allow Projections from field_weight_nodes to be learnable, and only if they are set to be learnable
@@ -2643,9 +2626,101 @@ class EMComposition(AutodiffComposition):
             else:
                 assert False, (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
 
-            # BREADCRUMB: ASSIGN PROJECTION_SPECIFIC LEARNING_RATE HERE IF SPECIFIED
             if projection.learning_mechanism:
                 projection.learning_mechanism.learning_rate = learning_rate
+
+        # # MODIFIED 5/11/25 NEW:
+        # # OUTLINE:
+        # # factors:
+        # # - self.enable_learning
+        # # - self.learning_rate (single value or dict)
+        # # - self.fields (dict)
+        # # - self.learn_field_weights (single value or list)
+        #
+        # # √ 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
+        # # 2. if self.learning_rate is a dict:
+        # #    - if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
+        # #    - otherwise, use whichever is numeric, and raise error if both are
+        # # 3. if self.learning_rate is NOT a dict:
+        # #    - create one from self.learn_field_weights:
+        # #      - if both self.learning_rate and self.learn_field_weights are numveric, raise error
+        # #      - otherwise, assign whichever is nueric to DEFAULT_LEARNING_RATE
+        # #      - if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict
+        # # 4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
+        # #    - set self.learning_rate to False and issue warning (don't bother if both are False)
+        #
+        # # BREADCRUMB: AFFIRM THAT IF self.fields WAS SPECIFIED AS A DICT,
+        # #             THAT IT HAS ALREADY BEEN PARSED AND learn_field_weights IS A LIST
+        #
+        # # Get field_weight projections and set all others to be non-learnable
+        # field_weight_projections = []
+        # for projection in self.projections:
+        #     if projection.sender.owner in self.field_weight_nodes:
+        #         field_weight_projections.append(projection)
+        #     else:
+        #         projection.learnable = False
+        #
+        # # Handle dict specification for self.learning_rate
+        # if isinstance(self.learning_rate, dict):
+        #     lr_dict = self.learning_rate
+        #     if isinstance(self.learn_field_weights, list):
+        #         # self.learning_rate and self.learn_field_weights can't both specify Projection-specific learning_rates
+        #         # BREADCRUMB: ELABORATE ERROR MESSAGE BELOW
+        #         raise EMCompositionError(f"CAN'T BOTH BE SO SPECIFIED")
+        #     if DEFAULT_LEARNING_RATE in lr_dict:
+        #         if is_numeric_scalar(lr_dict[DEFAULT_LEARNING_RATE]):
+        #             # self.learning_rate and self.learn_field_weights can't both specify a default learning_rate
+        #             if is_numeric_scalar(self.learn_fields_weights):
+        #                 raise EMCompositionError(f"CAN'T BOTH BE SO SPECIFIED")
+        #             # use self.learning_rate[DEFAULT_LEARNING_RATE] as default
+        #         else:
+        #             # use self.learn_field_weights as default since it is numeric and DEFAULT_LEARNING_RATE is not
+        #             lr_dict[DEFAULT_LEARNING_RATE] = self.learn_field_weights
+        #     else:
+        #         # use self.learn_field_weights as default since DEFAULT_LEARNING_RATE is not specified
+        #         lr_dict[DEFAULT_LEARNING_RATE] = self.learn_field_weights
+        #
+        #     # Convert all keys to Projections
+        #     lr_dict.update({key: self.projections[key] for key in lr_dict if not isinstance(key, MappingProjection)})
+        #
+        #     # Make sure all keys in self.learning_rate dict are field_weight Projections
+        #     bad_proj_specs = [proj for proj in lr_dict if proj not in field_weight_projections]
+        #     if bad_proj_specs:
+        #         # BREADCRUMB: ELABORATE ERROR MESSAGE BELOW
+        #         raise EMCompositionError(f"NOT ALLOWED TO SPECIFY LEARNING_RATE FOR NON-FIELD_WEIGHT PROJECTIONS"
+        #                                  f"{' ,'.join(bad_proj_specs)}")
+        #     # Nothing more to do
+        #     # - as unspecified field_weight Projections will be assigined the default learning_rate
+        #     # - all non-field_weight_projections have been specified as not learnable above
+        #
+        # elif isinstance(self.learn_field_weights, list):
+        #     # Construct dict for self.learning_rate from learn_field_weights if that is a list
+        #     lr_dict = {}
+        #     if self.learning_rate:
+        #         lr_dict[DEFAULT_LEARNING_RATE] = self.learning_rate
+        #     # BREADCRUMB: MAKE SURE THE FOLLOWING CoPilot CODE IS CORRECT
+        #     for i, field in enumerate(self.fields):
+        #         if field.type == FieldType.KEY:
+        #             # Get Projection for field_weight_node
+        #             proj = field.weight_node.efferents[0]
+        #             # Get learning_rate for field_weight_node
+        #             if self.learn_field_weights[i] is False:
+        #                 lr_dict[proj] = False
+        #                 # BREADCRUMB ?SET proj.learnable = False HERE
+        #                 #            OR LEAVE TO PYTORCHCOMPOSITIONWRAPPER TO SET requires_grad = False?
+        #                 proj.learnable = False
+        #             elif is_numeric_scalar(self.learn_field_weights[i]):
+        #                 lr_dict[proj] = self.learn_field_weights[i]
+        #             else:
+        #                 raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
+        #                                          f"({self.learn_field_weights[i]}) is not a valid value.")
+        # else:
+        #     # DEAL HERE WITH BOTH AS SCALAR/BOOLEAN SPECIFICATIONS
+        #     pass
+        #
+        # self.learning_rate = lr_dict
+        # MODIFIED 5/11/25 END
+
 
     def _validate_options_with_learning(self,
                                         use_gating_for_weighting,

@@ -1172,6 +1172,12 @@ class AutodiffComposition(Composition):
 
     def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context)->torch.optim.Optimizer:
 
+        if isinstance(learning_rate, dict) and not optimizer_params:
+            # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value
+            optimizer_params = learning_rate
+            learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE,
+                                                 self.parameters.learning_rate.default_value)
+            self.learning_rate = learning_rate
         if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError(f"Value ('{learning_rate}') specified in 'learning_rate' arg of the "
                                            f"learn() method for '{self.name}' must be an int, float, bool or dict.")
