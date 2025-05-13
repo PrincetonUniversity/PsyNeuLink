@@ -1,6 +1,6 @@
 import numpy as np
-
 import pytest
+from types import MappingProxyType
 
 import psyneulink as pnl
 
@@ -303,7 +303,6 @@ class TestConstruction:
         assert warning_msg_1 in str(warning[0].message)
         assert warning_msg_2 in str(warning[1].message)
 
-
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
     learn_field_weights = [True, False, .01, False, False]
@@ -381,11 +380,11 @@ class TestConstruction:
         pytorch_rep = em._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) == False
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
         # Assert that all non-field_weight Projections are not learnable
-        # BREADCRUMB: STILL CRASHES: NEED TO EXCLUDE MEMORY PROJECTIONS FROM LIST
-        for proj in [p for p in em.projections if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
-            assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == False
+        for proj in [p for p in em.pytorch_representation.wrapped_projections
+                     if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(proj) is False
         assert len(pytorch_rep.torch_params_to_projections()) == 23
         assert len(pytorch_rep.projections_to_torch_params()) == 23
 
@@ -484,10 +483,15 @@ class TestConstruction:
         elif not any(field_weights):
             with pytest.warns(UserWarning) as warning:
                 em = construct_em(field_weights)
-            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
-                           "are either None or set to 0; this will result in no retrievals "
-                           "unless/until one or more of them are changed to a positive value.")
-            assert warning_msg in str(warning[0].message)
+            assert ("All of the entries in the 'field_weights' arg for EM_Composition "
+                    "are either None or set to 0; this will result in no retrievals "
+                    "unless/until one or more of them are changed to a positive value."
+                    in str(warning[0].message))
+            if len(em.query_input_nodes)==1:
+                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to True, but it has only one key "
+                        f"('{em.query_input_nodes[0].name}') so fields_weights and learning will have no effect; "
+                        f"therefore, 'enable_learning' is being set to 'False'"
+                        in [str(warning[i].message) for i in range(len(warning))])
 
         elif any([fw == 0 for fw in field_weights]):
             with pytest.warns(UserWarning) as warning:
@@ -509,8 +513,27 @@ class TestConstruction:
                 # Validate alignment of field with memory
                 assert len(field.memories[0]) == [2,1,3][field.index]
 
-    # def test_learning_rate_assignments(self):
-
+    test_args_for_learning_rate_errors = [
+        ("learning_rate_dict",
+         {'WEIGHT to WEIGHTED MATCH for A': 3.4},
+         {'A': (1.2, 3.4, True), 'B': (None, False, True), 'C': (0, True, True),
+          'D': (7.8, False, True), 'E': (5.6, True, True)
+          },
+         "The 'learning_rate' arg for 'EM COMP' is specified as a dict, which is not supported for an EMComposition;  "
+         "use either its 'fields' arg or its 'learn_field_weights' arg instead."),
+    ]
+    @pytest.mark.parametrize('condition, learning_rate, fields, error_message', test_args_for_learning_rate_errors,
+                             ids=[x[0] for x in test_args_for_learning_rate_errors])
+    def test_learning_rate_specification_errors(self, condition, learning_rate, fields, error_message):
+        learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
+        fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
+        with pytest.raises(EMCompositionError) as error_text:
+            em = EMComposition(name= "EM COMP",
+                               memory_template=(5,1),
+                               memory_capacity=1,
+                               learning_rate=learning_rate,
+                               fields=fields)
+        assert error_message in error_text.value.error_value
 
 @pytest.mark.pytorch
 class TestExecution:
