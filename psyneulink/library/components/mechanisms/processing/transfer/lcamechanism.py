@@ -568,8 +568,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                                f"args of {self.__class__} can't both be specified.")
             else:
                 termination_threshold = threshold
-        else:
-            termination_threshold = termination_threshold or self.parameters.termination_threshold.default_value
 
         termination_measure = kwargs.pop(TERMINATION_MEASURE, None)
         termination_comparison_op = kwargs.pop(TERMINATION_COMPARISION_OP, None)
