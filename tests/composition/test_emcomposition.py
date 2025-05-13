@@ -267,7 +267,7 @@ class TestConstruction:
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
 
-    def test_fields_arg(self):
+    def test_fields_arg_and_associated_errors(self):
 
         em = EMComposition(memory_template=(5,1),
                            memory_capacity=1,
@@ -283,26 +283,46 @@ class TestConstruction:
         assert (em.learn_field_weights == [3.4, False, True, False, True]).all()
         np.testing.assert_allclose(em.target_fields, [True, True, True, True, True])
 
-        # # Test wrong number of entries
+        # # Test error for wrong number of entries
         with pytest.raises(EMCompositionError) as error_text:
             EMComposition(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
         assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
                                                 f"of 'EM_Composition' does not match the number of fields in its "
                                                 f"memory (3).")
-        # Test dual specification of fields and corresponding args and learning specified for value field
-        # BREADCRUMB: AUGMENT TO ALSO TEST FOR  field-names, learn_field_weights, and target_fields
+
+        # Test error for dual specification of fields and corresponding args
+        field_names = [['A', 'B'], None, None, None]
+        field_weights = [None, [10, 11.0], None, None]
+        learn_field_weights = [None, None, [True, False], None]
+        target_fields = [None, None, None, [True, False]]
+        comp_name = ["COMP_FN", "COMP_FW", "COMP_LFW", "COMP_TF"]
+        for fn, fw, lfw, tf, cn in zip(field_names, field_weights, learn_field_weights, target_fields, comp_name):
+            with pytest.warns(UserWarning) as warning:
+                EMComposition(name=cn,
+                              memory_template=(2,1),
+                              memory_capacity=1,
+                              fields={'A': (1.2, 3.4, True),
+                                      'B': (None, True, True)},
+                              field_names=fn,
+                              field_weights=fw,
+                              learn_field_weights=lfw,
+                              target_fields=tf)
+            assert (f"The 'fields' arg for '{cn}' was specified, so any of the "
+                    f"'field_names', 'field_weights',  'learn_field_weights' or "
+                    f"'target_fields' args will be ignored." in str(warning[0].message))
+
+        # Test error on specification of learning for value field
         with pytest.warns(UserWarning) as warning:
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4, True),
-                                  'B': (None, True, True)},
-                          field_weights=[10, 11.0])
-        warning_msg_1 = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
-                         f"'field_weights',  'learn_field_weights' or 'target_fields' args will be ignored.")
-        warning_msg_2 = (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
-                         f"'EM_Composition', but it is not allowed for value fields; it will be ignored.")
-        assert warning_msg_1 in str(warning[0].message)
-        assert warning_msg_2 in str(warning[1].message)
+                                  'B': (None, True, True)})
+        assert (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
+                f"'EM_Composition', but it is not allowed for value fields; it will be ignored."
+                 in str(warning[0].message))
+        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to True, but it has only one key "
+                "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
+                "'enable_learning' is being set to 'False'" in str(warning[1].message))
 
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
@@ -375,7 +395,6 @@ class TestConstruction:
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
-        # BREADCRUMB:  SHOULD EMCOMPOSITION OR PYTORCHCOMPOSITIONWRAPPER SET THIS, OR OK TO LEAVE AS LEARNABLE?
         assert not proj_KEY_VAL.learnable
 
         pytorch_rep = em._build_pytorch_representation()

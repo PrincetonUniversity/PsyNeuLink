@@ -2089,7 +2089,6 @@ class EMComposition(AutodiffComposition):
         # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
             for i, lfw in enumerate(learn_field_weights):
-                # BREADCRUMB: AFFIRM THERE IS A TEST FOR THIS WARNING:
                 if parsed_field_weights[i] is None and lfw is not False:
                     warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
                                   f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
@@ -2656,8 +2655,6 @@ class EMComposition(AutodiffComposition):
                     # Get learning_rate for field_weight_node
                     if self.learn_field_weights[i] is False:
                         lr_dict[proj] = False
-                        # BREADCRUMB ?SET proj.learnable = False HERE
-                        #            OR LEAVE TO PYTORCHCOMPOSITIONWRAPPER TO SET requires_grad = False?
                         proj.learnable = False
                     elif is_numeric_scalar(self.learn_field_weights[i]):
                         lr_dict[proj] = self.learn_field_weights[i]
