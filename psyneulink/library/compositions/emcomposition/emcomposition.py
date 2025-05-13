@@ -1205,20 +1205,21 @@ class EMComposition(AutodiffComposition):
         of specificaton format). The **fields** arg replaces the **field_names**, **field_weights**
         **learn_field_weights**, and **target_fields** arguments, and specifying any of these raises an error.
 
-    # BREADCRUMB: VERIFY THAT SPECIFYING THESE AND A DICT RAISES AN ERROR, VS A WARNING AND THEY ARE IGNORED
     field_names : list or tuple : default None
         specifies the names assigned to each field in the memory_template (see `field names <EMComposition_Field_Names>`
-        for details). If the **fields** argument is specified, this is not necessary and specifying raises an error.
+        for details). If the **fields** argument is specified, specifying **field_names** is not necessary and
+        doing so raises a warning.
 
     field_weights : list or tuple : default (1,0)
         specifies the relative weight assigned to each key when matching an item in memory (see `field weights
-        <EMComposition_Field_Weights>` for additional details). If the **fields** argument is specified, this
-        is not necessary and specifying raises an error.
+        <EMComposition_Field_Weights>` for additional details). If the **fields** argument is specified, specifying
+        **field_weights** is not necessary and doing so raises a warning.
 
     learn_field_weights : bool or list[bool, int, float]: default False
         specifies whether the `field_weights <EMComposition.field_weights>` are learnable and, if so, optionally what
         the learning_rate is for each field (see `learn_field_weights <EMComposition_Field_Weights_Learning>` for
-        specifications). If the **fields** argument is specified, this is not necessary and specifying raises an error.
+        specifications). If the **fields** argument is specified, specifying **learn_field_weights** is not necessary,
+        and doing so raises a warning.
 
     learning_rate : float : default .01
         specifies the default learning_rate for `field_weights <EMComposition.field_weights>` not
@@ -1272,7 +1273,7 @@ class EMComposition(AutodiffComposition):
         of the EMComposition.  If it is a list, each item must be ``True`` or ``False`` and the number of items
         must be equal to the number of `fields <EMComposition_Fields> specified (see `Target Fields
          <EMComposition_Target_Fields>` for additional details). If the **fields** argument is specified,
-         this is not necessary and specifying raises an error.
+         specifying **target_fields** is not necessary and doing so raises a warning.
 
     # 7/10/24 FIX: STILL TRUE?  DOES IT PRECLUDE USE OF EMComposition as a nested Composition??
     .. technical_note::
@@ -2088,6 +2089,7 @@ class EMComposition(AutodiffComposition):
         # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
             for i, lfw in enumerate(learn_field_weights):
+                # BREADCRUMB: AFFIRM THERE IS A TEST FOR THIS WARNING:
                 if parsed_field_weights[i] is None and lfw is not False:
                     warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
                                   f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
@@ -2594,72 +2596,26 @@ class EMComposition(AutodiffComposition):
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
-        Convert all learning_rate specifications into standard AutodiffComposition learning_rate dict format
+        Convert any learning_rate specifications into standard AutodiffComposition learning_rate dict format
+
+        Relevant attributes:
+        - self.enable_learning
+        - self.learning_rate (single value or dict)
+        - self.fields (dict, that may contain entries for field-specific learning_rates)
+        - self.learn_field_weights (list of field-specific learning_rates)
+
+        √ 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
+        2. if self.learning_rate is a dict:
+           - if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
+           - otherwise, use whichever is numeric, and raise error if both are
+        3. if self.learning_rate is NOT a dict:
+           - create one from self.learn_field_weights:
+             - if both self.learning_rate and self.learn_field_weights are numveric, raise error
+             - otherwise, assign whichever is nueric to DEFAULT_LEARNING_RATE
+             - if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict
+        4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
+           - set self.learning_rate to False and issue warning (don't bother if both are False)
         """
-
-        # BREADCRUMB
-        # # MODIFIED 5/11/25 OLD:
-        # for projection in self.projections:
-        #
-        #     # Only allow Projections from field_weight_nodes to be learnable, and only if they are set to be learnable
-        #     projection_is_field_weight = projection.sender.owner in self.field_weight_nodes
-        #     if self.enable_learning is False or not projection_is_field_weight:
-        #         projection.learnable = False
-        #         projection.learning_rate = False
-        #         continue
-        #
-        #     # If EMComposition's learn_field_weights is specified as None or True,
-        #     #   use AutodiffComposition default learning_rate as default for learnable field_weights
-        #     if self.learn_field_weights is None:
-        #         learning_rate = True
-        #     # Default learning_rate specified for EMComposition:
-        #     elif isinstance(self.learn_field_weights, (bool, int, float)):
-        #         learning_rate = self.learn_field_weights
-        #     # Individual learning_rates specified for each field (i.e., self.learn_field_weights is a list )
-        #     else:
-        #         assert isinstance(self.learn_field_weights, (list, np.ndarray)), \
-        #             (f"PROGRAM ERROR: expected 'self.field_weights' ({self.learn_field_weights}) "
-        #              f"for {self.name} to be a list.")
-        #         learning_rate = self.learn_field_weights[self._field_index_map[projection]]
-        #
-        #     if learning_rate is False:
-        #         projection.learnable = False
-        #         continue
-        #     elif learning_rate is True:
-        #         # Default (EMComposition's learning_rate) is used for all field_weight Projections:
-        #         learning_rate = self.learning_rate
-        #         projection.learnable = True
-        #     elif is_numeric_scalar(learning_rate):
-        #         projection.learning_rate = learning_rate
-        #         projection.learnable = True
-        #     else:
-        #         assert False, (f"PROGRAM ERROR: learning_rate for {projection.sender.owner.name} is not a valid value.")
-        #
-        #     if projection.learning_mechanism:
-        #         projection.learning_mechanism.learning_rate = learning_rate
-
-        # MODIFIED 5/11/25 NEW:
-        # OUTLINE:
-        # factors:
-        # - self.enable_learning
-        # - self.learning_rate (single value or dict)
-        # - self.fields (dict)
-        # - self.learn_field_weights (single value or list)
-
-        # √ 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
-        # 2. if self.learning_rate is a dict:
-        #    - if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
-        #    - otherwise, use whichever is numeric, and raise error if both are
-        # 3. if self.learning_rate is NOT a dict:
-        #    - create one from self.learn_field_weights:
-        #      - if both self.learning_rate and self.learn_field_weights are numveric, raise error
-        #      - otherwise, assign whichever is nueric to DEFAULT_LEARNING_RATE
-        #      - if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict
-        # 4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
-        #    - set self.learning_rate to False and issue warning (don't bother if both are False)
-
-        # BREADCRUMB: AFFIRM THAT IF self.fields WAS SPECIFIED AS A DICT,
-        #             THAT IT HAS ALREADY BEEN PARSED AND learn_field_weights IS A LIST
 
         # Get field_weight projections and set all others to be non-learnable
         field_weight_projections = []
@@ -2672,8 +2628,6 @@ class EMComposition(AutodiffComposition):
 
         constructor_learning_rate = self._optimizer_constructor_params
 
-        # BREADCRUMB: CAN constructor_learning_rate EVER BE ANYTHNING BUT A DICT (E.G. A float PASSED FROM
-        #  self.learning_rate?
         # Handle dict specification for self.learning_rate
         if constructor_learning_rate and isinstance(constructor_learning_rate, dict):
             raise EMCompositionError(f"The 'learning_rate' arg for '{self.name}' is specified as a dict, "
@@ -2682,7 +2636,8 @@ class EMComposition(AutodiffComposition):
 
         if self.enable_learning and isinstance(self.learn_field_weights, (list, np.ndarray)):
             if all(item for item in self.learn_field_weights if item is not False):
-                # BREADCRUMB: 1) DEAL WITH SPECIFICATION OF LEARN_FIELD_WEIGHTS WHEN ONLY ONE KEY
+                # If there is only a single key, there are no field_weight nodes or Projections,
+                #   therefore learning is not possible, so warn and disable learning
                 if len(self.query_input_nodes) == 1:
                     warnings.warn(f"The 'enable_learning' arg of '{self.name}' is set to True, but it has only one key "
                                   f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
@@ -2694,7 +2649,6 @@ class EMComposition(AutodiffComposition):
             lr_dict = {}
             if constructor_learning_rate:
                 lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate
-            # BREADCRUMB: DEAL WITH ONLY SINGLE KEY (AND THEREFORE NOT WEIGHT OR LEARNING POSSIBLE
             for i, field in enumerate(self.fields):
                 if field.type == FieldType.KEY:
                     # Get Projection for field_weight_node
@@ -2712,11 +2666,8 @@ class EMComposition(AutodiffComposition):
                                                  f"({self.learn_field_weights[i]}) is not a valid value.")
             self._optimizer_constructor_params = lr_dict
         else:
-            # BREADCRUMB: DEAL HERE WITH BOTH AS SCALAR/BOOLEAN SPECIFICATIONS
-            assert not self.enable_learning, "NON LIST VALUE FOR EM learn_field_weights"
-
-        # MODIFIED 5/11/25 END
-
+            assert not self.enable_learning, \
+                "PROGRAM ERROR: self.learn_field_weights is not a list, but should be by this point"
 
     def _validate_options_with_learning(self,
                                         use_gating_for_weighting,
@@ -2732,8 +2683,6 @@ class EMComposition(AutodiffComposition):
             warnings.warn(f"The 'softmax_choice' arg of '{self.name}' is set to '{softmax_choice}' with "
                           f"'enable_learning' set to True; this will generate an error if its "
                           f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
-
-
     #endregion
 
     # *****************************************************************************************************************

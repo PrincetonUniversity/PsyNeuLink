@@ -290,6 +290,7 @@ class TestConstruction:
                                                 f"of 'EM_Composition' does not match the number of fields in its "
                                                 f"memory (3).")
         # Test dual specification of fields and corresponding args and learning specified for value field
+        # BREADCRUMB: AUGMENT TO ALSO TEST FOR  field-names, learn_field_weights, and target_fields
         with pytest.warns(UserWarning) as warning:
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
