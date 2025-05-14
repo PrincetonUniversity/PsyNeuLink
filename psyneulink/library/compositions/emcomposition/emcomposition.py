@@ -951,8 +951,6 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -2597,6 +2595,7 @@ class EMComposition(AutodiffComposition):
         """Set learning-related attributes for Node and Projections
         Convert any learning_rate specifications into standard AutodiffComposition learning_rate dict format
 
+        BREADCRUMB:
         Relevant attributes:
         - self.enable_learning
         - self.learning_rate (single value or dict)
@@ -2643,6 +2642,12 @@ class EMComposition(AutodiffComposition):
                                   f"effect; therefore, 'enable_learning' is being set to 'False'")
                     self.enable_learning = False
                     return
+
+            # BREADCRUMB: OK HERE?
+            if all(item is False for item in self.learn_field_weights):
+                # If learning for all field weights are False, set enable_learning to False and be done
+                self.enable_learning = False
+                return
 
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}

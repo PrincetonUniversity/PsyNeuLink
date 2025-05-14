@@ -998,10 +998,10 @@ class TestExecution:
         state_input_layer = pnl.ProcessingMechanism(name='STATE', input_shapes=11)
         previous_state_layer = pnl.ProcessingMechanism(name='PREVIOUS STATE', input_shapes=11)
         context_layer = pnl.TransferMechanism(name='CONTEXT',
-                                          input_shapes=11,
-                                          function=pnl.Tanh,
-                                          integrator_mode=True,
-                                          integration_rate=.69)
+                                              input_shapes=11,
+                                              function=pnl.Tanh,
+                                              integrator_mode=True,
+                                              integration_rate=.69)
         em = EMComposition(name='EM',
                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
                            memory_fill=(0,.0001),
@@ -1034,52 +1034,52 @@ class TestExecution:
         # Pathways
         state_to_previous_state_pathway = [state_input_layer,
                                            pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
-                                                             learnable=False),
+                                                                 learnable=False),
                                            previous_state_layer]
         state_to_context_pathway = [state_input_layer,
                                     pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
-                                                      learnable=False),
+                                                          learnable=False),
                                     context_layer]
         state_to_em_pathway = [state_input_layer,
                                pnl.MappingProjection(sender=state_input_layer,
-                                                 receiver=em.nodes['STATE' + VALUE],
-                                                 matrix=pnl.IDENTITY_MATRIX,
-                                                 learnable=False),
+                                                     receiver=em.nodes['STATE' + VALUE],
+                                                     matrix=pnl.IDENTITY_MATRIX,
+                                                     learnable=False),
                                em]
         previous_state_to_em_pathway = [previous_state_layer,
                                         pnl.MappingProjection(sender=previous_state_layer,
-                                                          receiver=em.nodes['PREVIOUS_STATE' + QUERY],
-                                                          matrix=pnl.IDENTITY_MATRIX,
-                                                          learnable=False),
+                                                              receiver=em.nodes['PREVIOUS_STATE' + QUERY],
+                                                              matrix=pnl.IDENTITY_MATRIX,
+                                                              learnable=False),
                                         em]
         context_learning_pathway = [context_layer,
                                     pnl.MappingProjection(sender=context_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      receiver=em.nodes['CONTEXT' + QUERY],
-                                                      learnable=True),
+                                                          matrix=pnl.IDENTITY_MATRIX,
+                                                          receiver=em.nodes['CONTEXT' + QUERY],
+                                                          learnable=True),
                                     em,
                                     pnl.MappingProjection(sender=em.nodes['STATE' + RETRIEVED],
-                                                      receiver=prediction_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      learnable=False),
+                                                          receiver=prediction_layer,
+                                                          matrix=pnl.IDENTITY_MATRIX,
+                                                          learnable=False),
                                     prediction_layer]
 
         # Composition
         EGO = pnl.AutodiffComposition([state_to_previous_state_pathway,
-                                        state_to_context_pathway,
-                                        state_to_em_pathway,
-                                        previous_state_to_em_pathway,
-                                        context_learning_pathway],
-                                       learning_rate=.5,
-                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
-                                       device=pnl.CPU)
+                                       state_to_context_pathway,
+                                       state_to_em_pathway,
+                                       previous_state_to_em_pathway,
+                                       context_learning_pathway],
+                                      learning_rate=.5,
+                                      loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
+                                      device=pnl.CPU)
 
         learning_components = EGO.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         assert len(learning_components) == 1
         assert learning_components[0].name == 'TARGET for PREDICTION'
         EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                  receiver=learning_components[0],
-                                                  learnable=False))
+                                                 receiver=learning_components[0],
+                                                 learnable=False))
 
         EGO.scheduler.add_condition(em, pnl.BeforeNodes(previous_state_layer, context_layer))
 
