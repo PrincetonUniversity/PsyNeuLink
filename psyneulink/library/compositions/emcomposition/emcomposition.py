@@ -1648,8 +1648,8 @@ class EMComposition(AutodiffComposition):
 
         def _validate_learn_field_weights(self, learn_field_weights):
             if isinstance(learn_field_weights, (list, np.ndarray)):
-                if not all(isinstance(item, (bool, int, float)) for item in learn_field_weights):
-                    return f"can only contains bools, ints or floats as entries."
+                if not all(isinstance(item, (bool, int, float, type(None))) for item in learn_field_weights):
+                    return f"can only contains bools, ints, floats or None as entries."
             elif not isinstance(learn_field_weights, bool):
                 return f"must be a bool or list of bools, ints and/or floats."
 
@@ -2666,6 +2666,8 @@ class EMComposition(AutodiffComposition):
                         proj.learnable = False
                     elif is_numeric_scalar(self.learn_field_weights[i]):
                         lr_dict[proj] = self.learn_field_weights[i]
+                    elif self.learn_field_weights[i] is None:
+                        continue
                     else:
                         raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
                                                  f"({self.learn_field_weights[i]}) is not a valid value.")

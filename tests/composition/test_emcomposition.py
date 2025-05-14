@@ -990,9 +990,12 @@ class TestExecution:
                 np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
-    def test_backpropagation_of_error_in_learning(self):
+    @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_true', 'fw_learning_false'])
+    def test_backpropagation_of_error_in_learning(self, field_weight_learning):
         """This test is based on the EGO CSW Model"""
-        # BREADCRUMB: INCLUDE VERSION THAT ENABLES LEARNING FOR FIELD WEIGHTS
+        # BREADCRUMB:
+        #   - DEBUG VERSION BELOW THAT ENABLES LEARNING FOR FIELD WEIGHTS
+        #   - BENCHMARK AGAINST Younes' VERSION OF EGO MODEL
 
         import torch
         torch.manual_seed(0)
@@ -1003,6 +1006,12 @@ class TestExecution:
                                               function=pnl.Tanh,
                                               integrator_mode=True,
                                               integration_rate=.69)
+
+        # Use default learning_rate (.5) if field_weight_learning is True
+        state_fw_learning_rate = None if field_weight_learning else False
+        previous_state_fw_learning_rate = None if field_weight_learning else False
+        context_fw_learning_rate = None if field_weight_learning else False
+
         em = EMComposition(name='EM',
                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
                            memory_fill=(0,.0001),
@@ -1011,13 +1020,13 @@ class TestExecution:
                            softmax_gain=10,
                            softmax_threshold=0.001,
                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
-                                               pnl.LEARN_FIELD_WEIGHT: False,
+                                               pnl.LEARN_FIELD_WEIGHT: state_fw_learning_rate,
                                                pnl.TARGET_FIELD: True},
                                      'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
-                                                        pnl.LEARN_FIELD_WEIGHT: False,
+                                                        pnl.LEARN_FIELD_WEIGHT: previous_state_fw_learning_rate,
                                                         pnl.TARGET_FIELD: False},
                                      'CONTEXT': {pnl.FIELD_WEIGHT:.5,
-                                                 pnl.LEARN_FIELD_WEIGHT: False,
+                                                 pnl.LEARN_FIELD_WEIGHT: context_fw_learning_rate,
                                                  pnl.TARGET_FIELD: False}},
                            # field_names=['STATE', 'PREVIOUS_STATE', 'CONTEXT'],
                            # field_weights=[None, .5, .5],
@@ -1140,16 +1149,29 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
         result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
-        expected = [
-            [0.00000000e+00, 1.35933540e-03, 1.13114366e-03, 2.20590015e-03,
-             1.09314885e-03, 9.87722281e-01, 1.10371450e-03, 1.72925210e-03,
-             1.17352360e-03, 2.48170027e-03, 0.00000000e+00],
-            [0.00000000e+00, -6.54396065e-02,  1.41905061e-03, -2.08500295e-01,
-             -5.03985394e-05, -5.90196484e-01, -5.33017075e-03, -2.33024404e-03,
-             -2.02730870e-02, -1.58091223e-02,  0.00000000e+00],
-            [0.00000000e+00, 1.19576382e-03, 1.28593645e-03, 1.35933540e-03,
-             1.13114366e-03, 2.20590015e-03, 1.09314885e-03, 9.87722281e-01,
-             1.10371450e-03, 2.90277570e-03, 0.00000000e+00]]
+
+        if not field_weight_learning:
+            expected = [
+                [0.00000000e+00, 1.35933540e-03, 1.13114366e-03, 2.20590015e-03,
+                 1.09314885e-03, 9.87722281e-01, 1.10371450e-03, 1.72925210e-03,
+                 1.17352360e-03, 2.48170027e-03, 0.00000000e+00],
+                [0.00000000e+00, -6.54396065e-02,  1.41905061e-03, -2.08500295e-01,
+                 -5.03985394e-05, -5.90196484e-01, -5.33017075e-03, -2.33024404e-03,
+                 -2.02730870e-02, -1.58091223e-02,  0.00000000e+00],
+                [0.00000000e+00, 1.19576382e-03, 1.28593645e-03, 1.35933540e-03,
+                 1.13114366e-03, 2.20590015e-03, 1.09314885e-03, 9.87722281e-01,
+                 1.10371450e-03, 2.90277570e-03, 0.00000000e+00]]
+        else:
+            expected = [
+                [0.0, 0.0013185058635934287, 0.0010979596798407303, 0.0021472929479148884,
+                 0.00106198938249545, 0.9880943201343146, 0.0010704834766642585,
+                 0.0016896968298659707, 0.0011299829272538645, 0.0023897687580566812, 0.0],
+                [0.0, -0.06546896244908867, 0.001400684915746888, -0.20858043591528252,
+                 4.5915968927291804e-05, -0.5904922793121579, -0.004935076679686682,
+                 -0.0025183797807793794, -0.018900702892145304, -0.014885003696963925, 0.0],
+                [0.0, 0.0011512317384539093, 0.0012385370196027722, 0.0013185058635934287,
+                 0.0010979596798407303, 0.0021472929479148884, 0.00106198938249545,
+                 0.9880943201343146, 0.0010704834766642585, 0.002819679757119835, 0.0]]
         np.testing.assert_allclose(result, expected)
 
         # Plot (for during debugging):
