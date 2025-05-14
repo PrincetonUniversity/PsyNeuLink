@@ -2645,7 +2645,10 @@ class EMComposition(AutodiffComposition):
 
             # BREADCRUMB: OK HERE?
             if all(item is False for item in self.learn_field_weights):
-                # If learning for all field weights are False, set enable_learning to False and be done
+                # If learning for all field weights are False, set all learning_rates and enable_learning to False
+                for projection in field_weight_projections:
+                    projection.learnable = False
+                    projection.learning_rate = False
                 self.enable_learning = False
                 return
 
