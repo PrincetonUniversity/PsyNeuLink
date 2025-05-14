@@ -992,6 +992,7 @@ class TestExecution:
     @pytest.mark.composition
     def test_backpropagation_of_error_in_learning(self):
         """This test is based on the EGO CSW Model"""
+        # BREADCRUMB: INCLUDE VERSION THAT ENABLES LEARNING FOR FIELD WEIGHTS
 
         import torch
         torch.manual_seed(0)
