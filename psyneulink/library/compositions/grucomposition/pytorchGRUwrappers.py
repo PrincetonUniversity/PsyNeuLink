@@ -39,7 +39,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                  outer_creator=None,
                  dtype=None,
                  subclass_components=None,
-                 context=None):
+                 context=None,
+                 base_context=Context(execution_id=None),
+                 ):
 
         self._early_init(composition, device)
 
@@ -56,7 +58,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                               _projection_wrapper_pairs,
                                               execution_sets,
                                               Context()),
-                         context=context)
+                         context=context,
+                         base_context=base_context,
+                         )
 
         # The following have to be after super(), so that they can be assigned as attributes of torch.nn.module
 
@@ -162,7 +166,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                              outer_comp,
                              outer_comp_pytorch_rep,
                              access,
-                             context)->Tuple:
+                             context,
+                             base_context=Context(execution_id=None),
+                             ) -> Tuple:
         """Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
         Replace GRUComposition's nodes with gru_mech and projections to and from it.
         """
@@ -180,6 +186,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                              learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.afferents[0]
+            else:
+                direct_proj._initialize_from_context(context, base_context)
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
@@ -193,6 +201,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 learnable=pnl_proj.learnable)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.efferents[0]
+            else:
+                direct_proj._initialize_from_context(context, base_context)
             # gru_mech has only one output_port
             sender_port_idx = 0
 

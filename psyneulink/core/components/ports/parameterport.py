@@ -384,7 +384,13 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
     LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
     PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
-from psyneulink.core.globals.parameters import ParameterAlias, SharedParameter, check_user_specified
+from psyneulink.core.globals.parameters import (
+    ParameterAlias,
+    ParameterInvalidSourceError,
+    ParameterNoValueError,
+    SharedParameter,
+    check_user_specified,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
@@ -1035,6 +1041,8 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 if not isinstance(p._owner._owner, ComponentsMeta):
                     raise
                 func = None
+            except (ParameterInvalidSourceError, ParameterNoValueError):
+                func = None
 
             if func is None:
                 func = p.default_value
@@ -1063,7 +1071,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         res = obj
         for p in param_list[0:index + 1]:
             param = getattr(res.parameters, p)
-            func = param._get(context)
+            func = param._get(context, fallback_value=None)
 
             if func is None:
                 func = param.default_value

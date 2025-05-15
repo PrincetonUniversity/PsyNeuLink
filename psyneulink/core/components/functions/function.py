@@ -166,7 +166,7 @@ from psyneulink.core.globals.keywords import (
     MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -276,7 +276,7 @@ def get_param_value_for_keyword(owner, keyword):
         # return None
         else:
             raise FunctionError(e)
-    except AttributeError:
+    except (AttributeError, ParameterNoValueError):
         # prefs is not always created when this is called, so check
         try:
             owner.prefs

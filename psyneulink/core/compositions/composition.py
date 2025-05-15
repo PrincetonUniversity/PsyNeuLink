@@ -3090,7 +3090,12 @@ from psyneulink.core.globals.keywords import \
      SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS,
      TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
 from psyneulink.core.globals.log import CompositionLog, LogCondition
-from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter,
+    ParametersBase,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
@@ -11060,7 +11065,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
               for the movie file; it is automatically appended with '.gif'.
-_
+
             * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
               construct the animation in separate gif files, in addition to the file containing the animation.
 
@@ -11558,6 +11563,8 @@ _
             call_after_minibatch=None,
             context: Optional[Context] = None,
             *args,
+            base_context: Context = Context(execution_id=None),
+            skip_initialization: bool = False,
             **kwargs
     )->list:
         """
@@ -11682,6 +11689,16 @@ _
         """
         from psyneulink.library.compositions import CompositionRunner
         from psyneulink.library.compositions import AutodiffComposition
+
+        if (
+            not skip_initialization
+            and (
+                context is None
+                or ContextFlags.SIMULATION_MODE not in context.runmode
+            )
+        ):
+            self._initialize_from_context(context, base_context, override=False)
+
         runner = CompositionRunner(self)
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
@@ -11700,18 +11717,20 @@ _
         self._check_nested_target_mechs()
         context.execution_phase = execution_phase_at_entry
 
+        if minibatch_size is None:
+            minibatch_size = self.parameters.minibatch_size._get(context)
+
+        if optimizations_per_minibatch is None:
+            optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
+
         result = runner.run_learning(
             inputs=inputs,
             targets=targets,
             num_trials=num_trials,
             epochs=epochs,
             learning_rate=learning_rate,
-            minibatch_size=minibatch_size
-                            or self.parameters.minibatch_size._get(context)
-                            or self.parameters.minibatch_size.default_value,
-            optimizations_per_minibatch=optimizations_per_minibatch
-                                        or self.parameters.optimizations_per_minibatch._get(context)
-                                        or self.parameters.optimizations_per_minibatch.default_value,
+            minibatch_size=minibatch_size,
+            optimizations_per_minibatch=optimizations_per_minibatch,
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
@@ -11719,6 +11738,7 @@ _
             call_after_minibatch=call_after_minibatch,
             context=context,
             execution_mode=execution_mode,
+            skip_initialization=skip_initialization,
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
@@ -13319,7 +13339,7 @@ _
         if from_parameter is None:
             self._compilation_data.execution.delete(context)
         else:
-            execution_dict = self._compilation_data.execution.get(context)
+            execution_dict = self._compilation_data.execution._get(context, fallback_value=None)
             if execution_dict is None:
                 return
 

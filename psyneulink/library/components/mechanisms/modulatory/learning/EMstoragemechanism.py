@@ -176,7 +176,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
      MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, FunctionParameter, copy_parameter_value
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified, FunctionParameter, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
@@ -200,7 +200,10 @@ def _memory_matrix_getter(owning_component=None, context=None)->list:
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
     """
     if owning_component.is_initializing:
-        if owning_component.learning_signals is None or owning_component.input_ports is None:
+        try:
+            if owning_component.learning_signals is None or owning_component.input_ports is None:
+                return None
+        except ParameterNoValueError:
             return None
 
     num_fields = len(owning_component.input_ports)

@@ -307,12 +307,21 @@ class CompExecution(CUDAExecution):
 
         self.active_executions.add(self)
 
+        # storing this for pytorch_representation in
+        # gen_autodiffcomp_exec instead of changing all
+        # signatures of _comp_ex.[cuda_]run below to pass
+        # context through.
+        # TODO: consider if pytorch_representation can
+        # simply be stateful=False and manage its own
+        # contexts/Parameter values as needed
+        composition._context_for_pytorch = context
+
     def __del__(self):
         self.active_executions.discard(self)
 
     @staticmethod
     def get(composition, context:Context, additional_tags=frozenset()):
-        executions = composition._compilation_data.execution._get(context)
+        executions = composition._compilation_data.execution._get(context, fallback_value=None)
         if executions is None:
             executions = dict()
             composition._compilation_data.execution._set(executions, context)
@@ -321,6 +330,8 @@ class CompExecution(CUDAExecution):
         if execution is None:
             execution = pnlvm.CompExecution(composition, context, additional_tags=additional_tags)
             executions[additional_tags] = execution
+
+        composition._context_for_pytorch = context
 
         return execution
 

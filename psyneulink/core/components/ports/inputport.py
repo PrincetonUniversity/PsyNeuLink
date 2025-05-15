@@ -1265,7 +1265,7 @@ class InputPort(Port_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = np.array(projection_spec.port.value).ndim
+                            sender_dim = np.array(projection_spec.port.defaults.value).ndim
                         except AttributeError as e:
                             if (isinstance(projection_spec.port, type) or
                                      projection_spec.port.initialization_status == ContextFlags.DEFERRED_INIT):
@@ -1302,7 +1302,7 @@ class InputPort(Port_Base):
                                 continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
-                            sender_shape = np.array(projection_spec.port.value).shape
+                            sender_shape = np.array(projection_spec.port.defaults.value).shape
                             variable_item = np.zeros(sender_shape)
                             # If variable_item HASN'T been specified, or it is same shape as any previous ones,
                             #     use sender's value
