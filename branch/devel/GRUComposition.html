@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GRUComposition &mdash; PsyNeuLink 0.16.1.0+93.ge54f3b7e0 documentation</title>
+  <title>GRUComposition &mdash; PsyNeuLink 0.16.1.0+107.gfeb43f38e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+93
+                  0.16.1.0+107
                 </div>
               
             
@@ -967,13 +967,13 @@ bias parameter of the PyTorch <a class="reference external" href="https://pytorc
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchGRUCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PytorchGRUCompositionWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_creator=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass_components=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper" title="Link to this definition">¶</a></dt>
 <dd><p>Wrapper for GRUComposition as a Pytorch Module
 Manage the exchange of the Composition’s Projection <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix"><span class="std std-ref">Matrices</span></a>
 and the Pytorch GRU Module’s parameters, and return its output value.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch">
-<span class="sig-name descname"><span class="pre">_flatten_for_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pnl_proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sndr_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rcvr_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_comp_pytorch_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_flatten_for_pytorch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pnl_proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sndr_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rcvr_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested_mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_comp_pytorch_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch" title="Link to this definition">¶</a></dt>
 <dd><p>Return PytorchProjectionWrappers for Projections to/from GRUComposition to nested Composition
 Replace GRUComposition’s nodes with gru_mech and projections to and from it.</p>
 <dl class="field-list simple">
@@ -1332,7 +1332,7 @@ Return a list of all pathways from input_node -&gt; output node</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=bb8a5817"></script>
+         <script src="_static/documentation_options.js?v=de63fa9a"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
