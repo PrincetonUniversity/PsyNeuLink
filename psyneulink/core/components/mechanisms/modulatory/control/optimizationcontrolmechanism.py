@@ -1209,7 +1209,10 @@ def _state_feature_values_getter(owning_component=None, context=None):
               and not owning_component.composition._is_in_composition(spec)):
             # spec is not in ocm.composition
             state_feature_value = _deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
-        elif state_input_port.parameters.value._get(context) is not None:
+        elif (
+            state_input_port.parameters.value._has_value(context)
+            and state_input_port.parameters.value._get(context) is not None
+        ):
             # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
         else:
@@ -1228,7 +1231,7 @@ class OptimizationControlMechanismError(ControlMechanismError):
 def _control_allocation_search_space_getter(owning_component=None, context=None):
     search_space = owning_component.parameters.search_space._get(context)
     if search_space is None:
-        return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
+        return [c.parameters.allocation_samples._get(context, fallback_value=None) for c in owning_component.control_signals]
     else:
         return search_space
 

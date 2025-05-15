@@ -631,8 +631,8 @@ from psyneulink.core.globals.keywords import \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
     REFERENCE_VALUE, SEPARATE, INPUT_SHAPES, VALUE
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified
+from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_list, convert_to_np_array
@@ -714,13 +714,16 @@ def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
         costs = convert_all_elements_to_np_array([
-            c.compute_costs(c.parameters.value._get(context), context=context)
+            (
+                c.compute_costs(c.parameters.value._get(context), context=context)
+                if c.initialization_status != ContextFlags.DEFERRED_INIT else None
+            )
             for c in owning_component.control_signals
             if hasattr(c, 'compute_costs')
         ])  # GatingSignals don't have cost fcts
         return costs
 
-    except TypeError:
+    except (ParameterNoValueError, TypeError):
         return None
 
 def _outcome_getter(owning_component=None, context=None):
@@ -728,7 +731,7 @@ def _outcome_getter(owning_component=None, context=None):
     try:
         return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports],
                         dytpe=object)
-    except (AttributeError, TypeError):
+    except (AttributeError, ParameterNoValueError, TypeError):
         return None
 
 def _net_outcome_getter(owning_component=None, context=None):
@@ -739,7 +742,7 @@ def _net_outcome_getter(owning_component=None, context=None):
             c.parameters.outcome._get(context),
             c.combine_costs()
         )
-    except TypeError:
+    except (ParameterNoValueError, TypeError):
         return np.array([0])
 
 def _control_allocation_getter(owning_component=None, context=None):

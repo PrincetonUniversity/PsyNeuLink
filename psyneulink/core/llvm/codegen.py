@@ -835,6 +835,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             wrapper = ctx.get_node_assembly(composition, node)
             is_finished_callbacks[node] = (wrapper, args)
 
+        for node in composition.nodes:
+            node._context_for_pytorch = composition._context_for_pytorch
 
         # Resetting internal TRIAL/PASS/TIME_STEP clock for each node
         # also resets TIME_STEP counter for input_CIM and parameter_CIM
@@ -1169,8 +1171,10 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
-    composition._build_pytorch_representation(context=composition.default_execution_id)
-    pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
+
+    context = composition._context_for_pytorch
+    composition._build_pytorch_representation(context)
+    pytorch_model = composition.parameters.pytorch_representation.get(context)
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 

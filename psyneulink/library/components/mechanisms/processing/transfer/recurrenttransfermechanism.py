@@ -213,7 +213,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     (AUTO, ENERGY, ENTROPY, FUNCTION, HETERO, HOLLOW_MATRIX, INPUT_PORT,
      MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT)
-from psyneulink.core.globals.parameters import Parameter, SharedParameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, SharedParameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -256,7 +256,7 @@ def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=N
         a = get_auto_matrix(owning_component.parameters.auto._get(context), owning_component.recurrent_size)
         c = get_hetero_matrix(owning_component.parameters.hetero._get(context), owning_component.recurrent_size)
         return a + c
-    except TypeError:
+    except (ParameterNoValueError, TypeError):
         return None
 
 

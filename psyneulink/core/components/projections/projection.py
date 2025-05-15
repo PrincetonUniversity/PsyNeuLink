@@ -426,7 +426,13 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter,
+    ParameterInvalidSourceError,
+    ParameterNoValueError,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -867,12 +873,20 @@ class Projection_Base(Projection):
         # If Projection has a matrix parameter, it is specified as a keyword arg in the constructor,
         #    and sender and receiver have been instantiated, then implement it:
         if hasattr(self.parameters, MATRIX) and self.parameters.matrix._user_specified:
-            matrix = self.parameters.matrix.get(context)
-            if is_matrix_keyword(matrix):
-                if self.sender_instantiated and self.receiver_instantiated:
-                    self.parameters.matrix.set(get_matrix(self.matrix, len(self.sender.value),
-                                                          len(self.receiver.variable)),
-                                               context)
+            try:
+                matrix = self.parameters.matrix._get(context)
+            except ParameterInvalidSourceError:
+                pass
+            else:
+                if (
+                    is_matrix_keyword(matrix)
+                    and self.sender_instantiated
+                    and self.receiver_instantiated
+                ):
+                    matrix = get_matrix(
+                        self.matrix, len(self.sender.value), len(self.receiver.variable)
+                    )
+                    self.parameters.matrix._set(matrix, context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
@@ -1134,7 +1148,11 @@ class Projection_Base(Projection):
     @property
     def _dependent_components(self):
         res = super()._dependent_components
-        res.extend(self.parameter_ports)
+        try:
+            res.extend(self.parameter_ports)
+        except AttributeError:
+            # when in DEFERRED_INIT, _parameter_ports doesn't exist yet
+            pass
         if isinstance(self.sender, Component):
             res.append(self.sender)
         return res
@@ -1211,7 +1229,7 @@ class Projection_Base(Projection):
 
         if (
             simple_edge_format
-            and self.function is not None
+            and self.parameters.function.get(fallback_value=None) is not None
             and not self.function._is_identity(defaults=True)
         ):
             edge_node = ProcessingMechanism(
@@ -1261,7 +1279,7 @@ class Projection_Base(Projection):
             metadata = self._mdf_metadata
             try:
                 metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict(self.function.as_mdf_model())
-            except AttributeError:
+            except (AttributeError, ParameterNoValueError):
                 # projection is in deferred init, special handling here?
                 pass
 

@@ -231,7 +231,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  outer_creator=None,
                  dtype=None,
                  subclass_components=None,
-                 context=None):
+                 context=None,
+                 base_context=Context(execution_id=None),
+                 ):
 
         super(PytorchCompositionWrapper, self).__init__()
 
@@ -240,7 +242,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Instantiate standard PytorchWrappers for Mechanisms and Projections, and execution_sets used in forward()
             _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context)
             self._construct_node_wrapper_maps(_node_wrapper_pairs)
-            _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context)
+            _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context, base_context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
             self.execution_sets, execution_context = self._get_execution_sets(composition, context)
 
@@ -418,7 +420,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return _node_wrapper_pairs
 
-    def _instantiate_pytorch_projection_wrappers(self, composition, device, context)->list:
+    def _instantiate_pytorch_projection_wrappers(self, composition, device, context, base_context=Context(execution_id=None)) -> list:
         """Instantiate PytorchProjectionWrappers for Projections in the Composition being wrapped
         Assign Projections for outermost Composition (including any that are nested within it at any level)
         Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
@@ -445,7 +447,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
-                pnl_proj, proj_name, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, device, context)
+                pnl_proj, proj_name, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, context, base_context)
                 # # use = [LEARNING, SYNCH, SHOW_PYTORCH]
                 # use = [LEARNING, SYNCH]
 
@@ -484,7 +486,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return proj_wrappers_pairs
 
-    def _handle_nested_comp(self, projection:MappingProjection, device:str, context:Context)->tuple:
+    def _handle_nested_comp(
+        self,
+        projection: MappingProjection,
+        context: Context,
+        base_context: Context = Context(execution_id=None),
+    ) -> tuple:
         """Flatten nested Composition and assign Projections to/from it to outermost Composition
         This method is called when a Projection is to/from a CIM in a nested Composition that is not in the current
         Composition, and is needed for learning.
@@ -513,7 +520,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                  self.composition,
                                                                  self,
                                                                  ENTER_NESTED,
-                                                                 context))
+                                                                 context,
+                                                                 base_context,
+                                                                 )
+            )
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
 
@@ -569,7 +579,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                              outer_comp,
                              outer_comp_pytorch_rep,
                              access,
-                             context)->tuple:
+                             context,
+                             base_context=Context(execution_id=None),
+                             ) -> tuple:
         proj_sndr_wrapper = None
         proj_rcvr_wrapper = None
         use = [LEARNING, SYNCH]
@@ -610,6 +622,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                if proj.receiver is destination_rcvr_port][0]
                 pnl_proj.learnable = direct_proj.learnable
                 pnl_proj.learning_rate = direct_proj.learning_rate
+            else:
+                direct_proj._initialize_from_context(context, base_context)
+
             if direct_proj not in self.projection_wrappers:
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
@@ -653,6 +668,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                if proj.sender is source_sndr_port][0]
                 pnl_proj.learnable = direct_proj.learnable
                 pnl_proj.learning_rate = direct_proj.learning_rate
+            else:
+                direct_proj._initialize_from_context(context, base_context)
+
             if direct_proj not in self.projection_wrappers:
                 proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                         pnl_proj=pnl_proj,
@@ -765,7 +783,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         source = (LEARN_METHOD if (context.source == ContextFlags.METHOD
                                    and context.runmode == ContextFlags.LEARNING_MODE)
                   else CONSTRUCTOR)
-        
+
         if source == LEARN_METHOD:
             # _constructor_param_groups should have been assigned in constructor
             assert self._constructor_param_groups, (
@@ -2079,7 +2097,10 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        if projection.parameters.has_initializers._get(context) and projection.parameters.value.initializer:
+        if (
+            projection.parameters.has_initializers._get(context)
+            and projection.parameters.value.initializer
+        ):
             self.default_value = projection.parameters.value.initializer.get(context)
         else:
             self.default_value = projection.defaults.value
