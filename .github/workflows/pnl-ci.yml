@@ -193,3 +193,15 @@ jobs:
           ${{ steps.install.outputs.wheel }}
           ${{ steps.install.outputs.sdist }}
         retention-days: 2
+
+    - name: Stop running browsers
+      shell: pwsh
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+        Get-Process;
+        Write-Output 'Stopping msedge'
+        Stop-Process -Name 'msedge' -Force -PassThru
+        Write-Output 'Waiting for msedge to stop'
+        Wait-Process -Name 'msedge' -Timeout 60 -PassThru
+        Write-Output 'Remaining processes'
+        Get-Process
