@@ -1124,8 +1124,10 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
-            model = self.pytorch_composition_wrapper_type(composition=self, device=self.device, context=context, base_context=base_context)
-
+            model = self.pytorch_composition_wrapper_type(composition=self,
+                                                          device=self.device,
+                                                          context=context,
+                                                          base_context=base_context)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer function
