@@ -77,9 +77,8 @@ are specified.
 parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its `learn
 <AutodiffComposition.learn>` method (see `AutodiffComposition_Learning_Rates` for details of specification).
 
-If it is an int or a float, that is used as the default learning rate for the
-GRUComposition; if it is None or True, the GRUComposition's default `learning_rate <GRUComposition.learning_rate>`
-(.001) is used;
+If it is float or an int, that is used as the default learning rate for the GRUComposition; if it is None or True,
+the GRUComposition's default `learning_rate <GRUComposition.learning_rate>` (.001) is used;
 COMMENT:
 # BREADCRUMB:
 # FIX: 4/17/25 - CHECK THAT THIS IS TRUE (AND RECONCILE WITH DESCRIPTION IN _AutodiffComposition_Learning_Rates

@@ -37,8 +37,8 @@ from psyneulink.core.compositions.composition import Composition, CompositionInt
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
-                                              LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
+from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, EPOCH,
+                                              INPUTS, LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
                                               NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
                                               SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -763,6 +763,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
         """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
+        BREADCRUMB: UPDATE->
         Relevant data structures:
             projections_learning_rates: {Projection.name: learning_rate}
             self.composition._optimizer_params: {Projection or Projection.name: lr}
@@ -817,6 +818,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
 
+        run_time_default_learning_rate = optimizer_params_user_specs.pop(DEFAULT_LEARNING_RATE, None)
+
         # Replace any Projections in optimizer_torch_params_specified with their names
         optimizer_params_parsed = {}
         if optimizer_params_user_specs:
@@ -835,7 +838,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
 
-        if not projection_lr_specs:
+        if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
             return
@@ -944,7 +947,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
                         # Use either run_time learning_rate or learning_rate for Composition, giving precedence
                         #   to one to which the Projection belongs if it is in a nested Composition
-                        specified_learning_rate = (composition._runtime_learning_rate
+                        specified_learning_rate = (run_time_default_learning_rate
                                                    or proj_wrapper.composition.learning_rate
                                                    or composition.learning_rate)
 
@@ -994,7 +997,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
                                                                                                context,
                                                                                                nested=True)
-
         if nested:
             return specs_to_validate
         if specs_to_validate:

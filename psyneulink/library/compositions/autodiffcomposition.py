@@ -1121,6 +1121,7 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition"""
+        optimizer_params = optimizer_params or {}
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
@@ -1142,28 +1143,32 @@ class AutodiffComposition(Composition):
                 #    instantiate it using params specified in constructor (if any) since
                 #   - need those implemented in a params_group that is reverted back to after execution of learn()
                 #   - the ones specified in the call to learn() will be applied in call to _update_optimizer_params()
-                pytorch_rep.optimizer = self._instantiate_optimizer(refresh,
-                                                                    default_learning_rate,
+                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     self._optimizer_constructor_params,
                                                                     context)
                 # Then update optimizer params with any specified in the call to learn()
                 if optimizer_params:
-                    pytorch_rep._update_optimizer_params(pytorch_rep.optimizer, optimizer_params,
+                    pytorch_rep._update_optimizer_params(pytorch_rep.optimizer,
+                                                         optimizer_params,
                                                          Context(source=ContextFlags.METHOD,
                                                                  runmode=context.runmode))
             else:
                 # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
                 opt_params = optimizer_params or self._optimizer_constructor_params
-                pytorch_rep.optimizer = self._instantiate_optimizer(refresh,
-                                                                    default_learning_rate,
+                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
                                                                     context)
         else:
+            # Don't bother updating for call to show_graph()
+            if context.source is ContextFlags.SHOW_GRAPH:
+                pass
             # Otherwise, just update it
-            if context.source is not ContextFlags.SHOW_GRAPH:
-                pytorch_rep._update_optimizer_params(old_opt, optimizer_params,
-                                                     Context(source=ContextFlags.METHOD,
-                                                             runmode=context.runmode))
+            if self._runtime_learning_rate is not None:
+                optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+            pytorch_rep._update_optimizer_params(old_opt,
+                                                 optimizer_params,
+                                                 Context(source=ContextFlags.METHOD,
+                                                         runmode=context.runmode))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1175,7 +1180,7 @@ class AutodiffComposition(Composition):
 
         return pytorch_rep
 
-    def _instantiate_optimizer(self, refresh, learning_rate, optimizer_params, context)->torch.optim.Optimizer:
+    def _instantiate_optimizer(self, learning_rate, optimizer_params, context)->torch.optim.Optimizer:
 
         if isinstance(learning_rate, dict) and not optimizer_params:
             # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value

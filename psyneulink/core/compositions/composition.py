@@ -1102,18 +1102,6 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
       `learn <Composition.learn>` method; a dict can also be used to specify the **learning_rate** argument of the
       `learn <Composition.learn>` method, which overrides all other specifications, but applies only for that execution.
 
-  COMMENT:
-  # BREADCRUMB: 4/26/25:  REWORK FOR NESTED COMPOSITION
-
-  .. _Composition_Learning_Nested:
-
-  .. note::
-     If any **learning_rate** specifiations are included in the constructor for a nested AutodiffComposition, those
-     specifications are incorporated into the outer Composition; however, if there any specifications for the same
-     Projections in the **learning_rate** argument of the constructor or the learn() method for the outer Composition,
-     those take precedence.
-  COMMENT
-
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::
@@ -1140,26 +1128,19 @@ higher level, more general ones;  more specifically:
 
   * *learn()* method specifications take precedence over those made in constructors;
 
-  * *inner* Composition specifications take precedence over those for ones wihtin which they are nested, for cases
+  * *inner* Composition specifications take precedence over those for ones within which they are nested, for cases
     in which learning is supported for nested Compositions (see `note <Composition_Learning_Nested>` above for
     learning and `nested Compositions <Composition_Nested>`).
 
-Below is a complete listing, indicating their precedence in determining the learning_rate for a Projection used at
-execution.
-
-BREADCRUMB: 5/7/25
-    NOTE RE: INNER PROJ ALWAYS USING INNER COMP LR;  IF WANT IT TO MATCH OUTER, HAS TO BE SPECIFIED EXPLICITLY
-    NOTE RE: PASSING OPTIMIZER PARAMS TO LEARN BEFORE _build_pytorch_representation HAS BEEN CALLED:
-             WILL STILL USE ANY PASSED TO CONSTRUCTOR (OR DEFAULTS) AS BASE VALUES, THAT WILL BE REVERTED TO
-             AFTER CALL TO LEARN() METHOD.
-
+Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
+determining the learning_rate for a Projection used at execution:
 
 .. table::
 
    +--------------------------------------------------------------------------------------------------------------------------------------+
    |                          **Learning Rate Precedence Hierarchy**                                                                      |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
-   |  **Highest**:  |  `Composition.learn` method dict specifying Projection-specific learning_rate(s)                                    |
+   |  **Highest**:  |  `Composition.learn()` method dict specifying Projection-specific learning_rate(s)                                  |
    |                |    ``my_composition.learn(learning_rate={my_projection:val})`` (applies only during that execution)                 |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  MappingProjection in Composition constructor dict                                                                  |
@@ -1192,6 +1173,22 @@ BREADCRUMB: 5/7/25
    |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (*after* Composition assginment)   |
    | **No effect**: |    ``my_projection.learning_rate=val`` (see `note <Composition_Learning_Rate_Assignment_After_Construction>` above) |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
+
+   .. hint::
+      If the learning_rate of a Projecdtion in a `nested Composition <Composoition_Nested>` is not specified, it is
+      assigned the default learning_rate for the nested Composition to which it belongs; if such Projections should
+      be assigned the learning_rate of the outer Composition, then that value should be specified in the
+      **learning_rate** argument for the constructor of the nested Composition.
+
+BREADCRUMB:
+
+   .. note::
+      Specifying the **learing_rate** arg in a call to the `learn() <Composition.learn>` method of an
+      `AutodiffComposition` before its _build_pytorch_representation() method has been called will be used
+             WILL STILL USE ANY PASSED TO CONSTRUCTOR (OR DEFAULTS) AS BASE VALUES, THAT WILL BE REVERTED TO
+             AFTER CALL TO LEARN() METHOD.
+
+
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -11766,10 +11763,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
             learning_rate : float, int or bool : default None
-                specifies the learning_rate used by all `learnable <MappingProjection.learnable>` MappingProjections
-                in the Composition when its learn() method is called.  This overrides the `learning_rate` specified
-                for any individual Projections at construction, but only applies for the current execution of
-                the learn method (see `Composition_Learning_Rate` for additional details).
+                specifies the learning_rate used by `learnable <MappingProjection.learnable>` MappingProjections
+                in the Composition during execution of the learn() method.  This overrides the default `learning_rate
+                <Composition.learning_rate>` specified for the Composition, applies only to Projections for which
+                individual learning_rates have not been specified, and only during the current execution of the learn()
+                method (see `Composition_Learning_Rate` for additional details).
 
             minibatch_size : int (default=1)
                 specifies the number of inputs used to calculate the `error_signal <LearningMechanism.error_signal>`
@@ -11863,19 +11861,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(learning_rate, dict):
                 # learning_rate dict specification is not (yet) allowed for learn() method of Composition
                 raise CompositionError(f"The 'learning_rate' arg in a call to learn for '{self.name}' is a dict, which "
-                                       f"which is not currently supported for a Composition; use an AutodiffComposition, "
+                                       f"is not currently supported for a Composition; use an AutodiffComposition, "
                                        f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
                                        f"argument the constructor(s) for the corresponding MappingProjection(s).")
             if self._learning_rates_dict:
                 # dict should be empty if all specifications were valid and
-                # thus dispatched in calls to_assign_learning_rates()
-                if len(self._learning_rates_dict) == 1:
-                    err_msg = (f"The following entry appears in the dict specified for the 'learning_rate' arg of "
-                               f"'{self.name}' but its key is not a Projection or the name of one in that Composition:")
-                else:
-                    err_msg = (f"The following entries appear in the dict specified for the 'learning_rate' arg "
-                               f"of '{self.name}' but their keys are not Projections or the names of ones in that "
-                               f"Composition:")
+                # thus dispatched in calls to assign_learning_rates()
+                singular = ["entry appears", "its key is not a Projection", "name of one"]
+                plural = ["entries appear", "their keys are not Projections", "names of ones"]
+                filler = singular if len(self._learning_rates_dict) == 1 else plural
+                err_msg = (f"The following {filler[0]} in the dict specified for the 'learning_rate' arg of "
+                           f"'{self.name}' but {filler[1]} or the {filler[2]} in that Composition:")
                 raise CompositionError(err_msg + f" '{' ,'.join(list(self._learning_rates_dict.keys()))}'.")
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
