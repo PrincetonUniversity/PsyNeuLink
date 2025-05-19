@@ -790,6 +790,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{composition.name} but the _constructor_param_groups "
                 f"for its pytorch_representation have not been constructed.")
+            self.enable_learning = False
             # revert to learning_rate assignments made in constructor
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             if not optimizer_params_user_specs:
@@ -819,6 +820,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
         torch_param_tuple = namedtuple('ParamTuple', "orig_spec, value")
 
         run_time_default_learning_rate = optimizer_params_user_specs.pop(DEFAULT_LEARNING_RATE, None)
+        # # BREADCRUMB: REFACTOR THIS SO THAT IT ONLY OCCURS IF ALL PROJECTION LEARNING_RATES ARE FALSE (CHECK AT END)
+        # if run_time_default_learning_rate is False:
+        #     warnings.warn(f"The 'learning_rate' arg for the learn() method of '{composition.name}' is specified "
+        #                   f"as 'False', which means no learning will occur during execution of the method.")
 
         # Replace any Projections in optimizer_torch_params_specified with their names
         optimizer_params_parsed = {}
@@ -894,16 +899,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
                         f"the {source} for '{self.composition.name}' is not learnable; check that its 'learnable' "
                         f"attribute is set to 'True' and its learning_rate is not 'False', or remove from it the dict.")
-                elif proj_wrapper.projection.learnable:
+                else:
                     # param was set to False in call to constructor but has been assigned a learning_rate in learn()
                     raise AutodiffCompositionError(
                         f"The 'learning_rate' for Projection '{pnl_param_name}' was set to 'False' in the constructor "
                         f"for '{self.composition.name}', but is being assigned an active learning_rate ({param_val}) "
                         f"in the {source} for the Composition; either that specification must be removed, or the "
                         f"specification of the 'learning_rate' of 'False' in the constructor must be changed or removed.")
-                else:
-                    assert False, (f"PROGRAM ERROR: {torch_param_name} is not a learnable torch parameter even though "
-                                   f"it is associated with a learnable Projection ('{pnl_param_name}').")
 
             # IMPLEMENTATION NOTE: see above
             # if torch_param_slice:
@@ -912,44 +914,68 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             optimizer_torch_params_specified[param] = projection_lr_specs[pnl_param_name].value
 
+
+        # Process *every* parameter in the optimizer's param_groups
         # Get fresh copy of param_groups and assign to optimizer_params
         old_param_groups = optimizer.param_groups
         new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         optimizer.param_groups = new_param_groups
+        all_requires_grads_false = True
+        # BREADCRUMB:  ??RESTORE THE FOLLOWING:
+        # MODIFIED 5/19/25 OLD:
         # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimizer)
+        # MODIFIED 5/19/25 NEW:
+        # MODIFIED 5/19/25 END
         for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
             # Get each param in the param_groups
             param_group_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
-                # Get learning_rate specified for the parameter by the user; if not specified, assign 'NotImplemented'
-                #  (since 'None' is a valid specification)
-                specified_learning_rate = optimizer_torch_params_specified[param] \
-                    if param in optimizer_torch_params_specified else NotImplemented
+                specified_learning_rate = run_time_default_learning_rate
+                # Get learning_rate specified for the parameter by the user;
+                # if not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
+                if specified_learning_rate is None:
+                    specified_learning_rate = optimizer_torch_params_specified[param] \
+                        if param in optimizer_torch_params_specified else NotImplemented
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
                         f"The value ('{specified_learning_rate}') for '{param}' in the dict "
                         f"specified for the 'learning_rate' arg of the {source} for "
                         f"'{self.composition.name}' must be an int, float or bool.")
+                projection = self._torch_params_to_projections(old_param_groups)[param]
+                proj_wrapper_name = self._pnl_refs_to_torch_param_names[projection.name]
+                proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
+                # Get projection's Composition in case it is Nested (to give precedence to that below)
+                proj_composition = proj_wrapper.composition
+                # BREADCRUMB:  SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
+                        or proj_composition.learning_rate is False or projection.learning_rate is False
                         or specified_learning_rate is False):
                     # Learning disabled for the Composition or the Projection
+                    specified_learning_rate = False
+                    # MODIFIED 5/19/25 NEW:
+                    # BREADCRUMB: IS THIS OK?  WILL IT BE RESET TO ORIGINAL SPEC AFTER LEARN?
+                    projection.learning_rate = False
+                    # MODIFIED 5/19/25 END
                     param.requires_grad = False
                 else:
+                    # BREADCRUMB: THIS SHOULD BE MOVED ABOVE SO THAT PROJECTON'S COMPOSITION CAN BE REFERENCED
                     # Learning is enabled for the Projection
-                    projection = self._torch_params_to_projections(old_param_groups)[param]
                     # If learning_rate = True or None, use composition.learning_rate, else use specified value
                     if specified_learning_rate is NotImplemented:
                         specified_learning_rate = projection.learning_rate
                     # Otherwise, use learning_rate specified at run time or in constructor for Composition
                     param.requires_grad = False if specified_learning_rate is False else True
+                    # BREADCRUMB: Composition or Projection specification of False still not taking precedence below:
                     if specified_learning_rate in {True, None}:
-                        proj_wrapper_name = self._pnl_refs_to_torch_param_names[projection.name]
-                        proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
-                        # Use either run_time learning_rate or learning_rate for Composition, giving precedence
-                        #   to one to which the Projection belongs if it is in a nested Composition
-                        specified_learning_rate = (run_time_default_learning_rate
-                                                   or proj_wrapper.composition.learning_rate
-                                                   or composition.learning_rate)
+                        if proj_composition.learning_rate is False or composition.learning_rate is False:
+                            # Composition or Projection specification of False takes precedence over runtime spec
+                            specified_learning_rate = False
+                        else:
+                            # Use either run_time learning_rate or learning_rate for Composition, giving precedence
+                            #   to one to which the Projection belongs if it is in a nested Composition
+                            specified_learning_rate = (run_time_default_learning_rate
+                                                       or proj_composition.learning_rate
+                                                       or composition.learning_rate)
 
                     assert specified_learning_rate not in (None, NotImplemented),\
                         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"
@@ -969,6 +995,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     else:
                         # Create new param_group for the specified learning_rate
                         optimizer.add_param_group({'params': [param], 'lr': specified_learning_rate})
+
+                #BREADCRUMB: ?MOVE THIS param FOR LOOP BELOW:
+                if specified_learning_rate is not False:
+                    all_requires_grads_false = False
+
+        #BREADCRUMB: MOVE THIS TO END?
+        if all_requires_grads_false:
+            warning_msg =  ("they are specified in its learn() method" if source == CONSTRUCTOR
+                            else "during this execution of its learn() method")
+            warnings.warn(f"The learning_rates for all Projections in '{composition.name}' are 'False,' "
+                          f"which means no learning will occur {warning_msg}.")
 
         # Remove any remaining empty param_groups
         for param_group in new_param_groups.copy():

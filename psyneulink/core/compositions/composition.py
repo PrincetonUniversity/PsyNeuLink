@@ -1122,7 +1122,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
 As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
 general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
-higher level, more general ones;  more specifically:
+higher level, more general ones, and that False always takes precedence.  More specifically:
 
   * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
 
@@ -1130,8 +1130,8 @@ higher level, more general ones;  more specifically:
 
   * *inner* Composition specifications take precedence over those for ones within which they are nested, for cases
     in which learning is supported for nested Compositions (see `note <Composition_Learning_Nested>` above for
-    learning and `nested Compositions <Composition_Nested>`).
-
+    learning and `nested Compositions <Composition_Nested>`)
+    
 Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
 determining the learning_rate for a Projection used at execution:
 
@@ -1175,19 +1175,15 @@ determining the learning_rate for a Projection used at execution:
    +----------------+---------------------------------------------------------------------------------------------------------------------+
 
    .. hint::
-      If the learning_rate of a Projecdtion in a `nested Composition <Composoition_Nested>` is not specified, it is
-      assigned the default learning_rate for the nested Composition to which it belongs; if such Projections should
-      be assigned the learning_rate of the outer Composition, then that value should be specified in the
-      **learning_rate** argument for the constructor of the nested Composition.
-
-BREADCRUMB:
+      If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
+      assigned the default learning_rate for the nested Composition to which it belongs, and not any outer ones;
+      if nested Projections should be assigned the learning_rate of an outer Composition, then that value should be
+      specified in the **learning_rate** argument for the constructor of the nested Composition.
 
    .. note::
-      Specifying the **learing_rate** arg in a call to the `learn() <Composition.learn>` method of an
-      `AutodiffComposition` before its _build_pytorch_representation() method has been called will be used
-             WILL STILL USE ANY PASSED TO CONSTRUCTOR (OR DEFAULTS) AS BASE VALUES, THAT WILL BE REVERTED TO
-             AFTER CALL TO LEARN() METHOD.
-
+      `enable_learning <Composition.enable_learning>` (for a Composition) and `learnable <MappingProjection.learnable>`
+      (for Projections) take precedence over any other assignments; if either is ``False``, then no learning takes place
+      for that object and, for Compositions, all objects nested within it.
 
 
 .. _Composition_Learning_AutodiffComposition:

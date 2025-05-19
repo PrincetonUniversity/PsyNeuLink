@@ -1365,6 +1365,14 @@ class AutodiffComposition(Composition):
 
     def autodiff_backward(self, minibatch_loss, context):
         """Calculate gradients and apply to PyTorch model parameters (weights)"""
+
+        # # MODIFIED 5/19/25 OLD:
+        # if self._runtime_learning_rate is False:
+        # MODIFIED 5/19/25 NEW:
+        if not self.enable_learning:
+        # MODIFIED 5/19/25 END
+            return
+
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
         optimizer = pytorch_rep.optimizer
 
@@ -1374,7 +1382,6 @@ class AutodiffComposition(Composition):
         minibatch_loss.backward(retain_graph=not self.force_no_retain_graph)
         # Update weights and copy to PNL
         optimizer.step()
-        assert True
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
