@@ -291,72 +291,73 @@ def main():
     print("Running simulation...")
     steps = 0
     start_time = timeit.default_timer()
-    #agent_comp.show_graph(show_node_structure=True)
+    # agent_comp.show_graph(show_node_structure=True)
+    agent_comp.show_graph()
     #agent_comp.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch)
-    for _ in range(num_trials):
-        observation = env.reset()
-        while True:
-            if PNL_COMPILE:
-                BIN_EXECUTE = 'LLVM'
-            else:
-                BIN_EXECUTE = 'Python'
-            # Format
-            # input_array = [[observation[0]], [observation[1]], [-1], [-1],
-            #                [observation[4]], [observation[5]]]
-            # FIX: JDC TEMP FIX ("()" and "False" in observation[4] and observation[5])
-            #      TO AVOID FOLLOWING ERROR:
-            #      "Input for 'STATE INPUT' of KEYS AND DOORS COMPOSITION ([[0], [3], [-1], [-1], [()],[False]]) badly shaped for multiple InputPorts"
-            input_array = [[observation[0]], [observation[1]], [-1], [-1], [0], [0]]
-            if num_doors > 1:
-                input_array[2] = (x for x in observation[2])
-            if num_keys > 1:
-                input_array[3] = (x for x in observation[3])
-
-            # Get teacher-forced actions for the current observation
-            teacher_actions = get_teacher_actions(input_array)
-            # Build the inputs dictionary:
-            targets = agent_comp.get_target_nodes()
-            inputs = {state_input: input_array,
-                      targets[0]: [[teacher_actions[0]]],
-                      targets[1]: [[teacher_actions[1]]],
-                      targets[2]: [[teacher_actions[2]]],
-                      targets[3]: [[teacher_actions[3]]]}
-
-            learning_results = agent_comp.learn(
-                inputs=inputs,
-                epochs=1,
-                learning_rate=0.01
-            )
-
-            # Optionally, print the loss if available.
-            if learning_results is not None and isinstance(learning_results, (list, tuple)) and len(
-                    learning_results) > 0:
-                loss = learning_results[0]
-                print(f"Loss: {loss}")
-                total_loss += loss
-
-            # Run the agent composition using state_input as the input mechanism
-            execution = agent_comp.run(
-                inputs=inputs
-            )
-
-            dx_val = float(instruct_em.nodes["DX [RETRIEVED]"].value[0])
-            dy_val = float(instruct_em.nodes["DY [RETRIEVED]"].value[0])
-            open_action_val = float(instruct_em.nodes["OPEN ACTION [RETRIEVED]"].value[0])
-            pickup_action_val = float(instruct_em.nodes["PICKUP [RETRIEVED]"].value[0])
-
-
-            observation, reward, done = env.step(dx_val, dy_val, open_action_val, pickup_action_val)
-
-            steps += 1
-
-            if RENDER:
-                env.render()
-            if done:
-                break
-    stop_time = timeit.default_timer()
-    print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
-          f'{stop_time - start_time:.2f} seconds')
+    # for _ in range(num_trials):
+    #     observation = env.reset()
+    #     while True:
+    #         if PNL_COMPILE:
+    #             BIN_EXECUTE = 'LLVM'
+    #         else:
+    #             BIN_EXECUTE = 'Python'
+    #         # Format
+    #         # input_array = [[observation[0]], [observation[1]], [-1], [-1],
+    #         #                [observation[4]], [observation[5]]]
+    #         # FIX: JDC TEMP FIX ("()" and "False" in observation[4] and observation[5])
+    #         #      TO AVOID FOLLOWING ERROR:
+    #         #      "Input for 'STATE INPUT' of KEYS AND DOORS COMPOSITION ([[0], [3], [-1], [-1], [()],[False]]) badly shaped for multiple InputPorts"
+    #         input_array = [[observation[0]], [observation[1]], [-1], [-1], [0], [0]]
+    #         if num_doors > 1:
+    #             input_array[2] = (x for x in observation[2])
+    #         if num_keys > 1:
+    #             input_array[3] = (x for x in observation[3])
+    #
+    #         # Get teacher-forced actions for the current observation
+    #         teacher_actions = get_teacher_actions(input_array)
+    #         # Build the inputs dictionary:
+    #         targets = agent_comp.get_target_nodes()
+    #         inputs = {state_input: input_array,
+    #                   targets[0]: [[teacher_actions[0]]],
+    #                   targets[1]: [[teacher_actions[1]]],
+    #                   targets[2]: [[teacher_actions[2]]],
+    #                   targets[3]: [[teacher_actions[3]]]}
+    #
+    #         learning_results = agent_comp.learn(
+    #             inputs=inputs,
+    #             epochs=1,
+    #             learning_rate=0.01
+    #         )
+    #
+    #         # Optionally, print the loss if available.
+    #         if learning_results is not None and isinstance(learning_results, (list, tuple)) and len(
+    #                 learning_results) > 0:
+    #             loss = learning_results[0]
+    #             print(f"Loss: {loss}")
+    #             total_loss += loss
+    #
+    #         # Run the agent composition using state_input as the input mechanism
+    #         execution = agent_comp.run(
+    #             inputs=inputs
+    #         )
+    #
+    #         dx_val = float(instruct_em.nodes["DX [RETRIEVED]"].value[0])
+    #         dy_val = float(instruct_em.nodes["DY [RETRIEVED]"].value[0])
+    #         open_action_val = float(instruct_em.nodes["OPEN ACTION [RETRIEVED]"].value[0])
+    #         pickup_action_val = float(instruct_em.nodes["PICKUP [RETRIEVED]"].value[0])
+    #
+    #
+    #         observation, reward, done = env.step(dx_val, dy_val, open_action_val, pickup_action_val)
+    #
+    #         steps += 1
+    #
+    #         if RENDER:
+    #             env.render()
+    #         if done:
+    #             break
+    # stop_time = timeit.default_timer()
+    # print(f'{steps / (stop_time - start_time):.1f} steps/second, {steps} total steps in '
+    #       f'{stop_time - start_time:.2f} seconds')
 
 
 if RUN:
