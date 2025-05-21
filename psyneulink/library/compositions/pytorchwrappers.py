@@ -790,7 +790,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{composition.name} but the _constructor_param_groups "
                 f"for its pytorch_representation have not been constructed.")
-            self.enable_learning = False
+            composition.enable_learning = False
             # revert to learning_rate assignments made in constructor
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             if not optimizer_params_user_specs:
@@ -1006,6 +1006,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             else "during this execution of its learn() method")
             warnings.warn(f"The learning_rates for all Projections in '{composition.name}' are 'False,' "
                           f"which means no learning will occur {warning_msg}.")
+            composition.enable_learning = False
 
         # Remove any remaining empty param_groups
         for param_group in new_param_groups.copy():

@@ -723,12 +723,6 @@ class GRUComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
-                enable_learning
-                    see `enable_learning <GRUComposition.enable_learning>`
-
-                    :default value: True
-                    :type: ``bool``
-
                 gru_mech
                     see `gru_mech <GRUComposition.gru_mech>`
 
@@ -793,7 +787,6 @@ class GRUComposition(AutodiffComposition):
         hidden_size = Parameter(1, structural=True, stateful=False)
         bias = Parameter(False, structural=True, stateful=False)
         gru_mech = Parameter(None, structural=True, stateful=False)
-        enable_learning = Parameter(True, structural=True)
         learning_rate = Parameter(.001, modulable=True)
         input_weights_learning_rate = Parameter(True, structural=True)
         hidden_weights_learning_rate = Parameter(True, structural=True)

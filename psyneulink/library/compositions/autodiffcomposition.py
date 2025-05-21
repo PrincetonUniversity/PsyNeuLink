@@ -475,7 +475,7 @@ class AutodiffComposition(Composition):
         loss_spec=Loss.MSE,
         weight_decay=0,
         learning_rate=0.001,
-        disable_learning=False,
+        enable_learning=True,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
         synch_node_values_with_torch=RUN,
@@ -508,8 +508,8 @@ class AutodiffComposition(Composition):
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
-    disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning when run in `learning mode
+    enable_learning : bool: default True
+        specifies whether the AutodiffComposition should enable learning when run in `learning mode
         <Composition.learn>`.
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
@@ -760,7 +760,7 @@ class AutodiffComposition(Composition):
                  loss_spec=Loss.MSE,
                  weight_decay=0,
                  learning_rate:Optional[Union[float,int,bool,dict,]]=None,
-                 disable_learning=False,
+                 enable_learning=True,
                  force_no_retain_graph=False,
                  refresh_losses=False,
                  synch_projection_matrices_with_torch:Optional[str]=RUN,
@@ -823,7 +823,10 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
-        self.disable_learning = disable_learning
+        # MODIFIED 5/20/25 OLD:
+        # BREADCRUMB: MOVED TO Parameter
+        # self.disable_learning = disable_learning
+        # MODIFIED 5/20/25 END
         self.loss_function = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
@@ -1790,8 +1793,6 @@ class AutodiffComposition(Composition):
 
             if self._is_learning(context):
                 # TBI: How are we supposed to use base_context and statefulness here?
-                # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
-                # model may be modified between runs?
 
                 autodiff_inputs = self._get_autodiff_inputs_values(inputs)
                 autodiff_targets = self._get_autodiff_targets_values(inputs)

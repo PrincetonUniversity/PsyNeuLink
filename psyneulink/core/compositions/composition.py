@@ -117,10 +117,14 @@ The following arguments of the Composition's constructor can be used to add Comp
         adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing
         the Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the
         same forms of specification as the **pathways** argument of that method (see `Pathway_Specification` for
-        additonal details). If any `learning Pathways <Composition_Learning_Pathway>` are included, then the
-        constructor's **disable_learning** argument can be used to disable learning on those by default (though it
+        additonal details).
+        COMMENT:
+        ??BREADCRUMB:  IS THIS STILL TRUE:
+        If any `learning Pathways <Composition_Learning_Pathway>` are included, then assigning
+        ``False`` to the constructor's **enable_learning** argument disables learning on those by default (though it
         will still allow learning to occur on any other Compositions, either nested within the current one,
         or within which the current one is nested (see `Composition_Learning` for a full description).
+        COMMENT
 
    .. _Composition_Nodes_Arg:
 
@@ -1028,13 +1032,17 @@ they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition
 ==================================
 
 For learning to occur when a Composition is run, its `learn <Composition.learn>` method must be used instead of the
-`run <Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
+`run <Composition.run>` method, and its `enable_learning <Composition.enable_learning>` attribute must be ``True``.
 When the `learn <Composition.learn>` method is used, all Components *unrelated* to learning are executed in the same
-way as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
+way as with the `run <Composition.run>` method.
+COMMENT:
+BREADCRUMB: ??IS THIS STILL TRUE:
+If the Composition has any `nested Composition <Composition_Nested>`
 that have `learning Pathways <Composition_Learning_Pathway>`, then learning also occurs on all of those for which
-the `disable_learning <Composition.disable_learning>` attribute is False.  This is true even if the `disable_learning
-<Composition.disable_learning>` attribute is True for the Composition on which the  `learn <Composition.learn>` method
-was called.
+the `enable_learning <Composition.enable_learning>` attribute is ``True``.  This is true even if the `enable_learning
+<Composition.enable_learning>` attribute is ``False`` for the Composition on which the  `learn <Composition.learn>`
+method was called.
+COMMENT
 
 When a Composition is run that contains one or more `learning Pathways <Composition_Learning_Pathway>`, all of the
 ProcessingMechanisms for a pathway are executed first, and then its `learning components
@@ -1354,10 +1362,10 @@ then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of
 
 *Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur,
 its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
-`disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
+`enable_learning <Composition.enable_learning>` attribute must be ``True`` (the default). A set of targets must also
 be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.run>` and `execute <Composition.execute>`
 methods can also be used to execute a Composition that has been `configured for learning <Composition_Learning>`,
-but no learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>`
+but no learning will occur, irrespective of the value of the `enable_learning <Composition.enable_learning>`
 attribute.
 
 The sections that follow describe the formats that can be used for inputs, factors that impact execution, and
@@ -3371,7 +3379,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections=None,                  \
         allow_probes=True,                 \
         include_probes_in_output=False     \
-        disable_learning=False,            \
+        enable_learning=True,              \
         learning_rate=None,                \
         minibatch_size=1,                  \
         optimizations_per_minibatch=1,     \
@@ -3433,7 +3441,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default) they are included
         (see `Probes <Composition_Probes>` for additional details).
 
-    disable_learning : bool : default False
+    enable_learning : bool : default True
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
@@ -3715,7 +3723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     execution_ids : set
         stores all execution_ids used by the Composition.
 
-    disable_learning: bool : default False
+    enable_learning: bool : default False
         determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
@@ -3816,6 +3824,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Attributes
             ----------
 
+                enable_learning
+                    see `enable_learning <AutodiffComposition.enable_learning>`
+
+                    :default value: True
+                    :type: ``bool``
+
                 input_specification
                     see `input_specification <Composition.input_specification>`
 
@@ -3858,6 +3872,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :default value: []
                     :type: ``list``
         """
+        enable_learning = Parameter(True, structural=True)
         minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
         optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
         results = Parameter([], loggable=False, pnl_internal=True)
@@ -3887,7 +3902,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections=None,
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
-            disable_learning: bool = False,
+            enable_learning: bool = True,
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
@@ -3954,7 +3969,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
         self.parsed_inputs = False
 
-        self.disable_learning = disable_learning
+        # MODIFIED 5/20/25 OLD:
+        # BREADCRUMB: MOVED TO Parameter
+        # self.disable_learning = disable_learning
+        # MODIFIED 5/20/25 END
         self.learning_rate = self._parse_and_validate_learning_rate(learning_rate)
         self._runtime_learning_rate = None
 
@@ -11719,7 +11737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             **kwargs
     )->list:
         """
-            Runs the composition in learning mode - that is, any components with disable_learning False will be
+            Runs the composition in learning mode - that is, any components with enable_learning ``True`` will be
             executed in learning mode. See `Composition_Learning` for details.
 
             Arguments
@@ -13226,8 +13244,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return False
 
     def _is_learning(self, context):
-        """Returns true if the composition can learn in the given context"""
-        return (not self.disable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
+        """Returns ``True`` if the Composition can learn in the given context"""
+        return (self.enable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
 
     def _build_variable_for_input_CIM(self, inputs):
         """

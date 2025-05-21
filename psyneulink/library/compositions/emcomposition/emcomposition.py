@@ -1495,12 +1495,6 @@ class EMComposition(AutodiffComposition):
                     :default value: False
                     :type: ``bool``
 
-                enable_learning
-                    see `enable_learning <EMComposition.enable_learning>`
-
-                    :default value: True
-                    :type: ``bool``
-
                 field_names
                     see `field_names <EMComposition.field_names>`
 
@@ -1610,7 +1604,6 @@ class EMComposition(AutodiffComposition):
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_decay_rate = Parameter(AUTO, modulable=True)
         purge_by_field_weights = Parameter(False, structural=True)
-        enable_learning = Parameter(True, structural=True)
         target_fields = Parameter(None, read_only=True, structural=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
