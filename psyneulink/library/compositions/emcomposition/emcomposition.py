@@ -2644,6 +2644,7 @@ class EMComposition(AutodiffComposition):
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
     # region
+    @handle_external_context(fallback_default=True)
     def execute(self,
                 inputs=None,
                 context=None,
@@ -2729,7 +2730,7 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def learn(
         self,
         *args,

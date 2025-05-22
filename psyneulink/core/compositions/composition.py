@@ -10883,7 +10883,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def run(
             self,
             inputs=None,
@@ -11545,7 +11545,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return trial_output
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def learn(
             self,
             inputs: dict,
@@ -11809,7 +11809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            context=context,
                            node=self.controller)
 
-    @handle_external_context(execution_phase=ContextFlags.PROCESSING)
+    @handle_external_context(execution_phase=ContextFlags.PROCESSING, fallback_default=True)
     def execute(
             self,
             inputs=None,
@@ -13101,11 +13101,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             he execution id is either specified in the user's call to run(), or from the Composition's
             **default_execution_id**
         """
-
-        # Traverse processing graph and assign one execution_id to all of its nodes
-        if context.execution_id is None:
-            context.execution_id = self.default_execution_id
-
         if context.execution_id not in self.execution_ids:
             self.execution_ids.add(context.execution_id)
 
