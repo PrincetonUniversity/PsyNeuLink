@@ -6,6 +6,8 @@ on:
       - 'dependabot/**'
     tags:
       - 'v*'
+    paths-ignore:
+      - '.github/workflows/pnl-ci.yml'
   pull_request:
 
 # run only the latest instance of this workflow job for the current branch/PR

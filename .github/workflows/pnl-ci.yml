@@ -159,6 +159,24 @@ jobs:
           Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
         esac
 
+    # Windows runners use MS Edge as the default pdf viewer.
+    # This causes issues if any of the tests calls show_graph()
+    # or any other routine that by default produces a .pdf file
+    # and opens is in the default application.
+    # The problem with MS Edge is that it intermittently fails
+    # to exit and hangs the entire CI job in the last step.
+    # see: https://github.com/actions/runner/issues/3383
+    # Removing the default .pdf file association on windows is
+    # quite difficult because it needs to check multiple places
+    # and elevated privileges.
+    # Installing an alternative pdf viewer works around the issue
+    # as it prevents MS Edge from running when .pdf is displayed.
+    - name: Install windows pdf viewer
+      shell: bash
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+          choco install --no-progress -y sumatrapdf.install
+
     - name: Test with pytest
       timeout-minutes: 180
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
@@ -194,14 +212,9 @@ jobs:
           ${{ steps.install.outputs.sdist }}
         retention-days: 2
 
-    - name: Stop running browsers
+    # this step is kept for debugging hangs at the end of runner execution.
+    - name: List running processes
       shell: pwsh
       if: ${{ matrix.os == 'windows' }}
       run: |
         Get-Process;
-        Write-Output 'Stopping msedge'
-        Stop-Process -Name 'msedge' -Force -PassThru
-        Write-Output 'Waiting for msedge to stop'
-        Wait-Process -Name 'msedge' -Timeout 60 -PassThru
-        Write-Output 'Remaining processes'
-        Get-Process
