@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.16.1.0+111.g28ac30a0a documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.16.1.0+116.g0c5fc3ef2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+111
+                  0.16.1.0+116
                 </div>
               
             
@@ -1393,7 +1393,12 @@ this Component to execute in that Context</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.most_recent_context">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">most_recent_context</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_context" title="Link to this definition">¶</a></dt>
-<dd><p>used to set a default behavior for attributes that correspond to parameters</p>
+<dd><p>Returns:
+<a class="reference internal" href="Context.html"><span class="doc">Context</span></a>: the <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object this Component used in its
+last call to <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>,
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>. If
+none of these methods have been called, a <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object
+with the default execution_id (None)</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1546,7 +1551,7 @@ constructor string</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=4e064ea4"></script>
+         <script src="_static/documentation_options.js?v=325cff58"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
