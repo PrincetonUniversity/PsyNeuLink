@@ -948,11 +948,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
                 # Get projection's Composition in case it is Nested (to give precedence to that below)
                 proj_composition = proj_wrapper.composition
-                # BREADCRUMB:  ?? set specified_learning_rate to projection.learning_rate here,
+                # BREADCRUMB:  5/28/25 ?? set specified_learning_rate to projection.learning_rate here,
                 #                so that it becomes the default? (especialy if it is False, as that should override
                 #                any other spec, except any Projection-specific ones in a runtime specification dict
-                
-                # BREADCRUMB:  SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
+                specified_learning_rate = False if projection.learning_rate is False else specified_learning_rate
+                # BREADCRUMB: SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                         # MODIFIED 5/23/25 OLD:
                         # or proj_composition.learning_rate is False or projection.learning_rate is False
@@ -1117,6 +1117,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for comp_wrapper in self.get_all_nested_composition_wrappers():
             projections_to_torch_params.update(comp_wrapper.projections_to_torch_params())
         return projections_to_torch_params
+
+    @property
+    def projections_with_learnable_torch_params(self)->list:
+        """Return list of Projections for which torch parameters are learnable"""
+        return [pw.projection for pw in self.projection_wrappers if pw.matrix.requires_grad]
+        # return [self.torch_params_to_projections()[param]
+        #         for param_group in self.optimizer.param_groups
+        #         for param in param_group['params']  if param.requires_grad]
 
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
@@ -1801,7 +1809,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                                         [self.integrator_previous_value, variable],
                                         fct_has_mult_args=True)
             # Keep track of previous value in Pytorch node for use in next forward pass
-            self.integrator_previous_value = variable
+            self.integrator_previous_value = variable.detach().numpy()
 
         self.input = variable
 

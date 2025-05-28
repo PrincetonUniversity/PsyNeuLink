@@ -1033,7 +1033,9 @@ class TestExecution:
                            learning_rate=.5,
                            device=pnl.CPU
                            )
-        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION', input_shapes=11)
+        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION',
+                                                   function=pnl.Logistic,
+                                                   input_shapes=11)
 
         QUERY = ' [QUERY]'
         VALUE = ' [VALUE]'
@@ -1078,6 +1080,7 @@ class TestExecution:
                                        state_to_em_pathway,
                                        previous_state_to_em_pathway,
                                        context_learning_pathway],
+                                      name='EGO',
                                       learning_rate=.5,
                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
                                       device=pnl.CPU)
