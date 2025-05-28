@@ -2648,7 +2648,6 @@ class EMComposition(AutodiffComposition):
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False
-                self.enable_learning = False
                 return
 
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
