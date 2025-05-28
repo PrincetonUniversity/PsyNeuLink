@@ -790,7 +790,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{composition.name} but the _constructor_param_groups "
                 f"for its pytorch_representation have not been constructed.")
-            composition.enable_learning = False
+            # MODIFIED 5/22/25 OLD:
+            # composition.enable_learning = False
+            # MODIFIED 5/22/25 END
             # revert to learning_rate assignments made in constructor
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             if not optimizer_params_user_specs:
@@ -899,13 +901,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
                         f"the {source} for '{self.composition.name}' is not learnable; check that its 'learnable' "
                         f"attribute is set to 'True' and its learning_rate is not 'False', or remove from it the dict.")
-                else:
-                    # param was set to False in call to constructor but has been assigned a learning_rate in learn()
-                    raise AutodiffCompositionError(
-                        f"The 'learning_rate' for Projection '{pnl_param_name}' was set to 'False' in the constructor "
-                        f"for '{self.composition.name}', but is being assigned an active learning_rate ({param_val}) "
-                        f"in the {source} for the Composition; either that specification must be removed, or the "
-                        f"specification of the 'learning_rate' of 'False' in the constructor must be changed or removed.")
+                # else:
+                #     # param was set to False in call to constructor but has been assigned a learning_rate in learn()
+                #     raise AutodiffCompositionError(
+                #         f"The 'learning_rate' for Projection '{pnl_param_name}' was set to 'False' in the constructor "
+                #         f"for '{self.composition.name}', but is being assigned an active learning_rate ({param_val}) "
+                #         f"in the {source} for the Composition; either that specification must be removed, or the "
+                #         f"specification of the 'learning_rate' of 'False' in the constructor must be changed or removed.")
 
             # IMPLEMENTATION NOTE: see above
             # if torch_param_slice:
@@ -948,8 +950,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_composition = proj_wrapper.composition
                 # BREADCRUMB:  SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
-                        or proj_composition.learning_rate is False or projection.learning_rate is False
+                        # MODIFIED 5/23/25 OLD:
+                        # or proj_composition.learning_rate is False or projection.learning_rate is False
+                        # MODIFIED 5/23/25 END
                         or specified_learning_rate is False):
+                    # BREADCRUMB:  if specified_learning_rate is not False, then allow it to override?
                     # Learning disabled for the Composition or the Projection
                     specified_learning_rate = False
                     # MODIFIED 5/19/25 NEW:
@@ -1002,11 +1007,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         #BREADCRUMB: MOVE THIS TO END?
         if all_requires_grads_false:
-            warning_msg =  ("they are specified in its learn() method" if source == CONSTRUCTOR
-                            else "during this execution of its learn() method")
-            warnings.warn(f"The learning_rates for all Projections in '{composition.name}' are 'False,' "
-                          f"which means no learning will occur {warning_msg}.")
-            composition.enable_learning = False
+            if source == LEARN_METHOD:
+                raise AutodiffCompositionError(f"The learning_rates for all Projections in '{composition.name}' "
+                                               f"are 'False;' at least one Projection must be specified with a "
+                                               f"non-False value in order to execute the learn() method.")
+            warnings.warn(f"The learning_rates for all Projections in '{composition.name}' are 'False'; "
+                          f"if none are specified otherwise in its the learn() method, that will not execute.")
 
         # Remove any remaining empty param_groups
         for param_group in new_param_groups.copy():
