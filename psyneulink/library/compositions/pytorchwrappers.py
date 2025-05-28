@@ -1809,11 +1809,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                                         [self.integrator_previous_value, variable],
                                         fct_has_mult_args=True)
             # Keep track of previous value in Pytorch node for use in next forward pass
-            # # MODIFIED 5/28/25 OLD:
-            # self.integrator_previous_value = variable
-            # MODIFIED 5/28/25 NEW:
-            self.integrator_previous_value = variable.detach().numpy()
-            # MODIFIED 5/28/25 END
+            self.integrator_previous_value = variable
 
         self.input = variable
 
@@ -1984,8 +1980,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 pnl_mech.function.parameters.previous_value._set(value, context)
             # Do same for integrator_function of TransferMechanism if it is in integrator_mode
             if isinstance(pnl_mech, TransferMechanism) and pnl_mech.integrator_mode:
-                pnl_mech.integrator_function.parameters.previous_value._set(self.integrator_previous_value,
-                                                                            context)
+                integrator_prev_val = self.integrator_previous_value.detach().cpu().numpy()
+                pnl_mech.integrator_function.parameters.previous_value._set(integrator_prev_val, context)
 
         # FIX: 3/15/25 - ADD SUPPORT FOR THESE
         # if output_values:
