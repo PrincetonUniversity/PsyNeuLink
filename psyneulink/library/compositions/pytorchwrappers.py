@@ -948,6 +948,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
                 # Get projection's Composition in case it is Nested (to give precedence to that below)
                 proj_composition = proj_wrapper.composition
+                # BREADCRUMB:  ?? set specified_learning_rate to projection.learning_rate here,
+                #                so that it becomes the default? (especialy if it is False, as that should override
+                #                any other spec, except any Projection-specific ones in a runtime specification dict
+                
                 # BREADCRUMB:  SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
                         # MODIFIED 5/23/25 OLD:
