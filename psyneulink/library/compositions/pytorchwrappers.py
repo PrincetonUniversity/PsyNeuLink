@@ -1809,7 +1809,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
                                         [self.integrator_previous_value, variable],
                                         fct_has_mult_args=True)
             # Keep track of previous value in Pytorch node for use in next forward pass
+            # # MODIFIED 5/28/25 OLD:
+            # self.integrator_previous_value = variable
+            # MODIFIED 5/28/25 NEW:
             self.integrator_previous_value = variable.detach().numpy()
+            # MODIFIED 5/28/25 END
 
         self.input = variable
 
