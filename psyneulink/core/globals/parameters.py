@@ -621,7 +621,10 @@ def _owner_string(param_obj):
     if isinstance(param_owner, type):
         owner_string = f' of {param_owner}'
     else:
-        owner_string = f' of {param_owner.name}'
+        try:
+            owner_string = f' of {param_owner.name}'
+        except AttributeError:
+            return ''
 
         if hasattr(param_owner, 'owner') and param_owner.owner:
             owner_string += f' for {param_owner.owner.name}'
@@ -637,7 +640,27 @@ def _owner_string(param_obj):
 addl_unsynced_parameter_names = {'value'}
 
 
-class ParametersTemplate:
+class _ParamOwner:
+    @property
+    def _owner(self):
+        return unproxy_weakproxy(self._owner_ref)
+
+    @_owner.setter
+    def _owner(self, value):
+        try:
+            self._owner_ref = weakref.proxy(value)
+        except TypeError:
+            self._owner_ref = value
+        self.__owner_string = None
+
+    @property
+    def _owner_string(self):
+        if self.__owner_string is None:
+            self.__owner_string = _owner_string(self)
+        return self.__owner_string
+
+
+class ParametersTemplate(_ParamOwner):
     _deepcopy_shared_keys = ['_parent', '_params', '_owner_ref', '_children']
     _values_default_excluded_attrs = {'user': False}
 
@@ -755,21 +778,6 @@ class ParametersTemplate:
     def names(self, show_all=False):
         return sorted([p for p in self.values(show_all)])
 
-    @property
-    def _owner(self):
-        return unproxy_weakproxy(self._owner_ref)
-
-    @_owner.setter
-    def _owner(self, value):
-        try:
-            self._owner_ref = weakref.proxy(value)
-        except TypeError:
-            self._owner_ref = value
-
-    @property
-    def _owner_string(self):
-        return _owner_string(self)
-
     def _dependency_order_key(self, names=False):
         """
         Args:
@@ -863,7 +871,7 @@ class Defaults(ParametersTemplate):
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
-class ParameterBase(types.SimpleNamespace):
+class ParameterBase(types.SimpleNamespace, _ParamOwner):
     def __lt__(self, other):
         return self.name < other.name
 
@@ -875,10 +883,6 @@ class ParameterBase(types.SimpleNamespace):
 
     def __hash__(self):
         return object.__hash__(self)
-
-    @property
-    def _owner_string(self):
-        return _owner_string(self)
 
 
 class Parameter(ParameterBase):
