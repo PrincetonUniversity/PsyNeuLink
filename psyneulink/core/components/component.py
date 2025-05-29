@@ -578,10 +578,26 @@ from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
-    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type, is_iterable
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList,
+    _get_cached_function_signature,
+    call_with_pruned_args,
+    contains_type,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    get_all_explicit_arguments,
+    get_deepcopy_with_shared,
+    is_instance_or_subclass,
+    is_iterable,
+    is_matrix,
+    is_numeric,
+    iscompatible,
+    kwCompatibilityLength,
+    parse_valid_identifier,
+    safe_equals,
+    safe_len,
+    try_extract_0d_array_item,
+)
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -1885,7 +1901,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # add unspecified kwargs
         kwargs_names = [
             k
-            for k, v in inspect.signature(self.__init__).parameters.items()
+            for k, v in _get_cached_function_signature(self.__init__).parameters.items()
             if v.kind is inspect.Parameter.VAR_KEYWORD
         ]
 
