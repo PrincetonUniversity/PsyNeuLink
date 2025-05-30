@@ -926,11 +926,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         optimizer.param_groups = new_param_groups
         all_requires_grads_false = True
-        # BREADCRUMB:  ??RESTORE THE FOLLOWING:
-        # MODIFIED 5/19/25 OLD:
         # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimizer)
-        # MODIFIED 5/19/25 NEW:
-        # MODIFIED 5/19/25 END
         for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
             # Get each param in the param_groups
             param_group_learning_rate = old_param_group['lr']
@@ -948,24 +944,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"'{self.composition.name}' must be an int, float or bool.")
                 projection = self._torch_params_to_projections(old_param_groups)[param]
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
-                # BREADCRUMB: 5/28/25 WHEN GRUCOMPOSITION IS RUN STANDALONE (NON-NESTED),
-                #                     TRIES TO GET HIDDEN_PROJECTION_SETS;  EITHER:
-                #                     - THEY NEED TO BE ADDED IN AROUND LINE 383 IN PYTORCHGRUCOMPOSITION
-                #                       (BUT THEY MIGHT THEN BE TREATED AS ADDITIONAL PARAMS ON GRUCOMPOSITION)
-                #                     - OR JUST NEED TO USE self.composition FOR proj_wrapper.composition BELOW
-                #                     - OR MAYBE JUST CREATE A PROJ -> COMPOSITION MAP ON PytorchCompositionWrapper??
-                # # MODIFIED 3/29/25 OLD:
-                # proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == torch_param_name)
-                # # Get projection's Composition in case it is Nested (to give precedence to that below)
-                # proj_composition = proj_wrapper.composition
-                # MODIFIED 3/29/25 NEW: FIX: CAN'T LEAVE THIS, JUST DONE TO DIAGNOSE ABOVE PROBLEM
-                # proj_composition = self.composition
-                # MODIFIED 3/29/25 NEWER:
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
-                # MODIFIED 3/29/25 END
-                # BREADCRUMB:  5/28/25 ?? set specified_learning_rate to projection.learning_rate here,
-                #                so that it becomes the default? (especialy if it is False, as that should override
-                #                any other spec, except any Projection-specific ones in a runtime specification dict
                 specified_learning_rate = False if projection.learning_rate is False else specified_learning_rate
                 # BREADCRUMB: SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
