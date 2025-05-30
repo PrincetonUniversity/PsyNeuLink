@@ -39,8 +39,8 @@ from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGD
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
 from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, EPOCH,
                                               INPUTS, LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
-                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
-                                              SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
+                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS,
+                                              RESULTS, RUN, SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
@@ -48,13 +48,13 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
-           'ENTER_NESTED', 'EXIT_NESTED', 'TorchParam']
+           'ENTER_NESTED', 'EXIT_NESTED', 'TorchParam ParamNameCompositionTuple']
 
 ENTER_NESTED = 0
 EXIT_NESTED = 1
 
 TorchParam = namedtuple("TorchParam", "name slice")
-
+ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple', "param_name composition")
 
 class DataTypeEnum(Enum):
 
@@ -311,7 +311,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
         self.projections_map = {}  # {Projection: PytorchProjectionWrappers}
-        self._pnl_refs_to_torch_param_names = {} # {Projection.name: PytorchProjectionWarpper.name or torch param name}
+        self._pnl_refs_to_torch_param_names = {} # {Projection.name: ParamNameCompositionTuple}
 
         self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.minibatch_loss_count = 0  # Count of losses within batch
@@ -447,7 +447,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
-                pnl_proj, proj_name, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, context, base_context)
+                pnl_proj, pnl_proj_name, proj_sndr, proj_rcvr, use = (
+                    self._handle_nested_comp(projection, context, base_context))
                 # # use = [LEARNING, SYNCH, SHOW_PYTORCH]
                 # use = [LEARNING, SYNCH]
 
@@ -456,7 +457,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
                 pnl_proj = projection
-                proj_name = pnl_proj.name
+                pnl_proj_name = pnl_proj.name
                 use = [LEARNING, SYNCH, SHOW_PYTORCH]
 
             else:
@@ -481,8 +482,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
             # Add entries for both pnl_proj (user-specifie one) and projection (to input_CIM / from output_CIM)
             #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimization_params())
-            self._pnl_refs_to_torch_param_names.update({proj_name: pytorch_proj_wrapper.name,
-                                                       projection.name: pytorch_proj_wrapper.name})
+            pnl_proj_param_name_comp_tuple = ParamNameCompositionTuple(pytorch_proj_wrapper.name, composition)
+            projection_param_name_comp_tuple = ParamNameCompositionTuple(pytorch_proj_wrapper.name, composition)
+            self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
+                                                        projection.name: projection_param_name_comp_tuple})
 
         return proj_wrappers_pairs
 
@@ -859,7 +862,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             param_orig_spec = param_tuple.orig_spec
             # Get torch parameter specification for Projection names specified in projection_lr_specs
             try:
-                param = self._pnl_refs_to_torch_param_names[pnl_param_name]
+                param = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
             except KeyError:
                 raise AutodiffCompositionError(
                     f"Projection specified in 'learning_rate' arg of the {source} for '{self.composition.name}' "
@@ -894,7 +897,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         and self.composition._optimizer_constructor_params[param_orig_spec] is not False):
                     # Turn gradient back on
                     param.requires_grad = True
-                proj_wrapper_name = self._pnl_refs_to_torch_param_names[pnl_param_name]
+                proj_wrapper_name = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
                 if not proj_wrapper.projection.learnable:
                     raise AutodiffCompositionError(
@@ -944,10 +947,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"specified for the 'learning_rate' arg of the {source} for "
                         f"'{self.composition.name}' must be an int, float or bool.")
                 projection = self._torch_params_to_projections(old_param_groups)[param]
-                proj_wrapper_name = self._pnl_refs_to_torch_param_names[projection.name]
-                proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == proj_wrapper_name)
-                # Get projection's Composition in case it is Nested (to give precedence to that below)
-                proj_composition = proj_wrapper.composition
+                torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
+                # BREADCRUMB: 5/28/25 WHEN GRUCOMPOSITION IS RUN STANDALONE (NON-NESTED),
+                #                     TRIES TO GET HIDDEN_PROJECTION_SETS;  EITHER:
+                #                     - THEY NEED TO BE ADDED IN AROUND LINE 383 IN PYTORCHGRUCOMPOSITION
+                #                       (BUT THEY MIGHT THEN BE TREATED AS ADDITIONAL PARAMS ON GRUCOMPOSITION)
+                #                     - OR JUST NEED TO USE self.composition FOR proj_wrapper.composition BELOW
+                #                     - OR MAYBE JUST CREATE A PROJ -> COMPOSITION MAP ON PytorchCompositionWrapper??
+                # # MODIFIED 3/29/25 OLD:
+                # proj_wrapper = next(pw for pw in self.projection_wrappers if pw.name == torch_param_name)
+                # # Get projection's Composition in case it is Nested (to give precedence to that below)
+                # proj_composition = proj_wrapper.composition
+                # MODIFIED 3/29/25 NEW: FIX: CAN'T LEAVE THIS, JUST DONE TO DIAGNOSE ABOVE PROBLEM
+                # proj_composition = self.composition
+                # MODIFIED 3/29/25 NEWER:
+                proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+                # MODIFIED 3/29/25 END
                 # BREADCRUMB:  5/28/25 ?? set specified_learning_rate to projection.learning_rate here,
                 #                so that it becomes the default? (especialy if it is False, as that should override
                 #                any other spec, except any Projection-specific ones in a runtime specification dict
@@ -1078,7 +1093,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
         """Return torch Parameter for specified Projection"""
         projection_name = projection.name if isinstance(projection, MappingProjection) else projection
-        param_name = self._pnl_refs_to_torch_param_names[projection_name]
+        param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
         for param_tuple in self.named_parameters():
             if param_name == param_tuple[0]:
                 return param_tuple[1]
@@ -1130,7 +1145,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
         torch_params_to_projections = {}
         for proj in self.wrapped_projections:
-            if proj.name in self._pnl_refs_to_torch_param_names.keys():
+            if proj.name in self._pnl_refs_to_torch_param_names:
                 torch_params_to_projections.update({self._get_torch_param_for_projection(proj): proj})
         # Give subclasses a chance for custom handling of param->projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():
