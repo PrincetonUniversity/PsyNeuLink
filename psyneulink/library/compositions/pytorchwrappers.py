@@ -761,7 +761,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for wrapper in comp_wrappers:
             nested_wrappers = wrapper.get_all_nested_composition_wrappers()
             if nested_wrappers:
-                comp_wrappers.append(nested_wrappers)
+                comp_wrappers.extend(nested_wrappers)
         return comp_wrappers
 
     def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
@@ -951,7 +951,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # MODIFIED 5/23/25 OLD:
                         # or proj_composition.learning_rate is False or projection.learning_rate is False
                         # MODIFIED 5/23/25 END
-                        or specified_learning_rate is False):
+                        # BREADCUMB 5/31/25: IS THIS 'or' NEEDED SINCE specified_learning_rate IS ALREADY FALSE?
+                        # or specified_learning_rate is False
+                ):
                     # BREADCRUMB:  if specified_learning_rate is not False, then allow it to override?
                     # Learning disabled for the Composition or the Projection
                     specified_learning_rate = False
