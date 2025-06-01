@@ -931,12 +931,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Get each param in the param_groups
             param_group_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
+                # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
+                # MODIFIED 6/1/25 OLD:
                 # Get learning_rate specified for the parameter by the user;
                 # if not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
+                # if specified_learning_rate is None:
+                #     specified_learning_rate = optimizer_torch_params_specified[param] \
+                #         if param in optimizer_torch_params_specified else NotImplemented
+                # MODIFIED 6/1/25 NEW:
+                # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
+                specified_learning_rate = optimizer_torch_params_specified[param] \
+                        if param in optimizer_torch_params_specified else specified_learning_rate
+                # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
-                    specified_learning_rate = optimizer_torch_params_specified[param] \
-                        if param in optimizer_torch_params_specified else NotImplemented
+                    specified_learning_rate == NotImplemented
+                # MODIFIED 6/1/25 END
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
                         f"The value ('{specified_learning_rate}') for '{param}' in the dict "
@@ -945,6 +955,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 projection = self._torch_params_to_projections(old_param_groups)[param]
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+                # BREADCRUMB: 6/1/25 - IF specified_learning_rate is DEFAULT
+                #                      AND projection.learning_rate IS A NUMERIC VALUE,
+                #                      THEN specified_learning_rate should be set to projection.learning_rate
                 specified_learning_rate = False if projection.learning_rate is False else specified_learning_rate
                 # BREADCRUMB: SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)
