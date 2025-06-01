@@ -13245,7 +13245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _is_learning(self, context):
         """Returns ``True`` if the Composition can learn in the given context"""
-        return (self.enable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
+        return (ContextFlags.LEARNING_MODE in context.runmode) and (self.enable_learning)
 
     def _build_variable_for_input_CIM(self, inputs):
         """

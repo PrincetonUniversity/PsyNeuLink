@@ -1161,10 +1161,10 @@ class AutodiffComposition(Composition):
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
                                                                     context)
-        else:
-            # Don't bother updating for call to show_graph()
-            if context.source is ContextFlags.SHOW_GRAPH:
+        elif context.source is ContextFlags.SHOW_GRAPH:
+        # Don't bother updating for call to show_graph()
                 pass
+        else:
             # Otherwise, just update it
             if self._runtime_learning_rate is not None:
                 optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
