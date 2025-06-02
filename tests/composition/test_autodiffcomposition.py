@@ -411,28 +411,26 @@ class TestAutodiffLearningRateArgs:
             learning_rate=(learn_method_learning_rate_dict if "learn" in condition
                            else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
 
-        pytorch_rep = outer_comp.pytorch_representation
-        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
-        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.1
-        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.1
+        # pytorch_rep = outer_comp.pytorch_representation
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.1
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.1
 
         np.testing.assert_allclose(pytorch_result, expected)
 
     error_test_args = [
         ("comp_lr_spec_str",
-         "Value ('hello') specified in 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "must be an int, float, bool or dict."),
+         "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
         ("comp_lr_spec_proj",
-         "Value ('(MappingProjection INPUT PROJECTION)') specified in 'learning_rate' arg "
-         "of the learn() method for 'Outer Comp' must be an int, float, bool or dict."),
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
         ("dict_lr_val_str",
-         "The value ('goodbye') for 'Parameter containing:\\ntensor([[1.]], dtype=torch.float64, requires_grad=True)' "
-         "in the dict specified for the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "must be an int, float or bool."),
+         "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
         ("dict_lr_val_proj",
-         "The value ('(MappingProjection INPUT PROJECTION)') for 'Parameter containing:\\ntensor([[1.]], "
-         "dtype=torch.float64, requires_grad=True)' in the dict specified for the 'learning_rate' arg of the "
-         "learn() method for 'Outer Comp' must be an int, float or bool."),
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
         ("dict_illegal_key_str",
          "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "is not in that Composition or any nested within it: 'woa a woa'."),

@@ -54,7 +54,8 @@ ENTER_NESTED = 0
 EXIT_NESTED = 1
 
 TorchParam = namedtuple("TorchParam", "name slice")
-ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple', "param_name composition")
+ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
+                                       "projection, param_name composition")
 
 class DataTypeEnum(Enum):
 
@@ -482,8 +483,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
             # Add entries for both pnl_proj (user-specifie one) and projection (to input_CIM / from output_CIM)
             #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimization_params())
-            pnl_proj_param_name_comp_tuple = ParamNameCompositionTuple(pytorch_proj_wrapper.name, composition)
-            projection_param_name_comp_tuple = ParamNameCompositionTuple(pytorch_proj_wrapper.name, composition)
+            pnl_proj_param_name_comp_tuple = ParamNameCompositionTuple(projection,
+                                                                       pytorch_proj_wrapper.name,
+                                                                       composition)
+            projection_param_name_comp_tuple = ParamNameCompositionTuple(projection,
+                                                                         pytorch_proj_wrapper.name,
+                                                                         composition)
             self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
                                                         projection.name: projection_param_name_comp_tuple})
 
@@ -766,7 +771,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
         """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
-        BREADCRUMB: UPDATE->
+        BREADCRUMB: UPDATE THESE (AND ADD ANY NEWER ONES->
         Relevant data structures:
             projections_learning_rates: {Projection.name: learning_rate}
             self.composition._optimizer_params: {Projection or Projection.name: lr}
@@ -817,6 +822,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
                 return
 
+            # # MODIFIED 6/2/25 NEW:
+            # # Get any Projection.learning_rates in same format as optimizer_params_parsed:
+            # #     {Projection.name: (Projection or Projection.name, learning_rate)}
+            # # NOTE: only do this at construction, as these will be used to construct
+            # #       self._constructor_param_groups that will be copied when called from learn()
+            # #
+            # projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
+            #                        [p.projection for p in self.projection_wrappers
+            #                    if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
+            # # MODIFIED 6/2/25 END
+
         # Proceed to either construct new optimizer.param_groups (if called from constructor)
         #   or update existing ones (if called from learn() method)
 
@@ -839,14 +855,38 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if optimizer_params_parsed:
             self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
 
-        # Get any Projection.learning_rates (in same format as optimizer_params_parsed) to generate projection_lr_specs:
+        # # MODIFIED 6/2/25 OLD:
+        # # BREADCRUMB 6/2/25: THIS SHOULD RESPECT ANY PROJECTION-SPECIFIC learning_rates ASSIGNED IN CONSTRUCTOR
+        # #                    MAYBE JUST GET THEM FROM param_group ASSIGNMENTS rather than projection_wrapper
+        # #                    OR ASSIGN CONSTRUCTOR-SPECIFIED VALUES DIRECTLY TO projection.learning_rate??
+        # # Get all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
+        # #     {Projection.name: (Projection or Projection.name, learning_rate)}
+        # projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
+        #                        [p.projection for p in self.projection_wrappers
+        #                    if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
+        # # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
+        # projection_lr_specs.update(optimizer_params_parsed)
+        # MODIFIED 6/2/25 NEW:
+        # If amy Projection-specific learning_rates are specified, assign each to corresponding Projection.learning_rate
+        for proj_name in optimizer_params_parsed:
+            if proj_name == DEFAULT_LEARNING_RATE:
+                continue
+            if proj_name in self._pnl_refs_to_torch_param_names:
+                # optimizer_params_parsed[proj_name].orig_spec.parameters.learning_rate.set(
+                #     optimizer_params_parsed[proj_name].value, context)
+                # self._pnl_refs_to_torch_param_names[proj_name].projection.parameters.learning_rate.set(
+                #     optimizer_params_parsed[proj_name].value, context)
+                self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
+                    = optimizer_params_parsed[proj_name].value
+                assert True
+        # Get all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
         projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
                                [p.projection for p in self.projection_wrappers
-                               if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
-
+                           if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
+        # MODIFIED 6/2/25 END
 
         if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
@@ -949,9 +989,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # MODIFIED 6/1/25 END
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
-                        f"The value ('{specified_learning_rate}') for '{param}' in the dict "
-                        f"specified for the 'learning_rate' arg of the {source} for "
-                        f"'{self.composition.name}' must be an int, float or bool.")
+                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
+                        f"{source} for '{self.composition.name}' is not valid; it must be an int, float, bool or None.")
                 projection = self._torch_params_to_projections(old_param_groups)[param]
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition

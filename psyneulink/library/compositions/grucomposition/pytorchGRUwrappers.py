@@ -185,9 +185,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           composition=self.composition,
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
-            # self._pnl_refs_to_torch_param_names.update({pnl_proj.name: torch_param_spec})
-        input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(W_IH_NAME, self.composition)
-        hidden_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(W_HH_NAME, self.composition)
+        input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(None, W_IH_NAME, self.composition)
+        hidden_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(None, W_HH_NAME, self.composition)
         self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN:input_to_hidden_param_name_comp_tuple})
         self._pnl_refs_to_torch_param_names.update({HIDDEN_TO_HIDDEN: hidden_to_hidden_param_name_comp_tuple})
 
@@ -210,8 +209,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                               device=device)
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
                 # self._pnl_refs_to_torch_param_names.update({pnl_bias_proj.name: torch_bias_spec})
-            bias_in_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_IH_NAME, self.composition)
-            bias_hid_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_HH_NAME, self.composition)
+            bias_in_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(None, B_IH_NAME, self.composition)
+            bias_hid_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(None, B_HH_NAME, self.composition)
             self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN:bias_in_to_hid_param_name_comp_tuple})
             self._pnl_refs_to_torch_param_names.update({BIAS_HIDDEN_TO_HIDDEN: bias_hid_to_hid_param_name_comp_tuple})
 
