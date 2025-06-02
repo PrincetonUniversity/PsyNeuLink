@@ -1134,18 +1134,24 @@ class AutodiffComposition(Composition):
                                                           base_context=base_context)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
-        # Set up optimizer function
-        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
-        default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
+        # Set up optimizer
         old_opt = pytorch_rep.optimizer
+        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
+        # # MODIFIED 6/2/25 OLD:
+        # default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
+        # MODIFIED 6/2/25 NEW:
+        default_learning_rate = learning_rate or self.learning_rate
+        if self._runtime_learning_rate is not None:
+            optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+        # MODIFIED 6/2/25 END
+
         if (old_opt is None or refresh) and refresh is not False:
-            # Instantiate a new optimizer if there isn't one yet and refresh is not blocked,
-            #    or there is one but refresh has been called
+            # Instantiate a new optimizer if there isn't one yet or refresh has been called and is not blocked)
             if context.runmode == ContextFlags.LEARNING_MODE:
                 # If optimizer is being constructed de novo in call to learn(),
-                #    instantiate it using params specified in constructor (if any) since
-                #   - need those implemented in a params_group that is reverted back to after execution of learn()
-                #   - the ones specified in the call to learn() will be applied in call to _update_optimizer_params()
+                #    instantiate it using params specified in constructor (if any) since:
+                #   - need those implemented in a params_group to revert back to after execution of learn()
+                #   - the ones in the call to learn() will be applied in call to _update_optimizer_params() below
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     self._optimizer_constructor_params,
                                                                     context)
@@ -1166,8 +1172,10 @@ class AutodiffComposition(Composition):
                 pass
         else:
             # Otherwise, just update it
-            if self._runtime_learning_rate is not None:
-                optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+            # # MODIFIED 6/2/25 OLD:
+            # if self._runtime_learning_rate is not None:
+            #     optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+            # MODIFIED 6/2/25 END
             pytorch_rep._update_optimizer_params(old_opt,
                                                  optimizer_params,
                                                  Context(source=ContextFlags.METHOD,
