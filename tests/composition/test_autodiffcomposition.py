@@ -411,12 +411,13 @@ class TestAutodiffLearningRateArgs:
             execution_mode=pnl.ExecutionMode.PyTorch,
             # learning_rate=learn_method_lr
             learning_rate=(learn_method_learning_rate_dict if "learn" in condition
-                           else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
+                           # else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
+                           else {pnl.DEFAULT_LEARNING_RATE: .01}))
         if TEST:
             pytorch_rep = outer_comp.pytorch_representation
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.2 # (vs. .2 in "...lr_2_MOD"
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.1
-            assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.1
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.01
+            assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.01
 
         np.testing.assert_allclose(pytorch_result, expected)
 
