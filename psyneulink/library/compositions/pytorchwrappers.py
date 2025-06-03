@@ -1111,8 +1111,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Return torch Parameter for specified Projection"""
         projection_name = projection.name if isinstance(projection, MappingProjection) else projection
         param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
+        # MODIFIED 6/3/25 NEW:
+        torch_long_param_name = self._torch_param_short_to_long_names_map[param_name]
+        # MODIFIED 6/3/25 END
         for param_tuple in self.named_parameters():
-            if param_name == param_tuple[0]:
+            if torch_long_param_name == param_tuple[0]:
                 return param_tuple[1]
 
     def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
