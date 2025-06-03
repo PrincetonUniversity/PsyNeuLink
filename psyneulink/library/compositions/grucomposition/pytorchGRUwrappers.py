@@ -368,7 +368,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 self.name = name
                 self.learning_rate = learning_rate
             def __getattr__(self, name):
-                raise AttributeError(f"This object is used to convey the learning rate the torch parameters "
+                raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
                                      f"corresponding to the set of {self.name} Projections of a GRUComposition, "
                                      f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
                                      f"attributes, and no others")

@@ -855,38 +855,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if optimizer_params_parsed:
             self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
 
-        # # MODIFIED 6/2/25 OLD:
-        # # BREADCRUMB 6/2/25: THIS SHOULD RESPECT ANY PROJECTION-SPECIFIC learning_rates ASSIGNED IN CONSTRUCTOR
-        # #                    MAYBE JUST GET THEM FROM param_group ASSIGNMENTS rather than projection_wrapper
-        # #                    OR ASSIGN CONSTRUCTOR-SPECIFIED VALUES DIRECTLY TO projection.learning_rate??
-        # # Get all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
-        # #     {Projection.name: (Projection or Projection.name, learning_rate)}
-        # projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
-        #                        [p.projection for p in self.projection_wrappers
-        #                    if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
-        # # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
-        # projection_lr_specs.update(optimizer_params_parsed)
-        # MODIFIED 6/2/25 NEW:
-        # If amy Projection-specific learning_rates are specified, assign each to corresponding Projection.learning_rate
+        # Assign any user-specified Projection-specific learning_rates to the corresponding Projection.learning_rate
         for proj_name in optimizer_params_parsed:
             if proj_name == DEFAULT_LEARNING_RATE:
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
-                # optimizer_params_parsed[proj_name].orig_spec.parameters.learning_rate.set(
-                #     optimizer_params_parsed[proj_name].value, context)
-                # self._pnl_refs_to_torch_param_names[proj_name].projection.parameters.learning_rate.set(
-                #     optimizer_params_parsed[proj_name].value, context)
-                self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
-                    = optimizer_params_parsed[proj_name].value
-                assert True
-        # Get all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
+                if self._pnl_refs_to_torch_param_names[proj_name].projection:
+                    self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
+                        = optimizer_params_parsed[proj_name].value
+
+        # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
         projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
                                [p.projection for p in self.projection_wrappers
                            if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
-        # MODIFIED 6/2/25 END
 
         if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
