@@ -1760,15 +1760,12 @@ class Parameter(ParameterBase):
                     )
 
         if self.loggable:
-            value_for_log = value
-            if value_is_array_like:
-                value_for_log = copy_parameter_value(value)
             # log value
             if not skip_log:
-                self._log_value(value_for_log, context)
+                self._log_value(value, context)
             # Deliver value to external application
             if not skip_delivery:
-                self._deliver_value(value_for_log, context)
+                self._deliver_value(value, context)
 
         value_updated = False
         if not compilation_sync:
@@ -1863,6 +1860,9 @@ class Parameter(ParameterBase):
 
             if execution_id not in self.log:
                 self.log[execution_id] = collections.deque([])
+
+            if is_array_like(value):
+                value = copy_parameter_value(value)
 
             self.log[execution_id].append(
                 LogEntry(time, context_str, value)
