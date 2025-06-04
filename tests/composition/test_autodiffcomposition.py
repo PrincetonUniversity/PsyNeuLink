@@ -3496,23 +3496,19 @@ class TestMiscTrainingFunctionality:
                                               output_proj: learn_method_lr_output_proj}
 
         if condition in {'bad_proj', 'bad_lr'}:
-            err_msg_2 = ''
             if condition == 'bad_proj':
+                opt_params = {condition: .66}
                 err_msg = ("The following Projection specified in the 'learning_rate' arg of the learn() method "
                            "for 'OUTER' is not in that Composition or any nested within it: 'bad_proj'.")
-                opt_params = {condition: .66}
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
-                err_msg = "The value ('bad_lr') for 'Parameter containing"
-                err_msg_2 = (" in the dict specified for the 'learning_rate' arg of the learn() method for "
-                             "'OUTER' must be an int, float or bool.")
+                err_msg = ("A value ('bad_lr') specified in the 'learning_rate' arg of the learn() method for 'OUTER' "
+                           "is not valid; it must be an int, float, bool or None.")
             with pytest.raises(AutodiffCompositionError) as error_text:
                 outer_comp = pnl.AutodiffComposition(
-                    [input_mech, input_proj, nested_comp, output_proj, output_mech],
-                    name='OUTER')
+                    [input_mech, input_proj, nested_comp, output_proj, output_mech], name='OUTER')
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
             assert err_msg in str(error_text.value)
-            assert err_msg_2 in str(error_text.value)
             return
 
         elif condition == 'projs_not_lrnable':

@@ -388,17 +388,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections"""
-        # class DummyProjection:
-        #     """Dummy object for access to the learning rate for a torch parameter"""
-        #     def __init__(self, name, learning_rate):
-        #         self.name = name
-        #         self.learning_rate = learning_rate
-        #     def __getattr__(self, name):
-        #         raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
-        #                              f"corresponding to the set of {self.name} Projections of a GRUComposition, "
-        #                              f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
-        #                              f"attributes, and no others")
-
         torch_params_to_projections = {}
         def get_dict_entries(names):
             for projection_name in names:
@@ -410,13 +399,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 learning_rate = self._get_learning_rate_for_torch_param(torch_param, param_groups)
                 projection = self._pnl_refs_to_torch_param_names[projection_name].projection
                 torch_params_to_projections.update({torch_param: projection})
-
-        # _pnl_refs_to_torch_param_names
-
         get_dict_entries(HIDDEN_PROJECTION_SETS)
         if self.composition.bias:
             get_dict_entries(HIDDEN_BIAS_SETS)
-
         return torch_params_to_projections
 
     def log_weights(self):

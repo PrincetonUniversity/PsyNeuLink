@@ -866,9 +866,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
-        projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate) for proj in
-                               [p.projection for p in self.projection_wrappers
-                           if p.projection.learnable and is_numeric_scalar(p.projection.learning_rate)]}
+        projection_lr_specs = {proj.name:torch_param_tuple(proj, proj.learning_rate)
+                               for proj in [p.projection for p in self.projection_wrappers
+                                            if LEARNING in p._use and p.projection.learnable
+                                            and is_numeric_scalar(p.projection.learning_rate)]}
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
 
@@ -1115,7 +1116,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         torch_long_param_name = self._torch_param_short_to_long_names_map[param_name]
         # MODIFIED 6/3/25 END
         for param_tuple in self.named_parameters():
+            # param_tuple is a tuple of (name, torch.nn.Parameter)
+            # # MODIFIED 6/3/25 OLD:
+            # if param_name == param_tuple[0]:
+            # MODIFIED 6/3/25 NEW:
             if torch_long_param_name == param_tuple[0]:
+            # MODIFIED 6/3/25 END
                 return param_tuple[1]
 
     def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
