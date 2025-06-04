@@ -19,7 +19,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
-    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam
+    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.keywords import (
@@ -161,6 +161,21 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         to the corresponding part of the tensor in the parameter of the Pytorch GRU module.
         """
 
+        class DummyProjection:
+            """Dummy Projection for access to the learning rate for the IH and WH torch parameter
+            The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
+            so DummyProjections are used to provide access to their learning_rates
+            """
+            def __init__(self, name, learning_rate):
+                self.name = name
+                self.learning_rate = learning_rate
+            def __getattr__(self, name):
+                if name not in {'learning_rate', 'name'}:
+                    raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
+                                         f"corresponding to the set of {self.name} Projections of a GRUComposition, "
+                                         f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
+                                         f"attributes, and no others")
+
         pnl = self.composition
         self.torch_gru_parameters = torch_gru.parameters
 
@@ -185,9 +200,17 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           composition=self.composition,
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
-            # self._pnl_refs_to_torch_param_names.update({pnl_proj.name: torch_param_spec})
-        self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN: W_IH_NAME})
-        self._pnl_refs_to_torch_param_names.update({HIDDEN_TO_HIDDEN: W_HH_NAME})
+
+        # BREADCRUMB:  6/3/25 -- ??USE learning_rate ARG FOR CONSTRUCTOR OF COMPOSITION FOR THIS
+        #                          OR JUST USE DEFAULT FOR COMP AND ALLOW ASSIGNMENTS TO OCCUR LATER?
+        default_learning_rate = self.composition.learning_rate
+        IH_projection = DummyProjection(INPUT_TO_HIDDEN, default_learning_rate)
+        input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(IH_projection, W_IH_NAME, self.composition)
+        self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN:input_to_hidden_param_name_comp_tuple})
+
+        HH_projection = DummyProjection(HIDDEN_TO_HIDDEN, default_learning_rate)
+        hidden_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(HH_projection, W_HH_NAME, self.composition)
+        self._pnl_refs_to_torch_param_names.update({HIDDEN_TO_HIDDEN: hidden_to_hidden_param_name_comp_tuple})
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
@@ -208,8 +231,14 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                               device=device)
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
                 # self._pnl_refs_to_torch_param_names.update({pnl_bias_proj.name: torch_bias_spec})
-            self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN: B_IH_NAME})
-            self._pnl_refs_to_torch_param_names.update({BIAS_HIDDEN_TO_HIDDEN: B_HH_NAME})
+
+            B_IH_proj = DummyProjection(BIAS_INPUT_TO_HIDDEN, default_learning_rate)
+            bias_in_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_IH_proj, B_IH_NAME, self.composition)
+            self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN:bias_in_to_hid_param_name_comp_tuple})
+
+            B_HH_proj = DummyProjection(BIAS_HIDDEN_TO_HIDDEN, default_learning_rate)
+            bias_hid_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_HH_proj, B_HH_NAME, self.composition)
+            self._pnl_refs_to_torch_param_names.update({BIAS_HIDDEN_TO_HIDDEN: bias_hid_to_hid_param_name_comp_tuple})
 
         return _projection_wrapper_pairs
 
@@ -359,31 +388,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections"""
-        class DummyProjection:
-            """Provide a dummy object for access to the learning rate for a torch parameter"""
-            def __init__(self, name, learning_rate):
-                self.name = name
-                self.learning_rate = learning_rate
-            def __getattr__(self, name):
-                raise AttributeError(f"This object is used to convey the learning rate the torch parameters "
-                                     f"corresponding to the set of {self.name} Projections of a GRUComposition, "
-                                     f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
-                                     f"attributes, but no others")
-
         torch_params_to_projections = {}
         def get_dict_entries(names):
             for projection_name in names:
-                torch_param_name = self._pnl_refs_to_torch_param_names[projection_name]
+                torch_param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
                 torch_param_long_name = self._torch_param_short_to_long_names_map[torch_param_name]
                 torch_param = next((p[1] for p in self.named_parameters() if p[0] == torch_param_long_name),None)
                 assert torch_param is not None, (f"PROGRAM ERROR: torch parameter for {projection_name} "
                                                  f"not found in named_parameters() of {self.name}")
                 learning_rate = self._get_learning_rate_for_torch_param(torch_param, param_groups)
-                torch_params_to_projections.update({torch_param: DummyProjection(projection_name, learning_rate)})
+                projection = self._pnl_refs_to_torch_param_names[projection_name].projection
+                torch_params_to_projections.update({torch_param: projection})
         get_dict_entries(HIDDEN_PROJECTION_SETS)
         if self.composition.bias:
             get_dict_entries(HIDDEN_BIAS_SETS)
-
         return torch_params_to_projections
 
     def log_weights(self):

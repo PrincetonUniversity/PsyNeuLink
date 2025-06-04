@@ -940,8 +940,7 @@ class TestExecution:
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
     @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
     @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
-#    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
-    @pytest.mark.parametrize('learning', [False], ids=['no_learning'])
+    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
@@ -990,7 +989,7 @@ class TestExecution:
                 np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_true', 'fw_learning_false'])
+    @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_false', 'fw_learning_true'])
     def test_backpropagation_of_error_in_learning(self, field_weight_learning):
         """This test is based on the EGO CSW Model"""
         # BREADCRUMB:
@@ -1007,11 +1006,6 @@ class TestExecution:
                                               integrator_mode=True,
                                               integration_rate=.69)
 
-        # Use default learning_rate (.5) if field_weight_learning is True
-        state_fw_learning_rate = None if field_weight_learning else False
-        previous_state_fw_learning_rate = None if field_weight_learning else False
-        context_fw_learning_rate = None if field_weight_learning else False
-
         em = EMComposition(name='EM',
                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
                            memory_fill=(0,.0001),
@@ -1020,18 +1014,14 @@ class TestExecution:
                            softmax_gain=10,
                            softmax_threshold=0.001,
                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
-                                               pnl.LEARN_FIELD_WEIGHT: state_fw_learning_rate,
+                                               pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                pnl.TARGET_FIELD: True},
                                      'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
-                                                        pnl.LEARN_FIELD_WEIGHT: previous_state_fw_learning_rate,
+                                                        pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                         pnl.TARGET_FIELD: False},
                                      'CONTEXT': {pnl.FIELD_WEIGHT:.5,
-                                                 pnl.LEARN_FIELD_WEIGHT: context_fw_learning_rate,
+                                                 pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                  pnl.TARGET_FIELD: False}},
-                           # field_names=['STATE', 'PREVIOUS_STATE', 'CONTEXT'],
-                           # field_weights=[None, .5, .5],
-                           # learn_field_weights=False,
-                           # target_fields=[True, False, False],
                            normalize_field_weights=True,
                            normalize_memories=False,
                            concatenate_queries=False,
@@ -1039,7 +1029,9 @@ class TestExecution:
                            learning_rate=.5,
                            device=pnl.CPU
                            )
-        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION', input_shapes=11)
+        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION',
+                                                   function=pnl.Logistic,
+                                                   input_shapes=11)
 
         QUERY = ' [QUERY]'
         VALUE = ' [VALUE]'
@@ -1084,6 +1076,7 @@ class TestExecution:
                                        state_to_em_pathway,
                                        previous_state_to_em_pathway,
                                        context_learning_pathway],
+                                      name='EGO',
                                       learning_rate=.5,
                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
                                       device=pnl.CPU)

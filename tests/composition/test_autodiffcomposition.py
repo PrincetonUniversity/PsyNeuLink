@@ -313,32 +313,32 @@ class TestAutodiffLearningRateArgs:
         #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
         #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
         #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
-        ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
-        # learn() lr
-        ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
-        # learn() lr overrides constructor lr
-        ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
-        # Projection lr (in constructor)
-        ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
-        ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
-        # Projection lr overrides learn() lr
-        ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
-        ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
-        # learning_rate dict in Autodiff constructor overrides Projection lr
-        ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
-        ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
-        # learning_rate dict in learn() overrides Projection lr
-        ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
-        ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
+        # ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
+        # # learn() lr
+        # ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
+        # # learn() lr overrides constructor lr
+        # ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
+        # # Projection lr (in constructor)
+        # ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
+        # ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
+        # # Projection lr overrides learn() lr
+        # ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
+        # ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
+        # # learning_rate dict in Autodiff constructor overrides Projection lr
+        # ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
+        # ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
+        # # learning_rate dict in learn() overrides Projection lr
+        # ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
+        # ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
         # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
-        ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,   inp_cnstr_ovrd),
-        ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,   hid_cnstr_ovrd),
+        ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
+        ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
         # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
         #                                (use two different Projection lr's to be sure they don't matter)
-        ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False,   inpt_learn_ovrd),
-        ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,   hid_learn_ovrd),
-        ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False,   inpt_learn_ovrd),
-        ("hid_ovrd_learn_method5", default_lr,     .1,     None,     .5,    None,    'hidden',  False,   hid_learn_ovrd),
+        ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False, inpt_learn_ovrd),
+        ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,  hid_learn_ovrd),
+        ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False, inpt_learn_ovrd),
+        ("hid_ovrd_learn_method5", default_lr,     .1,     None,     .5,    None,    'hidden',  False,  hid_learn_ovrd),
         # Projection spec in learning_rate dict in learn() overrides everything else, including constructor dict
         ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   False,   inpt_learn_ovrd),
         ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  False,   hid_learn_ovrd),
@@ -391,6 +391,12 @@ class TestAutodiffLearningRateArgs:
                                              learning_rate = (constructor_learning_rate_dict
                                                               if "constructor" in condition
                                                               else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
+
+        # pytorch_rep = outer_comp._build_pytorch_representation()
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.01
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.01
+
         if post_constr:
             input_proj.learning_rate = .9
             nested_proj.learning_rate = .7
@@ -404,23 +410,27 @@ class TestAutodiffLearningRateArgs:
             # learning_rate=learn_method_lr
             learning_rate=(learn_method_learning_rate_dict if "learn" in condition
                            else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
+
+        # pytorch_rep = outer_comp.pytorch_representation
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.1
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.1
+
         np.testing.assert_allclose(pytorch_result, expected)
 
     error_test_args = [
         ("comp_lr_spec_str",
-         "Value ('hello') specified in 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "must be an int, float, bool or dict."),
+         "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
         ("comp_lr_spec_proj",
-         "Value ('(MappingProjection INPUT PROJECTION)') specified in 'learning_rate' arg "
-         "of the learn() method for 'Outer Comp' must be an int, float, bool or dict."),
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
         ("dict_lr_val_str",
-         "The value ('goodbye') for 'Parameter containing:\\ntensor([[1.]], dtype=torch.float64, requires_grad=True)' "
-         "in the dict specified for the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-         "must be an int, float or bool."),
+         "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
         ("dict_lr_val_proj",
-         "The value ('(MappingProjection INPUT PROJECTION)') for 'Parameter containing:\\ntensor([[1.]], "
-         "dtype=torch.float64, requires_grad=True)' in the dict specified for the 'learning_rate' arg of the "
-         "learn() method for 'Outer Comp' must be an int, float or bool."),
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
         ("dict_illegal_key_str",
          "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
          "is not in that Composition or any nested within it: 'woa a woa'."),
@@ -3395,54 +3405,56 @@ class TestMiscTrainingFunctionality:
     constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
     learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
     no_learning_expected = [[1.07518731, 0.2334628, 1.30069345, 1.05196273, 0.60886095]]
+    override_false_expected = [[1.0329353930306493, 0.4250751763513295, 1.1938294699940157,
+                                1.0114375211126878, 0.7007802232778438]]
 
     default_lr = .001
 
     test_specs_for_learning_rates = [
-        # #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
-        # #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
-        # #                  |   learning_rate     | projection |  projection  |  projection |     results
-        # #
-        # # Test that AutodiffComposition.learning_rate is used
-        # # ('all_defaults',       False,   False,   None,  None,   None,  None,  None,  None,    default_expected),
-        # # Test that Projection.learning_rate is used
-        # ('proj_only',          False,   False,   None,  None,   None,  None,  2.7,   1.4,     proj_expected),
-        # ('proj_nones',         False,   False,   2.9,    .5,   .66,     1.5,  None, None,     default_expected),
-        # # Test that Projection.learning_rate == False prevents learning
-        # ('proj_False_w_nones', False,   False,   None,  None,   None,  None, False, False,    no_learning_expected),
-        # ('proj_False_w_vals',  False,   False,   2.9,    .5,   .66,     1.5, False, False,    no_learning_expected),
-        # # Test that Projection.learning_rate is used
-        # ('proj_like_constr',   False,   False,   None,  None,   None,  None,  2.9,  .5,       constructor_expected),
-        # # Test that Projection.learning_rate spec supercedes specification in Autodiff constructor
-        # # ('constr_over_proj',   True,   False,    2.9,    .5,    None,  None,   2.9,  .5,      constructor_expected),
-        # # Test specs in constructor (with Projecton.learning_rate None or True)
-        # ('learn_over_proj',    False,   True,    None,  None,   .66,   1.5,   2.7,  1.4,      learn_method_expected),
-        # # Test that Autodiff constructor spec superceded Projection.learning_rate spec
-        # ('learn_over_all',     True,   True,     2.9,    .5,    .66,   1.5,   2.7,  1.4,      learn_method_expected),
-        # # Test that Autodiff constructor spec superceded Projection.learning_rate spec
-        # ('constructor_only',   True,    False,   2.9,    .5,    None,  None,  None,  True,    constructor_expected),
-        # # Test specs in learn() method (with Projecton.learning_rate None or True)
-        # ('learn_method_only',  False,   True,    None,  None,   .66,   1.5,   True,  None,    learn_method_expected),
-        # # Test that learn() method params supercede constructor params
-        # ('both',               True,    True,    2.9,    .5,    .66,   1.5,   None,  None,    learn_method_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_True',   True,    False,   True,  True,   None,  None,  None,  None,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_True',  False,   True,    None,  None,   True,  True,  None,  None,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('constructor_None',   True,    False,   None,  None,   None,  None,  None,  None,    default_expected),
-        # # Test that AutodiffComposition.learning_rate is used
-        # ('learn_method_None',  False,   True,    None,  None,   None,  None,  None,  None,    default_expected),
-        # # Test that no learning occurs
-        # ('constructor_False',  True,    False,   False, False,  None,  None,  None,  None,    no_learning_expected),
-        # # Test that no learning occurs
-        # ('learn_method_False', False,   True,    None,  None,   False, False, None,  None,    no_learning_expected),
-        # # Test that learning does *not* occur
-        # ('cnstr_val_lrn_False',True,    True,     2.9,   .5,    False, False, None,  None,    no_learning_expected),
-        # # Test warning for non-learnable Projection to, within & fron nested Composition
+        #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
+        #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
+        #                  |   learning_rate     | projection |  projection  |  projection |     results
+        #
+        # Test that AutodiffComposition.learning_rate is used
+        # ('all_defaults',       False,   False,   None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_only',          False,   False,   None,  None,   None,  None,  2.7,   1.4,     proj_expected),
+        ('proj_nones',         False,   False,   2.9,    .5,   .66,     1.5,  None, None,     default_expected),
+        # Test that Projection.learning_rate == False prevents learning
+        ('proj_False_w_nones', False,   False,   None,  None,   None,  None, False, False,    no_learning_expected),
+        ('proj_False_w_vals',  False,   False,   2.9,    .5,   .66,     1.5, False, False,    no_learning_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_like_constr',   False,   False,   None,  None,   None,  None,  2.9,  .5,       constructor_expected),
+        # Test that Projection.learning_rate spec supercedes specification in Autodiff constructor
+        # ('constr_over_proj',   True,   False,    2.9,    .5,    None,  None,   2.9,  .5,      constructor_expected),
+        # Test specs in constructor (with Projecton.learning_rate None or True)
+        ('learn_over_proj',    False,   True,    None,  None,   .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        # Test that Autodiff constructor spec superceded Projection.learning_rate spec
+        ('learn_over_all',     True,   True,     2.9,    .5,    .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        # Test that Autodiff constructor spec superceded Projection.learning_rate spec
+        ('constructor_only',   True,    False,   2.9,    .5,    None,  None,  None,  True,    constructor_expected),
+        # Test specs in learn() method (with Projecton.learning_rate None or True)
+        ('learn_method_only',  False,   True,    None,  None,   .66,   1.5,   True,  None,    learn_method_expected),
+        # Test that learn() method params supercede constructor params
+        ('both',               True,    True,    2.9,    .5,    .66,   1.5,   None,  None,    learn_method_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_True',   True,    False,   True,  True,   None,  None,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_True',  False,   True,    None,  None,   True,  True,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_None',   True,    False,   None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_None',  False,   True,    None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that no learning occurs
+        ('constructor_False',  True,    False,   False, False,  None,  None,  None,  None,    no_learning_expected),
+        # Test that no learning occurs
+        ('learn_method_False', False,   True,    None,  None,   False, False, None,  None,    no_learning_expected),
+        # Test that learning does *not* occur
+        ('cnstr_val_lrn_False',True,    True,     2.9,   .5,    False, False, None,  None,    no_learning_expected),
+        # Test warning for non-learnable Projection to, within & fron nested Composition
         ('projs_not_lrnable',  True,    True,     2.9,   .5,     .66,   1.5,  None,  None,          None),
         # Test error for assigning False in constructor but learning_rate in learn()
-        ('cnstr_False_lrn_val',True,    True,    False, False,   .66,   1.5,  None,  None,          None),
+        ('cnstr_False_lrn_val',True,    True,    False, False,   .66,   1.5,  None,  None,    override_false_expected),
         # Test error bad Projection specification
         ('bad_proj',           True,    True,     2.9,   .5,     .66,   1.5,  None,  None,          None),
         # Test error bad learning_rate spec
@@ -3484,23 +3496,19 @@ class TestMiscTrainingFunctionality:
                                               output_proj: learn_method_lr_output_proj}
 
         if condition in {'bad_proj', 'bad_lr'}:
-            err_msg_2 = ''
             if condition == 'bad_proj':
+                opt_params = {condition: .66}
                 err_msg = ("The following Projection specified in the 'learning_rate' arg of the learn() method "
                            "for 'OUTER' is not in that Composition or any nested within it: 'bad_proj'.")
-                opt_params = {condition: .66}
             elif condition == 'bad_lr':
                 opt_params = {input_proj: condition}
-                err_msg = "The value ('bad_lr') for 'Parameter containing"
-                err_msg_2 = (" in the dict specified for the 'learning_rate' arg of the learn() method for "
-                             "'OUTER' must be an int, float or bool.")
+                err_msg = ("A value ('bad_lr') specified in the 'learning_rate' arg of the learn() method for 'OUTER' "
+                           "is not valid; it must be an int, float, bool or None.")
             with pytest.raises(AutodiffCompositionError) as error_text:
                 outer_comp = pnl.AutodiffComposition(
-                    [input_mech, input_proj, nested_comp, output_proj, output_mech],
-                    name='OUTER')
+                    [input_mech, input_proj, nested_comp, output_proj, output_mech], name='OUTER')
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
             assert err_msg in str(error_text.value)
-            assert err_msg_2 in str(error_text.value)
             return
 
         elif condition == 'projs_not_lrnable':
@@ -3518,17 +3526,19 @@ class TestMiscTrainingFunctionality:
             return
 
         elif condition == 'cnstr_False_lrn_val':
-            with pytest.raises(AutodiffCompositionError) as error_text:  # Warn, since default_input is NOT set
-                opt_params = {input_proj: False, hidden_proj: 21.6, output_proj: False}
-                outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech],
-                                                     learning_rate=opt_params)
-                opt_params = {input_proj: 0.66, hidden_proj: 21.6, output_proj: 0.5}
-                outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
-            assert ("The 'learning_rate' for Projection 'INPUT PROJECTION' was set to 'False' in the constructor for "
-                    "'autodiff_composition', but is being assigned an active learning_rate (0.66) in the learn() "
-                    "method for the Composition; either that specification must be removed, or the specification of "
-                    "the 'learning_rate' of 'False' in the constructor must be changed or removed."
-                    in str(error_text.value))
+            # Validate the learn() method specifications override constructor projection-specific assignments of False
+            opt_params = {input_proj: False, hidden_proj: 21.6, output_proj: False}
+            outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech],
+                                                 learning_rate=opt_params)
+            opt_params = {input_proj: 0.66, hidden_proj: 21.6, output_proj: 0.5}
+            results = outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params, num_trials=2)
+
+            outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('autodiff_composition')
+
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == opt_params[input_proj]
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == opt_params[hidden_proj]
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == opt_params[output_proj]
+            np.testing.assert_allclose(expected, results)
             return
 
         # Construct outer Composition

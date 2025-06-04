@@ -1770,9 +1770,9 @@ class Report:
 
             # Do update
             self._rich_progress.update(output_report.rich_task_id,
-                                  description=update,
-                                  advance=1,
-                                  refresh=True)
+                                       description=update,
+                                       advance=1,
+                                       refresh=True)
 
         # This is needed so that, when _record_reports is active, progress report is generated and not duplicated
         if self._report_output is ReportOutput.OFF or self._report_progress is ReportProgress.OFF:
