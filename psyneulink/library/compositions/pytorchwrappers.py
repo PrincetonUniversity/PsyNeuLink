@@ -860,9 +860,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if proj_name == DEFAULT_LEARNING_RATE:
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
-                if self._pnl_refs_to_torch_param_names[proj_name].projection:
-                    self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
-                        = optimizer_params_parsed[proj_name].value
+                self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
+                    = optimizer_params_parsed[proj_name].value
 
         # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
@@ -1110,7 +1109,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
         """Return torch Parameter for specified Projection"""
-        projection_name = projection.name if isinstance(projection, MappingProjection) else projection
+        # # MODIFIED 6/4/25 OLD:
+        # projection_name = projection.name if isinstance(projection, MappingProjection) else projection
+        # MODIFIED 6/4/25 NEW:
+        projection_name = projection.name if isinstance(projection, Projection) else projection
+        # MODIFIED 6/4/25 END
         param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
         # MODIFIED 6/3/25 NEW:
         torch_long_param_name = self._torch_param_short_to_long_names_map[param_name]
@@ -1596,7 +1599,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
-            proj_wrapper.log_matrix()
+            if isinstance(proj_wrapper.projection, MappingProjection):
+                proj_wrapper.log_matrix()
 
     def copy_node_variables_and_values_to_psyneulink(self, options:dict, context=None):
         for pytorch_node in self.nodes_map.values():

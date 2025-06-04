@@ -16,7 +16,7 @@ from typing import Union, Optional, Literal, Tuple
 
 from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.projection import DuplicateProjectionError
+from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
@@ -161,26 +161,29 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         to the corresponding part of the tensor in the parameter of the Pytorch GRU module.
         """
 
-        class DummyProjection:
+        class DummyProjection(Projection):
             """Dummy Projection for access to the learning rate for the IH and WH torch parameter
             The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
             so DummyProjections are used to provide access to their learning_rates
             """
-            def __init__(self, name, learning_rate):
+            def __init__(self, name):
                 self.name = name
-                self.learning_rate = learning_rate
+                self.learning_rate = None
+                self.learnable = True
             def __getattr__(self, name):
                 if name not in {'learning_rate', 'name'}:
                     raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
                                          f"corresponding to the set of {self.name} Projections of a GRUComposition, "
-                                         f"that cannot be set directly.  It has only 'learning_rate' and 'name' "
-                                         f"attributes, and no others")
+                                         f"that cannot be set directly.  It has only 'name', 'learnable', and"
+                                         f"'learning_rate' as attributes, and no others.")
 
         pnl = self.composition
         self.torch_gru_parameters = torch_gru.parameters
 
         _projection_wrapper_pairs = []
 
+        # Wrap PNL Projections corresponding to all components of the Pytorch GRU module's parameters
+        # NOTE: these are used for synching values with those PNL Projections
         # Pytorch parameter info
         hid_len = pnl.hidden_size
         z_idx = hid_len
@@ -201,16 +204,27 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                           device=device)
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
 
-        # BREADCRUMB:  6/3/25 -- ??USE learning_rate ARG FOR CONSTRUCTOR OF COMPOSITION FOR THIS
-        #                          OR JUST USE DEFAULT FOR COMP AND ALLOW ASSIGNMENTS TO OCCUR LATER?
-        default_learning_rate = self.composition.learning_rate
-        IH_projection = DummyProjection(INPUT_TO_HIDDEN, default_learning_rate)
-        input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(IH_projection, W_IH_NAME, self.composition)
+        # Construct DummyProjection for INPUT_TO_HIDDEN and HIDDEN_TO_HIDDEN that are used to access their learning_rate
+        W_IH_projection = DummyProjection(INPUT_TO_HIDDEN)
+        pytorch_wrapper = PytorchGRUProjectionWrapper(projection=W_IH_projection,
+                                                      torch_parameter=(W_IH_NAME, torch_gru.state_dict()[W_IH_NAME]),
+                                                      use=LEARNING,
+                                                      composition=self.composition,
+                                                      device=device)
+        _projection_wrapper_pairs.append((W_IH_projection, pytorch_wrapper))
+        input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(W_IH_projection, W_IH_NAME, self.composition)
         self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN:input_to_hidden_param_name_comp_tuple})
 
-        HH_projection = DummyProjection(HIDDEN_TO_HIDDEN, default_learning_rate)
-        hidden_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(HH_projection, W_HH_NAME, self.composition)
+        W_HH_projection = DummyProjection(HIDDEN_TO_HIDDEN)
+        pytorch_wrapper = PytorchGRUProjectionWrapper(projection=W_HH_projection,
+                                                      torch_parameter=(W_HH_NAME, torch_gru.state_dict()[W_IH_NAME]),
+                                                      use=LEARNING,
+                                                      composition=self.composition,
+                                                      device=device)
+        _projection_wrapper_pairs.append((W_HH_projection, pytorch_wrapper))
+        hidden_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(W_HH_projection, W_HH_NAME, self.composition)
         self._pnl_refs_to_torch_param_names.update({HIDDEN_TO_HIDDEN: hidden_to_hidden_param_name_comp_tuple})
+
 
         if pnl.bias:
             from psyneulink.library.compositions.grucomposition.grucomposition import GRU_NODE
@@ -232,11 +246,23 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
                 # self._pnl_refs_to_torch_param_names.update({pnl_bias_proj.name: torch_bias_spec})
 
-            B_IH_proj = DummyProjection(BIAS_INPUT_TO_HIDDEN, default_learning_rate)
+            B_IH_proj = DummyProjection(BIAS_INPUT_TO_HIDDEN)
+            pytorch_wrapper = PytorchGRUProjectionWrapper(projection=B_IH_proj,
+                                                          torch_parameter=(B_IH_NAME,torch_gru.state_dict()[B_IH_NAME]),
+                                                          use=LEARNING,
+                                                          composition=self.composition,
+                                                          device=device)
+            _projection_wrapper_pairs.append((B_IH_proj, pytorch_wrapper))
             bias_in_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_IH_proj, B_IH_NAME, self.composition)
             self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN:bias_in_to_hid_param_name_comp_tuple})
 
-            B_HH_proj = DummyProjection(BIAS_HIDDEN_TO_HIDDEN, default_learning_rate)
+            B_HH_proj = DummyProjection(BIAS_HIDDEN_TO_HIDDEN)
+            pytorch_wrapper = PytorchGRUProjectionWrapper(projection=B_HH_proj,
+                                                          torch_parameter=(B_HH_NAME,torch_gru.state_dict()[B_HH_NAME]),
+                                                          use=LEARNING,
+                                                          composition=self.composition,
+                                                          device=device)
+            _projection_wrapper_pairs.append((B_HH_proj, pytorch_wrapper))
             bias_hid_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_HH_proj, B_HH_NAME, self.composition)
             self._pnl_refs_to_torch_param_names.update({BIAS_HIDDEN_TO_HIDDEN: bias_hid_to_hid_param_name_comp_tuple})
 
