@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LLVM Compilation &mdash; PsyNeuLink 0.16.1.0 documentation</title>
+  <title>LLVM Compilation &mdash; PsyNeuLink 0.17.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0
+                  0.17.0.0
                 </div>
               
             
@@ -198,47 +198,47 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.core.llvm.__init__">
-<span id="llvm-compilation"></span><h1>LLVM Compilation<a class="headerlink" href="#module-psyneulink.core.llvm.__init__" title="Permalink to this headline">¶</a></h1>
+<span id="llvm-compilation"></span><h1>LLVM Compilation<a class="headerlink" href="#module-psyneulink.core.llvm.__init__" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.llvm.__init__.</span></span><span class="sig-name descname"><span class="pre">ExecutionMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.llvm.__init__.</span></span><span class="sig-name descname"><span class="pre">ExecutionMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode" title="Link to this definition">¶</a></dt>
 <dd><p>Specify execution a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in interpreted or one of ithe compiled modes.
 These are used to specify the <strong>execution_mode</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>,
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods.  See <a class="reference internal" href="Composition.html#composition-compilation-modes"><span class="std std-ref">Compiled Modes</span></a> under <a class="reference internal" href="Composition.html#composition-compilation"><span class="std std-ref">Compilation</span></a> for additional details concerning
 use of each mode by a Composition.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.Python">
-<span class="sig-name descname"><span class="pre">Python</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">Python</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="Link to this definition">¶</a></dt>
 <dd><p>Execute using the Python interpreter;  this is the default mode.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.LLVM">
-<span class="sig-name descname"><span class="pre">LLVM</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">LLVM</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVM" title="Link to this definition">¶</a></dt>
 <dd><p>compile and run Composition <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> individually.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec">
-<span class="sig-name descname"><span class="pre">_LLVMExec</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_LLVMExec</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec" title="Link to this definition">¶</a></dt>
 <dd><p>compile and run each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> individually.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun">
-<span class="sig-name descname"><span class="pre">LLVMRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">LLVMRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun" title="Link to this definition">¶</a></dt>
 <dd><p>compile and run multiple <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.Auto">
-<span class="sig-name descname"><span class="pre">Auto</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Auto" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">Auto</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.Auto" title="Link to this definition">¶</a></dt>
 <dd><p>progressively attempt LLVMRun, LLVMexec. LLVM and then Python.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch">
-<span class="sig-name descname"><span class="pre">PyTorch</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">PyTorch</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="Link to this definition">¶</a></dt>
 <dd><p>execute the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method using PyTorch, and its
 <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method using the Python interpreter.</p>
 <div class="admonition warning">
@@ -251,14 +251,24 @@ its <a class="reference internal" href="Composition.html#psyneulink.core.composi
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PTX">
-<span class="sig-name descname"><span class="pre">PTX</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTX" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">PTX</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTX" title="Link to this definition">¶</a></dt>
 <dd><p>compile and run Composition <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> using CUDA for GPU.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode.PTXRun">
-<span class="sig-name descname"><span class="pre">PTXRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">PTXRun</span></span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun" title="Link to this definition">¶</a></dt>
 <dd><p>compile and run multiple <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s using CUDA for GPU.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.llvm.__init__.ExecutionMode._generate_next_value_">
+<span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.llvm.__init__.ExecutionMode._generate_next_value_" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the next value when not given.</p>
+<p>name: the name of the member
+start: the initial start value or None
+count: the number of existing members
+last_values: the last value assigned or None</p>
 </dd></dl>
 
 </dd></dl>
@@ -299,7 +309,21 @@ its <a class="reference internal" href="Composition.html#psyneulink.core.composi
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">LLVM Compilation</a></li>
+<li><a class="reference internal" href="#">LLVM Compilation</a><ul>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode"><code class="docutils literal notranslate"><span class="pre">ExecutionMode</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVM"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.LLVM</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode._LLVMExec"><code class="docutils literal notranslate"><span class="pre">ExecutionMode._LLVMExec</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.LLVMRun"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.LLVMRun</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.Auto"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.Auto</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTX"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.PTX</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode.PTXRun"><code class="docutils literal notranslate"><span class="pre">ExecutionMode.PTXRun</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.llvm.__init__.ExecutionMode._generate_next_value_"><code class="docutils literal notranslate"><span class="pre">ExecutionMode._generate_next_value_()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -315,10 +339,11 @@ its <a class="reference internal" href="Composition.html#psyneulink.core.composi
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

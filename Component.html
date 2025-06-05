@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.16.1.0 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.17.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0
+                  0.17.0.0
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="component">
-<h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
+<h1>Component<a class="headerlink" href="#component" title="Link to this heading">¶</a></h1>
 <div class="subclasses docutils container">
 <p><em>Subclasses</em></p>
 <div class="toctree-wrapper compound">
@@ -224,8 +224,8 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.component"></span><section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<section id="contents">
+<span id="module-psyneulink.core.components.component"></span><h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="#component-overview"><span class="std std-ref">Overview</span></a></p></li>
 <li><dl class="simple">
@@ -267,12 +267,12 @@
 </ul>
 </section>
 <section id="overview">
-<span id="component-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="component-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>Component is the base class for all of the objects used to create <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> in PsyNeuLink.
 It defines a common set of attributes possessed, and methods used by all Component objects.</p>
 </section>
 <section id="creating-a-component">
-<span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Permalink to this headline">¶</a></h2>
+<span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Link to this heading">¶</a></h2>
 <p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal notranslate"><span class="pre">__init__()</span></code>
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed <code class="xref any docutils literal notranslate"><span class="pre">below</span></code>) as part of the initialization procedure.  Every Component has a core set of
@@ -281,7 +281,7 @@ as additional parameters and attributes that may be specific to particular Compo
 by the user, and some of which provide useful information about the Component (see <a class="reference internal" href="#user-modifiable-parameters"><span class="std std-ref">Parameters</span></a>
 and <code class="xref any docutils literal notranslate"><span class="pre">Informational</span> <span class="pre">Attributes</span></code> below).</p>
 <section id="deferred-initialization">
-<span id="component-deferred-init"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
+<span id="component-deferred-init"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Link to this heading">¶</a></h3>
 <p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.owner" title="psyneulink.core.components.ports.port.Port_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Port</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its
 full initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> is assigned to a
@@ -293,9 +293,9 @@ a Projection to the <code class="xref any docutils literal notranslate"><span cl
 </section>
 </section>
 <section id="component-structure">
-<span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Link to this heading">¶</a></h2>
 <section id="core-structural-attributes">
-<span id="component-structural-attributes"></span><h3><em>Core Structural Attributes</em><a class="headerlink" href="#core-structural-attributes" title="Permalink to this headline">¶</a></h3>
+<span id="component-structural-attributes"></span><h3><em>Core Structural Attributes</em><a class="headerlink" href="#core-structural-attributes" title="Link to this heading">¶</a></h3>
 <p>Every Component has the following set of core structural attributes that can be specified in its constructor using the
 arguments listed below. These attributes are not meant to be changed by the user once the component is constructed,
 with the one exception of <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a>.</p>
@@ -367,7 +367,7 @@ following examples:</p>
 </pre></div>
 </div>
 <p>The specified Function will be used as a template to create a new Function object that is assigned to the
-<a class="reference internal" href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute of the Component.</p>
+<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute of the Component.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>In the current implementation of PsyNeuLink, if a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (or the constructor for one) is
@@ -395,7 +395,7 @@ specifications above as its value, as in the following example:</p>
 other values.</p>
 <blockquote>
 <div><div class="technical-note docutils container">
-<p>In general, Components that have an execute() method may use this to assign the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.value" title="psyneulink.core.components.functions.function.Function_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Component
+<p>In general, Components that have an execute() method may use this to assign the <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Component
 (e.g., <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Mechanism_Base</span></code></a>; see <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> and <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> for examples).</p>
 </div>
 </div></blockquote>
@@ -420,7 +420,7 @@ preference (see <a class="reference internal" href="Preferences.html"><span clas
 </ul>
 </section>
 <section id="parameters">
-<span id="user-modifiable-parameters"></span><h3><em>Parameters</em><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<span id="user-modifiable-parameters"></span><h3><em>Parameters</em><a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
 <p id="component-parameters">A Component defines its <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> in its <em>parameters</em> attribute, which contains a collection of
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> objects, each of which stores a Parameter’s values, <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default</span> <span class="pre">values</span></code></a>, and various
 <a class="reference internal" href="Parameters.html#parameter-attributes-table"><span class="std std-ref">properties</span></a> of the parameter.</p>
@@ -433,7 +433,7 @@ In general, only parameters that take numerical values and/or do not affect the 
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>,
-<a class="reference internal" href="EpisodicMemoryMechanism.html#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>, and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, are all listed in parameters, and are user-modifiable,
+<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>, and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, are all listed in parameters, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integration_rate</span></code></a> can all be subject to modulation. Parameters that are subject to modulation
 have the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulable</span></code></a> attribute set to True and are associated with a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which
 the ControlSignals can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -478,10 +478,10 @@ argument, using a value of <code class="xref any docutils literal notranslate"><
 </section>
 </section>
 <section id="execution">
-<span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A Component is executed when its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
 <section id="lazy-updating">
-<span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Permalink to this headline">¶</a></h3>
+<span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Link to this heading">¶</a></h3>
 <p>In general, only <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> are executed from the command line (i.e., from the console or in a
 script).  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can also be executed, although this is usually just for the purposes of demonstration
 or debugging, and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can only be executed if they are standalone (that is, they do not belong to
@@ -498,7 +498,7 @@ execution of the Components to which they belong or on which they depend for exe
 <p>The following attributes and methods control and provide information about the execution of a Component:</p>
 </section>
 <section id="initialization">
-<span id="component-execution-initialization"></span><h3><em>Initialization</em><a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<span id="component-execution-initialization"></span><h3><em>Initialization</em><a class="headerlink" href="#initialization" title="Link to this heading">¶</a></h3>
 <ul id="component-reset-stateful-function-when">
 <li><p><strong>reset_stateful_function_when</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> that determines when the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>
 method is called.  The <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a> <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a>, or that have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a> Parameters.  When the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method is called, this is done without any
@@ -514,20 +514,20 @@ Mechanisms (see <a class="reference internal" href="Composition.html#composition
 </ul>
 </section>
 <section id="termination">
-<span id="component-execution-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
+<span id="component-execution-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Link to this heading">¶</a></h3>
 <ul class="simple" id="component-is-finished">
 <li><p><strong>is_finished()</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</p></li>
 </ul>
 <ul class="simple" id="component-execute-until-finished">
-<li><p><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method returns True.
+<li><p><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method returns True.
 If it is False, then the Component executes only once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method,
-irrespective of its <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
-<a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p></li>
+irrespective of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
+<a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p></li>
 </ul>
 <ul class="simple" id="component-num-executions-before-finished">
 <li><p><strong>num_executions_before_finished</strong> – contains the number of times the Component has executed prior to finishing
 (and since it last finished);  depending upon the class, these may all be within a single call to the Component’s
-<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evaluates
+<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evaluates
 to True. Note that this is distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes.</p></li>
 </ul>
 <ul class="simple" id="component-max-executions-before-finished">
@@ -538,7 +538,7 @@ unlimited.</p></li>
 </ul>
 </section>
 <section id="count-and-time">
-<span id="component-execution-count-and-time"></span><h3><em>Count and Time</em><a class="headerlink" href="#count-and-time" title="Permalink to this headline">¶</a></h3>
+<span id="component-execution-count-and-time"></span><h3><em>Count and Time</em><a class="headerlink" href="#count-and-time" title="Link to this heading">¶</a></h3>
 <ul class="simple" id="component-execution-count">
 <li><p><strong>execution_count</strong> – maintains a record of the number of times a Component has executed since it was constructed,
 <em>excluding</em>  executions carried out during initialization and validation, but including all others whether they are
@@ -560,10 +560,11 @@ last execution.</p></li>
 </section>
 </section>
 <section id="class-reference">
-<span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.component.</span></span><span class="sig-name descname"><span class="pre">Component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.component.</span></span><span class="sig-name descname"><span class="pre">Component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Link to this definition">¶</a></dt>
 <dd><p>Base class for Component.</p>
 <p>The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
@@ -572,11 +573,11 @@ last execution.</p></li>
 It should be instantiated using the constructor for a subclass.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>default_variable</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default</em><em> [</em><em>[</em><em>0</em><em>]</em><em>]</em>) – specifies template for the input to the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and the value used as the
 input to the Component if none is provided on execution (see <code class="xref any docutils literal notranslate"><span class="pre">Component_Variable</span></code> for additional information).</p></li>
-<li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable of tuple</em><em> or </em><em>int : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
+<li><p><strong>input_shapes</strong> (<em>int</em><em>, or </em><em>Iterable</em><em> of </em><em>tuple</em><em> or </em><em>int : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it is checked for
 compatibility against <strong>input_shapes</strong> (see
 <a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a> for additonal details).</p></li>
@@ -592,10 +593,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.variable" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>2d np.array</p>
 </dd>
 </dl>
@@ -603,10 +604,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.input_shapes">
-<span class="sig-name descname"><span class="pre">input_shapes</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.input_shapes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">input_shapes</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.input_shapes" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-input-shapes"><span class="std std-ref">input_shapes</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Union[int, Iterable[Union[int, tuple]]]</p>
 </dd>
 </dl>
@@ -614,10 +615,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.function" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Function, function or method</p>
 </dd>
 </dl>
@@ -625,10 +626,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.value">
-<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.value" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-value"><span class="std std-ref">value</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>2d np.array</p>
 </dd>
 </dl>
@@ -636,10 +637,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.log">
-<span class="sig-name descname"><span class="pre">log</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.log" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">log</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.log" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-log"><span class="std std-ref">log</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log" title="psyneulink.core.globals.log.Log">Log</a></p>
 </dd>
 </dl>
@@ -647,10 +648,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.execution_count">
-<span class="sig-name descname"><span class="pre">execution_count</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.execution_count" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execution_count</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.execution_count" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -658,10 +659,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.num_executions">
-<span class="sig-name descname"><span class="pre">num_executions</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.num_executions" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">num_executions</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.num_executions" title="Link to this definition">¶</a></dt>
 <dd><p>see <code class="xref any docutils literal notranslate"><span class="pre">num_executions</span></code></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time" title="psyneulink.core.scheduling.time.Time">Time</a></p>
 </dd>
 </dl>
@@ -669,10 +670,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.current_execution_time">
-<span class="sig-name descname"><span class="pre">current_execution_time</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.current_execution_time" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">current_execution_time</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.current_execution_time" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-current-execution-time"><span class="std std-ref">current_execution_time</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple(<code class="xref any docutils literal notranslate"><span class="pre">Time.RUN</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Time.TRIAL</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Time.PASS</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">Time.TIME_STEP</span></code>)</p>
 </dd>
 </dl>
@@ -680,10 +681,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.execute_until_finished">
-<span class="sig-name descname"><span class="pre">execute_until_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.execute_until_finished" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execute_until_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.execute_until_finished" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -691,10 +692,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.num_executions_before_finished">
-<span class="sig-name descname"><span class="pre">num_executions_before_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.num_executions_before_finished" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">num_executions_before_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.num_executions_before_finished" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -702,10 +703,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.max_executions_before_finished">
-<span class="sig-name descname"><span class="pre">max_executions_before_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.max_executions_before_finished" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_executions_before_finished</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.max_executions_before_finished" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-max-executions-before-finished"><span class="std std-ref">max_executions_before_finished</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -713,10 +714,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.stateful_parameters">
-<span class="sig-name descname"><span class="pre">stateful_parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">stateful_parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-stateful-parameters"><span class="std std-ref">stateful_parameters</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list</p>
 </dd>
 </dl>
@@ -724,10 +725,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.reset_stateful_function_when">
-<span class="sig-name descname"><span class="pre">reset_stateful_function_when</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset_stateful_function_when</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-reset-stateful-function-when"><span class="std std-ref">reset_stateful_function_when</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></p>
 </dd>
 </dl>
@@ -735,10 +736,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.name" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -746,10 +747,10 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.prefs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.prefs" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PreferenceSet</p>
 </dd>
 </dl>
@@ -757,22 +758,22 @@ override any assigned to those parameters in arguments of the constructor.</p></
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.parameters">
-<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.parameters" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#component-parameters"><span class="std std-ref">parameters</span></a> and <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> for additional information.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters">Parameters</a></p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="CompositionInterfaceMechanism.html#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters" title="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters">Parameters</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.defaults">
-<span class="sig-name descname"><span class="pre">defaults</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.defaults" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">defaults</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.defaults" title="Link to this definition">¶</a></dt>
 <dd><p>an object that provides access to the default values of a <code class="xref any docutils literal notranslate"><span class="pre">Component's</span></code> <a class="reference internal" href="#psyneulink.core.components.component.Component.parameters" title="psyneulink.core.components.component.Component.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a>;
 see <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">parameter defaults</span></a> for additional information.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Defaults" title="psyneulink.core.globals.parameters.Defaults">Defaults</a></p>
 </dd>
 </dl>
@@ -780,7 +781,7 @@ see <a class="reference internal" href="Parameters.html#parameter-defaults"><spa
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.initialization_status">
-<span class="sig-name descname"><span class="pre">initialization_status</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.initialization_status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">initialization_status</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.initialization_status" title="Link to this definition">¶</a></dt>
 <dd><p>indicates the state of initialization of the Component;
 one and only one of the following flags is always set:</p>
 <blockquote>
@@ -794,7 +795,7 @@ one and only one of the following flags is always set:</p>
 </ul>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>field of flags attribute</p>
 </dd>
 </dl>
@@ -802,7 +803,7 @@ one and only one of the following flags is always set:</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._model_spec_generic_type_name">
-<span class="sig-name descname"><span class="pre">_model_spec_generic_type_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">NotImplemented</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_generic_type_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_model_spec_generic_type_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">NotImplemented</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_generic_type_name" title="Link to this definition">¶</a></dt>
 <dd><p>string describing this class’s generic type in universal model
 specification,
 if it exists and is different than the class name</p>
@@ -810,25 +811,25 @@ if it exists and is different than the class name</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._model_spec_class_name_is_generic">
-<span class="sig-name descname"><span class="pre">_model_spec_class_name_is_generic</span></span><em class="property"> <span class="pre">=</span> <span class="pre">False</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_class_name_is_generic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_model_spec_class_name_is_generic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_class_name_is_generic" title="Link to this definition">¶</a></dt>
 <dd><p>True if the class name is the class’s generic type in universal model specification,
 False otherwise</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._specified_variable_shape_flexibility">
-<span class="sig-name descname"><span class="pre">_specified_variable_shape_flexibility</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._specified_variable_shape_flexibility" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_specified_variable_shape_flexibility</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#psyneulink.core.components.component.Component._specified_variable_shape_flexibility" title="Link to this definition">¶</a></dt>
 <dd><p>The <code class="xref any docutils literal notranslate"><span class="pre">DefaultsFlexibility</span></code> ._variable_shape_flexibility takes on
 when variable shape was manually specified</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._handle_default_variable">
-<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_default_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>input_shapes</strong>
 arguments.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><em>a default variable if possible</em></p></li>
 <li><p><em>None otherwise</em></p></li>
@@ -840,16 +841,16 @@ arguments.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parse_input_shapes">
-<span class="sig-name descname"><span class="pre">_parse_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_input_shapes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_input_shapes" title="Link to this definition">¶</a></dt>
 <dd><p>Returns the equivalent ‘variable’ array specified by <strong>input_shapes</strong></p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_shapes</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>tuple</em><em>]</em><em>]</em><em>]</em>) – </p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_shapes</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>tuple</em><em>]</em><em>]</em><em>]</em>)</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -857,7 +858,7 @@ arguments.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._handle_input_shapes">
-<span class="sig-name descname"><span class="pre">_handle_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_input_shapes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_handle_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_input_shapes" title="Link to this definition">¶</a></dt>
 <dd><p>If variable is None, _handle_input_shapes tries to infer variable based on the <strong>input_shapes</strong> argument to the
 __init__() function. If input_shapes is None (usually in the case of
 Projections/Functions), then this function passes without
@@ -867,7 +868,7 @@ ComponentError is thrown if they are not compatible.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._get_allowed_arguments">
-<span class="sig-name descname"><span class="pre">_get_allowed_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._get_allowed_arguments" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_allowed_arguments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._get_allowed_arguments" title="Link to this definition">¶</a></dt>
 <dd><p>Returns a set of argument names that can be passed into
 __init__, directly or through params dictionaries</p>
 <dl class="simple">
@@ -881,7 +882,7 @@ constructor_argument</p></li>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></p>
 </dd>
 </dl>
@@ -889,13 +890,13 @@ constructor_argument</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._deferred_init">
-<span class="sig-name descname"><span class="pre">_deferred_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._deferred_init" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_deferred_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._deferred_init" title="Link to this definition">¶</a></dt>
 <dd><p>Use in subclasses that require deferred initialization</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._check_args">
-<span class="sig-name descname"><span class="pre">_check_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_args" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_check_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_args" title="Link to this definition">¶</a></dt>
 <dd><p>validate variable and params, instantiate variable (if necessary) and assign any runtime params.</p>
 <p>Called by functions to validate variable and params
 Validation can be suppressed by turning parameter_validation attribute off
@@ -907,16 +908,16 @@ target_set is a params dictionary to which params should be assigned;</p>
 - sets runtime params
 - validate params if PARAM_VALIDATION is set</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> – (anything but a dict) - variable to validate</p></li>
 <li><p><strong>params</strong> – (dict) - params to validate</p></li>
 </ul>
 </dd>
-<dt class="field-even">Target_set</dt>
+<dt class="field-even">Target_set<span class="colon">:</span></dt>
 <dd class="field-even"><p>(dict) - set to which params should be assigned</p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
@@ -924,7 +925,7 @@ target_set is a params dictionary to which params should be assigned;</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate_and_assign_runtime_params">
-<span class="sig-name descname"><span class="pre">_validate_and_assign_runtime_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_and_assign_runtime_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_and_assign_runtime_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_and_assign_runtime_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate runtime_params, cache for reset, and assign values</p>
 <p>Check that all params belong either to Component or its function (raise error if any are found that don’t)
 Cache params to reset in _runtime_params_reset</p>
@@ -932,7 +933,7 @@ Cache params to reset in _runtime_params_reset</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._instantiate_defaults">
-<span class="sig-name descname"><span class="pre">_instantiate_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_defaults" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_defaults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_defaults" title="Link to this definition">¶</a></dt>
 <dd><p>Validate variable and/or param defaults in requested set and assign values to params in target set</p>
 <blockquote>
 <div><p>Variable can be any type other than a dictionary (reserved for use as params)
@@ -953,7 +954,7 @@ if request_set is None, then all values in the target_set are assigned from the 
 </dl>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> – (anything but a dict (variable) - value to assign as defaults.variable</p></li>
 <li><p><strong>request_set</strong> – (dict) - params to be assigned</p></li>
@@ -962,7 +963,7 @@ if request_set is None, then all values in the target_set are assigned from the 
 <li><p><strong>default_set</strong> – (dict) - values used for params missing from request_set (only if assign_missing is True)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
@@ -970,7 +971,7 @@ if request_set is None, then all values in the target_set are assigned from the 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate_arguments">
-<span class="sig-name descname"><span class="pre">_validate_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_arguments" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_arguments" title="Link to this definition">¶</a></dt>
 <dd><p>Raises errors for illegal specifications of arguments to
 __init__:</p>
 <blockquote>
@@ -987,13 +988,13 @@ ParameterAlias</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._initialize_parameters">
-<span class="sig-name descname"><span class="pre">_initialize_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._initialize_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_initialize_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._initialize_parameters" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>**param_defaults</strong> – maps Parameter names to their default</p></li>
-<li><p><strong>any</strong> (<em>values. Sets instance-level Parameters dynamically for</em>) – </p></li>
-<li><p><strong>object.</strong> (<em>name that maps to a Parameter</em>) – </p></li>
+<li><p><strong>any</strong> (<em>values. Sets instance-level Parameters dynamically for</em>)</p></li>
+<li><p><strong>object.</strong> (<em>name that maps to a Parameter</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1001,14 +1002,14 @@ ParameterAlias</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._instantiate_parameter_classes">
-<span class="sig-name descname"><span class="pre">_instantiate_parameter_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_parameter_classes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_parameter_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_parameter_classes" title="Link to this definition">¶</a></dt>
 <dd><p>An optional method that will take any Parameter values in
 <strong>context</strong> that are classes/types, and instantiate them.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.reset_params">
-<span class="sig-name descname"><span class="pre">reset_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ResetMode.INSTANCE_TO_CLASS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ResetMode.INSTANCE_TO_CLASS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_params" title="Link to this definition">¶</a></dt>
 <dd><p>Reset current and/or instance defaults</p>
 <dl class="simple">
 <dt>If called with:</dt><dd><ul class="simple">
@@ -1019,59 +1020,56 @@ ParameterAlias</p></li>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>mode</strong> – (ResetMode) - determines which params are reset</p>
 </dd>
-<dt class="field-even">Return none</dt>
+<dt class="field-even">Return none<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._set_multiple_parameter_values">
-<span class="sig-name descname"><span class="pre">_set_multiple_parameter_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._set_multiple_parameter_values" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_set_multiple_parameter_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._set_multiple_parameter_values" title="Link to this definition">¶</a></dt>
 <dd><p>Unnecessary, but can simplify multiple parameter assignments at once
 For every kwarg k, v pair, will attempt to set self.parameters.&lt;k&gt; to v for context</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parse_arg_generic">
-<span class="sig-name descname"><span class="pre">_parse_arg_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_generic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_arg_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_generic" title="Link to this definition">¶</a></dt>
 <dd><p>Argument parser for any argument that does not have a specialized parser</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parse_arg_variable">
-<span class="sig-name descname"><span class="pre">_parse_arg_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_arg_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Transforms <strong>variable</strong> into a form that Components expect. Used to allow
 users to pass input in convenient forms, like a single float when a list
 for input ports is expected</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>The transformed <strong>input</strong></p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The transformed <strong>input</strong></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parse_function_variable">
-<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_function_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
 Function associated with this Component</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate">
-<span class="sig-name descname"><span class="pre">_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate" title="Link to this definition">¶</a></dt>
 <dd><p>Eventually should contain all validation methods, occurs at end of Component.__init__</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate_variable">
-<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -1092,13 +1090,13 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> – (anything other than a dictionary) - variable to be validated:</p></li>
 <li><p><strong>context</strong> – (str)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return variable</dt>
+<dt class="field-even">Return variable<span class="colon">:</span></dt>
 <dd class="field-even"><p>validated variable</p>
 </dd>
 </dl>
@@ -1106,7 +1104,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate params and assign validated values to targets,</p>
 <p>This performs top-level type validation of params</p>
 <p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
@@ -1119,26 +1117,26 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository of params that have been</em>) – </p></li>
-<li><p><strong>validated</strong> – </p></li>
+<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository</em><em> of </em><em>params that have been</em>)</p></li>
+<li><p><strong>validated</strong></p></li>
 </ul>
 </dd>
-<dt class="field-even">Return none</dt>
+<dt class="field-even">Return none<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._get_param_value_from_tuple">
-<span class="sig-name descname"><span class="pre">_get_param_value_from_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._get_param_value_from_tuple" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_param_value_from_tuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._get_param_value_from_tuple" title="Link to this definition">¶</a></dt>
 <dd><p>Returns param value (first item) of a (value, projection) tuple;</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._validate_function">
-<span class="sig-name descname"><span class="pre">_validate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_function" title="Link to this definition">¶</a></dt>
 <dd><p>Check that either params[FUNCTION] and/or self.execute are implemented</p>
 <p># FROM _validate_params:
 # It also checks FUNCTION:
@@ -1170,7 +1168,7 @@ If a specification is not present or valid:</p>
 </li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
@@ -1178,7 +1176,7 @@ If a specification is not present or valid:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._instantiate_function">
-<span class="sig-name descname"><span class="pre">_instantiate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_function" title="Link to this definition">¶</a></dt>
 <dd><p>Instantiate function defined in &lt;subclass&gt;.function or &lt;subclass&gt;.function</p>
 <p>Instantiate params[FUNCTION] if present, and assign it to self.function</p>
 <dl class="simple">
@@ -1213,14 +1211,14 @@ If a specification is not present or valid:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._check_for_composition">
-<span class="sig-name descname"><span class="pre">_check_for_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_for_composition" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_check_for_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_for_composition" title="Link to this definition">¶</a></dt>
 <dd><p>Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
 Called by Composition.add_node.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset" title="Link to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
@@ -1229,20 +1227,20 @@ value based on its default_variable.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.execute">
-<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.execute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.execute" title="Link to this definition">¶</a></dt>
 <dd><p>Executes Component’s <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  See Component-specific execute method for details.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.is_finished">
-<span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Link to this definition">¶</a></dt>
 <dd><p>Set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>; used by <code class="xref any docutils literal notranslate"><span class="pre">Component-based</span> <span class="pre">Conditions</span></code> to predicate the
 execution of one or more other Components on a Component.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._sender_ports">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_sender_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._sender_ports" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_sender_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._sender_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Returns:
 ContentAddressableList: list containing Ports on this object
 that can send Projections</p>
@@ -1250,7 +1248,7 @@ that can send Projections</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._receiver_ports">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_receiver_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._receiver_ports" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_receiver_ports</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._receiver_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Returns:
 ContentAddressableList: list containing Ports on this object
 that can receive Projections</p>
@@ -1258,49 +1256,49 @@ that can receive Projections</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.get_afferents">
-<span class="sig-name descname"><span class="pre">get_afferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_afferents" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_afferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_afferents" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>from_component</strong> (<a class="reference internal" href="#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
-<li><p><strong>from</strong> (<em>returned list to contain only afferents originating</em>) – </p></li>
-<li><p><strong>None.</strong> (<em>*from_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+<li><p><strong>from</strong> (<em>returned list to contain only afferents originating</em>)</p></li>
+<li><p><strong>None.</strong> (<em>*from_component*</em><em> or </em><em>one</em><em> of </em><em>its Ports. Defaults to</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>list of afferent Projections to this
 Component</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.get_efferents">
-<span class="sig-name descname"><span class="pre">get_efferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_efferents" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_efferents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.get_efferents" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>to_component</strong> (<a class="reference internal" href="#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>optional</em>) – if specified, filters</p></li>
-<li><p><strong>at</strong> (<em>returned list to contain only efferents ending</em>) – </p></li>
-<li><p><strong>None.</strong> (<em>*to_component*</em><em> or </em><em>one of its Ports. Defaults to</em>) – </p></li>
+<li><p><strong>at</strong> (<em>returned list to contain only efferents ending</em>)</p></li>
+<li><p><strong>None.</strong> (<em>*to_component*</em><em> or </em><em>one</em><em> of </em><em>its Ports. Defaults to</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>list of efferent Projections from
 this Component</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.loggable_items">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.loggable_items" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.loggable_items" title="Link to this definition">¶</a></dt>
 <dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContextFlags</span></code></a>.
 This is a convenience method that calls the <a class="reference internal" href="Log.html#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
@@ -1308,7 +1306,7 @@ This is a convenience method that calls the <a class="reference internal" href="
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.set_log_conditions">
-<span class="sig-name descname"><span class="pre">set_log_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">items</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">log_condition=EXECUTION</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_log_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">log_condition=EXECUTION</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_log_conditions" title="Link to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a>
 method of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
@@ -1316,7 +1314,7 @@ method of the Component’s <a class="reference internal" href="#psyneulink.core
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.set_delivery_conditions">
-<span class="sig-name descname"><span class="pre">set_delivery_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogCondition.EXECUTION</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_delivery_conditions" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_delivery_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery_condition=&lt;LogCondition.EXECUTION:</span> <span class="pre">896&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_delivery_conditions" title="Link to this definition">¶</a></dt>
 <dd><p>_set_delivery_conditions(                      items                                delivery_condition=EXECUTION          )</p>
 <p>Specifies items to be delivered to external application via gRPC; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a>
 of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log._set_delivery_conditions" title="psyneulink.core.globals.log.Log._set_delivery_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">_set_delivery_conditions</span></code></a>
@@ -1325,7 +1323,7 @@ method of the Component’s <a class="reference internal" href="#psyneulink.core
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.log_values">
-<span class="sig-name descname"><span class="pre">log_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.log_values" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">log_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.log_values" title="Link to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; ; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>. This is a convenience method that calls the <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> method
 of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
@@ -1333,19 +1331,19 @@ of the Component’s <a class="reference internal" href="#psyneulink.core.compon
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.all_dependent_parameters">
-<span class="sig-name descname"><span class="pre">all_dependent_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.all_dependent_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all_dependent_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.all_dependent_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>Dictionary of Parameters of this Component and its         <a class="reference internal" href="#psyneulink.core.components.component.Component._dependent_components" title="psyneulink.core.components.component.Component._dependent_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">_dependent_components</span></code></a> filtered by <strong>filter_name</strong> and         <strong>filter_regex</strong>. If no filter is specified, all Parameters         are included.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filter_name</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The                 exact name or names of Parameters to include. Defaults                 to None.</p></li>
 <li><p><strong>filter_regex</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Regular expression patterns. If any pattern matches a                 Parameter name (using re.match), it will be included                 in the result. Defaults to None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Component]: Dictionary of filtered Parameters</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter">Parameter</a></p>
 </dd>
 </dl>
@@ -1353,7 +1351,7 @@ of the Component’s <a class="reference internal" href="#psyneulink.core.compon
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.logged_items">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.logged_items" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.logged_items" title="Link to this definition">¶</a></dt>
 <dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContextFlags</span></code></a>s
 This is a convenience method that calls the <a class="reference internal" href="Log.html#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
@@ -1361,46 +1359,57 @@ This is a convenience method that calls the <a class="reference internal" href="
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">stateful_parameters</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stateful_parameters</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd><p>A list of all of this object’s <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> whose values
 may change during runtime</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.function_parameters">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">function_parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.function_parameters" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">function_parameters</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.function_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> object of this object’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._parameter_components">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_parameter_components</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._parameter_components" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_parameter_components</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._parameter_components" title="Link to this definition">¶</a></dt>
 <dd><p>Returns a set of Components that are values of this object’s
 Parameters</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._dependent_components">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_dependent_components</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._dependent_components" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a set of Components that will be executed if this Component is executed</p>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_dependent_components</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._dependent_components" title="Link to this definition">¶</a></dt>
+<dd><p>Returns:
+Components that must have values in a given Context for
+this Component to execute in that Context</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code></a>]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.most_recent_context">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">most_recent_context</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_context" title="Permalink to this definition">¶</a></dt>
-<dd><p>used to set a default behavior for attributes that correspond to parameters</p>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">most_recent_context</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component.most_recent_context" title="Link to this definition">¶</a></dt>
+<dd><p>Returns:
+<a class="reference internal" href="Context.html"><span class="doc">Context</span></a>: the <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object this Component used in its
+last call to <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>,
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>. If
+none of these methods have been called, a <a class="reference internal" href="Context.html"><span class="doc">Context</span></a> object
+with the default execution_id (None)</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component._model_spec_parameter_blacklist">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_model_spec_parameter_blacklist</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_model_spec_parameter_blacklist</span></span><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_parameter_blacklist" title="Link to this definition">¶</a></dt>
 <dd><p>A set of Parameter names that should not be added to the generated
 constructor string</p>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -1457,6 +1466,72 @@ constructor string</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component"><code class="docutils literal notranslate"><span class="pre">Component</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.variable"><code class="docutils literal notranslate"><span class="pre">Component.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.input_shapes"><code class="docutils literal notranslate"><span class="pre">Component.input_shapes</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.function"><code class="docutils literal notranslate"><span class="pre">Component.function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.value"><code class="docutils literal notranslate"><span class="pre">Component.value</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.log"><code class="docutils literal notranslate"><span class="pre">Component.log</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.execution_count"><code class="docutils literal notranslate"><span class="pre">Component.execution_count</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.num_executions"><code class="docutils literal notranslate"><span class="pre">Component.num_executions</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.current_execution_time"><code class="docutils literal notranslate"><span class="pre">Component.current_execution_time</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.execute_until_finished"><code class="docutils literal notranslate"><span class="pre">Component.execute_until_finished</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.num_executions_before_finished"><code class="docutils literal notranslate"><span class="pre">Component.num_executions_before_finished</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.max_executions_before_finished"><code class="docutils literal notranslate"><span class="pre">Component.max_executions_before_finished</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.stateful_parameters"><code class="docutils literal notranslate"><span class="pre">Component.stateful_parameters</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="docutils literal notranslate"><span class="pre">Component.reset_stateful_function_when</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.name"><code class="docutils literal notranslate"><span class="pre">Component.name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.prefs"><code class="docutils literal notranslate"><span class="pre">Component.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.parameters"><code class="docutils literal notranslate"><span class="pre">Component.parameters</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.defaults"><code class="docutils literal notranslate"><span class="pre">Component.defaults</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.initialization_status"><code class="docutils literal notranslate"><span class="pre">Component.initialization_status</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._model_spec_generic_type_name"><code class="docutils literal notranslate"><span class="pre">Component._model_spec_generic_type_name</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._model_spec_class_name_is_generic"><code class="docutils literal notranslate"><span class="pre">Component._model_spec_class_name_is_generic</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._specified_variable_shape_flexibility"><code class="docutils literal notranslate"><span class="pre">Component._specified_variable_shape_flexibility</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._handle_default_variable"><code class="docutils literal notranslate"><span class="pre">Component._handle_default_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._parse_input_shapes"><code class="docutils literal notranslate"><span class="pre">Component._parse_input_shapes()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._handle_input_shapes"><code class="docutils literal notranslate"><span class="pre">Component._handle_input_shapes()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._get_allowed_arguments"><code class="docutils literal notranslate"><span class="pre">Component._get_allowed_arguments()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._deferred_init"><code class="docutils literal notranslate"><span class="pre">Component._deferred_init()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._check_args"><code class="docutils literal notranslate"><span class="pre">Component._check_args()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate_and_assign_runtime_params"><code class="docutils literal notranslate"><span class="pre">Component._validate_and_assign_runtime_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._instantiate_defaults"><code class="docutils literal notranslate"><span class="pre">Component._instantiate_defaults()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate_arguments"><code class="docutils literal notranslate"><span class="pre">Component._validate_arguments()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._initialize_parameters"><code class="docutils literal notranslate"><span class="pre">Component._initialize_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._instantiate_parameter_classes"><code class="docutils literal notranslate"><span class="pre">Component._instantiate_parameter_classes()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.reset_params"><code class="docutils literal notranslate"><span class="pre">Component.reset_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._set_multiple_parameter_values"><code class="docutils literal notranslate"><span class="pre">Component._set_multiple_parameter_values()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._parse_arg_generic"><code class="docutils literal notranslate"><span class="pre">Component._parse_arg_generic()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._parse_arg_variable"><code class="docutils literal notranslate"><span class="pre">Component._parse_arg_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._parse_function_variable"><code class="docutils literal notranslate"><span class="pre">Component._parse_function_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate"><code class="docutils literal notranslate"><span class="pre">Component._validate()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate_variable"><code class="docutils literal notranslate"><span class="pre">Component._validate_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate_params"><code class="docutils literal notranslate"><span class="pre">Component._validate_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._get_param_value_from_tuple"><code class="docutils literal notranslate"><span class="pre">Component._get_param_value_from_tuple()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._validate_function"><code class="docutils literal notranslate"><span class="pre">Component._validate_function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._instantiate_function"><code class="docutils literal notranslate"><span class="pre">Component._instantiate_function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._check_for_composition"><code class="docutils literal notranslate"><span class="pre">Component._check_for_composition()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.reset"><code class="docutils literal notranslate"><span class="pre">Component.reset()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.execute"><code class="docutils literal notranslate"><span class="pre">Component.execute()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished"><code class="docutils literal notranslate"><span class="pre">Component.is_finished()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._sender_ports"><code class="docutils literal notranslate"><span class="pre">Component._sender_ports</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._receiver_ports"><code class="docutils literal notranslate"><span class="pre">Component._receiver_ports</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.get_afferents"><code class="docutils literal notranslate"><span class="pre">Component.get_afferents()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.get_efferents"><code class="docutils literal notranslate"><span class="pre">Component.get_efferents()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items"><code class="docutils literal notranslate"><span class="pre">Component.loggable_items</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.set_log_conditions"><code class="docutils literal notranslate"><span class="pre">Component.set_log_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.set_delivery_conditions"><code class="docutils literal notranslate"><span class="pre">Component.set_delivery_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.log_values"><code class="docutils literal notranslate"><span class="pre">Component.log_values()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.all_dependent_parameters"><code class="docutils literal notranslate"><span class="pre">Component.all_dependent_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.logged_items"><code class="docutils literal notranslate"><span class="pre">Component.logged_items</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Component.stateful_parameters</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.function_parameters"><code class="docutils literal notranslate"><span class="pre">Component.function_parameters</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._parameter_components"><code class="docutils literal notranslate"><span class="pre">Component._parameter_components</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._dependent_components"><code class="docutils literal notranslate"><span class="pre">Component._dependent_components</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component.most_recent_context"><code class="docutils literal notranslate"><span class="pre">Component.most_recent_context</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.component.Component._model_spec_parameter_blacklist"><code class="docutils literal notranslate"><span class="pre">Component._model_spec_parameter_blacklist</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1474,10 +1549,11 @@ constructor string</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

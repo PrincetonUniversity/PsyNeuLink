@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.16.1.0 documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.17.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0
+                  0.17.0.0
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="migrating-learning-compositions-from-before-psyneulink-0-7-4">
-<h1>Migrating Learning Compositions from before PsyNeuLink 0.7.4<a class="headerlink" href="#migrating-learning-compositions-from-before-psyneulink-0-7-4" title="Permalink to this headline">¶</a></h1>
+<h1>Migrating Learning Compositions from before PsyNeuLink 0.7.4<a class="headerlink" href="#migrating-learning-compositions-from-before-psyneulink-0-7-4" title="Link to this heading">¶</a></h1>
 <p>As of PsyNeuLink release 0.7.5, the API for learning has been changed.
 At a high level, the major goals of this change were:</p>
 <ol class="arabic simple">
@@ -211,10 +211,10 @@ At a high level, the major goals of this change were:</p>
 This guide aims to demonstrate these changes by way of example, and should serve as a point of reference for those looking to convert
 Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <section id="learning-using-standard-psyneulink-compositions">
-<h2>Learning using Standard PsyNeuLink Compositions<a class="headerlink" href="#learning-using-standard-psyneulink-compositions" title="Permalink to this headline">¶</a></h2>
+<h2>Learning using Standard PsyNeuLink Compositions<a class="headerlink" href="#learning-using-standard-psyneulink-compositions" title="Link to this heading">¶</a></h2>
 <p>Learning using standard PsyNeuLink is largely unchanged. The two changes that impact this are:</p>
 <ol class="arabic simple">
-<li><p>The removal of the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> parameter of compositions, and</p></li>
+<li><p>The removal of the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.enable_learning" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> parameter of compositions, and</p></li>
 <li><p>The addition of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.learn</span></code></a> method to swap to learning mode</p></li>
 </ol>
 <p>To demonstrate this by example, consider the two following code blocks which both implement a simple three-layer network that learns XOR</p>
@@ -279,12 +279,12 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <span class="gp">... </span>                   <span class="n">animate</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;show_learning&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 </section>
 <section id="learning-using-autodiffcompositions">
-<h2>Learning using AutodiffCompositions<a class="headerlink" href="#learning-using-autodiffcompositions" title="Permalink to this headline">¶</a></h2>
+<h2>Learning using AutodiffCompositions<a class="headerlink" href="#learning-using-autodiffcompositions" title="Link to this heading">¶</a></h2>
 <p>AutodiffCompositions are also update in this change. In addition to the API changes mentioned for learning in compositions, several parameters of AutodiffCompositions have been moved from
-its constructor to be runtime parameters of its <a class="reference internal" href="EMComposition.html#psyneulink.library.compositions.emcomposition.EMComposition.learn" title="psyneulink.library.compositions.emcomposition.EMComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+its constructor to be runtime parameters of its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 <p>This is demonstrated in the following codeblocks:</p>
 <p>This is the OLD code:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">input_shapes</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
@@ -391,10 +391,11 @@ In addition, notice that the inputs to <code class="xref any docutils literal no
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

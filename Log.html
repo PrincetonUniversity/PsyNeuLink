@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.16.1.0 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.17.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0
+                  0.17.0.0
                 </div>
               
             
@@ -198,9 +198,9 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.core.globals.log">
-<span id="log"></span><h1>Log<a class="headerlink" href="#module-psyneulink.core.globals.log" title="Permalink to this headline">¶</a></h1>
+<span id="log"></span><h1>Log<a class="headerlink" href="#module-psyneulink.core.globals.log" title="Link to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A Log object is used to record the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of PsyNeuLink Components during their “life cycle” (i.e.,
 when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute when the Component is created, that can be used to record its value and/or that of other
 Components that belong to it.  These are stored in <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a> of the Log, that contain a sequential list
@@ -213,13 +213,13 @@ in debugging the model during construction. The entries of a Log can be displaye
 its <a class="reference internal" href="#psyneulink.core.globals.log.Log.print_entries" title="psyneulink.core.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its and <a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray" title="psyneulink.core.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="psyneulink.core.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray_dictionary</span></code></a> and <a class="reference internal" href="#psyneulink.core.globals.log.Log.csv" title="psyneulink.core.globals.log.Log.csv"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">csv</span></code></a>  methods, respectively.</p>
 </section>
 <section id="creating-logs-and-entries">
-<span id="log-creation"></span><h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
+<span id="log-creation"></span><h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Link to this heading">¶</a></h2>
 <p>A log object is automatically created for and assigned to a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute when the
 Component is created.  An entry is automatically created and added to the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a> attribute
 when its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> or that of a Component that belongs to it is recorded in the Log.</p>
 </section>
 <section id="structure">
-<span id="log-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="log-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A Log is composed of <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a>, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
 of <code class="xref any docutils literal notranslate"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal notranslate"><span class="pre">LogEntry</span></code> tuple has three items:</p>
@@ -267,7 +267,7 @@ programmatically (“manually”).  Components can be specified by their names o
 </ul>
 </div></blockquote>
 <section id="loggable-items">
-<span id="log-loggable-items"></span><h3><em>Loggable Items</em><a class="headerlink" href="#loggable-items" title="Permalink to this headline">¶</a></h3>
+<span id="log-loggable-items"></span><h3><em>Loggable Items</em><a class="headerlink" href="#loggable-items" title="Link to this heading">¶</a></h3>
 <p>Although every Component is assigned its own Log, that records the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of that Component,
 the Logs for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> also  provide access to and control
 the Logs of their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>.  Specifically the Logs of these Components contain the following information:</p>
@@ -292,7 +292,7 @@ the Logs of their <a class="reference internal" href="Port.html"><span class="do
 </ul>
 </section>
 <section id="logging-conditions">
-<span id="log-conditions"></span><h3><em>Logging Conditions</em><a class="headerlink" href="#logging-conditions" title="Permalink to this headline">¶</a></h3>
+<span id="log-conditions"></span><h3><em>Logging Conditions</em><a class="headerlink" href="#logging-conditions" title="Link to this heading">¶</a></h3>
 <p>Configuring a Component to be logged is done using a condition, that specifies a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> under which its
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> should be entered in its Log.  These can be specified in the <a class="reference internal" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a> method of a Log, or directly by specifying a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for the value a Component’s
 <code class="xref any docutils literal notranslate"><span class="pre">logPref</span></code> item of its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.prefs" title="psyneulink.core.components.component.Component.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> attribute.  The former is easier, and allows
@@ -329,7 +329,7 @@ To log its <a class="reference internal" href="Component.html#psyneulink.core.co
 </section>
 </section>
 <section id="execution">
-<span id="log-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="log-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>The value of a Component is recorded to a Log when the condition assigned to its <code class="xref any docutils literal notranslate"><span class="pre">logPref</span></code> is met.
 This is specified as a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> or a boolean combination of them (see <a class="reference internal" href="#log-conditions"><span class="std std-ref">Logging Conditions</span></a>).  The default LogCondition
 is <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.OFF" title="psyneulink.core.globals.log.LogCondition.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OFF</span></code></a>.</p>
@@ -423,17 +423,18 @@ reported.</p>
 </div>
 </section>
 <section id="class-reference">
-<span id="log-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="log-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">Log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">Log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log" title="Link to this definition">¶</a></dt>
 <dd><p>Maintain a Log for an object, which contains a dictionary of logged value(s).</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.owner" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.owner" title="Link to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the Log belongs (and assigned as its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
 </dd>
 </dl>
@@ -441,22 +442,22 @@ reported.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.loggable_components">
-<span class="sig-name descname"><span class="pre">loggable_components</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.loggable_components" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loggable_components</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.loggable_components" title="Link to this definition">¶</a></dt>
 <dd><p>each item is a Component that is loggable for the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.loggable_items">
-<span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.loggable_items" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.loggable_items" title="Link to this definition">¶</a></dt>
 <dd><p>identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
 and the value is its currently assigned <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[Component.name: List[LogEntry]]</p>
 </dd>
 </dl>
@@ -464,12 +465,12 @@ and the value is its currently assigned <a class="reference internal" href="#psy
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.entries">
-<span class="sig-name descname"><span class="pre">entries</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.entries" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">entries</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.entries" title="Link to this definition">¶</a></dt>
 <dd><p>contains the logged information for <a class="reference internal" href="#id1" title="psyneulink.core.globals.log.Log.loggable_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_components</span></code></a>; the key of each entry
 is the name of a Component, and its value is a list of <code class="xref any docutils literal notranslate"><span class="pre">LogEntry</span></code> items for that Component.  Only Components
 for which information has been logged appear in the <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a> dict.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[Component.name: List[LogEntry]]</p>
 </dd>
 </dl>
@@ -477,11 +478,11 @@ for which information has been logged appear in the <a class="reference internal
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.logged_items">
-<span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.logged_items" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#psyneulink.core.globals.log.Log.logged_items" title="Link to this definition">¶</a></dt>
 <dd><p>identifies Components that currently have entries in the Log; the key for each entry is the name
 of a Component, and the value is its currently assigned <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[Component.name: List[LogEntry]]</p>
 </dd>
 </dl>
@@ -489,12 +490,12 @@ of a Component, and the value is its currently assigned <a class="reference inte
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.set_log_conditions">
-<span class="sig-name descname"><span class="pre">set_log_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogCondition.EXECUTION</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">set_log_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_condition=&lt;LogCondition.EXECUTION:</span> <span class="pre">896&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="Link to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged under the specified <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a>(s).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>items</strong> (<em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>tuple</em><em> or </em><em>List of these</em>) – specifies items to be logged;  these must be be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log.
+<li><p><strong>items</strong> (<em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>tuple</em><em> or </em><em>List</em><em> of </em><em>these</em>) – specifies items to be logged;  these must be be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log.
 Each item must be a:
 * string that is the name of a <code class="xref any docutils literal notranslate"><span class="pre">loggable_item</span></code> &lt;Log.loggable_item&gt;` of the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>;
 * a reference to a Component;
@@ -511,12 +512,12 @@ For convenience, the name of a LogCondition can be used in place of its full spe
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log._set_delivery_conditions">
-<span class="sig-name descname"><span class="pre">_set_delivery_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogCondition.EXECUTION</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._set_delivery_conditions" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_set_delivery_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delivery_condition=&lt;LogCondition.EXECUTION:</span> <span class="pre">896&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._set_delivery_conditions" title="Link to this definition">¶</a></dt>
 <dd><p>Specifies items to be delivered via gRPC under the specified <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a>(s).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>items</strong> (<em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>tuple</em><em> or </em><em>List of these</em>) – specifies items to be logged;  these must be be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log.
+<li><p><strong>items</strong> (<em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>tuple</em><em> or </em><em>List</em><em> of </em><em>these</em>) – specifies items to be logged;  these must be be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log.
 Each item must be a:
 * string that is the name of a <code class="xref any docutils literal notranslate"><span class="pre">loggable_item</span></code> &lt;Log.loggable_item&gt;` of the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>;
 * a reference to a Component;
@@ -533,7 +534,7 @@ For convenience, the name of a LogCondition can be used in place of its full spe
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log._log_value">
-<span class="sig-name descname"><span class="pre">_log_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._log_value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_log_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._log_value" title="Link to this definition">¶</a></dt>
 <dd><p>Add LogEntry to an entry in the Log</p>
 <p>If <strong>value</strong> is a LogEntry, it is assigned to the entry
 If <strong>condition</strong> is specified, it is used to determine whether the value is logged; <strong>time</strong> must be passed.
@@ -547,10 +548,10 @@ If <strong>value</strong> is specified, that is the value logged; otherwise the 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.clear_entries">
-<span class="sig-name descname"><span class="pre">clear_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confirm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.clear_entries" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clear_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confirm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.clear_entries" title="Link to this definition">¶</a></dt>
 <dd><p>Clear one or more entries either by deleting the entry or just removing its data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be cleared;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are cleared.</p></li>
@@ -576,10 +577,10 @@ the only <a class="reference internal" href="#psyneulink.core.globals.log.Log.en
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.print_entries">
-<span class="sig-name descname"><span class="pre">print_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.print_entries" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">print_entries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.print_entries" title="Link to this definition">¶</a></dt>
 <dd><p>Print summary of the Log’s entries in a (human-readable) table format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to printed;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the
 Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
@@ -587,16 +588,16 @@ If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a cla
 <li><p><strong>width</strong> (<em>int : default 120</em>) – specifies the width of the display. The widths of each column are adjusted accordingly, and based
 on which items are displayed (see <strong>display</strong> below);  information that does not fit within its column’s
 width is truncated and suffixes with an ellipsis.</p></li>
-<li><p><strong>display</strong> (<em>TIME</em><em>, </em><em>CONTEXT</em><em>, </em><em>VALUE</em><em>, </em><em>a list containing any of these</em><em>, or </em><em>ALL : default ALL</em>) – specifies the information items to display.  The name of the entry is always displayed, followed by the
+<li><p><strong>display</strong> (<em>TIME</em><em>, </em><em>CONTEXT</em><em>, </em><em>VALUE</em><em>, </em><em>a list containing any</em><em> of </em><em>these</em><em>, or </em><em>ALL : default ALL</em>) – specifies the information items to display.  The name of the entry is always displayed, followed by the
 specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
 are specified, allowing more information about one to be shown by omitting others (this is useful
 if the context strings are long and/or the values are arrays).</p></li>
 <li><p><strong>exclude_sims</strong> – <p>set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">default value</dt>
+<dt class="field-odd">default value<span class="colon">:</span></dt>
 <dd class="field-odd"><p>False</p>
 </dd>
-<dt class="field-even">type</dt>
+<dt class="field-even">type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 </dl>
@@ -608,7 +609,7 @@ if the context strings are long and/or the values are arrays).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.nparray">
-<span class="sig-name descname"><span class="pre">nparray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">nparray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray" title="Link to this definition">¶</a></dt>
 <dd><p>Return a 2d numpy array with headers (optional) and values for the specified entries.</p>
 <p>Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
 Rows are ordered in the same order as Components are specified in the <strong>entries</strong> argument.</p>
@@ -628,7 +629,7 @@ are not guaranteed to have been logged at the same time point.</p>
 “Trial”, and “Time_step”, or “Index” if any data are missing time stamps.  For subsequent rows it is the name
 of the Component logged in that entry (see <strong>owner_name</strong> argument below for formatting).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are included.</p></li>
@@ -652,7 +653,7 @@ otherwise, it is “&lt;entry name&gt;”.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.nparray_dictionary">
-<span class="sig-name descname"><span class="pre">nparray_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">nparray_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_all_executions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="Link to this definition">¶</a></dt>
 <dd><p>Returns an <a class="reference external" href="https://docs.python.org/3.5/library/collections.html#collections.OrderedDict">OrderedDict</a></p>
 <p><em>Keys:</em></p>
 <blockquote>
@@ -685,7 +686,7 @@ point, it is entered as <code class="xref any docutils literal notranslate"><spa
 is not guaranteed to have been logged at the same time point across all keys (Components).</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are included.</p></li>
@@ -696,10 +697,10 @@ their <a class="reference internal" href="Component.html#psyneulink.core.compone
 <code class="xref any docutils literal notranslate"><span class="pre">Component_Execute_Until_Finished</span></code> for additional details).</p></li>
 <li><p><strong>exclude_sims</strong> – <p>set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">default value</dt>
+<dt class="field-odd">default value<span class="colon">:</span></dt>
 <dd class="field-odd"><p>False</p>
 </dd>
-<dt class="field-even">type</dt>
+<dt class="field-even">type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 </dl>
@@ -712,7 +713,7 @@ their <a class="reference internal" href="Component.html#psyneulink.core.compone
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log.csv">
-<span class="sig-name descname"><span class="pre">csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quotes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&quot;'&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.csv" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quotes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&quot;'&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contexts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_sims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.csv" title="Link to this definition">¶</a></dt>
 <dd><p>Returns a CSV-formatted string with headers and values for the specified entries.</p>
 <p>Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
 Component at that time point, in the order they are specified in the <strong>entries</strong> argument. If all of the data
@@ -729,7 +730,7 @@ of each row is a sequential index (starting with 0) that designates the data ite
 <p>The <strong>owner_name</strong> argument can be used to prepend the header for each Component with its owner.
 The <strong>quotes</strong> argument can be used to suppress or specifiy quotes to use around numeric values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#id0" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a>).
 If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#id2" title="psyneulink.core.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">logged_items</span></code></a> are included.</p></li>
@@ -742,10 +743,10 @@ if specified with a string, that is used in place of single quotes to enclose <e
 if <code class="xref any docutils literal notranslate"><span class="pre">False</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, single quotes are used for headers (the items in the first row), but no others.</p></li>
 <li><p><strong>exclude_sims</strong> – <p>set to True to exclude from output any values logged during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">simulations</span></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">default value</dt>
+<dt class="field-odd">default value<span class="colon">:</span></dt>
 <dd class="field-odd"><p>False</p>
 </dd>
-<dt class="field-even">type</dt>
+<dt class="field-even">type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
 </dd>
 </dl>
@@ -758,27 +759,27 @@ if <code class="xref any docutils literal notranslate"><span class="pre">False</
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log._alias_owner_name">
-<span class="sig-name descname"><span class="pre">_alias_owner_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._alias_owner_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_alias_owner_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._alias_owner_name" title="Link to this definition">¶</a></dt>
 <dd><p>Alias name of owner Component to VALUE in loggable_items and logged_items
 Component’s actual name is preserved and used in log_entries (i.e., as entered by _log_value)</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.Log._dealias_owner_name">
-<span class="sig-name descname"><span class="pre">_dealias_owner_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._dealias_owner_name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_dealias_owner_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._dealias_owner_name" title="Link to this definition">¶</a></dt>
 <dd><p>De-alias VALUE to name of owner</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loggable_items</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd><p>Return dict of loggable items.</p>
 <p>Keys are names of the Components, values their ContextStates</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id1">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">loggable_components</span></span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loggable_components</span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of owner’s Components that are loggable</p>
 <p>The loggable items of a Component are the Components (typically Ports) specified in the _logagble_items
 property of its class, and its own <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute.</p>
@@ -786,7 +787,7 @@ property of its class, and its own <a class="reference internal" href="Component
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id2">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logged_items</span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd><p>Dict of items that have logged <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a>, indicating their specified <a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContextFlags</span></code></a>.</p>
 </dd></dl>
 
@@ -794,12 +795,12 @@ property of its class, and its own <a class="reference internal" href="Component
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.log.</span></span><span class="sig-name descname"><span class="pre">LogCondition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition" title="Link to this definition">¶</a></dt>
 <dd><p>Used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="#log-conditions"><span class="std std-ref">logged</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -808,73 +809,82 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.OFF">
-<span class="sig-name descname"><span class="pre">OFF</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.OFF" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">OFF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.OFF" title="Link to this definition">¶</a></dt>
 <dd><p>No recording.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.INITIALIZATION">
-<span class="sig-name descname"><span class="pre">INITIALIZATION</span></span><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">INITIALIZATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION" title="Link to this definition">¶</a></dt>
 <dd><p>Set during execution of the Component’s constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.VALIDATION">
-<span class="sig-name descname"><span class="pre">VALIDATION</span></span><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">VALIDATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.VALIDATION" title="Link to this definition">¶</a></dt>
 <dd><p>Set during validation of the value of a Component or its attribute.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.EXECUTION">
-<span class="sig-name descname"><span class="pre">EXECUTION</span></span><em class="property"> <span class="pre">=</span> <span class="pre">896</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">EXECUTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">896</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.EXECUTION" title="Link to this definition">¶</a></dt>
 <dd><p>Set during all <code class="xref any docutils literal notranslate"><span class="pre">phases</span> <span class="pre">of</span> <span class="pre">execution</span></code> of the Component.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.PROCESSING">
-<span class="sig-name descname"><span class="pre">PROCESSING</span></span><em class="property"> <span class="pre">=</span> <span class="pre">128</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.PROCESSING" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">PROCESSING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">128</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.PROCESSING" title="Link to this definition">¶</a></dt>
 <dd><p>Set during the <code class="xref any docutils literal notranslate"><span class="pre">processing</span> <span class="pre">phase</span></code> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.LEARNING">
-<span class="sig-name descname"><span class="pre">LEARNING</span></span><em class="property"> <span class="pre">=</span> <span class="pre">256</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.LEARNING" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">LEARNING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">256</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.LEARNING" title="Link to this definition">¶</a></dt>
 <dd><p>Set during the <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">phase</span></code> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.CONTROL">
-<span class="sig-name descname"><span class="pre">CONTROL</span></span><em class="property"> <span class="pre">=</span> <span class="pre">512</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.CONTROL" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">CONTROL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">512</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.CONTROL" title="Link to this definition">¶</a></dt>
 <dd><p>Set during the <code class="xref any docutils literal notranslate"><span class="pre">control</span> <span class="pre">phase</span> <span class="pre">System_Execution_Control&gt;</span></code> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.TRIAL">
-<span class="sig-name descname"><span class="pre">TRIAL</span></span><em class="property"> <span class="pre">=</span> <span class="pre">524288</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">TRIAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1048576</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="Link to this definition">¶</a></dt>
 <dd><p>Set at the end of a ‘TRIAL’.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.RUN">
-<span class="sig-name descname"><span class="pre">RUN</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1048576</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.RUN" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">RUN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2097152</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.RUN" title="Link to this definition">¶</a></dt>
 <dd><p>Set at the end of a ‘RUN’.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition.ALL_ASSIGNMENTS">
-<span class="sig-name descname"><span class="pre">ALL_ASSIGNMENTS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1835910</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ALL_ASSIGNMENTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3670918</span></em><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Link to this definition">¶</a></dt>
 <dd><p>Specifies all contexts.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition._get_log_condition_string">
-<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">_get_log_condition_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._get_log_condition_string" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_log_condition_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_str</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._get_log_condition_string" title="Link to this definition">¶</a></dt>
 <dd><p>Return string with the names of all flags that are set in <strong>condition</strong>, prepended by <strong>cond_str</strong></p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.globals.log.LogCondition._generate_next_value_">
+<span class="sig-name descname"><span class="pre">_generate_next_value_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._generate_next_value_" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the next value when not given.</p>
+<p>name: the name of the member
+start: the initial start value or None
+count: the number of existing members
+last_values: the last value assigned or None</p>
 </dd></dl>
 
-</section>
+</dd></dl>
+
 </section>
 
 
@@ -921,6 +931,43 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
 </li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log"><code class="docutils literal notranslate"><span class="pre">Log</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.owner"><code class="docutils literal notranslate"><span class="pre">Log.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.loggable_components"><code class="docutils literal notranslate"><span class="pre">Log.loggable_components</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.loggable_items"><code class="docutils literal notranslate"><span class="pre">Log.loggable_items</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.entries"><code class="docutils literal notranslate"><span class="pre">Log.entries</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.logged_items"><code class="docutils literal notranslate"><span class="pre">Log.logged_items</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.set_log_conditions"><code class="docutils literal notranslate"><span class="pre">Log.set_log_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log._set_delivery_conditions"><code class="docutils literal notranslate"><span class="pre">Log._set_delivery_conditions()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log._log_value"><code class="docutils literal notranslate"><span class="pre">Log._log_value()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.clear_entries"><code class="docutils literal notranslate"><span class="pre">Log.clear_entries()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.print_entries"><code class="docutils literal notranslate"><span class="pre">Log.print_entries()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray"><code class="docutils literal notranslate"><span class="pre">Log.nparray()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray_dictionary"><code class="docutils literal notranslate"><span class="pre">Log.nparray_dictionary()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log.csv"><code class="docutils literal notranslate"><span class="pre">Log.csv()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log._alias_owner_name"><code class="docutils literal notranslate"><span class="pre">Log._alias_owner_name()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.Log._dealias_owner_name"><code class="docutils literal notranslate"><span class="pre">Log._dealias_owner_name()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Log.loggable_items</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">Log.loggable_components</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">Log.logged_items</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogError"><code class="docutils literal notranslate"><span class="pre">LogError</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition"><code class="docutils literal notranslate"><span class="pre">LogCondition</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.OFF"><code class="docutils literal notranslate"><span class="pre">LogCondition.OFF</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.INITIALIZATION"><code class="docutils literal notranslate"><span class="pre">LogCondition.INITIALIZATION</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.VALIDATION"><code class="docutils literal notranslate"><span class="pre">LogCondition.VALIDATION</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.EXECUTION"><code class="docutils literal notranslate"><span class="pre">LogCondition.EXECUTION</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.PROCESSING"><code class="docutils literal notranslate"><span class="pre">LogCondition.PROCESSING</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.LEARNING"><code class="docutils literal notranslate"><span class="pre">LogCondition.LEARNING</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.CONTROL"><code class="docutils literal notranslate"><span class="pre">LogCondition.CONTROL</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL"><code class="docutils literal notranslate"><span class="pre">LogCondition.TRIAL</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.RUN"><code class="docutils literal notranslate"><span class="pre">LogCondition.RUN</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.ALL_ASSIGNMENTS"><code class="docutils literal notranslate"><span class="pre">LogCondition.ALL_ASSIGNMENTS</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition._get_log_condition_string"><code class="docutils literal notranslate"><span class="pre">LogCondition._get_log_condition_string()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition._generate_next_value_"><code class="docutils literal notranslate"><span class="pre">LogCondition._generate_next_value_()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -938,10 +985,11 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   
