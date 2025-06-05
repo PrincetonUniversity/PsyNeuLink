@@ -589,7 +589,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, \
     MODULATION, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, REFERENCE_VALUE, SAMPLE, PORT_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, is_numeric, ValidParamSpecType, \
@@ -699,13 +699,13 @@ class LearningMechanismError(MechanismError):
 def _learning_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.value._get(context)[0]
-    except (TypeError, IndexError):
+    except (TypeError, IndexError, ParameterNoValueError):
         return None
 
 def _error_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.value._get(context)[1]
-    except (TypeError, IndexError):
+    except (TypeError, IndexError, ParameterNoValueError):
         return None
 
 

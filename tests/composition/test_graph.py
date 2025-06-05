@@ -1,4 +1,4 @@
-from psyneulink.core.compositions.composition import Graph, Vertex
+from psyneulink.core.globals.graph import Graph, Vertex
 
 
 class TestGraph:

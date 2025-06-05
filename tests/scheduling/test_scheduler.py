@@ -11,7 +11,8 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, EdgeType
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import VALUE
 from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never, graph_structure_conditions_available, gsc_unavailable_message
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -1628,13 +1629,13 @@ class TestFeedback:
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
-                             [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
+                             [(pnl.AtTrial, pnl.TimeScale.RUN, [[[1.0]], [[2.0]]]),
                              ])
     def test_run_term_conditions(self, mode, condition, scale, expected_result):
         incrementing_mechanism = pnl.ProcessingMechanism(function=pnl.SimpleIntegrator)
         comp = pnl.Composition(pathways=[incrementing_mechanism])
 
-        comp.scheduler.termination_conds = {pnl.TimeScale.RUN: condition(2)}
+        comp.scheduler.termination_conds = {scale: condition(2)}
         r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
 
         np.testing.assert_allclose(r, expected_result[-1])

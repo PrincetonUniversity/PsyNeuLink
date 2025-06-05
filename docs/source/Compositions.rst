@@ -10,4 +10,5 @@ Subclasses of `Core` `Composition` that implement specialized operations.
    CompositionFunctionApproximator
    ParameterEstimationComposition
    EMComposition
+   GRUComposition
 

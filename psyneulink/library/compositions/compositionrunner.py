@@ -52,17 +52,19 @@ class CompositionRunner():
         """Convert a list of numpy arrays to a list of PyTorch tensors"""
 
         import torch
+        torch_dtype = self._composition.torch_dtype if hasattr(self._composition, 'torch_dtype') else torch.float64
 
         # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
         # converting directly to tensors for lists of np.ndarrays is slow.
         if type(v[0]) == np.ndarray:
-            t = torch.from_numpy(np.array(v))
+            # t = torch.tensor(torch.from_numpy(np.array(v)), dtype=torch_dtype)
+            t = torch.from_numpy(np.array(v)).to(dtype=torch_dtype)
         else:
             try:
-                t = torch.tensor(v)
+                t = torch.tensor(v, dtype=torch_dtype)
             except ValueError:
                 # We probably have a ragged array, so we need to convert to a list of tensors
-                t = [[torch.tensor(y).double() for y in x] for x in v]
+                t = [[torch.tensor(y, dtype=torch_dtype) for y in x] for x in v]
 
         # Assume that the input port dimension is singleton and add it for 2D inputs
         if isinstance(t, torch.Tensor) and t.ndim < 3:
@@ -166,8 +168,7 @@ class CompositionRunner():
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                node._composition_wrapper_owner.execute_node(node, variable,
-                                                                            optimization_num, context)
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
@@ -203,10 +204,6 @@ class CompositionRunner():
                     and early_stopper.step(self._calculate_loss(num_trials, execution_mode, context))):
                 # end early if patience exceeded
                 pass
-
-        if execution_mode is ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
 
     def _batch_function_inputs(self,
                                inputs: dict,
@@ -294,6 +291,7 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
+                     skip_initialization=False,
                      **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
@@ -348,8 +346,6 @@ class CompositionRunner():
             epochs = inf_yield_val(epochs)
         elif epochs is None:
             epochs = inf_yield_val(1)
-
-        skip_initialization = False
 
         # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 
@@ -411,7 +407,7 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
-            # IMPLEMENTATION NOTE: for autodiff composition, the following executes an MINIBATCH's worth of training
+            # IMPLEMENTATION NOTE: for autodiff composition, the following executes a MINIBATCH's worth of training
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
@@ -425,22 +421,21 @@ class CompositionRunner():
             skip_initialization = True
 
             if execution_mode is ExecutionMode.PyTorch:
-                pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
-                               copy_weights_to_psyneulink(context))
+                pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
                 if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                    pytorch_rep.copy_weights_to_psyneulink(context)
+                    pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
+
         # assign results from last *epoch* to learning_results
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
-        # return result of last *trial* (as usual for a call to run)
 
         if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
-            pytorch_rep.copy_weights_to_psyneulink(context)
+            pytorch_rep._copy_weights_to_psyneulink(context)
 
+        # return result of last *trial* (as usual for a call to run)
         return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):

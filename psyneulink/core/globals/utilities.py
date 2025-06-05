@@ -1727,6 +1727,13 @@ def _get_global_seed(offset=1):
 
 
 def set_global_seed(new_seed):
+    """Set global randomization seed for all Components for which a local seed has not been specified.
+
+    Arguments
+    ---------
+    new_seed : int
+        new seed to use for randomization
+    """
     global _seed
     _seed = new_seed
 
@@ -1928,7 +1935,7 @@ def parse_string_to_psyneulink_object_string(string):
     def is_pnl_obj(string):
         try:
             # remove parens to get rid of class instantiations
-            string = re.sub(r'\(.*?\)', '', string)
+            string = re.sub(r'\(.*\)', '', string)
             attr_sequence = string.split('.')
             obj = getattr(psyneulink, attr_sequence[0])
 

@@ -10,7 +10,7 @@ EMComposition
     * `EpisodicMemoryMechanism`
     * `ContentAddressableMemory`
 
-.. automodule:: psyneulink.library.compositions.emcomposition
+.. automodule:: psyneulink.library.compositions.emcomposition.emcomposition
    :members:
    :private-members:
    :exclude-members: Parameters, execute

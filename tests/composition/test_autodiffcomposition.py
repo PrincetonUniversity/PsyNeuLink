@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
+from numpy.ma.core import ones_like
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -32,9 +33,15 @@ def _single_learn_results(composition, *args, **kwargs):
     return composition.learning_results
 
 
+TORCH_PARAM = 'torch_param'
+PROJECTION = 'projection'
+PROJ = 'proj'
+NAME = 'proj_name'
+
 @pytest.mark.pytorch
 @pytest.mark.autodiff_constructor
 class TestAutodiffConstructor:
+
 
     def test_no_args(self):
         comp = AutodiffComposition()
@@ -53,9 +60,222 @@ class TestAutodiffConstructor:
     #     assert comp.target_CIM.composition == comp
     #     assert comp.target_CIM_ports == {}
 
-    def test_pytorch_representation(self):
+    def test_no_initial_pytorch_representation(self):
         comp = AutodiffComposition()
         assert comp.pytorch_representation is None
+
+    def test_duplicate_projections_to_nested_comp(self):
+        input_node_autodiff = pnl.ProcessingMechanism(name='autodiff INPUT', input_shapes=2)
+        hidden_node_autodiff_1 = pnl.ProcessingMechanism(name='autodiff HIDDEN 1', input_shapes=3)
+        hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
+        hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
+        output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
+
+        nested = pnl.AutodiffComposition(name='autodiff NESTED',
+                                     nodes = [hidden_node_autodiff_1,
+                                              hidden_node_autodiff_2])
+
+        nested = pnl.AutodiffComposition(name='autodiff NESTED 2',
+                                     nodes = [hidden_node_autodiff_1,
+                                              hidden_node_autodiff_2])
+        pathway_a = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_1), nested]
+        pathway_b = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_2), nested,
+                     MappingProjection(sender=hidden_node_autodiff_2, name="PROBLEM PROJ"), output_node_autodiff]
+        autodiff_comp = pnl.AutodiffComposition(pathways=[pathway_a, pathway_b], name='autodiff COMP')
+        with pytest.raises(AutodiffCompositionError) as error_text:
+            autodiff_comp._build_pytorch_representation()
+        assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
+                                                "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
+                                                "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
+                                                "be that these Components belong to different Compositions.")
+
+    @pytest.fixture
+    def copy_test_components(self):
+        import torch
+        def _get_copy_test_components(use_slice, proj_spec):
+            if use_slice is True:
+                # GRU uses sets of weights defined as slices within a single Parameter
+                torch_module = torch.nn.GRU(input_size=3, hidden_size=5, bias=False)
+                torch_parameter = list(torch_module.parameters())[0]
+                torch_tensor = torch_module.state_dict()['weight_ih_l0'][slice(0,5)]
+                autodiff = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+                proj_name = 'INPUT TO NEW WEIGHTS'
+                proj = autodiff.projections[proj_name]
+                proj_spec = proj if proj_spec == PROJ else proj_name
+                torch_param_specs = {#  name: proj_spec, torch_param, torch_module, slice, error_msg
+                    'tensor_slice':(proj_spec, torch_module.state_dict()['weight_ih_l0'], None, slice(0,5), None),
+                    'param_slice':(proj_spec, torch_parameter, None, slice(0,5), None),
+                    'module_with_param_name_and_slice':(proj_spec, 'weight_ih_l0', torch_module, slice(0,5), None),
+                    'shape_mismatch': (proj_spec, 'weight_hh_l0', torch_module,slice(0,5),
+                                       f"Shape of torch parameter (5, 5) in copy_torch_param_to_projection_matrix() "
+                                       f"does not match shape of matrix for 'INPUT TO NEW WEIGHTS' (3, 5)."),
+                    'tensor_with_bad_slice':(proj_spec,torch_module.state_dict()['weight_ih_l0'],None, 'SLICE OF PI',
+                                             "Specification of 'torch_slice' arg in "
+                                             "copy_torch_param_to_projection_matrix() (SLICE OF PI) must be a slice."),
+                    'param_with_bad_slice':(proj_spec, torch_parameter, None, 'SLICE OF PI',
+                                            f"Specification of 'torch_slice' arg in "
+                                            f"copy_torch_param_to_projection_matrix() (SLICE OF PI) must be a slice."),
+                    'module_with_param_name_and_bad_slice':(proj_spec, 'weight_hh_l0', torch_module, 'SLICE OF PI',
+                                                            f"Specification of 'torch_slice' arg in "
+                                                            f"copy_torch_param_to_projection_matrix() ('SLICE OF PI') "
+                                                            f"for Parameter 'weight_hh_l0' of GRU(3, 5, bias=False) "
+                                                            f"must be a slice."),
+                    'module_with_param_index_and_bad_slice':(proj_spec, 0, torch_module, 'SLICE OF PI',
+                                                             f"Specification of 'torch_slice' arg in "
+                                                             f"copy_torch_param_to_projection_matrix() "
+                                                             f"('SLICE OF PI') for Parameter 0 of "
+                                                             f"GRU(3, 5, bias=False) must be a slice.")
+                }
+            elif use_slice is False:
+                # No slices
+                torch_module = torch.nn.Linear(3, 5, bias=False)
+                torch_parameter = list(torch_module.parameters())[0]
+                torch_tensor = torch_module.state_dict()['weight']
+                autodiff = pnl.AutodiffComposition([pnl.ProcessingMechanism(input_shapes=3),
+                                                    pnl.MappingProjection(name='PROJECTION'),
+                                                    pnl.ProcessingMechanism(input_shapes=5)])
+                proj_name = 'PROJECTION'
+                proj = autodiff.projections[proj_name]
+                proj_spec = proj if proj_spec == PROJ else proj_name
+
+                torch_param_specs = {#  name: proj_spec, torch_param, torch_module, slice, error_msg
+                    'tensor': (proj_spec, torch_tensor, None, None, None),
+                    'param': (proj_spec, torch_parameter, None, None, None),
+                    'module_with_param_name': (proj_spec, 'weight', torch_module, None, None),
+                    'module_with_param_index': (proj_spec, 0, torch_module, None, None),
+                    'shape_mismatch': (proj_spec, torch.zeros(4), None, None,
+                                       f"Shape of torch parameter (1, 4) in copy_torch_param_to_projection_matrix() "
+                                       f"does not match shape of matrix for 'PROJECTION' (3, 5). [Note: torch biases, "
+                                       f"usually 1d, have already been converted to 2d to match "
+                                       f"PsyNeuLink BIAS Nodes Projections.]"),
+                    'bad_param_spec': (proj_spec, set(), None, None,
+                                       f"Specification of 'torch_param' arg in copy_torch_param_to_projection_matrix() "
+                                       f"(set()) must be a torch.nn.Parameter, torch.Tensor, str or int."),
+                    'module_in_param_spec': (proj_spec, torch_module, None, None,
+                                             f"Specification of 'torch_param' arg in "
+                                             f"copy_torch_param_to_projection_matrix() (Linear(in_features=3, "
+                                             f"out_features=5, bias=False)) is a Module, but must be a "
+                                             f"torch.nn.Parameter, torch.Tensor, str or int; if a Module is intended, "
+                                             f"use the 'torch_module' arg, and specify the Parameter name or index in "
+                                             f"the 'torch_param' arg."),
+                    'param_str_without_module_spec': (proj_spec, "'STRING'", None, None,
+                                                      f"Specifying of the 'torch_param' arg in "
+                                                      f"copy_torch_param_to_projection_matrix() with a "
+                                                      f"string or int ('STRING') requires the 'torch_module' arg "
+                                                      f"to be specified as well."),
+                    'param_int_without_module_spec': (proj_spec, 3, None, None,
+                                                      f"Specifying of the 'torch_param' arg in "
+                                                      f"copy_torch_param_to_projection_matrix() with a "
+                                                      f"string or int (3) requires the 'torch_module' arg "
+                                                      f"to be specified as well."),
+                    'param_none_spec': (proj_spec, None, "'I DON'T MATTER'", None,
+                                        f"The 'torch_param' arg in copy_torch_param_to_projection_matrix() (None) "
+                                        f"must be specified, using either a torch.nn.Parameter or torch.Tensor, or a "
+                                        f"str or int paired with specification of a torch.nn.Module in the "
+                                        f"'torch_module' arg."),
+                    'param_in_module_spec': (proj_spec, None, torch_parameter, None,
+                                             f"Specification of 'torch_module' arg in "
+                                             f"copy_torch_param_to_projection_matrix() is a torch Parameter or Tensor; "
+                                             f"this should be specified using the 'torch_para' arg."),
+                    'bad_module_spec': (proj_spec, 3, "'I BE BAD MODULE'", None,
+                                        f"Specification of 'torch_module' arg in "
+                                        f"copy_torch_param_to_projection_matrix() "
+                                        f"('I BE BAD MODULE') must be a torch.nn.Module."),
+                    'module_without_param_spec': (proj_spec, None, torch_module, None,
+                                                  f"The 'torch_param' arg in copy_torch_param_to_projection_matrix() "
+                                                  f"(None) must be specified, using either a torch.nn.Parameter or "
+                                                  f"torch.Tensor, or a str or int paired with specification of a "
+                                                  f"torch.nn.Module in the 'torch_module' arg."),
+                    'param_not_in_state_dict': (proj_spec, "I'M IN A BAD STATE", torch_module, None,
+                                                f"'I'M IN A BAD STATE' specified in 'torch_param' arg of "
+                                                f"copy_torch_param_to_projection_matrix() is not the name of a "
+                                                f"Parameter in the state_dict() for "
+                                                f"'Linear(in_features=3, out_features=5, bias=False)'."),
+                    'param_index_out_of_range': (proj_spec, 3, torch_module, None,
+                                                 f"The value (3) specified in the 'torch_param' arg of "
+                                                 f"copy_torch_param_to_projection_matrix() is not an index within "
+                                                 f"the range of the ParameterList specified for the Module "
+                                                 f"('Linear(in_features=3, out_features=5, bias=False)')."),
+                    'bad_projection_name': ("BAD NAME", torch_tensor, None, None,
+                                            f"'BAD NAME' in copy_torch_param_to_projection_matrix() "
+                                            f"is not the name of a Projection in 'autodiff_composition'."),
+                    'bad_projection': (MappingProjection(), torch_tensor, None, None,
+                                       f"'Deferred Init MappingProjection' in copy_torch_param_to_projection_matrix() "
+                                       f"is not a Projection in 'autodiff_composition'.")
+                }
+            else:
+                assert False, f"Invalid use_slice value: {use_slice}"
+            return torch_tensor, torch_param_specs, autodiff, proj
+        return _get_copy_test_components
+
+    # Test cases for copy_torch_param_to_projection_matrix()
+    #                              (test, use_slice, proj_spec)
+    copy_test_params = [
+        # name, use_slice, validate, proj_spec
+        # Valid specifications, with validation
+        ('tensor_slice', True, True, NAME),
+        ('param_slice', True, True, NAME),
+        ('module_with_param_name', False, True, PROJ),
+        ('module_with_param_index', False, True, NAME),
+        ('module_with_param_name_and_slice', True, True, PROJ),
+        # Valid specifications, without validation
+        ('tensor', False, False, PROJ),
+        ('param', False, False, PROJ),
+        ('tensor_slice', True, False, PROJ),
+        ('param_slice', True, False, PROJ),
+        # Invalid specifications, without validation (should generate errors)
+        ('shape_mismatch', False, True, NAME),
+        ('shape_mismatch', True, True, PROJ),
+        ('bad_param_spec', False, True, NAME),
+        ('module_in_param_spec', False, True, PROJ),
+        ('param_str_without_module_spec', False, True, NAME),
+        ('param_int_without_module_spec', False, True, PROJ),
+        ('param_none_spec', False, True, NAME),
+        ('bad_module_spec', False, True, NAME),
+        ('param_in_module_spec', False, True, PROJ),
+        ('module_without_param_spec', False, True, NAME),
+        ('param_not_in_state_dict', False, True, PROJ),
+        ('param_index_out_of_range', False, True, NAME),
+        ('bad_projection_name', False, True, PROJ),
+        ('bad_projection', False, True, NAME),
+        ('tensor_with_bad_slice', True, True, PROJ),
+        ('param_with_bad_slice', True, True, NAME),
+        ('module_with_param_name_and_bad_slice', True, True, PROJ),
+        ('module_with_param_index_and_bad_slice', True, True, NAME),
+    ]
+
+    copy_test_method = ['torch_to_pnl', 'pnl_to_torch']
+
+    @pytest.mark.parametrize('method', copy_test_method, ids=[x for x in copy_test_method])
+    @pytest.mark.parametrize('test_condition, use_slice, validate, proj_spec', copy_test_params,
+                             ids=[x[0] + ('_validate' if x[2] else '_no_validation')
+                                  for x in copy_test_params])
+    def test_torch_param_projection_matrix_exchange_methods(self,
+                                                            test_condition,
+                                                            use_slice,
+                                                            validate,
+                                                            proj_spec,
+                                                            method,
+                                                            copy_test_components):
+        torch_tensor, torch_param_specs, autodiff, proj = copy_test_components(use_slice, proj_spec)
+        proj_spec, torch_param, torch_module, torch_slice, error_msg = torch_param_specs[test_condition]
+
+        if method == 'torch_to_pnl':
+            copy_method = autodiff.copy_torch_param_to_projection_matrix
+        else:
+            copy_method = autodiff.copy_projection_matrix_to_torch_param
+
+        if error_msg is None:
+            copy_method(proj_spec, torch_param, torch_module, torch_slice, validate)
+            torch_param_as_pnl_matrix = torch_tensor.detach().cpu().clone().numpy().T
+            new_matrix = autodiff.projections[proj].parameters.matrix.get()
+            np.testing.assert_allclose(new_matrix, torch_param_as_pnl_matrix)
+
+        else:
+            with pytest.raises(AutodiffCompositionError) as error_text:
+                copy_method(proj_spec, torch_param, torch_module, torch_slice, validate)
+            assert error_text.value.error_value == error_msg
+
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
@@ -129,6 +349,21 @@ def test_autodiff_forward(autodiff_mode):
 
     outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
     np.testing.assert_allclose(outputs, [[0.9479085241082691]])
+
+@pytest.mark.pytorch
+@pytest.mark.composition
+def test_retain_results():
+    """Test that results from calls to learning() are added to results list (from retained_results)"""
+    inputs = [[-0.8104468, -0.40517032, 0.75040168]]
+    input_mech = pnl.ProcessingMechanism(input_shapes=3)
+    output_mech = pnl.ProcessingMechanism(input_shapes=3)
+    input_node = input_mech
+    comp = AutodiffComposition([input_mech, output_mech])
+    comp.run(inputs={input_node:inputs}, num_trials=1)
+    comp.learn(inputs={input_node:inputs},num_trials=2)
+    comp.run(inputs={input_node:inputs}, num_trials=3)
+    comp.learn(inputs={input_node:inputs},num_trials=4)
+    assert len(comp.results) == 10
 
 
 @pytest.mark.pytorch
@@ -2240,18 +2475,8 @@ class TestNestedLearning:
         pathway_b = [input_nodes[0],
                      MappingProjection(input_nodes[0], hidden_nodes[1]),
                      nested,
-                     MappingProjection(hidden_nodes[1]),
+                     MappingProjection(hidden_nodes[1]), # <- FIX FAILS
                      output_nodes[0]]
-
-        # error_msg = ("The output for 'hidden_2' Node of nested Composition 'nested' must project "
-        #              "to a node in the outer composition ('autodiff_comp') to be learnable.")
-        #
-        # with pytest.raises(AutodiffCompositionError) as error_text:
-        #     autodiff_results = execute_learning(comp_type='autodiff',
-        #                                         execution_mode=pnl.ExecutionMode.PyTorch,
-        #                                         pathways=[pathway_a, pathway_b],
-        #                                         inputs=inputs)
-        # assert error_msg in str(error_text.value)
 
         autodiff_results = execute_learning(comp_type='autodiff',
                                             execution_mode=pnl.ExecutionMode.PyTorch,
@@ -2265,7 +2490,7 @@ class TestNestedLearning:
                                         pathways=[pathway_a, pathway_b],
                                         inputs=inputs)
 
-        # np.testing.assert_allclose(comp_results, autodiff_results)
+        np.testing.assert_allclose(comp_results, autodiff_results)
 
     def test_nested_autodiff_learning_with_input_func(self):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
@@ -2728,12 +2953,15 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
+        # must manually initialize because _build_pytorch_representation
+        # is an internal method
+        xor._initialize_from_context(Context(execution_id=xor.default_execution_id))
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy())
         np.testing.assert_allclose(out_map.parameters.matrix.get(None),
-                           xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
+                           list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
     def test_training_then_processing(self, autodiff_mode):
@@ -2782,8 +3010,8 @@ class TestMiscTrainingFunctionality:
                                         execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        # pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out_bp = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
 
         #KAM temporarily removed -- will reimplement when pytorch weights can be used in pure PNL execution
         # do processing on a few inputs
@@ -2958,9 +3186,10 @@ class TestMiscTrainingFunctionality:
                   execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
-        pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
-        pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
-
+        # pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
+        # pt_weights_out = xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy().copy()
+        pt_weights_hid = list(xor.parameters.pytorch_representation.get(xor).parameters())[0].detach().numpy().copy()
+        pt_weights_out = list(xor.parameters.pytorch_representation.get(xor).parameters())[1].detach().numpy().copy()
         # assert that projections are still what they were initialized as
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None), hid_m)
         np.testing.assert_allclose(out_map.parameters.matrix.get(None), out_m)
@@ -3646,6 +3875,54 @@ class TestACLogging:
         xor.clear_losses(context=xor)
         assert len(xor.losses) == 0
 
+    @pytest.mark.pytorch
+    def test_synching_variable_and_value(self):
+        """Test synchronization of variables and values of nested Compositions with PyTorch execution."""
+        inner_mech_1 = pnl.ProcessingMechanism(name='Inner Mech 1', input_shapes=2, function=pnl.Logistic)
+        inner_mech_2 = pnl.ProcessingMechanism(name='Inner Mech 2', input_shapes=3)
+        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=4)
+        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=5, function=pnl.Logistic)
+        inner_comp = pnl.AutodiffComposition(name='Inner Comp',
+                                             pathways=[inner_mech_1, inner_mech_2],
+                                             # Note: no need to specify synch_node_values_with_torch, since default=RUN
+                                             synch_node_variables_with_torch=pnl.RUN)
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                             pathways=[outer_mech_in, inner_comp, outer_mech_out],
+                                             # Note: no need to specify synch_node_values_with_torch, since default=RUN
+                                             synch_node_variables_with_torch=pnl.RUN)
+        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
+                                          targets[0]: [[1,1,1,1,1]]},
+                                  execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Outer OUTPUT Mechanism -----------
+
+        # variable
+        expected = [[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].variable, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.variable.get('Outer Comp'), expected)
+
+        # value
+        expected = [[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]
+        # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].value, expected)
+        np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.value.get('Outer Comp'), expected)
+
+        # Nested INPUT Mechanism  ----------
+
+        # variable
+        expected = [[[10, 10]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].variable, expected)
+        # np.testing.assert_allclose(outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].variable, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.variable.get('Outer Comp'), expected)
+
+        # value
+        expected = [[[0.9999546, 0.9999546]]]
+        # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].value, expected)
+        # np.testing.assert_allclose(['Inner Comp'].nodes['Inner Mech 1'].value, expected)
+        np.testing.assert_allclose(
+            outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.value.get('Outer Comp'), expected)
+
 
 @pytest.mark.pytorch
 class TestBatching:
@@ -3851,6 +4128,7 @@ class TestBatching:
 
         np.testing.assert_allclose(ce_numpy, ce_torch)
 
+
 @pytest.mark.pytorch
 @pytest.mark.parametrize('batch_size', [1, 2, 4])
 @pytest.mark.parametrize('batched_results', [False, True])
@@ -3883,8 +4161,8 @@ def test_training_xor_with_batching(batch_size, batched_results):
     model = nn.Sequential(linear1, sigmoid, linear2, sigmoid).to(device) # MLP model
 
     # Copy the initial weights and biases. Make sure to copy the data, not just the reference.
-    weights1 = linear1.weight.detach().numpy().copy()
-    weights2 = linear2.weight.detach().numpy().copy()
+    weights1 = linear1.weight.detach().cpu().numpy().copy()
+    weights2 = linear2.weight.detach().cpu().numpy().copy()
     # bias1 = linear1.bias.detach().numpy().copy() if linear1.bias is not None else None
     # bias2 = linear2.bias.detach().numpy().copy() if linear2.bias is not None else None
 
@@ -3913,7 +4191,7 @@ def test_training_xor_with_batching(batch_size, batched_results):
             torch_losses.append(loss.item())
             torch_results.append(pred)
 
-    torch_results = torch.stack(torch_results).detach().numpy()
+    torch_results = torch.stack(torch_results).detach().cpu().numpy()
 
     autodiff_mode = pnl.ExecutionMode.PyTorch
 

@@ -1717,31 +1717,35 @@ class TestClip:
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
     test_params = [
-        # test_for           clip       scale offset input   expected     warning_msg
-        ["no clip",          None,        2,     1,   1.5,  2.63514895,   None],
-        ["ok clip",        (1.0, 3.0),    2,     1,   1.5,  2.63514895,   None],
-        ["clip lower",     (1.0, 3.0),    2,    -1,   1.5,  1.0,          (r"The upper value of clip for '.*' \(3.0\) "
-                                                                           r"is above its function's upper bound \(1\), "
-                                                                           "so it will not have an effect.")],
-        ["clip upper",     (1.0, 3.0),    2,     2,   1.5,  3.0,          (r"The lower value of clip for '.*' \(1.0\) "
-                                                                           r"is below its function's lower bound \(2\), "
-                                                                           "so it will not have an effect.")],
-        ["warning lower",  (-1.0, 2.0),   2,     0,   1.5,  1.63514895,   (r"The lower value of clip for '.*' \(-1.0\) "
-                                                                           r"is below its function's lower bound \(0\), "
-                                                                           "so it will not have an effect.")],
-        ["warning upper",  (-1.0, 3.0),   2,    -1,   1.5,  0.63514895,   (r"The upper value of clip for '.*' \(3.0\) "
-                                                                           r"is above its function's upper bound \(1\), "
-                                                                           "so it will not have an effect.")],
-        ["warning both",   (1.0, 5.0),    2,     2,   1.5,  3.63514895,   (r"The lower value of clip for '.*' \(1.0\) "
-                                                                           r"is below its function's lower bound \(2\) "
-                                                                           r"and its upper value \(5.0\) is above the "
-                                                                           r"function's upper bound \(4\), so clip will "
-                                                                           "not have an effect.")],
+        #             clip       scale offset  input   expected     warning_msg
+        pytest.param(None,          2,     1,   1.5,  2.63514895,  None, id="no clip"),
+        pytest.param((1.0, 3.0),    2,     1,   1.5,  2.63514895,  None, id="ok clip"),
+        pytest.param((1.0, 3.0),    2,    -1,   1.5,  1.0,         (r"The upper value of clip for '.*' \(3.0\) "
+                                                                    r"is above its function's upper bound \(1\), "
+                                                                     "so it will not have an effect."),
+                     id="clip lower"),
+        pytest.param((1.0, 3.0),    2,     2,   1.5,  3.0,         (r"The lower value of clip for '.*' \(1.0\) "
+                                                                    r"is below its function's lower bound \(2\), "
+                                                                     "so it will not have an effect."),
+                     id="clip upper"),
+        pytest.param((-1.0, 2.0),   2,     0,   1.5,  1.63514895,   (r"The lower value of clip for '.*' \(-1.0\) "
+                                                                     r"is below its function's lower bound \(0\), "
+                                                                      "so it will not have an effect."),
+                     id="warning lower"),
+        pytest.param((-1.0, 3.0),   2,    -1,   1.5,  0.63514895,   (r"The upper value of clip for '.*' \(3.0\) "
+                                                                     r"is above its function's upper bound \(1\), "
+                                                                      "so it will not have an effect."),
+                     id="warning upper"),
+        pytest.param((1.0, 5.0),    2,     2,   1.5,  3.63514895,   (r"The lower value of clip for '.*' \(1.0\) "
+                                                                     r"is below its function's lower bound \(2\) "
+                                                                     r"and its upper value \(5.0\) is above the "
+                                                                     r"function's upper bound \(4\), so clip will "
+                                                                      "not have an effect."),
+                     id="warning both"),
         ]
-    arg_names = "test_for, clip, scale, offset, variable, expected, warning"
 
-    @pytest.mark.parametrize(arg_names, test_params, ids=[x[0] for x in test_params])
-    def test_clip_with_respect_to_fct_bounds(self, test_for, clip, scale, offset, variable, expected, warning):
+    @pytest.mark.parametrize("clip, scale, offset, variable, expected, warning", test_params)
+    def test_clip_with_respect_to_fct_bounds(self, clip, scale, offset, variable, expected, warning):
         """Test for clip that falls outside range of function"""
 
         context = pytest.warns(UserWarning, match=warning) if warning is not None else contextlib.nullcontext()

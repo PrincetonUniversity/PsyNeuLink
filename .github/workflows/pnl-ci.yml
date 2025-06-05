@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.11', '3.12']
+        python-version: ['3.8', '3.11', '3.12', '3.13']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
@@ -138,11 +138,12 @@ jobs:
     - name: Lint with flake8
       shell: bash
       run: |
-        pip install flake8
+        pip install flake8 flake8-unused-arguments
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --exit-zero --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py tests/
 
     - name: Print numpy info
       shell: bash
@@ -157,6 +158,24 @@ jobs:
           macOS*) sysctl -a | grep '^hw' ;;
           Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
         esac
+
+    # Windows runners use MS Edge as the default pdf viewer.
+    # This causes issues if any of the tests calls show_graph()
+    # or any other routine that by default produces a .pdf file
+    # and opens is in the default application.
+    # The problem with MS Edge is that it intermittently fails
+    # to exit and hangs the entire CI job in the last step.
+    # see: https://github.com/actions/runner/issues/3383
+    # Removing the default .pdf file association on windows is
+    # quite difficult because it needs to check multiple places
+    # and elevated privileges.
+    # Installing an alternative pdf viewer works around the issue
+    # as it prevents MS Edge from running when .pdf is displayed.
+    - name: Install windows pdf viewer
+      shell: bash
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+          choco install --no-progress -y sumatrapdf.install
 
     - name: Test with pytest
       timeout-minutes: 180
@@ -188,5 +207,14 @@ jobs:
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
-        path: ${{ steps.install.outputs.wheel }} ${{ steps.install.outputs.sdist }}
+        path: |
+          ${{ steps.install.outputs.wheel }}
+          ${{ steps.install.outputs.sdist }}
         retention-days: 2
+
+    # this step is kept for debugging hangs at the end of runner execution.
+    - name: List running processes
+      shell: pwsh
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+        Get-Process;
