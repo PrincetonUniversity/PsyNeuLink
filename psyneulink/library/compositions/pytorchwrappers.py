@@ -15,6 +15,8 @@ from psyneulink._typing import Optional, Literal, Union
 import graph_scheduler
 import numpy as np
 
+from psyneulink.core.globals.parameters import ParameterNoValueError
+
 # import torch
 try:
     import torch
@@ -2200,13 +2202,21 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        if (
-            projection.parameters.has_initializers._get(context)
-            and projection.parameters.value.initializer
-        ):
-            self.default_value = projection.parameters.value.initializer.get(context)
-        else:
-            self.default_value = projection.defaults.value
+        # # MODIFIED 6/4/25 OLD:
+        # if (projection.parameters.has_initializers._get(context)
+        #         and projection.parameters.value.initializer):
+        #     self.default_value = projection.parameters.value.initializer.get(context)
+        # else:
+        #     self.default_value = projection.defaults.value
+        # MODIFIED 6/4/25 NEW:
+        self.default_value = projection.defaults.value
+        try:
+            if (projection.parameters.has_initializers._get(context)
+                    and projection.parameters.value.initializer):
+                self.default_value = projection.parameters.value.initializer.get(context)
+        except ParameterNoValueError:
+            pass
+        # MODIFIED 6/4/25 END
 
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
@@ -2219,9 +2229,17 @@ class PytorchProjectionWrapper():
                         break
                     i += 1
 
-        matrix = projection.parameters.matrix.get(context=context)
-        if matrix is None:
-            matrix = projection.parameters.matrix.get(context=None)
+        # # MODIFIED 6/4/25 OLD:
+        # matrix = projection.parameters.matrix.get(context=context)
+        # if matrix is None:
+        #     matrix = projection.parameters.matrix.get(context=None)
+        # MODIFIED 6/4/25 NEW:
+        matrix = projection.parameters.matrix.get(context=None)
+        try:
+            matrix = projection.parameters.matrix.get(context=context)
+        except ParameterNoValueError:
+            pass
+        # MODIFIED 6/4/25 END
         # Create a Pytorch Parameter for the matrix
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
