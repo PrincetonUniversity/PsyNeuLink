@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryProjection &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>ModulatoryProjection &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="modulatoryprojection">
-<h1>ModulatoryProjection<a class="headerlink" href="#modulatoryprojection" title="Permalink to this headline">¶</a></h1>
+<h1>ModulatoryProjection<a class="headerlink" href="#modulatoryprojection" title="Link to this heading">¶</a></h1>
 <div class="subclasses docutils container" id="modulatoryprojection-subtypes">
 <p><em>Subclasses</em></p>
 <div class="toctree-wrapper compound">
@@ -209,8 +209,8 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.projections.modulatory.modulatoryprojection"></span><section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<section id="contents">
+<span id="module-psyneulink.core.components.projections.modulatory.modulatoryprojection"></span><h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#modulatoryprojection-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -222,7 +222,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="modulatoryprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="modulatoryprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryProjection is a subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that takes the value of a
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, and uses that to
 modulate the function of the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to which it projects.  There are three types of ModulatoryProjections,
@@ -258,7 +258,7 @@ to the <a class="reference internal" href="InputPort.html"><span class="doc">Inp
 <p>See <a class="reference internal" href="ModulatoryMechanism.html#modulatorymechanism-naming"><span class="std std-ref">ModulatoryMechanism</span></a> for conventions used for the names of Modulatory components.</p>
 </section>
 <section id="creating-a-modulatoryprojection">
-<span id="modulatoryprojection-creation"></span><h2>Creating a ModulatoryProjection<a class="headerlink" href="#creating-a-modulatoryprojection" title="Permalink to this headline">¶</a></h2>
+<span id="modulatoryprojection-creation"></span><h2>Creating a ModulatoryProjection<a class="headerlink" href="#creating-a-modulatoryprojection" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
 More commonly, however, ModulatoryProjections are either specified in the context of the Ports to or from
@@ -266,18 +266,18 @@ which they project (<a class="reference internal" href="Port.html#port-projectio
 ModulatoryProjection.</p>
 </section>
 <section id="structure">
-<span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryProjection has the same basic structure as a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
 <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> are listed in the Port’s <a class="reference internal" href="Mechanism.html#id7" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 </section>
 <section id="execution">
-<span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to
 which it projects — its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> — is updated;  that occurs when the Port’s owner
 Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of
 the <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> from which it projects, and the ModulatorySignal’s <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute, to the Port that receives the Projection.  The Port assigns the value to
-the parameter of the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="GatingMechanism.html#psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.GatingMechanism.modulation" title="psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.GatingMechanism.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute, and then calls
+the parameter of the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> specified by the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.modulation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute, and then calls
 the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to determine the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Port.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -287,10 +287,11 @@ belongs is next executed; see <a class="reference internal" href="Component.html
 </div>
 </section>
 <section id="class-reference">
-<span id="modulatoryprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="modulatoryprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.modulatory.modulatoryprojection.</span></span><span class="sig-name descname"><span class="pre">ModulatoryProjection_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feedback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_in_autodiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.modulatory.modulatoryprojection.</span></span><span class="sig-name descname"><span class="pre">ModulatoryProjection_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feedback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_in_autodiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that modulates the value of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>.
 See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a> and subclasses for arguments and additonal attributes.</p>
 <div class="admonition note">
@@ -300,7 +301,7 @@ It should be instantiated using the constructor for a <a class="reference intern
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name" title="Link to this definition">¶</a></dt>
 <dd><p>the name of the ModulatoryProjection. If the ModulatoryProjection’s <a class="reference internal" href="Projection.html#projection-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>, it is assigned a temporary name (indicating its deferred initialization
 status) until initialization is completed, at which time it is assigned its designated name.  If that is the
 name of an existing ModulatoryProjection, it is appended with an indexed suffix, incremented for each
@@ -309,7 +310,7 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
 ‘&lt;ModualatorySignal type&gt; for &lt;receiver owner Mechanism’s name&gt;[&lt;receiver’s name&gt;]’
 (for example, <code class="docutils literal notranslate"><span class="pre">'GatingSignal</span> <span class="pre">for</span> <span class="pre">my_mech[InputPort-0]'</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -317,7 +318,6 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -361,6 +361,10 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
 <li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base"><code class="docutils literal notranslate"><span class="pre">ModulatoryProjection_Base</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base.name"><code class="docutils literal notranslate"><span class="pre">ModulatoryProjection_Base.name</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -378,10 +382,11 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

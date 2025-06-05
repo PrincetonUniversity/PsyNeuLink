@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -208,9 +208,9 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.library.components.mechanisms.processing.leabramechanism">
-<span id="leabramechanism"></span><h1>LeabraMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.leabramechanism" title="Permalink to this headline">¶</a></h1>
+<span id="leabramechanism"></span><h1>LeabraMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.leabramechanism" title="Link to this heading">¶</a></h1>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#leabramechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -222,7 +222,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="leabramechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that wraps a leabra network. Leabra is an artificial neural
 network algorithm (<a class="reference external" href="ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf">O’Reilly, 1996</a>). For more
 info about leabra, please see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a>.</p>
@@ -234,7 +234,7 @@ the leabra package itself is still in development, so it is not guaranteed to be
 </div>
 </section>
 <section id="creating-a-leabramechanism">
-<span id="leabramechanism-creation"></span><h2>Creating a LeabraMechanism<a class="headerlink" href="#creating-a-leabramechanism" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-creation"></span><h2>Creating a LeabraMechanism<a class="headerlink" href="#creating-a-leabramechanism" title="Link to this heading">¶</a></h2>
 <p>A LeabraMechanism can be created in two ways. Users can specify the size of the input layer (<strong>input_size</strong>), size
 of the output layer (<strong>output_size</strong>), number of hidden layers (<strong>hidden_layers</strong>), and sizes of the hidden layers
 (<strong>hidden_sizes</strong>). In this case, the LeabraMechanism will initialize the connections as uniform random values between
@@ -245,7 +245,7 @@ In the former method of creating a LeabraMechanism, the <strong>training_flag</s
 be learning (updating its weights) or not.</p>
 </section>
 <section id="structure">
-<span id="leabramechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>The LeabraMechanism has an attribute <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">training_flag</span></code></a> which can be set to True/False to
 determine whether the network is currently learning. The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">training_flag</span></code></a> can also be
 changed after creation of the LeabraMechanism, causing it to start/stop learning.</p>
@@ -280,28 +280,29 @@ LeabraMechanism. Here is an example of how to do this. In the example, T2 passes
 </div>
 </section>
 <section id="execution">
-<span id="leabramechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>. For details
 on Leabra, see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a> and the
 <a class="reference external" href="https://github.com/benureau/leabra">leabra Python package on Github</a>.</p>
 </section>
 <section id="class-reference">
-<span id="leabramechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="leabramechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction" title="Link to this definition">¶</a></dt>
 <dd><p id="leabrafunction">LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
 variable by providing it as input to the leabra network inside the LeabraFunction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default np.zeros</em><em>(</em><em>) </em><em>(</em><em>array of zeros</em><em>)</em>) – specifies a template for the input to the leabra network.</p></li>
+<li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>np.array : default np.zeros</em><em>(</em><em>) </em><em>(</em><em>array</em><em> of </em><em>zeros</em><em>)</em>) – specifies a template for the input to the leabra network.</p></li>
 <li><p><strong>network</strong> (<em>leabra.Network</em>) – specifies the leabra network to be used.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -312,10 +313,10 @@ arguments of the constructor.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable" title="Link to this definition">¶</a></dt>
 <dd><p>contains value to be transformed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number or np.array</p>
 </dd>
 </dl>
@@ -323,10 +324,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.network">
-<span class="sig-name descname"><span class="pre">network</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.network" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">network</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.network" title="Link to this definition">¶</a></dt>
 <dd><p>the leabra network that is being used</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>leabra.Network</p>
 </dd>
 </dl>
@@ -334,10 +335,10 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.owner" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.owner" title="Link to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Mechanism</p>
 </dd>
 </dl>
@@ -345,12 +346,12 @@ arguments of the constructor.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs" title="Link to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the LeabraMechanism; if it is not specified in the <strong>prefs</strong> argument of the
 constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PreferenceSet or specification dict</p>
 </dd>
 </dl>
@@ -358,7 +359,7 @@ for details).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_variable">
-<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_variable" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_variable" title="Link to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -379,13 +380,13 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>variable</strong> – (anything other than a dictionary) - variable to be validated:</p></li>
 <li><p><strong>context</strong> – (str)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return variable</dt>
+<dt class="field-even">Return variable<span class="colon">:</span></dt>
 <dd class="field-even"><p>validated variable</p>
 </dd>
 </dl>
@@ -393,7 +394,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate params and assign validated values to targets,</p>
 <p>This performs top-level type validation of params</p>
 <p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
@@ -406,13 +407,13 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository of params that have been</em>) – </p></li>
-<li><p><strong>validated</strong> – </p></li>
+<li><p><strong>validated</strong> (<em>dict</em><em> (</em><em>target_set</em><em>) </em><em>- repository</em><em> of </em><em>params that have been</em>)</p></li>
+<li><p><strong>validated</strong></p></li>
 </ul>
 </dd>
-<dt class="field-even">Return none</dt>
+<dt class="field-even">Return none<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -421,11 +422,11 @@ It is called only if the parameter_validation attribute is <code class="xref any
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.leabramechanism.</span></span><span class="sig-name descname"><span class="pre">LeabraMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is a wrapper for a Leabra network in PsyNeuLink.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>network</strong> (<em>Optional</em><em>[</em><em>leabra.Network</em><em>]</em>) – a network object from the leabra package. If specified, the LeabraMechanism’s network becomes <strong>network</strong>,
 and the other arguments that specify the network are ignored (<strong>input_size</strong>, <strong>output_size</strong>,
@@ -452,10 +453,10 @@ a given trial.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function" title="Link to this definition">¶</a></dt>
 <dd><p>the function that wraps and executes the leabra mechanism</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction">LeabraFunction</a></p>
 </dd>
 </dl>
@@ -463,10 +464,10 @@ a given trial.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size">
-<span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="Link to this definition">¶</a></dt>
 <dd><p>an integer specifying how many units are in (the size of) the first layer (input) of the leabra network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int : default 1</p>
 </dd>
 </dl>
@@ -474,10 +475,10 @@ a given trial.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size">
-<span class="sig-name descname"><span class="pre">output_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size" title="Link to this definition">¶</a></dt>
 <dd><p>an integer specifying how many units are in (the size of) the final layer (output) of the leabra network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int : default 1</p>
 </dd>
 </dl>
@@ -485,10 +486,10 @@ a given trial.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_layers">
-<span class="sig-name descname"><span class="pre">hidden_layers</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_layers" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hidden_layers</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_layers" title="Link to this definition">¶</a></dt>
 <dd><p>an integer specifying how many hidden layers are in the leabra network.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int : default 0</p>
 </dd>
 </dl>
@@ -496,10 +497,10 @@ a given trial.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_sizes">
-<span class="sig-name descname"><span class="pre">hidden_sizes</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_sizes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hidden_sizes</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_sizes" title="Link to this definition">¶</a></dt>
 <dd><p>an integer or list of integers, specifying the size of each hidden layer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int or List[int] : default input_size</p>
 </dd>
 </dl>
@@ -507,13 +508,13 @@ a given trial.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag">
-<span class="sig-name descname"><span class="pre">training_flag</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">training_flag</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="Link to this definition">¶</a></dt>
 <dd><p>a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
 its weights using the “leabra” algorithm, based on the training pattern (which is read from its second output
 state). The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">training_flag</span></code></a> attribute can be changed after initialization, causing the leabra network to
 start/stop learning.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>boolean</p>
 </dd>
 </dl>
@@ -521,13 +522,13 @@ start/stop learning.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size">
-<span class="sig-name descname"><span class="pre">quarter_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">quarter_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size" title="Link to this definition">¶</a></dt>
 <dd><p>an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
 quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
 Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
 a given trial.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int : default 50</p>
 </dd>
 </dl>
@@ -535,27 +536,26 @@ a given trial.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network">
-<span class="sig-name descname"><span class="pre">network</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">network</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network" title="Link to this definition">¶</a></dt>
 <dd><p>the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
 please see the <code class="xref any docutils literal notranslate"><span class="pre">leabra</span> <span class="pre">package</span></code> on Github.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>leabra.Network</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>instance of LeabraMechanism</strong></p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism">LeabraMechanism</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -608,6 +608,27 @@ please see the <code class="xref any docutils literal notranslate"><span class="
 <li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraError"><code class="docutils literal notranslate"><span class="pre">LeabraError</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction"><code class="docutils literal notranslate"><span class="pre">LeabraFunction</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.variable"><code class="docutils literal notranslate"><span class="pre">LeabraFunction.variable</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.network"><code class="docutils literal notranslate"><span class="pre">LeabraFunction.network</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.owner"><code class="docutils literal notranslate"><span class="pre">LeabraFunction.owner</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs"><code class="docutils literal notranslate"><span class="pre">LeabraFunction.prefs</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_variable"><code class="docutils literal notranslate"><span class="pre">LeabraFunction._validate_variable()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction._validate_params"><code class="docutils literal notranslate"><span class="pre">LeabraFunction._validate_params()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.function"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.input_size"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.input_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.output_size"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.output_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_layers"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.hidden_layers</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.hidden_sizes"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.hidden_sizes</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.training_flag</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.quarter_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.network"><code class="docutils literal notranslate"><span class="pre">LeabraMechanism.network</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -625,10 +646,11 @@ please see the <code class="xref any docutils literal notranslate"><span class="
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

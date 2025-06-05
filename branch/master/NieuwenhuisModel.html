@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -204,10 +204,10 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005">
-<h1>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005)<a class="headerlink" href="#locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005" title="Permalink to this headline">¶</a></h1>
+<h1>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005)<a class="headerlink" href="#locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://research.vu.nl/ws/files/2063874/Nieuwenhuis%20Journal%20of%20Experimental%20Psychology%20-%20General%20134(3)-2005%20u.pdf">“The Role of the Locus Coeruleus in Mediating the Attentional Blink: A Neurocomputational Theory”</a></p>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>This model implements a hypothesis concerning the role of the <a class="reference external" href="http://www.scholarpedia.org/article/Locus_coeruleus">locus coeruleus (LC)</a> in mediating the <a class="reference external" href="http://www.scholarpedia.org/article/Attentional_blink">attentional blink</a>. The attentional blink refers to the temporary impairment
 in perceiving the second of two targets presented in close temporal proximity.</p>
 <p>In the <a class="reference external" href="http://www.scholarpedia.org/article/Attentional_blink">attentional blink paradigm</a>, each trial consists of a
@@ -232,21 +232,24 @@ depends on:</p>
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
 noise).</p>
 <figure class="align-left" id="nieuwenhuis2005-psyneulink-fig" style="width: 45%">
-<img alt="Nieuwenhuis et al. 2005 plot produced by PsyNeuLink" src="_images/Nieuwenhuis2005_psyneulink.svg" /></figure>
+<img alt="Nieuwenhuis et al. 2005 plot produced by PsyNeuLink" src="_images/Nieuwenhuis2005_psyneulink.svg" />
+</figure>
 <figure class="align-left" id="nieuwenhuis2005-matlab-fig" style="width: 45%">
-<img alt="Nieuwenhuis et al. 2005 plot produced by MATLAB" src="_images/Nieuwenhuis2005_MATLAB.svg" /></figure>
+<img alt="Nieuwenhuis et al. 2005 plot produced by MATLAB" src="_images/Nieuwenhuis2005_MATLAB.svg" />
+</figure>
 </section>
 <section id="the-model">
-<h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
+<h2>The Model<a class="headerlink" href="#the-model" title="Link to this heading">¶</a></h2>
 <p>The model is comprised of two subsystems: a behavioral network, in which stimulus information feeds forward from an
 input layer, via a decision layer, to a response layer;  and an LC subystem that regulates the gain of the units in
 the decision and response layers.  Each of the layers in the behavioral network is implemented as a pathway of
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanisms, and the LC subystem uses an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> and
 associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, as shown in the figure below:</p>
 <figure class="align-center" id="nieuwenhuis2005-system-graph" style="width: 75%">
-<img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" /></figure>
+<img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" />
+</figure>
 <section id="behavioral-network-subsystem">
-<h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Permalink to this headline">¶</a></h3>
+<h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Link to this heading">¶</a></h3>
 <p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>input_shapes</strong>=3 (one element for the input to the T1, T2 and distractor units
 of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
 <p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <strong>input_shapes</strong>=3 (one element each for the T1, T2 and distractor units),
@@ -264,7 +267,7 @@ from the <em>DECISION_LAYER</em> to the <em>RESPONSE LAYER</em> uses a numpy arr
 off-diagonal elements.</p>
 </section>
 <section id="lc-subsystem">
-<h3>LC Subsystem<a class="headerlink" href="#lc-subsystem" title="Permalink to this headline">¶</a></h3>
+<h3>LC Subsystem<a class="headerlink" href="#lc-subsystem" title="Link to this heading">¶</a></h3>
 <p><strong>LC</strong>: an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>, that uses the FitzHughNagumoIntegrator to implement a FitzHugh-Nagumo model as a
 simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:</p>
 <blockquote id="nieuwenhuis-lc-params">
@@ -301,13 +304,13 @@ conforms to the convention that PsyNeuLink <a class="reference internal" href="C
 </section>
 </section>
 <section id="execution">
-<span id="nieuwenhuis-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="nieuwenhuis-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>The stimulus presentation sequence is split into 11 periods of execution, each of which is 100 time steps long. During
 each period, one of the three elements of the <em>INPUT LAYER</em> is assigned a value of 1 (activated) while the other two
 are assigned a value of 0.  For the first three time periods, the distractor element is activated.  T1 is activated
 during the fourth time period, followed in the fifther period by the distractor, and then by T2 during the sixth time
 period.  During all other time period the distraction unit is activated. To reproduce Figure 3 of the Nieuwenhuis et
-al. (2005) paper, the <a class="reference internal" href="Log.html#module-psyneulink.core.globals.log" title="psyneulink.core.globals.log"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of parameters <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">w</span></a>
+al. (2005) paper, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of parameters <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">w</span></a>
 and <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">v</span></a> for every execution of the <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>. The function <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">h(v)</span></a> is computed for every time step, and h(v) and <em>w</em> are plotted.</p>
 <p>Script: <a class="reference download internal" download="" href="_downloads/1f6b59eae792376520770e109efef880/Nieuwenhuis2005Model.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Nieuwenhuis2005Model.py</span></code></a></p>
 </section>
@@ -381,10 +384,11 @@ and <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 

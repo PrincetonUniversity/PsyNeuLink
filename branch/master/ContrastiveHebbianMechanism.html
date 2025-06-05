@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -210,9 +210,9 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism">
-<span id="contrastivehebbianmechanism"></span><h1>ContrastiveHebbianMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism" title="Permalink to this headline">¶</a></h1>
+<span id="contrastivehebbianmechanism"></span><h1>ContrastiveHebbianMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism" title="Link to this heading">¶</a></h1>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#contrastivehebbian-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -249,7 +249,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="contrastivehebbian-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="contrastivehebbian-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A ContrastiveHebbianMechanism is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that is customized for use with the
 Contrastive Hebbian learning rule.  See the following references for a description of the learning rule,
 its relationship to the backpropagation learning rule, and its use in connectionist networks:</p>
@@ -267,9 +267,9 @@ adaptation. Psychological review, 115(2), 518</a></p>
 described below.</p>
 </section>
 <section id="creating-a-contrastivehebbianmechanism">
-<span id="contrastivehebbian-creation"></span><h2>Creating a ContrastiveHebbianMechanism<a class="headerlink" href="#creating-a-contrastivehebbianmechanism" title="Permalink to this headline">¶</a></h2>
+<span id="contrastivehebbian-creation"></span><h2>Creating a ContrastiveHebbianMechanism<a class="headerlink" href="#creating-a-contrastivehebbianmechanism" title="Link to this heading">¶</a></h2>
 <section id="size">
-<span id="contrastivehebbian-size"></span><h3><em>Size</em><a class="headerlink" href="#size" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-size"></span><h3><em>Size</em><a class="headerlink" href="#size" title="Link to this heading">¶</a></h3>
 <p>The <strong>input_size</strong> argument of the constructor must always be specified (this is comparable to specifying the
 <strong>input_shapes</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  If it is specified on its own,
 it determines the total number of processing units.  If either the <strong>hidden_size</strong> and/or <strong>target_size</strong> arguments
@@ -277,7 +277,7 @@ are specified, then those units are treated as distinct from the input units (se
 details).</p>
 </section>
 <section id="phases">
-<span id="contrastivehebbian-phases"></span><h3><em>Phases</em><a class="headerlink" href="#phases" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-phases"></span><h3><em>Phases</em><a class="headerlink" href="#phases" title="Link to this heading">¶</a></h3>
 <p>A ContrastiveHebbianMechanism <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">executes in two phases</span></a>, and has
 <strong>minus_phase_termination_condition</strong> and <strong>plus_phase_termination_condition</strong> arguments, and corresponding
 <strong>minus_phase_termination_threshold</strong> and <strong>plus_phase_termination_threshold</strong> arguments, that determine when the
@@ -285,13 +285,13 @@ respective phases of execution are terminated.  Other parameters can also be con
 <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a>).</p>
 </section>
 <section id="oututports">
-<span id="contrastivehebbian-outputports"></span><h3><em>OututPorts</em><a class="headerlink" href="#oututports" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-outputports"></span><h3><em>OututPorts</em><a class="headerlink" href="#oututports" title="Link to this heading">¶</a></h3>
 <p>The Mechanism is automatically assigned three of its five <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>: <em>OUTPUT_ACTIVITY</em>, <em>CURRENT_ACTIVITY</em>,
 and <em>ACTIVITY_DIFFERENT</em> (see <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">below</span></a>). Additional OutputPorts can be specified
 in the <strong>additional_output_ports</strong> argument of the constructor.</p>
 </section>
 <section id="learning">
-<span id="contrastivehebbian-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Link to this heading">¶</a></h3>
 <p>A ContrastiveHebbianMechanism can be configured for learning either by specifying <strong>enable_learning</strong> as <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or using
 the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">configure_learning</span></code></a> method, with the following differences from a
 standard <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-learning"><span class="std std-ref">RecurrentTransferMechanism</span></a>:  it is automatically assigned
@@ -300,7 +300,7 @@ standard <a class="reference internal" href="RecurrentTransferMechanism.html#rec
 <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> to the <em>ACTIVATION_INPUT</em> of its <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code>.</p>
 </section>
 <section id="simple-hebbian-mode">
-<span id="contrastivehebbian-simple-hebbian"></span><h3><em>SIMPLE_HEBBIAN mode</em><a class="headerlink" href="#simple-hebbian-mode" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-simple-hebbian"></span><h3><em>SIMPLE_HEBBIAN mode</em><a class="headerlink" href="#simple-hebbian-mode" title="Link to this heading">¶</a></h3>
 <p>This replicates the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g., for validation or
 ease in comparing processing outcomes).  It is configured by specifying the <strong>mode</strong> argument as <em>SIMPLE_HEBBIAN</em>,
 which automatically makes the following assignments:</p>
@@ -315,9 +315,9 @@ are ignored.</p>
 </section>
 </section>
 <section id="structure">
-<span id="contrastivehebbian-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="contrastivehebbian-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <section id="input">
-<span id="contrastivehebbian-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Link to this heading">¶</a></h3>
 <p>A ContrastiveHebbianMechanism always has two, and possibly three <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
@@ -381,7 +381,7 @@ otherwise, the same as <em>input_field</em>.</p></li>
 </div></blockquote>
 </section>
 <section id="functions">
-<span id="contrastivehebbian-functions"></span><h3><em>Functions</em><a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-functions"></span><h3><em>Functions</em><a class="headerlink" href="#functions" title="Link to this heading">¶</a></h3>
 <p>In addition to its primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, if either the
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_termination_condition</span></code></a> or
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">plus_phase_termination_condition</span></code></a>
@@ -391,7 +391,7 @@ replaced by any function that takes two 1d arrays (“activity ports”) and com
 but can be replaced by any function that takes and returns a 1d array.</p>
 </section>
 <section id="output">
-<span id="contrastivehebbian-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
 <p>A ContrastiveHebbianMechanism is automatically assigned three <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>:</p>
 <ul class="simple">
 <li><p><em>OUTPUT_ACTIVITY:</em> assigned as the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>, and contains the pattern
@@ -414,9 +414,9 @@ is assigned from the <em>ACTIVITY_DIFFERENCE</em> <a class="reference internal" 
 </section>
 </section>
 <section id="execution">
-<span id="contrastivehebbian-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="contrastivehebbian-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <section id="processing">
-<span id="contrastivehebbian-processing"></span><h3><em>Processing</em><a class="headerlink" href="#processing" title="Permalink to this headline">¶</a></h3>
+<span id="contrastivehebbian-processing"></span><h3><em>Processing</em><a class="headerlink" href="#processing" title="Link to this heading">¶</a></h3>
 <p>A ContrastiveHebbianMechanism always executes in two sequential phases, that together constitute a <em>trial of execution:</em></p>
 <ul class="simple" id="contrastivehebbian-minus-phase">
 <li><p><em>minus phase:</em> in each execution, the <em>RECURRENT</em> InputPort’s <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (received from the
@@ -469,7 +469,7 @@ it is assigned the value of the <a class="reference internal" href="#contrastive
 </ul>
 </section>
 <section id="contrastivehebbian-learning-execution">
-<span id="id1"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Link to this heading">¶</a></h3>
 <p>If a ContrastiveHebbianMechanism is <a class="reference internal" href="#contrastivehebbian-learning"><span class="std std-ref">configured for learning</span></a>, at the end of each
 <a class="reference internal" href="#contrastivehebbian-processing"><span class="std std-ref">trial of execution</span></a> the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>ACTIVITY_DIFFERENCE</em>
 <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> is passed to its <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code>.  If the Mechanism is part of a <code class="xref any docutils literal notranslate"><span class="pre">System</span></code>, then the
@@ -478,26 +478,27 @@ algorithms (such as <a class="reference internal" href="LearningFunctions.html#p
 </section>
 </section>
 <section id="class-reference">
-<span id="contrastivehebbian-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="contrastivehebbian-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.</span></span><span class="sig-name descname"><span class="pre">ContrastiveHebbianError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.</span></span><span class="sig-name descname"><span class="pre">ContrastiveHebbianError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.</span></span><span class="sig-name descname"><span class="pre">ContrastiveHebbianMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combination_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hetero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus_phase_termination_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus_phase_termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus_phase_termination_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus_phase_termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_convergence_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_passes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.</span></span><span class="sig-name descname"><span class="pre">ContrastiveHebbianMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combination_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hetero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus_phase_termination_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minus_phase_termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus_phase_termination_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plus_phase_termination_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_convergence_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_passes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layer auto-recurrent network using two-phases
 of execution and the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/B978148321448150007X">Contrastive Hebbian Learning algorithm</a>.  See <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-class-reference"><span class="std std-ref">RecurrentTransferMechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input_size</strong> (<em>int : default 0</em>) – specifies the size of the <em>INPUT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a> and number of units in the
 <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>.</p></li>
 <li><p><strong>hidden_size</strong> (<em>int : default None</em>) – specifies the number of units in the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">hidden_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>.</p></li>
 <li><p><strong>target_size</strong> (<em>int : default None</em>) – specifies the size of the <em>TARGET</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a>, number of units in the
 <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>,
-and of the <code class="xref any docutils literal notranslate"><span class="pre">OUTPUT_ACTIVITY</span></code> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p></li>
+and of the <a class="reference internal" href="#output-activity"><span class="std std-ref">OUTPUT_ACTIVITY</span></a> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p></li>
 <li><p><strong>separated</strong> (<em>bool : default True</em>) – specifies whether <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a> should be different from the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a>.</p></li>
 <li><p><strong>mode</strong> (<em>SIMPLE_HEBBIAN</em><em> or </em><em>None : default None</em>) – specifies configuratoin that emulates standard <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> using <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a> learning
 (see <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN mode</span></a> for details).</p></li>
@@ -535,10 +536,10 @@ interpreter exception is generated.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_size">
-<span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">input_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_size" title="Link to this definition">¶</a></dt>
 <dd><p>size of the <em>INPUT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_activity</span></code></a>, and the number of units in the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field of</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -546,11 +547,11 @@ interpreter exception is generated.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_size">
-<span class="sig-name descname"><span class="pre">hidden_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hidden_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_size" title="Link to this definition">¶</a></dt>
 <dd><p>size of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">hidden_activity</span></code></a>, and number of units in
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> and the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">hidden_field</span></a> of the <em>RECURRENT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -558,13 +559,13 @@ interpreter exception is generated.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_size">
-<span class="sig-name descname"><span class="pre">target_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">target_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_size" title="Link to this definition">¶</a></dt>
 <dd><p>size of the <em>TARGET</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a> <a class="reference internal" href="#contrastivehebbian-creation"><span class="std std-ref">if specified</span></a> and,
 if so, the number of units in <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target_activity</span></code></a>, the
 <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>,
 and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -572,10 +573,10 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_start">
-<span class="sig-name descname"><span class="pre">target_start</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_start" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">target_start</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_start" title="Link to this definition">¶</a></dt>
 <dd><p>index of first unit of <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -583,10 +584,10 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_end">
-<span class="sig-name descname"><span class="pre">target_end</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_end" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">target_end</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_end" title="Link to this definition">¶</a></dt>
 <dd><p>index of first unit <em>after</em> <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -594,10 +595,10 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated">
-<span class="sig-name descname"><span class="pre">separated</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">separated</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a> is different from <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a> (<code class="xref any docutils literal notranslate"><span class="pre">True</span></code>) or the same (<code class="xref any docutils literal notranslate"><span class="pre">False</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool : default True</p>
 </dd>
 </dl>
@@ -605,10 +606,10 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size">
-<span class="sig-name descname"><span class="pre">recurrent_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">recurrent_size</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size" title="Link to this definition">¶</a></dt>
 <dd><p>size of <em>RECURRENT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a>, <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>, and <em>CURRENT_ACTIVITY</em> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
@@ -616,11 +617,11 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.mode">
-<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.mode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.mode" title="Link to this definition">¶</a></dt>
 <dd><p>indicates whether <em>SIMPLE_HEBBIAN</em> was used for configuration (see
 <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN mode</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>SIMPLE_HEBBIAN or None</p>
 </dd>
 </dl>
@@ -628,10 +629,10 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection">
-<span class="sig-name descname"><span class="pre">recurrent_projection</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">recurrent_projection</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection" title="Link to this definition">¶</a></dt>
 <dd><p>an <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that projects from the <em>CURRENT_ACTIVITY</em> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> to the <em>RECURRENT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">AutoAssociativeProjection</a></p>
 </dd>
 </dl>
@@ -639,12 +640,12 @@ and the <em>OUTPUT_ACTIVITY</em> <a class="reference internal" href="#contrastiv
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function">
-<span class="sig-name descname"><span class="pre">combination_function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">combination_function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function" title="Link to this definition">¶</a></dt>
 <dd><p>used to combine <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>INPUT</em> and <em>TARGET</em> (if specified)  <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPorts</span></a> with that of the <em>RECURRENT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a> to determine
 the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> passed to the Mechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> and/or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a> for details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>method or function</p>
 </dd>
 </dl>
@@ -652,11 +653,11 @@ the <code class="xref any docutils literal notranslate"><span class="pre">variab
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp">
-<span class="sig-name descname"><span class="pre">clamp</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clamp</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>INPUT</em> and <em>TARGET</em> (if specified) <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPorts</span></a> replace (<em>HARD_CLAMP</em>) or are added to (<em>SOFT_CLAMP</em>) the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
 of the <em>RECURRENT</em> InputPort by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">combination_function</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>HARD_CLAMP or SOFT_CLAMP</p>
 </dd>
 </dl>
@@ -664,11 +665,11 @@ of the <em>RECURRENT</em> InputPort by <a class="reference internal" href="#psyn
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous">
-<span class="sig-name descname"><span class="pre">continuous</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">continuous</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous" title="Link to this definition">¶</a></dt>
 <dd><p>determines whether or not <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> is reset
 at the beginning of the <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a> of execution. If <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>, it is set to <code class="xref any docutils literal notranslate"><span class="pre">initial_value</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool : default True</p>
 </dd>
 </dl>
@@ -676,10 +677,10 @@ at the beginning of the <a class="reference internal" href="#contrastivehebbian-
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity">
-<span class="sig-name descname"><span class="pre">current_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">current_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="Link to this definition">¶</a></dt>
 <dd><p>the value of the actvity of the ContrastiveHebbianMechanism following its last <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">execution</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats</p>
 </dd>
 </dl>
@@ -687,10 +688,10 @@ at the beginning of the <a class="reference internal" href="#contrastivehebbian-
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity">
-<span class="sig-name descname"><span class="pre">input_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">input_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity" title="Link to this definition">¶</a></dt>
 <dd><p>value of units in the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats</p>
 </dd>
 </dl>
@@ -698,10 +699,10 @@ at the beginning of the <a class="reference internal" href="#contrastivehebbian-
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_activity">
-<span class="sig-name descname"><span class="pre">hidden_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hidden_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_activity" title="Link to this definition">¶</a></dt>
 <dd><p>value of units in the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">hidden_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>;  <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> if hidden_size = 0 or mode = <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats or None</p>
 </dd>
 </dl>
@@ -709,12 +710,12 @@ at the beginning of the <a class="reference internal" href="#contrastivehebbian-
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity">
-<span class="sig-name descname"><span class="pre">target_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">target_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity" title="Link to this definition">¶</a></dt>
 <dd><p>value of units in the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> if <em>TARGET</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort is specified</span></a>. Same as <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_activity</span></code></a>
 if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">separated</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>;  <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> if target_size = 0 or mode =
 <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats or None</p>
 </dd>
 </dl>
@@ -722,10 +723,10 @@ if <a class="reference internal" href="#psyneulink.library.components.mechanisms
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_activity">
-<span class="sig-name descname"><span class="pre">recurrent_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">recurrent_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_activity" title="Link to this definition">¶</a></dt>
 <dd><p>same as <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats</p>
 </dd>
 </dl>
@@ -733,11 +734,11 @@ if <a class="reference internal" href="#psyneulink.library.components.mechanisms
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity">
-<span class="sig-name descname"><span class="pre">minus_phase_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">minus_phase_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity" title="Link to this definition">¶</a></dt>
 <dd><p>the value of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> at the end of the
 <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase of execution</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats</p>
 </dd>
 </dl>
@@ -745,11 +746,11 @@ if <a class="reference internal" href="#psyneulink.library.components.mechanisms
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity">
-<span class="sig-name descname"><span class="pre">plus_phase_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plus_phase_activity</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity" title="Link to this definition">¶</a></dt>
 <dd><p>the value of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> at the end of the
 <a class="reference internal" href="#contrastivehebbian-plus-phase"><span class="std std-ref">plus phase of execution</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array of floats</p>
 </dd>
 </dl>
@@ -757,11 +758,11 @@ if <a class="reference internal" href="#psyneulink.library.components.mechanisms
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta">
-<span class="sig-name descname"><span class="pre">delta</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">delta</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta" title="Link to this definition">¶</a></dt>
 <dd><p>value returned by <code class="xref any docutils literal notranslate"><span class="pre">phase_convergence_function</span></code>;
 used to determined when <code class="xref any docutils literal notranslate"><span class="pre">is_converged</span></code> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>scalar</p>
 </dd>
 </dl>
@@ -769,12 +770,12 @@ used to determined when <code class="xref any docutils literal notranslate"><spa
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.is_converged">
-<span class="sig-name descname"><span class="pre">is_converged</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.is_converged" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">is_converged</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.is_converged" title="Link to this definition">¶</a></dt>
 <dd><p>indicates when a <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">phase of execution</span></a> is complete, if the termination condition
 for that phase is specified as <em>CONVERGENCE</em>.  <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> when <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">delta</span></code></a> is less
 than or equal to the termination_threshold speified for the corresponding phase.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -782,13 +783,13 @@ than or equal to the termination_threshold speified for the corresponding phase.
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function">
-<span class="sig-name descname"><span class="pre">phase_convergence_function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">phase_convergence_function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function" title="Link to this definition">¶</a></dt>
 <dd><p>determines when a <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">phase of execution</span></a> is complete if the termination
 condition for that phase is specified as <em>CONVERGENCE</em>.  Compares the value of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a> with the
 previous <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>; result is
 assigned as the value of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">delta</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>function</p>
 </dd>
 </dl>
@@ -796,14 +797,14 @@ assigned as the value of <a class="reference internal" href="#psyneulink.library
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition">
-<span class="sig-name descname"><span class="pre">minus_phase_termination_condition</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">minus_phase_termination_condition</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="Link to this definition">¶</a></dt>
 <dd><p>determines the type of condition used to terminate the <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus_phase</span></a> of
 execution.  If it is <em>CONVERGENCE</em>, execution continues until the value returned by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">phase_convergence_function</span></code></a> is less than or equal to
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_termination_threshold</span></code></a>;
 if it is <em>COUNT</em>, the Mechanism is executed the number of times specified in
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_termination_threshold</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>CONVERGENCE or COUNT: default CONVERGENCE</p>
 </dd>
 </dl>
@@ -811,11 +812,11 @@ if it is <em>COUNT</em>, the Mechanism is executed the number of times specified
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold">
-<span class="sig-name descname"><span class="pre">minus_phase_termination_threshold</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">minus_phase_termination_threshold</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold" title="Link to this definition">¶</a></dt>
 <dd><p>the value used for the specified <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_termination_condition</span></code></a> to determine when the
 <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase of execution</span></a> terminates.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float or int</p>
 </dd>
 </dl>
@@ -823,14 +824,14 @@ if it is <em>COUNT</em>, the Mechanism is executed the number of times specified
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition">
-<span class="sig-name descname"><span class="pre">plus_phase_termination_condition</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plus_phase_termination_condition</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition" title="Link to this definition">¶</a></dt>
 <dd><p>determines the type of condition used to terminate the <a class="reference internal" href="#contrastivehebbian-plus-phase"><span class="std std-ref">plus_phase</span></a> of
 execution.  If it is <em>CONVERGENCE</em>, execution continues until the value returned by <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">phase_convergence_function</span></code></a> is less than or equal to
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">plus_phase_termination_threshold</span></code></a>;
 if it is <em>COUNT</em>, the Mechanism is executed the number of times specified in
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">plus_phase_termination_threshold</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>CONVERGENCE or COUNT : default CONVERGENCE</p>
 </dd>
 </dl>
@@ -838,10 +839,10 @@ if it is <em>COUNT</em>, the Mechanism is executed the number of times specified
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold">
-<span class="sig-name descname"><span class="pre">plus_phase_termination_threshold</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plus_phase_termination_threshold</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold" title="Link to this definition">¶</a></dt>
 <dd><p>the value used for the specified <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">plus_phase_termination_condition</span></code></a> to determine when the <a class="reference internal" href="#contrastivehebbian-plus-phase"><span class="std std-ref">plus phase of execution</span></a> terminates.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float or int</p>
 </dd>
 </dl>
@@ -849,12 +850,12 @@ if it is <em>COUNT</em>, the Mechanism is executed the number of times specified
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.max_passes">
-<span class="sig-name descname"><span class="pre">max_passes</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.max_passes" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">max_passes</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.max_passes" title="Link to this definition">¶</a></dt>
 <dd><p>determines the maximum number of executions (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">passes</span></code></a>) that can occur in an <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">execution phase</span></a> before reaching the corresponding termination_threshold for that phase,
 after which an error occurs; if <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> is specified, execution may continue indefinitely or until an
 interpreter exception is generated.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int or None</p>
 </dd>
 </dl>
@@ -862,12 +863,12 @@ interpreter exception is generated.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.execution_phase">
-<span class="sig-name descname"><span class="pre">execution_phase</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.execution_phase" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">execution_phase</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.execution_phase" title="Link to this definition">¶</a></dt>
 <dd><p>indicates current <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">phase of execution</span></a>.
 <code class="xref any docutils literal notranslate"><span class="pre">False</span></code> = <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a>;
 <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> = <a class="reference internal" href="#contrastivehebbian-plus-phase"><span class="std std-ref">plus phase</span></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -875,7 +876,7 @@ interpreter exception is generated.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_ports">
-<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_ports" title="Link to this definition">¶</a></dt>
 <dd><p>contains the following <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> by default:</p>
 <ul class="simple">
 <li><p><em>OUTPUT_ACTIVITY</em>, the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the Mechanism, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which is <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target_activity</span></code></a> if a
@@ -886,15 +887,15 @@ of the ContrastiveHebbianMechanism after each execution;  at the end of an <a cl
 differences in activity between the plus and minus phases at the end of an <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">execution sequence</span></a>.</p></li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>ContentAddressableList[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.ContentAddressableList" title="psyneulink.core.globals.utilities.ContentAddressableList">ContentAddressableList</a>[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports">
-<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports" title="Link to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following in addition to the
 <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
 <dl class="simple" id="output-activity">
@@ -921,29 +922,29 @@ differences in activity between the plus and minus phases at the end of an <a cl
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list[str]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>instance of ContrastiveHebbianMechanism</strong></p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism">ContrastiveHebbianMechanism</a></p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._validate_params" title="Link to this definition">¶</a></dt>
 <dd><p>Validate shape and size of auto, hetero, matrix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_input_ports">
-<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_input_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Call Port._instantiate_input_ports to instantiate orderedDict of InputPort(s)</p>
 <dl class="simple">
 <dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_input_ports</p>
@@ -953,8 +954,8 @@ differences in activity between the plus and minus phases at the end of an <a cl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_attributes_before_function">
-<span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>using the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> argument the user passed in (which is now stored in function_params), instantiate
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_attributes_before_function" title="Link to this definition">¶</a></dt>
+<dd><p>using the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> argument the user passed in (which is now stored in function_params), instantiate
 ParameterPorts for auto and hetero if they haven’t already been instantiated. This is useful if auto and
 hetero were None in the initialization call.
 :param function:</p>
@@ -962,25 +963,24 @@ hetero were None in the initialization call.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_recurrent_projection">
-<span class="sig-name descname"><span class="pre">_instantiate_recurrent_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HollowMatrix'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_recurrent_projection" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_recurrent_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mech</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HollowMatrix'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_recurrent_projection" title="Link to this definition">¶</a></dt>
 <dd><p>Instantiate an AutoAssociativeProjection from Mechanism to itself</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._execute">
-<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._execute" title="Link to this definition">¶</a></dt>
 <dd><p>Execute TransferMechanism function and return transform of input</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._learning_signal_source">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">_learning_signal_source</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._learning_signal_source" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_learning_signal_source</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._learning_signal_source" title="Link to this definition">¶</a></dt>
 <dd><p>Override default to use ACTIVITY_DIFFERENCE as source of learning signal</p>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -1049,6 +1049,46 @@ hetero were None in the initialization call.
 </ul>
 </li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianError"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianError</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_size"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.input_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_size"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.hidden_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_size"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.target_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_start"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.target_start</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_end"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.target_end</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.separated"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.separated</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.recurrent_size</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.mode"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.mode</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.recurrent_projection</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.combination_function"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.combination_function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.clamp</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.continuous</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.current_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.input_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.input_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.hidden_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.hidden_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.target_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.target_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.recurrent_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.minus_phase_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.plus_phase_activity</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.delta"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.delta</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.is_converged"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.is_converged</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.phase_convergence_function"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.phase_convergence_function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.minus_phase_termination_condition</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_threshold"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.minus_phase_termination_threshold</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_condition"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.plus_phase_termination_condition</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_termination_threshold"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.plus_phase_termination_threshold</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.max_passes"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.max_passes</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.execution_phase"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.execution_phase</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.output_ports"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.output_ports</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism.standard_output_ports</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._validate_params"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._validate_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_input_ports"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._instantiate_input_ports()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_attributes_before_function"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._instantiate_attributes_before_function()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._instantiate_recurrent_projection"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._instantiate_recurrent_projection()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._execute"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._execute()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism._learning_signal_source"><code class="docutils literal notranslate"><span class="pre">ContrastiveHebbianMechanism._learning_signal_source</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1066,10 +1106,11 @@ hetero were None in the initialization call.
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

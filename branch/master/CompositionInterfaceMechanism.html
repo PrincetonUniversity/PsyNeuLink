@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -198,7 +198,7 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="compositioninterfacemechanism">
-<h1>CompositionInterfaceMechanism<a class="headerlink" href="#compositioninterfacemechanism" title="Permalink to this headline">¶</a></h1>
+<h1>CompositionInterfaceMechanism<a class="headerlink" href="#compositioninterfacemechanism" title="Link to this heading">¶</a></h1>
 <div class="related docutils container">
 <p><em>Related</em></p>
 <div class="toctree-wrapper compound">
@@ -208,8 +208,8 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism"></span><section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<section id="contents">
+<span id="module-psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism"></span><h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#compositioninterfacemechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -221,7 +221,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="compositioninterfacemechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="compositioninterfacemechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>CompositionInterfaceMechanisms act as interfaces between a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> and its inputs from and outputs to the
 environment, or the Components of another Composition within which it is <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a>.</p>
 <div class="technical-note docutils container">
@@ -239,12 +239,12 @@ for aggregating outputs that, again, maintain a standard interface to other Comp
 </div>
 </section>
 <section id="creation">
-<span id="compositioninterfacemechanism-creation"></span><h2>Creation<a class="headerlink" href="#creation" title="Permalink to this headline">¶</a></h2>
+<span id="compositioninterfacemechanism-creation"></span><h2>Creation<a class="headerlink" href="#creation" title="Link to this heading">¶</a></h2>
 <p>The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
 constructed (and should never be constructed manually):  <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.parameter_CIM" title="psyneulink.core.compositions.composition.Composition.parameter_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_CIM</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_CIM</span></code></a> (see <a class="reference internal" href="Composition.html#composition-cims"><span class="std std-ref">CompositionInterfaceMechanisms</span></a> for additional details).</p>
 </section>
 <section id="structure">
-<span id="compositioninterfacemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="compositioninterfacemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A CompositionInterfaceMechanisms has a set of <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> / <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> pairs that its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Identity" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Identity"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Identity</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> – uses to transmit inputs to CompositionInterfaceMechanism
 to its outputs.  These are listed in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map" title="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">port_map</span></code></a> attribute, each entry
 of which is a key designating the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> of the Component with which the CompositionInterfaceMechanism communicates
@@ -253,11 +253,12 @@ outside the Composition (i.e., from an <a class="reference internal" href="Compo
 CompositionIntefaceMechanisms can be seen graphically using the <code class="xref any docutils literal notranslate"><span class="pre">show_cim</span></code> option of the
 Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method (see figure below).</p>
 <figure class="align-default" id="id1">
-<img alt="_images/CIM_figure.svg" src="_images/CIM_figure.svg" /><figcaption>
+<img alt="_images/CIM_figure.svg" src="_images/CIM_figure.svg" />
+<figcaption>
 <p><span class="caption-text"><strong>Examples of Projections to nested Compositions routed through CompositionInterfaceMechanisms.</strong>  <em>Panel A:</em>
 Simple example showing a basic configuration.  <em>Panel B:</em>  More complex configuration, generated from script below,
 showing Projections automatically created from the Node of an outer Composition (<em>X</em>) to two <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>, a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
-from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in the outer Composition to a Node it modulates in the nested one, and from a <a class="reference internal" href="Composition.html#id15" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Node (<em>B</em>) in the nested Composition to the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that monitors it.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in the outer Composition to a Node it modulates in the nested one, and from a <a class="reference internal" href="Composition.html#id17" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Node (<em>B</em>) in the nested Composition to the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that monitors it.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 <div class="legend">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
 <span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
@@ -280,24 +281,25 @@ from a <a class="reference internal" href="ControlMechanism.html"><span class="d
 </figure>
 </section>
 <section id="execution">
-<span id="compositioninterfacemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="compositioninterfacemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A CompositionInterface Mechanism is executed when the Composition to which it belongs is executed, and shown never
 be executed manually.</p>
 </section>
 <section id="class-reference">
-<span id="compositioninterfacemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="compositioninterfacemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.</span></span><span class="sig-name descname"><span class="pre">CompositionInterfaceMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.</span></span><span class="sig-name descname"><span class="pre">CompositionInterfaceMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that acts as interface between a Composition and its inputs
 from and outputs to the environment or other Components (if it is a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>).</p>
 <p>See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for arguments and additional attributes.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function" title="Link to this definition">¶</a></dt>
 <dd><p>the function used to transform the variable before assigning it to the Mechanism’s OutputPort(s)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>InterfaceFunction : default Identity</p>
 </dd>
 </dl>
@@ -305,13 +307,13 @@ from and outputs to the environment or other Components (if it is a <a class="re
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map">
-<span class="sig-name descname"><span class="pre">port_map</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">port_map</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map" title="Link to this definition">¶</a></dt>
 <dd><p>entries are comprised of keys designating a Component outside the Composition with which it communicates,
 and values tuples that designate the corresponding <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> - <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> pairs used to transmit that
 information into or out of the Composition (see <a class="reference internal" href="#compositioninterfacemechanism-structure"><span class="std std-ref">Structure</span></a>, and
 <a class="reference internal" href="Composition.html#composition-cims"><span class="std std-ref">CompositionInterfaceMechanisms</span></a> under Composition for additional details).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict[Port:(<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a>,<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>)]</p>
 </dd>
 </dl>
@@ -319,16 +321,16 @@ information into or out of the Composition (see <a class="reference internal" hr
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters">
-<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters" title="Link to this definition">¶</a></dt>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters.function" title="Link to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function" title="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a></p>
 <dl class="field-list simple">
-<dt class="field-odd">Default value</dt>
+<dt class="field-odd">Default value<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Identity" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Identity"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Identity</span></code></a></p>
 </dd>
-<dt class="field-even">Type</dt>
+<dt class="field-even">Type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="Function.html"><span class="doc">Function</span></a></p>
 </dd>
 </dl>
@@ -338,7 +340,7 @@ information into or out of the Composition (see <a class="reference internal" hr
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.add_ports">
-<span class="sig-name descname"><span class="pre">add_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ports</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.add_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ports</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.add_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Add one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> to the Mechanism.  Only <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> can be added; <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> cannot be added to a Mechanism after it has
 been constructed.</p>
 <p>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.owner" title="psyneulink.core.components.ports.port.Port_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> of a Port specified in the <strong>ports</strong> argument is not the same as the
@@ -353,16 +355,16 @@ which may produce an incompatibility with its <a class="reference internal" href
 <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">Mechanism InputPorts</span></a> for a more detailed explanation).</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ports</strong> (<em>Port</em><em> or </em><em>List</em><em>[</em><em>Port</em><em>]</em>) – one more <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> to be added to the Mechanism.
 Port specification(s) can be an InputPort or OutputPort object, class reference, class keyword, or
 <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port specification dictionary</span></a> (the latter must have a <em>PORT_TYPE</em> entry
 specifying the class or keyword for InputPort or OutputPort).</p></li>
-<li><p><strong>entries</strong> (<em>Returns a dictionary with two</em>) – </p></li>
-<li><p><strong>added.</strong> (<em>containing the list of InputPorts and OutputPorts</em>) – </p></li>
-<li><p><strong>-------</strong> – </p></li>
-<li><p><strong>added</strong> (<em>Dictionary with entries containing InputPorts and/or OutputPorts</em>) – </p></li>
+<li><p><strong>entries</strong> (<em>Returns a dictionary with two</em>)</p></li>
+<li><p><strong>added.</strong> (<em>containing the list</em><em> of </em><em>InputPorts and OutputPorts</em>)</p></li>
+<li><p><strong>-------</strong></p></li>
+<li><p><strong>added</strong> (<em>Dictionary with entries containing InputPorts and/or OutputPorts</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -370,7 +372,7 @@ specifying the class or keyword for InputPort or OutputPort).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.remove_ports">
-<span class="sig-name descname"><span class="pre">remove_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ports</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.remove_ports" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">remove_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ports</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.remove_ports" title="Link to this definition">¶</a></dt>
 <dd><p>Remove one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> from the Mechanism.  Only <code class="xref any docutils literal notranslate"><span class="pre">InputPorts</span></code> can be removed; <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> cannot be removed from a Mechanism.</p>
 <p>Each Specified port must be owned by the Mechanism, otherwise the request is ignored.</p>
 <div class="admonition note">
@@ -380,7 +382,7 @@ attribute, which may produce an incompatibility with its <a class="reference int
 <a class="reference internal" href="Mechanism.html#mechanism-inputports"><span class="std std-ref">Mechanism InputPorts</span></a> for more detailed information).</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ports</strong> (<em>Port</em><em> or </em><em>List</em><em>[</em><em>Port</em><em>]</em>) – one more ports to be removed from the Mechanism.
 Port specification(s) can be an Port object or the name of one.</p>
 </dd>
@@ -389,7 +391,7 @@ Port specification(s) can be an Port object or the name of one.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM">
-<span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
 Return None if there is no source Node (i.e., port receives input direcdtly from input to outermost Composition)
 <strong>port</strong> InputPort or OutputPort of the input_CIM from which the local projection projects;
@@ -398,7 +400,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 <div><p>assumes the current CompositionInterfaceMechanism’s Composition by default</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 </dd>
 </dl>
@@ -406,7 +408,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM">
-<span class="sig-name descname"><span class="pre">_get_destination_info_from_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_destination_info_from_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition for “ultimate” destination of projection to <strong>port</strong>.
 <strong>port</strong>: InputPort or OutputPort of the input_CIM to which the projection of interest projects;</p>
 <blockquote>
@@ -420,7 +422,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_modulated_info_from_parameter_CIM">
-<span class="sig-name descname"><span class="pre">_get_modulated_info_from_parameter_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_modulated_info_from_parameter_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_modulated_info_from_parameter_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_modulated_info_from_parameter_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition for parameter modulated by ControlSignal that projects to parameter_CIM.
 <strong>port</strong>: InputPort or OutputPort of the parameter_CIM to which the ControlSignal projects;</p>
 <blockquote>
@@ -434,7 +436,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM">
-<span class="sig-name descname"><span class="pre">_get_source_of_modulation_for_parameter_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_source_of_modulation_for_parameter_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return ControlSignal, Node and Composition that projects to a ParameterPort from (possibly nested) outer comp
 <strong>port</strong>: InputPort or OutputPort of the parameter_CIM from which the local ControlSignal projects;</p>
 <blockquote>
@@ -448,7 +450,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM">
-<span class="sig-name descname"><span class="pre">_get_source_info_from_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_source_info_from_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition for “original” source of projection from <strong>port</strong>.
 <strong>port</strong> InputPort or OutputPort of the output_CIM from which the projection of interest projects;</p>
 <blockquote>
@@ -459,7 +461,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
 </dd>
 </dl>
@@ -467,7 +469,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM">
-<span class="sig-name descname"><span class="pre">_get_destination_info_for_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_get_destination_info_for_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition for “ultimate” destination(s) of projection to <strong>port</strong>.
 <strong>port</strong>: InputPort or OutputPort of the output_CIM to which the projection of interest projects;</p>
 <blockquote>
@@ -482,7 +484,7 @@ that is specified to project to more than one Node in the outer Composition</p>
 </dl>
 <p>Return None if there are no destination Nodes (i.e., source is output of outermost Composition</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
 </dd>
 </dl>
@@ -490,13 +492,12 @@ that is specified to project to more than one Node in the outer Composition</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe">
-<span class="sig-name descname"><span class="pre">_sender_is_probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_sender_is_probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe" title="Link to this definition">¶</a></dt>
 <dd><p>Return True if source of output_port is a PROBE Node of the Composition to which it belongs</p>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 </section>
 
 
@@ -540,6 +541,24 @@ that is specified to project to more than one Node in the outer Composition</p>
 <li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.function"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.port_map"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.port_map</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.Parameters</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters.function"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.Parameters.function</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.add_ports"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.add_ports()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.remove_ports"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism.remove_ports()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_source_node_for_input_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_from_input_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_destination_info_from_input_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_modulated_info_from_parameter_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_modulated_info_from_parameter_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_source_of_modulation_for_parameter_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_source_info_from_output_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._get_destination_info_for_output_CIM()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe"><code class="docutils literal notranslate"><span class="pre">CompositionInterfaceMechanism._sender_is_probe()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -557,10 +576,11 @@ that is specified to project to more than one Node in the outer Composition</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   

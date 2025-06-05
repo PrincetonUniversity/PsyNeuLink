@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningSignal &mdash; PsyNeuLink 0.16.0.0+6.gf7b887a93 documentation</title>
+  <title>LearningSignal &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.0.0+6
+                  0.16.1.0+5
                 </div>
               
             
@@ -198,9 +198,9 @@
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
   <section id="module-psyneulink.core.components.ports.modulatorysignals.learningsignal">
-<span id="learningsignal"></span><h1>LearningSignal<a class="headerlink" href="#module-psyneulink.core.components.ports.modulatorysignals.learningsignal" title="Permalink to this headline">¶</a></h1>
+<span id="learningsignal"></span><h1>LearningSignal<a class="headerlink" href="#module-psyneulink.core.components.ports.modulatorysignals.learningsignal" title="Link to this heading">¶</a></h1>
 <section id="contents">
-<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents:<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">Learning_signal_Overview</span></code></p></li>
@@ -225,7 +225,7 @@
 </div></blockquote>
 </section>
 <section id="overview">
-<span id="learningsignal-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="learningsignal-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>A LearningSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> and one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>, to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to which they project.  A
 LearningSignal receives the value of a <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning_signal</span></a> calculated by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to
@@ -235,14 +235,14 @@ MappingProjections` <em>MATRIX</em> <a class="reference internal" href="Paramete
 the MappingProjection(s) being learned.</p>
 </section>
 <section id="creating-a-learningsignal">
-<span id="learningsignal-creation"></span><h2>Creating a LearningSignal<a class="headerlink" href="#creating-a-learningsignal" title="Permalink to this headline">¶</a></h2>
+<span id="learningsignal-creation"></span><h2>Creating a LearningSignal<a class="headerlink" href="#creating-a-learningsignal" title="Link to this heading">¶</a></h2>
 <p>A LearningSignal is created automatically whenever a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">specified for learning</span></a> and the Projection belongs to the same <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> as the
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>. LearningSignals can also be specified in the <strong>learning_signals</strong> argument of the constructor
 for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>. Although a LearningSignal can be created directly using its constructor (or any of the
 other ways for <code class="xref any docutils literal notranslate"><span class="pre">creating</span> <span class="pre">an</span> <span class="pre">OutputPort</span></code>), this is neither necessary nor advisable, as a
 LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.</p>
 <section id="specifying-learningsignals">
-<span id="learningsignal-specification"></span><h3><em>Specifying LearningSignals</em><a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-specification"></span><h3><em>Specifying LearningSignals</em><a class="headerlink" href="#specifying-learningsignals" title="Link to this heading">¶</a></h3>
 <p>When a LearningSignal is specified in the <strong>learning_signals</strong> argument of the constructor for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>,
 the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort(s)</span></a> of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> being learned must be
 specified.  This can take any of the following forms:</p>
@@ -289,12 +289,12 @@ attributes.</p>
 </section>
 </section>
 <section id="structure">
-<span id="learningsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="learningsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>A LearningSignal is owned by an <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, and “trains” one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
 by modulating the value of their <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameters.  This is governed by three
 attributes of the LearningSignal, as described below.</p>
 <section id="projections">
-<span id="learningsignal-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Link to this heading">¶</a></h3>
 <p>When a LearningSignal is created, it can be assigned one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>,
 using either the <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the
 <strong>params</strong> argument with the key <em>PROJECTIONS</em>.  These will be assigned to its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attribute.  See <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">Port Projections</span></a> for additional details
@@ -309,7 +309,7 @@ networks</a>.</p>
 </div>
 </section>
 <section id="modulation">
-<span id="learningsignal-modulation"></span><h3><em>Modulation</em><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<span id="learningsignal-modulation"></span><h3><em>Modulation</em><a class="headerlink" href="#modulation" title="Link to this heading">¶</a></h3>
 <p>A LearningSignal has a <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute that determines how the LearningSignal’s
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (i.e., its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>) is used by the
 ParameterPort(s) to which it projects to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter(s) of their
@@ -326,7 +326,7 @@ specification dictionary where the LearningSignal itself is specified, as descri
 used by all of the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that project from that LearningSignal.</p>
 </section>
 <section id="learningsignal-function">
-<h3><em>LearningSignal Function</em><a class="headerlink" href="#learningsignal-function" title="Permalink to this headline">¶</a></h3>
+<h3><em>LearningSignal Function</em><a class="headerlink" href="#learningsignal-function" title="Link to this heading">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a LearningSignal converts the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> it receives from the LearningMechanism to which it belongs to its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (i.e., the LearningSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>). By default
 this is an identity function (<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> with <strong>slope</strong>=1 and <strong>intercept</strong>=0), that simply uses the
 LearningMechanism’s <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> as its own.  However, the LearningSignal’s
@@ -340,7 +340,7 @@ attributes of a LearningSignal are automatically assigned and should not be modi
 </section>
 </section>
 <section id="execution">
-<span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
 <p>A LearningSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to which it belongs is
 executed.  When this occurs, the LearningMechanism provides the LearningSignal with a
 <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>, that is used by its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to
@@ -355,24 +355,25 @@ explanation of “lazy” updating).</p>
 </div>
 </section>
 <section id="class-reference">
-<span id="learningsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="learningsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Link to this heading">¶</a></h2>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.learningsignal.</span></span><span class="sig-name descname"><span class="pre">LearningSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.learningsignal.</span></span><span class="sig-name descname"><span class="pre">LearningSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal" title="Link to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>params=None,                                             projections=None,                                        name=None,                                               prefs=None)</p>
 </div></blockquote>
 <p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to modify the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of one more more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a>.  See
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-class-reference"><span class="std std-ref">ModulatorySignal</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used by the LearningSignal to generate its
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>.</p></li>
 <li><p><strong>modulation</strong> (<em>str : default ADDITIVE</em>) – specifies the way in which the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningSignal is used to modify the value
 of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to which
 the LearningSignal’s <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> project.</p></li>
-<li><p><strong>modulates</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">LearningProjection(s)</span></a> to be assigned to the LearningSignal, and that will be
+<li><p><strong>modulates</strong> (<em>list</em><em> of </em><em>Projection specifications</em>) – specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">LearningProjection(s)</span></a> to be assigned to the LearningSignal, and that will be
 listed in its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attribute (see <a class="reference internal" href="#learningsignal-projections"><span class="std std-ref">Projections</span></a> for additional
 details).</p></li>
 </ul>
@@ -380,11 +381,11 @@ details).</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function">
-<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="Link to this definition">¶</a></dt>
 <dd><p>converts <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> into the LearningSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>. The default is the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Identity" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Identity"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Identity</span></code></a> Function, that assigns the LearningSignal’s
 <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>TransferFunction :  default Linear(slope=1, intercept=0)</p>
 </dd>
 </dl>
@@ -392,11 +393,11 @@ details).</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value">
-<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="Link to this definition">¶</a></dt>
 <dd><p>result of the LearningSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; same as its
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number, list or np.ndarray</p>
 </dd>
 </dl>
@@ -404,10 +405,10 @@ details).</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal">
-<span class="sig-name descname"><span class="pre">learning_signal</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">learning_signal</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal" title="Link to this definition">¶</a></dt>
 <dd><p>result of the LearningSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; same as its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>number or ndarray</p>
 </dd>
 </dl>
@@ -415,11 +416,11 @@ details).</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents">
-<span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents" title="Link to this definition">¶</a></dt>
 <dd><p>a list of the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> assigned to (i.e., that project from) the
 LearningSignal.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>[List[<a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection">LearningProjection</a>]]</p>
 </dd>
 </dl>
@@ -427,12 +428,12 @@ LearningSignal.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation">
-<span class="sig-name descname"><span class="pre">modulation</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">modulation</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation" title="Link to this definition">¶</a></dt>
 <dd><p>determines the way in which the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningSignal is used to modify the
 value of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which the
 LearningSignal’s <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a> project.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -440,18 +441,17 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.projection_type">
-<span class="sig-name descname"><span class="pre">projection_type</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.projection_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection</span></code></a></p>
+<span class="sig-name descname"><span class="pre">projection_type</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.projection_type" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearningProjection</span></code></a></p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignalError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.learningsignal.</span></span><span class="sig-name descname"><span class="pre">LearningSignalError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignalError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.learningsignal.</span></span><span class="sig-name descname"><span class="pre">LearningSignalError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignalError" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</section>
 </section>
 
 
@@ -503,6 +503,16 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
 </li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal"><code class="docutils literal notranslate"><span class="pre">LearningSignal</span></code></a><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.function"><code class="docutils literal notranslate"><span class="pre">LearningSignal.function</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.value"><code class="docutils literal notranslate"><span class="pre">LearningSignal.value</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.learning_signal"><code class="docutils literal notranslate"><span class="pre">LearningSignal.learning_signal</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.efferents"><code class="docutils literal notranslate"><span class="pre">LearningSignal.efferents</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.modulation"><code class="docutils literal notranslate"><span class="pre">LearningSignal.modulation</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal.projection_type"><code class="docutils literal notranslate"><span class="pre">LearningSignal.projection_type</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignalError"><code class="docutils literal notranslate"><span class="pre">LearningSignalError</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -520,10 +530,11 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
+         <script src="_static/jquery.js?v=5d32c60e"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/doctools.js?v=9bcbadda"></script>
+         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
 
   
