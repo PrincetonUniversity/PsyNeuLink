@@ -53,7 +53,7 @@ from psyneulink.core.components.functions.function import (
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
-     CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
+     CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
@@ -1821,7 +1821,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
-        normalize = Parameter(False)
+        normalize = Parameter(False, fallback_value=DEFAULT)
 
     @check_user_specified
     @beartype
