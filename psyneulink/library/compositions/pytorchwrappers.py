@@ -2208,14 +2208,18 @@ class PytorchProjectionWrapper():
         #     self.default_value = projection.parameters.value.initializer.get(context)
         # else:
         #     self.default_value = projection.defaults.value
-        # MODIFIED 6/4/25 NEW:
-        self.default_value = projection.defaults.value
-        try:
-            if (projection.parameters.has_initializers._get(context)
-                    and projection.parameters.value.initializer):
-                self.default_value = projection.parameters.value.initializer.get(context)
-        except ParameterNoValueError:
-            pass
+        # # MODIFIED 6/4/25 NEW:
+        # self.default_value = projection.defaults.value
+        # try:
+        #     if (projection.parameters.has_initializers._get(context)
+        #             and projection.parameters.value.initializer):
+        #         self.default_value = projection.parameters.value.initializer.get(context)
+        # except ParameterNoValueError:
+        #     pass
+        # MODIFIED 6/4/25 NEWER:
+        if (projection.parameters.has_initializers._get(context, fallback_value=False)
+                and projection.parameters.value.initializer):
+            self.default_value = projection.parameters.value.initializer.get(context)
         # MODIFIED 6/4/25 END
 
         # Get item of value corresponding to OutputPort that is Projection's sender
@@ -2239,6 +2243,10 @@ class PytorchProjectionWrapper():
             matrix = projection.parameters.matrix.get(context=context)
         except ParameterNoValueError:
             pass
+        # # MODIFIED 6/4/25 NEWER:
+        # matrix = projection.parameters.matrix.get(context, fallback_value=None)
+        # if matrix is None:
+        #     matrix = projection.parameters.matrix.get(context=None)
         # MODIFIED 6/4/25 END
         # Create a Pytorch Parameter for the matrix
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
