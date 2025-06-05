@@ -1111,22 +1111,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
         """Return torch Parameter for specified Projection"""
-        # # MODIFIED 6/4/25 OLD:
-        # projection_name = projection.name if isinstance(projection, MappingProjection) else projection
-        # MODIFIED 6/4/25 NEW:
         projection_name = projection.name if isinstance(projection, Projection) else projection
-        # MODIFIED 6/4/25 END
         param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
-        # MODIFIED 6/3/25 NEW:
         torch_long_param_name = self._torch_param_short_to_long_names_map[param_name]
-        # MODIFIED 6/3/25 END
         for param_tuple in self.named_parameters():
             # param_tuple is a tuple of (name, torch.nn.Parameter)
-            # # MODIFIED 6/3/25 OLD:
-            # if param_name == param_tuple[0]:
-            # MODIFIED 6/3/25 NEW:
             if torch_long_param_name == param_tuple[0]:
-            # MODIFIED 6/3/25 END
                 return param_tuple[1]
 
     def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
@@ -2202,25 +2192,9 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        # # MODIFIED 6/4/25 OLD:
-        # if (projection.parameters.has_initializers._get(context)
-        #         and projection.parameters.value.initializer):
-        #     self.default_value = projection.parameters.value.initializer.get(context)
-        # else:
-        #     self.default_value = projection.defaults.value
-        # # MODIFIED 6/4/25 NEW:
-        # self.default_value = projection.defaults.value
-        # try:
-        #     if (projection.parameters.has_initializers._get(context)
-        #             and projection.parameters.value.initializer):
-        #         self.default_value = projection.parameters.value.initializer.get(context)
-        # except ParameterNoValueError:
-        #     pass
-        # MODIFIED 6/4/25 NEWER:
         if (projection.parameters.has_initializers._get(context, fallback_value=False)
                 and projection.parameters.value.initializer):
             self.default_value = projection.parameters.value.initializer.get(context)
-        # MODIFIED 6/4/25 END
 
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
