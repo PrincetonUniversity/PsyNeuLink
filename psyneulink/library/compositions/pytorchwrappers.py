@@ -2195,6 +2195,8 @@ class PytorchProjectionWrapper():
         if (projection.parameters.has_initializers._get(context, fallback_value=False)
                 and projection.parameters.value.initializer):
             self.default_value = projection.parameters.value.initializer.get(context)
+        else:
+            self.default_value = projection.defaults.value
 
         # Get item of value corresponding to OutputPort that is Projection's sender
         # Note: this may not be the same as _sender_port_idx if the sender Mechanism has OutputPorts for Projections
