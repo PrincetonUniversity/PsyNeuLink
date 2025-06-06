@@ -72,64 +72,68 @@ bias vectors in its computations.
 no learning will occur, even when its `learn <AutodiffComposition.learn>` method is called, and learn_rates
 are specified.
 
-**learning_rate** (float or bool): specifies the default learning_rate for the parameters of the Pytorch `GRU
-<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified for individual
-parameters in the **optimizer_params** argument of the AutodiffComposition's constructor in the call to its `learn
-<AutodiffComposition.learn>` method (see `AutodiffComposition_Learning_Rates` for details of specification).
+**learning_rate** (float, bool, dict or None): specifies the learning_rate for the parameters of the Pytorch
+`GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified in the
+**learning_rate** argument of a call to the `learn <AutodiffComposition.learn>` method of the GRUComposition or the
+AutodiffComposition within which the GRUComposition is nested (see `AutodiffComposition_Learning_Rates` for details
+of specification).  It can be assigned any of the following values (see `eeComposition_Learning_Rate_Specification`
+for additonal details of specification):
 
-If it is float or an int, that is used as the default learning rate for the GRUComposition; if it is None or True,
-the GRUComposition's default `learning_rate <GRUComposition.learning_rate>` (.001) is used;
-COMMENT:
-# BREADCRUMB:
-# FIX: 4/17/25 - CHECK THAT THIS IS TRUE (AND RECONCILE WITH DESCRIPTION IN _AutodiffComposition_Learning_Rates
-if it is False, then learning will occur only for parameters for which an explicit learning_rate
-has been specified in the **optimizer_params** argument of the GRUComposition's constructor or in the call to its
-`learn <AutodiffComposition.learn>` method as described below.
-# FIX: ALTERNATIVE:
-if it is ``False``, then its `enable_learning <GRUComposition.enable_learning>` attribute is set to False, and
-no learning will occur;  if it is ``True``, then learning will occur only for Parameters for which an explicit
-learning_rate has been specified  in the **optimizer_params** argument of the GRUComposition's constructor or
-in the call to its `learn <AutodiffComposition.learn>` method as described below.
-COMMENT
- BREADCRUMB: RECONCILE WITH NEW REFACTORING OF learning_rate INSTEAD OF optimizer_params ARG
-.. _GRUComposition_Individual_Learning_Rates:
+.. _GRUComposition_Learning_Rate_Specification:
 
-**optimizer_params** (dict): used to specify parameter-specific learning rates, which supercede the value of the
-GRUCompositon's `learning_rate <GRUComposition.learning_rate>`. Keys of the dict must be one of the keys below
-that reference parameters of the `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module;
-values specify their learning_rates (see `AutodiffComposition_Learning_Rates` for additional information).
+    * *int or float*: the value is used as the default learning_rate for the GRUComposition, which is assigned to any
+      parameters that have not been otherwise specified in the **learning_rate** argument of a call to the `learn
+      <AutodiffComposition.learn>` method of the GRUComposition or the AutodiffComposition within which it is nested.
 
-  **Keys** for specifying GRU parameters in the **optimizer_params** dict:
+    * *True or None*: the GRUComposition's default `learning_rate <GRUComposition.learning_rate>` (.001) is used as
+      the learning_rate for amy parameters that have not been otherwise specified in the **learning_rate** argument
+      of a call to the `learn <AutodiffComposition.learn>` method of the GRUComposition or the AutodiffComposition
+      within which it is nested.
 
-    - *INPUT_TO_HIDDEN*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
-      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
-      <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
-      is stored in the `w_ih_learning_rate <GRUComposition.w_ih_learning_rate>` attribute of the GRUComposition;
+    * *False*: learning occurs only for parameters for which an explicit learning_rate has been specified in the
+      **learning_rate** argument of a call to the `learn <AutodiffComposition.learn>` method of the GRUComposition
+      or the AutodiffComposition within which it is nested.
 
-    - *HIDDEN_TO_HIDDEN*: learning rate for the ``weight_hh_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
-      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
-      `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`; its
-      value is stored in the `w_hh_learning_rate <GRUComposition.w_hh_learning_rate>` attribute of the GRUComposition;
+    .. _GRUComposition_Individual_Learning_Rates:
 
-    - *BIAS_INPUT_TO_HIDDEN*: learning rate for the ``bias_ih_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
-      efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `bias_ir
-      <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`; its value
-      is stored in the `b_ih_learning_rate <GRUComposition.b_ih_learning_rate>` attribute of the GRUComposition;
+    * *dict*: {Projection or Projection name: learning_rate}; used to specify parameter-specific learning rates,
+      which supercede the value of the GRUCompositon's `learning_rate <GRUComposition.learning_rate>`. Keys of the
+      dict must be one of the keys below that reference parameters of the `GRU
+      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module; values specify their learning_rates
+      (see `AutodiffComposition_Learning_Rates` for additional information):
 
-    - *BIAS_HIDDEN_TO_HIDDEN*: learning rate for the ``bias_hh_l0`` parameter of the PyTorch `GRU
-      <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
-      efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
-      `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`; its
-      value is stored in the `b_hh_learning_rate <GRUComposition.b_hh_learning_rate>` attribute of theGRUComposition.
+      - *INPUT_TO_HIDDEN*: learning rate for the ``weight_ih_l0`` parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+        efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `wts_in
+        <GRUComposition.wts_in>`, `wts_iu <GRUComposition.wts_iu>`, and `wts_ir <GRUComposition.wts_ir>`; its value
+        is stored in the `w_ih_learning_rate <GRUComposition.w_ih_learning_rate>` attribute of the GRUComposition;
 
-  .. warning::
-     Only the keywords above can be used to specify the learning_rate for parameters in the **optimizer_params** dict.
-     The learning_rates for individual Projections in the GRUComposition cannot be specified, as they do not have
-     corresponding torch.nn.Parameters in the `named_parameters()` list of the  PyTorch `GRU
-     <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module; specifying them will raise an error.
+      - *HIDDEN_TO_HIDDEN*: learning rate for the ``weight_hh_l0`` parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the weights of the
+        efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+        `wts_hn <GRUComposition.wts_hn>`, `wts_hu <GRUComposition.wts_hu>`, `wts_hr <GRUComposition.wts_hr>`; its
+        value is stored in the `w_hh_learning_rate <GRUComposition.w_hh_learning_rate>` attribute of the GRUComposition;
+
+      - *BIAS_INPUT_TO_HIDDEN*: learning rate for the ``bias_ih_l0`` parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+        efferent projections from the `input_node <GRUComposition.input_node>` of the GRUComposition: `bias_ir
+        <GRUComposition.bias_ir>`, `bias_iu <GRUComposition.bias_iu>`, `bias_in <GRUComposition.bias_in>`; its value
+        is stored in the `b_ih_learning_rate <GRUComposition.b_ih_learning_rate>` attribute of the GRUComposition;
+
+      - *BIAS_HIDDEN_TO_HIDDEN*: learning rate for the ``bias_hh_l0`` parameter of the PyTorch `GRU
+        <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that corresponds to the biases of the
+        efferent projections from the `hidden_layer_node <GRUComposition.hidden_layer_node>` of the GRUComposition:
+        `bias_hr <GRUComposition.bias_hr>`, `bias_hu <GRUComposition.bias_hu>`, `bias_hn <GRUComposition.bias_hn>`; its
+        value is stored in the `b_hh_learning_rate <GRUComposition.b_hh_learning_rate>` attribute of theGRUComposition.
+
+       - *DEFAULT_LEARNING_RATE*: specifies the default learning rate for the GRUComposition, that is used as the
+         the learning_rate for any parameters for which there are not other entries in the dict.
+
+    .. warning::
+       Only the keywords above can be used to specify the learning_rate for parameters in a **learning_rate** dict.
+       The learning_rates for individual Projections in the GRUComposition cannot be specified, as they do not have
+       corresponding torch.nn.Parameters in the `named_parameters()` list of the  PyTorch `GRU
+       <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module; specifying them will raise an error.
 
 .. _GRUComposition_Structure:
 
@@ -708,7 +712,7 @@ class GRUComposition(AutodiffComposition):
 
     if torch_available:
         from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import \
-            PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper
+            (PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper)
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
         pytorch_mechanism_wrapper_type = PytorchGRUMechanismWrapper
 
@@ -1224,3 +1228,33 @@ class GRUComposition(AutodiffComposition):
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
             raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
         return super().add_projection(*args, **kwargs)
+
+    @property
+    def w_ih_learning_rate(self):
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import INPUT_TO_HIDDEN
+        pytorch_rep = self._build_pytorch_representation()
+        return pytorch_rep._pnl_refs_to_torch_param_names[INPUT_TO_HIDDEN].projection.learning_rate
+
+    @property
+    def w_hh_learning_rate(self):
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import HIDDEN_TO_HIDDEN
+        pytorch_rep = self._build_pytorch_representation()
+        return pytorch_rep._pnl_refs_to_torch_param_names[HIDDEN_TO_HIDDEN].projection.learning_rate
+
+    @property
+    def b_ih_learning_rate(self):
+        if self.bias:
+            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_INPUT_TO_HIDDEN
+            pytorch_rep = self._build_pytorch_representation()
+            return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_INPUT_TO_HIDDEN].projection.learning_rate
+        warnings.warn(f"{self.name} does not have any bias parameters; "
+                      f"it must be constructed with bias=True in its constructor to have them.")
+
+    @property
+    def b_hh_learning_rate(self):
+        if self.bias:
+            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_HIDDEN_TO_HIDDEN
+            pytorch_rep = self._build_pytorch_representation()
+            return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_HIDDEN_TO_HIDDEN].projection.learning_rate
+        warnings.warn(f"{self.name} does not have any bias parameters; "
+                      f"it must be constructed with bias=True in its constructor to have them.")
