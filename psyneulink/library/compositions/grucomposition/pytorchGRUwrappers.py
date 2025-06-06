@@ -298,8 +298,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 learning_rate=pnl_proj.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.afferents[0]
-            # else:
-            #     direct_proj._initialize_from_context(context, base_context)
+            else:
+                direct_proj._initialize_from_context(context, base_context)
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
@@ -314,8 +314,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                                 learning_rate=pnl_proj.learning_rate)
             except DuplicateProjectionError:
                 direct_proj = self.composition.gru_mech.efferents[0]
-            # else:
-            #     direct_proj._initialize_from_context(context, base_context)
+            else:
+                direct_proj._initialize_from_context(context, base_context)
             # gru_mech has only one output_port
             sender_port_idx = 0
 
