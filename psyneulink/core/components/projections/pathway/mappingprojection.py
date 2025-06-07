@@ -251,21 +251,14 @@ execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
 *Learning*
 ~~~~~~~~~~
 
-COMMENT:
-BREADCRUMB 4/20/25 - ADD:
- - MENTION learning_rate AND POINT TO Composition FOR FUll DISCUSSION
- - learnable is a toggle, allowing learning_rate to be set but to disable learning, but...
- - learning_rate = False -> learnable = False; and...
- - learnable must be True to set learning_rate;  if it is False, raise error
-COMMENT
-
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`.
-This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`, governed
+by its `learnable <MappingProjection.learnable>`  and `learning_rate <MappingProjection.learning_rate>` Parameters.
+Learning conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
 A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
 *MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `MatrixTransform`).  By
-default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
+default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`. A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
@@ -380,11 +373,11 @@ class MappingProjection(PathwayProjection_Base):
 
     learnable : bool : default True
         specifies whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
-        `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
+        `learning <LearningMechanism>` (see `learnable <MappingProjection.learnable>` for additional details).
 
     learning_rate : float, int or bool : default None
-         specifies Projection-specific learning_rate (see `Composition_Learning_Rate` for description of options).
-
+         specifies Projection-specific learning_rate (see `learning_rate <MappingProjection.learning_rate>` for
+         additional details).
 
     Attributes
     ----------
@@ -407,12 +400,27 @@ class MappingProjection(PathwayProjection_Base):
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
+    COMMENT:
+    BREADCRUMB 4/20/25 - ADD:
+     - learnable must be True to set learning_rate;  if it is False, raise error
+    COMMENT
+
     learnable : bool
         determines whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
-        `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
+        `learning <LearningMechanism>`.  If it is ``False``, no learning occurs for the MappingProjection irrespective
+        of value of its `learning_rate <MappingProjection.learning_rate>` Parameter or of any to Composition to which
+        the MappingProjection belongs.
 
-    learning_rate : float, int or bool
-         determines Projection-specific learning_rate (see `Composition_Learning_Rate` for additional details).
+    learning_rate : float, int, bool or None
+        determines Projection-specific learning_rate, that is operational only if the MappingProjection's `learnable
+        <MappingProjection.learnable>` attribute is True.  If it is a numeric value, that value is used unless it
+        is overridden by a value specified for the MappingProjection in the `learning method
+        <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
+        additional details); if it is ``False``, no learning occurs even if `learnable <MappingProjection.learnable>`
+        attribute is ``True``; however, this too can be overidden by a specification of the learning_rate for the
+        MappingProjection in the `learning method <Composition_Learning_Methods>` of the Composition.  If learning_rate
+        is ``True`` or ``None``, the Projection assumes the value of the `learning_rate <Composition.learning_rate>`
+        Parameter of the Composition to which the MappingProjection belongs.
 
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
