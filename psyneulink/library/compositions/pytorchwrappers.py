@@ -2191,28 +2191,8 @@ class PytorchProjectionWrapper():
                         break
                     i += 1
 
-        # # # MODIFIED 6/4/25 OLD:
-        # # matrix = projection.parameters.matrix.get(context=context)
-        # # if matrix is None:
-        # #     matrix = projection.parameters.matrix.get(context=None)
-        # # # MODIFIED 6/4/25 NEW:
-        # #  BREADCRUMB: WORKS FOR test_pytorch_identicality_of_learning_rates_nested
-        # #              BUT CRASHES IN test_autodiff_logging
-        # matrix = projection.parameters.matrix.get(context=None)
-        # try:
-        #     matrix = projection.parameters.matrix.get(context=context)
-        # except ParameterNoValueError:
-        #     pass
-        # # MODIFIED 6/4/25 NEWER:
-        # #  BREADCRUMB: WORKS FOR test_autodiff_logging
-        # #              BUT CRASHES IN test_pytorch_identicality_of_learning_rates_nested
-        # matrix = projection.parameters.matrix.get(context, fallback_value=None)
-        # if matrix is None:
-        #     matrix = projection.parameters.matrix.get(context=None)
-        # # MODIFIED 6/4/25 END
-        matrix = projection.parameters.matrix.get(context=context)
-
         # Create a Pytorch Parameter for the matrix
+        matrix = projection.parameters.matrix.get(context=context)
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
