@@ -845,7 +845,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    run_time_default_learning_rate: Union[float, bool, None],
                                    source:str,
                                    context:Context)-> dict:
-        """Parse user-specified learning_rate specifications for Projections"""
+        """Parse user learning_rate specifications and integrate with Projection_specific ones"""
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
@@ -949,7 +949,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer_torch_params_specified
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
-        """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
+        """Allow override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
 
         source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
@@ -986,8 +986,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                run_time_default_learning_rate:Union[float, bool, None],
                                source:str,
                                context:Context):
+        """Assign parsed learning_rate specifications."""
+
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         composition = self.composition
+
         # Process *every* parameter in the optimizer's param_groups
         # Get fresh copy of param_groups and assign to optimizer_params
         old_param_groups = optimizer.param_groups
@@ -1001,20 +1004,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for param in old_param_group['params']:
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
-                # MODIFIED 6/1/25 OLD:
-                # Get learning_rate specified for the parameter by the user;
-                # if not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
-                # if specified_learning_rate is None:
-                #     specified_learning_rate = optimizer_torch_params_specified[param] \
-                #         if param in optimizer_torch_params_specified else NotImplemented
-                # MODIFIED 6/1/25 NEW:
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
                 specified_learning_rate = optimizer_torch_params_specified[param] \
                         if param in optimizer_torch_params_specified else specified_learning_rate
                 # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
                     specified_learning_rate == NotImplemented
-                # MODIFIED 6/1/25 END
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
                         f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the {source} "
@@ -1027,10 +1022,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)):
                     # Learning disabled for the Composition or the Projection
                     specified_learning_rate = False
-                    # MODIFIED 5/19/25 NEW:
                     # BREADCRUMB: IS THIS OK?  WILL IT BE RESET TO ORIGINAL SPEC AFTER LEARN?
                     projection.learning_rate = False
-                    # MODIFIED 5/19/25 END
                     param.requires_grad = False
                 else:
                     # Learning is enabled for the Projection
