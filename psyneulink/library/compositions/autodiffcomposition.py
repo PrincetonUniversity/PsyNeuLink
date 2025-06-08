@@ -419,7 +419,8 @@ from psyneulink.core.globals.keywords import (
                                               SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS, RETAIN_IN_PNL_OPTIONS, TARGETS,
                                               TRAINED_OUTPUTS, TRIAL, DEFAULT,
 )
-from psyneulink.core.globals.utilities import is_numeric_scalar, convert_to_np_array, deprecation_warning
+from psyneulink.core.globals.utilities import (
+    is_matrix_keyword, is_numeric_scalar, convert_to_np_array, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1133,13 +1134,9 @@ class AutodiffComposition(Composition):
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
-        # # MODIFIED 6/2/25 OLD:
-        # default_learning_rate = self._runtime_learning_rate or learning_rate or self.learning_rate
-        # MODIFIED 6/2/25 NEW:
         default_learning_rate = learning_rate or self.learning_rate
         if self._runtime_learning_rate is not None:
             optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
-        # MODIFIED 6/2/25 END
 
         if (old_opt is None or refresh) and refresh is not False:
             # Instantiate a new optimizer if there isn't one yet or refresh has been called and is not blocked)
@@ -1373,11 +1370,7 @@ class AutodiffComposition(Composition):
     def autodiff_backward(self, minibatch_loss, context):
         """Calculate gradients and apply to PyTorch model parameters (weights)"""
 
-        # # MODIFIED 5/19/25 OLD:
-        # if self._runtime_learning_rate is False:
-        # MODIFIED 5/19/25 NEW:
         if not self.enable_learning:
-        # MODIFIED 5/19/25 END
             return
 
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
@@ -1513,17 +1506,24 @@ class AutodiffComposition(Composition):
                 target_nodes.extend(node._identify_target_nodes(context))
         return target_nodes
 
+    def _get_valid_weights_shape(self, projection):
+        pnl_wt_matrix = projection.defaults.matrix
+        if not isinstance(pnl_wt_matrix, np.ndarray):
+            assert is_matrix_keyword(pnl_wt_matrix)
+            pnl_wt_matrix = projection._get_matrix_from_keyword(pnl_wt_matrix)
+        return pnl_wt_matrix.shape
+
     @handle_external_context()
     def set_weights(self, pnl_proj, weights:Union[list, np.ndarray], context=None):
         """Set weights for specified Projection."""
-        pnl_wt_matrix = pnl_proj.parameters.matrix._get(context)
-        assert weights.shape == pnl_wt_matrix.shape, \
+        valid_shape = self._get_valid_weights_shape(pnl_proj)
+        assert weights.shape == valid_shape, \
             (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
-             f"Specified weights do not match required shape ({pnl_proj.ma.shape}).)")
+             f"Specified weights do not match required shape ({valid_shape}).)")
         pnl_proj.parameters.matrix._set(weights, context)
         pnl_proj.parameter_ports['matrix'].parameters.value._set(weights, context)
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
               synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
@@ -1741,7 +1741,7 @@ class AutodiffComposition(Composition):
 
         return execution_mode
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def execute(self,
                 inputs=None,
                 num_trials=None,
@@ -1858,7 +1858,7 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
-    @handle_external_context()
+    @handle_external_context(fallback_default=True)
     def run(self, *args,
             synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
             synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,

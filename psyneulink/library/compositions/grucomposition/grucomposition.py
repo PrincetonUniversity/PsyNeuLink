@@ -1103,10 +1103,10 @@ class GRUComposition(AutodiffComposition):
         #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
         for wts, proj in zip(weights,
                        [self.wts_ir, self.wts_iu, self.wts_in, self.wts_hr, self.wts_hu, self.wts_hn]):
-            matrix = proj.parameters.matrix._get(context)
-            assert wts.shape == matrix.shape, \
+            valid_shape = self._get_valid_weights_shape(proj)
+            assert wts.shape == valid_shape, \
                 (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
-                 f"({wts.shape}) does not match required shape ({matrix.shape}).)")
+                 f"({wts.shape}) does not match required shape ({valid_shape}).)")
             proj.parameters.matrix._set(wts, context)
             proj.parameter_ports['matrix'].parameters.value._set(wts, context)
         # MODIFIED 3/11/25 END
@@ -1114,10 +1114,10 @@ class GRUComposition(AutodiffComposition):
         if biases:
             for torch_bias, pnl_bias in zip(biases, [self.bias_ir, self.bias_iu, self.bias_in,
                                                      self.bias_hr, self.bias_hu, self.bias_hn]):
-                matrix = pnl_bias.parameters.matrix._get(context)
-                assert torch_bias.shape == matrix.shape, \
+                valid_shape = self._get_valid_weights_shape(pnl_bias)
+                assert torch_bias.shape == valid_shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
-                     f"({torch_bias.shape}) does not match required shape ({matrix.shape}).")
+                     f"({torch_bias.shape}) does not match required shape ({valid_shape}).")
                 pnl_bias.parameters.matrix._set(torch_bias, context)
                 pnl_bias.parameter_ports['matrix'].parameters.value._set(torch_bias, context)
 

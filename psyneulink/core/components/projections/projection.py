@@ -866,6 +866,11 @@ class Projection_Base(Projection):
         #                                       f"({(len(self.sender.value), len(self.receiver.variable))}).")
         # MODIFIED JDC 7/11/23 END
 
+    def _get_matrix_from_keyword(self, keyword):
+        return get_matrix(
+            keyword, self.sender.socket_width, self.receiver.socket_width
+        )
+
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self._instantiate_parameter_ports(function=function, context=context)
