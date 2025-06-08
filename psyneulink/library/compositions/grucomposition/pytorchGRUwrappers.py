@@ -350,7 +350,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         """
 
-        self._set_synch_with_pnl(synch_with_pnl_options)
+        # BREADCRUMB: 6/7/25 - PASS MECH_WRAPPER HERE:
+        self._set_synch_with_pnl(self.gru_pytorch_node, synch_with_pnl_options)
 
         # Get input from GRUComposition's INPUT_NODE
         inputs = inputs[self.composition.input_node]
@@ -364,11 +365,19 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return {self.composition.gru_mech: output}
 
-    def _set_synch_with_pnl(self, synch_with_pnl_options):
+    # # MODIFIED 6/7/25 OLD:
+    # def _set_synch_with_pnl(self, synch_with_pnl_options):
+    #     if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
+    #         self.gru_pytorch_node.synch_with_pnl = True
+    #     else:
+    #         self.gru_pytorch_node.synch_with_pnl = False
+    # MODIFIED 6/7/25 NEW:
+    def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
-            self.gru_pytorch_node.synch_with_pnl = True
+            mech_wrapper.synch_with_pnl = True
         else:
-            self.gru_pytorch_node.synch_with_pnl = False
+            mech_wrapper.synch_with_pnl = False
+    # MODIFIED 6/7/25 END
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self.projections_map.items():
@@ -499,7 +508,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
 
-        self.composition.pytorch_representation._set_synch_with_pnl(synch_with_pnl_options)
+        # # MODIFIED 6/7/25 OLD:
+        # self.composition.pytorch_representation._set_synch_with_pnl(synch_with_pnl_options)
+        # MODIFIED 6/7/25 NEW:
+        # BREADCRUMB: PASS IN PytorchGRUMechanismWrapper (i.e., self) to _set_synch_with_pnl
+        self.composition.pytorch_representation._set_synch_with_pnl(self, synch_with_pnl_options)
+        # MODIFIED 6/7/25 END
 
         self.input = variable
 

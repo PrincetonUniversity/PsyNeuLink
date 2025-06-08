@@ -823,10 +823,6 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
-        # MODIFIED 5/20/25 OLD:
-        # BREADCRUMB: MOVED TO Parameter
-        # self.disable_learning = disable_learning
-        # MODIFIED 5/20/25 END
         self.loss_function = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
@@ -1909,7 +1905,9 @@ class AutodiffComposition(Composition):
             kwargs[SYNCH_WITH_PNL_OPTIONS] = synch_with_pnl_options
             kwargs[RETAIN_IN_PNL_OPTIONS] = retain_in_pnl_options
 
+        # Run AutodiffComposition
         results = super(AutodiffComposition, self).run(*args, context=context, **kwargs)
+
         if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
             # Synchronize specified outcomes at end of run
             pytorch_rep = self.parameters.pytorch_representation.get(context)

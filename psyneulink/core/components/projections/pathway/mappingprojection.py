@@ -376,8 +376,8 @@ class MappingProjection(PathwayProjection_Base):
         `learning <LearningMechanism>` (see `learnable <MappingProjection.learnable>` for additional details).
 
     learning_rate : float, int or bool : default None
-         specifies Projection-specific learning_rate (see `learning_rate <MappingProjection.learning_rate>` for
-         additional details).
+         specifies Projection-specific learning_rate; assigning this if `learnable <MappingProjection.learnable>`
+         is ``False`` raises an error  (see `learning_rate <MappingProjection.learning_rate>` for additional details).
 
     Attributes
     ----------
@@ -400,26 +400,22 @@ class MappingProjection(PathwayProjection_Base):
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
-    COMMENT:
-    BREADCRUMB 4/20/25 - ADD:
-     - learnable must be True to set learning_rate;  if it is False, raise error
-    COMMENT
-
     learnable : bool
         determines whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
-        `learning <LearningMechanism>`.  If it is ``False``, no learning occurs for the MappingProjection irrespective
+        `learning <LearningMechanism>`.  If it is ``False``, no learning occurs for the MappingProjection, irrespective
         of value of its `learning_rate <MappingProjection.learning_rate>` Parameter or of any to Composition to which
-        the MappingProjection belongs.
+        the MappingProjection belongs, and any attempts to assign a `learning_rate <MappingProjection.learning_rate>'
+        raises an error.
 
     learning_rate : float, int, bool or None
         determines Projection-specific learning_rate, that is operational only if the MappingProjection's `learnable
-        <MappingProjection.learnable>` attribute is True.  If it is a numeric value, that value is used unless it
+        <MappingProjection.learnable>` attribute is True.  If it is a numeric value, that value is used, unless it
         is overridden by a value specified for the MappingProjection in the `learning method
         <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
-        additional details); if it is ``False``, no learning occurs even if `learnable <MappingProjection.learnable>`
+        additional details); if it is ``False`` no learning occurs, even if `learnable <MappingProjection.learnable>`
         attribute is ``True``; however, this too can be overidden by a specification of the learning_rate for the
         MappingProjection in the `learning method <Composition_Learning_Methods>` of the Composition.  If learning_rate
-        is ``True`` or ``None``, the Projection assumes the value of the `learning_rate <Composition.learning_rate>`
+        is ``True`` or ``None``, the Projection is assigned the value of the `learning_rate <Composition.learning_rate>`
         Parameter of the Composition to which the MappingProjection belongs.
 
     name : str

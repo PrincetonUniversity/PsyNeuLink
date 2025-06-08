@@ -2601,15 +2601,16 @@ class EMComposition(AutodiffComposition):
         - self.fields (dict, that may contain entries for field-specific learning_rates)
         - self.learn_field_weights (list of field-specific learning_rates)
 
-        √ 1. Raise error if learning_rate = dict and self.learn_field_weights is a list
+        1. Raise error if learning_rate = dict and self.learn_field_weights is a list
         2. if self.learning_rate is a dict:
            - if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
            - otherwise, use whichever is numeric, and raise error if both are
         3. if self.learning_rate is NOT a dict:
            - create one from self.learn_field_weights:
-             - if both self.learning_rate and self.learn_field_weights are numveric, raise error
-             - otherwise, assign whichever is nueric to DEFAULT_LEARNING_RATE
+             - if both self.learning_rate and self.learn_field_weights are numeric, raise error
+             - otherwise, assign whichever is numeric to DEFAULT_LEARNING_RATE entry in self.learning_rate dict
              - if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict
+        BREADCRUMB - STILL NEEDS TO BE DONE:
         4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
            - set self.learning_rate to False and issue warning (don't bother if both are False)
         """
@@ -2644,7 +2645,7 @@ class EMComposition(AutodiffComposition):
 
             # BREADCRUMB: OK HERE?
             if all(item is False for item in self.learn_field_weights):
-                # If learning for all field weights are False, set all learning_rates and enable_learning to False
+                # If learning for all field weights are False, set all learning_rates to False
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False
