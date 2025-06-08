@@ -347,10 +347,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         Otherwise, the node.execute() method is called directly (i.e., it is treated as a single node).
         Returns a dictionary {output_node:value} with the output value for the torch GRU module (that is used
         by the collect_afferents method(s) of the other node(s) that receive Projections from the GRUComposition.
-
         """
 
-        # BREADCRUMB: 6/7/25 - PASS MECH_WRAPPER HERE:
         self._set_synch_with_pnl(self.gru_pytorch_node, synch_with_pnl_options)
 
         # Get input from GRUComposition's INPUT_NODE
@@ -365,19 +363,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return {self.composition.gru_mech: output}
 
-    # # MODIFIED 6/7/25 OLD:
-    # def _set_synch_with_pnl(self, synch_with_pnl_options):
-    #     if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
-    #         self.gru_pytorch_node.synch_with_pnl = True
-    #     else:
-    #         self.gru_pytorch_node.synch_with_pnl = False
-    # MODIFIED 6/7/25 NEW:
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
             mech_wrapper.synch_with_pnl = True
         else:
             mech_wrapper.synch_with_pnl = False
-    # MODIFIED 6/7/25 END
 
     def copy_weights_to_torch_gru(self, context=None):
         for projection, proj_wrapper in self.projections_map.items():
@@ -393,6 +383,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
          - in set_weights_from_torch_gru(), where they are converted to numpy arrays
          - for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()
         """
+
         hid_len = torch_gru.hidden_size
         z_idx = hid_len
         n_idx = 2 * hid_len
@@ -505,15 +496,11 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
           received from other node(s) that project to the GRUComposition, and its outputs used by the
           collect_afferents method(s) of the other node(s) that receive Projections from the  GRUComposition.
         """
+
         # Get hidden state from GRUComposition's HIDDEN_NODE.value
         from psyneulink.library.compositions.grucomposition.grucomposition import HIDDEN_LAYER
 
-        # # MODIFIED 6/7/25 OLD:
-        # self.composition.pytorch_representation._set_synch_with_pnl(synch_with_pnl_options)
-        # MODIFIED 6/7/25 NEW:
-        # BREADCRUMB: PASS IN PytorchGRUMechanismWrapper (i.e., self) to _set_synch_with_pnl
         self.composition.pytorch_representation._set_synch_with_pnl(self, synch_with_pnl_options)
-        # MODIFIED 6/7/25 END
 
         self.input = variable
 
@@ -546,7 +533,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         (batch, input_port, projection, ...)
 
         Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.
-
         """
 
         if self.afferents == INPUT:
@@ -618,6 +604,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         These are needed for assigning to the corresponding nodes in the GRUComposition.
         Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively
         """
+
         torch_gru_parameters = PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(self.function.function)
 
         # Get weights
@@ -726,8 +713,8 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
 
     matrix_indices: slice
         a slice specifying the part of the Pytorch parameter corresponding to the GRUCOmposition Projection's matrix.
-
     """
+
     def __init__(self,
                  projection:MappingProjection,
                  torch_parameter:Tuple,
