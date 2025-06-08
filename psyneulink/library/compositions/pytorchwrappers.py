@@ -55,6 +55,9 @@ __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProje
 ENTER_NESTED = 0
 EXIT_NESTED = 1
 
+LEARN_METHOD = 'learn() method'
+CONSTRUCTOR = 'constructor'
+
 TorchParam = namedtuple("TorchParam", "name slice")
 TorchParamTuple = namedtuple('ParamTuple', "orig_spec, value")
 ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
@@ -784,10 +787,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.named_parameters(): (full hierarchical name of torch param, torch param)
             self.state_dict(): (local name of torch param, Tensor)
         """
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         # These are used both for error messages (hence strings) as we well determining how to update param_groups
-        LEARN_METHOD = 'learn() method'
-        CONSTRUCTOR = 'constructor'
 
         # source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
         source = (LEARN_METHOD if (context.source == ContextFlags.METHOD
@@ -820,13 +820,34 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
                 return
 
-
-        # BREADCRUMB: MOVE FROM HERE UNTIL for old_param_group... INTO NEW parse_learning_rate_specs() METHOD
         # Proceed to either construct new optimizer.param_groups (if called from constructor)
         #   or update existing ones (if called from learn() method)
 
-        composition = self.composition
         run_time_default_learning_rate = optimizer_params_user_specs.pop(DEFAULT_LEARNING_RATE, None)
+
+        optimizer_torch_params_specified = self._parse_learning_rate_specs(optimizer,
+                                                                           optimizer_params_user_specs,
+                                                                           run_time_default_learning_rate,
+                                                                           source,
+                                                                           context)
+        if optimizer_torch_params_specified is None:
+            return
+
+        self._assign_learning_rates(optimizer,
+                                    optimizer_torch_params_specified,
+                                    run_time_default_learning_rate,
+                                    source,
+                                    context)
+
+    def _parse_learning_rate_specs(self,
+                                   optimizer:torch.optim.Optimizer,
+                                   optimizer_params_user_specs:dict,
+                                   run_time_default_learning_rate: Union[float, bool, None],
+                                   source:str,
+                                   context:Context)-> dict:
+        """Parse user-specified learning_rate specifications for Projections"""
+
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
         # Replace any Projections in optimizer_torch_params_specified with their names
         optimizer_params_parsed = {}
@@ -925,7 +946,48 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             optimizer_torch_params_specified[param] = projection_lr_specs[pnl_param_name].value
 
-        # BREADCRUMB: MOVE THIS INTO NEW assign_learning_rates() METHOD
+        return optimizer_torch_params_specified
+
+    def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
+        """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
+
+        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
+
+        for proj_spec in specs_to_validate.copy():
+            if proj_spec in self._pnl_refs_to_torch_param_names:
+                specs_to_validate.remove(proj_spec)
+
+        if specs_to_validate:
+            # Give subclasses a chance to identify specs by calling _validate_optimizer_param_specs()
+            #   recursively on any nested PytorchCompositionWrappers
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
+                                               if (isinstance(node_wrapper, PytorchCompositionWrapper))]:
+                specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
+                                                                                               context,
+                                                                                               nested=True)
+        if nested:
+            return specs_to_validate
+        if specs_to_validate:
+            if len(specs_to_validate) == 1:
+                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source} for "
+                           f"'{self.composition.name}' is not in that Composition or any nested within it: "
+                           f"'{list(specs_to_validate)[0]}'.")
+            else:
+                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the {source} for "
+                           f"'{self.composition.name}' are not in that Composition or any nested within it: "
+                           f"'{', '.join(list(specs_to_validate))}'.")
+            raise AutodiffCompositionError(err_msg)
+
+
+    def _assign_learning_rates(self,
+                               optimizer:torch.optim.Optimizer,
+                               optimizer_torch_params_specified:dict,
+                               run_time_default_learning_rate:Union[float, bool, None],
+                               source:str,
+                               context:Context):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        composition = self.composition
         # Process *every* parameter in the optimizer's param_groups
         # Get fresh copy of param_groups and assign to optimizer_params
         old_param_groups = optimizer.param_groups
@@ -955,8 +1017,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # MODIFIED 6/1/25 END
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
-                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
-                        f"{source} for '{self.composition.name}' is not valid; it must be an int, float, bool or None.")
+                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the {source} "
+                        f"for '{self.composition.name}' is not valid; it must be an int, float, bool or None.")
                 projection = self._torch_params_to_projections(old_param_groups)[param]
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
@@ -1026,37 +1088,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if source == CONSTRUCTOR:
             # Store constructor-specified learning_rates (for reversion after learn())
             self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-
-    def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
-        """Allows override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
-
-        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
-
-        for proj_spec in specs_to_validate.copy():
-            if proj_spec in self._pnl_refs_to_torch_param_names:
-                specs_to_validate.remove(proj_spec)
-
-        if specs_to_validate:
-            # Give subclasses a chance to identify specs by calling _validate_optimizer_param_specs()
-            #   recursively on any nested PytorchCompositionWrappers
-            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-            for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
-                                               if (isinstance(node_wrapper, PytorchCompositionWrapper))]:
-                specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
-                                                                                               context,
-                                                                                               nested=True)
-        if nested:
-            return specs_to_validate
-        if specs_to_validate:
-            if len(specs_to_validate) == 1:
-                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source} for "
-                           f"'{self.composition.name}' is not in that Composition or any nested within it: "
-                           f"'{list(specs_to_validate)[0]}'.")
-            else:
-                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the {source} for "
-                           f"'{self.composition.name}' are not in that Composition or any nested within it: "
-                           f"'{', '.join(list(specs_to_validate))}'.")
-            raise AutodiffCompositionError(err_msg)
 
     def _copy_torch_param_groups(self, param_groups:list)->list:
         """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
