@@ -130,7 +130,7 @@ class TestStructral:
                                                 condition, comp_lr, learn_method_lr,
                                                 proj_constr, comp_constuctor_lr_dict, post_constr, expected):
 
-        #  TEST precedence of pathway lr specification
+        #  BREADCRUMB: TEST precedence of pathway lr specification
 
         in_shape = 4
         hidden_1_shape = 3
@@ -364,8 +364,8 @@ class TestStructral:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                                p.target: [[[4.0]], [[5.0]], [[6.0]]]})
             np.testing.assert_allclose(comp.results,
-                               [[[1.]], [[2.6]], [[5.34]],
-                                [[1.978]], [[4.3604]], [[6.92436]]])
+                                       [[[1.]], [[2.6]], [[5.34]],
+                                        [[1.978]], [[4.3604]], [[6.92436]]])
 
         def test_target_dict_spec_multi_trial_lists_bp(self):
             A = TransferMechanism(name="learning-process-mech-A")
@@ -383,10 +383,10 @@ class TestStructral:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                                p.target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
             np.testing.assert_allclose(comp.results,
-                               [[[1., 1.]],
-                                [[1.2075, 1.265]],
-                                [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
-                                [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
+                                       [[[1., 1.]],
+                                        [[1.2075, 1.265]],
+                                        [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
+                                        [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
 
         # DS: The following test fails the assert. The same value is returned whether a dict or function is used as input,
         # which is not the same as the expected values. Are the expected values incorrect? If not, there is a problem
