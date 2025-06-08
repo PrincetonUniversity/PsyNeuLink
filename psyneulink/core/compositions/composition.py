@@ -3138,9 +3138,7 @@ from psyneulink.core.components.ports.port import Port, PortError
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-# # MODIFIED 4/24/25 NEW:
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError#, PROXY_FOR
-# # MODIFIED 4/24/25 END
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
     Projection_Base, ProjectionError, DuplicateProjectionError
@@ -6785,7 +6783,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender_mechanism = sender.output_CIM
                 sender_output_port = sender_mechanism.output_port
             nested_compositions.append(nested_comp)
-            # MODIFIED 3/17/25 END
+
         else:
             raise CompositionError("sender arg ({}) of call to add_projection method of {} is not a {}, {} or {}".
                                    format(sender, self.name,

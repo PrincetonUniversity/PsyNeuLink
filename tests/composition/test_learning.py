@@ -130,7 +130,7 @@ class TestStructral:
                                                 condition, comp_lr, learn_method_lr,
                                                 proj_constr, comp_constuctor_lr_dict, post_constr, expected):
 
-        #  BREADCRUMB: TEST precedence of pathway lr specification
+        #  BREADCRUMB: ADD TEST FOR precedence of pathway lr specification
 
         in_shape = 4
         hidden_1_shape = 3

@@ -1098,7 +1098,6 @@ class GRUComposition(AutodiffComposition):
     def set_weights(self, weights:Union[list, np.ndarray], biases:Union[list, np.ndarray], context=None):
         """Set weights for Projections to input_node and hidden_layer_node."""
 
-        # MODIFIED 2/16/25 NEW:
         # FIX: CHECK IF TORCH GRU EXISTS YET (CHECK FOR pytorch_representation != None; i.e., LEARNING HAS OCCURRED;
         #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
         for wts, proj in zip(weights,
@@ -1109,7 +1108,6 @@ class GRUComposition(AutodiffComposition):
                  f"({wts.shape}) does not match required shape ({valid_shape}).)")
             proj.parameters.matrix._set(wts, context)
             proj.parameter_ports['matrix'].parameters.value._set(wts, context)
-        # MODIFIED 3/11/25 END
 
         if biases:
             for torch_bias, pnl_bias in zip(biases, [self.bias_ir, self.bias_iu, self.bias_in,

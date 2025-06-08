@@ -512,12 +512,7 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
         self.learnable = bool(learnable)
-        # MODIFIED 4/20/25 OLD:
-        # FIX: IF  is_numeric_scalar IS MODIFIED TO RETURN False FOR False, REVERT TO THIS:
-        # if is_numeric_scalar(learning_rate) and and not self.learnable:
-        # MODIFIED 4/20/25 NEW:
         if not self.learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
-        # MODIFIED 4/20/25 END
             raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
                                f"float or int when 'learnable' is False.")
         elif learning_rate is False:

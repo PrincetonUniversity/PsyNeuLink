@@ -1165,10 +1165,6 @@ class AutodiffComposition(Composition):
                 pass
         else:
             # Otherwise, just update it
-            # # MODIFIED 6/2/25 OLD:
-            # if self._runtime_learning_rate is not None:
-            #     optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
-            # MODIFIED 6/2/25 END
             pytorch_rep._update_optimizer_params(old_opt,
                                                  optimizer_params,
                                                  Context(source=ContextFlags.METHOD,

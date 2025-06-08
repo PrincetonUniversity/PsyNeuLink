@@ -1896,11 +1896,7 @@ class TestAnalyzeGraph:
                                                                              ALLOCATION_SAMPLES:np.arange(0.1,
                                                                                                           1.01,
                                                                                                           0.3)}]
-                                                                        )
-                                       )
-        # # MODIFIED 4/25/20 OLD:
-        # comp._analyze_graph()
-        # MODIFIED 4/25/20 END
+                                                                        )                                       )
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
         # disable controller

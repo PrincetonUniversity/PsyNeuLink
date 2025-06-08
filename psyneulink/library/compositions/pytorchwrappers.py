@@ -845,7 +845,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    run_time_default_learning_rate: Union[float, bool, None],
                                    source:str,
                                    context:Context)-> dict:
-        """Parse user learning_rate specifications and integrate with Projection_specific ones"""
+        """Parse user-specified learning_rates.
+        User specifications can be in:
+        - constructor for of outermost and/or nested AutodiffComposition
+        - learn() method of outermost AutodiffComposition
+        - """
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
@@ -1022,7 +1026,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)):
                     # Learning disabled for the Composition or the Projection
                     specified_learning_rate = False
-                    # BREADCRUMB: IS THIS OK?  WILL IT BE RESET TO ORIGINAL SPEC AFTER LEARN?
                     projection.learning_rate = False
                     param.requires_grad = False
                 else:

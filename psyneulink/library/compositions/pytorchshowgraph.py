@@ -123,12 +123,6 @@ class PytorchShowGraph(ShowGraph):
         """Override to include direct Projections from outer to nested comps in Pytorch mode"""
         sndr = proj.sender.owner
         rcvr = proj.receiver.owner
-        # # MODIFIED 2/16/25 NEW:
-        # if isinstance(rcvr, CompositionInterfaceMechanism):
-        #     # If receiver is an input_CIM, get the node in the inner Composition to which it projects
-        #     #   as it may be specified as dependent on the sender in the autodiff processing_graph
-        #     rcvr = rcvr._get_destination_info_from_input_CIM(proj.receiver)[1]
-        # MODIFIED 2/16/25 END
         if self.show_pytorch:
             processing_graph = self._get_processing_graph(self.composition, context)
             if proj in composition_projections:
@@ -193,26 +187,11 @@ class PytorchShowGraph(ShowGraph):
 
             modulatory_node = None
             if proj.parameter_ports[0].mod_afferents:
-                # MODIFIED 2/22/25 OLD:
                 modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
-                # # MODIFIED 2/22/25 NEW:
-                # modulatory_node = self.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
-                # # MODIFIED 2/22/25 END
 
             if proj in self.pytorch_rep.projections_map:
-                # # MODIFIED 2/25/25 NEW:
-                # if ((hasattr(proj, 'learnable') and proj.learnable)
-                #         or (proj in self.pytorch_rep.projections_map and
-                #             self.pytorch_rep.projections_map[proj].matrix.requires_grad)):
-                #     proj_is_learnable = True
-                # # MODIFIED 2/25/25 END
-
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
-                # # MODIFIED 2/25/25 OLD:
                 if proj.learnable or self.pytorch_rep.projections_map[proj].matrix.requires_grad:
-                # # MODIFIED 2/25/25 NEW:
-                # if proj_is_learnable:
-                # # MODIFIED 2/25/25 END
                     kwargs['color'] = self.learning_color
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
