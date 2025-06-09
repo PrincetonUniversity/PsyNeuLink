@@ -117,15 +117,15 @@ However, biases can be implemented using `Composition_Bias_Nodes`.
 ~~~~~~~~~
 
 An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and there can
-be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. Furthermore, all
-nested Compositions use the `learning_rate <AutodiffComposition.learning_rate>` specified for the outermost Composition,
-whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its constructor, or its
-default value is being used (see `learning_rate <AutodiffComposition.learning_rate>` below for additional details).
+be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. The learning_rate
+for nested Compositions is inherited from the enclosing Composition unless it is set individually (see
+`Composition_Learning_Rate` for a full discussion of how learning rates and precedence of assignment;  see
+`Composition_Enable_Learning` for enabling and disabling learning in nested Compositions.
 
 .. technical_note::
    Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
    <Composition.input_CIM>` of a nested Composition, and from its `output_CIM <Composition.output_CIM>` to Nodes
-   in the outer Composition are subject to learning;  however those within the nested Composition itself (i.e.,
+   in the outer Composition are subject to learning; however those within the nested Composition itself (i.e.,
    from its input_CIM to its INPUT Nodes and from its OUTPUT Nodes to its output_CIM) are *not* subject to learning,
    as they serve simply as conduits of information between the outer Composition and the nested one.
 
@@ -475,8 +475,8 @@ class AutodiffComposition(Composition):
         optimizer_type='sgd',
         loss_spec=Loss.MSE,
         weight_decay=0,
-        learning_rate=0.001,
         enable_learning=True,
+        learning_rate=0.001,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
         synch_node_values_with_torch=RUN,
@@ -503,15 +503,15 @@ class AutodiffComposition(Composition):
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
+    enable_learning : bool: default True
+        specifies whether the AutodiffComposition should enable learning when run in `learning mode
+        <Composition.learn>` (see `Composition_Enable_Learning` for additional details).
+
     learning_rate : float, int, bool or dict : default 0.001
         specifies the learning rate(s) passed to the optimizer; overridden by any specified in the `learn
         <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
-
-    enable_learning : bool: default True
-        specifies whether the AutodiffComposition should enable learning when run in `learning mode
-        <Composition.learn>`.
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
@@ -761,7 +761,7 @@ class AutodiffComposition(Composition):
                  loss_spec=Loss.MSE,
                  weight_decay=0,
                  learning_rate:Optional[Union[float,int,bool,dict,]]=None,
-                 enable_learning=True,
+                 enable_learning:bool=True,
                  force_no_retain_graph=False,
                  refresh_losses=False,
                  synch_projection_matrices_with_torch:Optional[str]=RUN,
@@ -802,6 +802,7 @@ class AutodiffComposition(Composition):
             optimizer_type = optimizer_type,
             loss_spec = loss_spec,
             weight_decay = weight_decay,
+            enable_learning = enable_learning,
             learning_rate = learning_rate,
             synch_projection_matrices_with_torch = synch_projection_matrices_with_torch,
             synch_node_variables_with_torch = synch_node_variables_with_torch,
@@ -1791,49 +1792,59 @@ class AutodiffComposition(Composition):
             if scheduler is None:
                 scheduler = self.scheduler
 
-            if self._is_learning(context):
-                # TBI: How are we supposed to use base_context and statefulness here?
+            if ContextFlags.LEARNING_MODE in context.runmode:
+                # In LEARNING_MODE, so check that at least one enable_learning is True (potentially in nested Comp)
+                if self._is_learning(context) or any(comp._is_learning(context)
+                                                     for comp in self._get_nested_compositions()):
+                    # TBI: How are we supposed to use base_context and statefulness here?
+                    # BREADCRUMB 6/9/25: ADD ELSE FOR ALL ENABLE_LEARNING ATTRIBUTES SET TO FALSE,
+                    #                    STATING THAT EITHER ENABLE_LEARNING MUST BE SET TO TRUE
 
-                autodiff_inputs = self._get_autodiff_inputs_values(inputs)
-                autodiff_targets = self._get_autodiff_targets_values(inputs)
+                    autodiff_inputs = self._get_autodiff_inputs_values(inputs)
+                    autodiff_targets = self._get_autodiff_targets_values(inputs)
 
-                # Begin reporting of learning TRIAL:
-                report(self,
-                       LEARN_REPORT,
-                       # EXECUTE_REPORT,
-                       report_num=report_num,
-                       scheduler=scheduler,
-                       content='trial_start',
-                       context=context)
+                    # Begin reporting of learning TRIAL:
+                    report(self,
+                           LEARN_REPORT,
+                           # EXECUTE_REPORT,
+                           report_num=report_num,
+                           scheduler=scheduler,
+                           content='trial_start',
+                           context=context)
 
-                self._build_pytorch_representation(optimizer_params=optimizer_params,
-                                                   learning_rate=self.learning_rate,
-                                                   context=context, base_context=base_context)
-                trained_output_values, all_output_values = \
-                                                self.autodiff_forward(inputs=autodiff_inputs,
-                                                                      targets=autodiff_targets,
-                                                                      synch_with_pnl_options=synch_with_pnl_options,
-                                                                      retain_in_pnl_options=retain_in_pnl_options,
-                                                                      execution_mode=execution_mode,
-                                                                      scheduler=scheduler,
-                                                                      context=context)
-                execution_phase = context.execution_phase
-                context.execution_phase = ContextFlags.PROCESSING
-                context.execution_phase = execution_phase
+                    self._build_pytorch_representation(optimizer_params=optimizer_params,
+                                                       learning_rate=self.learning_rate,
+                                                       context=context, base_context=base_context)
+                    trained_output_values, all_output_values = \
+                                                    self.autodiff_forward(inputs=autodiff_inputs,
+                                                                          targets=autodiff_targets,
+                                                                          synch_with_pnl_options=synch_with_pnl_options,
+                                                                          retain_in_pnl_options=retain_in_pnl_options,
+                                                                          execution_mode=execution_mode,
+                                                                          scheduler=scheduler,
+                                                                          context=context)
+                    execution_phase = context.execution_phase
+                    context.execution_phase = ContextFlags.PROCESSING
+                    context.execution_phase = execution_phase
 
-                # Complete TRIAL Panel for output report, and report progress
-                report(self,
-                       # [LEARN_REPORT],
-                       [EXECUTE_REPORT, PROGRESS_REPORT],
-                       report_num=report_num,
-                       scheduler=scheduler,
-                       content='trial_end',
-                       context=context)
+                    # Complete TRIAL Panel for output report, and report progress
+                    report(self,
+                           # [LEARN_REPORT],
+                           [EXECUTE_REPORT, PROGRESS_REPORT],
+                           report_num=report_num,
+                           scheduler=scheduler,
+                           content='trial_end',
+                           context=context)
 
-                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+                    scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-                self.most_recent_context = context
-                return all_output_values
+                    self.most_recent_context = context
+                    return all_output_values
+                else:
+                    raise AutodiffCompositionError(f"The learn() method of '{self.name}' was called, but its "
+                                                   f"'enable_learning' Parameter (and the ones for any Compositions "
+                                                   f"nested within) it are set to 'False'. Either set at least one to "
+                                                   f"'True', or use {self.name}.run().")
 
         # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,

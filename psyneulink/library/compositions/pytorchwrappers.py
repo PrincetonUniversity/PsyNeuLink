@@ -1022,9 +1022,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
                 specified_learning_rate = False if projection.learning_rate is False else specified_learning_rate
-                # BREADCRUMB: SHOULD THE FOLLOWING BE SPECIIFC TO COMPOSITION IF NESTED (AS BELOW FOR None / True)?
-                if ((hasattr(composition, 'enable_learning') and composition.enable_learning is False)):
-                    # Learning disabled for the Composition or the Projection
+                if proj_composition.enable_learning is False:
+                    # Disable learning for Projections based enable_learning for the Compositions to which they belong
                     specified_learning_rate = False
                     projection.learning_rate = False
                     param.requires_grad = False
@@ -1070,11 +1069,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if all_requires_grads_false:
             if source == LEARN_METHOD:
-                raise AutodiffCompositionError(f"The learning_rates for all Projections in '{composition.name}' "
-                                               f"are 'False;' at least one Projection must be specified with a "
-                                               f"non-False value in order to execute the learn() method.")
-            warnings.warn(f"The learning_rates for all Projections in '{composition.name}' are 'False'; "
-                          f"if none are specified otherwise in its the learn() method, that will not execute.")
+
+                if composition._is_learning(context) is False or any(comp._is_learning(context) is False
+                                                       for comp in composition._get_nested_compositions()):
+                    err_msg =  (f"There are no learnable Projections in '{composition.name}' or those nested under it; "
+                                f"this may be because all of their Projections and/or their 'enable_learning' Parameters "
+                                f"are set to 'False'.  The learning_rate for at least one Projection must be specified "
+                                f"with a non-False value in a Composition with 'enable_learning' to 'True' in order"
+                                f"to execute the learn() method for {composition.name}.")
+                else:
+                    err_msg =  f"The learning_rate for all Projections in '{composition.name}' or those nested under it "
+                    f"are set to 'False'; at least one Projection must be specified with a non-False value "
+                    f"in order to execute the learn() method."
+                raise AutodiffCompositionError(err_msg)
+            warnings.warn(f"The learning_rates for all Projections in '{composition.name}' and nested under it are "
+                          f"'False'; if none are specified otherwise in its the learn() method, that will not execute.")
 
         # Remove any remaining empty param_groups
         for param_group in new_param_groups.copy():

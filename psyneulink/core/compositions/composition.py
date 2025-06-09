@@ -40,6 +40,7 @@ Contents
            - `Composition_Learning_Methods`
            - `Composition_Learning_Components`
            - `Composition_Learning_Execution`
+        • `Composition_Enable_Learning`
         • `Composition_Learning_Rate`
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
@@ -471,11 +472,10 @@ are also included in those attributes of any intervening and the outermost Compo
 
 .. _Composition_Nested_Learning:
 
-*Learning in nested Compositions.* A nested Composition can also contain one or more `learning Pathways
-<Composition_Learning_Pathway>`, however a learning Pathway may not extend from an enclosing Composition
-to one nested within it or vice versa.  The learning Pathways within a nested Composition are executed
-when that Composition is run, just like any other (see `Composition_Learning_Execution`).
-
+*Learning in nested Compositions.* Some subclasses of Composition support learning in nested Compositions
+<Composition_Nested> (e.g., AutdodiffComposition; see `AutodiffComposition_Nesting`).  The learning Pathways within
+a nested Composition are executed when that Composition is run, just like any other (see
+`Composition_Enable_Learning`).
 
 .. _Composition_CIMs:
 
@@ -1027,19 +1027,15 @@ they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition
 *Execution of Supervised Learning*
 ==================================
 
-For learning to occur when a Composition is run, its `learn <Composition.learn>` method must be used instead of the
-`run <Composition.run>` method, and its `enable_learning <Composition.enable_learning>` attribute must be ``True``.
-When the `learn <Composition.learn>` method is used, all Components *unrelated* to learning are executed in the same
-way as with the `run <Composition.run>` method. If the Composition has any `nested Composition <Composition_Nested>`
-that have `learning Pathways <Composition_Learning_Pathway>`, then learning also occurs on all of those for which
-the `enable_learning <Composition.enable_learning>` attribute is ``True``.  This is true even if the `enable_learning
-<Composition.enable_learning>` attribute is ``False`` for the Composition on which the  `learn <Composition.learn>`
-method was called.
+For learning to occur when a Composition is executed, its `learn <Composition.learn>` method must be used instead
+of the `run <Composition.run>` method, and its `enable_learning <Composition.enable_learning>` attribute must be
+``True`` (or it must have a nested Composition for which that is so; see `Composition_Enable_Learning` for additional
+details). When the `learn <Composition.learn>` method is used, all Components *unrelated* to learning are executed
+in the same way as with the `run <Composition.run>` method. When a Composition is run that contains one or more
+`learning Pathways <Composition_Learning_Pathway>`,  all of the ProcessingMechanisms for a pathway are executed first,
+and then its `learning components <Composition_Learning_Components>`.  This is shown in an animation of the XOR
+network from the `example above <Composition_XOR_Example>`:
 
-When a Composition is run that contains one or more `learning Pathways <Composition_Learning_Pathway>`, all of the
-ProcessingMechanisms for a pathway are executed first, and then its `learning components
-<Composition_Learning_Components>`.  This is shown in an animation of the XOR network from the `example above
-<Composition_XOR_Example>`:
 
 .. _Composition_Learning_Animation_Figure:
 
@@ -1063,6 +1059,36 @@ method, as well as additonal ones that are specific to learning.  Also like `run
 `output_values <Composition.output_values>` of the Composition after the last trial of execution.  The results for the
 last epoch of learning are stored in its `learning_results <Composition.learning_results>` attribute.
 
+.. _Composition_Enable_Learning:
+
+Enabling Learning
+^^^^^^^^^^^^^^^^^
+
+When a Composition's `learn <Composition.learn>` method is called, learning occurs only if its `enable_learning
+<Composition.enable_learning>` attribute is ``True``; if `enable_learning <Composition.enable_learning>` is ``False``,
+an error is raised.  This attribute can be set in the Composition's constructor, or programmatically by assigning
+a value to it.
+
+*Learning in Nested Compositions.* While the parent class of Composition does not support learning in `nested
+Compositions <Composition_Nested>`, some subclasses do (e.g., AutdodiffComposition; see `AutodiffComposition_Nesting`).
+In such cases, each must have its `enable_learning <Composition.enable_learning>` attribute set to ``True`` for
+learning to occur on that nested Composition when the `learn <Composition.learn>` method of the outer Composition is
+called.  If a nested Composition has its `enable_learning <Composition.enable_learning>` attribute set to ``False``,
+no learning will occur for that Composition when the `learn <Composition.learn>` method of the outer Composition is
+called, regardless of whether the outer Composition's `enable_learning <Composition.enable_learning>` attribute is
+``True`` or ``False``. If a Composition has nested Compositions and any of their `enable_learning
+<Composition.enable_learning>` attributes is set to ``True``, then its `learn <Composition.learn>` method the `learn
+<Composition.learn>` method of the outer Composition can be called, even if its `enable_learning
+<Composition.enable_learning>` attribute is set to ``False``, and learning will occur on any nested Composition(s)
+for which `enable_learning <Composition.enable_learning>` is ``True``.  However, if the outer Composition and all of
+those nested within it have their `enable_learning <Composition.enable_learning>` attribute set to ``False``,
+then an error is raised if the `learn <Composition.learn>` method is called.
+
+COMMENT:
+BREADCRUMB 6/9/25: REMOVE ONCE SETTLED
+the Composition is executed, and returns the `output_values <Composition.output_values>` of the Composition after the
+last trial of execution, which is the same as if its `run  <Composition.run>` method had been called instead.
+COMMENT
 
 .. _Composition_Learning_Rate:
 
@@ -1183,7 +1209,7 @@ determining the learning_rate for a Projection used at execution:
    .. note::
       `enable_learning <Composition.enable_learning>` (for a Composition) and `learnable <MappingProjection.learnable>`
       (for Projections) take precedence over any other assignments; if either is ``False``, then no learning takes place
-      for that object and, for Compositions, all objects nested within it.
+      for that object (though, for a Composition, learning may occur for Compositions nested within it).
 
 
 .. _Composition_Learning_AutodiffComposition:
@@ -3433,7 +3459,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     enable_learning : bool : default True
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
-        `learning mode <Composition.learn>`.
+        `learning mode <Composition.learn>` (see `Composition_Enable_Learning` for additional details).
 
     learning_rate : float, int, bool or dict : default .05
         specifies the default learning_rate for the Composition, used for any `learnable <MappingProjection.learnable>`
@@ -3713,9 +3739,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     execution_ids : set
         stores all execution_ids used by the Composition.
 
-    enable_learning: bool : default False
+    enable_learning : bool : default False
         determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
-        `learning mode <Composition.learn>`.
+        `learning mode <Composition.learn>` (see `Composition_Enable_Learning` for additional details).
 
     learning_rate : float, int or bool
         determines the default learning_rate for the Composition, used for any `learnable <MappingProjection.learnable>`
@@ -3892,7 +3918,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections=None,
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
-            enable_learning: bool = True,
+            # enable_learning: bool = True,
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
@@ -3983,6 +4009,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
+            # enable_learning=enable_learning,
             minibatch_size=minibatch_size,
             optimizations_per_minibatch=optimizations_per_minibatch,
             retain_old_simulation_data=retain_old_simulation_data,
