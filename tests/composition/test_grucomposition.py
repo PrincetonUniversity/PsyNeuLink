@@ -105,12 +105,17 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
+    # BREADCRUMB:  ADD TEST OF enable_learning SETTINGS FOR OUTER AND NESTED: True/False vs. False/True
+    @pytest.mark.parametrize('enable_learning', ['outer_false', 'gru_false', 'both_false'])
     @pytest.mark.parametrize('execution_type', ['run', 'learn'])
     @pytest.mark.parametrize('pathway_type', ['solo', 'gru_as_input', 'gru_as_hidden', 'gru_as_output'])
-    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
+    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type, enable_learning):
+        gru_enable_learning = True if 'outer' in enable_learning else False
+        outer_enable_learning = True if 'gru' in enable_learning else False
+
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
-        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False, enable_learning=gru_enable_learning)
         if pathway_type == 'solo':
             pathway = [gru]
             input_node = gru
@@ -129,7 +134,7 @@ class TestConstruction:
             target_node = gru.gru_mech
         else:
             raise ValueError("Invalid pathway_type")
-        outer_comp = pnl.AutodiffComposition(pathway)
+        outer_comp = pnl.AutodiffComposition(pathway, enable_learning=outer_enable_learning)
         inputs = {input_node: [[.1, .2, .3]]}
         targets = {target_node: [[1,1,1,1,1]]}
         if execution_type == 'run':

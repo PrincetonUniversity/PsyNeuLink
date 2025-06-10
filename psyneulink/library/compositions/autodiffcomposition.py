@@ -1797,8 +1797,6 @@ class AutodiffComposition(Composition):
                 if self._is_learning(context) or any(comp._is_learning(context)
                                                      for comp in self._get_nested_compositions()):
                     # TBI: How are we supposed to use base_context and statefulness here?
-                    # BREADCRUMB 6/9/25: ADD ELSE FOR ALL ENABLE_LEARNING ATTRIBUTES SET TO FALSE,
-                    #                    STATING THAT EITHER ENABLE_LEARNING MUST BE SET TO TRUE
 
                     autodiff_inputs = self._get_autodiff_inputs_values(inputs)
                     autodiff_targets = self._get_autodiff_targets_values(inputs)
