@@ -1285,7 +1285,7 @@ class Parameter(ParameterBase):
         ):
             del memo[id(self.default_value)]
             result._set_default_value(
-                copy_parameter_value(self.default_value, memo), directly=True
+                copy_parameter_value(self.default_value, memo=memo), directly=True
             )
 
         memo[id(self)] = result
