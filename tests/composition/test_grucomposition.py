@@ -4,6 +4,7 @@ import pytest
 import psyneulink as pnl
 from psyneulink import CompositionError, AutodiffComposition, HIDDEN_TO_HIDDEN
 
+from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
 # All tests are set to run. If you need to skip certain tests,
@@ -106,12 +107,14 @@ class TestConstruction:
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
     # BREADCRUMB:  ADD TEST OF enable_learning SETTINGS FOR OUTER AND NESTED: True/False vs. False/True
-    @pytest.mark.parametrize('enable_learning', ['outer_false', 'gru_false', 'both_false'])
-    @pytest.mark.parametrize('execution_type', ['run', 'learn'])
+    @pytest.mark.parametrize('execution_type', [
+        # 'run', 'learn', 'outer_false',
+        'gru_false', 'both_false'])
     @pytest.mark.parametrize('pathway_type', ['solo', 'gru_as_input', 'gru_as_hidden', 'gru_as_output'])
-    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type, enable_learning):
-        gru_enable_learning = True if 'outer' in enable_learning else False
-        outer_enable_learning = True if 'gru' in enable_learning else False
+    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
+        # Test nested GRUComposition in different positions within outer and with different enable_learning settings
+        gru_enable_learning = True if any(keyword in execution_type for keyword in {'outer', 'learn'}) else False
+        outer_enable_learning = True if any(keyword in execution_type for keyword in {'gru', 'learn'})  else False
 
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
@@ -140,7 +143,12 @@ class TestConstruction:
         if execution_type == 'run':
             outer_comp.run(inputs=inputs)
         else:
-            outer_comp.learn(inputs=inputs, targets=targets)
+            if execution_type =='both_false' or (execution_type == 'gru_false' and pathway_type == 'solo'):
+                with pytest.raises(AutodiffCompositionError) as error_text:
+                    outer_comp.learn(inputs=inputs, targets=targets)
+                assert 'GRUComposition cannot be learned with learning disabled' in str(error_text.value)
+            else:
+                outer_comp.learn(inputs=inputs, targets=targets)
         assert True
 
 

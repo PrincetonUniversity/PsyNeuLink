@@ -801,9 +801,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 f"for its pytorch_representation have not been constructed.")
             # revert to learning_rate assignments made in constructor
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
-            if not optimizer_params_user_specs:
-                # No user-specified specs in learn method(), so nothing more to do
-                return
+            # if not optimizer_params_user_specs:
+            #     # No user-specified specs in learn method(), so nothing more to do
+            #     return
         # CONSTRUCTOR is source
         else:
             if self.optimizer and not optimizer_params_user_specs:
@@ -830,8 +830,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                            run_time_default_learning_rate,
                                                                            source,
                                                                            context)
-        if optimizer_torch_params_specified is None:
-            return
+        # # MODIFIED 6/10/25 OLD:
+        # if optimizer_torch_params_specified is None:
+        #     return
+        # MODIFIED 6/10/25 END
 
         self._assign_learning_rates(optimizer,
                                     optimizer_torch_params_specified,
@@ -1009,8 +1011,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
-                specified_learning_rate = optimizer_torch_params_specified[param] \
-                        if param in optimizer_torch_params_specified else specified_learning_rate
+                # # MODIFIED 6/10/25 OLD:
+                # specified_learning_rate = optimizer_torch_params_specified[param] \
+                #         if param in optimizer_torch_params_specified else specified_learning_rate
+                # MODIFIED 6/10/25 NEW:
+                specified_learning_rate = (optimizer_torch_params_specified[param]
+                                           if optimizer_torch_params_specified
+                                              and param in optimizer_torch_params_specified
+                                           else specified_learning_rate)
+                # MODIFIED 6/10/25 END
                 # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
                     specified_learning_rate == NotImplemented
@@ -1075,14 +1084,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                           f"'enable_learning' Parameters for the Composition(s) are all set to 'False'. ")
             else:
                 insert = f"this is because the learning_rates for all of the Projections are set to 'False'. "
-            if source == LEARN_METHOD:
-                err_msg_end =  (f"The learning_rate for at least one Projection must be a non-False value within a "
-                                f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
-                                f"method for {composition.name}.")
-                raise AutodiffCompositionError(err_msg_start + insert + err_msg_end)
-            else:
-                err_msg_end = (f"If none are specified otherwise when learn() is called, it will not execute.")
-                warnings.warn(err_msg_start + insert + err_msg_end)
+            err_msg_end =  (f"The learning_rate for at least one Projection must be a non-False value within a "
+                            f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
+                            f"method for {composition.name}.")
+            raise AutodiffCompositionError(err_msg_start + insert + err_msg_end)
 
         # Remove any remaining empty param_groups
         for param_group in new_param_groups.copy():

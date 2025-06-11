@@ -1201,6 +1201,7 @@ class AutodiffComposition(Composition):
         if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator
             assert len(list(params)) == 0, (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
                                             f"but no entries in its state_dict()")
+            # BREADCRUMB: 6/10/25 SHOULDN'T THIS BE AN ERROR (SAME AS FOR all_requires_grads_false
             warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
             return
         if self.optimizer_type == 'sgd':
