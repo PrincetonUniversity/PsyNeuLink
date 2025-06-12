@@ -1353,13 +1353,14 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
 
-        mnet.learn(
+        result = mnet.learn(
             inputs=input_set,
             minibatch_size=1,
             patience=patience,
             min_delta=min_delt,
             execution_mode=pnl.ExecutionMode.PyTorch,
         )
+
         mnet.run(
             inputs=input_set['inputs']
         )
