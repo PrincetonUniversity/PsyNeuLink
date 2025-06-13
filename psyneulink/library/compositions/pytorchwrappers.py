@@ -819,10 +819,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                            run_time_default_learning_rate,
                                                                            source,
                                                                            context)
-        # # MODIFIED 6/10/25 OLD:
-        # if optimizer_torch_params_specified is None:
-        #     return
-        # MODIFIED 6/10/25 END
 
         self._assign_learning_rates(optimizer,
                                     optimizer_torch_params_specified,
@@ -874,7 +870,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if source == CONSTRUCTOR:
                 self._store_constructor_proj_learning_rates_and_torch_params(optimizer)
             return
-        # MODIFIED 6/11/25 END
 
         # Replace Projection names in projection_lr_specs for torch params (used in state_dict())
         # with their actual torch parameter objects to genernate optimizer_torch_params_specified:
@@ -1001,15 +996,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
-                # # MODIFIED 6/10/25 OLD:
-                # specified_learning_rate = optimizer_torch_params_specified[param] \
-                #         if param in optimizer_torch_params_specified else specified_learning_rate
-                # MODIFIED 6/10/25 NEW:
                 specified_learning_rate = (optimizer_torch_params_specified[param]
                                            if optimizer_torch_params_specified
                                               and param in optimizer_torch_params_specified
                                            else specified_learning_rate)
-                # MODIFIED 6/10/25 END
                 # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
                     specified_learning_rate = NotImplemented

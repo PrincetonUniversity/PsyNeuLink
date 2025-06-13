@@ -114,7 +114,7 @@ class TestConstruction:
     def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
         # Test nested GRUComposition in different positions within outer and with different enable_learning settings
         gru_enable_learning = True if any(keyword in execution_type for keyword in {'outer', 'learn'}) else False
-        outer_enable_learning = True if any(keyword in execution_type for keyword in {'gru', 'learn'})  else False
+        outer_enable_learning = True if any(keyword in execution_type for keyword in {'gru', 'learn'}) else False
 
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
