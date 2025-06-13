@@ -311,6 +311,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
         self._constructor_param_groups = None
+        self._constructor_proj_learning_rates = {}
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -797,13 +798,29 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if source == LEARN_METHOD:
             # _constructor_param_groups should have been assigned in constructor
             assert self._constructor_param_groups, (
-                f"PROGRAM ERROR: learn() called for '{composition.name} but the _constructor_param_groups "
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
+                f"for its pytorch_representation have not been constructed.")
+            assert self._constructor_param_groups, (
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_proj_learning_rates "
                 f"for its pytorch_representation have not been constructed.")
             # revert to learning_rate assignments made in constructor
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
+            # MODIFIED 6/11/25 OLD:
             # if not optimizer_params_user_specs:
             #     # No user-specified specs in learn method(), so nothing more to do
             #     return
+            # # MODIFIED 6/12/25 NEW:
+            # # BREADCRUMB: REPLACE WITH STORING ORIGINAL LEARNING_RATES IN _constructor_proj_learning_rates
+            # # Restore learning_rates for Projections to values in _constrctor_param_groups
+            # #     (as base for any new specifications)
+            # for proj in self.wrapped_projections:
+            #     proj.learning_rate = self.get_torch_learning_rate_for_projection(proj)
+            # # MODIFIED 6/12/25 NEWER:
+            # Restore learning_rates for Projections to values in _constrctor_proj_learning_rates
+            #     (as base for any new specifications)
+            for proj in self.wrapped_projections:
+                proj.learning_rate = self._constructor_proj_learning_rates[proj]
+            # MODIFIED 6/11/25 END
         # CONSTRUCTOR is source
         else:
             if self.optimizer and not optimizer_params_user_specs:
@@ -811,13 +828,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 return
             # _constructor_param_groups should not yet be assigned
             assert self._constructor_param_groups is None,(
-                f"PROGRAM ERROR: constructor called for '{composition.name}' to assign "
+                f"PROGRAM ERROR: constructor called for '{self.composition.name}' to assign "
                 f"_constructor_param_groups but they have already been assigned.")
+            assert not self._constructor_proj_learning_rates,(
+                f"PROGRAM ERROR: constructor called for '{self.composition.name}' to assign "
+                f"_constructor_proj_learning_rates but they have already been assigned.")
 
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers():
                 # If user didn't provide any specs, and there are no learnable Projections, not much to do;
-                # just assign default optimizer.param_groups
-                self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+                # just assign default optimizer.param_groups and store learning_rates for Projections
+                self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
                 return
 
         # Proceed to either construct new optimizer.param_groups (if called from constructor)
@@ -881,10 +901,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
 
+        # MODIFIED 6/11/25 OLD:
         if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
-                self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+                self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
             return
+        # MODIFIED 6/11/25 END
 
         # Replace Projection names in projection_lr_specs for torch params (used in state_dict())
         # with their actual torch parameter objects to genernate optimizer_torch_params_specified:
@@ -1022,7 +1044,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # MODIFIED 6/10/25 END
                 # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
-                    specified_learning_rate == NotImplemented
+                    specified_learning_rate = NotImplemented
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
                         f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the {source} "
@@ -1031,8 +1053,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
                 specified_learning_rate = False if projection.learning_rate is False else specified_learning_rate
-                if proj_composition.enable_learning is False:
-                    # Disable learning for Projections based enable_learning for the Compositions to which they belong
+                if proj_composition.enable_learning is False or projection.learnable is False:
+                    # Disable learning for Projection if:
+                    # - its learnable attribute is False
+                    # - enable_learning is False for the Compositions to which it belongs
                     specified_learning_rate = False
                     projection.learning_rate = False
                     param.requires_grad = False
@@ -1096,7 +1120,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if source == CONSTRUCTOR:
             # Store constructor-specified learning_rates (for reversion after learn())
-            self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+            self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
+
+    def _save_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer):
+        self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        for proj in self.wrapped_projections:
+            self._constructor_proj_learning_rates[proj] = proj.learning_rate
 
     def _copy_torch_param_groups(self, param_groups:list)->list:
         """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
@@ -1115,7 +1144,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert True
         return new_params_group
 
-    def _get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
+    def get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
         """Return torch Parameter for specified Projection"""
         projection_name = projection.name if isinstance(projection, Projection) else projection
         param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
@@ -1125,7 +1154,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if torch_long_param_name == param_tuple[0]:
                 return param_tuple[1]
 
-    def _get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
+    def get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
         """Get learning_rate for torch parameter"""
         # First get parameter's python id
         for param_group in param_groups:
@@ -1138,8 +1167,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                optimizer:torch.optim=None)->float:
         """Get torch learning_rate for a Projection"""
         optimizer = optimizer or self.optimizer or self._optimizer_error('get_torch_learning_rate_for_projection')
-        param = self._get_torch_param_for_projection(projection)
-        return self._get_learning_rate_for_torch_param(param, optimizer.param_groups)
+        param = self.get_torch_param_for_projection(projection)
+        return self.get_learning_rate_for_torch_param(param, optimizer.param_groups)
 
     def torch_params_to_projections(self, optimizer:torch.optim=None)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
@@ -1153,7 +1182,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
         projections_to_torch_params = {}
         for projection in self.wrapped_projections:
-                projections_to_torch_params.update({projection: self._get_torch_param_for_projection(projection)})
+                projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
         # Call recursively on any nested PytorchCompositionWrappers,
         #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():
@@ -1173,7 +1202,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         torch_params_to_projections = {}
         for proj in self.wrapped_projections:
             if proj.name in self._pnl_refs_to_torch_param_names:
-                torch_params_to_projections.update({self._get_torch_param_for_projection(proj): proj})
+                torch_params_to_projections.update({self.get_torch_param_for_projection(proj): proj})
         # Give subclasses a chance for custom handling of param->projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():
             torch_params_to_projections.update(comp_wrapper._torch_params_to_projections(param_groups))

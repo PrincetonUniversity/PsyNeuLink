@@ -422,7 +422,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 torch_param = next((p[1] for p in self.named_parameters() if p[0] == torch_param_long_name),None)
                 assert torch_param is not None, (f"PROGRAM ERROR: torch parameter for {projection_name} "
                                                  f"not found in named_parameters() of {self.name}")
-                learning_rate = self._get_learning_rate_for_torch_param(torch_param, param_groups)
+                learning_rate = self.get_learning_rate_for_torch_param(torch_param, param_groups)
                 projection = self._pnl_refs_to_torch_param_names[projection_name].projection
                 torch_params_to_projections.update({torch_param: projection})
         get_dict_entries(HIDDEN_PROJECTION_SETS)
