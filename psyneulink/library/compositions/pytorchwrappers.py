@@ -310,8 +310,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
                                 # as the latter is needed to pass the parameters to the optimizer
-        self._constructor_param_groups = None
-        self._constructor_proj_learning_rates = {}
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -796,48 +794,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
                   else CONSTRUCTOR)
 
         if source == LEARN_METHOD:
-            # _constructor_param_groups should have been assigned in constructor
-            assert self._constructor_param_groups, (
-                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
-                f"for its pytorch_representation have not been constructed.")
-            assert self._constructor_param_groups, (
-                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_proj_learning_rates "
-                f"for its pytorch_representation have not been constructed.")
             # revert to learning_rate assignments made in constructor
-            self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
-            # MODIFIED 6/11/25 OLD:
-            # if not optimizer_params_user_specs:
-            #     # No user-specified specs in learn method(), so nothing more to do
-            #     return
-            # # MODIFIED 6/12/25 NEW:
-            # # BREADCRUMB: REPLACE WITH STORING ORIGINAL LEARNING_RATES IN _constructor_proj_learning_rates
-            # # Restore learning_rates for Projections to values in _constrctor_param_groups
-            # #     (as base for any new specifications)
-            # for proj in self.wrapped_projections:
-            #     proj.learning_rate = self.get_torch_learning_rate_for_projection(proj)
-            # # MODIFIED 6/12/25 NEWER:
-            # Restore learning_rates for Projections to values in _constrctor_proj_learning_rates
-            #     (as base for any new specifications)
-            for proj in self.wrapped_projections:
-                proj.learning_rate = self._constructor_proj_learning_rates[proj]
-            # MODIFIED 6/11/25 END
+            self._restore_constructor_proj_learning_rates_and_torch_params(self.optimizer)
+
         # CONSTRUCTOR is source
         else:
             if self.optimizer and not optimizer_params_user_specs:
                 # No need to construct (optimizer exists) or to update_optimizer (no new params)
                 return
-            # _constructor_param_groups should not yet be assigned
-            assert self._constructor_param_groups is None,(
-                f"PROGRAM ERROR: constructor called for '{self.composition.name}' to assign "
-                f"_constructor_param_groups but they have already been assigned.")
-            assert not self._constructor_proj_learning_rates,(
-                f"PROGRAM ERROR: constructor called for '{self.composition.name}' to assign "
-                f"_constructor_proj_learning_rates but they have already been assigned.")
 
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers():
                 # If user didn't provide any specs, and there are no learnable Projections, not much to do;
                 # just assign default optimizer.param_groups and store learning_rates for Projections
-                self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
+                self._store_constructor_proj_learning_rates_and_torch_params(optimizer)
                 return
 
         # Proceed to either construct new optimizer.param_groups (if called from constructor)
@@ -901,10 +870,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
 
-        # MODIFIED 6/11/25 OLD:
         if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
-                self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
+                self._store_constructor_proj_learning_rates_and_torch_params(optimizer)
             return
         # MODIFIED 6/11/25 END
 
@@ -1120,12 +1088,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if source == CONSTRUCTOR:
             # Store constructor-specified learning_rates (for reversion after learn())
-            self._save_constructor_proj_learning_rates_and_torch_params(optimizer)
+            self._store_constructor_proj_learning_rates_and_torch_params(optimizer)
 
-    def _save_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer):
+    def _store_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer):
         self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-        for proj in self.wrapped_projections:
-            self._constructor_proj_learning_rates[proj] = proj.learning_rate
+        self._constructor_proj_learning_rates = {proj: proj.learning_rate for proj in self.wrapped_projections}
+
+    def _restore_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer):
+        """Restore constructor-specified learning_rates and torch parameters for Projections"""
+        try:
+            self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
+            for proj in self.wrapped_projections:
+                proj.learning_rate = self._constructor_proj_learning_rates[proj]
+        except AttributeError:
+            assert self._constructor_param_groups, (
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
+                f"for its pytorch_representation have not been constructed.")
+            assert self._constructor_param_groups, (
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_proj_learning_rates "
+                f"for its pytorch_representation have not been constructed.")
+
 
     def _copy_torch_param_groups(self, param_groups:list)->list:
         """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
