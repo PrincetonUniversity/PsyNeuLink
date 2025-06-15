@@ -255,8 +255,8 @@ that is propagated through the EMComposition.
 .. _EMComposition_Field_Weights:
 
 * **field_weights**: specifies which fields are used as keys, and how they are weighted during retrieval. Fields
-  designated as keys used to match inputs (queries) against entries in memory for retrieval (see `Match memories by
-  field <EMComposition_Processing>`); entries designated as *values* are ignored during the matching process, but
+  designated as keys are used to match inputs (queries) against entries in memory for retrieval (see `Match memories
+  by field <EMComposition_Processing>`); entries designated as *values* are ignored during the matching process, but
   their values in memory are retrieved and assigned as the `value <Mechanism_Base.value>` of the corresponding
   `retrieved_node <EMComposition.retrieved_nodes>`. This distinction between keys and value corresponds
   to the format of a standard "dictionary," though in that case only a single key and value are allowed, whereas
@@ -292,7 +292,7 @@ that is propagated through the EMComposition.
     .. _EMComposition_No_Field_Weights_For_Single_Key_Note:
 
     .. note::
-       If there is only a single key field, no field_weight is constructed, as there in this case weighting would have
+       If there is only a single key field, no field_weight is constructed, as in this case weighting would have
        no effect; this also means that **learn_field_weights** has no effect, and a warning is issued if specified.
 
     .. _EMComposition_Field_Weights_Change_Note:
@@ -2084,15 +2084,50 @@ class EMComposition(AutodiffComposition):
             parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
 
         # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
+        # # MODIFIED 6/15/25 OLD:
+        # if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
+        #     for i, lfw in enumerate(learn_field_weights):
+        #         if parsed_field_weights[i] is None and lfw is not False:
+        #             warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
+        #                           f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
+        # MODIFIED 6/15/25 END
+        # # MODIFIED 6/14/25 OLD:
+        # elif learn_field_weights in {None, True, False}:
+        #     learn_field_weights = [False] * len(parsed_field_weights)
+        # # MODIFIED 6/14/25 NEW:
+        # elif learn_field_weights in {None, True, False}:
+        #     learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
+        # MODIFIED 6/14/25 NEWER:
+        # elif isinstance(learn_field_weights, bool):
+        #     learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
+        # elif learn_field_weights is None:
+        #     learn_field_weights = [False] * len(parsed_field_weights)
+        # MODIFIED 6/15/25 NEWEST:
+        lfw_values_specified_individually = True
+        if learn_field_weights in {None, True, False}:
+            learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
+            lfw_values_specified_individually = False
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
-            for i, lfw in enumerate(learn_field_weights):
-                if parsed_field_weights[i] is None and lfw is not False:
-                    warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
-                                  f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
-        elif learn_field_weights in {None, True, False}:
-            learn_field_weights = [False] * len(parsed_field_weights)
+            for i, vals  in enumerate(zip(parsed_field_weights, learn_field_weights)):
+                fw, lfw = vals
+                if fw is None:
+                    # Field is a value field, so no learning allowed
+                    if lfw and lfw_values_specified_individually:
+                        # learning_rate specified as True or scalar for value field
+                        warnings.warn(f"A learning_rate was specified for field '{field_names[i]}' "
+                                      f"in the 'learn_field_weights' arg for '{name}', "
+                                      f"but it is not allowed for value fields; it will be ignored.")
+                    learn_field_weights[i] = False
+                elif lfw in {None, True}:
+                    # Assign default learning_rate
+                    learn_field_weights[i] = learning_rate
+                else:
+                    learn_field_weights[i] = lfw
+            assert True
+        # MODIFIED 6/14/25 END
         else:
-            assert False, f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a list, tuple or bool."
+            assert False, \
+                f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a list, array, tuple, or bool."
 
         # Memory structure Parameters
         parsed_field_names = field_names.copy() if field_names is not None else None
