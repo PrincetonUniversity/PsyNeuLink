@@ -959,7 +959,7 @@ from psyneulink.core.globals.keywords import \
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
      MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
+    ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar, is_iterable
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -2104,7 +2104,7 @@ class EMComposition(AutodiffComposition):
         #     learn_field_weights = [False] * len(parsed_field_weights)
         # MODIFIED 6/15/25 NEWEST:
         lfw_values_specified_individually = True
-        if learn_field_weights in {None, True, False}:
+        if not is_iterable(learn_field_weights) and learn_field_weights in {None, True, False}:
             learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
             lfw_values_specified_individually = False
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
@@ -2123,7 +2123,6 @@ class EMComposition(AutodiffComposition):
                     learn_field_weights[i] = learning_rate
                 else:
                     learn_field_weights[i] = lfw
-            assert True
         # MODIFIED 6/14/25 END
         else:
             assert False, \
@@ -2660,6 +2659,7 @@ class EMComposition(AutodiffComposition):
                 projection.learning_rate = False
 
         constructor_learning_rate = self._optimizer_constructor_params
+        learn_field_weights = self.parameters.learn_field_weights.spec
 
         # Handle dict specification for self.learning_rate
         if constructor_learning_rate and isinstance(constructor_learning_rate, dict):
@@ -2667,19 +2667,20 @@ class EMComposition(AutodiffComposition):
                                      f"which is not supported for an EMComposition;  "
                                      f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
 
-        if self.enable_learning and isinstance(self.learn_field_weights, (list, np.ndarray)):
-            if all(item for item in self.learn_field_weights if item is not False):
+        if self.enable_learning and isinstance(learn_field_weights, (list, np.ndarray)):
+            if all(item is False for item in learn_field_weights) or len(self.query_input_nodes) == 1:
+                # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
                 # If there is only a single key, there are no field_weight nodes or Projections,
                 #   therefore learning is not possible, so warn and disable learning
-                if len(self.query_input_nodes) == 1:
-                    warnings.warn(f"The 'enable_learning' arg of '{self.name}' is set to True, but it has only one key "
-                                  f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
-                                  f"effect; therefore, 'enable_learning' is being set to 'False'")
-                    self.enable_learning = False
-                    return
+                warnings.warn(f"The 'enable_learning' arg of '{self.name}' is set to True, but it has only one key "
+                              f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
+                              f"effect; therefore, 'enable_learning' is being set to 'False'")
+                self.enable_learning = False
+                return
 
-            # BREADCRUMB: OK HERE?
-            if all(item is False for item in self.learn_field_weights):
+            # BREADCRUMB: OK HERE?  EDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSINGN ALL learning_rates HERE?
+            #
+            if all(item is False for item in learn_field_weights):
                 # If learning for all field weights are False, set all learning_rates to False
                 for projection in field_weight_projections:
                     projection.learnable = False
@@ -2695,16 +2696,16 @@ class EMComposition(AutodiffComposition):
                     # Get Projection for field_weight_node
                     proj = field.weight_node.efferents[0]
                     # Get learning_rate for field_weight_node
-                    if self.learn_field_weights[i] is False:
+                    if learn_field_weights[i] is False:
                         lr_dict[proj] = False
                         proj.learnable = False
-                    elif is_numeric_scalar(self.learn_field_weights[i]):
-                        lr_dict[proj] = self.learn_field_weights[i]
-                    elif self.learn_field_weights[i] is None:
+                    elif is_numeric_scalar(learn_field_weights[i]):
+                        lr_dict[proj] = learn_field_weights[i]
+                    elif learn_field_weights[i] is None:
                         continue
                     else:
                         raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
-                                                 f"({self.learn_field_weights[i]}) is not a valid value.")
+                                                 f"({learn_field_weights[i]}) is not a valid value.")
             self._optimizer_constructor_params = lr_dict
         else:
             assert not self.enable_learning, \

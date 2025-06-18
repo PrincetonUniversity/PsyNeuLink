@@ -387,7 +387,7 @@ class TestConstruction:
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE A' in proj.name for proj in em.projections)
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE LEARN' in proj.name for proj in em.projections)
         # Learnability and learning rate for field weights
-        assert em.learn_field_weights == [True, False, .01, False, False]
+        assert em.parameters.learn_field_weights.spec == [.5, False, .01, False, False]
 
         proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
         proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']
@@ -395,12 +395,16 @@ class TestConstruction:
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
+        # BREADCRUMB: SHOULD THIS BE LEARNABLE OR NOT?
         assert not proj_KEY_VAL.learnable
 
         pytorch_rep = em._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
+        assert proj_KEY_A.learning_rate == .5
+        assert proj_KEY_B.learning_rate == .01
+        assert proj_KEY_VAL.learning_rate == False
         # Assert that all non-field_weight Projections are not learnable
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
