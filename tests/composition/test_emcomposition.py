@@ -317,8 +317,8 @@ class TestConstruction:
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4, True),
                                   'B': (None, True, True)})
-        assert (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
-                f"'EM_Composition', but it is not allowed for value fields; it will be ignored."
+        assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
+                "but it is not allowed for value fields; it will be ignored."
                  in str(warning[0].message))
         assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to True, but it has only one key "
                 "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "

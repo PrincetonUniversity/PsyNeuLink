@@ -2126,7 +2126,7 @@ class EMComposition(AutodiffComposition):
                     learn_field_weights[i] = False
                 elif lfw in {None, True}:
                     # Assign default learning_rate
-                    learn_field_weights[i] = learning_rate
+                    learn_field_weights[i] = learning_rate or lfw
                 else:
                     learn_field_weights[i] = lfw
         # MODIFIED 6/14/25 END
@@ -2685,7 +2685,7 @@ class EMComposition(AutodiffComposition):
                 self.enable_learning = False
                 return
 
-            # BREADCRUMB: OK HERE?  EDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSINGN ALL learning_rates HERE?
+            # BREADCRUMB: OK HERE?  REDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSINGN ALL learning_rates HERE?
             #
             if all(item is False for item in learn_field_weights):
                 # If learning for all field weights are False, set all learning_rates to False
@@ -2694,6 +2694,7 @@ class EMComposition(AutodiffComposition):
                     projection.learning_rate = False
                 return
 
+            # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}
             if constructor_learning_rate:
