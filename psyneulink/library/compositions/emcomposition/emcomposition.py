@@ -2050,6 +2050,12 @@ class EMComposition(AutodiffComposition):
 
         self.num_fields = len(self.entry_template)
 
+        # Handle dict specification for self.learning_rate (not allowed for EMComposition)
+        if isinstance(learning_rate, dict):
+            raise EMCompositionError(f"The 'learning_rate' arg for '{name}' is specified as a dict, "
+                                     f"which is not supported for an EMComposition;  "
+                                     f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
+
         if fields:
             # If a fields dict has been specified, use that to assign field_names, field_weights & learn_field_weights
             if any([field_names, field_weights, learn_field_weights, target_fields]):
@@ -2661,6 +2667,7 @@ class EMComposition(AutodiffComposition):
         constructor_learning_rate = self._optimizer_constructor_params
         learn_field_weights = self.parameters.learn_field_weights.spec
 
+        # BREADCRUMB:  REMOVE? (SINCE NOW DONE IN _parse_fields())?
         # Handle dict specification for self.learning_rate
         if constructor_learning_rate and isinstance(constructor_learning_rate, dict):
             raise EMCompositionError(f"The 'learning_rate' arg for '{self.name}' is specified as a dict, "
