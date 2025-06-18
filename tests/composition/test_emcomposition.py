@@ -404,7 +404,7 @@ class TestConstruction:
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
         assert proj_KEY_A.learning_rate == .5
         assert proj_KEY_B.learning_rate == .01
-        assert proj_KEY_VAL.learning_rate == False
+        assert proj_KEY_VAL.learning_rate is False
         # Assert that all non-field_weight Projections are not learnable
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
