@@ -2689,13 +2689,8 @@ class EMComposition(AutodiffComposition):
                                f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
                                f"effect; therefore, 'enable_learning' is being set to 'False'.")
                     warnings.warn(warning)
-                # self.enable_learning = False
-                return
-
-            # BREADCRUMB: OK HERE?  REDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSIGN ALL learning_rates HERE?
-            #
-            if all(item is False for item in learn_field_weights):
-                # If learning for all field weights are False, set all learning_rates to False
+                # since no learning, set enable_learning and learnable and learning_rate for all Projections to False
+                self.enable_learning = False
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False

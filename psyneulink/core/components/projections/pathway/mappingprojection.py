@@ -402,10 +402,10 @@ class MappingProjection(PathwayProjection_Base):
 
     learnable : bool
         determines whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
-        `learning <LearningMechanism>`.  If it is ``False``, learning is precluded from every occuring for the
+        `learning <LearningMechanism>`.  If it is ``False``, learning is precluded from ever occuring for the
         MappingProjection, irrespective of value of its `learning_rate <MappingProjection.learning_rate>` Parameter
-        or of any to Composition to which the MappingProjection belongs, and any attempts to assign a `learning_rate
-        <MappingProjection.learning_rate>' (other than False) raises an error.
+        or of any for the Composition to which the MappingProjection belongs, and any attempts to assign a
+        `learning_rate <MappingProjection.learning_rate>' (other than False) raises an error.
 
     learning_rate : float, int, bool or None
         determines Projection-specific learning_rate, that takes effect only if the MappingProjection's `learnable
