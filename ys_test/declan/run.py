@@ -15,7 +15,7 @@ def run_participant(params, data_loader, len_memory=2):
     for trial, (x, _, y) in enumerate(data_loader):
 
         # For each state, optimize the context representation for predicting the next state over n_optimization_steps.
-        for _ in range(params['n_optimization_steps']):
+        for o in range(params['n_optimization_steps']):
               # retrieve the context representation from the integrator.
              # Initialize context if not already done.
             # Skip first state bc which sequence within the context is randomly assigned.
@@ -33,10 +33,11 @@ def run_participant(params, data_loader, len_memory=2):
                 context = torch.zeros([1, params["context_d"]]).float()
                 pred_em = torch.zeros([1, params["output_d"]]).float()
 
+            with torch.no_grad():
+                em_preds.append(pred_em.cpu().detach().numpy())
         with torch.no_grad():
             em_module.write(x_last, context, x)
-            em_preds.append(pred_em.cpu().detach().numpy())
-        x_last = x.cpu()
+        x_last = x
 
     # Collect some metrics from the training run for analysis.
     em_preds = np.stack(em_preds).squeeze()
