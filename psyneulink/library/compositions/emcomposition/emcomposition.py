@@ -2689,7 +2689,7 @@ class EMComposition(AutodiffComposition):
                                f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
                                f"effect; therefore, 'enable_learning' is being set to 'False'.")
                     warnings.warn(warning)
-                self.enable_learning = False
+                # self.enable_learning = False
                 return
 
             # BREADCRUMB: OK HERE?  REDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSIGN ALL learning_rates HERE?

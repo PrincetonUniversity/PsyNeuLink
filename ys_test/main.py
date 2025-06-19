@@ -23,7 +23,8 @@ def main():
     torch.set_default_dtype(torch.float64)
     utils.set_random_seed_and_capture_state(0)
     data_loader = gen_data_loader(TRAINING_PARADIGM, PROBS, 2)
-    fig, axes = plt.subplots(2, 1, figsize=(5, 12))
+    if PLOT:
+        fig, axes = plt.subplots(2, 1, figsize=(5, 12))
 
     ego_inputs = data_loader.dataset.xs.numpy().copy()
     ego_targets = data_loader.dataset.ys.numpy().copy()
@@ -33,11 +34,11 @@ def main():
         utils.set_random_seed_and_capture_state(0)
         model, context, state, em = construct_model(memory_capacity=len(ego_inputs))
         ego_results = run_model(model, context, state, em, ego_inputs)
-        plot_results(ego_results, ego_targets, axes[0])
+        # plot_results(ego_results, ego_targets, axes[0])
     if RUN_DECLAN:
         utils.set_random_seed_and_capture_state(0)
         declan_results = run_participant(params_declan, data_loader, len(ego_inputs))
-        plot_results(declan_results, ego_targets, axes[1])
+        # plot_results(declan_results, ego_targets, axes[1])
 
 
     if RUN_PSY_EGO:
