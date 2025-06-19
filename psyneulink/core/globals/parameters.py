@@ -329,6 +329,7 @@ from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import (
     call_with_pruned_args,
+    contains_type,
     convert_all_elements_to_np_array,
     create_union_set,
     get_alias_property_getter,
@@ -1046,6 +1047,16 @@ class Parameter(ParameterBase):
 
             :default: False
 
+        bool_as_number
+            if True, booleans in otherwise numeric arrays for this
+            Parameter will be converted to 0 or 1, and the array will
+            remain numeric. This is the default behavior for numpy
+            arrays and torch tensors. If False, booleans within mixed
+            arrays will not be converted to numbers, and the array will
+            remain of mixed type (object dtype).
+
+            :default: True
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -1111,6 +1122,7 @@ class Parameter(ParameterBase):
         port=None,  # if modulated, set to the ParameterPort
         mdf_name=None,
         specify_none=False,
+        bool_as_number=True,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -1177,6 +1189,7 @@ class Parameter(ParameterBase):
             port=port,
             mdf_name=mdf_name,
             specify_none=specify_none,
+            bool_as_number=bool_as_number,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
@@ -1392,8 +1405,11 @@ class Parameter(ParameterBase):
 
     def _parse(self, value, check_scalar=False):
         if is_numeric(value):
+            dtype = None
+            if not self.bool_as_number and contains_type(value, bool):
+                dtype = object
             orig_value = value
-            value = convert_all_elements_to_np_array(value)
+            value = convert_all_elements_to_np_array(value, dtype=dtype)
             if check_scalar:
                 self._scalar_converted = orig_value is not value and value.ndim == 0
 
