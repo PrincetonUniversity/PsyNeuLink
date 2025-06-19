@@ -221,7 +221,7 @@ which provides a comparison of the different modes of execution for an AutodiffC
 ~~~~~~~~~~~~~~
 
 COMMENT:
-# 7/10/24 - FIX:
+# 7/10/24 - BREADCRUMB:
 .. _AutodiffComposition_PyTorch_LearningScale:
    ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTION OF pytorch_rep:
       OPTIMIZATION STEP:

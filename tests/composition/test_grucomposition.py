@@ -106,16 +106,16 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
-    # BREADCRUMB:  ADD TEST OF enable_learning SETTINGS FOR OUTER AND NESTED: True/False vs. False/True
     @pytest.mark.parametrize('execution_type', [
-        # 'run', 'learn', 'outer_false',
-        'gru_false', 'both_false'])
+        # 'run',
+        'learn'
+    ])
+    @pytest.mark.parametrize('outer_enable_learning', [False, True])
+    @pytest.mark.parametrize('gru_enable_learning', [False, True])
     @pytest.mark.parametrize('pathway_type', ['solo', 'gru_as_input', 'gru_as_hidden', 'gru_as_output'])
-    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
+    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type,
+                                                            outer_enable_learning, gru_enable_learning):
         # Test nested GRUComposition in different positions within outer and with different enable_learning settings
-        gru_enable_learning = True if any(keyword in execution_type for keyword in {'outer', 'learn'}) else False
-        outer_enable_learning = True if any(keyword in execution_type for keyword in {'gru', 'learn'}) else False
-
         input_mech = pnl.ProcessingMechanism(input_shapes=3)
         output_mech = pnl.ProcessingMechanism(input_shapes=5)
         gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False, enable_learning=gru_enable_learning)
@@ -143,14 +143,24 @@ class TestConstruction:
         if execution_type == 'run':
             outer_comp.run(inputs=inputs)
         else:
-            if execution_type =='both_false' or (execution_type == 'gru_false' and pathway_type == 'solo'):
+            # if execution_type =='both_false' or (execution_type == 'gru_false' and pathway_type == 'solo'):
+            if gru_enable_learning is False and (outer_enable_learning is False or pathway_type == 'solo'):
                 with pytest.raises(AutodiffCompositionError) as error_text:
                     outer_comp.learn(inputs=inputs, targets=targets)
-                assert 'GRUComposition cannot be learned with learning disabled' in str(error_text.value)
+                if outer_enable_learning is False:
+                    assert ((f"The learn() method of 'autodiff_composition' was called, but its 'enable_learning' "
+                             f"Parameter (and the ones for any Compositions nested within) it are set to 'False'. "
+                             f"Either set at least one to 'True', or use autodiff_composition.run().")
+                            in str(error_text.value))
+                else:
+                    assert ((f"There are no learnable Projections in 'autodiff_composition' nor any nested under it; "
+                             f"this may be because the learning_rates for all of the Projections and/or "
+                             f"'enable_learning' Parameters for the Composition(s) are all set to 'False'. "
+                             f"The learning_rate for at least one Projection must be a non-False value within a "
+                             f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
+                             f"method for autodiff_composition.") in str(error_text.value))
             else:
                 outer_comp.learn(inputs=inputs, targets=targets)
-        assert True
-
 
 @pytest.mark.pytorch
 @pytest.mark.composition

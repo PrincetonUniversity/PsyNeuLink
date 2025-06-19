@@ -7,6 +7,7 @@ import psyneulink as pnl
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
@@ -317,12 +318,12 @@ class TestConstruction:
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4, True),
                                   'B': (None, True, True)})
-        assert (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
-                f"'EM_Composition', but it is not allowed for value fields; it will be ignored."
+        assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
+                "but it is not allowed for value fields; it will be ignored."
                  in str(warning[0].message))
-        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to True, but it has only one key "
+        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
                 "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
-                "'enable_learning' is being set to 'False'" in str(warning[1].message))
+                "'enable_learning' is being set to 'False'." in str(warning[1].message))
 
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
@@ -395,7 +396,6 @@ class TestConstruction:
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
-        # BREADCRUMB: SHOULD THIS BE LEARNABLE OR NOT?
         assert not proj_KEY_VAL.learnable
 
         pytorch_rep = em._build_pytorch_representation()
@@ -404,7 +404,7 @@ class TestConstruction:
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
         assert proj_KEY_A.learning_rate == .5
         assert proj_KEY_B.learning_rate == .01
-        assert proj_KEY_VAL.learning_rate == False
+        assert proj_KEY_VAL.learning_rate is False
         # Assert that all non-field_weight Projections are not learnable
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
@@ -512,9 +512,9 @@ class TestConstruction:
                     "unless/until one or more of them are changed to a positive value."
                     in str(warning[0].message))
             if len(em.query_input_nodes)==1:
-                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to True, but it has only one key "
+                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to 'True', but it has only one key "
                         f"('{em.query_input_nodes[0].name}') so fields_weights and learning will have no effect; "
-                        f"therefore, 'enable_learning' is being set to 'False'"
+                        f"therefore, 'enable_learning' is being set to 'False'."
                         in [str(warning[i].message) for i in range(len(warning))])
 
         elif any([fw == 0 for fw in field_weights]):
@@ -941,12 +941,8 @@ class TestExecution:
         outer_comp.learn(inputs=inputs, epochs=1)
 
     @pytest.mark.composition
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch])
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
-    @pytest.mark.parametrize('concatenate', [False], ids=['no_concatenate'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
     @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
     @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
@@ -981,8 +977,13 @@ class TestExecution:
             if concatenate:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_queries'=True." in str(error.value)
-
+                assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
+            elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
+                with pytest.raises(AutodiffCompositionError) as error:
+                    em.learn(inputs=inputs, execution_mode=exec_mode)
+                assert (f"The learn() method of 'EM_Composition' was called, but its 'enable_learning' Parameter "
+                        f"(and the ones for any Compositions nested within) it are set to 'False'. "
+                        f"Either set at least one to 'True', or use EM_Composition.run().") in str(error.value)
             else:
                 # if exec_mode == pnl.ExecutionMode.Python:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)

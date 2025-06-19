@@ -1103,13 +1103,13 @@ class Field():
         self.weighted_match_node = None
         self.retrieved_node = None
         # Projections for all fields:
-        self.storage_projection = None       # Projection from input_node to storage_node
-        self.retrieve_projection = None     # Projection from softmax_node ("RETRIEVE" node) to retrieved_node
+        self.storage_projection = None         # Projection from input_node to storage_node
+        self.retrieve_projection = None        # Projection from softmax_node ("RETRIEVE" node) to retrieved_node
         # Projections for key fields:
-        self.memory_projection = None        # Projection from query_input_node to match_node
-        self.concatenation_projection = None # Projection from query_input_node to concatenate_queries_node
-        self.match_projection = None         # Projection from match_node to weighted_match_node
-        self.weight_projection = None        # Projection from weight_node to weighted_match_node
+        self.memory_projection = None          # Projection from query_input_node to match_node
+        self.concatenation_projection = None   # Projection from query_input_node to concatenate_queries_node
+        self.match_projection = None           # Projection from match_node to weighted_match_node
+        self.weight_projection = None          # Projection from weight_node to weighted_match_node
         self.weighted_match_projection = None  # Projection from weighted_match_node to combined_matches_node
 
     @property
@@ -2050,6 +2050,12 @@ class EMComposition(AutodiffComposition):
 
         self.num_fields = len(self.entry_template)
 
+        # Handle dict specification for self.learning_rate (not allowed for EMComposition)
+        if isinstance(learning_rate, dict):
+            raise EMCompositionError(f"The 'learning_rate' arg for '{name}' is specified as a dict, "
+                                     f"which is not supported for an EMComposition;  "
+                                     f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
+
         if fields:
             # If a fields dict has been specified, use that to assign field_names, field_weights & learn_field_weights
             if any([field_names, field_weights, learn_field_weights, target_fields]):
@@ -2120,7 +2126,7 @@ class EMComposition(AutodiffComposition):
                     learn_field_weights[i] = False
                 elif lfw in {None, True}:
                     # Assign default learning_rate
-                    learn_field_weights[i] = learning_rate
+                    learn_field_weights[i] = learning_rate or lfw
                 else:
                     learn_field_weights[i] = lfw
         # MODIFIED 6/14/25 END
@@ -2661,6 +2667,7 @@ class EMComposition(AutodiffComposition):
         constructor_learning_rate = self._optimizer_constructor_params
         learn_field_weights = self.parameters.learn_field_weights.spec
 
+        # BREADCRUMB:  REMOVE? (SINCE NOW DONE IN _parse_fields())?
         # Handle dict specification for self.learning_rate
         if constructor_learning_rate and isinstance(constructor_learning_rate, dict):
             raise EMCompositionError(f"The 'learning_rate' arg for '{self.name}' is specified as a dict, "
@@ -2668,17 +2675,24 @@ class EMComposition(AutodiffComposition):
                                      f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
 
         if self.enable_learning and isinstance(learn_field_weights, (list, np.ndarray)):
-            if all(item is False for item in learn_field_weights) or len(self.query_input_nodes) == 1:
+            if (all(item is False for item in learn_field_weights)
+                    or len(self.query_input_nodes) == 1 or self.concatenate_queries_node):
                 # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
-                # If there is only a single key, there are no field_weight nodes or Projections,
-                #   therefore learning is not possible, so warn and disable learning
-                warnings.warn(f"The 'enable_learning' arg of '{self.name}' is set to True, but it has only one key "
-                              f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
-                              f"effect; therefore, 'enable_learning' is being set to 'False'")
+                if self.concatenate_queries_node:
+                    warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
+                               f"`concatenate_queries` also set to 'True', so 'fields_weights' and 'learning' "
+                               f"will have no effect; therefore, 'enable_learning' is being set to 'False'.")
+                else:
+                    # If there is only a single key, there are no field_weight nodes or Projections,
+                    #   therefore learning is not possible, so warn and disable learning
+                    warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True', but it has only one key "
+                               f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
+                               f"effect; therefore, 'enable_learning' is being set to 'False'.")
+                    warnings.warn(warning)
                 self.enable_learning = False
                 return
 
-            # BREADCRUMB: OK HERE?  EDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSINGN ALL learning_rates HERE?
+            # BREADCRUMB: OK HERE?  REDUNDANT WITH ABOVE;  INSTEAD, MAYBE ASSIGN ALL learning_rates HERE?
             #
             if all(item is False for item in learn_field_weights):
                 # If learning for all field weights are False, set all learning_rates to False
@@ -2687,6 +2701,7 @@ class EMComposition(AutodiffComposition):
                     projection.learning_rate = False
                 return
 
+            # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}
             if constructor_learning_rate:
@@ -2887,7 +2902,7 @@ class EMComposition(AutodiffComposition):
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
         if self.concatenate_queries:
-            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'=True.")
+            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
         return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):

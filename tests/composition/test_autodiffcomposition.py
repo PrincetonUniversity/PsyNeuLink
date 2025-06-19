@@ -3612,10 +3612,10 @@ class TestMiscTrainingFunctionality:
         # #                                                                        expected after construction; values
         # #                                                                        after learn() are handled in the test
         # #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
-        # ('defaults',      None,  None,    None,       None,  NotImplemented, default,  default,    default,  default),
+        ('defaults',      None,  None,    None,       None,  NotImplemented, default,  default,    default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
-        # ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,  NotImplemented,  1.414,       7,       1.414,       7  ),
-        # # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
+        ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,  NotImplemented,  1.414,       7,       1.414,       7  ),
+        # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
         ('proj_lr_none', 1.414,    7,     6.02,        2.7,      None,        1.414,       7,       1.414,       7  ),
         ('learn_only',    None,  None,    None,       None,      3.14,       default,  default,     default,  default),
@@ -3709,13 +3709,8 @@ class TestMiscTrainingFunctionality:
 
         # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg
         outer_comp.learn(inputs={inner_node_input:[[1]]})
-        # BREADCRUMB: COMMENT OUT NEXT 3 LINES ONCE DEBUGGED
-        learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
-        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
-        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
-        # BREADCRUMB: RESTORE NEXT 2 LINES ONCE DEBUGGED
-        # assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
-        # assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
     @pytest.mark.parametrize("bias", [False, True])
