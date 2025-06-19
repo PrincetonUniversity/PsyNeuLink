@@ -58,7 +58,7 @@ def construct_model(
     previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     context_layer = TransferMechanism(name=context_name,
                                       input_shapes=context_size,
-                                      function=Tanh,  # TODO: Here is still an error
+                                      function=Tanh,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
 
