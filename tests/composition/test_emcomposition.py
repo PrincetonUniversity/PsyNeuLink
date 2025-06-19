@@ -388,7 +388,7 @@ class TestConstruction:
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE A' in proj.name for proj in em.projections)
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE LEARN' in proj.name for proj in em.projections)
         # Learnability and learning rate for field weights
-        assert em.parameters.learn_field_weights.spec == [.5, False, .01, False, False]
+        assert (em.learn_field_weights == [.5, False, .01, False, False]).all()
 
         proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
         proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']

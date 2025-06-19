@@ -1593,7 +1593,7 @@ class EMComposition(AutodiffComposition):
         memory_capacity = Parameter(1000, structural=True)
         field_names = Parameter(None, structural=True)
         field_weights = Parameter([1], setter=field_weights_setter)
-        learn_field_weights = Parameter(False, structural=True)
+        learn_field_weights = Parameter(False, structural=True, bool_as_number=False)
         learning_rate = Parameter(.001, modulable=True)
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
@@ -2665,7 +2665,7 @@ class EMComposition(AutodiffComposition):
                 projection.learning_rate = False
 
         constructor_learning_rate = self._optimizer_constructor_params
-        learn_field_weights = self.parameters.learn_field_weights.spec
+        learn_field_weights = self.learn_field_weights
 
         # BREADCRUMB:  REMOVE? (SINCE NOW DONE IN _parse_fields())?
         # Handle dict specification for self.learning_rate
