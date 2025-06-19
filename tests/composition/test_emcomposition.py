@@ -321,9 +321,11 @@ class TestConstruction:
         assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
                 "but it is not allowed for value fields; it will be ignored."
                  in str(warning[0].message))
-        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
-                "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
-                "'enable_learning' is being set to 'False'." in str(warning[1].message))
+        # MODIFIED 6/19/25 OLD:  WARNING NO LONGER OCCURS ON CONSTRUCTION, BUT IT SHOULD BE RAISED ON LEARN
+        # assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
+        #         "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
+        #         "'enable_learning' is being set to 'False'." in str(warning[1].message))
+        # MODIFIED 6/19/25 END
 
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
@@ -511,11 +513,6 @@ class TestConstruction:
                     "are either None or set to 0; this will result in no retrievals "
                     "unless/until one or more of them are changed to a positive value."
                     in str(warning[0].message))
-            if len(em.query_input_nodes)==1:
-                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to 'True', but it has only one key "
-                        f"('{em.query_input_nodes[0].name}') so fields_weights and learning will have no effect; "
-                        f"therefore, 'enable_learning' is being set to 'False'."
-                        in [str(warning[i].message) for i in range(len(warning))])
 
         elif any([fw == 0 for fw in field_weights]):
             with pytest.warns(UserWarning) as warning:
@@ -984,6 +981,12 @@ class TestExecution:
                 assert (f"The learn() method of 'EM_Composition' was called, but its 'enable_learning' Parameter "
                         f"(and the ones for any Compositions nested within) it are set to 'False'. "
                         f"Either set at least one to 'True', or use EM_Composition.run().") in str(error.value)
+                # assert (f"There are no learnable Projections in 'EM_Composition' nor any nested under it; this is "
+                #         f"because the learning_rates for all of the Projections are set to 'False'. The learning_rate "
+                #         f"for at least one Projection must be a non-False value within a Composition with"
+                #         f" 'enable_learning' set to 'True' in order to execute the learn() method for EM_Composition."
+
+
             else:
                 # if exec_mode == pnl.ExecutionMode.Python:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)

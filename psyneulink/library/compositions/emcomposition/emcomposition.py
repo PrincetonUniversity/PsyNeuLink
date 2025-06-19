@@ -1707,6 +1707,7 @@ class EMComposition(AutodiffComposition):
             name,
             learn_field_weights,
         )
+        self._enable_learning_warning_flag = False
 
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
@@ -2677,23 +2678,25 @@ class EMComposition(AutodiffComposition):
         if self.enable_learning and isinstance(learn_field_weights, (list, np.ndarray)):
             if (all(item is False for item in learn_field_weights)
                     or len(self.query_input_nodes) == 1 or self.concatenate_queries_node):
-                # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
-                if self.concatenate_queries_node:
-                    warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
-                               f"`concatenate_queries` also set to 'True', so 'fields_weights' and 'learning' "
-                               f"will have no effect; therefore, 'enable_learning' is being set to 'False'.")
-                else:
-                    # If there is only a single key, there are no field_weight nodes or Projections,
-                    #   therefore learning is not possible, so warn and disable learning
-                    warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True', but it has only one key "
-                               f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
-                               f"effect; therefore, 'enable_learning' is being set to 'False'.")
-                    warnings.warn(warning)
+                # # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
+                # if self.concatenate_queries_node:
+                #     warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
+                #                f"`concatenate_queries` also set to 'True', so 'fields_weights' and 'learning' "
+                #                f"will have no effect; therefore, 'enable_learning' is being set to 'False'.")
+                # else:
+                #     # If there is only a single key, there are no field_weight nodes or Projections,
+                #     #   therefore learning is not possible, so warn and disable learning
+                #     warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True', but it has only one key "
+                #                f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
+                #                f"effect; therefore, 'enable_learning' is being set to 'False'.")
+                #     warnings.warn(warning)
                 # since no learning, set enable_learning and learnable and learning_rate for all Projections to False
-                self.enable_learning = False
+                # self.enable_learning = False
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False
+                self.enable_learning = False
+                self._enable_learning_warning_flag = True
                 return
 
             # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
@@ -2836,7 +2839,10 @@ class EMComposition(AutodiffComposition):
         skip_initialization: bool = False,
         **kwargs
     ) -> list:
-        """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
+        """Override to check for various error and warning conditions
+        - error for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning
+        - warning for enable_learning when concatenate_queries is True or when there is only one key
+        """
 
         if (
             not skip_initialization
@@ -2858,6 +2864,25 @@ class EMComposition(AutodiffComposition):
         if softmax_choice in {ARG_MAX, PROBABILISTIC}:
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                                      f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
+
+        if self._enable_learning_warning_flag and not self.is_nested:
+            # Warn only if EM is being run as a standalone Composition
+            #   (it may be common for it to be nested but use only one key or concatenation, so dont' bother user)
+            # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
+            warning = None
+            if self.concatenate_queries_node:
+                warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
+                           f"`concatenate_queries` also set to 'True', so 'fields_weights' and 'learning' "
+                           f"will have no effect; therefore, 'enable_learning' is being set to 'False'.")
+            elif self.query_input_nodes == 1:
+                # If there is only a single key, there are no field_weight nodes or Projections,
+                #   therefore learning is not possible, so warn and disable learning
+                warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True', but it has only one key "
+                           f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
+                           f"effect; therefore, 'enable_learning' is being set to 'False'.")
+            if warning:
+                warnings.warn(warning)
+
 
         return super().learn(
             *args,
