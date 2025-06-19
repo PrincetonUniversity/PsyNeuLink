@@ -106,7 +106,6 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
-    # BREADCRUMB:  ADD TEST OF enable_learning SETTINGS FOR OUTER AND NESTED: True/False vs. False/True
     @pytest.mark.parametrize('execution_type', [
         # 'run',
         'learn'
