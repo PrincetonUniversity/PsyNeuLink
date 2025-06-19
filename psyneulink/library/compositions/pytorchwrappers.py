@@ -1064,9 +1064,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
             err_msg_start = f"There are no learnable Projections in '{composition.name}' nor any nested under it; "
             if composition._is_learning(context) is False or any(comp._is_learning(context) is False
                                                                  for comp in composition._get_nested_compositions()):
+                # enable_learning might be False at construction
                 insert = (f"this may be because the learning_rates for all of the Projections and/or "
                           f"'enable_learning' Parameters for the Composition(s) are all set to 'False'. ")
             else:
+                # must be that enable_learning is True but no Projections are learnable
                 insert = f"this is because the learning_rates for all of the Projections are set to 'False'. "
             err_msg_end =  (f"The learning_rate for at least one Projection must be a non-False value within a "
                             f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
@@ -1529,7 +1531,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # Node is excluded from gradient calculations, so cache for later execution
                 if node.exclude_from_gradient_calc:
                     if node.exclude_from_gradient_calc == AFTER:
-                        # Cache variable for later exce execution
+                        # Cache variable for later execution
                         self._nodes_to_execute_after_gradient_calc[node] = variable
                         continue
                     elif node.exclude_from_gradient_calc == BEFORE:
@@ -1727,7 +1729,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
-        the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
+        the forward() and backward(). If AFTER is specified, the node is executed after at the end of the
         `update_learning_parameters` method.  BEFORE is not currently supported
 
     _use : list[LEARNING, SYNCH]

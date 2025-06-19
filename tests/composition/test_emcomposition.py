@@ -321,9 +321,9 @@ class TestConstruction:
         assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
                 "but it is not allowed for value fields; it will be ignored."
                  in str(warning[0].message))
-        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to True, but it has only one key "
+        assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
                 "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
-                "'enable_learning' is being set to 'False'" in str(warning[1].message))
+                "'enable_learning' is being set to 'False'." in str(warning[1].message))
 
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
@@ -396,7 +396,6 @@ class TestConstruction:
 
         assert proj_KEY_A.learnable
         assert proj_KEY_B.learnable
-        # BREADCRUMB: SHOULD THIS BE LEARNABLE OR NOT?
         assert not proj_KEY_VAL.learnable
 
         pytorch_rep = em._build_pytorch_representation()
@@ -513,9 +512,9 @@ class TestConstruction:
                     "unless/until one or more of them are changed to a positive value."
                     in str(warning[0].message))
             if len(em.query_input_nodes)==1:
-                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to True, but it has only one key "
+                assert (f"The 'enable_learning' arg of 'EM_Composition' is set to 'True', but it has only one key "
                         f"('{em.query_input_nodes[0].name}') so fields_weights and learning will have no effect; "
-                        f"therefore, 'enable_learning' is being set to 'False'"
+                        f"therefore, 'enable_learning' is being set to 'False'."
                         in [str(warning[i].message) for i in range(len(warning))])
 
         elif any([fw == 0 for fw in field_weights]):
@@ -942,18 +941,10 @@ class TestExecution:
         outer_comp.learn(inputs=inputs, epochs=1)
 
     @pytest.mark.composition
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch])
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
-    @pytest.mark.parametrize('concatenate', [False], ids=['no_concatenate'])
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
-    @pytest.mark.parametrize('use_storage_node', [True], ids=['use_storage_node'])
-    # BREADCRUMB: RESTORE ONCE DEBUGGED:
-    # @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
-    @pytest.mark.parametrize('learning', [False], ids=['no_learning'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
+    @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
+    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
@@ -986,8 +977,8 @@ class TestExecution:
             if concatenate:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_queries'=True." in str(error.value)
-            elif not learning:
+                assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
+            elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
                 with pytest.raises(AutodiffCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
                 assert (f"The learn() method of 'EM_Composition' was called, but its 'enable_learning' Parameter "
