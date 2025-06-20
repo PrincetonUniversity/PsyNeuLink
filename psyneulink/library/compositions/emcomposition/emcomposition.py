@@ -2695,7 +2695,9 @@ class EMComposition(AutodiffComposition):
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False
-                self.enable_learning = False
+                # # MODIFIED 6/19/25 OLD:
+                # self.enable_learning = False
+                # MODIFIED 6/19/25 END
                 self._enable_learning_warning_flag = True
                 return
 
