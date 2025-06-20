@@ -1730,7 +1730,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
     exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
         the forward() and backward(). If AFTER is specified, the node is executed after at the end of the
-        `update_learning_parameters` method.  BEFORE is not currently supported
+        `update_learning_parameters` method;  it must be specified as an attribute of the Mechanism being wrapped.
+        BEFORE is not currently supported.
 
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords (see
