@@ -431,10 +431,11 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition', 'OPTIMIZER_PARAMS'
+    'AutodiffComposition', 'OPTIMIZER_PARAMS', 'EXCLUDE_FROM_GRADIENT_CALC',
 ]
 
 OPTIMIZER_PARAMS = 'optimizer_params'
+EXCLUDE_FROM_GRADIENT_CALC = 'exclude_from_gradient_calc'
 
 def _get_torch_trained_outputs(owning_component=None, context=None):
     if not context.execution_id:

@@ -31,9 +31,11 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
         self.storage_node = self.nodes_map[self.composition.storage_node]
+        # MODIFIED 6/20/25 OLD:
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
         self.storage_node.exclude_from_gradient_calc = AFTER
+        # MODIFIED 6/20/25 END
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it

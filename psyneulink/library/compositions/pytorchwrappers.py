@@ -1773,7 +1773,14 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
+
+        # # MODIFIED 6/20/25 OLD:
+        # self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
+        # MODIFIED 6/20/25 NEW:
+        from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
+        self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
+            if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
+        # MODIFIED 6/20/25 END
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \

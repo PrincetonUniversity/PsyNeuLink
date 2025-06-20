@@ -945,7 +945,8 @@ from psyneulink.core.components.functions.nonstateful.transformfunctions import 
     Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
-from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
+from psyneulink.library.compositions.autodiffcomposition import (
+    AutodiffComposition, torch_available, EXCLUDE_FROM_GRADIENT_CALC)
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -954,7 +955,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL,
+    (ADAPTIVE, AFTER, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL,
      DEFAULT_INPUT, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
      MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
@@ -2455,7 +2456,6 @@ class EMComposition(AutodiffComposition):
                                                                       PROJECTIONS: memory_projection}))
                 field.memory_projection = memory_projection
 
-
     def _construct_field_weight_nodes(self, concatenate_queries, use_gating_for_weighting):
         """Create ProcessingMechanisms that weight each key's contribution to the retrieved values.
         Note: not constructed if only one key is specified, since in that case there is no point in weighting."""
@@ -2633,6 +2633,7 @@ class EMComposition(AutodiffComposition):
 
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
+        Make exclude_fron_gradient_calc assignments to relevant Nodes
         Convert any learning_rate specifications into standard AutodiffComposition learning_rate dict format
 
         BREADCRUMB:
@@ -2655,6 +2656,10 @@ class EMComposition(AutodiffComposition):
         4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,
            - set self.learning_rate to False and issue warning (don't bother if both are False)
         """
+
+        # BREADCRUMB: SET self.storage_node = None IF NOT USE_STORAGE_NODE?
+        if hasattr(self, 'storage_node'):
+            setattr(self.storage_node, EXCLUDE_FROM_GRADIENT_CALC, AFTER)
 
         # Get field_weight projections and set all others to be non-learnable
         field_weight_projections = []
