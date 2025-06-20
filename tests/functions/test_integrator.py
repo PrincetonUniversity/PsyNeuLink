@@ -242,7 +242,7 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
         ex_res = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({'reset'}), member='reset')
 
         # Compiled mode ignores input variable, but python uses it if it's provided
-        post_reset = ex_res(None if func_mode == "Python" else variable)
+        post_reset = benchmark(ex_res, None if func_mode == "Python" else variable)
 
         # Python implementations return 2d arrays,
         # while most compiled variants return 1d
@@ -257,6 +257,9 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
         reset_expected[0] = f.parameters.initializer.get()
 
         np.testing.assert_allclose(post_reset, reset_expected)
+
+    else:
+        assert False, "Unknown test mode: {}".format(mode)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():
