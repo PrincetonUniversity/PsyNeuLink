@@ -358,7 +358,7 @@ class ParameterError(Exception):
 
 
 class ParameterNoValueError(ParameterError):
-    def __init__(self, param=None, execution_id=None):
+    def __init__(self, param, execution_id):
         message = "{0} '{1}'{2} has no value for execution_id {3}".format(
             type(param).__name__,
             param.name,
@@ -369,7 +369,7 @@ class ParameterNoValueError(ParameterError):
 
 
 class ParameterInvalidSourceError(ParameterError):
-    def __init__(self, param=None, detail=None):
+    def __init__(self, param, detail=None):
         from psyneulink.core.components.component import ComponentsMeta
 
         if detail is None:
