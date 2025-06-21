@@ -4040,7 +4040,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the same as if they were created on a command-line call. Do
         # not use the above context object because the source change
         # will persist after this call
-        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
 
         # Controller
         self.controller = None
@@ -8317,16 +8317,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Update graph in case method is called again
             self._analyze_graph()
 
-        # Assign any Projection-specific learning_rates
+        # Assign any Projection-specific learning_rates from/to LearningMechanisms
         learning_mechanisms = learning_pathway.learning_components[LEARNING_MECHANISMS]
         for learnable_projection in [lp for lp in learning_pathway.learning_components[LEARNED_PROJECTIONS]
-                                     if lp.learnable and lp.learning_rate is not None]:
-            learning_mech = learnable_projection.parameter_ports['matrix'].mod_afferents[0].sender.owner
-            assert learning_mech in learning_mechanisms, \
+                                     if lp.learnable]:
+            learning_mech = next((lp.sender.owner
+                                  for lp in learnable_projection.parameter_ports['matrix'].mod_afferents
+                                  if lp.sender.owner in learning_mechanisms), None)
+            assert learning_mech, \
                 (f"PROGRAM ERROR: LearningMechanism that projects to '{learnable_projection.name}' is not in "
                  f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
-            # FIX: 4/25/25 USE CONTEXT HERE:
-            learning_mech.parameters.learning_rate.set(learnable_projection.learning_rate)
+            learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
+            proj_lr = learnable_projection.parameters.learning_rate.get(context)
+            if proj_lr is not None:
+                # if Projection has a learning_rate, assign to LearningMechanism
+                learning_mech.parameters.learning_rate.set(proj_lr)
+            else:
+                # otherwise use, assign LearningMechanism's learning rate or default to Projection
+                learnable_projection.parameters.learning_rate.set(
+                    learning_mech_lr if learning_mech_lr is not None else learning_rate,
+                    context)
 
         return learning_pathway
 

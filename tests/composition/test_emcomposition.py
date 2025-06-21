@@ -1000,10 +1000,6 @@ class TestExecution:
     @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_false', 'fw_learning_true'])
     def test_backpropagation_of_error_in_learning(self, field_weight_learning):
         """This test is based on the EGO CSW Model"""
-        # BREADCRUMB:
-        #   - DEBUG VERSION BELOW THAT ENABLES LEARNING FOR FIELD WEIGHTS
-        #   - BENCHMARK AGAINST Younes' VERSION OF EGO MODEL
-
         import torch
         torch.manual_seed(0)
         state_input_layer = pnl.ProcessingMechanism(name='STATE', input_shapes=11)

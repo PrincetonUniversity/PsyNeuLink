@@ -3607,37 +3607,35 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        # BREADCRUMB: REMOVE exp_p_1_out and exp_p2_out SINCE IDENTICAL TO exp_p_1_in and exp_p2_in
+        # BREADCRUMB: ADD TEST FOR PATHWAY LEARNING RATE INHERITANCE
         # #                                                                  NOTE: the specs below are for values
         # #                                                                        expected after construction; values
         # #                                                                        after learn() are handled in the test
-        # #  condition    p_1_lr  p_2_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in  exp_p_1_out  exp_p2_out
-        ('defaults',      None,  None,    None,       None,  NotImplemented, default,  default,    default,  default),
+        # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
+        ('defaults',      None,  None,       None,      None,      None,  NotImplemented, default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
-        ('proj_lr_nimp', 1.414,    7,     6.02,        2.7,  NotImplemented,  1.414,       7,       1.414,       7  ),
+        ('proj_lr_nimp', 1.414,    7,        None,      6.02,       2.7,  NotImplemented,  1.414,       7),
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
-        ('proj_lr_none', 1.414,    7,     6.02,        2.7,      None,        1.414,       7,       1.414,       7  ),
-        ('learn_only',    None,  None,    None,       None,      3.14,       default,  default,     default,  default),
-        ('inr_p2_none',  1.414,  None,    None,       None,      3.14,        1.414,   default,     1.414,    default),
-        ('inr_outr',     1.414,  None,    6.02,       None,      3.14,        1.414,     6.02,      1.414,     6.02  ),
-        ('inr_none_nimp', None,    7,     6.02,       None,  NotImplemented,   6.02,       7,        6.02,       7   ),
-        ('inr_none_none', None,    7,     6.02,       None,      None,         6.02,       7,        6.02,       7   ),
-        ('inr_lr_nimp',  1.414,    7,     6.02,       None,  NotImplemented,  1.414,       7,       1.414,       7   ),
-        ('inr_lr_none',  1.414,    7,     6.02,       None,      None,        1.414,       7,       1.414,       7   ),
-        ('outr_comp_lr',  None,    7,     6.02,        2.7,      None,         6.02,       7,        6.02,       7   ),
-        ('outr_comp_lr',  None,    7,     None,        2.7,      None,       default,      7,       default,     7   ),
+        ('proj_lr_none', 1.414,    7,        None,      6.02,       2.7,      None,        1.414,       7),
+        ('learn_only',    None,  None,       None,      None,      None,      3.14,       default,  default),
+        ('inr_p2_none',  1.414,  None,       None,      None,      None,      3.14,        1.414,   default),
+        ('inr_outr',     1.414,  None,       None,      6.02,      None,      3.14,        1.414,     6.02),
+        ('inr_none_nimp', None,    7,        None,      6.02,      None,  NotImplemented,   6.02,       7),
+        ('inr_none_none', None,    7,        None,      6.02,      None,      None,         6.02,       7),
+        ('inr_lr_nimp',  1.414,    7,        None,      6.02,      None,  NotImplemented,  1.414,       7),
+        ('inr_lr_none',  1.414,    7,        None,      6.02,      None,      None,        1.414,       7),
+        ('outr_comp_lr',  None,    7,        None,      6.02,       2.7,      None,         6.02,       7),
+        ('outr_comp_lr',  None,    7,        None,      None,       2.7,      None,       default,      7),
     ]
-    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, "
+    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, pathway_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
-                             "expected_proj_1_inner, expected_proj_2_inner, "
-                             "expected_proj_1_outer, expected_proj_2_outer",
+                             "expected_proj_1_inner, expected_proj_2_inner",
                              test_specs_for_learning_rate_inheritance,
                              ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
-    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_1_lr, proj_2_lr,
+    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_1_lr, proj_2_lr, pathway_lr,
                                                       inner_comp_lr, outer_comp_lr, outer_learn_lr,
-                                                      expected_proj_1_inner, expected_proj_2_inner,
-                                                      expected_proj_1_outer, expected_proj_2_outer):
+                                                      expected_proj_1_inner, expected_proj_2_inner):
 
         # Construct inner Composition
         inner_node_input = pnl.ProcessingMechanism(name="INPUT NODE")
@@ -3651,14 +3649,18 @@ class TestMiscTrainingFunctionality:
                                            inner_node_output,
                                            learning_rate = proj_2_lr,
                                            name="INNER PROJECTION 2")
-        inner_comp = AutodiffComposition([inner_node_input,
-                                          inner_proj_1,
-                                          inner_node_hidden,
-                                          inner_proj_2,
-                                          inner_node_output],
-                                         learning_rate=inner_comp_lr,
+        # inner_pathway = [inner_node_input, inner_proj_1, inner_node_hidden, inner_proj_2, inner_node_output]
+        # inner_comp = AutodiffComposition(pathways=inner_pathway,
+        #                                  learning_rate=inner_comp_lr,
+        #                                  name="INNER COMP")
+        inner_comp = AutodiffComposition(learning_rate=inner_comp_lr,
                                          name="INNER COMP")
-
+        inner_comp.add_backpropagation_learning_pathway([inner_node_input,
+                                                         inner_proj_1,
+                                                         inner_node_hidden,
+                                                         inner_proj_2,
+                                                         inner_node_output],
+                                                        learning_rate = pathway_lr)
         # Check inner_comp assignments from constructor
         inner_comp._build_pytorch_representation()
         inner_pytorch_rep = inner_comp.pytorch_representation
@@ -3674,8 +3676,8 @@ class TestMiscTrainingFunctionality:
         outer_comp._build_pytorch_representation()
         outer_pytorch_rep = outer_comp.pytorch_representation
         outer_proj = outer_comp.nodes[-1].afferents[0]
-        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_outer
-        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
         # Check outer_comp assignments after learn() method
@@ -3700,11 +3702,11 @@ class TestMiscTrainingFunctionality:
                          learning_rate=learning_rate_arg)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == proj_1_expected
-        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_outer
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_proj_expected
         # Check that _learing_params_for_execution works properly
         assert learn_pytorch_rep._torch_params_for_execution[inner_proj_1] == proj_1_expected
-        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_outer
+        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_inner
         assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
 
         # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg

@@ -2683,26 +2683,9 @@ class EMComposition(AutodiffComposition):
         if self.enable_learning and isinstance(learn_field_weights, (list, np.ndarray)):
             if (all(item is False for item in learn_field_weights)
                     or len(self.query_input_nodes) == 1 or self.concatenate_queries_node):
-                # # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
-                # if self.concatenate_queries_node:
-                #     warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
-                #                f"`concatenate_queries` also set to 'True', so 'fields_weights' and 'learning' "
-                #                f"will have no effect; therefore, 'enable_learning' is being set to 'False'.")
-                # else:
-                #     # If there is only a single key, there are no field_weight nodes or Projections,
-                #     #   therefore learning is not possible, so warn and disable learning
-                #     warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True', but it has only one key "
-                #                f"('{self.query_input_nodes[0].name}') so fields_weights and learning will have no "
-                #                f"effect; therefore, 'enable_learning' is being set to 'False'.")
-                #     warnings.warn(warning)
-                # since no learning, set enable_learning and learnable and learning_rate for all Projections to False
-                # self.enable_learning = False
                 for projection in field_weight_projections:
                     projection.learnable = False
                     projection.learning_rate = False
-                # # MODIFIED 6/19/25 OLD:
-                # self.enable_learning = False
-                # MODIFIED 6/19/25 END
                 self._enable_learning_warning_flag = True
                 return
 
