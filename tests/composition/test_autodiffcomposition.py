@@ -3612,21 +3612,22 @@ class TestMiscTrainingFunctionality:
         # #                                                                        expected after construction; values
         # #                                                                        after learn() are handled in the test
         # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
-        ('defaults',      None,  None,       None,      None,      None,  NotImplemented, default,  default),
+        ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
-        ('proj_lr_nimp', 1.414,    7,        None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
-        ('proj_lr_none', 1.414,    7,        None,      6.02,       2.7,      None,        1.414,       7),
-        ('learn_only',    None,  None,       None,      None,      None,      3.14,       default,  default),
-        ('inr_p2_none',  1.414,  None,       None,      None,      None,      3.14,        1.414,   default),
-        ('inr_outr',     1.414,  None,       None,      6.02,      None,      3.14,        1.414,     6.02),
-        ('inr_none_nimp', None,    7,        None,      6.02,      None,  NotImplemented,   6.02,       7),
-        ('inr_none_none', None,    7,        None,      6.02,      None,      None,         6.02,       7),
-        ('inr_lr_nimp',  1.414,    7,        None,      6.02,      None,  NotImplemented,  1.414,       7),
-        ('inr_lr_none',  1.414,    7,        None,      6.02,      None,      None,        1.414,       7),
-        ('outr_comp_lr',  None,    7,        None,      6.02,       2.7,      None,         6.02,       7),
-        ('outr_comp_lr',  None,    7,        None,      None,       2.7,      None,       default,      7),
+        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
+        ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
+        ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
+        ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
+        ('inr_none_nimp',  None,     7,      None,      6.02,      None,  NotImplemented,   6.02,       7),
+        ('inr_none_none',  None,     7,      None,      6.02,      None,      None,         6.02,       7),
+        ('inr_lr_nimp',   1.414,     7,      None,      6.02,      None,  NotImplemented,  1.414,       7),
+        ('inr_lr_none',   1.414,     7,      None,      6.02,      None,      None,        1.414,       7),
+        ('outr_comp_lr',   None,     7,      None,      6.02,       2.7,      None,         6.02,       7),
+        ('outr_comp_lr',   None,     7,      None,      None,       2.7,      None,       default,      7),
     ]
     @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, pathway_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
