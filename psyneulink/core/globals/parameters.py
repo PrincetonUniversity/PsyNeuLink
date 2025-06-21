@@ -346,7 +346,8 @@ from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter'
+    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter',
+    'ParameterNoValueError', 'ParameterInvalidSourceError',
 ]
 
 logger = logging.getLogger(__name__)
