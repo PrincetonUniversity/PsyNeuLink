@@ -8,6 +8,7 @@ import torch.nn
 from fontTools.mtiLib import parseSingleSubst
 
 import psyneulink as pnl
+from psyneulink import RANDOM_CONNECTIVITY_MATRIX
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
@@ -535,6 +536,63 @@ class TestAutodiffLearningRateArgs:
 
         assert set(param_to_proj_dict.values()) == set(proj_to_param_dict.keys())
         assert set(proj_to_param_dict.values()) == set(param_to_proj_dict.keys())
+
+    @pytest.mark.parametrize("enable_learning", ['before_run', 'after_run'])
+    def test_enable_learning(self, enable_learning):
+        # Test construction with enable_learning=False, running, and then enabling learning
+
+        enable_learning = enable_learning == 'before_run'
+        nested_proj_lr = .25
+        input_proj_lr = True
+        output_proj_lr = 1.9
+        outer_comp_lr = .3
+
+        nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1', input_shapes=2)
+        nested_mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 2', input_shapes=3)
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2,
+                                            matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                            learning_rate=nested_proj_lr, name="NESTED PROJECTION")
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[nested_mech_1, nested_proj, nested_mech_2],
+                                              enable_learning = enable_learning)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1, learning_rate=input_proj_lr,
+                                           name="INPUT PROJECTION")
+        output_proj = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=output_proj_lr,
+                                            name="OUTPUT PROJECTION")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp',
+                                             enable_learning = enable_learning,
+                                             learning_rate = outer_comp_lr)
+
+        if enable_learning:
+            # Execute learning without run
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                               num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                               learning_rate={input_proj:input_proj_lr})
+
+        else:
+            # Execute run, then enable learning and execute learning()
+            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                        num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
+
+            # Check that learning rates are ones from construction
+            # pytorch_rep = outer_comp._build_pytorch_representation(learning_rate=10)
+            nested_comp.enable_learning = True
+            outer_comp.enable_learning = True
+            pytorch_rep = outer_comp._build_pytorch_representation()
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == nested_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                               num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                               learning_rate={input_proj:input_proj_lr})
+            # Ensure learning occurred
+            assert learning_result != run_result
+
+        # Should get same result after learning in both cases
+        assert learning_result == [[-0.35035038561297505]]
 
 # Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
 @pytest.mark.composition
