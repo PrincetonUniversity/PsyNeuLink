@@ -3607,7 +3607,6 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        # BREADCRUMB: ADD TEST FOR PATHWAY LEARNING RATE INHERITANCE
         # #                                                                  NOTE: the specs below are for values
         # #                                                                        expected after construction; values
         # #                                                                        after learn() are handled in the test
@@ -3615,10 +3614,11 @@ class TestMiscTrainingFunctionality:
         ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
         ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        # # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
+        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
         # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
-        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
-        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
         ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
         ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
         ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
