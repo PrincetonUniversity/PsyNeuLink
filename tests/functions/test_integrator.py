@@ -78,25 +78,25 @@ def DriftIntFun(_init, _value, iterations, noise, **kwargs):
 
     if np.isscalar(noise):
         if "initializer" not in kwargs:
-            return ([0.35782281, 4.03326927, 4.90427264, 0.90944534, 1.45943493,
-                     2.31791882, 3.05580281, 1.20089146, 2.8408554 , 1.93964773],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.53150387, 3.78140754, 4.53709231, 1.01650495, 1.48888893,
+                     2.26545636, 2.89486977, 1.3060138,  2.75587927, 1.90759788],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
         else:
-            return ([1.14954785, 4.56216419, 5.4723172 , 1.83504198, 1.53047099,
-                     2.40504812, 3.07602121, 2.0335113 , 3.61901215, 2.80965988],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[1.32322891, 4.31030246, 5.10513687, 1.94210158, 1.55992499,
+                     2.35258566, 2.91508817, 2.13863365, 3.53403602, 2.77761003],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
     else:
         if "initializer" not in kwargs:
-            return ([0.17810305, 4.06675934, 4.20730295, 0.90582833, 1.60883329,
-                     2.27822395, 2.2923697 , 1.10933472, 2.71418965, 1.86808107],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.19557944, 3.84081432, 3.4503575,  1.01012678, 1.67172503,
+                     2.1987747, 1.93406955, 1.1364648, 2.55292322, 1.79854117],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
         else:
-            return ([0.96982809, 4.59565426, 4.77534751, 1.83142497, 1.67986935,
-                     2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.98730448, 4.36970924, 4.01840206, 1.93572342, 1.74276108,
+                     2.285904, 1.95428795, 1.96908464, 3.33107997, 2.66855331],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
 def LeakyFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
@@ -201,27 +201,19 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.benchmark
 def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
     func_class, func_res, func_params = func
-    benchmark.group = GROUP_PREFIX + func_class.componentName
+    benchmark.group = GROUP_PREFIX + func_class.componentName + " " + mode
 
-    try:
-        noise = noise()
-    except TypeError as e:
-        if "object is not callable" not in str(e):
-            raise e from None
-    else:
+    if callable(noise):
         if issubclass(func_class, (pnl.DriftDiffusionIntegrator, pnl.DriftOnASphereIntegrator)):
             pytest.skip("{} doesn't support functional noise".format(func_class.componentName))
+
+        # Instantiate the noise Function using explicit seed
+        noise = noise(seed=0)
 
     params = {**params, **func_params}
 
     if issubclass(func_class, pnl.AccumulatorIntegrator):
         params.pop('offset', None)
-
-    elif issubclass(func_class, pnl.DriftDiffusionIntegrator):
-        # If we are dealing with a DriftDiffusionIntegrator, noise and
-        # time_step_size defaults have changed since this test was created.
-        # Hard code their old values.
-        noise = np.sqrt(noise)
 
     f = func_class(default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
