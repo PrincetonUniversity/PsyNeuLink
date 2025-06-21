@@ -1,3 +1,4 @@
+import contextlib
 import copy
 import numpy as np
 import psyneulink as pnl
@@ -145,7 +146,8 @@ def test_parameter_setter():
 
 def test_history():
     t = pnl.TransferMechanism()
-    assert t.parameters.value.get_previous() is None
+    with pytest.raises(pnl.ParameterNoValueError):
+        t.parameters.value.get_previous()
     t.execute(10)
     assert t.parameters.value.get_previous() == 0
     t.execute(100)
@@ -156,12 +158,12 @@ def test_history():
     'index, range_start, range_end, expected',
     [
         (1, None, None, 4),
-        (6, None, None, None),
         (None, 2, None, [3, 4]),
         (None, 2, 0, [3, 4]),
         (1, 2, 0, [3, 4]),
         (None, 5, 2, [0, 1, 2]),
-        (None, 10, 2, [0, 1, 2])
+        (None, 10, 2, [0, 1, 2]),
+        (6, None, None, pnl.ParameterNoValueError),
     ]
 )
 def test_get_previous(index, range_start, range_end, expected):
@@ -171,13 +173,18 @@ def test_get_previous(index, range_start, range_end, expected):
     for i in range(1, 6):
         t.execute(i)
 
-    previous = t.parameters.value.get_previous(
-        index=index,
-        range_start=range_start,
-        range_end=range_end,
-    )
+    if expected == pnl.ParameterNoValueError:
+        ctx = pytest.raises(pnl.ParameterNoValueError)
+    else:
+        ctx = contextlib.nullcontext()
 
-    assert previous == expected
+    with ctx:
+        previous = t.parameters.value.get_previous(
+            index=index,
+            range_start=range_start,
+            range_end=range_end,
+        )
+        assert previous == expected
 
 
 def test_delta():
