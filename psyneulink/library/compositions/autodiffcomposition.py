@@ -687,7 +687,6 @@ class AutodiffComposition(Composition):
     class Parameters(Composition.Parameters):
         pytorch_representation = None
         # optimizer = None
-        learning_rate = Parameter(.001, fallback_value=DEFAULT, specify_none=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_value=DEFAULT)
         synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
         synch_node_values_with_torch = Parameter(RUN, fallback_value=DEFAULT)
@@ -734,7 +733,6 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'OPTIMIZATION_STEP can't be used with 'synch_results_with_torch';"
                                                f"use another value of {', '.arg_vals}")
 
-
         def _validate_retain_torch_trained_outputs(self, spec):
             if spec is not None and spec not in LEARNING_SCALE_VALUES:
                 raise AutodiffCompositionError(f"Value of `retain_torch_trained_outputs` arg "
@@ -753,7 +751,6 @@ class AutodiffComposition(Composition):
                                                f"must be one of the following keywords: "
                                                f"{', '.join(LEARNING_SCALE_NAMES)}")
 
-
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     @check_user_specified
     def __init__(self,
@@ -761,7 +758,7 @@ class AutodiffComposition(Composition):
                  optimizer_type='sgd',
                  loss_spec=Loss.MSE,
                  weight_decay=0,
-                 learning_rate:Optional[Union[float,int,bool,dict,]]=None,
+                 learning_rate:Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning:bool=True,
                  force_no_retain_graph=False,
                  refresh_losses=False,

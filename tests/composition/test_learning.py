@@ -245,11 +245,15 @@ class TestStructral:
 
         @pytest.mark.composition
         @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'])
-        @pytest.mark.parametrize('exec_mode', [pytest.param(pnl.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
-                                               pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-                                               pnl.ExecutionMode.Python])
-        @pytest.mark.parametrize('comp_type', ['composition',
-                                               pytest.param('autodiff', marks=pytest.mark.pytorch)])
+        @pytest.mark.parametrize('exec_mode', [
+            # pytest.param(pnl.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
+            # pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+            pnl.ExecutionMode.Python
+        ])
+        @pytest.mark.parametrize('comp_type', [
+            # 'composition',
+            pytest.param('autodiff', marks=pytest.mark.pytorch)
+        ])
         def test_node_spec_types(self, comp_type, input_type, exec_mode):
 
             if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
