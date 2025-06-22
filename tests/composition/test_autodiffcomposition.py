@@ -419,6 +419,90 @@ class TestAutodiffLearningRateArgs:
 
         np.testing.assert_allclose(pytorch_result, expected)
 
+    def test_learning_rate_with_3_levels_of_nesting(self):
+        # Test construction with enable_learning=False, running, and then enabling learning
+        nested_2_proj_AB_lr = .1
+        nested_2_proj_BC_lr = None
+        nested_2_proj_CD_lr = True
+        nested_2_proj_DE_lr = False
+        nested_2_comp_lr = None
+        nested_1_proj_in_lr = .2
+        nested_1_proj_out_lr = True
+        nested_1_comp_lr = .3
+        input_proj_lr = True
+        output_proj_lr = .4
+        outer_comp_lr = .5
+
+        nested_2_mech_A = pnl.ProcessingMechanism(name='NESTED 2 NODE A', input_shapes=2)
+        nested_2_mech_B = pnl.ProcessingMechanism(name='NESTED 2 NODE B', input_shapes=5)
+        nested_2_mech_C = pnl.ProcessingMechanism(name='NESTED 2 NODE C', input_shapes=4)
+        nested_2_mech_D = pnl.ProcessingMechanism(name='NESTED 2 NODE D', input_shapes=3)
+        nested_2_mech_E = pnl.ProcessingMechanism(name='NESTED 2 NODE E', input_shapes=2)
+        nested_2_proj_AB = pnl.MappingProjection(nested_2_mech_A, nested_2_mech_B,
+                                                 name="NESTED 2 PROJ AB",
+                                                 matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                                 learning_rate=nested_2_proj_AB_lr)
+        nested_2_proj_BC = pnl.MappingProjection(nested_2_mech_B, nested_2_mech_C,
+                                                 name="NESTED 2 PROJ BC",
+                                                 learning_rate=nested_2_proj_BC_lr)
+        nested_2_proj_CD = pnl.MappingProjection(nested_2_mech_C, nested_2_mech_D,
+                                                 name="NESTED 2 PROJ CD",
+                                                 learning_rate=nested_2_proj_CD_lr)
+        nested_2_proj_DE = pnl.MappingProjection(nested_2_mech_D, nested_2_mech_E,
+                                                 name="NESTED 2 PROJ DE",
+                                                 learning_rate=nested_2_proj_DE_lr)
+        nested_2_comp = pnl.AutodiffComposition(name='Nested 2 Comp',
+                                                pathways=[nested_2_mech_A, nested_2_proj_AB,
+                                                          nested_2_mech_B, nested_2_proj_BC,
+                                                          nested_2_mech_C, nested_2_proj_CD,
+                                                          nested_2_mech_D, nested_2_proj_DE,
+                                                          nested_2_mech_E],
+                                                learning_rate=nested_2_comp_lr)
+
+        nested_1_mech_IN = pnl.ProcessingMechanism(name='NESTED 1 NODE IN', input_shapes=4)
+        nested_1_mech_OUT = pnl.ProcessingMechanism(name='NESTED 1 NODE OUT', input_shapes=3)
+        nested_1_proj_in = pnl.MappingProjection(nested_1_mech_IN, nested_2_mech_A,
+                                                 name="NESTED 1 PROJ IN",
+                                                 learning_rate=nested_1_proj_in_lr)
+        nested_1_proj_out = pnl.MappingProjection(nested_2_mech_E, nested_1_mech_OUT,
+                                                  learning_rate=nested_1_proj_out_lr,
+                                                  name="NESTED 1 PROJ OUT")
+        nested_1_comp = pnl.AutodiffComposition(name='Nested 1 Comp',
+                                                pathways=[nested_1_mech_IN,
+                                                          nested_1_proj_in,
+                                                          nested_2_comp,
+                                                          nested_1_proj_out,
+                                                          nested_1_mech_OUT],
+                                                learning_rate = nested_1_comp_lr)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='OUTER NODE IN')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTER NODE OUT')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_1_mech_IN, learning_rate=input_proj_lr,
+                                           name="OUTER PROJ TO NESTED 1")
+        output_proj = pnl.MappingProjection(nested_1_mech_OUT, outer_mech_out, learning_rate=output_proj_lr,
+                                            name="OUTER PROJ FROM NESTED 1")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_1_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp',
+                                             learning_rate = outer_comp_lr)
+
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                                   outer_comp.get_target_nodes()[0]: [[1]]},
+                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                           learning_rate={input_proj:input_proj_lr})
+        # pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+        learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                           learning_rate={input_proj:input_proj_lr})
+
     error_test_args = [
         ("comp_lr_spec_str",
          "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "

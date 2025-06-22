@@ -972,7 +972,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                            f"'{', '.join(list(specs_to_validate))}'.")
             raise AutodiffCompositionError(err_msg)
 
-
     def _assign_learning_rates(self,
                                optimizer:torch.optim.Optimizer,
                                optimizer_torch_params_specified:dict,
@@ -1034,9 +1033,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         else:
                             # Use either run_time learning_rate or learning_rate for Composition, giving precedence
                             #   to one to which the Projection belongs if it is in a nested Composition
+                            # MODIFIED 6/22/25 OLD:
                             specified_learning_rate = (run_time_default_learning_rate
                                                        or proj_composition.learning_rate
                                                        or composition.learning_rate)
+                            # # MODIFIED 6/22/25 NEW:
+                            # specified_learning_rate = \
+                            #     (run_time_default_learning_rate or
+                            #      self._get_default_composition_learning_rate(proj_composition, composition, context))
+                            # MODIFIED 6/22/25 END
 
                     assert specified_learning_rate not in (None, NotImplemented),\
                         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"
@@ -1101,7 +1106,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_proj_learning_rates "
                 f"for its pytorch_representation have not been constructed.")
-
 
     def _copy_torch_param_groups(self, param_groups:list)->list:
         """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
@@ -1194,6 +1198,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
     # Return execution-specific learning_rates
     def _torch_params_for_execution(self)->dict:
         return {proj: self.get_torch_learning_rate_for_projection(proj) for proj in self.wrapped_projections}
+
+    def _get_default_composition_learning_rate(self, nested_comp, outer_comp, context):
+        comp_nesting_hierarchy = nested_comp._get_outer_compositions(outer_comp)
+        for comp in comp_nesting_hierarchy:
+            if comp.parameters.learning_rate.spec is not None:
+                return comp.parameters.learning_rate.get(context)
+        return comp.parameters.learning_rate.get(context)
 
     def _optimizer_error(self, method:str):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError

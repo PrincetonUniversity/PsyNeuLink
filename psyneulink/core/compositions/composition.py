@@ -4040,7 +4040,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the same as if they were created on a command-line call. Do
         # not use the above context object because the source change
         # will persist after this call
+        # # MODIFIED 6/22/25 OLD:
+        # self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+        # MODIFIED 6/22/25 NEW:
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
+        # MODIFIED 6/22/25 END
 
         # Controller
         self.controller = None
@@ -4932,13 +4936,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
-                                 visited_compositions=NotImplemented):
-        """Recursively search for and return all nested compositions.
-
-        :return
-
-        A list of nested compositions.
-
+                                 visited_compositions=NotImplemented)-> list:
+        """Return list of all Compositions nested in self
+        Recursively search for and return all nested compositions.
         """
         if nested_compositions is NotImplemented:
             nested_compositions=[]
@@ -4952,6 +4952,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node._get_nested_compositions(nested_compositions,
                                               visited_compositions)
         return nested_compositions
+
+    def _get_outer_compositions(self, outer_composition)->list:
+        """Return list of outer Compositions within which self is nested, from innermost to outermost
+        *outer_composition* specifies Composition at which to start the search; self must be nested within it.
+        Return list of Compositions, starting with self and ending with outer_composition, or self if it is not nested.
+        """
+        if not self.is_nested:
+            return [self]
+        nested_comps = outer_composition._get_nested_compositions()
+        if self not in nested_comps:
+            raise CompositionError(f"'{self.name}._get_outer_compositions_for_nested()' called with"
+                                   f" '{outer_composition.name}' but it is not nested within that.")
+        def dfs(current, path):
+            if current is self:
+                return path + [current]
+            for node in getattr(current, 'nodes', []):
+                if getattr(node, 'componentType', None) == 'Composition':
+                    result = dfs(node, path + [current])
+                    if result:
+                        return result
+            return None
+
+        for comp in nested_comps:
+            result = dfs(comp, [outer_composition])
+            if result:
+                result.reverse()
+                return result
 
     def _get_all_nodes(self):
         """Return all nodes, including those within nested Compositions at any level
@@ -8327,11 +8354,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert learning_mech, \
                 (f"PROGRAM ERROR: LearningMechanism that projects to '{learnable_projection.name}' is not in "
                  f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
+            # MODIFIED 6/22/25 OLD:
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
+            # # MODIFIED 6/22/25 NEW:
+            # learning_mech_lr = learning_mech.learning_rate
+            # proj_lr = learnable_projection.learning_rate
+            # MODIFIED 6/22/25 END
             if proj_lr is not None:
                 # if Projection has a learning_rate, assign to LearningMechanism
-                learning_mech.parameters.learning_rate.set(proj_lr)
+                learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
                 # otherwise use, assign LearningMechanism's learning rate or default to Projection
                 learnable_projection.parameters.learning_rate.set(
@@ -9314,7 +9346,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for proj in projections:
             # Get learning_rate spec if there is one;  use NotImplemented
             try:
-                proj.learning_rate = self._learning_rates_dict.pop(proj.name)
+                # # MODIFIED 6/22/25 OLD:
+                # proj.learning_rate = self._learning_rates_dict.pop(proj.name)
+                # MODIFIED 6/22/25 NEW:
+                proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
+                # MODIFIED 6/22/25 END
                 if not proj.learnable:
                     not_learnable.append(proj.name)
             except KeyError:

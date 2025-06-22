@@ -687,7 +687,7 @@ class AutodiffComposition(Composition):
     class Parameters(Composition.Parameters):
         pytorch_representation = None
         # optimizer = None
-        learning_rate = Parameter(.001, fallback_value=DEFAULT)
+        learning_rate = Parameter(.001, fallback_value=DEFAULT, specify_none=True)
         synch_projection_matrices_with_torch = Parameter(RUN, fallback_value=DEFAULT)
         synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
         synch_node_values_with_torch = Parameter(RUN, fallback_value=DEFAULT)
@@ -2352,3 +2352,6 @@ class AutodiffComposition(Composition):
                 res.extend([w.projection for w in pytorch_repr.projection_wrappers])
 
         return res
+
+    def _get_default_comp_learning_rate(self):
+        self._get_nested_compositions()
