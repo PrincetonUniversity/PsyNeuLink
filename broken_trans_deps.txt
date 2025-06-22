@@ -16,10 +16,6 @@ onnx != 1.14.0
 # but modeci_mdf that's available for python 3.11 doesn't do that.
 onnxruntime != 1.16; python_version == '3.11'
 
-# modeci_mdf-0.4.12 was released in user hostile way that limits onnx
-# to versions not available on Python 3.13
-modeci_mdf != 0.4.12; python_version == '3.13'
-
 # torch wheels for win32 python3.10 are built against numpy>=1.23
 # https://github.com/pytorch/pytorch/issues/100690
 torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platform_system == 'Windows'
