@@ -1173,7 +1173,7 @@ class GRUComposition(AutodiffComposition):
         """
         # BREADCRUMB: 3/9/25 CLEAN THIS UP WRT POTENTIAL FOR >1 EFFERENTS OF OUTPUT NODE
         if self._pytorch_projections:
-            assert len(self._pytorch_projections) >= 3, \
+            assert len(self._pytorch_projections) >= 2, \
                 (f"PROGRAM ERROR: {self.name}._pytorch_projections should have only two Projections, but has "
                  f"{len(self._pytorch_projections)}: {' ,'.join([proj.name for proj in self._pytorch_projections])}.")
             direct_proj_in = self._pytorch_projections[0]

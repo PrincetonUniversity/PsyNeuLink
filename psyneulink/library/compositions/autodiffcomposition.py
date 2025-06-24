@@ -968,13 +968,20 @@ class AutodiffComposition(Composition):
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
-            # Only consider pathways with 3 or more components (input -> projection -> ... -> output)
-            #    since can't learn on only one mechanism (len==1)
-            #    and a pathway can't have just one mechanism and one projection (len==2)
-            if len(pathway) >= 3:
-                return pathway
-            else:
-                return []
+            # # MODIFIED 6/24/25 OLD:
+            # # Only consider pathways with 1 or 3 or more components (input -> projection -> ... -> output)
+            # #    since can't learn on only one mechanism (len==1)
+            # #    and a pathway can't have just one mechanism and one projection (len==2)
+            # # if len(pathway) >= 3:
+            # #     return pathway
+            # # else:
+            # #     return []
+            # MODIFIED 6/24/25 NEW:
+            # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
+            assert len(pathway)%2, \
+                f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
+            return pathway
+            # MODIFIED 6/24/25 END
 
         # breadth-first search starting with input node
         while len(queue) > 0:
