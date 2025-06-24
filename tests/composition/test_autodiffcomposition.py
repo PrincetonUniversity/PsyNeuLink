@@ -495,10 +495,10 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
         if build_pytorch_rep_spec:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == build_pytorch_rep_spec
-        #     assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == build_pytorch_rep_spec
-        # else:
-        #     assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
-        #     assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == build_pytorch_rep_spec
+        else:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == nested_1_comp_lr

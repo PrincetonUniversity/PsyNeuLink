@@ -1033,14 +1033,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         else:
                             # Use either run_time learning_rate or learning_rate for Composition, giving precedence
                             #   to one to which the Projection belongs if it is in a nested Composition
-                            # MODIFIED 6/22/25 OLD:
-                            specified_learning_rate = (run_time_default_learning_rate
-                                                       or proj_composition.learning_rate
-                                                       or composition.learning_rate)
-                            # # MODIFIED 6/22/25 NEW:
-                            # specified_learning_rate = \
-                            #     (run_time_default_learning_rate or
-                            #      self._get_default_composition_learning_rate(proj_composition, composition, context))
+                            # # MODIFIED 6/22/25 OLD:
+                            # specified_learning_rate = (run_time_default_learning_rate
+                            #                            or proj_composition.learning_rate
+                            #                            or composition.learning_rate)
+                            # MODIFIED 6/22/25 NEW:
+                            specified_learning_rate = \
+                                (run_time_default_learning_rate or
+                                 self._get_default_composition_learning_rate(proj_composition, composition, context))
                             # MODIFIED 6/22/25 END
 
                     assert specified_learning_rate not in (None, NotImplemented),\
@@ -1202,7 +1202,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _get_default_composition_learning_rate(self, nested_comp, outer_comp, context):
         comp_nesting_hierarchy = nested_comp._get_outer_compositions(outer_comp)
         for comp in comp_nesting_hierarchy:
-            if comp.parameters.learning_rate.spec is not None:
+            if comp.parameters.learning_rate._user_specified:
                 return comp.parameters.learning_rate.get(context)
         return comp.parameters.learning_rate.get(context)
 
