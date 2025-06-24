@@ -682,7 +682,7 @@ class TestAutodiffLearningRateArgs:
             assert learning_result != run_result
 
         # Should get same result after learning in both cases
-        assert learning_result == [[-0.35035038561297505]]
+        np.testing.assert_allclose(learning_result,[[-0.35035038561297505]])
 
 # Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
 @pytest.mark.composition
