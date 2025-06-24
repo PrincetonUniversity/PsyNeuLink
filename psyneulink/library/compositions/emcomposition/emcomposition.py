@@ -2858,7 +2858,7 @@ class EMComposition(AutodiffComposition):
         if self._enable_learning_warning_flag and not self.is_nested:
             # Warn only if EM is being run as a standalone Composition
             #   (it may be common for it to be nested but use only one key or concatenation, so dont' bother user)
-            # BREADCRUMB: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
+            # FIX: THIS SHOULD BE CHANGED WHEN FIELD_WEIGHTS CAN BE TENSORS THAT ARE LEARNABLE
             warning = None
             if self.concatenate_queries_node:
                 warning = (f"The 'enable_learning' arg of '{self.name}' is set to 'True' with "
@@ -2872,7 +2872,6 @@ class EMComposition(AutodiffComposition):
                            f"effect; therefore, 'enable_learning' is being set to 'False'.")
             if warning:
                 warnings.warn(warning)
-
 
         return super().learn(
             *args,
