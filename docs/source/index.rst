@@ -308,6 +308,7 @@ Table of Contents
    Core
    Library
    ContributorsGuide
+   tutorials/index
 
 .. _Indices_and_Tables:
 
