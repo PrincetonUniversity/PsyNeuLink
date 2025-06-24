@@ -90,7 +90,7 @@ applications), or linked together and run in a Composition to implement part of,
 Mechanisms for execution can be as simple as creating them and then assigning them to a Composition in a list --
 PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
 assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 feedforward neural network,
-the first layer of which takes an an array of length 5 as its input, and uses a `Linear` function
+the first layer of which takes an array of length 5 as its input, and uses a `Linear` function
 (the default for a `ProcessingMechanism`), and the other two of which take 1d arrays of the specified sizes and use a
 `Logistic` function::
 
