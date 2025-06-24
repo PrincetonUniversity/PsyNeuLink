@@ -1168,15 +1168,16 @@ class GRUComposition(AutodiffComposition):
                         queue:deque,
                         comp:AutodiffComposition):
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
+        Add direct_proj_in and direct_proj_out to self._pytorch_projections
+        Other projections (including 'INPUT TO UPDATE WEIGHTS') are added in super()._get_pytorch_backprop_pathway()
         """
-        # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:
+        # BREADCRUMB: 3/9/25 CLEAN THIS UP WRT POTENTIAL FOR >1 EFFERENTS OF OUTPUT NODE
         if self._pytorch_projections:
-            assert len(self._pytorch_projections) == 2, \
+            assert len(self._pytorch_projections) >= 3, \
                 (f"PROGRAM ERROR: {self.name}._pytorch_projections should have only two Projections, but has "
                  f"{len(self._pytorch_projections)}: {' ,'.join([proj.name for proj in self._pytorch_projections])}.")
             direct_proj_in = self._pytorch_projections[0]
             direct_proj_out = self._pytorch_projections[1]
-
         else:
             try:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",
@@ -1187,7 +1188,6 @@ class GRUComposition(AutodiffComposition):
                 self._pytorch_projections.append(direct_proj_in)
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
-
             try:
                 direct_proj_out = MappingProjection(name="Projection from GRU COMP",
                                                     sender=self.gru_mech,
@@ -1198,7 +1198,7 @@ class GRUComposition(AutodiffComposition):
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection from GRU COMP"
 
-        # FIX: GET ALL EFFERENTS OF OUTPUT NODE HERE
+        # BREADCRUMB: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
         # output_node = self.output_CIM.output_port
         output_node = self.output_CIM
@@ -1209,7 +1209,7 @@ class GRUComposition(AutodiffComposition):
         dependency_dict[direct_proj_out]=self.gru_mech
         dependency_dict[output_node]=direct_proj_out
 
-        # FIX : ADD ALL EFFERENTS OF OUTPUT NODE HERE:
+        # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, self))
 
     def _identify_target_nodes(self, context):

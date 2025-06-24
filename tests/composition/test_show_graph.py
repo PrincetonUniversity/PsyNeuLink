@@ -194,6 +194,8 @@ class TestNested:
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff_with_singleton_node
 
+    # BREADCRUMB:  TEST FOR GRU ALONE AND NESTED    (GET FROM ministrel SCRATCHPAD)
+    #              DO SAME FOR EM
     expected_output_for_nested_gru_composition = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"PYTORCH GRU NODE" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"PYTORCH GRU NODE" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "PYTORCH GRU NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     @pytest.mark.pytorch
     def test_nested_gru_composition(self):
@@ -207,6 +209,7 @@ class TestNested:
                                    pathways=[input_mech, gru_comp, output_mech])
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_gru_composition
+
 
 class TestLearning:
     def test_process(self):

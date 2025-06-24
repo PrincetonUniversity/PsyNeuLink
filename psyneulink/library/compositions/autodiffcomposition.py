@@ -1085,6 +1085,7 @@ class AutodiffComposition(Composition):
                     if rcvr in current_comp.nodes:
                         # rcvr is still in nested Composition, so keep traversing that
                         current_comp._add_dependency(node, efferent_proj, rcvr, dependency_dict, queue, current_comp)
+                        current_comp._pytorch_projections.append(efferent_proj)
                         continue
                     elif rcvr in self.nodes:
                         # rcvr is in outer Composition (presumably a direct Pytorch Projection out of nested comp)
@@ -1119,15 +1120,21 @@ class AutodiffComposition(Composition):
                                       optimizer_params=None,
                                       context=None,
                                       refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
-        """Builds a Pytorch representation of the AutodiffComposition"""
+        """Builds a Pytorch representation of the AutodiffComposition
+        Constructs PytorchCompositionWrapper that is used for learning in Pytorch.
+        If *learning_rate* is specified, it serves as default_learning_rate.
+        If *optimizer_params* is specified, that is used for default values.
+        If refresh is specified, a new pytorch_representation is constructed;  otherwise, if one exists, that is used.
+        """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
-            model = self.pytorch_composition_wrapper_type(composition=self,
-                                                          device=self.device,
-                                                          context=context,
-                                                          base_context=base_context)
+            # Instantiate pytorch_representation
+            self.pytorch_composition_wrapper_type(composition=self,
+                                                  device=self.device,
+                                                  context=context,
+                                                  base_context=base_context)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer
