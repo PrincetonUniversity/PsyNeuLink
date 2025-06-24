@@ -3925,7 +3925,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections=None,
             allow_probes: Union[bool, CONTROL] = True,
             include_probes_in_output: bool = False,
-            # enable_learning: bool = True,
+            enable_learning: bool = True,
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
@@ -3992,7 +3992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
         self.parsed_inputs = False
 
-        self.learning_rate = self._parse_and_validate_learning_rate(learning_rate)
+        learning_rate = self._parse_and_validate_learning_rate(learning_rate)
         self._runtime_learning_rate = None
 
         # graph and scheduler status attributes
@@ -4016,7 +4016,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
-            # enable_learning=enable_learning,
+            learning_rate=learning_rate,
+            enable_learning=enable_learning,
             minibatch_size=minibatch_size,
             optimizations_per_minibatch=optimizations_per_minibatch,
             retain_old_simulation_data=retain_old_simulation_data,
@@ -4047,11 +4048,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the same as if they were created on a command-line call. Do
         # not use the above context object because the source change
         # will persist after this call
-        # # MODIFIED 6/22/25 OLD:
-        # self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
-        # MODIFIED 6/22/25 NEW:
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
-        # MODIFIED 6/22/25 END
 
         # Controller
         self.controller = None
