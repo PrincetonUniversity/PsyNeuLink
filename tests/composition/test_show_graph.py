@@ -207,61 +207,47 @@ class TestNested:
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_gru_data, ids=[f"{x[0]}-{x[1]}" for x in test_gru_data])
     @pytest.mark.pytorch
-    def test_show_graph_for_grucomposition(self, nesting, mode, expected):
+    def test_show_graph_for_gru_composition(self, nesting, mode, expected):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         from psyneulink.library.compositions.grucomposition import GRUComposition
-        grucomp = GRUComposition(name='GRU COMP',
+        gru_comp = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=False)
         if nesting == 'unnested':
-            outer_comp = grucomp
+            outer_comp = gru_comp
         else:
             input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
             output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
             outer_comp = AutodiffComposition(name='OUTER COMP',
-                                       pathways=[input_mech, grucomp, output_mech])
+                                       pathways=[input_mech, gru_comp, output_mech])
         gv = outer_comp.show_graph(show_pytorch=True if mode == 'PyTorch' else False, output_fmt='source')
         assert gv == expected
-
-    # expected_output_for_nested_emcomposition = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
-    # @pytest.mark.pytorch
-    # def test_show_graph_for_emcomposition(self):
-    #     from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-    #     from psyneulink.library.compositions.emcomposition import EMComposition
-    #     input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
-    #     output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-    #     emcomp = EMComposition(name='EM COMP',memory_capacity=3)
-    #     outer_comp = AutodiffComposition(name='OUTER COMP',
-    #                                pathways=[input_mech, emcomp, output_mech])
-    #     gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
-    #     assert gv == self.expected_output_for_nested_emcomposition
 
     expected_output_for_unnested_python_em = 'digraph "EM COMP" {\n\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     expected_output_for_nested_python_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_EM COMP" {\n\t\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=black penwidth=1]\n\t\tSTORE [color=black penwidth=1 rank=same shape=oval]\n\t\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t\tlabel="EM COMP"\n\t}\n}\n'
-    expected_output_for_unnested_pytorch_em = 'x'
+    expected_output_for_unnested_pytorch_em = 'digraph "EM COMP" {\n\tgraph [label="EM COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"VALUE [VALUE]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [QUERY]" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n\t"VALUE [RETRIEVED]" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     expected_output_for_nested_pytorch_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     test_em_data = [
         #   nesting       mode                expected
-        # (  'unnested',  'Python',   expected_output_for_unnested_python_em),
-        # (  'nested',    'Python',   expected_output_for_nested_python_em),
+        (  'unnested',  'Python',   expected_output_for_unnested_python_em),
+        (  'nested',    'Python',   expected_output_for_nested_python_em),
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
-        # (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em)
+        (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em)
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_em_data, ids=[f"{x[0]}-{x[1]}" for x in test_em_data])
     @pytest.mark.pytorch
-    def test_show_graph_for_emcomposition(self, nesting, mode, expected):
+    def test_show_graph_for_em_composition(self, nesting, mode, expected):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         from psyneulink.library.compositions.emcomposition import EMComposition
-        emcomp = EMComposition(name='EM COMP', memory_capacity=3)
+        em_comp = EMComposition(name='EM COMP', memory_capacity=3)
         if nesting == 'unnested':
-            outer_comp = emcomp
+            outer_comp = em_comp
         else:
             input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
             output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
             outer_comp = AutodiffComposition(name='OUTER COMP',
-                                             pathways=[input_mech, emcomp, output_mech])
+                                             pathways=[input_mech, em_comp, output_mech])
         gv = outer_comp.show_graph(show_pytorch=True if mode == 'PyTorch' else False, output_fmt='source')
         assert gv == expected
-
 
 class TestLearning:
     def test_process(self):

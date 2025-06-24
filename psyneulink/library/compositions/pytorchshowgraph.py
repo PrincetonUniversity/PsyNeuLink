@@ -59,6 +59,7 @@ class PytorchShowGraph(ShowGraph):
         self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
+            self.composition.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
             self.pytorch_rep = (
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
@@ -100,8 +101,8 @@ class PytorchShowGraph(ShowGraph):
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            nodes = [node for node in self.pytorch_rep.nodes_map
-                           if SHOW_PYTORCH in self.pytorch_rep.nodes_map[node]._use]
+            nodes = sorted([node for node in self.pytorch_rep.nodes_map
+                           if SHOW_PYTORCH in self.pytorch_rep.nodes_map[node]._use])
             return nodes
         else:
             return super()._get_nodes(composition, context)
