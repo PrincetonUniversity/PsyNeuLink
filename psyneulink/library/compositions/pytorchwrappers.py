@@ -992,10 +992,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimizer)
         for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
             # Get each param in the param_groups
-            param_group_learning_rate = old_param_group['lr']
+            default_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
                 # Get default learning_rate if specified in learn() method
-                specified_learning_rate = run_time_default_learning_rate or param_group_learning_rate
+                # MODIFIED 6/24/25 OLD:
+                # specified_learning_rate = run_time_default_learning_rate or param_group_learning_rate
+                # MODIFIED 6/24/25 NEW:
+                specified_learning_rate = run_time_default_learning_rate
+                # MODIFIED 6/24/25 END
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
                 specified_learning_rate = (optimizer_torch_params_specified[param]
                                            if optimizer_torch_params_specified
@@ -1040,7 +1044,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             # MODIFIED 6/22/25 NEW:
                             specified_learning_rate = \
                                 (run_time_default_learning_rate or
-                                 self._get_default_composition_learning_rate(proj_composition, composition, context))
+                                 self._get_default_composition_learning_rate(proj_composition,
+                                                                             composition,
+                                                                             context))
                             # MODIFIED 6/22/25 END
 
                     assert specified_learning_rate not in (None, NotImplemented),\

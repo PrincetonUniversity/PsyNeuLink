@@ -419,7 +419,10 @@ class TestAutodiffLearningRateArgs:
 
         np.testing.assert_allclose(pytorch_result, expected)
 
-    @pytest.mark.parametrize("build_pytorch_rep_spec", [None, 10])
+    @pytest.mark.parametrize("build_pytorch_rep_spec", [
+        None,
+        10
+    ])
     def test_learning_rate_with_3_levels_of_nesting_and_build_pytorch_rep_spec(self, build_pytorch_rep_spec):
         # Test construction with enable_learning=False, running, and then enabling learning
         nested_2_proj_AB_lr = .1
@@ -429,10 +432,10 @@ class TestAutodiffLearningRateArgs:
         nested_2_comp_lr = None
         nested_1_proj_in_lr = .2
         nested_1_proj_out_lr = True
-        nested_1_comp_lr = .3
+        nested_1_comp_lr = None if build_pytorch_rep_spec else .3
         input_proj_lr = True
         output_proj_lr = .4
-        outer_comp_lr = .5
+        outer_comp_lr = None if build_pytorch_rep_spec else .5
 
         nested_2_mech_A = pnl.ProcessingMechanism(name='NESTED 2 NODE A', input_shapes=2)
         nested_2_mech_B = pnl.ProcessingMechanism(name='NESTED 2 NODE B', input_shapes=5)
@@ -501,13 +504,14 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
-        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == nested_1_comp_lr
-        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == (nested_1_comp_lr or
+                                                                                         build_pytorch_rep_spec)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (outer_comp_lr or
+                                                                                  build_pytorch_rep_spec)
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                                            num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                            learning_rate={input_proj:input_proj_lr})
-
 
     error_test_args = [
         ("comp_lr_spec_str",
@@ -3832,13 +3836,14 @@ class TestMiscTrainingFunctionality:
         # Check outer_comp assignments after learn() method
         if outer_learn_lr == NotImplemented:
             learning_rate_arg = None
+            # proj_1_expected = proj_1_lr or inner_comp_lr or outer_comp_lr or self.default
             proj_1_expected = proj_1_lr or inner_comp_lr or outer_comp_lr or self.default
             proj_2_expected = proj_2_lr or inner_comp_lr or outer_comp_lr or self.default
             outer_proj_expected = outer_comp_lr or self.default
         elif outer_learn_lr is None:
             learning_rate_arg = {inner_proj_1: None,
                              outer_proj: None}
-            proj_1_expected = inner_comp_lr or proj_1_lr or self.default
+            proj_1_expected = inner_comp_lr or proj_1_lr or outer_comp_lr
             proj_2_expected = inner_comp_lr or proj_2_lr or self.default
             outer_proj_expected = outer_comp_lr or self.default
         else:

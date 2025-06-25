@@ -1147,7 +1147,20 @@ class AutodiffComposition(Composition):
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
-        default_learning_rate = learning_rate or self.learning_rate
+        # # MODIFIED 6/25/25 OLD:
+        # default_learning_rate = learning_rate or self.learning_rate
+        # MODIFIED 6/25/25 NEW:
+        default_learning_rate = learning_rate
+        if isinstance(learning_rate, dict):
+            lr_dict = default_learning_rate
+            default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
+            for proj in lr_dict:
+                proj.parameters.learning_rate.set(lr_dict[proj], context)
+        if default_learning_rate is None:
+            default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
+        else:
+            self.parameters.learning_rate.set(default_learning_rate, context)
+        # MODIFIED 6/25/25 END
         if self._runtime_learning_rate is not None:
             optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
 
@@ -1614,6 +1627,9 @@ class AutodiffComposition(Composition):
                     kwargs[LEARNING_RATE] = {DEFAULT_LEARNING_RATE: default_learning_rate}
 
         if LEARNING_RATE in kwargs and isinstance(kwargs[LEARNING_RATE], dict):
+            # If learning_rate is a dict:
+            # - move it to optimizer_params;
+            # - if it contains DEFAULT_LEARNING_RATE entry, assign that as learning_rate
             kwargs[OPTIMIZER_PARAMS] = kwargs[LEARNING_RATE]
             kwargs[LEARNING_RATE] = kwargs[OPTIMIZER_PARAMS].pop(DEFAULT_LEARNING_RATE, None)
 
