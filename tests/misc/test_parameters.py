@@ -155,18 +155,25 @@ def test_history():
 
 
 @pytest.mark.parametrize(
-    'index, range_start, range_end, expected',
+    'start, stop, step, expected',
     [
-        (1, None, None, 4),
-        (None, 2, None, [3, 4]),
-        (None, 2, 0, [3, 4]),
-        (1, 2, 0, [3, 4]),
-        (None, 5, 2, [0, 1, 2]),
-        (None, 10, 2, [0, 1, 2]),
+        (0, None, None, 4),
+        (1, None, None, 3),
+        (3, None, None, 1),
+        (None, 2, None, [4, 3]),
+        (0, 2, 1, [4, 3]),
+        (1, 2, None, [3]),
+        (1, 2, 1, [3]),
+        (None, 5, 2, [4, 2, 0]),
+        (0, 5, 2, [4, 2, 0]),
         (6, None, None, pnl.ParameterNoValueError),
+        (None, 10, None, pnl.ParameterNoValueError),
+        (None, 10, 2, pnl.ParameterNoValueError),
+        (10, 10, None, pnl.ParameterNoValueError),
+        (11, 10, None, pnl.ParameterNoValueError),
     ]
 )
-def test_get_previous(index, range_start, range_end, expected):
+def test_get_previous(start, stop, step, expected):
     t = pnl.TransferMechanism()
     t.parameters.value.history_max_length = 10
 
@@ -180,9 +187,9 @@ def test_get_previous(index, range_start, range_end, expected):
 
     with ctx:
         previous = t.parameters.value.get_previous(
-            index=index,
-            range_start=range_start,
-            range_end=range_end,
+            start=start,
+            stop=stop,
+            step=step,
         )
         assert previous == expected
 
