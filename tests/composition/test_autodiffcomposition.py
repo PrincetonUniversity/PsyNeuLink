@@ -489,12 +489,12 @@ class TestAutodiffLearningRateArgs:
                                              name='Outer Comp',
                                              learning_rate = outer_comp_lr)
 
+        # Results should reflect values specified in _build_pytorch_rep and specified in learn()
         pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
                                                    outer_comp.get_target_nodes()[0]: [[1]]},
                                            num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
                                            learning_rate={input_proj:input_proj_lr})
-        # pytorch_rep = outer_comp._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
         if build_pytorch_rep_spec:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == build_pytorch_rep_spec
@@ -509,9 +509,29 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (outer_comp_lr or
                                                                                   build_pytorch_rep_spec)
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
-                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
-                                           learning_rate={input_proj:input_proj_lr})
+                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # BREADCRUMB:  NOT DIFFERENCE FROM ABOVE
+        #              - MAYBE SET input_proj_lr TO SCALAR?
+        #              - ALSO, TRY SETTING build_pytorch_rep_spec TO DICT
+        # Results should return to constructor-speficied values or defaults
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
+        if build_pytorch_rep_spec:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == build_pytorch_rep_spec
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == build_pytorch_rep_spec
+        else:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == (nested_1_comp_lr or
+                                                                                         build_pytorch_rep_spec)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (outer_comp_lr or
+                                                                                  build_pytorch_rep_spec)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+
 
     error_test_args = [
         ("comp_lr_spec_str",
