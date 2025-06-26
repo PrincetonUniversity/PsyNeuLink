@@ -1154,10 +1154,13 @@ class AutodiffComposition(Composition):
         if isinstance(learning_rate, dict):
             lr_dict = default_learning_rate
             default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
-            for proj in lr_dict:
-                proj.parameters.learning_rate.set(lr_dict[proj], context)
+            for proj, lr in lr_dict.items():
+                if isinstance(proj, str):
+                    proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
+                proj.parameters.learning_rate.set(lr, context)
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
+        # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
         else:
             self.parameters.learning_rate.set(default_learning_rate, context)
         # MODIFIED 6/25/25 END
