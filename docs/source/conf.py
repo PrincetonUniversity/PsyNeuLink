@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_autodoc_typehints',
     'technical_note',
+    'include_notebook',
     'nbsphinx',
     # 'myst_nb'
     # 'sphinx.ext.imgmath'
