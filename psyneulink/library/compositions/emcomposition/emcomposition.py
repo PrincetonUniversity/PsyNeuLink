@@ -1595,7 +1595,6 @@ class EMComposition(AutodiffComposition):
         field_names = Parameter(None, structural=True)
         field_weights = Parameter([1], setter=field_weights_setter)
         learn_field_weights = Parameter(False, structural=True)
-        learning_rate = Parameter(.001, modulable=True)
         normalize_field_weights = Parameter(True)
         concatenate_queries = Parameter(False, structural=True)
         normalize_memories = Parameter(True)

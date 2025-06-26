@@ -518,7 +518,6 @@ class TestAutodiffLearningRateArgs:
 
         # # BREADCRUMB:  NO DIFFERENCE FROM ABOVE
         # #              - MAYBE SET input_proj_lr TO SCALAR?
-        # #              - ALSO, TRY SETTING build_pytorch_rep_spec TO DICT
         # # Results should return to constructor-speficied values or defaults
         # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
         # if build_pytorch_rep_spec:
