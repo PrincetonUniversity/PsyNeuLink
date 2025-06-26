@@ -76,6 +76,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install Pandoc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+
     - name: Get pip cache location
       shell: bash
       id: pip_cache
