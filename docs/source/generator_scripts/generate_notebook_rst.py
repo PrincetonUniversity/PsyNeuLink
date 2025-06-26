@@ -7,7 +7,7 @@ SRC_NOTEBOOKS = Path(__file__).resolve().parent.parent
 DST_GENERATED = Path(__file__).resolve().parent.parent / "_generated"
 GITHUB_REPO = "PrincetonUniversity/PsyNeuLink"  # replace with your GitHub username/repo
 BRANCH = "main"
-NOTEBOOK_BRANCH = "notebooks-gh"
+NOTEBOOK_BRANCH = "additional-tutorials" # "notebooks-gh"
 
 
 def colab_badge(nb_path: Path):
@@ -77,9 +77,14 @@ def convert_double_backticks_to_single(content):
     """
     Example:
         >>> convert_double_backticks_to_single("Use ``Linear`` to create a linear layer.")
+        'Use `Linear` to create a linear layer.'
+
+        >>> convert_double_backticks_to_single("Use ``Linear <linear>`` and ``ReLU`` for activation.")
+        'Use `Linear <liner>` and `ReLU` for activation.'
+
     """
     # Only convert short, one-word literals (like ``Linear``) to `Linear`
-    return re.sub(r'``([A-Za-z_][A-Za-z0-9_]*)``', r'`\1`', content)
+    return re.sub(r'``([^`]+?)``', r'`\1`', content)
 
 
 if __name__ == "__main__":
