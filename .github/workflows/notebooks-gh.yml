@@ -3,7 +3,8 @@ name: Push Colab Notebooks
 
 on:
   push:
-    branches: [doc/additional-tutorials]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy-notebooks:
