@@ -303,12 +303,11 @@ Table of Contents
    :titlesonly:
 
    self
-   BasicsAndPrimer
+   introductory_material/index
    QuickReference
    Core
    Library
    ContributorsGuide
-   tutorials/index
 
 .. _Indices_and_Tables:
 
