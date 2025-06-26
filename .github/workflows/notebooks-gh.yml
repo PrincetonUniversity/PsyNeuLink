@@ -1,0 +1,40 @@
+# .github/workflows/push-notebooks.yml
+name: Push Colab Notebooks
+
+on:
+  push:
+    branches: [doc/additional-tutorials]
+
+jobs:
+  deploy-notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+
+    - name: Install deps
+      run: pip install -r docs/doc_requirements.txt
+
+    - name: Generate Colab notebooks
+      run: make -C docs generated  # Or however you invoke your generator
+
+    - name: Commit & push to notebooks-gh
+      run: |
+        git config user.name "Colab Bot"
+        git config user.email "actions@github.com"
+        git switch --orphan notebooks-gh
+        git rm -rf .
+        mkdir -p docs/source/_generated/colab_notebooks
+        cp -r docs/source/_generated/colab_notebooks/* .
+        touch .nojekyll
+        git add .
+        git commit -m "Update Colab notebooks from $GITHUB_SHA"
+        git push -f origin HEAD:notebooks-gh
