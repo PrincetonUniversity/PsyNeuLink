@@ -53,8 +53,16 @@ clean:
 .PHONY: html
 html: generated
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(MAKE) patch-notebooks
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+.PHONY: html-no-execute
+html-no-execute: generated
+	$(SPHINXBUILD) -b html -D nbsphinx_execute=never $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo
+	@echo "Build finished (no notebook execution). The HTML pages are in $(BUILDDIR)/html."
+
 
 .PHONY: dirhtml
 dirhtml: generated
@@ -239,6 +247,12 @@ gh-pages:
 	git add -A
 	git ci -m "Generated gh-pages for `git log devel -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout devel
 	make clean
+
+.PHONY: patch-notebooks
+patch-notebooks:
+	@echo "Patching notebooks with HTML links..."
+	python source/post_scripts/generate_notebook_colab.py
+	@echo "Notebook patching complete."
 
 source/generator_scripts/%: source/generator_scripts/%.py
 	python $<
