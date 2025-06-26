@@ -37,8 +37,21 @@ def patch_notebook(ipynb_path: Path, out_path: Path, symbol_map: dict):
     for cell in nb.cells:
         if cell.cell_type == "markdown":
             cell.source = re.sub(
+                r'`([^`<>]+?)\s*<[^<>]+?>`',
+                lambda m: (
+                    f"[{m.group(1)}]({symbol_map[m.group(1).strip()]})"
+                    if m.group(1).strip() in symbol_map else m.group(0)
+                ),
+                cell.source
+            )
+
+            # Then: Handle `Label` → [Label](url)
+            cell.source = re.sub(
                 r'`([A-Za-z_][A-Za-z0-9_]*)`',
-                lambda m: f"[{m.group(1)}]({symbol_map[m.group(1)]})" if m.group(1) in symbol_map else m.group(0),
+                lambda m: (
+                    f"[{m.group(1)}]({symbol_map[m.group(1)]})"
+                    if m.group(1) in symbol_map else m.group(0)
+                ),
                 cell.source
             )
     out_path.parent.mkdir(parents=True, exist_ok=True)
