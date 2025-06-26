@@ -7,7 +7,7 @@ SRC_NOTEBOOKS = Path(__file__).resolve().parent.parent
 DST_GENERATED = Path(__file__).resolve().parent.parent / "_generated"
 GITHUB_REPO = "PrincetonUniversity/PsyNeuLink"  # replace with your GitHub username/repo
 BRANCH = "main"
-NOTEBOOK_BRANCH = "additional-tutorials" # "notebooks-gh"
+NOTEBOOK_BRANCH = "doc/additional_tutorials" # "notebooks-gh"
 
 
 def colab_badge(nb_path: Path):
