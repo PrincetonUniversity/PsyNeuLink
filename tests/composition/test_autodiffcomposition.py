@@ -420,8 +420,8 @@ class TestAutodiffLearningRateArgs:
         np.testing.assert_allclose(pytorch_result, expected)
 
     @pytest.mark.parametrize("build_pytorch_rep_spec", [
-        # None,
-        # 10,
+        None,
+        10,
         'dict'
     ])
     def test_learning_rate_with_3_levels_of_nesting_and_build_pytorch_rep_spec(self, build_pytorch_rep_spec):
@@ -503,12 +503,11 @@ class TestAutodiffLearningRateArgs:
                                                           })
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 13
         if build_pytorch_rep_spec:
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 13
             assert (pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) ==
                     build_pytorch_rep_spec["NESTED 2 PROJ CD"] if isinstance(build_pytorch_rep_spec, dict) else 10)
         else:
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
