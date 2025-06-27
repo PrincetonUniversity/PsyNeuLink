@@ -1149,6 +1149,12 @@ class AutodiffComposition(Composition):
                                                   device=self.device,
                                                   context=context,
                                                   base_context=base_context)
+        elif context.flags & ContextFlags.COMMAND_LINE:
+            warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
+                          f"direcdtly from the command line; this and any additional calls will be ignored. "
+                          f"Make any desired modifications to parameters (e.g., learning_rates) either in the "
+                          f"constructor for the AutodiffComposition, or its learn() method.")
+
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer
