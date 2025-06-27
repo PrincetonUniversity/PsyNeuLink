@@ -153,11 +153,13 @@ class ContextFlags(enum.IntFlag):
     """Set while `Composition is `executing <Composition_Execution>` `LearningMechanisms <LearningMechanism>`."""
     CONTROL = enum.auto()
     """Set while Composition's `controller <Composition.controller>` or its `ObjectiveMechanism` is executing."""
+    DISPLAYING = enum.auto()
+    """Set during call to Composition's `show_graph`show_graph <ShowGraph.graph>` method."""
     IDLE = enum.auto()
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
     EXECUTING = PROCESSING | LEARNING | CONTROL
-    EXECUTION_PHASE_MASK = IDLE | PREPARING | EXECUTING
+    EXECUTION_PHASE_MASK = IDLE | PREPARING | DISPLAYING | EXECUTING
 
     # source (source-of-call) flags:
     COMMAND_LINE = enum.auto()
@@ -397,7 +399,8 @@ class Context():
             or composition.__class__.__name__ in {'Composition',
                                                   'AutodiffComposition',
                                                   'ParameterEstimationComposition',
-                                                  'EMComposition'}
+                                                  'EMComposition',
+                                                  'GRUComposition'}
         ):
             self._composition = composition
         else:

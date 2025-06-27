@@ -396,7 +396,6 @@ Class Reference
 """
 import abc
 import inspect
-import itertools
 import warnings
 from collections import namedtuple, defaultdict
 
@@ -406,7 +405,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Type, Literal, Any, Dict, Tuple
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import get_matrix, ValidMatrixSpecType
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transformfunctions import MatrixTransform
@@ -414,6 +413,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FEEDBACK, FUNCTION_PARAMS, \
@@ -426,7 +426,13 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_RECEIVER, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter,
+    ParameterInvalidSourceError,
+    ParameterNoValueError,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -724,22 +730,20 @@ class Projection_Base(Projection):
 
         self.receiver = receiver
         self.exclude_in_autodiff = exclude_in_autodiff
-        self._feedback = feedback # Assign to _feedback to avoid interference with vertex.feedback used in Composition
+        self.feedback = feedback  # Assign to _feedback to avoid interference with vertex.feedback used in Composition
 
          # Register with ProjectionRegistry or create one
         register_category(entry=self,
                           base_class=Projection_Base,
                           name=name,
-                          registry=ProjectionRegistry,
-                          )
+                          registry=ProjectionRegistry)
 
         # Create projection's _portRegistry and ParameterPort entry
         self._portRegistry = {}
 
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
-                          registry=self._portRegistry,
-                          )
+                          registry=self._portRegistry)
 
         self._instantiate_sender(sender, context=context)
 
@@ -862,6 +866,11 @@ class Projection_Base(Projection):
         #                                       f"({(len(self.sender.value), len(self.receiver.variable))}).")
         # MODIFIED JDC 7/11/23 END
 
+    def _get_matrix_from_keyword(self, keyword):
+        return get_matrix(
+            keyword, self.sender.socket_width, self.receiver.socket_width
+        )
+
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self._instantiate_parameter_ports(function=function, context=context)
@@ -869,12 +878,20 @@ class Projection_Base(Projection):
         # If Projection has a matrix parameter, it is specified as a keyword arg in the constructor,
         #    and sender and receiver have been instantiated, then implement it:
         if hasattr(self.parameters, MATRIX) and self.parameters.matrix._user_specified:
-            matrix = self.parameters.matrix.get(context)
-            if is_matrix_keyword(matrix):
-                if self.sender_instantiated and self.receiver_instantiated:
-                    self.parameters.matrix.set(get_matrix(self.matrix, len(self.sender.value),
-                                                          len(self.receiver.variable)),
-                                               context)
+            try:
+                matrix = self.parameters.matrix._get(context)
+            except ParameterInvalidSourceError:
+                pass
+            else:
+                if (
+                    is_matrix_keyword(matrix)
+                    and self.sender_instantiated
+                    and self.receiver_instantiated
+                ):
+                    matrix = get_matrix(
+                        self.matrix, len(self.sender.value), len(self.receiver.variable)
+                    )
+                    self.parameters.matrix._set(matrix, context)
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
@@ -1135,10 +1152,26 @@ class Projection_Base(Projection):
 
     @property
     def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            self.parameter_ports,
-        ))
+        res = super()._dependent_components
+        try:
+            res.extend(self.parameter_ports)
+        except AttributeError:
+            # when in DEFERRED_INIT, _parameter_ports doesn't exist yet
+            pass
+        if isinstance(self.sender, Component):
+            res.append(self.sender)
+        return res
+
+    @property
+    def feedback(self):
+        return self._feedback
+
+    @feedback.setter
+    def feedback(self, value: Union[bool, EdgeType]):
+        if value is None:
+            self._feedback = None
+        else:
+            self._feedback = EdgeType.from_any(value)
 
     @property
     def _model_spec_parameter_blacklist(self):
@@ -1154,10 +1187,11 @@ class Projection_Base(Projection):
         import modeci_mdf.mdf as mdf
 
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        from psyneulink.core.globals.mdf import _get_id_for_mdf_port
 
         # these may occur during deferred init
-        if not isinstance(self.sender, type):
-            sender_name = parse_valid_identifier(self.sender.name)
+        if hasattr(self, 'sender') and not isinstance(self.sender, type):
+            sender_name = _get_id_for_mdf_port(self.sender)
             if isinstance(self.sender.owner, CompositionInterfaceMechanism):
                 sender_mech = parse_valid_identifier(self.sender.owner.composition.name)
             else:
@@ -1166,7 +1200,7 @@ class Projection_Base(Projection):
             sender_name = ''
             sender_mech = ''
 
-        if not isinstance(self.receiver, type):
+        if hasattr(self, 'receiver') and not isinstance(self.receiver, type):
             try:
                 num_path_afferents = len(self.receiver.path_afferents)
             except PortError:
@@ -1174,9 +1208,10 @@ class Projection_Base(Projection):
                 num_path_afferents = 0
 
             if num_path_afferents > 1:
-                receiver_name = parse_valid_identifier(f'input_port_{self.name}')
+                afferent = self
             else:
-                receiver_name = parse_valid_identifier(self.receiver.name)
+                afferent = None
+            receiver_name = _get_id_for_mdf_port(self.receiver, afferent=afferent)
 
             if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
                 receiver_mech = parse_valid_identifier(self.receiver.owner.composition.name)
@@ -1187,8 +1222,8 @@ class Projection_Base(Projection):
             receiver_mech = ''
 
         socket_dict = {
-            MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
-            MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+            MODEL_SPEC_ID_SENDER_PORT: sender_name,
+            MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
             MODEL_SPEC_ID_SENDER_MECH: sender_mech,
             MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
         }
@@ -1197,7 +1232,11 @@ class Projection_Base(Projection):
         if self.defaults.weight is None:
             parameters[self._model_spec_id_parameters]['weight'] = 1
 
-        if simple_edge_format and not self.function._is_identity(defaults=True):
+        if (
+            simple_edge_format
+            and self.parameters.function.get(fallback_value=None) is not None
+            and not self.function._is_identity(defaults=True)
+        ):
             edge_node = ProcessingMechanism(
                 name=f'{self.name}_dummy_node',
                 default_variable=self.defaults.variable,
@@ -1219,7 +1258,7 @@ class Projection_Base(Projection):
                     self._model_spec_id_parameters: {
                         'weight': parameters[self._model_spec_id_parameters]['weight']
                     },
-                    MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+                    MODEL_SPEC_ID_SENDER_PORT: sender_name,
                     MODEL_SPEC_ID_RECEIVER_PORT: edge_node.input_ports[0].id,
                     MODEL_SPEC_ID_SENDER_MECH: sender_mech,
                     MODEL_SPEC_ID_RECEIVER_MECH: edge_node.id
@@ -1235,7 +1274,7 @@ class Projection_Base(Projection):
                 id=parse_valid_identifier(f'{self.name}_dummy_post_edge'),
                 **{
                     MODEL_SPEC_ID_SENDER_PORT: edge_node.output_ports[0].id,
-                    MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+                    MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
                     MODEL_SPEC_ID_SENDER_MECH: edge_node.id,
                     MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
                 }
@@ -1245,7 +1284,7 @@ class Projection_Base(Projection):
             metadata = self._mdf_metadata
             try:
                 metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict(self.function.as_mdf_model())
-            except AttributeError:
+            except (AttributeError, ParameterNoValueError):
                 # projection is in deferred init, special handling here?
                 pass
 

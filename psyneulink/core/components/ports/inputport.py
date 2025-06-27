@@ -615,6 +615,7 @@ EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
 
+
 class InputPortError(PortError):
     pass
 
@@ -766,7 +767,7 @@ class InputPort(Port_Base):
         *not* required or allowed.
 
     shadow_inputs : InputPort
-        identifies the InputPort of another `Mechanism` that is being shadowed by this InputPort.
+        identifies the InputPort of another `Mechanism` being `shadowed <InputPort_Shadow_Inputs>` by this InputPort.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
@@ -867,7 +868,7 @@ class InputPort(Port_Base):
         shadow_inputs = Parameter(None, stateful=False, loggable=False, read_only=True, pnl_internal=True, structural=True)
 
         def _validate_default_input(self, default_input):
-            if default_input not in {None, DEFAULT_VARIABLE}:
+            if default_input is not None and default_input is not DEFAULT_VARIABLE:
                 return f"must be None or the keyword '{DEFAULT_VARIABLE.upper()}'."
 
     #endregion
@@ -1264,7 +1265,7 @@ class InputPort(Port_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = np.array(projection_spec.port.value).ndim
+                            sender_dim = np.array(projection_spec.port.defaults.value).ndim
                         except AttributeError as e:
                             if (isinstance(projection_spec.port, type) or
                                      projection_spec.port.initialization_status == ContextFlags.DEFERRED_INIT):
@@ -1301,7 +1302,7 @@ class InputPort(Port_Base):
                                 continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
-                            sender_shape = np.array(projection_spec.port.value).shape
+                            sender_shape = np.array(projection_spec.port.defaults.value).shape
                             variable_item = np.zeros(sender_shape)
                             # If variable_item HASN'T been specified, or it is same shape as any previous ones,
                             #     use sender's value

@@ -372,16 +372,16 @@ class TestInputAndTargetSpecs:
         with pytest.raises(RunError) as error_text:
             comp.run(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        error_msg = ("Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'TARGET for learning-process-mech-C' is incompatible with the shape of its external input ([array([0., 0.])]).")
         assert error_msg in str(error_text.value)
 
         # Elicit error with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) "
+                     f"for 'TARGET for learning-process-mech-C' is incompatible with the "
+                     f"shape of its external input ([array([0., 0.])]).")
         assert error_msg in str(error_text.value)
 
     # The input sizes were picked because the lengths conflict in set:
@@ -406,6 +406,83 @@ class TestInputAndTargetSpecs:
         assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
                'contains input specifications of different lengths ({2, 10})' in error_text
         assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
+
+
+    @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                             ids=["Composition", "Autodiff"])
+    @pytest.mark.parametrize("target_specs", [
+        'target_mechs_in_inputs',
+        'output_mechs_in_targets',
+        'target_mechs_in_targets',
+        'target_mechs_in_inputs_and_targets',
+        'too_many_targets',
+    ])
+    @pytest.mark.pytorch
+    def test_infer_target_nodes(self, target_specs, comp_type):
+        """Test for checks on the validity of the inputs and targets args of the learn() method"""
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
+        output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
+        output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
+        if comp_type == Composition:
+            comp = comp_type(name='TEST COMP')
+            comp.add_backpropagation_learning_pathway([input_mech, output_mech_A])
+            comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
+            execution_mode = pnl.ExecutionMode.Python
+        else:
+            comp = comp_type([input_mech,{output_mech_A, output_mech_B}], name='TEST COMP')
+            execution_mode = pnl.ExecutionMode.PyTorch
+        targets = comp.get_target_nodes()
+        inputs_arg = {'INPUT MECH': [[1]]}
+        target_mechs = {targets[0]: [[1]],
+                        targets[1]: [[2]]}
+
+        if target_specs == 'target_mechs_in_inputs':
+            inputs_arg.update(target_mechs)
+            comp.learn(inputs = inputs_arg, execution_mode=execution_mode)
+
+        elif target_specs == 'output_mechs_in_targets':
+            comp.learn(inputs=inputs_arg,
+                       targets={comp.nodes['OUTPUT MECH A']: [[1]],
+                                comp.nodes['OUTPUT MECH B']: [[2]]},
+                       execution_mode=execution_mode)
+
+        elif target_specs == 'target_mechs_in_targets':
+            # Test for warning about TARGET_MECHANISMS in targets arg
+            with pytest.warns(UserWarning) as warning:
+                comp.learn(inputs=inputs_arg,
+                           targets=target_mechs,
+                           execution_mode=execution_mode)
+            assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "
+                    f"are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "
+                    f"it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "
+                    f"of the dict, obviating the need to determine the TARGET_MECHANISM(s). Alternatively, "
+                    f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                    f"obviating the need to specify the 'targets' arg."
+                    in warning[0].message.args[0])
+
+        elif target_specs == 'target_mechs_in_inputs_and_targets':
+            # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
+            with pytest.warns(UserWarning) as warning:
+                inputs_arg.update(target_mechs)
+                comp.learn(inputs=inputs_arg,
+                           targets=target_mechs,
+                           execution_mode=execution_mode)
+            assert (f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' args "
+                    f"of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
+                    f"This isn't technically a problem, but it is redundant so thought you should know ;^)."
+                    in warning[1].message.args[0])
+
+        elif target_specs == 'too_many_targets':
+            # Test error for too many entries in targets arg
+            with pytest.raises(CompositionError) as error_text:
+                comp.learn(inputs=inputs_arg,
+                           targets={comp.nodes[0]: [[1]],
+                                    comp.nodes[1]: [[1]],
+                                    comp.nodes[2]: [[2]]},
+                           execution_mode=execution_mode)
+            assert (f"The number of targets (3) specified in `targets` arg of the learn method "
+                    f"for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
+                    in str(error_text.value))
 
 
 class TestLearningPathwayMethods:

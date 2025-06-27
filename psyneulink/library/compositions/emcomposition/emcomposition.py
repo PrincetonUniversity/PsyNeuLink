@@ -942,15 +942,16 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
      EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VALUE, VARIABLE)
+     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
-from psyneulink.core.globals.registry import name_without_suffix
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1015,7 +1016,10 @@ def _memory_getter(owning_component=None, context=None)->list:
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    if owning_component.field_weights is None:
+    if (
+        not owning_component.parameters.field_weights._has_value(context)
+        or owning_component.parameters.field_weights._get(context) is None
+    ):
         return field_weights
     elif len(field_weights) != len(owning_component.field_weights):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
@@ -1459,14 +1463,15 @@ class EMComposition(AutodiffComposition):
     query_and_value_input_nodes : list[ProcessingMechanism]
         Full list of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` ordered with query_input_nodes first
         followed by value_input_nodes; used primarily for internal computations.
-
     """
 
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers import \
+            PytorchEMCompositionWrapper, PytorchEMMechanismWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper
 
 
     class Parameters(AutodiffComposition.Parameters):
@@ -1690,12 +1695,15 @@ class EMComposition(AutodiffComposition):
         # Construct memory --------------------------------------------------------------------------------
 
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
-        self._validate_memory_specs(memory_template,
-                                    memory_capacity,
-                                    memory_fill,
-                                    field_weights,
-                                    field_names,
-                                    name)
+        self._validate_memory_specs(
+            memory_template,
+            memory_capacity,
+            memory_fill,
+            field_weights,
+            field_names,
+            name,
+            learn_field_weights,
+        )
 
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
@@ -1768,11 +1776,8 @@ class EMComposition(AutodiffComposition):
                                  self._use_storage_node,
                                  self.learn_field_weights,
                                  self.enable_learning,
-                                 self._use_gating_for_weighting)
-
-        # if torch_available:
-        #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
-        #     self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+                                 self._use_gating_for_weighting,
+                                 context=Context(source=ContextFlags.COMMAND_LINE, string='FROM EM'))
 
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
@@ -1844,7 +1849,7 @@ class EMComposition(AutodiffComposition):
     # ***********************************  Memory Construction Methods  ***********************************************
     # *****************************************************************************************************************
     #region
-    def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name):
+    def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name, learn_field_weights):
         """Validate the memory_template, field_weights, and field_names arguments
         """
 
@@ -1880,8 +1885,8 @@ class EMComposition(AutodiffComposition):
                                      f"must be a float, int or len tuple of ints and/or floats.")
 
         # If learn_field_weights is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
-        if isinstance(self.learn_field_weights, list) and len(self.learn_field_weights) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(self.learn_field_weights)}) in the "
+        if isinstance(learn_field_weights, list) and len(learn_field_weights) != num_fields:
+            raise EMCompositionError(f"The number of items ({len(learn_field_weights)}) in the "
                                      f"'learn_field_weights' arg for {name} must match the number of "
                                      f"fields in memory ({num_fields}).")
 
@@ -2132,13 +2137,19 @@ class EMComposition(AutodiffComposition):
             if self.num_keys == 1:
                 error_msg = f"there is only one key"
                 correction_msg = ""
-            elif not all(np.all(keys_weights[i] == keys_weights[0] for i in range(len(keys_weights)))):
-                error_msg = f" field weights ({field_weights}) are not all equal"
+
+            elif not all(np.all(keys_weight == keys_weights[0]) for keys_weight in keys_weights):
+                error_msg = f"field weights ({field_weights}) are not all equal"
                 correction_msg = (f" To use concatenation, remove `field_weights` "
-                                     f"specification or make them all the same.")
+                                  f"specification or make them all the same.")
+
             elif not normalize_memories:
-                error_msg = f" normalize_memories is False"
+                error_msg = f"normalize_memories is False"
                 correction_msg = f" To use concatenation, set normalize_memories to True."
+
+            else:
+                assert False, "Unknown error"
+
             warnings.warn(f"The 'concatenate_queries' arg for '{name}' is True but {error_msg}; "
                           f"concatenation will be ignored.{correction_msg}")
 
@@ -2201,6 +2212,7 @@ class EMComposition(AutodiffComposition):
                             learn_field_weights,
                             enable_learning,
                             use_gating_for_weighting,
+                            context
                             ):
         """Construct Nodes and Pathways for EMComposition"""
 
@@ -2245,17 +2257,17 @@ class EMComposition(AutodiffComposition):
         # LEARNING NOT ENABLED --------------------------------------------------
         # Set up pathways WITHOUT PsyNeuLink learning pathways
         if not self.enable_learning:
-            self.add_nodes(self.input_nodes)
+            self.add_nodes(self.input_nodes, context=context)
             if use_storage_node:
-                self.add_node(self.storage_node)
+                self.add_node(self.storage_node, context=context)
             if self.concatenate_queries_node:
-                self.add_node(self.concatenate_queries_node)
-            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes)
+                self.add_node(self.concatenate_queries_node, context=context)
+            self.add_nodes(self.match_nodes + self.field_weight_nodes + self.weighted_match_nodes, context=context)
             if self.combined_matches_node:
-                self.add_node(self.combined_matches_node)
-            self.add_nodes([self.softmax_node] + self.retrieved_nodes)
+                self.add_node(self.combined_matches_node, context=context)
+            self.add_nodes([self.softmax_node] + self.retrieved_nodes, context=context)
             if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
+                self.add_node(self.softmax_gain_control_node, context=context)
 
         # LEARNING ENABLED -----------------------------------------------------
         # Set up pathways WITH psyneulink backpropagation learning field weights
@@ -2286,14 +2298,14 @@ class EMComposition(AutodiffComposition):
 
             # softmax gain control is specified:
             if self.softmax_gain_control_node:
-                self.add_node(self.softmax_gain_control_node)
+                self.add_node(self.softmax_gain_control_node, context=context)
 
             # field_weights -> weighted_softmax pathways
             if any(self.field_weight_nodes):
                 for i in range(self.num_keys):
                     self.add_linear_processing_pathway([self.field_weight_nodes[i], self.weighted_match_nodes[i]])
 
-            self.add_nodes(self.value_input_nodes)
+            self.add_nodes(self.value_input_nodes, context=context)
 
             # Retrieval pathways
             for i in range(len(self.retrieved_nodes)):
@@ -2301,7 +2313,7 @@ class EMComposition(AutodiffComposition):
 
             # Storage Nodes
             if use_storage_node:
-                self.add_node(self.storage_node)
+                self.add_node(self.storage_node, context=context)
 
     def _construct_input_nodes(self):
         """Create one node for each input to EMComposition and identify as key or value
@@ -2632,6 +2644,7 @@ class EMComposition(AutodiffComposition):
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
     # region
+    @handle_external_context(fallback_default=True)
     def execute(self,
                 inputs=None,
                 context=None,
@@ -2717,12 +2730,29 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    @handle_external_context()
-    def learn(self, *args, **kwargs)->list:
+    @handle_external_context(fallback_default=True)
+    def learn(
+        self,
+        *args,
+        context: Optional[Context] = None,
+        base_context: Context = Context(execution_id=None),
+        skip_initialization: bool = False,
+        **kwargs
+    ) -> list:
         """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
-        softmax_choice = self.parameters.softmax_choice.get(kwargs[CONTEXT])
+
+        if (
+            not skip_initialization
+            and (
+                context is None
+                or ContextFlags.SIMULATION_MODE not in context.runmode
+            )
+        ):
+            self._initialize_from_context(context, base_context, override=False)
+
+        softmax_choice = self.parameters.softmax_choice.get(context)
         use_gating_for_weighting = self._use_gating_for_weighting
-        enable_learning = self.parameters.enable_learning.get(kwargs[CONTEXT])
+        enable_learning = self.parameters.enable_learning.get(context)
 
         if use_gating_for_weighting and enable_learning:
             raise EMCompositionError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
@@ -2732,7 +2762,13 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                                      f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
 
-        return super().learn(*args, **kwargs)
+        return super().learn(
+            *args,
+            context=context,
+            base_context=base_context,
+            skip_initialization=skip_initialization,
+            **kwargs,
+        )
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""
@@ -2772,6 +2808,18 @@ class EMComposition(AutodiffComposition):
         pass
 
     #endregion
+
+    def add_node(self, node, required_roles=None, context=None):
+        """Override if called from command line to disallow modification of EMComposition"""
+        if context is None:
+            raise EMCompositionError(f"Nodes cannot be added to an {self.componentCategory}: ('{self.name}').")
+        super().add_node(node, required_roles, context)
+
+    def add_projection(self, *args, **kwargs):
+        """Override if called from command line to disallow modification of EMComposition"""
+        if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
+            raise EMCompositionError(f"Projections cannot be added to an {self.componentCategory}: ('{self.name}').")
+        return super().add_projection(*args, **kwargs)
 
     # *****************************************************************************************************************
     # ***************************************** Properties  **********************************************************

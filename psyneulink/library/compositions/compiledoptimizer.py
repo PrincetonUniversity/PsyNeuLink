@@ -7,7 +7,7 @@ class Optimizer():
 
     def __init__(self, pytorch_model):
         self._pytorch_model = pytorch_model
-        self._composition = pytorch_model._composition
+        self.composition = pytorch_model.composition
 
         self._DELTA_W_NUM = 0
 
@@ -39,7 +39,7 @@ class Optimizer():
         builder.store(grad_struct.type.pointee(None),grad_struct)
 
     def zero_grad(self, ctx):
-        name = self._composition.name + "_ZERO_GRAD"
+        name = self.composition.name + "_ZERO_GRAD"
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
@@ -87,11 +87,11 @@ class AdamOptimizer(Optimizer):
 
     # steps the adam optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
-        name = self._composition.name + "_ADAM_STEP"
+        name = self.composition.name + "_ADAM_STEP"
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                ctx.get_state_struct_type(self._composition).as_pointer(),
-                ctx.get_param_struct_type(self._composition).as_pointer()]
+                ctx.get_state_struct_type(self.composition).as_pointer(),
+                ctx.get_param_struct_type(self.composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
         optim_struct, state, params = llvm_func.args
@@ -146,7 +146,8 @@ class AdamOptimizer(Optimizer):
             pnlvm.helpers.printf_float_matrix(ctx,
                                               builder,
                                               m_t_ptr,
-                                              prefix=f"mt val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              prefix=f"mt val: {proj.sender_wrapper.mechanism} ->"
+                                                     f" {proj.receiver_wrapper.mechanism}\n",
                                               tags={"torch"})
         # 3) update second moments
         for idx, proj in enumerate(self._pytorch_model.projection_wrappers):
@@ -186,7 +187,8 @@ class AdamOptimizer(Optimizer):
             pnlvm.helpers.printf_float_matrix(ctx,
                                               builder,
                                               delta_w_ptr,
-                                              prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n",
+                                              prefix=f"grad val: {proj.sender_wrapper.mechanism} ->"
+                                                     f" {proj.receiver_wrapper.mechanism}\n",
                                               tags={"torch"})
 
             # this is messy - #TODO - cleanup this
@@ -239,11 +241,11 @@ class SGDOptimizer(Optimizer):
 
     # steps the sgd optimizer (methodology: https://arxiv.org/pdf/1412.6980.pdf )
     def step(self, ctx):
-        name = self._composition.name + "_SGD_STEP"
+        name = self.composition.name + "_SGD_STEP"
 
         args = [self._get_optimizer_struct_type(ctx).as_pointer(),
-                ctx.get_state_struct_type(self._composition).as_pointer(),
-                ctx.get_param_struct_type(self._composition).as_pointer()]
+                ctx.get_state_struct_type(self.composition).as_pointer(),
+                ctx.get_param_struct_type(self.composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
         optim_struct, state, params = llvm_func.args

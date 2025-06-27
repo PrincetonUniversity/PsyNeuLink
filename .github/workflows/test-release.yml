@@ -25,14 +25,16 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Install setup dependencies
+      shell: bash
+      run: pip install build twine
+
     - name: Create Python Dist files
       id: create_dist
       shell: bash
       run: |
         # We don't care about the python version used.
-        pip install setuptools wheel
-        python setup.py sdist
-        python setup.py bdist_wheel
+        python -m build -v
         cd dist
         echo "sdist=$(ls *.tar.gz)" >> $GITHUB_OUTPUT
         echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
@@ -40,16 +42,17 @@ jobs:
     - name: Upload Python dist files
       uses: actions/upload-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
-        retention-days: 1
+        retention-days: 30
+
+    - name: Validate dist files
+      shell: bash
+      run: twine check --strict dist/*
 
     - name: Upload dist files to test PyPI
       shell: bash
       run: |
-        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
-        pip install setuptools setuptools-rust wheel
-        pip install twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
@@ -69,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         os: [ubuntu-latest, macos-latest, windows-latest]
         dist: [wheel, sdist]
 
@@ -80,7 +83,7 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
 
     - name: Set up Python ${{ matrix.python-version }}
@@ -118,7 +121,7 @@ jobs:
     - name: Run tests
       shell: bash
       # run only tests/. We don't care about codestyle/docstyle at this point
-      timeout-minutes: 80
+      timeout-minutes: 180
       run: |
         # remove sources to prevent conflict with the isntalled package
         rm -r -f psyneulink/ docs/ bin/ Matlab/
@@ -143,15 +146,20 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
+
+    - name: Install setup dependencies
+      shell: bash
+      run: pip install twine
+
+    - name: Validate dist files
+      shell: bash
+      run: twine check --strict dist/*
 
     - name: Upload dist files to PyPI
       shell: bash
       run: |
-        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
-        pip3 install --user setuptools setuptools-rust wheel
-        pip3 install --user twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
@@ -177,7 +185,7 @@ jobs:
     - name: Download dist files
       uses: actions/download-artifact@v4
       with:
-        name: Python-dist-files
+        name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
 
     - name: Upload dist files to release
@@ -185,5 +193,9 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        previous_release=$(gh --repo ${{ github.repository }} release list | head -n 1 | awk '{print $1}')
-        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref }} dist/*
+        previous_release=$(gh --repo ${{ github.repository }} release list -L 1 | cut -f1)
+        if [[ -z "$previous_release" ]]; then
+          echo "No previous release found"
+          exit 1
+        fi
+        gh --repo ${{ github.repository }} release create --generate-notes --notes-start-tag "$previous_release" ${{ github.ref_name }} dist/*

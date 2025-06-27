@@ -41,11 +41,12 @@ from psyneulink.core.components.functions.function import (
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_FUNCTION, EM_STORAGE_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, \
-    MATRIX, Loss
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.keywords import (
+    CONTRASTIVE_HEBBIAN_FUNCTION, EM_STORAGE_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE,
+    KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION,
+    MATRIX, Loss, DEFAULT,
+)
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
 
@@ -349,7 +350,7 @@ class EMStorage(LearningFunction):
         storage_prob = Parameter(1.0, modulable=True)
         decay_rate = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
 
     def _validate_storage_prob(self, storage_prob):
         storage_prob = float(storage_prob)
@@ -506,6 +507,15 @@ class EMStorage(LearningFunction):
                  decay_rate,
                  random_state)->torch.tensor:
             """Decay existing memories and replace weakest entry with entry_to_store (parallel EMStorage._function)"""
+
+            # If the batch_size is not equal to one then we need to raise an exception.
+            if len(entry_to_store.shape) > 2:
+                if entry_to_store.shape[0] != 1:
+                    raise NotImplementedError("EMSStorage has not been implemented for batch sizes greater than 1")
+                else:
+                    # Drop the singleton batch dimension
+                    entry_to_store = entry_to_store[0]
+
             if random_state.uniform(0, 1) < storage_prob:
                 if decay_rate:
                     memory_matrix *= torch.tensor(decay_rate)
@@ -515,9 +525,9 @@ class EMStorage(LearningFunction):
                     # Find weakest entry (i.e., with lowest norm) along specified axis of matrix
                     idx_of_min = torch.argmin(torch.linalg.norm(memory_matrix, axis=axis))
                 if axis == 0:
-                    memory_matrix[:,idx_of_min] = entry_to_store
+                    memory_matrix[:,idx_of_min] = entry_to_store[0]
                 elif axis == 1:
-                    memory_matrix[idx_of_min,:] = entry_to_store
+                    memory_matrix[idx_of_min,:] = entry_to_store[0]
             return memory_matrix
         return func
 
@@ -767,7 +777,7 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,
@@ -1696,21 +1706,21 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 def _activation_input_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
-    except (AttributeError, TypeError):
+    except (AttributeError, ParameterNoValueError, TypeError):
         return None
 
 
 def _activation_output_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
-    except (AttributeError, TypeError):
+    except (AttributeError, ParameterNoValueError, TypeError):
         return None
 
 
 def _error_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
-    except (AttributeError, TypeError):
+    except (AttributeError, ParameterNoValueError, TypeError):
         return None
 
 

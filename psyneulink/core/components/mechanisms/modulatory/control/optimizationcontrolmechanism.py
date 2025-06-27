@@ -1209,7 +1209,10 @@ def _state_feature_values_getter(owning_component=None, context=None):
               and not owning_component.composition._is_in_composition(spec)):
             # spec is not in ocm.composition
             state_feature_value = _deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
-        elif state_input_port.parameters.value._get(context) is not None:
+        elif (
+            state_input_port.parameters.value._has_value(context)
+            and state_input_port.parameters.value._get(context) is not None
+        ):
             # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
         else:
@@ -1228,7 +1231,7 @@ class OptimizationControlMechanismError(ControlMechanismError):
 def _control_allocation_search_space_getter(owning_component=None, context=None):
     search_space = owning_component.parameters.search_space._get(context)
     if search_space is None:
-        return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
+        return [c.parameters.allocation_samples._get(context, fallback_value=None) for c in owning_component.control_signals]
     else:
         return search_space
 
@@ -2845,18 +2848,18 @@ class OptimizationControlMechanism(ControlMechanism):
         agent_rep_str = ('' if self.agent_rep == self.composition
                          else f"both its `{AGENT_REP}` ('{self.agent_rep.name}') as well as ")
         not_in_comps_str = f"that are missing from {agent_rep_str}'{self.composition.name}' and any " \
-                      f"{Composition.componentCategory}s nested within it."
+                           f"{Composition.componentCategory}s nested within it."
 
         # Ensure that all InputPorts shadowed by specified state_input_ports
         #    are in agent_rep or one of its nested Compositions
         invalid_state_features = [input_port for input_port in self.state_input_ports
                                   if (input_port.shadow_inputs
                                       and not (input_port.shadow_inputs.owner in
-                                            list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
+                                               list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
                                       and (not [input_port.shadow_inputs.owner.composition is x for x in
-                                                  comp._get_nested_compositions()
-                                           if isinstance(input_port.shadow_inputs.owner,
-                                                     CompositionInterfaceMechanism)]))]
+                                                comp._get_nested_compositions()
+                                                if isinstance(input_port.shadow_inputs.owner,
+                                                              CompositionInterfaceMechanism)]))]
         # Ensure any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions
         for input_port in self.state_input_ports:
             if input_port.shadow_inputs:
@@ -2901,8 +2904,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
                 f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
                 f"to have them automatically assigned.") from error
-        except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
-            pass                    # and will issue the corresponding error message.
+        except KeyError:   # This occurs if a Node is illegal for a reason other than above,
+            pass           # and will issue the corresponding error message.
         except:  # Legal Node specifications, but incorrect for input to agent_rep
             specs = [f.full_name if hasattr(f, 'full_name') else (f.name if isinstance(f, Component) else f)
                      for f in state_features]
@@ -2950,7 +2953,6 @@ class OptimizationControlMechanism(ControlMechanism):
         self.defaults.value = np.array(control_allocation)
         self.parameters.value._set(copy.deepcopy(self.defaults.value), context)
         return control_allocation
-
 
     def _create_randomization_control_signal(self, context):
         num_estimates = self.parameters.num_estimates._get(context)

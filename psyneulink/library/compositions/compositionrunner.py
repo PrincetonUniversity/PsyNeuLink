@@ -48,6 +48,49 @@ class CompositionRunner():
             total_loss += comparator.value[0][0]
         return total_loss
 
+    def convert_to_torch(self, v):
+        """Convert a list of numpy arrays to a list of PyTorch tensors"""
+
+        import torch
+        torch_dtype = self._composition.torch_dtype if hasattr(self._composition, 'torch_dtype') else torch.float64
+
+        # If the inner elements of the list are numpy arrays, convert to np.array first since PyTorch says
+        # converting directly to tensors for lists of np.ndarrays is slow.
+        if type(v[0]) == np.ndarray:
+            # t = torch.tensor(torch.from_numpy(np.array(v)), dtype=torch_dtype)
+            t = torch.from_numpy(np.array(v)).to(dtype=torch_dtype)
+        else:
+            try:
+                t = torch.tensor(v, dtype=torch_dtype)
+            except ValueError:
+                # We probably have a ragged array, so we need to convert to a list of tensors
+                t = [[torch.tensor(y, dtype=torch_dtype) for y in x] for x in v]
+
+        # Assume that the input port dimension is singleton and add it for 2D inputs
+        if isinstance(t, torch.Tensor) and t.ndim < 3:
+            t = t.unsqueeze(dim=1)
+
+        # Convert integer types to double
+        if type(t) is not list and t.dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
+            t = t.double()
+
+        return t
+
+    def convert_input_to_arrays(self, inputs, execution_mode):
+        """If the inputs are not numpy arrays or torch tensors, convert them"""
+
+        array_inputs = {}
+        for k, v in inputs.items():
+            if type(v) is list:
+                if execution_mode is ExecutionMode.PyTorch:
+                    array_inputs[k] = self.convert_to_torch(v)
+                else:
+                    array_inputs[k] = np.array(v)
+            else:
+                array_inputs[k] = v
+
+        return array_inputs
+
     def _batch_inputs(self,
                       inputs: dict,
                       epochs: int,
@@ -62,17 +105,33 @@ class CompositionRunner():
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
                       context=None)->GeneratorType:
-        """Execute inputs and update pytorch parameters for one minibatch at a time.
+        """
+        Execute inputs and update pytorch parameters for one minibatch at a time.
         Partition inputs dict into ones of length minibatch_size (or, for the last set, the remainder)
         Execute all inputs in that dict and then update weights (parameters), and repeat for all batches
         within an epoch Synchronize weights, values and results with PsyNeuLink as specified in
         synch_with_pnl_options and retain_in_pnl_options dicts.
+
+        The generator should always yield a dict containing torch.Tensors or lists of torch.Tensores (when ragged).
+        Each torch.Tensor or list should have its minibatch_size as the first dimension, even if minibatch_size=1.
+
         """
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
-        #This is a generator for performance reasons,
+        if type(minibatch_size) == np.ndarray:
+            minibatch_size = minibatch_size.item()
+
+        if type(minibatch_size) == list:
+            minibatch_size = np.array(minibatch_size).item()
+
+        if minibatch_size > 1 and optimizations_per_minibatch != 1:
+            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+
+        inputs = self.convert_input_to_arrays(inputs, execution_mode)
+
+        # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
             indices_of_all_trials = list(range(0, num_trials))
@@ -87,41 +146,37 @@ class CompositionRunner():
                 # Cycle over trials (stimui) within a minibatch
                 indices_of_trials_in_batch = indices_of_all_trials[i:i + minibatch_size]
 
-                # FIX: IMPLEMENT PARALLELIZATION FOR minibatch_size > 1
-                # # assert IF MINIBATCH > 1 THEN OPTIMIZATIONS_PER_STIMULUS == 1
-                # if minibatch_size > 1 and optimizations_per_minibatch == 1:
-                #     yield DICT WITH STIMULI FOR BATCH RUN THROUGH copy_parameter_value(stim)
-                #  FIX: _gen_pytorch_fct's need to be refactored to handle batch dimension
+                inputs_for_minibatch = {}
+                for k, v in inputs.items():
+                    modded_indices = [i % len(v) for i in indices_of_trials_in_batch]
 
-                for trial_idx in indices_of_trials_in_batch:
-                    inputs_for_minibatch = {}
-                    # Get inputs for the current minibatch
-                    for k, v in inputs.items():
-                        inputs_for_minibatch[k] = v[trial_idx % len(v)]
+                    if type(v) is not list:
+                        inputs_for_minibatch[k] = v[modded_indices]
+                    else: # list because ragged
+                        inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
-                    # Cycle over optimizations per trial (stimulus
-                    for optimization_num in range(optimizations_per_minibatch):
-                        # Return current set of stimuli for minibatch
-                        yield copy_parameter_value(inputs_for_minibatch)
+                # Cycle over optimizations per trial (stimulus
+                for optimization_num in range(optimizations_per_minibatch):
+                    # Return current set of stimuli for minibatch
+                    yield copy_parameter_value(inputs_for_minibatch)
 
-                        # Update weights if in PyTorch execution_mode;
-                        #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
-                        if execution_mode is ExecutionMode.PyTorch:
-                            self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                            from torch import no_grad
-                            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                            with no_grad():
-                                for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                    node._composition_wrapper_owner.execute_node(node, variable,
-                                                                                optimization_num, context)
-
-                            # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
-                                                              [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
-
+                    # Update weights if in PyTorch execution_mode;
+                    #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        # Synchronize specified outcomes after every stimulus (i.e., trial)
-                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
+                        self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                        from torch import no_grad
+                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        with no_grad():
+                            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
+
+                        # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
+                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                                                          [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
+
+                if execution_mode is ExecutionMode.PyTorch:
+                    # Synchronize specified outcomes after every stimulus (i.e., trial)
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
 
                 if execution_mode is ExecutionMode.PyTorch:
                     # Synchronize specified outcomes after every minibatch
@@ -150,19 +205,14 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
-        if execution_mode is ExecutionMode.PyTorch:
-            # Synchronize specified outcomes at end of learning run
-            pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, RUN, context)
-
-    # 8/8/24 - FIX: THIS NEEDS TO BE BROUGHT INTO ALINGMENT WITH REFACTORING OF _batch_inputs ABOVE
     def _batch_function_inputs(self,
                                inputs: dict,
                                epochs: int,
                                num_trials: int,
-                               batch_size: int = 1,
+                               minibatch_size: int = 1,
                                optimizations_per_minibatch: int = 1,
-                               synch_with_pnl_options:Optional[Mapping] = None,
-                               retain_in_pnl_options:Optional[Mapping] = None,
+                               synch_with_pnl_options: Optional[Mapping] = None,
+                               retain_in_pnl_options: Optional[Mapping] = None,
                                call_before_minibatch=None,
                                call_after_minibatch=None,
                                early_stopper=None,
@@ -173,25 +223,37 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        if type(minibatch_size) == np.ndarray:
+            minibatch_size = minibatch_size.item()
+
+        if type(minibatch_size) == list:
+            minibatch_size = np.array(minibatch_size).item()
+
+        if minibatch_size > 1 and optimizations_per_minibatch != 1:
+            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+
         for epoch in range(epochs):
-            for i in range(0, num_trials, batch_size):
+            for i in range(0, num_trials, minibatch_size):
                 batch_ran = False
 
                 if call_before_minibatch:
                     call_before_minibatch()
 
-                for idx in range(i, i + batch_size):
+                for idx in range(i, i + minibatch_size):
                     try:
-                        trial_input, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
+                        input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,
                                                                                 context=context)
                     except:
                         break
-                    if trial_input is None:
+                    if input_batch is None:
                         break
                     batch_ran = True
-                    yield trial_input
+
+                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode)
+
+                    yield input_batch
 
                 if batch_ran:
                     if call_after_minibatch:
@@ -229,6 +291,7 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
+                     skip_initialization=False,
                      **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
@@ -283,8 +346,6 @@ class CompositionRunner():
             epochs = inf_yield_val(epochs)
         elif epochs is None:
             epochs = inf_yield_val(1)
-
-        skip_initialization = False
 
         # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 
@@ -346,7 +407,7 @@ class CompositionRunner():
             # (Passing num_trials * stim_epoch + 1 works)
             run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
 
-            # IMPLEMENTATION NOTE: for autodiff composition, the following executes an MINIBATCH's worth of training
+            # IMPLEMENTATION NOTE: for autodiff composition, the following executes a MINIBATCH's worth of training
             self._composition.run(inputs=minibatched_input,
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
@@ -360,22 +421,21 @@ class CompositionRunner():
             skip_initialization = True
 
             if execution_mode is ExecutionMode.PyTorch:
-                pytorch_rep = (self._composition.parameters.pytorch_representation._get(context).
-                               copy_weights_to_psyneulink(context))
+                pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
                 if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
-                    pytorch_rep.copy_weights_to_psyneulink(context)
+                    pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        # return self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
+
         # assign results from last *epoch* to learning_results
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
-        # return result of last *trial* (as usual for a call to run)
 
         if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
             # Copy weights at end of learning run
-            pytorch_rep.copy_weights_to_psyneulink(context)
+            pytorch_rep._copy_weights_to_psyneulink(context)
 
+        # return result of last *trial* (as usual for a call to run)
         return self._composition.parameters.results.get(context)[-1]
 
 class EarlyStopping(object):

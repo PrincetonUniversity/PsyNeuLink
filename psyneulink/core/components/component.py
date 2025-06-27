@@ -527,18 +527,52 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
     Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.mdf import MDFSerializable
-from psyneulink.core.globals.keywords import \
-    CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, DETERMINISTIC, EXECUTE_UNTIL_FINISHED, \
-    FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
-    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_METADATA, \
-    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MODEL_SPEC_ID_MDF_VARIABLE, \
-    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    RANDOM, RESET_STATEFUL_FUNCTION_WHEN, INPUT_SHAPES, VALUE, VARIABLE, SHARED_COMPONENT_TYPES
+from psyneulink.core.globals.keywords import (
+    CONTEXT,
+    CONTROL_PROJECTION,
+    DEFERRED_INITIALIZATION,
+    DETERMINISTIC,
+    EXECUTE_UNTIL_FINISHED,
+    FUNCTION,
+    FUNCTION_PARAMS,
+    INIT_FULL_EXECUTE_METHOD,
+    INPUT_PORTS,
+    LEARNING,
+    LEARNING_PROJECTION,
+    MATRIX,
+    MAX_EXECUTIONS_BEFORE_FINISHED,
+    MODEL_SPEC_ID_PSYNEULINK,
+    MODEL_SPEC_ID_METADATA,
+    MODEL_SPEC_ID_INPUT_PORTS,
+    MODEL_SPEC_ID_OUTPUT_PORTS,
+    MODEL_SPEC_ID_MDF_VARIABLE,
+    MODULATORY_SPEC_KEYWORDS,
+    NAME,
+    OUTPUT_PORTS,
+    OWNER,
+    PARAMS,
+    PREFS_ARG,
+    RANDOM,
+    RESET_STATEFUL_FUNCTION_WHEN,
+    INPUT_SHAPES,
+    VALUE,
+    VARIABLE,
+    SHARED_COMPONENT_TYPES,
+    DEFAULT,
+)
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.parameters import \
-    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, check_user_specified, copy_parameter_value, is_array_like
+from psyneulink.core.globals.parameters import (
+    Defaults,
+    Parameter,
+    ParameterAlias,
+    ParameterError,
+    ParameterInvalidSourceError,
+    ParametersBase,
+    SharedParameter,
+    check_user_specified,
+    copy_parameter_value,
+    is_array_like,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
@@ -750,7 +784,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     """
     Component(                 \
         default_variable=None, \
-        input_shapes=None,             \
+        input_shapes=None,     \
         params=None,           \
         name=None,             \
         prefs=None,            \
@@ -1034,11 +1068,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                                     read_only=True,
                                     loggable=False,
                                     stateful=False,
-                                    fallback_default=True,
+                                    fallback_value=DEFAULT,
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True)
         execute_until_finished = Parameter(True, pnl_internal=True)
-        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False, pnl_internal=True)
+        num_executions = Parameter(
+            Time(),
+            read_only=True,
+            modulable=False,
+            loggable=False,
+            fallback_value=DEFAULT,
+            pnl_internal=True
+        )
         num_executions_before_finished = Parameter(0, read_only=True, modulable=False, pnl_internal=True)
         max_executions_before_finished = Parameter(1000, modulable=False, pnl_internal=True)
 
@@ -1137,6 +1178,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             execution_phase=ContextFlags.IDLE,
             execution_id=None,
         )
+
+
 
         if reset_stateful_function_when is not None:
             self.reset_stateful_function_when = reset_stateful_function_when
@@ -1404,9 +1447,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         def _is_compilation_state(p):
             # FIXME: This should use defaults instead of 'p.get'
-            return p.name not in blacklist and \
-                   (p.name in whitelist or isinstance(p.get(), Component)) and \
-                   self._is_compilable_param(p)
+            return (
+                p.name not in blacklist
+                # check before p.get to avoid possible SharedParameter exceptions
+                and self._is_compilable_param(p)
+                and (p.name in whitelist or isinstance(p.get(), Component))
+            )
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -1498,6 +1544,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "search_termination_function", "state_feature_function",
                      "search_function", "weight", "exponent", "gating_signal_params",
                      "retain_old_simulation_data",
+                     # "input_size", "hidden_size", "output_size", "bias", "gru_mech",
                      # not used in compiled learning
                      "learning_results", "learning_signal", "learning_signals",
                      "error_matrix", "error_signal", "activation_input",
@@ -1506,6 +1553,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "minibatch_size", "optimizations_per_minibatch", "device",
                      "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
                      "torch_trained_outputs", "torch_targets", "torch_losses",
+                     # "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
+                     # "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
                      # should be added to relevant _gen_llvm_function... when aug:
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
@@ -2365,7 +2414,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
             # set default to None context to ensure it exists
             if (
-                p._get(context) is None and p.getter is None
+                p._get(context, fallback_value=None) is None and p.getter is None
                 or context.execution_id not in p.values
             ):
                 if p._user_specified:
@@ -3309,7 +3358,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             # Immutable, so just assign value
             self.defaults.value = value
 
-    def _update_default_variable(self, new_default_variable, context=None):
+    def _update_default_variable(self, new_default_variable, context):
         from psyneulink.core.components.shellclasses import Function
 
         new_default_variable = convert_all_elements_to_np_array(new_default_variable)
@@ -3331,7 +3380,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self._instantiate_value(context)
 
         for p in self.parameters._in_dependency_order:
-            val = p._get(context)
+            try:
+                val = p._get(context)
+            except ParameterInvalidSourceError:
+                continue
+
             if (
                 not p.reference
                 and isinstance(val, Function)
@@ -4389,7 +4442,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
-            param_value = p._get(context)
+            try:
+                param_value = p._get(context)
+            except ParameterInvalidSourceError:
+                continue
+
             try:
                 param_value = param_value.__self__
             except AttributeError:
@@ -4399,16 +4456,23 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 self._parameter_components.add(param_value)
 
     @property
-    def _dependent_components(self):
+    def _dependent_components(self) -> Iterable['Component']:
         """
-            Returns a set of Components that will be executed if this Component is executed
+            Returns:
+                Components that must have values in a given Context for
+                this Component to execute in that Context
         """
         return list(self._parameter_components)
 
     @property
     def most_recent_context(self):
         """
-            used to set a default behavior for attributes that correspond to parameters
+        Returns:
+            `Context`: the `Context` object this Component used in its
+            last call to `execute <Component.execute>`,
+            `run <Composition.run>`, or `learn <Composition.learn>`. If
+            none of these methods have been called, a `Context` object
+            with the default execution_id (None)
         """
         try:
             return self._most_recent_context

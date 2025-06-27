@@ -1,7 +1,7 @@
 import versioneer
 
 # Always prefer setuptools over distutils
-from setuptools import find_packages, setup
+from setuptools import setup
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -30,6 +30,7 @@ setup(
 
     description='A block modeling system for cognitive neuroscience',
     long_description=long_description,
+    long_description_content_type='text/x-rst',
 
     # Github address.
     url='https://github.com/PrincetonUniversity/PsyNeuLink',
@@ -62,6 +63,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
 
     # Require recent python
@@ -69,10 +71,6 @@ setup(
 
     # What does your project relate to?
     keywords='cognitive modeling',
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    packages=find_packages(),
 
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's

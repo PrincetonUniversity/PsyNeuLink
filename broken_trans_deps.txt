@@ -2,7 +2,7 @@
 
 # onnxruntime-1.14.0 is broken on macos/x64
 # https://github.com/microsoft/onnxruntime/issues/14663
-onnxruntime != 1.14.0; platform_system=="Darwin"
+onnxruntime != 1.14.0; platform_system == 'Darwin'
 
 # ipython == 8.13.0 uses incorrect python requires and only works with 3.9+
 # https://github.com/ipython/ipython/issues/14053
@@ -38,14 +38,7 @@ beartype != 0.17.1; python_version == '3.9'
 # https://github.com/nedbat/coveragepy/issues/1891
 coverage != 7.6.5
 
-# The following need at least sphinx-5 without indicating it in dependencies:
-# * sphinxcontrib-applehelp >=1.0.8,
-# * sphinxcontrib-devhelp >=1.0.6,
-# * sphinxcontrib-htmlhelp >=2.0.5,
-# * sphinxcontrib-serializinghtml >=1.1.10,
-# * sphinxcontrib-qthelp >=1.0.7
-sphinxcontrib-applehelp <1.0.8
-sphinxcontrib-devhelp <1.0.6
-sphinxcontrib-htmlhelp <2.0.5
-sphinxcontrib-serializinghtml <1.1.10
-sphinxcontrib-qthelp <1.0.7
+# pytorch doesn't provide wheels for macos x64 for torch-2.3.0+
+# https://pypi.org/project/torch/2.3.0/#files
+# the last avaialble version (2.2.2) doesn't work with Numpy2.0
+numpy < 2; platform_system == 'Darwin' and platform_machine == 'x86_64'

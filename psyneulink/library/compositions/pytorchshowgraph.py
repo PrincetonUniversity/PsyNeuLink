@@ -14,19 +14,11 @@ from psyneulink._typing import Optional, Union, Literal
 
 from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
-from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.projections.projection import Projection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import BOLD, INSET, NESTED, PNL
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.keywords import SHOW_PYTORCH, PNL
 
-__all__ = ['SHOW_PYTORCH']
-
-SHOW_PYTORCH = 'show_pytorch'
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
 
@@ -50,7 +42,7 @@ class PytorchShowGraph(ShowGraph):
     """
 
     def __init__(self, *args, **kwargs):
-        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, False)
+        self.show_pytorch = kwargs.pop('show_pytorch', False)
         super().__init__(*args, **kwargs)
 
     @beartype
@@ -64,10 +56,10 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
-        self.show_pytorch = kwargs.pop(SHOW_PYTORCH, self.show_pytorch)
+        self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
-            self.pytorch_rep = self.composition._build_pytorch_representation(context)
+            self.pytorch_rep = self.composition._build_pytorch_representation(context, refresh=False)
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
@@ -77,29 +69,40 @@ class PytorchShowGraph(ShowGraph):
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
-            # 7/9/24 FIX: COULD DO THIS BY ITERATING OVER PROJECTIONS INSTEAD OF NODES
-            for node in self._get_nodes(composition, context):
+            nodes = self._get_nodes(composition, context)
+            for node in nodes:
                 dependencies = set()
                 for projection in projections:
-                    if node is projection.receiver.owner:
-                        dependencies.add(projection.sender.owner)
+                    sender = projection.sender.owner
+                    receiver = projection.receiver.owner
+                    if node is receiver:
+                        dependencies.add(sender)
+                    # FIX: 3/9/25 - HANDLE NODE THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-                    elif (isinstance(projection.receiver.owner, CompositionInterfaceMechanism) and
-                          projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
-                          is node):
-                        dependencies.add(projection.sender.owner)
+                    elif (isinstance(receiver, CompositionInterfaceMechanism) and
+                          # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]
+                          # FIX: SUPPOSED TO RETRIEVE GRU NODE HERE,
+                          #      BUT NEED TO DEAL WITH INTERFERING PROJECTION FROM OUTPUT NODE
+                          receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
+                        dependencies.add(sender)
+                    else:
+                        for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
+                            dependencies.add(proj.sender.owner)
                 processing_graph[node] = dependencies
+
             # Add TARGET nodes
             for node in self.composition.learning_components:
                 processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
-            return processing_graph
+            return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+
         else:
             return super()._get_processing_graph(composition, context)
 
     def _get_nodes(self, composition, context):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
-            nodes = list(self.pytorch_rep.nodes_map.keys())
+            nodes = [node for node in self.pytorch_rep.nodes_map
+                           if SHOW_PYTORCH in self.pytorch_rep.nodes_map[node]._use]
             return nodes
         else:
             return super()._get_nodes(composition, context)
@@ -107,7 +110,9 @@ class PytorchShowGraph(ShowGraph):
     def _get_projections(self, composition, context):
         """Override to return nodes of Pytorch graph"""
         if self.show_pytorch:
-            projections = list(self.pytorch_rep.projections_map.keys())
+            # projections = list(self.pytorch_rep.projections_map.keys())
+            projections = [proj for proj in self.pytorch_rep.projections_map
+                           if SHOW_PYTORCH in self.pytorch_rep.projections_map[proj]._use]
             # FIX: NEED TO ADD PROJECTIONS TO NESTED COMPS THAT ARE TO CIM
             # Add any Projections to TARGET nodes
             projections += [afferent
@@ -120,13 +125,20 @@ class PytorchShowGraph(ShowGraph):
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
         """Override to include direct Projections from outer to nested comps in Pytorch mode"""
+        sndr = proj.sender.owner
+        rcvr = proj.receiver.owner
+        # # MODIFIED 2/16/25 NEW:
+        # if isinstance(rcvr, CompositionInterfaceMechanism):
+        #     # If receiver is an input_CIM, get the node in the inner Composition to which it projects
+        #     #   as it may be specified as dependent on the sender in the autodiff processing_graph
+        #     rcvr = rcvr._get_destination_info_from_input_CIM(proj.receiver)[1]
+        # MODIFIED 2/16/25 END
         if self.show_pytorch:
             processing_graph = self._get_processing_graph(self.composition, context)
             if proj in composition_projections:
                 return True
-            # If proj is betw. a sender and receiver specified in the processing_graphl, then it is in the autodiffcomp
-            elif (proj.receiver.owner in processing_graph
-                  and proj.sender.owner in processing_graph[proj.receiver.owner]):
+            # Include if proj is betw. a sender and receiver specified as dependent on it in processing_graph
+            elif (rcvr in processing_graph and sndr in processing_graph[rcvr]):
                 return True
             else:
                 return False
@@ -155,9 +167,24 @@ class PytorchShowGraph(ShowGraph):
     def _implement_graph_node(self, g, rcvr, context, *args, **kwargs):
         """Override to assign EXCLUDE_FROM_GRADIENT_CALC nodes their own style in Pytorch mode"""
         if self.show_pytorch:
-            if self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
+            if hasattr(rcvr, 'exclude_from_show_graph'):
+                # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
+                return
+            if rcvr in self.pytorch_rep.nodes_map and self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
+            elif rcvr not in self.composition.nodes:
+                #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph
+                #  (since they are not in the outermost Composition and are therefore ignored when it is flattened)
+                dependencies = self._get_processing_graph(self.composition, context)
+                receivers = dependencies.keys()
+                senders = [sender for sender_list in dependencies.values() for sender in sender_list]
+                if rcvr in receivers and rcvr not in senders:
+                    kwargs['color'] = self.output_color
+                    kwargs['penwidth'] = str(self.bold_width)
+                elif rcvr in senders and rcvr not in receivers:
+                    kwargs['color'] = self.input_color
+                    kwargs['penwidth'] = str(self.bold_width)
             g.node(*args, **kwargs)
         else:
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)
@@ -170,12 +197,26 @@ class PytorchShowGraph(ShowGraph):
 
             modulatory_node = None
             if proj.parameter_ports[0].mod_afferents:
+                # MODIFIED 2/22/25 OLD:
                 modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                # # MODIFIED 2/22/25 NEW:
+                # modulatory_node = self.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                # # MODIFIED 2/22/25 END
 
             if proj in self.pytorch_rep.projections_map:
+                # # MODIFIED 2/25/25 NEW:
+                # if ((hasattr(proj, 'learnable') and proj.learnable)
+                #         or (proj in self.pytorch_rep.projections_map and
+                #             self.pytorch_rep.projections_map[proj].matrix.requires_grad)):
+                #     proj_is_learnable = True
+                # # MODIFIED 2/25/25 END
 
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection
+                # # MODIFIED 2/25/25 OLD:
                 if proj.learnable or self.pytorch_rep.projections_map[proj].matrix.requires_grad:
+                # # MODIFIED 2/25/25 NEW:
+                # if proj_is_learnable:
+                # # MODIFIED 2/25/25 END
                     kwargs['color'] = self.learning_color
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
