@@ -1128,10 +1128,17 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition
-        Constructs PytorchCompositionWrapper that is used for learning in Pytorch.
-        If *learning_rate* is specified, it serves as default_learning_rate.
-        If *optimizer_params* is specified, that is used for default values.
-        If refresh is specified, a new pytorch_representation is constructed;  otherwise, if one exists, that is used.
+        Constructs PytorchCompositionWrapper that is used for learning in PyTorch.
+            - if *learning_rate* is specified:
+                - as a dict (in a direct call):
+                    - entries are moved to optmizer_params
+                    - if there is a DEFAULT_LEARNING_RATE entry, that is assigned to learning_rate
+                - as a single value, that is left, and used as the default learning_learning
+            - if *optimizer_params* is specified (in a call from learn(),
+                 - that is used for default value of learning_rate of specified projs
+        A new pytorch_representation is constructed if:
+            - none yet existis
+            - refresh is specified
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
@@ -1151,7 +1158,14 @@ class AutodiffComposition(Composition):
         # default_learning_rate = learning_rate or self.learning_rate
         # MODIFIED 6/25/25 NEW:
         default_learning_rate = learning_rate
-        if isinstance(learning_rate, dict):
+        if isinstance(learning_rate, dict) and optimizer_params:
+            # if learning_rate is a dict, optimizer_params should not have been passed in call
+            assert context.flags & ContextFlags.COMMAND_LINE, \
+                ("PROGRAM ERROR: 'optmizer_params' assigned when learning_rate assigned as a dict "
+                 "in internal call to _build_pytorch_representation() for '{self.name}'.")
+            assert False, \
+                ("PROGRAM ERROR:  Assignment of 'optimizer_params' in a direct call to "
+                 "_build_pytorch_representation() from the command line is not currently supported.")
             lr_dict = default_learning_rate
             default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
             for proj, lr in lr_dict.items():
