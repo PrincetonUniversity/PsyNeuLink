@@ -1197,6 +1197,7 @@ class AutodiffComposition(Composition):
                                                          optimizer_params,
                                                          Context(source=ContextFlags.METHOD,
                                                                  runmode=context.runmode,
+                                                                 # BREADCRUMB 6/27/25
                                                                  execution_id=context.execution_id))
             else:
                 # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
@@ -1213,6 +1214,7 @@ class AutodiffComposition(Composition):
                                                  optimizer_params,
                                                  Context(source=ContextFlags.METHOD,
                                                          runmode=context.runmode,
+                                                         # BREADCRUMB 6/27/25
                                                          execution_id=context.execution_id))
         # Set up loss function
         if self.loss_function is not None:
