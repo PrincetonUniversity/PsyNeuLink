@@ -1139,6 +1139,7 @@ class AutodiffComposition(Composition):
         A new pytorch_representation is constructed if:
             - none yet existis
             - refresh is specified
+        If called from the command_line more than once without refresh specified, warns and ignores
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
