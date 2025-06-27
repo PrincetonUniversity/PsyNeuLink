@@ -1196,7 +1196,8 @@ class AutodiffComposition(Composition):
                     pytorch_rep._update_optimizer_params(pytorch_rep.optimizer,
                                                          optimizer_params,
                                                          Context(source=ContextFlags.METHOD,
-                                                                 runmode=context.runmode))
+                                                                 runmode=context.runmode,
+                                                                 execution_id=context.execution_id))
             else:
                 # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
                 opt_params = optimizer_params or self._optimizer_constructor_params
@@ -1211,7 +1212,8 @@ class AutodiffComposition(Composition):
             pytorch_rep._update_optimizer_params(old_opt,
                                                  optimizer_params,
                                                  Context(source=ContextFlags.METHOD,
-                                                         runmode=context.runmode))
+                                                         runmode=context.runmode,
+                                                         execution_id=context.execution_id))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
