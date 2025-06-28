@@ -489,12 +489,14 @@ class TestAutodiffLearningRateArgs:
                                              name='Outer Comp',
                                              learning_rate = outer_comp_lr)
 
-        # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
         pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
+
+        # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
                                                    outer_comp.get_target_nodes()[0]: [[1]]},
                                            num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
-                                           learning_rate={input_proj:12, "NESTED 2 PROJ BC": 13})
+                                           learning_rate={input_proj:12, "NESTED 2 PROJ BC": 13,
+                                                          nested_2_proj_DE: 15})
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 13
@@ -503,7 +505,7 @@ class TestAutodiffLearningRateArgs:
                     build_pytorch_rep_spec["NESTED 2 PROJ CD"] if isinstance(build_pytorch_rep_spec, dict) else 10)
         else:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
-        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) == 15
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == (nested_1_comp_lr or 10)
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 12
@@ -626,14 +628,12 @@ class TestAutodiffLearningRateArgs:
         elif condition == "dict_proj_not_learnable":
             error_type = AutodiffCompositionError
             comp_lr = None
+            input_proj.learnable = False
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
         with pytest.raises(error_type) as error_text:
-            # outer_comp = pnl.AutodiffComposition(pathway, learning_rate=comp_lr, name='Outer Comp')
             outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
-            # input_proj.learnable = False
-            # outer_comp.learn(inputs={outer_mech_in: [[1.0]]})
             outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
         assert error_msg in str(error_text.value)
 

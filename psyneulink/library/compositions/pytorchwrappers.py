@@ -856,8 +856,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if proj_name == DEFAULT_LEARNING_RATE:
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
-                self._pnl_refs_to_torch_param_names[proj_name].projection.learning_rate \
-                    = optimizer_params_parsed[proj_name].value
+                proj = self._pnl_refs_to_torch_param_names[proj_name].projection
+                # BREADCDRUMB:
+                proj.learning_rate = optimizer_params_parsed[proj_name].value
+                # proj.parameters.learning_rate._set(optimizer_params_parsed[proj_name].value, context)
+            else:
+                assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
+                               f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
+
 
         # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
@@ -924,6 +930,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
                         f"the {source} for '{self.composition.name}' is not learnable; check that its 'learnable' "
                         f"attribute is set to 'True' and its learning_rate is not 'False', or remove from it the dict.")
+                # BREADCRUMB:  ?IS THIS ERROR MANAGED SOMEWHERE ELSE:
                 # else:
                 #     # param was set to False in call to constructor but has been assigned a learning_rate in learn()
                 #     raise AutodiffCompositionError(
@@ -995,11 +1002,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             default_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
                 # Get default learning_rate if specified in learn() method
-                # MODIFIED 6/24/25 OLD:
-                # specified_learning_rate = run_time_default_learning_rate or param_group_learning_rate
-                # MODIFIED 6/24/25 NEW:
                 specified_learning_rate = run_time_default_learning_rate
-                # MODIFIED 6/24/25 END
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
                 specified_learning_rate = (optimizer_torch_params_specified[param]
                                            if optimizer_torch_params_specified
@@ -1037,17 +1040,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         else:
                             # Use either run_time learning_rate or learning_rate for Composition, giving precedence
                             #   to one to which the Projection belongs if it is in a nested Composition
-                            # # MODIFIED 6/22/25 OLD:
-                            # specified_learning_rate = (run_time_default_learning_rate
-                            #                            or proj_composition.learning_rate
-                            #                            or composition.learning_rate)
-                            # MODIFIED 6/22/25 NEW:
                             specified_learning_rate = \
                                 (run_time_default_learning_rate or
-                                 self._get_default_composition_learning_rate(proj_composition,
-                                                                             composition,
-                                                                             context))
-                            # MODIFIED 6/22/25 END
+                                 self._get_default_composition_learning_rate(proj_composition, composition, context))
 
                     assert specified_learning_rate not in (None, NotImplemented),\
                         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"

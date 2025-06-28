@@ -515,8 +515,6 @@ class MappingProjection(PathwayProjection_Base):
         if not self.learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
             raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
                                f"float or int when 'learnable' is False.")
-        elif learning_rate is False:
-            self.learnable = False
         # # MODIFIED 4/24/25 NEW:
         # if PROXY_FOR in kwargs:
         #     # Identifies Projection into or out of a nested Composition for which this is the proxy
