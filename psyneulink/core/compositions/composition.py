@@ -1128,7 +1128,6 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
         Specifying *learning_rate* as a dict using Projection name(s) as key(s) can be useful at construction
         when the Projection itself may not yet have been constructed.
 
-
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::
@@ -1215,6 +1214,18 @@ determining the learning_rate for a Projection used at execution:
       (for Projections) take precedence over any other assignments; if either is ``False``, then no learning takes place
       for that object (though, for a Composition, learning may occur for Compositions nested within it).
 
+   COMMENT:  BREADCRUMB - UNCOMMENT ONCE IMPLEMENTED
+   .. note::
+      specifying *learning_rate* as 'False' in the constructor or `learn() <Composition.learn>` method of a Composition
+      applies only to Projections within its scope that are assigned 'None' (that is, it functions as the default for
+      those Projections); any Projecions directly assigned a `learning_rate <MappingProjection.learning_rate>` that is
+      a scalar value will use that value, and any assigned `True` will use either the `learning_rate
+      <Composition.learning_rate>` of any outer Composition if it is in a nested and there is one specified, or the
+      the Composition's class default `learning_rate <Composition.learning_rate>` -- that is, 'True' "protects" against
+      the assignment of 'False' to the Composition's `learning_rate <Composition.learning_rate>`, and forces use of
+      a default value procured from its Composition or one within which it is nested.  To fully disable learning for a
+      Composition, its `enable_learning <Composition.enable_learning>` attribute should be set to ``False``.
+   COMMENT
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -9341,17 +9352,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_rate
 
     def _assign_learning_rates(self, projections, context):
+        from psyneulink.library.compositions import AutodiffComposition
         if not self._learning_rates_dict:
             return
         not_learnable = []
         for proj in projections:
             # Get learning_rate spec if there is one;  use NotImplemented
             try:
-                # # MODIFIED 6/22/25 OLD:
-                # proj.learning_rate = self._learning_rates_dict.pop(proj.name)
-                # MODIFIED 6/22/25 NEW:
-                proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
-                # MODIFIED 6/22/25 END
+                # Make assignment of Projection.learning_rate
+                if isinstance(self, AutodiffComposition):
+                    # but leave in dict for transfer to optimizer_params
+                    proj.parameters.learning_rate.set(self._learning_rates_dict[proj.name], context)
+                else:
+                    # clear from dict, so call to learn() can verify that all have been used
+                    proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
                 if not proj.learnable:
                     not_learnable.append(proj.name)
             except KeyError:

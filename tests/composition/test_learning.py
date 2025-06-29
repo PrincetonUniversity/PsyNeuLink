@@ -122,7 +122,7 @@ class TestStructral:
         ("hidn_override_lr",   default_lr,        .1,       "hidden",         True,      hid_learn_ovrd),
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
-    #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
+    #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
     @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
     @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])

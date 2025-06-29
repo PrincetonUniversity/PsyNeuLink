@@ -1122,7 +1122,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    f"pytorch_representation of '{composition.name}'")
             new_params_group.append(param_group.copy())
             new_params_group[-1]['params'] = param_group['params'].copy()
-            assert True
         return new_params_group
 
     def get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
