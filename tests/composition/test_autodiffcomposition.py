@@ -392,7 +392,7 @@ class TestAutodiffLearningRateArgs:
                                              learning_rate = (constructor_learning_rate_dict
                                                               if "constructor" in condition
                                                               else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
-        # # BREADCRUMB: ?USE THESE:
+
         input_proj_lr = \
             .3 if constructor_dict_param == 'input' \
                 else input_lr if input_lr \
@@ -403,11 +403,11 @@ class TestAutodiffLearningRateArgs:
                 else hidden_lr if hidden_lr \
                 else constructor_lr if constructor_lr is not None \
                 else default_lr
-        outer_comp_proj = constructor_lr if constructor_lr is not None else .001
+        outer_comp_proj_lr = constructor_lr if constructor_lr is not None else .001
         pytorch_rep = outer_comp._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr # (vs. .2 in "...lr_2_MOD"
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == hidden_proj_lr
-        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == outer_comp_proj
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == outer_comp_proj_lr
 
         if post_constr:
             input_proj.learning_rate = .9
@@ -423,11 +423,16 @@ class TestAutodiffLearningRateArgs:
             learning_rate=(learn_method_learning_rate_dict if "learn" in condition
                            else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
 
-        # pytorch_rep = outer_comp.pytorch_representation
-        # # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
-        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.01 # (vs. .2 in "...lr_2_MOD"
-        # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == 0.1
-        # assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == 0.1
+        pytorch_rep = outer_comp.pytorch_representation
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == \
+               .2 if learn_method_learning_rate_dict[input_proj] else .9 if post_constr else input_proj_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == \
+               learn_method_learning_rate_dict[nested_proj] \
+            if learn_method_learning_rate_dict[nested_proj] is not None \
+            else .7 if post_constr else hidden_proj_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == \
+               learn_method_lr if learn_method_lr is not None else constructor_lr if constructor_lr is not None else .1
 
         np.testing.assert_allclose(pytorch_result, expected)
 
