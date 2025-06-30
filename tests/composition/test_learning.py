@@ -123,12 +123,12 @@ class TestStructral:
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
-    @pytest.mark.parametrize("comp_constuctor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
+    @pytest.mark.parametrize("comp_constructor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
     @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
     def test_projection_specific_learning_rates(self,
                                                 condition, comp_lr, learn_method_lr,
-                                                proj_constr, comp_constuctor_lr_dict, post_constr, expected):
+                                                proj_constr, comp_constructor_lr_dict, post_constr, expected):
 
         #  BREADCRUMB: ADD TEST FOR precedence of pathway lr specification
 
@@ -154,10 +154,9 @@ class TestStructral:
                         input_proj: input_lr,
                         hidden_proj: hidden_lr}
 
-        # output_proj = pnl.MappingProjection(mech_3, mech_4, learning_rate=default_lr,name="OUTPUT PROJECTION")
         comp = pnl.Composition(name='Comp',
                                synch_node_variables_with_torch=pnl.RUN,
-                               learning_rate=comp_lr_dict if comp_constuctor_lr_dict else comp_lr)
+                               learning_rate=comp_lr_dict if comp_constructor_lr_dict else comp_lr)
         learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
                                                       hidden_proj, mech_3, mech_4])
         if post_constr:
