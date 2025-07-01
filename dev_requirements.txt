@@ -8,4 +8,4 @@ pytest-helpers-namespace<2021.12.30
 pytest-profiling<1.8.2
 pytest-pycodestyle<2.5.0
 pytest-pydocstyle<2.5.0
-pytest-xdist>=3.2.0, <3.8.0
+pytest-xdist>=3.2.0, <3.9.0
