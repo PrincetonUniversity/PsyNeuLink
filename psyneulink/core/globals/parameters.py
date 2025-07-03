@@ -323,6 +323,7 @@ import weakref
 
 import toposort
 
+from psyneulink._typing import Iterable, Optional, Union
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
@@ -346,7 +347,8 @@ from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter'
+    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter',
+    'ParameterNoValueError', 'ParameterInvalidSourceError',
 ]
 
 logger = logging.getLogger(__name__)
@@ -357,18 +359,35 @@ class ParameterError(Exception):
 
 
 class ParameterNoValueError(ParameterError):
-    def __init__(self, param=None, execution_id=None):
-        message = "{0} '{1}'{2} has no value for execution_id {3}".format(
+    def __init__(
+        self,
+        param,
+        execution_id,
+        # to indicate there are no history values, pass None
+        history: Optional[Union[int, Iterable, None]] = NotImplemented,
+    ):
+        history_str = ''
+        if history is not NotImplemented:
+            history_str = ' in history'
+            if history is not None:
+                try:
+                    history = f'[{":".join([str(x) for x in history])}]'
+                except TypeError:
+                    history = f'[{history}]'
+                history_str = f'{history_str} ({history})'
+
+        message = "{0} '{1}'{2} has no value{3} for execution_id {4}".format(
             type(param).__name__,
             param.name,
             param._owner_string,
+            history_str,
             execution_id if not isinstance(execution_id, str) else f"'{execution_id}'"
         )
         super().__init__(message)
 
 
 class ParameterInvalidSourceError(ParameterError):
-    def __init__(self, param=None, detail=None):
+    def __init__(self, param, detail=None):
         from psyneulink.core.components.component import ComponentsMeta
 
         if detail is None:
@@ -1447,6 +1466,19 @@ class Parameter(ParameterBase):
         }
         return call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
+    def _handle_fallback_value(
+        self, execution_id, fallback_value, parent_exception=None, **err_kwargs
+    ):
+        if fallback_value is ParameterNoValueError:
+            fallback_value = self.fallback_value
+
+        if fallback_value is ParameterNoValueError:
+            raise ParameterNoValueError(self, execution_id, **err_kwargs) from parent_exception
+        elif fallback_value == DEFAULT:
+            return self.default_value
+        else:
+            return fallback_value
+
     @handle_external_context()
     def get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
         """
@@ -1494,94 +1526,72 @@ class Parameter(ParameterBase):
             try:
                 return self.values[execution_id]
             except KeyError as e:
-                if fallback_value is ParameterNoValueError:
-                    fallback_value = self.fallback_value
-
-                if fallback_value is ParameterNoValueError:
-                    raise ParameterNoValueError(self, execution_id) from e
-                elif fallback_value == DEFAULT:
-                    return self.default_value
-                else:
-                    return fallback_value
+                return self._handle_fallback_value(execution_id, fallback_value, e)
 
     @handle_external_context()
     def get_previous(
         self,
         context=None,
-        index: int = 1,
-        range_start: int = None,
-        range_end: int = None,
+        start: int = 0,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        fallback_value=ParameterNoValueError,
     ):
         """
             Gets the value set before the current value of this
             `Parameter` in the context of **context**. To return a range
-            of values, use `range_start` and `range_end`. Range takes
-            precedence over `index`. All history values can be accessed
-            directly as a list in `Parameter.history`.
+            of values, specify **stop** or **step**. If **stop** or
+            **step** is specified, the standard range [index:stop:step]
+            will be used. All history values can be accessed directly as
+            a list in `Parameter.history`.
 
             Args:
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a
                     Composition, uses **context**.default_execution_id
 
-                index
-                    how far back to look into the history. An index of
-                    1 means the value this Parameter had just before
-                    its current value. An index of 2 means the value
-                    before that
+                start
+                    how far back to look into the history. A **start**
+                    of 0 means the value this Parameter had just before
+                    its current value. A **start**  of 1 means the value
+                    before that.
 
-                range_start
-                    Inclusive. The index of the oldest history value to
-                    return. If ``None``, the range begins at the oldest
-                    value stored in history
+                stop
+                    Exclusive. The ending index of a slice into
+                    `history <Parameter.history>`.
 
-                range_end
-                    Inclusive. The index of the newest history value to
-                    return. If ``None``, the range ends at the newest
-                    value stored in history (does not include current
-                    value in `Parameter.values`)
+                step
+                    The step item of a slice into
+                    `history <Parameter.history>`.
+
+                fallback_value
+                    overrides `Parameter.fallback_value` for this call
 
             Returns:
                 the stored value or list of values in Parameter history
 
         """
-        def parse_index(x, arg_name=None):
-            try:
-                if x < 0:
-                    raise ValueError(f'{arg_name} cannot be negative')
-                return -x
-            except TypeError:
-                return x
+        eid = context.execution_id
+        try:
+            hist = self.history[eid]
+        except KeyError as e:
+            return self._handle_fallback_value(eid, fallback_value, e, history=None)
 
-        # inverted because the values represent "___ from the end of history"
-        index = parse_index(index, arg_name='index')
-        range_start = parse_index(range_start, arg_name='range_start')
+        if stop is not None or step is not None:
+            if stop is not None and stop > len(hist):
+                return self._handle_fallback_value(
+                    eid, fallback_value, history=(start, stop, step)
+                )
+            return list(itertools.islice(hist, start, stop, step))
 
-        # override index with ranges
-        if range_start == range_end and range_start is not None:
-            index = range_start
-            range_start = range_end = None
-
-        # fix 0 to "-0" / None
-        if range_end == 0:
-            range_end = None
-        elif range_end is not None:
-            # range_end + 1 for inclusive range
-            range_end = range_end + 1
-
-        if range_start is not None or range_end is not None:
-            try:
-                return list(self.history[context.execution_id])[range_start:range_end]
-            except (KeyError, IndexError):
-                return None
-        else:
-            try:
-                return self.history[context.execution_id][index]
-            except (KeyError, IndexError):
-                return None
+        try:
+            # standard int index
+            return hist[start]
+        except IndexError as e:
+            return self._handle_fallback_value(eid, fallback_value, e, history=start)
 
     @handle_external_context()
-    def get_delta(self, context=None):
+    def get_delta(self, context=None, fallback_value=ParameterNoValueError):
         """
             Gets the difference between the current value and previous value of `Parameter` in the context of **context**
 
@@ -1590,15 +1600,21 @@ class Parameter(ParameterBase):
 
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a Composition, uses **context**.default_execution_id
+
+                fallback_value
+                    overrides `Parameter.fallback_value` for this call
         """
+        current = self.get(context, fallback_value=fallback_value)
+        previous = self.get_previous(context, fallback_value=fallback_value)
+
         try:
-            return self.get(context) - self.get_previous(context)
+            return current - previous
         except TypeError as e:
             raise TypeError(
                 "Parameter '{0}' value mismatch between current ({1}) and previous ({2}) values".format(
                     self.name,
-                    self.get(context),
-                    self.get_previous(context)
+                    current,
+                    previous,
                 )
             ) from e
 
@@ -1712,7 +1728,7 @@ class Parameter(ParameterBase):
                     value_for_history = copy_parameter_value(value_for_history)
 
                 try:
-                    self.history[execution_id].append(value_for_history)
+                    self.history[execution_id].appendleft(value_for_history)
                 except KeyError:
                     self.history[execution_id] = collections.deque(
                         [value_for_history],
@@ -2224,11 +2240,12 @@ class SharedParameter(Parameter):
     def get_previous(
         self,
         context=None,
-        index: int = 1,
-        range_start: int = None,
-        range_end: int = None,
+        start: int = 0,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        fallback_value=ParameterNoValueError,
     ):
-        return self.source.get_previous(context, index, range_start, range_end)
+        return self.source.get_previous(context, start, stop, step, fallback_value)
 
     @handle_external_context()
     def get_delta(self, context=None):
