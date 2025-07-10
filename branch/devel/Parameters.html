@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.17.0.0+31.gf75262e2e documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.17.0.0+36.g3a338c145 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+31
+                  0.17.0.0+36
                 </div>
               
             
@@ -1032,29 +1032,28 @@ If no context is specified, attributes on the associated <a class="reference int
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.parameters.Parameter.get_previous">
-<span class="sig-name descname"><span class="pre">get_previous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_previous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_previous" title="Link to this definition">¶</a></dt>
 <dd><p>Gets the value set before the current value of this
 <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> in the context of <strong>context</strong>. To return a range
-of values, use <code class="xref any docutils literal notranslate"><span class="pre">range_start</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">range_end</span></code>. Range takes
-precedence over <a class="reference internal" href="index.html"><span class="doc">Welcome to PsyNeuLink </span></a>. All history values can be accessed
-directly as a list in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.history</span></code></a>.</p>
+of values, specify <strong>stop</strong> or <strong>step</strong>. If <strong>stop</strong> or
+<strong>step</strong> is specified, the standard range [index:stop:step]
+will be used. All history values can be accessed directly as
+a list in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.history</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> – Context, execution_id, Composition
 the context for which the value is stored; if a
 Composition, uses <strong>context</strong>.default_execution_id</p></li>
-<li><p><strong>index</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how far back to look into the history. An index of
-1 means the value this Parameter had just before
-its current value. An index of 2 means the value
-before that</p></li>
-<li><p><strong>range_start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Inclusive. The index of the oldest history value to
-return. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the range begins at the oldest
-value stored in history</p></li>
-<li><p><strong>range_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Inclusive. The index of the newest history value to
-return. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the range ends at the newest
-value stored in history (does not include current
-value in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.values" title="psyneulink.core.globals.parameters.Parameter.values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.values</span></code></a>)</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how far back to look into the history. A <strong>start</strong>
+of 0 means the value this Parameter had just before
+its current value. A <strong>start</strong>  of 1 means the value
+before that.</p></li>
+<li><p><strong>stop</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Exclusive. The ending index of a slice into
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>.</p></li>
+<li><p><strong>step</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The step item of a slice into
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>.</p></li>
+<li><p><strong>fallback_value</strong> – overrides <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.fallback_value" title="psyneulink.core.globals.parameters.Parameter.fallback_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.fallback_value</span></code></a> for this call</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1065,11 +1064,14 @@ value in <a class="reference internal" href="#psyneulink.core.globals.parameters
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.parameters.Parameter.get_delta">
-<span class="sig-name descname"><span class="pre">get_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.get_delta" title="Link to this definition">¶</a></dt>
 <dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> in the context of <strong>context</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><em>execution_id</em><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>context</strong>.default_execution_id</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><em>execution_id</em><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>context</strong>.default_execution_id</p></li>
+<li><p><strong>fallback_value</strong> – overrides <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.fallback_value" title="psyneulink.core.globals.parameters.Parameter.fallback_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.fallback_value</span></code></a> for this call</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -1310,29 +1312,28 @@ value specified in its target</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.globals.parameters.SharedParameter.get_previous">
-<span class="sig-name descname"><span class="pre">get_previous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.get_previous" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_previous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_value=&lt;class</span> <span class="pre">'psyneulink.core.globals.parameters.ParameterNoValueError'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.get_previous" title="Link to this definition">¶</a></dt>
 <dd><p>Gets the value set before the current value of this
 <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> in the context of <strong>context</strong>. To return a range
-of values, use <code class="xref any docutils literal notranslate"><span class="pre">range_start</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">range_end</span></code>. Range takes
-precedence over <a class="reference internal" href="index.html"><span class="doc">Welcome to PsyNeuLink </span></a>. All history values can be accessed
-directly as a list in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.history</span></code></a>.</p>
+of values, specify <strong>stop</strong> or <strong>step</strong>. If <strong>stop</strong> or
+<strong>step</strong> is specified, the standard range [index:stop:step]
+will be used. All history values can be accessed directly as
+a list in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.history</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> – Context, execution_id, Composition
 the context for which the value is stored; if a
 Composition, uses <strong>context</strong>.default_execution_id</p></li>
-<li><p><strong>index</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how far back to look into the history. An index of
-1 means the value this Parameter had just before
-its current value. An index of 2 means the value
-before that</p></li>
-<li><p><strong>range_start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Inclusive. The index of the oldest history value to
-return. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the range begins at the oldest
-value stored in history</p></li>
-<li><p><strong>range_end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Inclusive. The index of the newest history value to
-return. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the range ends at the newest
-value stored in history (does not include current
-value in <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.values" title="psyneulink.core.globals.parameters.Parameter.values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.values</span></code></a>)</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how far back to look into the history. A <strong>start</strong>
+of 0 means the value this Parameter had just before
+its current value. A <strong>start</strong>  of 1 means the value
+before that.</p></li>
+<li><p><strong>stop</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – Exclusive. The ending index of a slice into
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>.</p></li>
+<li><p><strong>step</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – The step item of a slice into
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>.</p></li>
+<li><p><strong>fallback_value</strong> – overrides <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.fallback_value" title="psyneulink.core.globals.parameters.Parameter.fallback_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.fallback_value</span></code></a> for this call</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1347,12 +1348,25 @@ value in <a class="reference internal" href="#psyneulink.core.globals.parameters
 <dd><p>Gets the difference between the current value and previous value of <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> in the context of <strong>context</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><em>execution_id</em><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>context</strong>.default_execution_id</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em>, </em><em>execution_id</em><em>, </em><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – the context for which the value is stored; if a Composition, uses <strong>context</strong>.default_execution_id</p></li>
+<li><p><strong>fallback_value</strong> – overrides <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.fallback_value" title="psyneulink.core.globals.parameters.Parameter.fallback_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Parameter.fallback_value</span></code></a> for this call</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.ParameterNoValueError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.parameters.</span></span><span class="sig-name descname"><span class="pre">ParameterNoValueError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParameterNoValueError" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.core.globals.parameters.ParameterInvalidSourceError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.parameters.</span></span><span class="sig-name descname"><span class="pre">ParameterInvalidSourceError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.ParameterInvalidSourceError" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -1467,6 +1481,8 @@ value in <a class="reference internal" href="#psyneulink.core.globals.parameters
 <li><a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter.get_delta"><code class="docutils literal notranslate"><span class="pre">SharedParameter.get_delta()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#psyneulink.core.globals.parameters.ParameterNoValueError"><code class="docutils literal notranslate"><span class="pre">ParameterNoValueError</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.globals.parameters.ParameterInvalidSourceError"><code class="docutils literal notranslate"><span class="pre">ParameterInvalidSourceError</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1486,7 +1502,7 @@ value in <a class="reference internal" href="#psyneulink.core.globals.parameters
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=96333dde"></script>
+         <script src="_static/documentation_options.js?v=c5ec8cde"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
