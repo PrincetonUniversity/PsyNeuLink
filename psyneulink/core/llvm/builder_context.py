@@ -536,6 +536,8 @@ class LLVMBuilderContext:
 
         elif isinstance(t, (list, tuple)):
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+
+            # Use array if all elements are of the same type
             if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
                 return ir.ArrayType(elems_t[0], len(elems_t))
 
@@ -558,7 +560,14 @@ class LLVMBuilderContext:
             # observed here after compilation sync.
             # Avoid silent promotion to float (via Python's builtin int-type)
             if t.ndim == 0 and t.dtype == np.uint32:
-                return self.convert_python_struct_to_llvm_ir(t.reshape(1)[0])
+                return self.convert_python_struct_to_llvm_ir(t.flat[0])
+
+            # Convert to Python list. This reuses the above path
+            # and for decision between struct vs. array.
+            # It also converts np.integer values to Python "int" as there
+            # are situations in which PNL uses integer arrays for floating
+            # point data, e.g. variable default of '[1,2,3,4]' will be
+            # dtype np.int64.
             return self.convert_python_struct_to_llvm_ir(t.tolist())
 
         elif isinstance(t, np.random.RandomState):
