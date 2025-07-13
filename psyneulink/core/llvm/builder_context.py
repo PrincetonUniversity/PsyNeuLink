@@ -488,8 +488,17 @@ class LLVMBuilderContext:
                 val = np.asarray(val, dtype=float).ravel()
             elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
-            elif np.ndim(val) == 0 and component._is_param_modulated(p):
-                val = [val]   # modulation adds array wrap
+
+            # seeds are represented as np.uint32, but need to be converted to
+            # float for compiled variant in order to support seed modulation
+            elif p.name in {'seed', 'function-seed'}:
+                val = float(val)
+
+            # Modulation turns scalars into arrays
+            # TODO: should this be 2d arrays?
+            if np.ndim(val) == 0 and component._is_param_modulated(p):
+                val = [val]
+
             return self.convert_python_struct_to_llvm_ir(val)
 
         elements = map(_param_struct, component._get_compilation_params())
