@@ -31,7 +31,7 @@ Contents
 Overview
 --------
 
-An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
+An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competing
 accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network. By default, it uses a
 `LeakyCompetingIntegrator` and a `Logistic` Function to compute the activity of the units, each of which has a
 self-excitatory connection (specified by the **self_excitation** argument) and mutually inhibitory connections with
