@@ -478,15 +478,23 @@ class LLVMBuilderContext:
             return component._get_param_struct_type(self)
 
         def _param_struct(p):
-            val = p.get(None)   # this should use defaults
+            # TODO: Types should be based on the default value rather than
+            #       the value of context 'None'
+            val = p.get(None)
+
             if hasattr(val, "_get_compilation_params") or \
                hasattr(val, "_get_param_struct_type"):
                 return self.get_param_struct_type(val)
+
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
-            elif p.name == 'matrix':   # Flatten matrix
+
+            # matrices are represented as flat arrays
+            elif p.name == 'matrix':
                 val = np.asarray(val, dtype=float).ravel()
-            elif p.name == 'num_trials_per_estimate':  # Should always be int
+
+            # num_trials_per_estimate should be integer
+            elif p.name == 'num_trials_per_estimate':
                 val = np.int32(0) if val is None else np.int32(val)
 
             # seeds are represented as np.uint32, but need to be converted to
@@ -510,14 +518,21 @@ class LLVMBuilderContext:
             return component._get_state_struct_type(self)
 
         def _state_struct(p):
-            val = p.get(None)   # this should use defaults
+            # TODO: Types should be based on the default value rather than
+            #       the value of context 'None'
+            val = p.get(None)
+
             if hasattr(val, "_get_compilation_state") or \
                hasattr(val, "_get_state_struct_type"):
                 return self.get_state_struct_type(val)
+
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
-            if p.name == 'matrix':   # Flatten matrix
+
+            # matrices are represented as flat arrays
+            if p.name == 'matrix':
                 val = np.asarray(val, dtype=float).ravel()
+
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 
@@ -536,6 +551,7 @@ class LLVMBuilderContext:
         if cache is None:
             cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_assemblies', cache)
+
         return cache.setdefault(node, _node_assembly(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
