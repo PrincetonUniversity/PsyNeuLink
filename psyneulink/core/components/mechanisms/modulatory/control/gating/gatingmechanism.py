@@ -125,7 +125,7 @@ type of `OutputPort`, they are also listed in the GatingMechanism's `output_port
 attribute. The InputPorts and/or OutputPorts modulated by a GatingMechanism's GatingSignals can be displayed using
 its `show <GatingMechanism.show>` method. If the GatingMechanism's `function <GatingMechanism.function>` generates a
 `gating_allocation <GatingMechanism.gating_allocation>` with a single value (the default), then this is used as the
-`allocation <GatingSignal.alloction>` for all of the GatingMechanism's `gating_signals
+`allocation <GatingSignal.allocation>` for all of the GatingMechanism's `gating_signals
 <GatingMechanism.gating_signals>`.  If the `gating_allocation <GatingMechanism.gating_allocation>` has multiple
 items, and this is the same as the number of GatingSignals, then each GatingSignal is assigned the value of the
 corresponding item in the `gating_allocation <GatingMechanism.gating_allocation>`.  If there is a different number of
