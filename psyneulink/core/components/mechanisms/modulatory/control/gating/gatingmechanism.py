@@ -40,9 +40,9 @@ Creating A GatingMechanism
 
 A GatingMechanism is created by calling its constructor.  When a GatingMechanism is created, the OutputPorts it
 monitors and the `InputPorts <InputPort>` and/or `OutputPorts <OutputPort>` it modulates can be specified in the
-**montior_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
+**monitor_for_gating** and **gate** arguments of its constructor, respectively.  Each can be specified in several
 ways, paralleling those used for a ControlMechanism, and described in `ControlMechanism_Monitor_for_Control` and
-`ControlMechanism_ControlSignals` respectively. If neither the **montior_for_gating** or **gate** arguments is
+`ControlMechanism_ControlSignals` respectively. If neither the **monitor_for_gating** or **gate** arguments is
 specified, then only the GatingMechanism is constructed, and its inputs and the InputPorts and/or OutputPorts it
 modulates must be specified in some other way.
 COMMENT:
