@@ -48,7 +48,7 @@ class CompositionRunner():
             total_loss += comparator.value[0][0]
         return total_loss
 
-    def convert_to_torch(self, v):
+    def convert_to_torch(self, v, add_sequence_dim):
         """Convert a list of numpy arrays to a list of PyTorch tensors"""
 
         import torch
@@ -74,16 +74,25 @@ class CompositionRunner():
         if type(t) is not list and t.dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
             t = t.double()
 
+        # Even though this is not an input of sequences, we need to add a singleton dimension for sequence. This
+        # will be the second dimension, after the batch dimension.
+        if add_sequence_dim:
+            try:
+                t = t[:, None, ...]
+            except TypeError:
+                # We are dealing with a list.
+                t = [[[x for x in y]] for y in t]
+
         return t
 
-    def convert_input_to_arrays(self, inputs, execution_mode):
+    def convert_input_to_arrays(self, inputs, execution_mode, add_sequence_dim: bool = False):
         """If the inputs are not numpy arrays or torch tensors, convert them"""
 
         array_inputs = {}
         for k, v in inputs.items():
             if type(v) is list:
                 if execution_mode is ExecutionMode.PyTorch:
-                    array_inputs[k] = self.convert_to_torch(v)
+                    array_inputs[k] = self.convert_to_torch(v, add_sequence_dim)
                 else:
                     array_inputs[k] = np.array(v)
             else:
@@ -130,9 +139,10 @@ class CompositionRunner():
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
 
         if isinstance(inputs, dict):
-            inputs = self.convert_input_to_arrays(inputs, execution_mode)
+            inputs = self.convert_input_to_arrays(inputs, execution_mode, add_sequence_dim=True)
+
         elif isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs):
-            inputs = [self.convert_input_to_arrays(i, execution_mode) for i in inputs]
+            inputs = [self.convert_input_to_arrays(i, execution_mode, add_sequence_dim=False) for i in inputs]
 
             import torch
             from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
@@ -284,7 +294,7 @@ class CompositionRunner():
                         break
                     batch_ran = True
 
-                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode)
+                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode, add_sequence_dim=True)
 
                     yield input_batch
 

@@ -143,7 +143,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 entry_to_store = field_projection.sender_wrapper.output
 
                 # Retrieve the correct field (for each batch, batch is first dimension)
-                memory_to_store_indexed = memory_to_store[:, field_idx, :]
+                memory_to_store_indexed = memory_to_store[:, :, field_idx, :]
 
                 # - store in row
                 axis = 0
@@ -155,7 +155,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)
-                entry_to_store = memory_to_store[:, field_idx, :]
+                entry_to_store = memory_to_store[:, :, field_idx, :]
                 # - store in column
                 axis = 1
             # Get matrix containing memories for the field from the Projection

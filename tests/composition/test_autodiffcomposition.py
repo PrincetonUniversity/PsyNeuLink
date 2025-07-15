@@ -3799,22 +3799,22 @@ class TestACLogging:
 
 
         if minibatch_size == 1:
-            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, :, :])
+            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, None, :, :])
         elif minibatch_size == 4:
             np.testing.assert_equal(in_np_vals[0:2][:, :, :], in_np_dict_vals)
 
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_in.input_shapes)
+        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_in.input_shapes)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.input_shapes, xor_hid.input_shapes)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_hid.input_shapes)
+        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_hid.input_shapes)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.input_shapes, xor_out.input_shapes)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_out.input_shapes)
+        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_out.input_shapes)
 
         xor_out.log.print_entries()
 
@@ -3895,26 +3895,26 @@ class TestACLogging:
         # Outer OUTPUT Mechanism -----------
 
         # variable
-        expected = [[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]
+        expected = [[[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]]
         # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].variable, expected)
         np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.variable.get('Outer Comp'), expected)
 
         # value
-        expected = [[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]
+        expected = [[[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]]
         # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].value, expected)
         np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.value.get('Outer Comp'), expected)
 
         # Nested INPUT Mechanism  ----------
 
         # variable
-        expected = [[[10, 10]]]
+        expected = [[[[10, 10]]]]
         # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].variable, expected)
         # np.testing.assert_allclose(outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].variable, expected)
         np.testing.assert_allclose(
             outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.variable.get('Outer Comp'), expected)
 
         # value
-        expected = [[[0.9999546, 0.9999546]]]
+        expected = [[[[0.9999546, 0.9999546]]]]
         # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].value, expected)
         # np.testing.assert_allclose(['Inner Comp'].nodes['Inner Mech 1'].value, expected)
         np.testing.assert_allclose(
@@ -4143,13 +4143,15 @@ def test_training_xor_with_batching(batch_size, batched_results):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    torch.set_default_dtype(torch.float64)
+
     HIDDEN_SIZE = 5
     LEARNING_RATE = 0.1
     WEIGHT_DECAY = 0
     NUM_EPOCHS = 2
 
-    X = torch.FloatTensor([[0, 0], [0, 1], [1, 0], [1, 1]]).to(device)
-    Y = torch.FloatTensor([[0], [1], [1], [0]]).to(device)
+    X = torch.tensor([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=torch.get_default_dtype()).to(device)
+    Y = torch.tensor([[0], [1], [1], [0]], dtype=torch.get_default_dtype()).to(device)
 
     linear1 = nn.Linear(2, HIDDEN_SIZE, bias=False)
     linear2 = nn.Linear(HIDDEN_SIZE, 1, bias=False)
@@ -4167,6 +4169,14 @@ def test_training_xor_with_batching(batch_size, batched_results):
     # criterion = nn.BCELoss().to(device)
     criterion = nn.MSELoss().to(device)
     optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    # x, y = X[0:0+batch_size].unsqueeze(1), Y[0:0+batch_size].unsqueeze(1)
+    #
+    # t = linear1(x); print(f"Linear1 Out: {torch.sum(t).item()}")
+    # t = sigmoid(t); print(f"Sigmoid1 Out: {torch.sum(t).item()}")
+    # t = linear2(t); print(f"Linear2 Out: {torch.sum(t).item()}")
+    # t = sigmoid(t); print(f"Sigmoid2 Out: {torch.sum(t).item()}")
+    # loss = criterion(t, y); print(f"Loss: {loss.item()}")
 
     # A generator to generate batches of X with batch_size, batches will be of shape
     # (batch_size, 1, 2)
