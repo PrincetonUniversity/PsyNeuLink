@@ -307,6 +307,8 @@ Table of Contents
    QuickReference
    Core
    Library
+   manual/index
+   tutorials/index
    ContributorsGuide
 
 .. _Indices_and_Tables:
