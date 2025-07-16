@@ -53,6 +53,7 @@ clean:
 .PHONY: html
 html: generated
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@$(MAKE) postprocess
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
@@ -247,3 +248,7 @@ GENERATED=$(patsubst %.py, %, $(shell find source/generator_scripts -name "*.py"
 
 .PHONY: generated
 generated: $(GENERATED)
+
+.PHONY: postprocess
+postprocess:
+	python source/post_process/add_colab_support.py
