@@ -1172,12 +1172,12 @@ class AutodiffComposition(Composition):
             for proj, lr in lr_dict.items():
                 if isinstance(proj, str):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
-                proj.parameters.learning_rate.set(lr, context)
+                proj.parameters.learning_rate._set(lr, context)
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
         else:
-            self.parameters.learning_rate.set(default_learning_rate, context)
+            self.parameters.learning_rate._set(default_learning_rate, context)
         # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
         # MODIFIED 6/29/25 OLD:
         if self._runtime_learning_rate is not None:
@@ -1238,7 +1238,7 @@ class AutodiffComposition(Composition):
             optimizer_params = learning_rate
             learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE,
                                                  self.parameters.learning_rate.default_value)
-            self.learning_rate = learning_rate
+            self.parameters.learning_rate._set(learning_rate, context)
         if not is_numeric_scalar(learning_rate):
             raise AutodiffCompositionError(
                 f"A value ('{learning_rate}') specified in the 'learning_rate' arg of the learn() method "
@@ -1866,7 +1866,7 @@ class AutodiffComposition(Composition):
                            context=context)
 
                     self._build_pytorch_representation(optimizer_params=optimizer_params,
-                                                       learning_rate=self.learning_rate,
+                                                       learning_rate=self.parameters.learning_rate.get(context),
                                                        context=context, base_context=base_context)
                     trained_output_values, all_output_values = \
                                                     self.autodiff_forward(inputs=autodiff_inputs,

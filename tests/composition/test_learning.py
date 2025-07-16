@@ -59,7 +59,7 @@ def xor_network(comp_type, comp_learning_rate, pathway_learning_rate):
     return xor, input_layer, hidden_layer, output_layer, target_mechanism, inputs, targets,
 
 
-class TestStructral:
+class TestStructural:
 
     def validate_learning_mechs(self, comp):
 
@@ -93,7 +93,7 @@ class TestStructral:
 
     # Expected results for test_projection_specific_learning_rates()
     # NOTE: these should be kept the same as used in test_autodiffcomposition/test_projection_specific_learning_rates()
-    #       to additionally test for identicality of effects with PyTorch learning in AutodiffCompostion.
+    #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
     baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
     learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
     input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
@@ -167,6 +167,43 @@ class TestStructral:
                                  num_trials=num_trials,
                                  learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
+
+    @pytest.mark.parametrize("proj_lr", [.2, None, True, False])
+    @pytest.mark.parametrize("comp_lr", [.3, None, True, False])
+    def test_default_and_False_learning_rates(self, proj_lr, comp_lr):
+        mech_1 = pnl.ProcessingMechanism()
+        mech_2 = pnl.ProcessingMechanism()
+        proj = pnl.MappingProjection(mech_1, mech_2,
+                                     learning_rate=proj_lr,
+                                     name='PROJECTION')
+
+        autodiff = pnl.AutodiffComposition([mech_1, proj, mech_2],
+                                           # learning_rate = {proj:1,
+                                           #                  DEFAULT_LEARNING_RATE: 1.5},
+                                           # learning_rate = 2
+                                           learning_rate = comp_lr
+                                           )
+        # autodiff._build_pytorch_representation(learning_rate = 10)
+        # autodiff._build_pytorch_representation(learning_rate = {proj:.2,
+        #                                                         DEFAULT_LEARNING_RATE: 2.5})
+        pytorch_rep = autodiff._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr
+        assert proj.learning_rate == proj_lr
+        assert autodiff.learning_rate == comp_lr
+
+        autodiff.learn(inputs=autodiff.get_input_format(),
+                       learning_rate={DEFAULT_LEARNING_RATE:99,
+                                      proj:None},
+                       execution_mode=pnl.ExecutionMode.PyTorch)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == comp_lr
+        assert proj.parameters.learning_rate.get('autodiff_composition') == comp_lr
+        assert autodiff.learning_rate == 99
+
+        autodiff.learn(inputs=autodiff.get_input_format(),
+                       execution_mode=pnl.ExecutionMode.PyTorch)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr
+        assert proj.learning_rate == proj_lr
+        assert autodiff.learning_rate == comp_lr
 
     error_test_args = [
         ("comp_lr_spec_str", True,
