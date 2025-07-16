@@ -43,7 +43,8 @@ types of Mechanisms in PsyNeuLink:
       different types of ProcessingMechanism, that accept various forms of input and transform them in different ways
       (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
 
-      to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
+    * `ModulatoryMechanisms <ModulatoryMechanism>` modulate the parameters of other Mechanisms or Projections.
+       There are three basic ModulatoryMechanisms:
 
       * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
