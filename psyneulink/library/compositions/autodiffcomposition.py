@@ -787,13 +787,6 @@ class AutodiffComposition(Composition):
                 opt_params_arg[DEFAULT_LEARNING_RATE] = learning_rate
             learning_rate = opt_params_arg.pop(LEARNING_RATE)
 
-        # Move learning_rate to optimizer_params if it is a dict, and extract default learning_rate for Composition
-        if isinstance(learning_rate, dict):
-            self._optimizer_constructor_params = learning_rate
-            learning_rate = self._optimizer_constructor_params.pop(DEFAULT_LEARNING_RATE, None)
-        else:
-            self._optimizer_constructor_params = {}
-
         super(AutodiffComposition, self).__init__(
             name = name,
             pathways=pathways,
@@ -818,6 +811,7 @@ class AutodiffComposition(Composition):
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
+        self._optimizer_constructor_params = self._learning_rates_dict or {}
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
@@ -875,6 +869,7 @@ class AutodiffComposition(Composition):
 
         # ShowGraph
         self.assign_ShowGraph(show_graph_attributes)
+
     def assign_ShowGraph(self, show_graph_attributes):
         """Override to replace assignment of ShowGraph class with PytorchShowGraph if torch is available"""
         show_graph_attributes = show_graph_attributes or {}
@@ -1139,6 +1134,7 @@ class AutodiffComposition(Composition):
         A new pytorch_representation is constructed if:
             - none yet existis
             - refresh is specified
+        If called from the command_line more than once without refresh specified, warns and ignores
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
@@ -1149,15 +1145,20 @@ class AutodiffComposition(Composition):
                                                   device=self.device,
                                                   context=context,
                                                   base_context=base_context)
+        elif context.flags & ContextFlags.COMMAND_LINE:
+            warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
+                          f"direcdtly from the command line; this and any additional calls will be ignored. "
+                          f"Make any desired modifications to parameters (e.g., learning_rates) either in the "
+                          f"constructor for the AutodiffComposition, or its learn() method.")
+
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
-        # # MODIFIED 6/25/25 OLD:
-        # default_learning_rate = learning_rate or self.learning_rate
-        # MODIFIED 6/25/25 NEW:
-        default_learning_rate = learning_rate
+        #    give precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
+        #    over learning_rate specified in constructor (passed in above as learning_rate)
+        default_learning_rate = self._runtime_learning_rate or learning_rate
         if isinstance(learning_rate, dict) and optimizer_params:
             # if learning_rate is a dict, optimizer_params should not have been passed in call
             assert context.flags & ContextFlags.COMMAND_LINE, \
@@ -1171,15 +1172,20 @@ class AutodiffComposition(Composition):
             for proj, lr in lr_dict.items():
                 if isinstance(proj, str):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
-                proj.parameters.learning_rate.set(lr, context)
+                proj.parameters.learning_rate._set(lr, context)
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
         else:
-            self.parameters.learning_rate.set(default_learning_rate, context)
-        # MODIFIED 6/25/25 END
+            self.parameters.learning_rate._set(default_learning_rate, context)
+        # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
+        # MODIFIED 6/29/25 OLD:
         if self._runtime_learning_rate is not None:
             optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+        # # MODIFIED 6/29/25 NEW:
+        # if default_learning_rate is not None:
+        #     optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
+        # MODIFIED 6/29/25 END
 
         if (old_opt is None or refresh) and refresh is not False:
             # Instantiate a new optimizer if there isn't one yet or refresh has been called and is not blocked)
@@ -1197,7 +1203,6 @@ class AutodiffComposition(Composition):
                                                          optimizer_params,
                                                          Context(source=ContextFlags.METHOD,
                                                                  runmode=context.runmode,
-                                                                 # BREADCRUMB 6/27/25
                                                                  execution_id=context.execution_id))
             else:
                 # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
@@ -1214,7 +1219,6 @@ class AutodiffComposition(Composition):
                                                  optimizer_params,
                                                  Context(source=ContextFlags.METHOD,
                                                          runmode=context.runmode,
-                                                         # BREADCRUMB 6/27/25
                                                          execution_id=context.execution_id))
         # Set up loss function
         if self.loss_function is not None:
@@ -1234,10 +1238,11 @@ class AutodiffComposition(Composition):
             optimizer_params = learning_rate
             learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE,
                                                  self.parameters.learning_rate.default_value)
-            self.learning_rate = learning_rate
+            self.parameters.learning_rate._set(learning_rate, context)
         if not is_numeric_scalar(learning_rate):
-            raise AutodiffCompositionError(f"Value ('{learning_rate}') specified in 'learning_rate' arg of the "
-                                           f"learn() method for '{self.name}' must be an int, float, bool or dict.")
+            raise AutodiffCompositionError(
+                f"A value ('{learning_rate}') specified in the 'learning_rate' arg of the learn() method "
+                f"for '{self.name}' is not valid; it must be an int, float, bool or None.")
         if self.optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
@@ -1861,7 +1866,7 @@ class AutodiffComposition(Composition):
                            context=context)
 
                     self._build_pytorch_representation(optimizer_params=optimizer_params,
-                                                       learning_rate=self.learning_rate,
+                                                       learning_rate=self.parameters.learning_rate.get(context),
                                                        context=context, base_context=base_context)
                     trained_output_values, all_output_values = \
                                                     self.autodiff_forward(inputs=autodiff_inputs,

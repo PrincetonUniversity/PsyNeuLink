@@ -1,4 +1,5 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+
+# "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -1084,11 +1085,6 @@ for which `enable_learning <Composition.enable_learning>` is ``True``.  However,
 those nested within it have their `enable_learning <Composition.enable_learning>` attribute set to ``False``,
 then an error is raised if the `learn <Composition.learn>` method is called.
 
-COMMENT:
-BREADCRUMB 6/9/25: REMOVE ONCE SETTLED
-the Composition is executed, and returns the `output_values <Composition.output_values>` of the Composition after the
-last trial of execution, which is the same as if its `run  <Composition.run>` method had been called instead.
-COMMENT
 
 .. _Composition_Learning_Rate:
 
@@ -1128,6 +1124,10 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
       `learn <Composition.learn>` method; a dict can also be used to specify the **learning_rate** argument of the
       `learn <Composition.learn>` method, which overrides all other specifications, but applies only for that execution.
 
+    .. hint::
+        Specifying *learning_rate* as a dict using Projection name(s) as key(s) can be useful at construction
+        when the Projection itself may not yet have been constructed.
+
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::
@@ -1148,7 +1148,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
 As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
 general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
-higher level, more general ones, and that False always takes precedence.  More specifically:
+higher level, more general ones.  More specifically:
 
   * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
 
@@ -1157,7 +1157,10 @@ higher level, more general ones, and that False always takes precedence.  More s
   * *inner* Composition specifications take precedence over those for ones within which they are nested, for cases
     in which learning is supported for nested Compositions (see `note <Composition_Learning_Nested>` above for
     learning and `nested Compositions <Composition_Nested>`)
-    
+
+  * 'False' specified for a Composition (in its constructor or `learn <Composition.learn>` method) only applies
+    to Projections within its scope that are assigned 'None' or 'True' (that is, it functions as the default).
+
 Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
 determining the learning_rate for a Projection used at execution:
 
@@ -1211,6 +1214,18 @@ determining the learning_rate for a Projection used at execution:
       (for Projections) take precedence over any other assignments; if either is ``False``, then no learning takes place
       for that object (though, for a Composition, learning may occur for Compositions nested within it).
 
+   COMMENT:  BREADCRUMB - UNCOMMENT ONCE IMPLEMENTED
+   .. note::
+      specifying *learning_rate* as 'False' in the constructor or `learn() <Composition.learn>` method of a Composition
+      applies only to Projections within its scope that are assigned 'None' (that is, it functions as the default for
+      those Projections); any Projecions directly assigned a `learning_rate <MappingProjection.learning_rate>` that is
+      a scalar value will use that value, and any assigned `True` will use either the `learning_rate
+      <Composition.learning_rate>` of any outer Composition if it is in a nested and there is one specified, or the
+      the Composition's class default `learning_rate <Composition.learning_rate>` -- that is, 'True' "protects" against
+      the assignment of 'False' to the Composition's `learning_rate <Composition.learning_rate>`, and forces use of
+      a default value procured from its Composition or one within which it is nested.  To fully disable learning for a
+      Composition, its `enable_learning <Composition.enable_learning>` attribute should be set to ``False``.
+   COMMENT
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -8358,22 +8373,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert learning_mech, \
                 (f"PROGRAM ERROR: LearningMechanism that projects to '{learnable_projection.name}' is not in "
                  f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
-            # MODIFIED 6/22/25 OLD:
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
-            # # MODIFIED 6/22/25 NEW:
-            # learning_mech_lr = learning_mech.learning_rate
-            # proj_lr = learnable_projection.learning_rate
-            # MODIFIED 6/22/25 END
             if proj_lr is not None:
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
                 # otherwise use, assign LearningMechanism's learning rate or default to Projection
                 learnable_projection.parameters.learning_rate.set(
-                    learning_mech_lr if learning_mech_lr is not None else learning_rate,
-                    context)
-
+                    learning_mech_lr if learning_mech_lr is not None else learning_rate, context)
         return learning_pathway
 
     @beartype
@@ -9344,17 +9352,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_rate
 
     def _assign_learning_rates(self, projections, context):
+        from psyneulink.library.compositions import AutodiffComposition
         if not self._learning_rates_dict:
             return
         not_learnable = []
         for proj in projections:
             # Get learning_rate spec if there is one;  use NotImplemented
             try:
-                # # MODIFIED 6/22/25 OLD:
-                # proj.learning_rate = self._learning_rates_dict.pop(proj.name)
-                # MODIFIED 6/22/25 NEW:
-                proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
-                # MODIFIED 6/22/25 END
+                # Make assignment of Projection.learning_rate
+                if isinstance(self, AutodiffComposition):
+                    # but leave in dict for transfer to optimizer_params
+                    proj.parameters.learning_rate.set(self._learning_rates_dict[proj.name], context)
+                else:
+                    # clear from dict, so call to learn() can verify that all have been used
+                    proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
                 if not proj.learnable:
                     not_learnable.append(proj.name)
             except KeyError:
