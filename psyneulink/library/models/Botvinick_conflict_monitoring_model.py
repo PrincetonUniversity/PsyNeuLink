@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 RATE = .01  # As in Cohen-huston text
 BIAS = 4.0  # bias 4.0 is -4.0 in the paper see Docs for description. Bbias is positive since Logistic equation has
-# - sing already implemented
+# minus sing already implemented
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 # Input layers (linear, is the default function)
