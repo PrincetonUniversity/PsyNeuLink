@@ -48,13 +48,18 @@ It defines a common set of attributes possessed, and methods used by all Compone
 Creating a Component
 --------------------
 
-A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
+A Component is never created by calling the constructor for the Component base class.  However, its ``__init__``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
-(listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
+COMMENT:
+(listed `below <Component_Methods>`) TODO: check the commented out section bellow
+COMMENT
+as part of the initialization procedure.  Every Component has a core set of
 `configurable parameters <Parameters>` that can be specified in the arguments of the constructor, as well
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
-by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters`
-and `Informational Attributes` below).
+by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters` below).
+COMMENT:
+and `Informational Attributes` TODO: implement "_Component_Stateful_Parameters" below and link here
+COMMENT
 
 .. _Component_Deferred_Init:
 
@@ -63,13 +68,13 @@ and `Informational Attributes` below).
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `Port <Port_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
-full initialization is deferred until its the information is available (e.g., the `Port <Port>` is assigned to a
+full initialization is deferred until the information is available (e.g., the `Port <Port>` is assigned to a
 `Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection_Base.sender>` and `receiver
 <Projection_Base.receiver>`).  This allows Components to be created before all of the information they require is
 available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
-be completed by a call to it `deferred_init` method.  This is usually done automatically when the Component is
+be completed by a call to its `deferred_init` method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
-a Projection to the `pathway <Process.pahtway>`) of a `Process`), as appropriate.
+a Projection to the `pathway <Process.pathway>` of a `Process`), as appropriate.
 
 .. _Component_Structure:
 
