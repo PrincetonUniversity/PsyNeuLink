@@ -41,7 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_autodoc_typehints',
     'technical_note',
-    # 'nbsphinx',
+     'nbsphinx',
     # 'myst_nb'
     # 'sphinx.ext.imgmath'
 ]
@@ -57,7 +57,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = ['.rst', '.ipynb']
+source_suffix = ['.rst']
 # source_suffix = '.rst'
 
 # The encoding of source files.
@@ -379,3 +379,5 @@ autodoc_typehints = 'none'
 default_role = 'any'
 
 epub_tocdepth = 5
+
+nbsphinx_execute = 'never'
