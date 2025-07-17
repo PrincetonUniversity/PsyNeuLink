@@ -1033,7 +1033,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
                 proj_lr = projection.parameters.learning_rate.get(context)
                 proj_comp_lr = proj_composition.parameters.learning_rate.get(context)
-                specified_learning_rate = False if proj_larning_rate is False else specified_learning_rate
+                specified_learning_rate = False if proj_lr is False else specified_learning_rate
                 if proj_composition.enable_learning is False or projection.learnable is False:
                     # Disable learning for Projection if:
                     # - its learnable attribute is False
@@ -1107,7 +1107,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _store_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
         self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-        self._constructor_proj_learning_rates = {proj: proj.parametesrs.learning_rate.get(context)
+        self._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
                                                  for proj in self.wrapped_projections}
 
     def _restore_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
@@ -1115,7 +1115,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         try:
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             for proj in self.wrapped_projections:
-                proj.parameters.learning_rate._set(self._constructor_proj_learning_rates[proj])
+                proj.parameters.learning_rate._set(self._constructor_proj_learning_rates[proj], context)
         except AttributeError:
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
