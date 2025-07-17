@@ -9320,14 +9320,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_mechanism
 
-    def _parse_and_validate_learning_rate_arg(self, learning_rate):
-        """Parse and validate learning_rate specified in Composition constructor
-        If it is a single value, use as Composition's learning_rate.
-        If it is a dict, move parsed entries to self.learning_rates_dict
+    def _parse_and_validate_learning_rate_arg(self, learning_rate, context=None):
+        """Parse and validate learning_rate specified in Composition constructor or learn() method
+        If learning_rate is:
+          - a single value, use as Composition's learning_rate.
+          - a dict, move parsed entries to self.learning_rates_dict for specified context (None if from constructor).
+        Assumes context=None if called from Composition constructor.
+        Otherwise, assumes call is from learn() method, and gets learning_rats for Projections in all nested comps
         """
         if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
+            source_str = self.name
+            if context:
+                source_str = f"the learn() method of " + source_str
             raise CompositionError(
-                f"The 'learning_rate' arg for '{self.name}' ('{learning_rate}') "
+                f"The 'learning_rate' arg for '{source_str}' ('{learning_rate}') "
                 f"must be a float, int, bool, None, or a dict.")
         if isinstance(learning_rate, dict):
             _lr_dict_arg = learning_rate
@@ -9335,73 +9341,62 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_vals = [{spec: val} for spec, val in _lr_dict_arg.items()
                         if not isinstance(val, (float, int, bool, type(None)))]
             if bad_vals:
-                raise CompositionError(f"The values of the entries in the dict specified for the 'learning_rate' arg "
-                                       f"of '{self.name}' ('{bad_vals}') must each be a float, int, bool, or None.")
-            # Get default learning rate if there is one
+                raise CompositionError(f"The following values of the entries in the dict specified "
+                                       f"for the 'learning_rate' arg of '{source_str}' must each be "
+                                       f"a float, int, bool, or None: '{bad_vals}'.")
+            # Get default learning rate if there is one and remove it from the dict
             learning_rate = _lr_dict_arg.pop(DEFAULT_LEARNING_RATE, None)
+
             # Check that all keys in remaining entries are a Projection or a name (str)
             bad_keys = [spec for spec in _lr_dict_arg.keys() if not isinstance(spec, (str, MappingProjection))]
             if bad_keys:
-                raise CompositionError(f"The following keys in the dict specified for 'learning_rate' arg of "
-                                       f"{self.name} are not MappingProjections (or names of ones) in that Composition:"
+                raise CompositionError(f"The following keys in the dict specified for the 'learning_rate' arg "
+                                       f"of {source_str} are not MappingProjections (or names of ones) in that "
+                                       f"Composition:"
                                        f" {', '.join([str(k) if not isinstance(k, str) else k for k in bad_keys])}').")
-            # Convert all remaining entries to Projection names for consistency in later processing
-            self.parameters.learning_rates_dict.set({(k.name if isinstance(k, MappingProjection) else k): v
-                                                     for k,v in _lr_dict_arg.items()}, None)
+
+            # Convert all entries to Projection names for consistency in later processing
+            _lr_dict_arg = {(k.name if isinstance(k, MappingProjection) else k): v for k,v in _lr_dict_arg.items()}
+
+            # Get default dict for Composition
+            lr_dict = self.parameters.learning_rates_dict.get(None)
+
+            if context:
+                # If called in an execution context (i.e., from learn()), get learning_rates for all nested comps
+                for comp in self._get_nested_compositions():
+                    lr_dict.update(comp.parameters.learning_rates_dict.get(None))
+                lr_dict.update(_lr_dict_arg)
+
+            # Assign learning_rates_dict to context for the current execution
+            self.parameters.learning_rates_dict.set(lr_dict, context)
 
         return learning_rate
 
-    # MODIFIED 7/16/25 OLD:
-    def _assign_learning_rates(self, projections):
-        # from psyneulink.library.compositions import AutodiffComposition
-        # if not self._learning_rates_dict:
-        #     return
-        # not_learnable = []
-        # for proj in projections:
-        #     # Get learning_rate spec if there is one;  use NotImplemented
-        #     try:
-        #         # Make assignment of Projection.learning_rate
-        #         if isinstance(self, AutodiffComposition):
-        #             # but leave in dict for transfer to optimizer_params
-        #             proj.parameters.learning_rate.set(self._learning_rates_dict[proj.name], context)
-        #         else:
-        #             # clear from dict, so call to learn() can verify that all have been used
-        #             proj.parameters.learning_rate.set(self._learning_rates_dict.pop(proj.name), context)
-        #         if not proj.learnable:
-        #             not_learnable.append(proj.name)
-        #     except KeyError:
-        #         pass
-        # if not_learnable:
-        #     raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
-        #                            f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
-        #                            f"'learnable' attribute is set to True or remove them from the dict.")
-    # MODIFIED 7/16/25 NEW:
-        """Assign specified learning_rates to Projections, and build dict of learning_rates for all Projections"""
+    def _assign_learning_rates(self, projections, context=None):
+        """Assign specified learning_rates for context to Projections & build dict of learning_rates for all Projections
+        """
         from psyneulink.library.compositions import AutodiffComposition
         not_learnable = []
+        # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
+        context = context or self.name+'_'+DEFAULT
+
         for proj in projections:
             if proj.name in learning_rates_dict:
-                # BREADCRUMB:  DON'T ASSIGN LEARNING_RATE DIRECTLY TO PROJECTION, SINCE IT MIGHT BE USED IN OTHER COMPS
-                #              ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
-                #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
-                # # Assign specified learning_rate to Projection.learning_rate
-                # #   so user will see that as Projection's learning_rate
-                # # NOTE: this means Projection will use that learning_rate for other Compositions to which it belongs
-                proj_lr = learning_rates_dict[proj.name]
-                # proj.parameters.learning_rate.set(proj_lr, None)
-                if proj_lr is not False and not proj.learnable:
-                    # Flag for error if anything other than False is specifieD for a Projection that is not learnable
+                # Flag for error if anything other than False is specifieD for a Projection that is not learnable
+                if learning_rates_dict[proj.name] is not False and not proj.learnable:
                     not_learnable.append(proj.name)
             else:
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
                 learning_rates_dict[proj.name] = proj.learning_rate
-            if not_learnable:
-                raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
-                                       f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
-                                       f"'learnable' attribute is set to True or remove them from the dict.")
-    # MODIFIED 7/16/25 END
-
+            # Set Projection's learning_rate to specified value in <Composition.name>_default context
+            # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
+            #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
+            proj.parameters.learning_rate.set(learning_rates_dict[proj.name], context)
+        if not_learnable:
+            raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
+                                   f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
+                                   f"'learnable' attribute is set to True or remove them from the dict.")
 
     def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
@@ -11989,6 +11984,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     err_msg = (f"The following {filler[0]} in the dict specified for the 'learning_rate' arg of "
             #                f"'{self.name}' but {filler[1]} or the {filler[2]} in that Composition:")
             #     raise CompositionError(err_msg + f" '{' ,'.join(list(self.learning_rates_dict.keys()))}'.")
+
+            # BREADCRUMB: CALL _parse_and_validate_learning_rate_arg HERE AND ASSIGN SPECS TO _learning_rates_dict
+            self._parse_and_validate_learning_rate_arg(learning_rate, context)
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
