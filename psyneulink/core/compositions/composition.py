@@ -11974,19 +11974,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"is not currently supported for a Composition; use an AutodiffComposition, "
                                        f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
                                        f"argument the constructor(s) for the corresponding MappingProjection(s).")
-            # BREADCRUMB: GET RID OF THIS SINCE NOW DEALT WITH IN _parse_and_validate_learning_rate_arg
-            # if self.learning_rates_dict:
-            #     # dict should be empty if all specifications were valid and
-            #     # thus dispatched in calls to assign_learning_rates()
-            #     singular = ["entry appears", "its key is not a Projection", "name of one"]
-            #     plural = ["entries appear", "their keys are not Projections", "names of ones"]
-            #     filler = singular if len(self.learning_rates_dict) == 1 else plural
-            #     err_msg = (f"The following {filler[0]} in the dict specified for the 'learning_rate' arg of "
-            #                f"'{self.name}' but {filler[1]} or the {filler[2]} in that Composition:")
-            #     raise CompositionError(err_msg + f" '{' ,'.join(list(self.learning_rates_dict.keys()))}'.")
 
-            # BREADCRUMB: CALL _parse_and_validate_learning_rate_arg HERE AND ASSIGN SPECS TO _learning_rates_dict
+            # parse and then assign any learning_rate specs to learning_rate_dict for execution context
             self._parse_and_validate_learning_rate_arg(learning_rate, context)
+            # BREADCRUMB: FOLLOWING NEEDS TO USE ASSIGNED SPECS PASSED IN DICT TO comp.learning_rates_dict
+            self._assign_learning_rates(context=context)
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
