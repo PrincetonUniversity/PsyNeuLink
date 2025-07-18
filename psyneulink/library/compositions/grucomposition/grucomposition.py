@@ -644,8 +644,10 @@ class GRUComposition(AutodiffComposition):
     componentCategory = GRU_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import PytorchGRUCompositionWrapper
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import \
+            PytorchGRUCompositionWrapper, PytorchGRUMechanismWrapper
         pytorch_composition_wrapper_type = PytorchGRUCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchGRUMechanismWrapper
 
     class Parameters(AutodiffComposition.Parameters):
         """
@@ -1063,10 +1065,10 @@ class GRUComposition(AutodiffComposition):
         #      IF SO, ADD CALL TO PytorchGRUPRojectionWrapper HELPER METHOD TO SET TORCH GRU PARAMETERS
         for wts, proj in zip(weights,
                        [self.wts_ir, self.wts_iu, self.wts_in, self.wts_hr, self.wts_hu, self.wts_hn]):
-            matrix = proj.parameters.matrix._get(context)
-            assert wts.shape == matrix.shape, \
+            valid_shape = self._get_valid_weights_shape(proj)
+            assert wts.shape == valid_shape, \
                 (f"PROGRAM ERROR: Shape of weights in 'weights' arg of '{self.name}.set_weights' "
-                 f"({wts.shape}) does not match required shape ({matrix.shape}).)")
+                 f"({wts.shape}) does not match required shape ({valid_shape}).)")
             proj.parameters.matrix._set(wts, context)
             proj.parameter_ports['matrix'].parameters.value._set(wts, context)
         # MODIFIED 3/11/25 END
@@ -1074,10 +1076,10 @@ class GRUComposition(AutodiffComposition):
         if biases:
             for torch_bias, pnl_bias in zip(biases, [self.bias_ir, self.bias_iu, self.bias_in,
                                                      self.bias_hr, self.bias_hu, self.bias_hn]):
-                matrix = pnl_bias.parameters.matrix._get(context)
-                assert torch_bias.shape == matrix.shape, \
+                valid_shape = self._get_valid_weights_shape(pnl_bias)
+                assert torch_bias.shape == valid_shape, \
                     (f"PROGRAM ERROR: Shape of biases in 'bias' arg of '{self.name}.set_weights' "
-                     f"({torch_bias.shape}) does not match required shape ({matrix.shape}).")
+                     f"({torch_bias.shape}) does not match required shape ({valid_shape}).")
                 pnl_bias.parameters.matrix._set(torch_bias, context)
                 pnl_bias.parameter_ports['matrix'].parameters.value._set(torch_bias, context)
 
@@ -1086,9 +1088,6 @@ class GRUComposition(AutodiffComposition):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
-        # FIX: 3/15/25
-        # if self.gru_mech:
-        #     return [self.target_node]
 
         # Create Mechanism the function fo which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
@@ -1136,8 +1135,12 @@ class GRUComposition(AutodiffComposition):
         """
         # FIX: 3/9/25 CLEAN THIS UP: WRT ASSIGNMENT OF _pytorch_projections BELOW:
         if self._pytorch_projections:
+            assert len(self._pytorch_projections) == 2, \
+                (f"PROGRAM ERROR: {self.name}._pytorch_projections should have only two Projections, but has "
+                 f"{len(self._pytorch_projections)}: {' ,'.join([proj.name for proj in self._pytorch_projections])}.")
             direct_proj_in = self._pytorch_projections[0]
             direct_proj_out = self._pytorch_projections[1]
+
         else:
             try:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",

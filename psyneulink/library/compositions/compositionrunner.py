@@ -210,8 +210,7 @@ class CompositionRunner():
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                node.composition_wrapper.execute_node(node, variable, optimization_num,
-                                                                      synch_with_pnl_options, context)
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
@@ -334,6 +333,7 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
+                     skip_initialization=False,
                      **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
@@ -389,8 +389,6 @@ class CompositionRunner():
             epochs = inf_yield_val(epochs)
         elif epochs is None:
             epochs = inf_yield_val(1)
-
-        skip_initialization = False
 
         # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 

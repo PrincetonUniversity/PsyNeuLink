@@ -342,7 +342,7 @@ In standard mode"""
     ],
     'Scheduler': [
         (
-            r'(Arguments\n    ---------\n)',
+            r'(Arguments\n *---------\n)',
             """\\1
     composition : Composition
         specifies the `Components <Component>` to be ordered for execution, and any dependencies among them,

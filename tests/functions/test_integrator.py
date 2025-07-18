@@ -17,8 +17,9 @@ RAND0_1 = np.random.random()
 RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
-def SimpleIntFun(init, value, iterations, noise, rate, offset, **kwargs):
+def SimpleIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
+
     if np.isscalar(noise):
         if "initializer" in kwargs:
             return [4.91845218, 4.78766907, 4.73758993, 5.04920442, 4.09842889,
@@ -44,7 +45,7 @@ def SimpleIntFun(init, value, iterations, noise, rate, offset, **kwargs):
             return [4.7398811, 4.33354877, 3.23128239, 4.14249424, 2.05951504,
                     3.8008388, 2.14580932, 4.9102284,  3.69882314, 2.91676163]
 
-def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
+def AdaptiveIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -72,32 +73,32 @@ def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
             return [3.59649986, 3.28818534, 2.45181396, 3.14321808, 1.56270704,
                     2.88397872, 1.62818492, 3.72575501, 2.80657186, 2.2131637]
 
-def DriftIntFun(init, value, iterations, noise, **kwargs):
+def DriftIntFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
         if "initializer" not in kwargs:
-            return ([0.35782281, 4.03326927, 4.90427264, 0.90944534, 1.45943493,
-                     2.31791882, 3.05580281, 1.20089146, 2.8408554 , 1.93964773],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.53150387, 3.78140754, 4.53709231, 1.01650495, 1.48888893,
+                     2.26545636, 2.89486977, 1.3060138,  2.75587927, 1.90759788],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
         else:
-            return ([1.14954785, 4.56216419, 5.4723172 , 1.83504198, 1.53047099,
-                     2.40504812, 3.07602121, 2.0335113 , 3.61901215, 2.80965988],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[1.32322891, 4.31030246, 5.10513687, 1.94210158, 1.55992499,
+                     2.35258566, 2.91508817, 2.13863365, 3.53403602, 2.77761003],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
     else:
         if "initializer" not in kwargs:
-            return ([0.17810305, 4.06675934, 4.20730295, 0.90582833, 1.60883329,
-                     2.27822395, 2.2923697 , 1.10933472, 2.71418965, 1.86808107],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.19557944, 3.84081432, 3.4503575,  1.01012678, 1.67172503,
+                     2.1987747, 1.93406955, 1.1364648, 2.55292322, 1.79854117],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
         else:
-            return ([0.96982809, 4.59565426, 4.77534751, 1.83142497, 1.67986935,
-                     2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
-                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
+            return [[0.98730448, 4.36970924, 4.01840206, 1.93572342, 1.74276108,
+                     2.285904, 1.95428795, 1.96908464, 3.33107997, 2.66855331],
+                    [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.]]
 
-def LeakyFun(init, value, iterations, noise, **kwargs):
+def LeakyFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -118,7 +119,7 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
         else:
             return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395, 2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
-def AccumulatorFun(init, value, iterations, noise, **kwargs):
+def AccumulatorFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -149,7 +150,7 @@ def AccumulatorFun(init, value, iterations, noise, **kwargs):
             return [[1.67373165, 1.42936784, 0.97944456, 1.41185147, 0.51221934,
                      1.20867833, 0.54474727, 1.62918182, 1.06390014, 0.92255587]]
 
-def DriftOnASphereFun(init, value, iterations, noise, **kwargs):
+def DriftOnASphereFun(_init, _value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
@@ -200,27 +201,19 @@ GROUP_PREFIX="IntegratorFunction "
 @pytest.mark.benchmark
 def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
     func_class, func_res, func_params = func
-    benchmark.group = GROUP_PREFIX + func_class.componentName
+    benchmark.group = GROUP_PREFIX + func_class.componentName + " " + mode
 
-    try:
-        noise = noise()
-    except TypeError as e:
-        if "object is not callable" not in str(e):
-            raise e from None
-    else:
+    if callable(noise):
         if issubclass(func_class, (pnl.DriftDiffusionIntegrator, pnl.DriftOnASphereIntegrator)):
             pytest.skip("{} doesn't support functional noise".format(func_class.componentName))
+
+        # Instantiate the noise Function using explicit seed
+        noise = noise(seed=0)
 
     params = {**params, **func_params}
 
     if issubclass(func_class, pnl.AccumulatorIntegrator):
         params.pop('offset', None)
-
-    elif issubclass(func_class, pnl.DriftDiffusionIntegrator):
-        # If we are dealing with a DriftDiffusionIntegrator, noise and
-        # time_step_size defaults have changed since this test was created.
-        # Hard code their old values.
-        noise = np.sqrt(noise)
 
     f = func_class(default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
@@ -241,7 +234,7 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
         ex_res = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({'reset'}), member='reset')
 
         # Compiled mode ignores input variable, but python uses it if it's provided
-        post_reset = ex_res(None if func_mode == "Python" else variable)
+        post_reset = benchmark(ex_res, None if func_mode == "Python" else variable)
 
         # Python implementations return 2d arrays,
         # while most compiled variants return 1d
@@ -256,6 +249,9 @@ def test_execute(func, func_mode, variable, noise, params, mode, benchmark):
         reset_expected[0] = f.parameters.initializer.get()
 
         np.testing.assert_allclose(post_reset, reset_expected)
+
+    else:
+        assert False, "Unknown test mode: {}".format(mode)
 
 
 def test_integrator_function_no_default_variable_and_params_len_more_than_1():

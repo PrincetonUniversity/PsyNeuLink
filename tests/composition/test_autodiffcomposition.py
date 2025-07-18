@@ -352,7 +352,7 @@ def test_autodiff_forward(autodiff_mode):
 
 @pytest.mark.pytorch
 @pytest.mark.composition
-def test_retain_results(autodiff_mode):
+def test_retain_results():
     """Test that results from calls to learning() are added to results list (from retained_results)"""
     inputs = [[-0.8104468, -0.40517032, 0.75040168]]
     input_mech = pnl.ProcessingMechanism(input_shapes=3)
@@ -2953,6 +2953,9 @@ class TestMiscTrainingFunctionality:
 
         # mini version of xor.execute just to build up pytorch representation
         xor._analyze_graph()
+        # must manually initialize because _build_pytorch_representation
+        # is an internal method
+        xor._initialize_from_context(Context(execution_id=xor.default_execution_id))
         xor._build_pytorch_representation(context=xor.default_execution_id)
         # check whether pytorch parameters are identical to projections
         np.testing.assert_allclose(hid_map.parameters.matrix.get(None),

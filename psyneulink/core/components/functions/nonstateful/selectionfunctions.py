@@ -36,14 +36,15 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError,
     _random_state_getter, _seed_setter,
 )
-from psyneulink.core.globals.keywords import \
-    (ALL, ARG_MAX, ARG_MAX_ABS, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR,
-     ARG_MIN, ARG_MIN_ABS, ARG_MIN_ABS_INDICATOR, ARG_MIN_INDICATOR,
-     DETERMINISTIC, FIRST, LAST,
-     MAX, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL,
-     MIN, MIN_ABS_INDICATOR, MIN_ABS_VAL, MIN_INDICATOR, MIN_VAL,
-     MODE, ONE_HOT_FUNCTION, PREFERENCE_SET_NAME, PROB, PROB_INDICATOR,
-     RANDOM, SELECTION_FUNCTION_TYPE)
+from psyneulink.core.globals.keywords import (
+    ALL, ARG_MAX, ARG_MAX_ABS, ARG_MAX_ABS_INDICATOR, ARG_MAX_INDICATOR,
+    ARG_MIN, ARG_MIN_ABS, ARG_MIN_ABS_INDICATOR, ARG_MIN_INDICATOR,
+    DETERMINISTIC, FIRST, LAST,
+    MAX, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL,
+    MIN, MIN_ABS_INDICATOR, MIN_ABS_VAL, MIN_INDICATOR, MIN_VAL,
+    MODE, ONE_HOT_FUNCTION, PREFERENCE_SET_NAME, PROB, PROB_INDICATOR,
+    RANDOM, SELECTION_FUNCTION_TYPE, DEFAULT,
+)
 
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -331,7 +332,7 @@ class OneHot(SelectionFunction):
         indicator = Parameter(False, stateful=False)
         tie = Parameter(ALL, stateful=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
 
         def _validate_mode(self, mode):
             if mode not in mode_options:

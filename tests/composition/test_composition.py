@@ -56,6 +56,11 @@ logger = logging.getLogger(__name__)
 # see http://doc.pytest.org/en/latest/skipping.html
 
 
+composition_classes = pytest.helpers.get_all_subclasses(
+    type_=pnl.Composition, exclude_type=pnl.CompositionFunctionApproximator
+)
+
+
 def record_values(d, time_scale, *mechs, comp=None):
     if time_scale not in d:
         d[time_scale] = {}
@@ -4301,7 +4306,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[1, 1]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)
@@ -4345,7 +4350,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[0.5, 0.5]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)
@@ -4390,7 +4395,7 @@ class TestRun:
         inputs_dict = {A: [1, 1]}
         output = comp.run(inputs=inputs_dict, execution_mode=comp_mode)
         np.testing.assert_allclose([[0.5, 0.5]], output)
-        orig_comp_ex = comp._compilation_data.execution.get(comp)
+        orig_comp_ex = comp._compilation_data.execution.get(comp, fallback_value=None)
         if orig_comp_ex is not None:
             orig_comp_ex = {
                 tag: getattr(ex, struct_name)
@@ -7604,24 +7609,18 @@ class TestNodeRoles:
         comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
         assert B.output_port in comp.output_CIM.port_map
 
-    params = [  # id     allow_probes  include_probes_in_output  err_msg
-        (
-            "allow_probes_True", True, False, None
-         ),
-        (
-            "allow_probes_True", True, True, None
-         ),
-        (
-            "allow_probes_False", False, False,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         ),
-        (
-            "allow_probes_CONTROL", "CONTROL", True,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         )
+    params = [        # allow_probes  include_probes_in_output  err_msg
+        pytest.param(True, False, None, id="allow_probes_True"),
+        pytest.param(True, True, None, id="allow_probes_True"),
+        pytest.param(False, False,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT.",
+                     id="allow_probes_False"),
+        pytest.param("CONTROL", True,
+                     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT.",
+                     id="allow_probes_CONTROL"),
     ]
-    @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
-    def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+    @pytest.mark.parametrize('allow_probes, include_probes_in_output, err_msg', params)
+    def test_nested_PROBES(self, allow_probes, include_probes_in_output, err_msg):
         """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
 
         A = ProcessingMechanism(name='A')
@@ -7634,9 +7633,7 @@ class TestNodeRoles:
         Z = ProcessingMechanism(name='Z')
         mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
 
-        O = ProcessingMechanism(name='O',
-                                input_ports=[B, Y]
-                                )
+        O = ProcessingMechanism(name='O', input_ports=[B, Y])
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
@@ -8562,6 +8559,36 @@ class TestMisc:
         inner.run(context=c)
         assert outer.most_recent_context.execution_id == outer.name
         assert inner.most_recent_context.execution_id == c.execution_id
+
+    @pytest.mark.parametrize('comp_type', composition_classes)
+    @pytest.mark.parametrize('method', ['run', 'execute'])
+    def test_most_recent_context(self, comp_type, method):
+        if method not in comp_type.__dict__:
+            pytest.skip(f'{comp_type} does not override {method}')
+
+        try:
+            comp = comp_type()
+        except TypeError as e:
+            if 'required positional arguments' in str(e):
+                pytest.skip(f'{comp_type} cannot be instantiated with no arguments')
+            else:
+                raise
+
+        # autodiff requires at least two nodes to run
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        try:
+            comp.add_node(a)
+            comp.add_linear_processing_pathway([a, b])
+        except CompositionError as e:
+            if 'Nodes cannot be added' not in str(e):
+                raise
+
+        getattr(comp, method)(
+            inputs={a: [a.defaults.variable]},
+            execution_mode=pnl.ExecutionMode.Python,
+        )
+        assert comp.most_recent_context.execution_id == comp.default_execution_id
 
 
 class TestInputSpecsDocumentationExamples:

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink import CompositionError
+from psyneulink import CompositionError, AutodiffComposition
 
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
@@ -22,7 +22,7 @@ from psyneulink.library.compositions.grucomposition.grucomposition import GRUCom
 # ---------------------
 # HOOK FOR torch.GRU module for use in debugging internal calculations
 
-def _pytorch_gru_module_values_hook(module, input, output):
+def _pytorch_gru_module_values_hook(module, input):
     import torch
     in_len = module.input_size
     hid_len = module.hidden_size
@@ -92,6 +92,7 @@ def _pytorch_gru_module_values_hook(module, input, output):
 
 # Unit tests for functions of GRUComposition class
 
+
 @pytest.mark.pytorch
 @pytest.mark.composition
 class TestConstruction:
@@ -104,11 +105,47 @@ class TestConstruction:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
-    def test_solo_nested(self):
-        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=True)
-        outer_comp = pnl.AutodiffComposition(name='Outer Comp',pathways=[gru])
-        target_mech = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        assert target_mech[0].name == 'TARGET for PYTORCH GRU NODE'
+    @pytest.mark.parametrize('execution_type', [
+        'run',
+        'learn'
+    ])
+    @pytest.mark.parametrize('pathway_type', [
+        'solo',
+        'gru_as_input',
+        'gru_as_hidden',
+        'gru_as_output'
+    ])
+    def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type):
+        input_mech = pnl.ProcessingMechanism(input_shapes=3)
+        output_mech = pnl.ProcessingMechanism(input_shapes=5)
+        gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False)
+        if pathway_type == 'solo':
+            pathway = [gru]
+            input_node = gru
+            target_node = gru.gru_mech
+        elif pathway_type == 'gru_as_input':
+            pathway = [gru, output_mech]
+            input_node = gru
+            target_node = output_mech
+        elif pathway_type == 'gru_as_hidden':
+            pathway = [input_mech, gru, output_mech]
+            input_node = input_mech
+            target_node = output_mech
+        elif pathway_type == 'gru_as_output':
+            pathway = [input_mech, gru]
+            input_node = input_mech
+            target_node = gru.gru_mech
+        else:
+            raise ValueError("Invalid pathway_type")
+        outer_comp = pnl.AutodiffComposition(pathway)
+        inputs = {input_node: [[.1, .2, .3]]}
+        targets = {target_node: [[1,1,1,1,1]]}
+        if execution_type == 'run':
+            outer_comp.run(inputs=inputs)
+        else:
+            outer_comp.learn(inputs=inputs, targets=targets)
+        assert True
+
 
 @pytest.mark.pytorch
 @pytest.mark.composition
@@ -204,6 +241,7 @@ class TestExecution:
     @pytest.mark.parametrize('bias', [False, True], ids=['no_bias','bias'])
     def test_nested_gru_composition_learning_and_copy_values(self, bias):
         # Test identicality of results of nested GRUComposition and pure pytorch version
+        # Note: tests learning of input weights to GRU (in both PNL and torch) as well as GRU itself
 
         import torch
         entry_torch_dtype = torch.get_default_dtype()
@@ -221,7 +259,6 @@ class TestExecution:
                 super(TorchModel, self).__init__()
                 # Note:  input and output modules don't use biases in PNL version, so match that here
                 self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
-                self.input.weight.requires_grad = False # Since weights to INPUT nodes of Composition are not learnable
                 self.gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
                 self.output = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE, bias=False)
 
@@ -261,9 +298,8 @@ class TestExecution:
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
                                    pathways=[input_mech, gru, output_mech],
                                                 learning_rate = LEARNING_RATE)
-        # FIX: 3/15/25 - NEED TO BE HARDWIRED IN CONSTRUCTION OF ?AUTODIFF OR GRUCOMPOSITION:
-        autodiff_comp.projections[0].learnable = False
-        autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
+        input_mech_to_gru_projection = autodiff_comp.projections[0]
+        autodiff_comp.set_weights(input_mech_to_gru_projection, torch_input_initial_weights)
         autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
         autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
         target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
@@ -290,32 +326,28 @@ class TestExecution:
             np.testing.assert_allclose(autodiff_comp.nodes['INPUT MECH'].parameters.variable.get('OUTER COMP'),
                                        np.array([[1., 2., 3.]]))
             np.testing.assert_allclose(autodiff_comp.nodes['OUTPUT MECH'].parameters.variable.get('OUTER COMP'),
-                                       np.array([[-0.2371911, 0.09483196, 0.08101949, -0.32086433, 0.17566031]]),
+                                       np.array([[-0.23692851, 0.09497075, 0.08103833, -0.32070243, 0.17565629]]),
                                        atol=1e-8)
             # GRU Comp
             GRU_comp_nodes = autodiff_comp.nodes['GRU COMP'].nodes
             np.testing.assert_allclose(GRU_comp_nodes['INPUT'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.88200826,  1.82932232, -0.43319262]]),
+                                       np.array([[0.88201173, 1.82952986, -0.43124228]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['RESET'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.52969068, 0.42252881, 0.54034619, 0.64740737, 0.34754141]]),
+                                       np.array([[0.52954788, 0.42252649, 0.54021425, 0.64730422, 0.3475345 ]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['UPDATE'].parameters.value.get('OUTER COMP'),
-                                       np.array([[0.4842834,  0.65262676, 0.73368542, 0.32401945, 0.51233801]]),
+                                       np.array([[0.48432402, 0.65252951, 0.73358667, 0.32417801, 0.51246621]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['NEW'].parameters.value.get('OUTER COMP'),
-                                       np.array([[-0.2679114,  -0.01421539,  0.67555595,  0.76259181, -0.81329808]]),
+                                       np.array([[-0.2687626, -0.01417762, 0.67483992, 0.76314636,-0.81250713]]),
                                        atol=1e-8)
             np.testing.assert_allclose(GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'),
-                                       np.array([[-0.21075669, -0.0222539, 0.32382497, 0.57810654, -0.51770585]]),
+                                       np.array([[-0.21116122, -0.02223958, 0.32373588, 0.57829492, -0.5174555]]),
                                        atol=1e-8)
             torch_gru = autodiff_comp.pytorch_representation.node_wrappers[2].node_wrappers[0]
             np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
                                        GRU_comp_nodes['HIDDEN\nLAYER'].parameters.value.get('OUTER COMP'))
-            # MODIFIED 3/16/25 OLD:
-            # np.testing.assert_allclose(GRU_comp_nodes['OUTPUT'].parameters.value.get('OUTER COMP'),
-            #                           torch_gru.hidden_state.detach().numpy(), atol=1e-8)
-            # MODIFIED 3/16/25 END
 
         torch.set_default_dtype(entry_torch_dtype)
 

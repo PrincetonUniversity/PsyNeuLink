@@ -107,7 +107,12 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import (
+    FunctionParameter,
+    Parameter,
+    ParameterInvalidSourceError,
+    check_user_specified,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
@@ -295,10 +300,10 @@ class LeabraFunction(Function_Base):
 
 
 def _training_flag_setter(value, self=None, owning_component=None, context=None):
-    if value is not self._get(context):
+    if value is not self._get(context, fallback_value=None):
         try:
             set_training(owning_component.parameters.network._get(context), value)
-        except AttributeError:
+        except (AttributeError, ParameterInvalidSourceError):
             # do not return None here, or training_flag will always be
             # set to None
             pass

@@ -59,9 +59,7 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
 # TEST WITH ContentAddressableMemory ***********************************************************************************
 # Note:  ContentAddressableMemory has not yet been compiled for use with LLVM or PTX, so those are dummy tests for now
 test_data = [
-    (
-        # name
-        "ContentAddressableMemory Default",
+    pytest.param(
         # func
         ContentAddressableMemory,
         # func_params
@@ -75,11 +73,11 @@ test_data = [
         # expected output_port names
         ['RETRIEVED_FIELD_0'],
         # expected output
-        [[0,0]]
-    ),
-    (
+        [[0,0]],
         # name
-        "ContentAddressableMemory Func Default Variable Mech Size Init",
+        id="ContentAddressableMemory Default",
+    ),
+    pytest.param(
         # func
         ContentAddressableMemory,
         # func_params
@@ -93,20 +91,21 @@ test_data = [
         # expected output_port names
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         # expected output
-        [[0,0],[0,0],[0,0,0]]
+        [[0,0],[0,0],[0,0,0]],
+        # name
+        id="ContentAddressableMemory Func Default Variable Mech Size Init",
     ),
-    (
-        "ContentAddressableMemory Func Default Variable Mech Default Var Init",
+    pytest.param(
         ContentAddressableMemory,
         {'default_variable': [[0],[0,0],[0,0,0]]},
         {'default_variable': [[0],[0,0],[0,0,0]]},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
-        [[0],[0,0],[0,0,0]]
+        [[0],[0,0],[0,0,0]],
+        id="ContentAddressableMemory Func Default Variable Mech Default Var Init",
     ),
-    (
-        "ContentAddressableMemory Func Initializer (ragged) Mech Size Init",
+    pytest.param(
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
                                  [list([10]), list([20, 30]), list([40, 50, 60])],
@@ -116,10 +115,10 @@ test_data = [
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         # [[10.],[20., 30.],[40., 50., 60.]]
-        [[1], [2,3], [4,5,6]] # <- distance = 0 to [[10.],[20., 30.],[40., 50., 60.]]
+        [[1], [2, 3], [4, 5, 6]], # <- distance = 0 to [[10.],[20., 30.],[40., 50., 60.]]
+        id="ContentAddressableMemory Func Initializer (ragged) Mech Size Init",
     ),
-    (
-        "ContentAddressableMemory Func Initializer (ragged) Mech Default Variable Init",
+    pytest.param(
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
                                  [[12], [20, 55], [40, 50, 60]],
@@ -128,10 +127,10 @@ test_data = [
         [[10.],[20., 30.],[40., 50., 60.]],
         ['hello', 'world', 'goodbye'],
         ['RETRIEVED_hello', 'RETRIEVED_world', 'RETRIEVED_goodbye'],
-        [[1.],[2., 3.],[4., 5., 6.]]
+        [[1.],[2., 3.],[4., 5., 6.]],
+        id="ContentAddressableMemory Func Initializer (ragged) Mech Default Variable Init",
     ),
-    (
-        "ContentAddressableMemory Func Initializer (regular 2d) Mech Size Init",
+    pytest.param(
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
                                  [[10,20], [30,40], [50,60]],
@@ -141,9 +140,9 @@ test_data = [
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         [[11,12], [22,23], [34, 35]],
+        id="ContentAddressableMemory Func Initializer (regular 2d) Mech Size Init",
     ),
-    (
-        "ContentAddressableMemory Func Initializer (regular 2d) Mech Default Variable Init",
+    pytest.param(
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
                                  [[10,20], [30,40], [50,60]],
@@ -156,9 +155,9 @@ test_data = [
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1', 'RETRIEVED_FIELD_2'],
         [[10,20], [30,40], [50, 60]],
+        id="ContentAddressableMemory Func Initializer (regular 2d) Mech Default Variable Init",
     ),
-    (
-        "ContentAddressableMemory Func Mech default_variable Init",
+    pytest.param(
         ContentAddressableMemory,
         {},
         {'default_variable':[[10,20], [30,40]],
@@ -167,9 +166,9 @@ test_data = [
         ['FIRST', 'SECOND'],
         ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[0,0], [0,0]],
+        id="ContentAddressableMemory Func Mech default_variable Init",
     ),
-    (
-        "ContentAddressableMemory Func Mech Memory Init",
+    pytest.param(
         ContentAddressableMemory,
         {},
         {'memory':[[[10,20],[30,40]],
@@ -179,9 +178,9 @@ test_data = [
         ['FIRST', 'SECOND'],
         ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[10,20], [30,40]],
+        id="ContentAddressableMemory Func Mech Memory Init",
     ),
-    (
-        "ContentAddressableMemory Func Mech Memory Init Enforce Shape",
+    pytest.param(
         ContentAddressableMemory,
         {},
         {'memory':[[11,12],[22, 23]], # <- memory incorrect shape, but should be cast by function._enforce_memory_shape
@@ -190,16 +189,14 @@ test_data = [
         ['FIRST', 'SECOND'],
         ['RETRIEVED_FIRST', 'RETRIEVED_SECOND'],
         [[11,12],[22, 23]],
+        id="ContentAddressableMemory Func Mech Memory Init Enforce Shape",
     )
 ]
 
-# Allows names to be with each test_data set
-names = [td[0] for td in test_data]
-
-@pytest.mark.parametrize('name, func, func_params, mech_params, test_var,'
-                         'input_port_names, output_port_names, expected_output', test_data, ids=names)
+@pytest.mark.parametrize('func, func_params, mech_params, test_var,'
+                         'input_port_names, output_port_names, expected_output', test_data)
 @pytest.mark.llvm_not_implemented
-def test_with_contentaddressablememory(name, func, func_params, mech_params, test_var,
+def test_with_contentaddressablememory(func, func_params, mech_params, test_var,
                                        input_port_names, output_port_names, expected_output, mech_mode):
     f = func(seed=0, **func_params)
     # EpisodicMemoryMechanism(function=f, **mech_params)

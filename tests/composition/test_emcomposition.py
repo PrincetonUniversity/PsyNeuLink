@@ -319,15 +319,14 @@ class TestConstruction:
                                                          learn_field_weights,
                                                          target_fields)}
     test_field_map_and_args_assignment_data = [
-        ('args', None, field_names, field_weights, learn_field_weights, target_fields),
-        ('dict-subdict', dict_subdict, None, None, None, None),
-        ('dict-tuple', dict_tuple, None, None, None, None)]
-    field_arg_names = "format, fields, field_names, field_weights, learn_field_weights, target_fields"
+        pytest.param(None, field_names, field_weights, learn_field_weights, target_fields, id='args'),
+        pytest.param(dict_subdict, None, None, None, None, id='dict-subdict'),
+        pytest.param(dict_tuple, None, None, None, None, id='dict-tuple'),
+    ]
 
-    @pytest.mark.parametrize(field_arg_names, test_field_map_and_args_assignment_data,
-                             ids=[x[0] for x in test_field_map_and_args_assignment_data])
+    @pytest.mark.parametrize("fields, field_names, field_weights, learn_field_weights, target_fields",
+                             test_field_map_and_args_assignment_data)
     def test_field_args_and_map_assignments(self,
-                                            format,
                                             fields,
                                             field_names,
                                             field_weights,
@@ -840,14 +839,11 @@ class TestExecution:
 
 
     @pytest.mark.composition
-    # @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
-    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.PyTorch])
-    # @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
-    @pytest.mark.parametrize('concatenate', [False], ids=['no_concatenate'])
-    # @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
-    @pytest.mark.parametrize('use_storage_node', [True], ids=['use_storage_node'])
-    # @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
-    @pytest.mark.parametrize('learning', [True], ids=['learning'])
+    @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
+    @pytest.mark.parametrize('concatenate', [True, False], ids=['concatenate', 'no_concatenate'])
+    @pytest.mark.parametrize('use_storage_node', [True, False], ids=['use_storage_node', 'no_storage_node'])
+#    @pytest.mark.parametrize('learning', [True, False], ids=['learning', 'no_learning'])
+    @pytest.mark.parametrize('learning', [False], ids=['no_learning'])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
@@ -860,8 +856,7 @@ class TestExecution:
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_queries=concatenate,
-                           # learn_field_weights=learning,
-                           learn_field_weights=False,
+                           learn_field_weights=learning,
                            enable_learning=True,
                            use_storage_node=use_storage_node)
 

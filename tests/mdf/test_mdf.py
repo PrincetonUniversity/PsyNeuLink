@@ -431,8 +431,12 @@ def test_mdf_pnl_results_equivalence_individual_functions(mech_type, function, r
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
 def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
     orig_file = read_defined_model_script(filename)
-    exec(orig_file)
-    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
+
+    _locals = {}
+    _globals = {}
+    exec(orig_file, _globals, _locals)
+    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")', _globals, _locals)
+
 
     mdf_file, mdf_fname, _ = get_mdf_output_file(filename, tmp_path, fmt)
     mdf_file.write_text(serialized)

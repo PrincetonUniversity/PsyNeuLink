@@ -293,10 +293,15 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |history_max_length|       1       |the maximum length of the stored history    |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-| fallback_default |     False     |if False, the Parameter will return None if |                                         |
-|                  |               |a requested value is not present for a given|                                         |
-|                  |               |execution context; if True, the Parameter's |                                         |
-|                  |               |default_value will be returned instead      |                                         |
+| fallback_value   | ParameterNo   | indicates the behavior of calls to         |                                         |
+|                  | ValueError    | `Parameter.get` or `Parameter._get` when   |                                         |
+|                  |               | the Parameter has no value in the          |                                         |
+|                  |               | requested context. The default behavior is |                                         |
+|                  |               | to raise a ParameterNoValueError. If set   |                                         |
+|                  |               | to the keyword DEFAULT='default', the      |                                         |
+|                  |               | Parameter's default value will be          |                                         |
+|                  |               | returned. If set to some other value, that |                                         |
+|                  |               | value will be returned.                    |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 
 
@@ -318,12 +323,14 @@ import weakref
 
 import toposort
 
+from psyneulink._typing import Iterable, Optional, Union
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
-from psyneulink.core.globals.keywords import SHARED_COMPONENT_TYPES
+from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import (
     call_with_pruned_args,
+    contains_type,
     convert_all_elements_to_np_array,
     create_union_set,
     get_alias_property_getter,
@@ -340,7 +347,8 @@ from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter'
+    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter',
+    'ParameterNoValueError', 'ParameterInvalidSourceError',
 ]
 
 logger = logging.getLogger(__name__)
@@ -348,6 +356,67 @@ logger = logging.getLogger(__name__)
 
 class ParameterError(Exception):
     pass
+
+
+class ParameterNoValueError(ParameterError):
+    def __init__(
+        self,
+        param,
+        execution_id,
+        # to indicate there are no history values, pass None
+        history: Optional[Union[int, Iterable, None]] = NotImplemented,
+    ):
+        history_str = ''
+        if history is not NotImplemented:
+            history_str = ' in history'
+            if history is not None:
+                try:
+                    history = f'[{":".join([str(x) for x in history])}]'
+                except TypeError:
+                    history = f'[{history}]'
+                history_str = f'{history_str} ({history})'
+
+        message = "{0} '{1}'{2} has no value{3} for execution_id {4}".format(
+            type(param).__name__,
+            param.name,
+            param._owner_string,
+            history_str,
+            execution_id if not isinstance(execution_id, str) else f"'{execution_id}'"
+        )
+        super().__init__(message)
+
+
+class ParameterInvalidSourceError(ParameterError):
+    def __init__(self, param, detail=None):
+        from psyneulink.core.components.component import ComponentsMeta
+
+        if detail is None:
+            try:
+                owner = param._owner._owner
+            except AttributeError as e:
+                raise AssertionError() from e
+
+            attr_name = param.attribute_name
+            try:
+                attr_val = getattr(owner, attr_name)
+            except AttributeError:
+                detail = f"has no attribute '{attr_name}'"
+            else:
+                if attr_val is None:
+                    detail = f"'{attr_name}' is None"
+                elif not hasattr(attr_val, param.shared_parameter_name):
+                    detail = f"'{attr_name}' {attr_val} has no attribute '{param.shared_parameter_name}'"
+                elif isinstance(attr_val, ComponentsMeta):
+                    detail = f"'{attr_name}' {attr_val} is not yet instantiated"
+                else:
+                    detail = f"'{attr_name}' {attr_val} unspecified error"
+        message = "Invalid source for {0} '{1}'{2}: {3}".format(
+            type(param).__name__,
+            param.name,
+            param._owner_string,
+            detail
+        )
+        super().__init__(message)
 
 
 def _get_prefixed_method(obj, prefix, name, sep=''):
@@ -517,6 +586,32 @@ def is_array_like(obj: typing.Any) -> bool:
     return hasattr(obj, 'dtype')
 
 
+def _owner_string(param_obj):
+    # Parameter or ParametersTemplate
+    try:
+        param_owner = param_obj._owner
+    except AttributeError:
+        return ''
+
+    # Parameter only (bypass its ParametersTemplate _owner)
+    try:
+        param_owner = param_owner._owner
+    except AttributeError:
+        pass
+
+    if isinstance(param_owner, type):
+        owner_string = f' of {param_owner}'
+    else:
+        owner_string = f' of {param_owner.name}'
+
+        if hasattr(param_owner, 'owner') and param_owner.owner:
+            owner_string += f' for {param_owner.owner.name}'
+            if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
+                owner_string += f' of {param_owner.owner.owner.name}'
+
+    return owner_string
+
+
 # used in Parameter._set_value. Parameter names where a change in
 # shape/type should cause deletion of corresponding compiled structs
 # even if the values are not synced
@@ -652,6 +747,10 @@ class ParametersTemplate:
         except TypeError:
             self._owner_ref = value
 
+    @property
+    def _owner_string(self):
+        return _owner_string(self)
+
     def _dependency_order_key(self, names=False):
         """
         Args:
@@ -757,6 +856,10 @@ class ParameterBase(types.SimpleNamespace):
 
     def __hash__(self):
         return object.__hash__(self)
+
+    @property
+    def _owner_string(self):
+        return _owner_string(self)
 
 
 class Parameter(ParameterBase):
@@ -896,11 +999,16 @@ class Parameter(ParameterBase):
 
             :default: 0
 
-        fallback_default
-            if False, the Parameter will return None if a requested value is not present for a given execution context;
-            if True, the Parameter's default_value will be returned instead.
+        fallback_value
+            indicates the behavior of calls to `Parameter.get` or
+            `Parameter._get` when the Parameter has no value in the
+            requested context. The default behavior is to raise a
+            ParameterNoValueError. If set to the keyword
+            DEFAULT='default', the Parameter's default value will be
+            returned. If set to some other value, that value will be
+            returned.
 
-            :default: False
+            :default: ParameterNoValueError
 
         retain_old_simulation_data
             if False, the Parameter signals to other PNL objects that any values generated during simulations may be
@@ -958,6 +1066,16 @@ class Parameter(ParameterBase):
 
             :default: False
 
+        bool_as_number
+            if True, booleans in otherwise numeric arrays for this
+            Parameter will be converted to 0 or 1, and the array will
+            remain numeric. This is the default behavior for numpy
+            arrays and torch tensors. If False, booleans within mixed
+            arrays will not be converted to numbers, and the array will
+            remain of mixed type (object dtype).
+
+            :default: True
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -969,7 +1087,7 @@ class Parameter(ParameterBase):
         'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
         'modulation_combination_function', 'valid_types', 'initializer'
     }
-    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
+    _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_value', 'retain_old_simulation_data'}
     _hidden_when = {
         **{k: lambda self, val: val is None for k in _hidden_if_unset_attrs},
         **{k: lambda self, val: val is False for k in _hidden_if_false_attrs},
@@ -1011,7 +1129,7 @@ class Parameter(ParameterBase):
         history=None,
         history_max_length=1,
         history_min_length=0,
-        fallback_default=False,
+        fallback_value=ParameterNoValueError,
         retain_old_simulation_data=False,
         constructor_argument=None,
         spec=None,
@@ -1023,6 +1141,7 @@ class Parameter(ParameterBase):
         port=None,  # if modulated, set to the ParameterPort
         mdf_name=None,
         specify_none=False,
+        bool_as_number=True,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -1077,7 +1196,7 @@ class Parameter(ParameterBase):
             history=history,
             history_max_length=history_max_length,
             history_min_length=history_min_length,
-            fallback_default=fallback_default,
+            fallback_value=fallback_value,
             retain_old_simulation_data=retain_old_simulation_data,
             constructor_argument=constructor_argument,
             spec=spec,
@@ -1089,6 +1208,7 @@ class Parameter(ParameterBase):
             port=port,
             mdf_name=mdf_name,
             specify_none=specify_none,
+            bool_as_number=bool_as_number,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
@@ -1304,8 +1424,11 @@ class Parameter(ParameterBase):
 
     def _parse(self, value, check_scalar=False):
         if is_numeric(value):
+            dtype = None
+            if not self.bool_as_number and contains_type(value, bool):
+                dtype = object
             orig_value = value
-            value = convert_all_elements_to_np_array(value)
+            value = convert_all_elements_to_np_array(value, dtype=dtype)
             if check_scalar:
                 self._scalar_converted = orig_value is not value and value.ndim == 0
 
@@ -1331,8 +1454,33 @@ class Parameter(ParameterBase):
     def _default_setter_kwargs(self):
         return self._default_getter_kwargs
 
+    def _call_getter(self, context, **kwargs):
+        kwargs = {**self._default_getter_kwargs, **kwargs}
+        return call_with_pruned_args(self.getter, context=context, **kwargs)
+
+    def _call_setter(self, value, context, compilation_sync, **kwargs):
+        kwargs = {
+            **self._default_setter_kwargs,
+            **kwargs,
+            'compilation_sync': compilation_sync,
+        }
+        return call_with_pruned_args(self.setter, value, context=context, **kwargs)
+
+    def _handle_fallback_value(
+        self, execution_id, fallback_value, parent_exception=None, **err_kwargs
+    ):
+        if fallback_value is ParameterNoValueError:
+            fallback_value = self.fallback_value
+
+        if fallback_value is ParameterNoValueError:
+            raise ParameterNoValueError(self, execution_id, **err_kwargs) from parent_exception
+        elif fallback_value == DEFAULT:
+            return self.default_value
+        else:
+            return fallback_value
+
     @handle_external_context()
-    def get(self, context=None, **kwargs):
+    def get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
         """
             Gets the value of this `Parameter` in the context of **context**
             If no context is specified, attributes on the associated `Component` will be used
@@ -1342,17 +1490,21 @@ class Parameter(ParameterBase):
 
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a Composition, uses **context**.default_execution_id
+
+                fallback_value:
+                    overrides `Parameter.fallback_value` for this call
+
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        base_val = self._get(context, **kwargs)
+        base_val = self._get(context, fallback_value, **kwargs)
         if self._scalar_converted:
             base_val = try_extract_0d_array_item(base_val)
         if is_array_like(base_val):
             base_val = copy_parameter_value(base_val)
         return base_val
 
-    def _get(self, context=None, **kwargs):
+    def _get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
@@ -1366,99 +1518,80 @@ class Parameter(ParameterBase):
                 ) from e
 
         if self.getter is not None:
-            kwargs = {**self._default_getter_kwargs, **kwargs}
-            value = call_with_pruned_args(self.getter, context=context, **kwargs)
+            value = self._call_getter(context, **kwargs)
             if self.stateful:
                 self._set_value(value, execution_id=execution_id, context=context)
             return value
         else:
             try:
                 return self.values[execution_id]
-            except KeyError:
-                logger.info('Parameter \'{0}\' has no value for execution_id {1}'.format(self.name, execution_id))
-                if self.fallback_default:
-                    return self.default_value
-                else:
-                    return None
+            except KeyError as e:
+                return self._handle_fallback_value(execution_id, fallback_value, e)
 
     @handle_external_context()
     def get_previous(
         self,
         context=None,
-        index: int = 1,
-        range_start: int = None,
-        range_end: int = None,
+        start: int = 0,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        fallback_value=ParameterNoValueError,
     ):
         """
             Gets the value set before the current value of this
             `Parameter` in the context of **context**. To return a range
-            of values, use `range_start` and `range_end`. Range takes
-            precedence over `index`. All history values can be accessed
-            directly as a list in `Parameter.history`.
+            of values, specify **stop** or **step**. If **stop** or
+            **step** is specified, the standard range [index:stop:step]
+            will be used. All history values can be accessed directly as
+            a list in `Parameter.history`.
 
             Args:
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a
                     Composition, uses **context**.default_execution_id
 
-                index
-                    how far back to look into the history. An index of
-                    1 means the value this Parameter had just before
-                    its current value. An index of 2 means the value
-                    before that
+                start
+                    how far back to look into the history. A **start**
+                    of 0 means the value this Parameter had just before
+                    its current value. A **start**  of 1 means the value
+                    before that.
 
-                range_start
-                    Inclusive. The index of the oldest history value to
-                    return. If ``None``, the range begins at the oldest
-                    value stored in history
+                stop
+                    Exclusive. The ending index of a slice into
+                    `history <Parameter.history>`.
 
-                range_end
-                    Inclusive. The index of the newest history value to
-                    return. If ``None``, the range ends at the newest
-                    value stored in history (does not include current
-                    value in `Parameter.values`)
+                step
+                    The step item of a slice into
+                    `history <Parameter.history>`.
+
+                fallback_value
+                    overrides `Parameter.fallback_value` for this call
 
             Returns:
                 the stored value or list of values in Parameter history
 
         """
-        def parse_index(x, arg_name=None):
-            try:
-                if x < 0:
-                    raise ValueError(f'{arg_name} cannot be negative')
-                return -x
-            except TypeError:
-                return x
+        eid = context.execution_id
+        try:
+            hist = self.history[eid]
+        except KeyError as e:
+            return self._handle_fallback_value(eid, fallback_value, e, history=None)
 
-        # inverted because the values represent "___ from the end of history"
-        index = parse_index(index, arg_name='index')
-        range_start = parse_index(range_start, arg_name='range_start')
+        if stop is not None or step is not None:
+            if stop is not None and stop > len(hist):
+                return self._handle_fallback_value(
+                    eid, fallback_value, history=(start, stop, step)
+                )
+            return list(itertools.islice(hist, start, stop, step))
 
-        # override index with ranges
-        if range_start == range_end and range_start is not None:
-            index = range_start
-            range_start = range_end = None
-
-        # fix 0 to "-0" / None
-        if range_end == 0:
-            range_end = None
-        elif range_end is not None:
-            # range_end + 1 for inclusive range
-            range_end = range_end + 1
-
-        if range_start is not None or range_end is not None:
-            try:
-                return list(self.history[context.execution_id])[range_start:range_end]
-            except (KeyError, IndexError):
-                return None
-        else:
-            try:
-                return self.history[context.execution_id][index]
-            except (KeyError, IndexError):
-                return None
+        try:
+            # standard int index
+            return hist[start]
+        except IndexError as e:
+            return self._handle_fallback_value(eid, fallback_value, e, history=start)
 
     @handle_external_context()
-    def get_delta(self, context=None):
+    def get_delta(self, context=None, fallback_value=ParameterNoValueError):
         """
             Gets the difference between the current value and previous value of `Parameter` in the context of **context**
 
@@ -1467,15 +1600,21 @@ class Parameter(ParameterBase):
 
                 context : Context, execution_id, Composition
                     the context for which the value is stored; if a Composition, uses **context**.default_execution_id
+
+                fallback_value
+                    overrides `Parameter.fallback_value` for this call
         """
+        current = self.get(context, fallback_value=fallback_value)
+        previous = self.get_previous(context, fallback_value=fallback_value)
+
         try:
-            return self.get(context) - self.get_previous(context)
+            return current - previous
         except TypeError as e:
             raise TypeError(
                 "Parameter '{0}' value mismatch between current ({1}) and previous ({2}) values".format(
                     self.name,
-                    self.get(context),
-                    self.get_previous(context)
+                    current,
+                    previous,
                 )
             ) from e
 
@@ -1554,12 +1693,7 @@ class Parameter(ParameterBase):
                 ) from e
 
         if self.setter is not None:
-            kwargs = {
-                **self._default_setter_kwargs,
-                **kwargs,
-                'compilation_sync':compilation_sync,
-            }
-            value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
+            value = self._call_setter(value, context, compilation_sync, **kwargs)
 
         self._set_value(
             value,
@@ -1570,6 +1704,9 @@ class Parameter(ParameterBase):
             skip_delivery=skip_delivery,
             compilation_sync=compilation_sync,
         )
+
+        assert 'DEBUGGING BREAKPOINT: PARAMETER SETTING'
+
         return value
 
     def _set_value(
@@ -1591,7 +1728,7 @@ class Parameter(ParameterBase):
                     value_for_history = copy_parameter_value(value_for_history)
 
                 try:
-                    self.history[execution_id].append(value_for_history)
+                    self.history[execution_id].appendleft(value_for_history)
                 except KeyError:
                     self.history[execution_id] = collections.deque(
                         [value_for_history],
@@ -1659,6 +1796,9 @@ class Parameter(ParameterBase):
             pass
 
         self.clear_log(context.execution_id)
+
+    def _has_value(self, context: Context):
+        return context.execution_id in self.values
 
     def _log_value(self, value, context=None):
         # manual logging
@@ -1959,6 +2099,14 @@ class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
             self._source = value
 
 
+def _SharedParameter_default_getter(self, context=None):
+    return self.source._get(context)
+
+
+def _SharedParameter_default_setter(value, self, context=None):
+    return self.source._set(value, context)
+
+
 class SharedParameter(Parameter):
     """
         A Parameter that is not a "true" Parameter of a Component but a
@@ -2021,8 +2169,8 @@ class SharedParameter(Parameter):
         attribute_name=None,
         shared_parameter_name=None,
         primary=False,
-        getter=None,
-        setter=None,
+        getter=_SharedParameter_default_getter,
+        setter=_SharedParameter_default_setter,
         **kwargs
     ):
 
@@ -2036,24 +2184,6 @@ class SharedParameter(Parameter):
             _source_exists=False,
             **kwargs
         )
-
-        if getter is None:
-            def getter(self, context=None):
-                try:
-                    return self.source._get(context)
-                except (AttributeError, TypeError, IndexError):
-                    return None
-
-            self.getter = getter
-
-        if setter is None:
-            def setter(value, self, context=None):
-                try:
-                    return self.source._set(value, context)
-                except AttributeError:
-                    return None
-
-            self.setter = setter
 
     def __getattr__(self, attr):
         try:
@@ -2085,15 +2215,37 @@ class SharedParameter(Parameter):
 
         super(Parameter, self).__setattr__('name', name)
 
+    def _validate_source(self):
+        from psyneulink.core.components.component import Component, ComponentsMeta
+
+        if self.source is None:
+            raise ParameterInvalidSourceError(self)
+
+        if (
+            self.source is not None
+            and isinstance(self._owner._owner, Component)
+            and isinstance(self.source._owner._owner, ComponentsMeta)
+        ):
+            raise ParameterInvalidSourceError(self, detail=f'Instance to class {self._owner._owner} -> {self.source._owner._owner}')
+
+    def _call_getter(self, context, **kwargs):
+        self._validate_source()
+        return super()._call_getter(context, **kwargs)
+
+    def _call_setter(self, value, context, compilation_sync, **kwargs):
+        self._validate_source()
+        return super()._call_setter(value, context, compilation_sync, **kwargs)
+
     @handle_external_context()
     def get_previous(
         self,
         context=None,
-        index: int = 1,
-        range_start: int = None,
-        range_end: int = None,
+        start: int = 0,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        fallback_value=ParameterNoValueError,
     ):
-        return self.source.get_previous(context, index, range_start, range_end)
+        return self.source.get_previous(context, start, stop, step, fallback_value)
 
     @handle_external_context()
     def get_delta(self, context=None):
@@ -2101,19 +2253,26 @@ class SharedParameter(Parameter):
 
     @property
     def source(self):
+        from psyneulink.core.components.component import Component, ComponentsMeta
+
         try:
-            obj = getattr(self._owner._owner.parameters, self.attribute_name)
+            owning_component = self._owner._owner
+        except AttributeError:
+            return None
+
+        try:
+            obj = getattr(owning_component.parameters, self.attribute_name)
             if obj.stateful:
                 raise ParameterError(
                     f'Parameter {type(obj._owner._owner).__name__}.{self.attribute_name}'
                     f' is the target object of {type(self).__name__}'
-                    f' {type(self._owner._owner).__name__}.{self.name} and'
+                    f' {type(owning_component).__name__}.{self.name} and'
                     f' cannot be stateful.'
                 )
             obj = obj.values[None]
         except AttributeError:
             try:
-                obj = getattr(self._owner._owner, self.attribute_name)
+                obj = getattr(owning_component, self.attribute_name)
             except AttributeError:
                 return None
         except KeyError:
@@ -2123,7 +2282,15 @@ class SharedParameter(Parameter):
             # stateful or loggable) and when either self._owner._owner
             # is a type or is in the process of instantiating a
             # Parameter for an instance of a Component
-            obj = getattr(self._owner._owner.defaults, self.attribute_name)
+            return None
+
+        if (
+            isinstance(owning_component, Component)
+            and isinstance(obj, ComponentsMeta)
+        ):
+            # don't mix Parameters on instantiated objects with
+            # those on classes
+            return None
 
         try:
             obj = getattr(obj.parameters, self.shared_parameter_name)
@@ -2285,22 +2452,8 @@ class ParametersBase(ParametersTemplate):
         self._initializing = False
 
     def _throw_attr_error(self, attr):
-        try:
-            param_owner = self._owner
-            if isinstance(param_owner, type):
-                owner_string = f' of {param_owner}'
-            else:
-                owner_string = f' of {param_owner.name}'
-
-            if hasattr(param_owner, 'owner') and param_owner.owner:
-                owner_string += f' for {param_owner.owner.name}'
-                if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
-                    owner_string += f' of {param_owner.owner.owner.name}'
-        except AttributeError:
-            owner_string = ''
-
         raise AttributeError(
-            f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
+            f"No attribute '{attr}' exists in the parameter hierarchy{self._owner_string}."
         ) from None
 
     def __getattr__(self, attr):

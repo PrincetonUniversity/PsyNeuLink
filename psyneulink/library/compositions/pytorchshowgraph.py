@@ -77,7 +77,7 @@ class PytorchShowGraph(ShowGraph):
                     receiver = projection.receiver.owner
                     if node is receiver:
                         dependencies.add(sender)
-                    # FIX: 3/9/25 - HANDLE NOTED THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
+                    # FIX: 3/9/25 - HANDLE NODE THAT PROJECTS TO OUTPUT_CIM IN SAME WAY:
                     # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                     elif (isinstance(receiver, CompositionInterfaceMechanism) and
                           # projection.receiver.owner._get_destination_info_from_input_CIM(projection.receiver)[1]

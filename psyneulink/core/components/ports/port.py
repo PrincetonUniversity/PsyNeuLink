@@ -837,7 +837,7 @@ PROJECTION_SPECIFIC_PARAMS = 'PROJECTION_SPECIFIC_PARAMS'
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
-REMOVE_PORTS = 'REMOVE_PORTS'
+
 
 def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
@@ -2431,15 +2431,12 @@ class Port_Base(Port):
 
     @property
     def _dependent_components(self):
+        res = super()._dependent_components
         try:
-            return list(itertools.chain(
-                super()._dependent_components,
-                self.efferents,
-            ))
-        except PortError:
-            return list(itertools.chain(
-                super()._dependent_components,
-            ))
+            res.extend(self.all_afferents)
+        except AttributeError:
+            pass
+        return res
 
 
 def _instantiate_port_list(owner,

@@ -712,9 +712,6 @@ class ShowGraph():
         """
         composition = self.composition
 
-        if context.execution_id is None:
-            context.execution_id = composition.default_execution_id
-
         # Args not specified by user but used in calls to show_graph for nested Compositions
         comp_hierarchy = kwargs.pop(COMP_HIERARCHY, {})
         enclosing_comp = kwargs.pop(ENCLOSING_COMP,None)

@@ -6,6 +6,8 @@ on:
       - 'dependabot/**'
     tags:
       - 'v*'
+    paths-ignore:
+      - '.github/workflows/pnl-ci.yml'
   pull_request:
 
 # run only the latest instance of this workflow job for the current branch/PR
@@ -21,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         os: [ubuntu-latest, macos-latest, windows-latest]
         pnl-version: ${{ (github.event_name == 'push') && fromJSON('["head"]') || fromJSON('["head", "base"]') }}
         exclude:
@@ -36,6 +38,8 @@ jobs:
           - python-version: '3.10'
             pnl-version: 'base'
           - python-version: '3.12'
+            pnl-version: 'base'
+          - python-version: '3.13'
             pnl-version: 'base'
 
     outputs:

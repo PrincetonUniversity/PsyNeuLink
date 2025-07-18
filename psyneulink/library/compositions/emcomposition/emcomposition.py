@@ -1016,7 +1016,10 @@ def _memory_getter(owning_component=None, context=None)->list:
 
 def field_weights_setter(field_weights, owning_component=None, context=None):
     # FIX: ALLOW DICTIONARY WITH FIELD NAME AND WEIGHT
-    if owning_component.field_weights is None:
+    if (
+        not owning_component.parameters.field_weights._has_value(context)
+        or owning_component.parameters.field_weights._get(context) is None
+    ):
         return field_weights
     elif len(field_weights) != len(owning_component.field_weights):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
@@ -1465,8 +1468,10 @@ class EMComposition(AutodiffComposition):
     componentCategory = EM_COMPOSITION
 
     if torch_available:
-        from psyneulink.library.compositions.emcomposition.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
+        from psyneulink.library.compositions.emcomposition.pytorchEMwrappers import \
+            PytorchEMCompositionWrapper, PytorchEMMechanismWrapper
         pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
+        pytorch_mechanism_wrapper_type = PytorchEMMechanismWrapper
 
 
     class Parameters(AutodiffComposition.Parameters):
@@ -1690,12 +1695,15 @@ class EMComposition(AutodiffComposition):
         # Construct memory --------------------------------------------------------------------------------
 
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
-        self._validate_memory_specs(memory_template,
-                                    memory_capacity,
-                                    memory_fill,
-                                    field_weights,
-                                    field_names,
-                                    name)
+        self._validate_memory_specs(
+            memory_template,
+            memory_capacity,
+            memory_fill,
+            field_weights,
+            field_names,
+            name,
+            learn_field_weights,
+        )
 
         memory_template, memory_capacity = self._parse_memory_template(memory_template,
                                                                        memory_capacity,
@@ -1771,10 +1779,6 @@ class EMComposition(AutodiffComposition):
                                  self._use_gating_for_weighting,
                                  context=Context(source=ContextFlags.COMMAND_LINE, string='FROM EM'))
 
-        # if torch_available:
-        #     from psyneulink.library.compositions.pytorchEMcompositionwrapper import PytorchEMCompositionWrapper
-        #     self.pytorch_composition_wrapper_type = PytorchEMCompositionWrapper
-
         # Final Configuration and Clean-up ---------------------------------------------------------------------------
 
         # Assign learning-related attributes
@@ -1845,7 +1849,7 @@ class EMComposition(AutodiffComposition):
     # ***********************************  Memory Construction Methods  ***********************************************
     # *****************************************************************************************************************
     #region
-    def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name):
+    def _validate_memory_specs(self, memory_template, memory_capacity, memory_fill, field_weights, field_names, name, learn_field_weights):
         """Validate the memory_template, field_weights, and field_names arguments
         """
 
@@ -1881,8 +1885,8 @@ class EMComposition(AutodiffComposition):
                                      f"must be a float, int or len tuple of ints and/or floats.")
 
         # If learn_field_weights is a list of bools, it must match the len of 1st dimension (axis 0) of memory_template:
-        if isinstance(self.learn_field_weights, list) and len(self.learn_field_weights) != num_fields:
-            raise EMCompositionError(f"The number of items ({len(self.learn_field_weights)}) in the "
+        if isinstance(learn_field_weights, list) and len(learn_field_weights) != num_fields:
+            raise EMCompositionError(f"The number of items ({len(learn_field_weights)}) in the "
                                      f"'learn_field_weights' arg for {name} must match the number of "
                                      f"fields in memory ({num_fields}).")
 
@@ -2640,6 +2644,7 @@ class EMComposition(AutodiffComposition):
     # *********************************** Execution Methods  **********************************************************
     # *****************************************************************************************************************
     # region
+    @handle_external_context(fallback_default=True)
     def execute(self,
                 inputs=None,
                 context=None,
@@ -2725,12 +2730,29 @@ class EMComposition(AutodiffComposition):
             # Assign updated matrix to Projection
             self.retrieved_nodes[i].path_afferents[0].parameters.matrix.set(field_memories, context)
 
-    @handle_external_context()
-    def learn(self, *args, **kwargs)->list:
+    @handle_external_context(fallback_default=True)
+    def learn(
+        self,
+        *args,
+        context: Optional[Context] = None,
+        base_context: Context = Context(execution_id=None),
+        skip_initialization: bool = False,
+        **kwargs
+    ) -> list:
         """Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning"""
-        softmax_choice = self.parameters.softmax_choice.get(kwargs[CONTEXT])
+
+        if (
+            not skip_initialization
+            and (
+                context is None
+                or ContextFlags.SIMULATION_MODE not in context.runmode
+            )
+        ):
+            self._initialize_from_context(context, base_context, override=False)
+
+        softmax_choice = self.parameters.softmax_choice.get(context)
         use_gating_for_weighting = self._use_gating_for_weighting
-        enable_learning = self.parameters.enable_learning.get(kwargs[CONTEXT])
+        enable_learning = self.parameters.enable_learning.get(context)
 
         if use_gating_for_weighting and enable_learning:
             raise EMCompositionError(f"Field weights cannot be learned when 'use_gating_for_weighting' is True; "
@@ -2740,7 +2762,13 @@ class EMComposition(AutodiffComposition):
             raise EMCompositionError(f"The ARG_MAX and PROBABILISTIC options for the 'softmax_choice' arg "
                                      f"of '{self.name}' cannot be used during learning; change to WEIGHTED_AVG.")
 
-        return super().learn(*args, **kwargs)
+        return super().learn(
+            *args,
+            context=context,
+            base_context=base_context,
+            skip_initialization=skip_initialization,
+            **kwargs,
+        )
 
     def _get_execution_mode(self, execution_mode):
         """Parse execution_mode argument and return a valid execution mode for the learn() method"""

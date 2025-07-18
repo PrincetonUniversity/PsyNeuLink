@@ -2155,7 +2155,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
         def diff_with_normalization(vector, matrix):
             normalize = torch.sum(torch.abs(vector - matrix))
-            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
+            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0, keepdim=True)
 
         if operation is DOT_PRODUCT:
             if normalize:
@@ -2163,6 +2163,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             else:
                 def matmul(x, y):
                     return torch.matmul(x, y)
+
                 return matmul
 
         elif operation is L0:
@@ -2213,7 +2214,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                     #      Also need to deal with column- (or row-) wise zeros which cause div by zero
                     #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                     # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
-                    matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+                    matrix = matrix / np.linalg.norm(matrix, axis=0, keepdims=True)
             result = np.dot(vector, matrix)
 
         elif operation == L0:
