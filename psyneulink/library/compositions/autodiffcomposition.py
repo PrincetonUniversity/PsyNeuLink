@@ -1794,8 +1794,8 @@ class AutodiffComposition(Composition):
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
 
             # Drop the sequence dimension if its singleton
-            # if trial_output.ndim >= 3 and trial_output.shape[1] == 1:
-            #     trial_output = trial_output.squeeze(1)
+
+
 
             # Check if the trial_output is atleast 3D
             is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
