@@ -471,12 +471,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         return res
 
-    # def execute_input_ports(self, variable)->torch.Tensor:
-    #     from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-    #     assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
-    #                                             f"should be a torch.Tensor, but is {type(variable)}.")
-    #     # Return the input for the port for all items in the batch
-    #     return variable[:, :, 0, ...]
 
     def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->dict:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
