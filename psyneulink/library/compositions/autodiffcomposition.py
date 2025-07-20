@@ -1115,7 +1115,7 @@ class AutodiffComposition(Composition):
         dependency_dict[projection] = sender
         queue.append((receiver, comp))
 
-    # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
+    # BREADCRUMB: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self,
                                       learning_rate=None,
@@ -1177,7 +1177,7 @@ class AutodiffComposition(Composition):
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
         else:
-            self.parameters.learning_rate._set(default_learning_rate, context)
+            self.parameters.learning_rate.set(default_learning_rate, context)
         # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
         # MODIFIED 6/29/25 OLD:
         if self._runtime_learning_rate is not None:
