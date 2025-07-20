@@ -4031,7 +4031,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
-            learning_rate=learning_rate,
+            learning_rate=composition_learning_rate,
             enable_learning=enable_learning,
             minibatch_size=minibatch_size,
             optimizations_per_minibatch=optimizations_per_minibatch,
@@ -9359,7 +9359,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _lr_dict_arg = {(k.name if isinstance(k, MappingProjection) else k): v for k,v in _lr_dict_arg.items()}
 
             # Get default dict for Composition
-            lr_dict = self.parameters.learning_rates_dict.get(None)
+            if self.parameters.learning_rates_dict.values:
+                # BREADCRUMB: KATHERINE, WHY HAS NONE CONTEXT NOT YET BEEN ASSIGNED:
+                lr_dict = self.parameters.learning_rates_dict.get(None)
+            else:
+                self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
 
             if context:
                 # If called in an execution context (i.e., from learn()), get learning_rates for all nested comps
@@ -9367,8 +9371,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     lr_dict.update(comp.parameters.learning_rates_dict.get(None))
                 lr_dict.update(_lr_dict_arg)
 
-            # Assign learning_rates_dict to context for the current execution
-            self.parameters.learning_rates_dict.set(lr_dict, context)
+                # Assign learning_rates_dict to context for the current execution
+                self.parameters.learning_rates_dict.set(lr_dict, context)
 
         return learning_rate
 
