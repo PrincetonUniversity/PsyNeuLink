@@ -8069,6 +8069,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nodes[nodes.index(n)] = n[0]
                     # MODIFIED 12/22/24 END
 
+        # BREADCRUMB: SHOULD PASS PROJECTIONS FROM PATHWAY RATHER THAN projections THEMSELVES,
+        #             (SINCE "PROXIES" MAY BE USED IN PATHWAY FOR PROJECTIONS TO NESTED COMPOSITIONS)
+        #             OR MAP FROM PROJECTIONS TO PROXIES FOR LEARNING RATE ASSIGNMENTS
         self._assign_learning_rates(projections)
 
         specified_pathway = pathway
