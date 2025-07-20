@@ -3178,7 +3178,7 @@ from psyneulink.core.components.ports.port import Port, PortError
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError#, PROXY_FOR
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError, PROXY_FOR
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
     Projection_Base, ProjectionError, DuplicateProjectionError
@@ -6560,8 +6560,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   MATRIX:projection.matrix.base,
                                   LEARNABLE:projection.learnable,
                                   LEARNING_RATE:projection.learning_rate,
-                                  # # # MODIFIED 4/24/25 NEW:
-                                  # PROXY_FOR:projection
+                                  # # MODIFIED 4/24/25 NEW:
+                                  PROXY_FOR:projection
                                   # MODIFIED 4/24/25 END
                                   }
                              }
@@ -9389,9 +9389,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context = context or self.name+'_'+DEFAULT
 
         for proj in projections:
-            if proj.name in learning_rates_dict:
+            proj_name = proj._proxy_for.name if hasattr(proj, '_' + PROXY_FOR) else proj.name
+            if proj_name in learning_rates_dict:
                 # Flag for error if anything other than False is specifieD for a Projection that is not learnable
-                if learning_rates_dict[proj.name] is not False and not proj.learnable:
+                if learning_rates_dict[proj_name] is not False and not proj.learnable:
                     not_learnable.append(proj.name)
             else:
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
@@ -9399,7 +9400,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
             #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
-            proj.parameters.learning_rate.set(learning_rates_dict[proj.name], context)
+            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
         if not_learnable:
             raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
                                    f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "

@@ -308,13 +308,13 @@ from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'MappingError', 'MappingProjection',
-    # # MODIFIED 4/24/25 NEW:
-    # 'PROXY_FOR'
+    # MODIFIED 4/24/25 NEW:
+    'PROXY_FOR'
     # MODIFIED 4/24/25 END
 ]
 
 # # MODIFIED 4/24/25 NEW:
-# PROXY_FOR = 'proxy_for'
+PROXY_FOR = 'proxy_for'
 # MODIFIED 4/24/25 END
 
 parameter_keywords.update({MAPPING_PROJECTION})
@@ -516,10 +516,10 @@ class MappingProjection(PathwayProjection_Base):
             raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
                                f"float or int when 'learnable' is False.")
         # # MODIFIED 4/24/25 NEW:
-        # if PROXY_FOR in kwargs:
-        #     # Identifies Projection into or out of a nested Composition for which this is the proxy
-        #     #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
-        #     self._proxy_for = kwargs.pop(PROXY_FOR)
+        if PROXY_FOR in kwargs:
+            # Identifies Projection into or out of a nested Composition for which this is the proxy
+            #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
+            self._proxy_for = kwargs.pop(PROXY_FOR)
         # MODIFIED 4/24/25 END
 
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
