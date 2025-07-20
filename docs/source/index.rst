@@ -49,14 +49,14 @@ used to implement the function of brain subsystems and/or psychological processe
 be simulated at the system level.
 
 The purpose of PsyNeuLink is to make it as easy as possible to create new and/or import existing models, and
-integrate them to simluate system-level interactions.  It provides a suite of core components for
+integrate them to simulate system-level interactions.  It provides a suite of core components for
 implementing models of various forms of processing, learning, and control, and its Library includes examples that
 combine these components to implement published models.  As an open source project, its suite of components is meant
 to be enhanced and extended, and its library is meant to provide an expanding repository of models, written in a
 concise, executable, and easy to interpret form, that can be shared, compared, and extended by the scientific community.
 
 *(Note: the PsyNeuLink development effort was initiated and named in 2016, entirely independently and without
-awareness of Neuralink, with which it bears no association nor any intentional relationsip.)*
+awareness of Neuralink, with which it bears no association nor any intentional relationship.)*
 
 .. _What_PsyNeuLink_IS:
 
@@ -100,11 +100,11 @@ It is:
 What PsyNeuLink is **NOT**
 --------------------------
 
-The longterm goal of PsyNeuLink is to provide an environment that integrates comptutational modeling of brain function
+The longterm goal of PsyNeuLink is to provide an environment that integrates computational modeling of brain function
 and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
 implement models at any level, it is still under development, and current efficiency considerations make it more
-suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
-simple to moderately complex models, and for the integration of disparate models into a single environment, and the
+suitable for some forms of modeling than others. In its present form, it is well suited to the creation of
+simple to moderately complex models, for the integration of disparate models into a single environment, and the
 creation of systems-level neuroscientific models, as well as cognitive neuroscientific and modestly scaled machine
 learning-style models, while in
 it is presently less well suited to efforts involving massively large computations, such as:
@@ -301,13 +301,12 @@ Table of Contents
 
 .. toctree::
    :titlesonly:
+   :maxdepth: 1
 
    self
    BasicsAndPrimer
    QuickReference
-   Core
-   Library
-   manual/index
+   Manual
    tutorials/index
    ContributorsGuide
 
