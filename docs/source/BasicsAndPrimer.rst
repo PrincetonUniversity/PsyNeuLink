@@ -124,7 +124,7 @@ As the name of the ``show_graph()`` method suggests, Compositions are represente
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
 display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `igraph <http://igraph.org/redirect
 .html>`_).  They can also be exported as a JSON file, in a format that is currently being developed for the exchange
-of computational models in neuroscience and psychology (see `json`)
+of computational models in neuroscience and psychology (see `mdf`)
 
 .. XXX USE show_graph(show_node_structure=True) HERE OR ABOVE::
 
