@@ -16,7 +16,7 @@ Overview
 The developers of PsyNeuLink are collaborating with the scientific community, as part of the `OpenNeuro effort
 <https://openneuro.org>`_, to create a standard, serialized format for the description and exchange of computational
 models of brain and psychological function across different simulation environments. As part of this effort,
-PsyNeuLink supports the `ModECI Model Description Format <https://github.com/ModECI/MDF/includes>`_ (MDF) by
+PsyNeuLink supports the `ModECI Model Description Format <https://modeci.org/>`_ (MDF) by
 including the ability to produce an MDF-compatible model from a PsyNeuLink model and to construct valid Python
 scripts that express a PsyNeuLink model from an MDF model.
 
