@@ -39,7 +39,7 @@ information to a decision layer).
 
 Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>`
 *directly transmit* and possibly *transform* information, and are linked by `PathwayProjections
-<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>`
+<PathwayProjection>` that transmit the information between them. `ModulatoryMechanisms <ModulatoryMechanism>`
 *modify* or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
 <ModulatoryProjecdtion>` to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
@@ -96,8 +96,8 @@ the first layer of which takes an array of length 5 as its input, and uses a `Li
 
     # Construct the Mechanisms:
     input_layer = ProcessingMechanism(input_shapes=5, name='Input')
-    hidden_layer = ProcessingMechanism(input_shapes=2, function=Logistic, name='hidden')
-    output_layer = ProcessingMechanism(input_shapes=5, function=Logistic, name='output')
+    hidden_layer = ProcessingMechanism(input_shapes=2, function=Logistic, name='Hidden')
+    output_layer = ProcessingMechanism(input_shapes=5, function=Logistic, name='Output')
 
     # Construct the Composition:
     my_network = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
