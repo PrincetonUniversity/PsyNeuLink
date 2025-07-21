@@ -9326,7 +9326,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - a single value, use as Composition's learning_rate.
           - a dict, move parsed entries to self.learning_rates_dict for specified context (None if from constructor).
         Assumes context=None if called from Composition constructor.
-        Otherwise, assumes call is from learn() method, and gets learning_rats for Projections in all nested comps
+        Otherwise, assumes call is from learn(), and gets learning_rates for Projections in all nested comps
         """
         if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
             source_str = self.name
@@ -9361,6 +9361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get default dict for Composition
             lr_dict = self.parameters.learning_rates_dict.get(None)
 
+            # BREADCRUMB:  ??MOVE THIS TO _assign_learning_rates BELOW
             if context:
                 # If called in an execution context (i.e., from learn()), get learning_rates for all nested comps
                 for comp in self._get_nested_compositions():
