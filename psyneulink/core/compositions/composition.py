@@ -3178,7 +3178,7 @@ from psyneulink.core.components.ports.port import Port, PortError
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError#, PROXY_FOR
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError, PROXY_FOR
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import \
     Projection_Base, ProjectionError, DuplicateProjectionError
@@ -4031,7 +4031,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._initialize_parameters(
             **param_defaults,
-            learning_rate=learning_rate,
+            learning_rate=composition_learning_rate,
             enable_learning=enable_learning,
             minibatch_size=minibatch_size,
             optimizations_per_minibatch=optimizations_per_minibatch,
@@ -6560,8 +6560,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   MATRIX:projection.matrix.base,
                                   LEARNABLE:projection.learnable,
                                   LEARNING_RATE:projection.learning_rate,
-                                  # # # MODIFIED 4/24/25 NEW:
-                                  # PROXY_FOR:projection
+                                  # # MODIFIED 4/24/25 NEW:
+                                  PROXY_FOR:projection
                                   # MODIFIED 4/24/25 END
                                   }
                              }
@@ -8069,6 +8069,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nodes[nodes.index(n)] = n[0]
                     # MODIFIED 12/22/24 END
 
+        # BREADCRUMB: SHOULD PASS PROJECTIONS FROM PATHWAY RATHER THAN projections THEMSELVES,
+        #             (SINCE "PROXIES" MAY BE USED IN PATHWAY FOR PROJECTIONS TO NESTED COMPOSITIONS)
+        #             OR MAP FROM PROJECTIONS TO PROXIES FOR LEARNING RATE ASSIGNMENTS
         self._assign_learning_rates(projections)
 
         specified_pathway = pathway
@@ -9326,7 +9329,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - a single value, use as Composition's learning_rate.
           - a dict, move parsed entries to self.learning_rates_dict for specified context (None if from constructor).
         Assumes context=None if called from Composition constructor.
-        Otherwise, assumes call is from learn(), and gets learning_rates for Projections in all nested comps
+        Otherwise, assumes call is from learn() method, and gets learning_rats for Projections in all nested comps
         """
         if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
             source_str = self.name
@@ -9359,17 +9362,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _lr_dict_arg = {(k.name if isinstance(k, MappingProjection) else k): v for k,v in _lr_dict_arg.items()}
 
             # Get default dict for Composition
-            lr_dict = self.parameters.learning_rates_dict.get(None)
-
-            # BREADCRUMB:  ??MOVE THIS TO _assign_learning_rates BELOW
-            if context:
+            # MODIFIED 7/21/25 OLD:
+            # # BREADCRUMB: KATHERINE: THE FOLLOWING ASSIGNMENT SEEMS TO BE PERSISTING FROM PREVIOUS ASSIGNMENT
+            # if self.parameters.learning_rates_dict.values:
+            #     # BREADCRUMB: KATHERINE, WHY HAS NONE CONTEXT NOT YET BEEN ASSIGNED?:
+            #     lr_dict = self.parameters.learning_rates_dict.get(None)
+            # else:
+            #     self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
+            # MODIFIED 7/21/25 NEW:
+            # lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
+            # MODIFIED 7/21/25 END
+            if context is None:
+                lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
+            else:
+                lr_dict = self.parameters.learning_rates_dict.get(context)
                 # If called in an execution context (i.e., from learn()), get learning_rates for all nested comps
                 for comp in self._get_nested_compositions():
                     lr_dict.update(comp.parameters.learning_rates_dict.get(None))
                 lr_dict.update(_lr_dict_arg)
 
-            # Assign learning_rates_dict to context for the current execution
-            self.parameters.learning_rates_dict.set(lr_dict, context)
+                # Assign learning_rates_dict to context for the current execution
+                self.parameters.learning_rates_dict.set(lr_dict, context)
 
         return learning_rate
 
@@ -9383,17 +9396,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context = context or self.name+'_'+DEFAULT
 
         for proj in projections:
-            if proj.name in learning_rates_dict:
+            proj_name = proj._proxy_for.name if hasattr(proj, '_' + PROXY_FOR) else proj.name
+            if proj_name in learning_rates_dict:
                 # Flag for error if anything other than False is specifieD for a Projection that is not learnable
-                if learning_rates_dict[proj.name] is not False and not proj.learnable:
+                if learning_rates_dict[proj_name] is not False and not proj.learnable:
                     not_learnable.append(proj.name)
             else:
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
-                learning_rates_dict[proj.name] = proj.learning_rate
+                learning_rates_dict[proj_name] = proj.learning_rate
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
             #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
-            proj.parameters.learning_rate.set(learning_rates_dict[proj.name], context)
+            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
         if not_learnable:
             raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
                                    f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
@@ -11976,7 +11990,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
                                        f"argument the constructor(s) for the corresponding MappingProjection(s).")
 
-            # parse and then assign any learning_rate specs to learning_rate_dict for execution context
+            # parse and then assign any learning_rate specs to learning_rates_dict for execution context
             self._parse_and_validate_learning_rate_arg(learning_rate, context)
             # BREADCRUMB: FOLLOWING NEEDS TO USE ASSIGNED SPECS PASSED IN DICT TO comp.learning_rates_dict
             self._assign_learning_rates(context=context)

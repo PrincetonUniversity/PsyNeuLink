@@ -634,7 +634,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 direct_proj = [proj for proj in projection.sender.efferents
                                if proj.receiver is destination_rcvr_port][0]
                 pnl_proj.learnable = direct_proj.learnable
-                pnl_proj.parameters.learning_rate._set(direct_proj.parameters.learning_rate.get(context), context)
+                pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
 
@@ -863,7 +863,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 # # MODIFIED 6/30/25 OLD:
                 # proj.learning_rate = optimizer_params_parsed[proj_name].value
                 # MODIFIED 6/30/25 NEW:
-                proj.parameters.learning_rate._set(optimizer_params_parsed[proj_name].value, context)
+                proj.parameters.learning_rate.set(optimizer_params_parsed[proj_name].value, context)
                 # MODIFIED 6/30/25 END
             else:
                 assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
@@ -1115,7 +1115,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         try:
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             for proj in self.wrapped_projections:
-                proj.parameters.learning_rate._set(self._constructor_proj_learning_rates[proj], context)
+                proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
         except AttributeError:
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
