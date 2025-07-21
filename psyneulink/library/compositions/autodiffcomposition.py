@@ -1205,7 +1205,7 @@ class AutodiffComposition(Composition):
                                                                  runmode=context.runmode,
                                                                  execution_id=context.execution_id))
             else:
-                # Otherwise, if call is from Composition constructor, use user-specified params specified in that call
+                # Otherwise, if call is from Composition constructor, use params specified by user in that call
                 opt_params = optimizer_params or self._optimizer_constructor_params
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
