@@ -9370,7 +9370,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # else:
             #     self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
             # MODIFIED 7/21/25 NEW:
-            lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
+            # lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
             # MODIFIED 7/21/25 END
             if context is None:
                 lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
