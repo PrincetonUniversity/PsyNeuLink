@@ -9362,8 +9362,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _lr_dict_arg = {(k.name if isinstance(k, MappingProjection) else k): v for k,v in _lr_dict_arg.items()}
 
             # Get default dict for Composition
+            # BREADCRUMB: KATHERINE: THE FOLLOWING SEEMS TO BE PERSISTING FROM PREVIOUS ASSIGNMENT
             if self.parameters.learning_rates_dict.values:
-                # BREADCRUMB: KATHERINE, WHY HAS NONE CONTEXT NOT YET BEEN ASSIGNED:
+                # BREADCRUMB: KATHERINE, WHY HAS NONE CONTEXT NOT YET BEEN ASSIGNED?:
                 lr_dict = self.parameters.learning_rates_dict.get(None)
             else:
                 self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
@@ -9396,7 +9397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     not_learnable.append(proj.name)
             else:
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
-                learning_rates_dict[proj.name] = proj.learning_rate
+                learning_rates_dict[proj_name] = proj.learning_rate
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
             #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED

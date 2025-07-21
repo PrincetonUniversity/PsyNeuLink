@@ -324,7 +324,7 @@ class TestAutodiffLearningRateArgs:
         # ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
         # # Projection lr overrides learn() lr
         # ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
-        # ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
+        ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
         # # learning_rate dict in Autodiff constructor overrides Projection lr
         ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
         ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
