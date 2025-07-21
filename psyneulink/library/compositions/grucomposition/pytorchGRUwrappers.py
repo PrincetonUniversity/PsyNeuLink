@@ -22,6 +22,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.keywords import (
     ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
@@ -166,9 +167,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
             so DummyProjections are used to provide access to their learning_rates
             """
+
+            class Parameters(Projection.Parameters):
+                learning_rate = Parameter(None, stateful=True)
+
             def __init__(self, name):
                 self.name = name
-                self.learning_rate = None
+                # self.learning_rate = None
                 self.learnable = True
             def __getattr__(self, name):
                 if name not in {'learning_rate', 'name'}:
