@@ -9372,6 +9372,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # MODIFIED 7/21/25 NEW:
             # lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
             # MODIFIED 7/21/25 END
+            # BREADCRUMB: KATHERINE: THE learning_rates_dict ASSIGNMENT FROM THE PRECEDING TEST IS PERSISTING:
+            #             test_projection_specific_learning_rates(): hidden_dict_constructor -> input_dict_learn
             if context is None:
                 lr_dict = self.parameters.learning_rates_dict.set(_lr_dict_arg, None)
             else:
@@ -9383,6 +9385,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Assign learning_rates_dict to context for the current execution
                 self.parameters.learning_rates_dict.set(lr_dict, context)
+
+        # BREADCRUMB:  NEEDEED DUE TO PERSISTENCE PROBLEM NOTED ABOVE
+        else:
+            self.parameters.learning_rates_dict.set({}, None)
 
         return learning_rate
 
