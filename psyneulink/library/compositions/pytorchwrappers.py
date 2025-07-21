@@ -681,7 +681,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 direct_proj = [proj for proj in projection.receiver.path_afferents
                                if proj.sender is source_sndr_port][0]
                 pnl_proj.learnable = direct_proj.learnable
-                pnl_proj.parameters.learning_rate._set(direct_proj.parameters.learning_rate.get(context), context)
+                pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
 
