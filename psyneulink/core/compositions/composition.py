@@ -3193,8 +3193,8 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
     (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY,
-     DEFAULT, DEFAULT_LEARNING_RATE, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
-     INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
+     DEFAULT, DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP,
+     IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
      LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
      LEARNING_RATE, LEARNING_SIGNAL, Loss,
      MATRIX, MAYBE, MODEL_SPEC_ID_METADATA, MONITOR, MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM,
@@ -8376,6 +8376,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
             if proj_lr is not None:
+                # BREADCRUMB:  CHECK THAT CONTEXT IS DEFAULT_SUFFIX HERE
+                #              ??ALSO ASSIGN TO learning_rates_dict??
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
@@ -9401,7 +9403,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         not_learnable = []
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
-        context = context or self.name + '_'+ DEFAULT
+        context = context or self.name + DEFAULT_SUFFIX
 
         for proj in projections:
             _is_proxy = hasattr(proj, PROXY_FOR_ATTRIB)
