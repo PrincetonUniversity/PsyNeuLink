@@ -24,7 +24,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.keywords import (
-    ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
@@ -97,12 +97,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context, nested=False):
+    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, source:str, context, nested=False):
         """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
-
-        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
         for spec in optimizer_param_specs:
             # Raise error for attempt to specify bias parameters when bias=False
@@ -169,12 +167,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             """
 
             class Parameters(Projection.Parameters):
-                learning_rate = Parameter(None, stateful=True)
+                learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
 
             def __init__(self, name):
                 self.name = name
-                # self.learning_rate = None
+                self.parameters.learning_rate.set(None, None)
                 self.learnable = True
+
             def __getattr__(self, name):
                 if name not in {'learning_rate', 'name'}:
                     raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "

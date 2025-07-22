@@ -55,6 +55,8 @@ __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProje
 ENTER_NESTED = 0
 EXIT_NESTED = 1
 
+LEARN_CONSTRUCTION = 'learn_construction'
+LEARN_OVERRIDE = 'learn_override'
 LEARN_METHOD = 'learn() method'
 CONSTRUCTOR = 'constructor'
 
@@ -790,28 +792,34 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
         # These are used both for error messages (hence strings) as we well determining how to update param_groups
 
-        # source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
-        source = (LEARN_METHOD if (context.source == ContextFlags.METHOD
-                                   and context.runmode == ContextFlags.LEARNING_MODE)
-                  else CONSTRUCTOR)
+        if context.runmode == ContextFlags.LEARNING_MODE:
+            if context.source == ContextFlags.COMPOSITION:
+                source = LEARN_CONSTRUCTION
+                assert not self.optimizer, (f"PROGRAM ERROR: '{self.name}' is being constructed in learning mode "
+                                            f"but optimizer is already specified ")
+                self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
 
-        if source == LEARN_METHOD:
-            # revert to learning_rate assignments made in constructor
-            self._restore_constructor_proj_learning_rates_and_torch_params(self.optimizer, context)
+            elif context.source == ContextFlags.METHOD:
+                source = LEARN_OVERRIDE
+                assert self.optimizer, (f"PROGRAM ERROR: 'no optimizer in call to learn() for '{self.name}' ")
+                # revert to learning_rate assignments made in constructor before assigning any new values
+                self._restore_constructor_proj_learning_rates_and_torch_params(self.optimizer, context)
 
-        # CONSTRUCTOR is source
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} called in learning mode with an unexpected context.source"
+
         else:
+            source = CONSTRUCTOR
             if self.optimizer and not optimizer_params_user_specs:
                 # No need to construct (optimizer exists) or to update_optimizer (no new params)
                 return
 
-            # MODIFIED 6/14/25 OLD:
             if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers(context=context):
                 # If user didn't provide any specs, and there are no learnable Projections, not much to do;
                 # just assign default optimizer.param_groups and store learning_rates for Projections
-                self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
                 return
-            # MODIFIED 6/14/25 END
+
+        source_str = LEARN_METHOD if 'learn' in source else CONSTRUCTOR
 
         # Proceed to either construct new optimizer.param_groups (if called from constructor)
         #   or update existing ones (if called from learn() method)
@@ -843,6 +851,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         - """
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        source_str = LEARN_METHOD if 'learn' in source else CONSTRUCTOR
 
         # Replace any Projections in optimizer_torch_params_specified with their names
         optimizer_params_parsed = {}
@@ -851,7 +860,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                        for k, v in optimizer_params_user_specs.items()}
 
         if optimizer_params_parsed:
-            self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), context)
+            self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), source_str, context)
 
         # Assign any user-specified Projection-specific learning_rates to the corresponding Projection.learning_rate
         for proj_name in optimizer_params_parsed:
@@ -859,12 +868,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
                 proj = self._pnl_refs_to_torch_param_names[proj_name].projection
-                # BREADCRUMB:
-                # # MODIFIED 6/30/25 OLD:
-                # proj.learning_rate = optimizer_params_parsed[proj_name].value
-                # MODIFIED 6/30/25 NEW:
                 proj.parameters.learning_rate.set(optimizer_params_parsed[proj_name].value, context)
-                # MODIFIED 6/30/25 END
             else:
                 assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
                                f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
@@ -872,17 +876,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
-        # # MODIFIED 6/30/25 OLD:
-        # projection_lr_specs = {proj.name:TorchParamTuple(proj, proj.learning_rate)
-        #                        for proj in [p.projection for p in self.projection_wrappers
-        #                                     if LEARNING in p._use and p.projection.learnable
-        #                                     and is_numeric_scalar(p.projection.learning_rate)]}
-        # MODIFIED 6/30/25 NEW:
         projection_lr_specs = {proj.name:TorchParamTuple(proj, proj.parameters.learning_rate.get(context))
                                for proj in [p.projection for p in self.projection_wrappers
                                             if LEARNING in p._use and p.projection.learnable
                                             and is_numeric_scalar(p.projection.parameters.learning_rate.get(context))]}
-        # MODIFIED 6/30/25 END
         # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
         projection_lr_specs.update(optimizer_params_parsed)
 
@@ -903,7 +900,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 param = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
             except KeyError:
                 raise AutodiffCompositionError(
-                    f"Projection specified in 'learning_rate' arg of the {source} for '{self.composition.name}' "
+                    f"Projection specified in 'learning_rate' arg of the {source_str} for '{self.composition.name}' "
                     f"('{pnl_param_name}') is not associated with a learnable Pytorch parameter.")
 
             # IMPLEMENTATION NOTE:
@@ -930,7 +927,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             if not param.requires_grad and param_val is not False:
                 # If param was set to False in previous call to learn() but was not False at construction
-                if (source == LEARN_METHOD
+                if (source == LEARN_OVERRIDE
                         and param_orig_spec in self.composition._optimizer_constructor_params
                         and self.composition._optimizer_constructor_params[param_orig_spec] is not False):
                     # Turn gradient back on
@@ -940,7 +937,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if not proj_wrapper.projection.learnable:
                     raise AutodiffCompositionError(
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
-                        f"the {source} for '{self.composition.name}' is not learnable; check that its 'learnable' "
+                        f"the {source_str} for '{self.composition.name}' is not learnable; check that its 'learnable' "
                         f"attribute is set to 'True' and its learning_rate is not 'False', or remove from it the dict.")
                 # BREADCRUMB:  ?IS THIS ERROR MANAGED SOMEWHERE ELSE:
                 # else:
@@ -960,10 +957,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return optimizer_torch_params_specified
 
-    def _validate_optimizer_param_specs(self, specs_to_validate:set, context, nested=False):
+    def _validate_optimizer_param_specs(self, specs_to_validate:set, source_str:str, context, nested=False):
         """Allow override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
-
-        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
         for proj_spec in specs_to_validate.copy():
             if proj_spec in self._pnl_refs_to_torch_param_names:
@@ -976,17 +971,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
                                                if (isinstance(node_wrapper, PytorchCompositionWrapper))]:
                 specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
+                                                                                               source_str,
                                                                                                context,
                                                                                                nested=True)
         if nested:
             return specs_to_validate
         if specs_to_validate:
             if len(specs_to_validate) == 1:
-                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source} for "
+                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the {source_str} for "
                            f"'{self.composition.name}' is not in that Composition or any nested within it: "
                            f"'{list(specs_to_validate)[0]}'.")
             else:
-                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the {source} for "
+                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the {source_str} for "
                            f"'{self.composition.name}' are not in that Composition or any nested within it: "
                            f"'{', '.join(list(specs_to_validate))}'.")
             raise AutodiffCompositionError(err_msg)
@@ -1002,6 +998,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         composition = self.composition
         comp_lr = composition.parameters.learning_rate.get(context)
+        source_str = LEARN_METHOD if 'learn' in source else CONSTRUCTOR
 
         # Process *every* parameter in the optimizer's param_groups
         # Get fresh copy of param_groups and assign to optimizer_params
@@ -1026,8 +1023,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     specified_learning_rate = NotImplemented
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
                     raise AutodiffCompositionError(
-                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the {source} "
-                        f"for '{self.composition.name}' is not valid; it must be an int, float, bool or None.")
+                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
+                        f"{source_str} for '{self.composition.name}' is not valid; "
+                        f"it must be an int, float, bool or None.")
                 projection = self._torch_params_to_projections(old_param_groups)[param]
                 torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
                 proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
@@ -1101,7 +1099,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if not param_group['params']:
                 optimizer.param_groups.remove(param_group)
 
-        if source == CONSTRUCTOR:
+        if source in {CONSTRUCTOR, LEARN_CONSTRUCTION}:
             # Store constructor-specified learning_rates (for reversion after learn())
             self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
 
@@ -1117,6 +1115,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for proj in self.wrapped_projections:
                 proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
         except AttributeError:
+            assert self.optimizer, (
+                f"PROGRAM ERROR: _restore_constructor_proj_learning_rates_and_torch_params() called for "
+                f"'{self.composition.name}' but it does not (yet) have an optimizer."
+                f"for its pytorch_representation have not been constructed.")
             assert self._constructor_param_groups, (
                 f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
                 f"for its pytorch_representation have not been constructed.")

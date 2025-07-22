@@ -309,12 +309,13 @@ from psyneulink.core.globals.utilities import is_numeric_scalar
 __all__ = [
     'MappingError', 'MappingProjection',
     # MODIFIED 4/24/25 NEW:
-    'PROXY_FOR'
+    'PROXY_FOR', 'PROXY_FOR_ATTRIB'
     # MODIFIED 4/24/25 END
 ]
 
 # # MODIFIED 4/24/25 NEW:
 PROXY_FOR = 'proxy_for'
+PROXY_FOR_ATTRIB = '_' + PROXY_FOR
 # MODIFIED 4/24/25 END
 
 parameter_keywords.update({MAPPING_PROJECTION})
