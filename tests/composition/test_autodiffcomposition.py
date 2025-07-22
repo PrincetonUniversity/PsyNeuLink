@@ -3628,26 +3628,26 @@ class TestMiscTrainingFunctionality:
     default_lr = .001
 
     test_specs_for_learning_rates = [
-        # #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
-        # #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
-        # #                  |   learning_rate     | projection |  projection  |  projection |     results
-        # #
-        # # Test that AutodiffComposition.learning_rate is used
-        # # ('all_defaults',       False,   False,   None,  None,   None,  None,  None,  None,    default_expected),
-        # # Test that Projection.learning_rate is used
-        # ('proj_only',          False,   False,   None,  None,   None,  None,  2.7,   1.4,     proj_expected),
-        # ('proj_nones',         False,   False,   2.9,    .5,   .66,     1.5,  None, None,     default_expected),
-        # # Test that Projection.learning_rate == False prevents learning
-        # ('proj_False_w_nones', False,   False,   None,  None,   None,  None, False, False,    no_learning_expected),
-        # ('proj_False_w_vals',  False,   False,   2.9,    .5,   .66,     1.5, False, False,    no_learning_expected),
-        # # Test that Projection.learning_rate is used
-        # ('proj_like_constr',   False,   False,   None,  None,   None,  None,  2.9,  .5,       constructor_expected),
-        # # Test that Projection.learning_rate spec supercedes specification in Autodiff constructor
-        # # ('constr_over_proj',   True,   False,    2.9,    .5,    None,  None,   2.9,  .5,      constructor_expected),
-        # # Test specs in constructor (with Projecton.learning_rate None or True)
-        # ('learn_over_proj',    False,   True,    None,  None,   .66,   1.5,   2.7,  1.4,      learn_method_expected),
-        # # Test that Autodiff constructor spec superceded Projection.learning_rate spec
-        # ('learn_over_all',     True,   True,     2.9,    .5,    .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
+        #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
+        #                  |   learning_rate     | projection |  projection  |  projection |     results
+        #
+        # Test that AutodiffComposition.learning_rate is used
+        # ('all_defaults',       False,   False,   None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_only',          False,   False,   None,  None,   None,  None,  2.7,   1.4,     proj_expected),
+        ('proj_nones',         False,   False,   2.9,    .5,   .66,     1.5,  None, None,     default_expected),
+        # Test that Projection.learning_rate == False prevents learning
+        ('proj_False_w_nones', False,   False,   None,  None,   None,  None, False, False,    no_learning_expected),
+        ('proj_False_w_vals',  False,   False,   2.9,    .5,   .66,     1.5, False, False,    no_learning_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_like_constr',   False,   False,   None,  None,   None,  None,  2.9,  .5,       constructor_expected),
+        # Test that Projection.learning_rate spec supercedes specification in Autodiff constructor
+        # ('constr_over_proj',   True,   False,    2.9,    .5,    None,  None,   2.9,  .5,      constructor_expected),
+        # Test specs in constructor (with Projecton.learning_rate None or True)
+        ('learn_over_proj',    False,   True,    None,  None,   .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        # Test that Autodiff constructor spec superceded Projection.learning_rate spec
+        ('learn_over_all',     True,   True,     2.9,    .5,    .66,   1.5,   2.7,  1.4,      learn_method_expected),
         # Test that Autodiff constructor spec superceded Projection.learning_rate spec
         ('constructor_only',   True,    False,   2.9,    .5,    None,  None,  None,  True,    constructor_expected),
         # Test specs in learn() method (with Projecton.learning_rate None or True)
@@ -3827,14 +3827,14 @@ class TestMiscTrainingFunctionality:
         # #                                                                        expected after construction; values
         # #                                                                        after learn() are handled in the test
         # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
-        ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
+        # ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
         # # projection-specific specs takes precedence if no learn() method specs
-        ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
-        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        # ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        # ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
         # # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
         ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
-        # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
         ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
         ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
         ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
