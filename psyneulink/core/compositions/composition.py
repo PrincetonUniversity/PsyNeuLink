@@ -8064,11 +8064,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i, n_e in enumerate(node_entries):
             for n in convert_to_list(n_e):
                 if isinstance(n, tuple):
-                    # # MODIFIED 12/22/24 OLD:
-                    # nodes[i] = nodes[i][0]
-                    # MODIFIED 12/22/24 NEW:
                     nodes[nodes.index(n)] = n[0]
-                    # MODIFIED 12/22/24 END
 
         # BREADCRUMB: SHOULD PASS PROJECTIONS FROM PATHWAY RATHER THAN projections THEMSELVES,
         #             (SINCE "PROXIES" MAY BE USED IN PATHWAY FOR PROJECTIONS TO NESTED COMPOSITIONS)
@@ -9398,6 +9394,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         from psyneulink.library.compositions import AutodiffComposition
         projections = projections or []
+        # Flatten any sets or tuples
+        projections = [item for sub_item in projections
+                       for item in (sub_item if isinstance(sub_item, (list, tuple, set))
+                                    else [sub_item])]
         not_learnable = []
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
