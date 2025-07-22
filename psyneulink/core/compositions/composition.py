@@ -8376,7 +8376,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
             if proj_lr is not None:
-                # BREADCRUMB:  CHECK THAT CONTEXT IS DEFAULT_SUFFIX HERE
+                # BREADCRUMB:  CHANGE CONTEXT TO DEFAULT_SUFFIX HERE??
                 #              ??ALSO ASSIGN TO learning_rates_dict??
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
