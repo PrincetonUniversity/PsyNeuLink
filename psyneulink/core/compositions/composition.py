@@ -1187,7 +1187,7 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
-   |                |    ``my_composition.add_linear_learning_pathway(learning_rate=val)``                                                |
+   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                                |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
@@ -8376,14 +8376,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
             if proj_lr is not None:
-                # BREADCRUMB:  CHECK THAT CONTEXT IS DEFAULT_SUFFIX HERE
-                #              ??ALSO ASSIGN TO learning_rates_dict??
+                # Keep Projection's specified learning_rate, as it takes precedence over pathway learning_rate
+                #   (see `Composition_Learning_Rate_Precedence_Hierarchy`)
+                # BREADCRUMB:  SHOULD CONTEXT BE DEFAULT_SUFFIX HERE??
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
                 # otherwise use, assign LearningMechanism's learning rate or default to Projection
-                learnable_projection.parameters.learning_rate.set(
-                    learning_mech_lr if learning_mech_lr is not None else learning_rate, context)
+                _lr = learning_mech_lr if learning_mech_lr is not None else learning_rate
+                _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
+                learnable_projection.parameters.learning_rate.set(_lr, _context)
+                self.learning_rates_dict[learnable_projection.name] = _lr
         return learning_pathway
 
     @beartype
@@ -9403,7 +9406,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         not_learnable = []
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
+        # MODIFIED 7/23/25 OLD:
         context = context or self.name + DEFAULT_SUFFIX
+        # # MODIFIED 7/23/25 NEW:
+        # context = context if (context and context.execution_id is not None) else self.name + DEFAULT_SUFFIX
+        # MODIFIED 7/23/25 END
 
         for proj in projections:
             _is_proxy = hasattr(proj, PROXY_FOR_ATTRIB)
@@ -9414,7 +9421,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     not_learnable.append(proj.name)
             else:
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
-                learning_rates_dict[proj_name] = proj.learning_rate
+                learning_rates_dict[proj_name] = proj.parameters.learning_rate.get(None)
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
             #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
