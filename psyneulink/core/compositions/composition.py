@@ -9408,9 +9408,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
         # MODIFIED 7/23/25 OLD:
         context = context or self.name + DEFAULT_SUFFIX
-        # # MODIFIED 7/23/25 NEW:
-        # context = context if (context and context.execution_id is not None) else self.name + DEFAULT_SUFFIX
-        # MODIFIED 7/23/25 END
 
         for proj in projections:
             _is_proxy = hasattr(proj, PROXY_FOR_ATTRIB)
