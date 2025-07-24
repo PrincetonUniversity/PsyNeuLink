@@ -447,15 +447,16 @@ class TestExecution:
             )
             # BREADCRUMB: THIS PRODUCES DuplicateProjectionError ON learn() BELOW
             # pytorch_rep = outer._build_pytorch_representation()
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .3
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .001
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .001
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .001
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
+            pytorch_rep = outer.pytorch_representation
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
             assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001

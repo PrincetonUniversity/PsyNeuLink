@@ -1083,9 +1083,19 @@ class GRUComposition(AutodiffComposition):
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
-        # self._learning_rates_dict = {
-        #     HIDDEN_TO_HIDDEN: learning_rate??
-        # }
+
+        # MODIFIED 7/24/25 NEW:
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import INPUT_TO_HIDDEN
+        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import HIDDEN_TO_HIDDEN
+        comp_default_lr = self.parameters.learning_rate.get(None)
+        comp_default_lr_dict = self.parameters.learning_rates_dict.get(None)
+        _lr_dict = {INPUT_TO_HIDDEN: comp_default_lr,
+                    HIDDEN_TO_HIDDEN: comp_default_lr}
+        _lr_dict.update(comp_default_lr_dict)
+        comp_default_lr_dict.update(_lr_dict)
+        assert True
+        # IF PROJECTION learning_rates ARE NOT SPECIFIED, ASSIGN ANY FROM CONSTRUCTOR DEFAULTS USING DEFAULT_SUFFIX
+        # MODIFIED 7/24/25 END
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
