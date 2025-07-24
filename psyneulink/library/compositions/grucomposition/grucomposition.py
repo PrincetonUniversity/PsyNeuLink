@@ -866,7 +866,7 @@ class GRUComposition(AutodiffComposition):
         hidden_size = self.hidden_size
 
         self._construct_pnl_composition(input_size, hidden_size,
-                                    context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+                                        context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
 
         self._assign_gru_specific_attributes(input_size, hidden_size)
 
@@ -1083,6 +1083,9 @@ class GRUComposition(AutodiffComposition):
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
+        # self._learning_rates_dict = {
+        #     HIDDEN_TO_HIDDEN: learning_rate??
+        # }
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)

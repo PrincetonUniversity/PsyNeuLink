@@ -445,11 +445,24 @@ class TestExecution:
                 [input_mech, input_proj, gru, output_proj, output_mech],
                 learning_rate=constructor_learning_rates if condition in {'constructor'} else None
             )
+            # BREADCRUMB: THIS PRODUCES DuplicateProjectionError ON learn() BELOW
+            # pytorch_rep = outer._build_pytorch_representation()
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .3
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
+
+        # BREADCRUMB: RUN learn() AGAIN HERE, AND TEST THAT PARAMS GO BACK TO COMPOSITION DEFAULTS
+
             np.testing.assert_allclose(expected, results)
 
     @pytest.mark.parametrize("bias", [False, True])

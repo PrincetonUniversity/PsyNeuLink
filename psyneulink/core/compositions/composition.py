@@ -12009,7 +12009,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # parse and then assign any learning_rate specs to learning_rates_dict for execution context
             self._parse_and_validate_learning_rate_arg(learning_rate, context)
-            # BREADCRUMB: FOLLOWING NEEDS TO USE ASSIGNED SPECS PASSED IN DICT TO comp.learning_rates_dict
             self._assign_learning_rates(context=context)
 
         # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
