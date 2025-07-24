@@ -445,7 +445,7 @@ class TestExecution:
                 [input_mech, input_proj, gru, output_proj, output_mech],
                 learning_rate=constructor_learning_rates if condition in {'constructor'} else None
             )
-            # BREADCRUMB: THIS PRODUCES DuplicateProjectionError ON learn() BELOW
+            # BREADCRUMB: THE NEXT LINE PRODUCES DuplicateProjectionError ON learn() BELOW
             # pytorch_rep = outer._build_pytorch_representation()
             # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .001
             # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .001
