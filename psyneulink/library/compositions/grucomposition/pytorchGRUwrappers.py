@@ -22,7 +22,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
     ALL, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
@@ -159,28 +159,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         For each PytorchGRUProjectionWrapper, assign the current weight matrix of the PNL Projection
         to the corresponding part of the tensor in the parameter of the Pytorch GRU module.
         """
-
-        class DummyProjection(Projection):
-            """Dummy Projection for access to the learning rate for the IH and WH torch parameter
-            The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
-            so DummyProjections are used to provide access to their learning_rates
-            """
-
-            class Parameters(Projection.Parameters):
-                learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
-
-            def __init__(self, name):
-                self.name = name
-                self.parameters.learning_rate.set(None, None)
-                self.learnable = True
-
-            def __getattr__(self, name):
-                if name not in {'learning_rate', 'name'}:
-                    raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
-                                         f"corresponding to the set of {self.name} Projections of a GRUComposition, "
-                                         f"that cannot be set directly.  It has only 'name', 'learnable', and"
-                                         f"'learning_rate' as attributes, and no others.")
-
         pnl = self.composition
         self.torch_gru_parameters = torch_gru.parameters
 
@@ -761,3 +739,29 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
             detached_matrix = self.matrix.detach().cpu().numpy()
             self.projection.parameters.matrix._set(detached_matrix, context=self._context)
             self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
+
+
+class DummyProjection(Projection):
+    """Dummy Projection for access to the learning rate for the IH and WH torch parameter
+    The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
+    so DummyProjections are used to provide access to their learning_rates
+    """
+    name = ""
+
+    class Parameters(Projection.Parameters):
+        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
+
+    @check_user_specified
+    def __init__(self, name):
+        self.name = name
+        self._initialize_parameters(learning_rate=None, context=Context(execution_id=None))
+        self.parameters.learning_rate.set(None, None)
+        self.learnable = True
+
+    def __getattr__(self, name):
+        obj_name = f"{self.name} "
+        if name not in {'learning_rate', 'name'}:
+            raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
+                                 f"corresponding to the set of {obj_name}Projections of a GRUComposition, "
+                                 f"that cannot be set directly.  It has only 'name', 'learnable', and"
+                                 f"'learning_rate' as attributes, and no others.")
