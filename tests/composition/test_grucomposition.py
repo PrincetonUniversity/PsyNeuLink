@@ -389,12 +389,23 @@ class TestExecution:
                                  )
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
-        constructor_learning_rates = {gru_proj: .3,
-                                        input_proj: 2.9,
-                                        output_proj: .5}
-        learning_method_learning_rates = {gru_proj: .95,
-                                          input_proj: .66,
-                                          output_proj: 1.5}
+
+        lr_specs_from = ("constructor" if condition in {'constructor'}
+                         else "learn_method" if condition in {'learn_method', 'both'} else None)
+
+        gru_proj_lr = .3 if lr_specs_from == 'constructor' else .95 if lr_specs_from == 'learn_method' else None
+        input_proj_lr = 2.9 if lr_specs_from == 'constructor' else .66 if lr_specs_from == 'learn_method' else None
+        output_proj_lr = .5 if lr_specs_from == 'constructor' else 1.5 if lr_specs_from == 'learn_method' else None
+        if gru_proj == pnl.INPUT_TO_HIDDEN:
+            ih_lr = gru_proj_lr
+            hh_lr = .001
+        else:
+            ih_lr = .001
+            hh_lr = gru_proj_lr
+        learning_rates_dict = ({gru_proj: gru_proj_lr,
+                                input_proj: input_proj_lr,
+                                output_proj: output_proj_lr}
+                               if lr_specs_from else None)
 
         # Test for error on attempt to set individual Projection learning rate
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
@@ -404,11 +415,10 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-                )
+                    learning_rate=learning_rates_dict)
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    learning_rate=learning_rates_dict)
             assert error_msg in str(error_text.value)
 
         # Test for error on attempt to set BIAS learning rate if bias option is False
@@ -420,11 +430,11 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-                )
+                    learning_rate=learning_rates_dict)
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    # learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    learning_rate=learning_rates_dict)
             assert error_msg in str(error_text.value)
 
         # Test for assignment of learning_rates to nested Composition on its construction
@@ -443,8 +453,7 @@ class TestExecution:
             # Test assignment of learning_rate on construction
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-            )
+                    learning_rate=learning_rates_dict)
             # BREADCRUMB: THE NEXT LINE PRODUCES DuplicateProjectionError ON learn() BELOW
             # pytorch_rep = outer._build_pytorch_representation()
             # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .001
@@ -454,13 +463,13 @@ class TestExecution:
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
+                learning_rate=learning_rates_dict,
                 num_trials=2)
-            # pytorch_rep = outer.pytorch_representation
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
+            pytorch_rep = outer.pytorch_representation
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr
 
         # BREADCRUMB: RUN learn() AGAIN HERE, AND TEST THAT PARAMS GO BACK TO COMPOSITION DEFAULTS
 
