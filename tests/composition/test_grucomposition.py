@@ -390,12 +390,12 @@ class TestExecution:
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
 
-        lr_specs_from = ("constructor" if condition in {'constructor'}
+        lr_dict_spec = ("constructor" if condition in {'constructor'}
                          else "learn_method" if condition in {'learn_method', 'both'} else None)
 
-        gru_proj_lr = .3 if lr_specs_from == 'constructor' else .95 if lr_specs_from == 'learn_method' else None
-        input_proj_lr = 2.9 if lr_specs_from == 'constructor' else .66 if lr_specs_from == 'learn_method' else None
-        output_proj_lr = .5 if lr_specs_from == 'constructor' else 1.5 if lr_specs_from == 'learn_method' else None
+        gru_proj_lr = .3 if lr_dict_spec == 'constructor' else .95 if lr_dict_spec == 'learn_method' else .001
+        input_proj_lr = 2.9 if lr_dict_spec == 'constructor' else .66 if lr_dict_spec == 'learn_method' else .001
+        output_proj_lr = .5 if lr_dict_spec == 'constructor' else 1.5 if lr_dict_spec == 'learn_method' else .001
         if gru_proj == pnl.INPUT_TO_HIDDEN:
             ih_lr = gru_proj_lr
             hh_lr = .001
@@ -405,7 +405,7 @@ class TestExecution:
         learning_rates_dict = ({gru_proj: gru_proj_lr,
                                 input_proj: input_proj_lr,
                                 output_proj: output_proj_lr}
-                               if lr_specs_from else None)
+                               if lr_dict_spec else None)
 
         # Test for error on attempt to set individual Projection learning rate
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
