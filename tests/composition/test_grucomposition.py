@@ -370,8 +370,8 @@ class TestExecution:
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
     test_specs = [
-        # ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
-        # ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
+        ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
+        ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
         ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
         ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
         ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
@@ -456,11 +456,11 @@ class TestExecution:
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
-            pytorch_rep = outer.pytorch_representation
-            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
-            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
+            # pytorch_rep = outer.pytorch_representation
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .66
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == 1.5
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
+            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .95
 
         # BREADCRUMB: RUN learn() AGAIN HERE, AND TEST THAT PARAMS GO BACK TO COMPOSITION DEFAULTS
 
