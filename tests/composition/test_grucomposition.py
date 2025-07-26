@@ -451,29 +451,37 @@ class TestExecution:
 
         else:
             # Test assignment of learning_rate on construction
+            constr = condition in {'constructor', 'both'}
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=learning_rates_dict)
-            # BREADCRUMB: THE NEXT LINE PRODUCES DuplicateProjectionError ON learn() BELOW
-            # pytorch_rep = outer._build_pytorch_representation()
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == .001
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .001
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == .001
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == .001
+                    learning_rate=learning_rates_dict if constr else None)
+            pytorch_rep = outer._build_pytorch_representation()
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                learning_rate=learning_rates_dict,
+                learning_rate=learning_rates_dict if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
             pytorch_rep = outer.pytorch_representation
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr
-
-        # BREADCRUMB: RUN learn() AGAIN HERE, AND TEST THAT PARAMS GO BACK TO COMPOSITION DEFAULTS
-
             np.testing.assert_allclose(expected, results)
+
+            # Check that values are returned to constructor defaults for new call to learn() w/o specs
+            results = outer.learn(
+                inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+                learning_rate=None)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_unnested(self, bias):

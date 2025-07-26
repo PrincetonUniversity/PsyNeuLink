@@ -24,7 +24,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
-    ALL, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
@@ -266,39 +266,42 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         Replace GRUComposition's nodes with gru_mech and projections to and from it.
         """
 
+        def _get_direct_proj(pnl_proj, direction:Literal['to', 'from'])-> Union[Projection, bool]:
+            """Get direct Projection to/from GRUComposition's gru_mech
+            Checks for existing Projection and returns that if found; otherwise, constructs it"""
+            sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
+            receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
+            dir_proj = outer_comp._check_for_existing_projections(sender=sender,
+                                                                  receiver=receiver,
+                                                                  in_composition=ANY)
+            if dir_proj:
+                assert len(dir_proj) == 1, (
+                    f"PROGRAM ERROR: More than one ({len(direct_proj)} Projections found from "
+                    f"{pnl_proj.sender.name} to {self.composition.gru_mech.name} in {outer_comp.name}. ")
+                dir_proj = dir_proj[0]
+            else:
+                dir_proj = MappingProjection(name="Projection to GRU COMP",
+                                             sender=sender,
+                                             receiver=receiver,
+                                             learnable=pnl_proj.learnable,
+                                             learning_rate=pnl_proj.learning_rate)
+                dir_proj._initialize_from_context(context, base_context)
+            return dir_proj
+
         direct_proj = None
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
             sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
             rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection to GRU COMP",
-                                                sender=pnl_proj.sender,
-                                                receiver=self.composition.gru_mech,
-                                                learnable=pnl_proj.learnable,
-                                                learning_rate=pnl_proj.learning_rate)
-            except DuplicateProjectionError:
-                direct_proj = self.composition.gru_mech.afferents[0]
-            else:
-                direct_proj._initialize_from_context(context, base_context)
+            direct_proj = _get_direct_proj(pnl_proj, 'to')
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection from GRU COMP",
-                                                sender=self.composition.gru_mech,
-                                                receiver=pnl_proj.receiver,
-                                                learnable=pnl_proj.learnable,
-                                                learning_rate=pnl_proj.learning_rate)
-            except DuplicateProjectionError:
-                direct_proj = self.composition.gru_mech.efferents[0]
-            else:
-                direct_proj._initialize_from_context(context, base_context)
-            # gru_mech has only one output_port
+            direct_proj = _get_direct_proj(pnl_proj, 'from')
             sender_port_idx = 0
 
         else:
