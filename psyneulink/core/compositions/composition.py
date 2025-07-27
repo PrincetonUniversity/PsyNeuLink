@@ -9392,6 +9392,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign learning_rates_dict to context for the current execution
                 self.parameters.learning_rates_dict.set(lr_dict, context)
 
+            # Check that all entries in lr_dict are for Projections in the Composition
+            bad_keys = [proj_name for proj_name in lr_dict.keys() if proj_name not in self.projections]
+            if bad_keys:
+                singular = ["entry appears", "its key is not a Projection", "name of one"]
+                plural = ["entries appear", "their keys are not Projections", "names of ones"]
+                filler = singular if len(bad_keys) == 1 else plural
+                err_msg = (f"The following {filler[0]} in the dict specified for the 'learning_rate' arg of "
+                           f"'{self.name}' but {filler[1]} or the {filler[2]} in that Composition:")
+                raise CompositionError(err_msg + f" '{' ,'.join(list(bad_keys))}'.")
+
+
         # BREADCRUMB:  NEEDEED DUE TO PERSISTENCE PROBLEM NOTED ABOVE
         else:
             self.parameters.learning_rates_dict.set({}, None)

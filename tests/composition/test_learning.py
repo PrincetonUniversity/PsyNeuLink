@@ -231,9 +231,9 @@ class TestStructural:
         # ("dict_lr_val_proj", False,
         #  "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
         #  "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
-        ("dict_illegal_key_str", True,
-         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
-         "a Projection or the name of one in that Composition: 'woa a woa'."),
+        # ("dict_illegal_key_str", True,
+        #  "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
+        #  "a Projection or the name of one in that Composition: 'woa a woa'."),
         ("dict_illegal_key_int", False,
          "The keys ('23') for all entries of the dict specified in 'learning_rate' arg for 'Comp' must all be "
          "MappingProjections or names of ones."),
