@@ -1,4 +1,4 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+ # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -937,7 +937,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
                         f"the {self.get_source_str(source)} for '{self.composition.name}' is not learnable; check that "
                         f"its 'learnable' attribute is set to 'True' and its learning_rate is not 'False', "
-                        f"or remove from it the dict.")
+                        f"or remove it from the dict.")
                 # BREADCRUMB:  ?IS THIS ERROR MANAGED SOMEWHERE ELSE:
                 # else:
                 #     # param was set to False in call to constructor but has been assigned a learning_rate in learn()
@@ -996,7 +996,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         composition = self.composition
-        comp_lr = composition.parameters.learning_rate.get(context)
+        comp_lr = run_time_default_learning_rate or composition.parameters.learning_rate.get(context)
+        self.composition.parameters.learning_rate.set(comp_lr, context)
 
         # Process *every* parameter in the optimizer's param_groups
         # Get fresh copy of param_groups and assign to optimizer_params
@@ -1112,6 +1113,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             for proj in self.wrapped_projections:
                 proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
+            comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
+            self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
         except AttributeError:
             assert self.optimizer, (
                 f"PROGRAM ERROR: _restore_constructor_proj_learning_rates_and_torch_params() called for "

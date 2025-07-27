@@ -8381,11 +8381,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
-                # otherwise use, assign LearningMechanism's learning rate or default to Projection
+                # otherwise assign LearningMechanism's learning rate or default to Projection
                 _lr = learning_mech_lr if learning_mech_lr is not None else learning_rate
                 _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
                 learnable_projection.parameters.learning_rate.set(_lr, _context)
+                # BREADCRUMB:  THE FOLLOWING
                 self.learning_rates_dict[learnable_projection.name] = _lr
+                # # SHOULD BE:
+                # self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
+
         return learning_pathway
 
     @beartype
@@ -9332,10 +9336,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Assumes context=None if called from Composition constructor.
         Otherwise, assumes call is from learn() method, and gets learning_rats for Projections in all nested comps
         """
+        source_str = self.name
+        if context:
+            source_str = f"the learn() method of " + source_str
+
         if not isinstance(learning_rate, (float, int, bool, dict, type(None))):
-            source_str = self.name
-            if context:
-                source_str = f"the learn() method of " + source_str
             raise CompositionError(
                 f"The 'learning_rate' arg for '{source_str}' ('{learning_rate}') "
                 f"must be a float, int, bool, None, or a dict.")
@@ -9416,11 +9421,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if learning_rates_dict[proj_name] is not False and not proj.learnable:
                     not_learnable.append(proj.name)
             else:
-                # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dicdt
-                learning_rates_dict[proj_name] = proj.parameters.learning_rate.get(None)
+                # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dict
+                learning_rates_dict[proj_name] = proj.parameters.learning_rate.get(None) if proj.learnable else False
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
-            #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED
+            #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED;
+            #              NEED TO USE get(context=<Composition.name>_default) TO SEE IT
             proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
             if _is_proxy:
                 proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], context)

@@ -2630,6 +2630,10 @@ class EMComposition(AutodiffComposition):
             for field in self.fields:
                 field.storage_projection = self.storage_node.path_afferents[field.index]
 
+    def _assign_learning_rates(self, projections=None, context=None):
+        """Override to defer population of learning_rates_dict until call to _set_learning_attributes below."""
+        pass
+
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         Make exclude_fron_gradient_calc assignments to relevant Nodes
@@ -2672,27 +2676,27 @@ class EMComposition(AutodiffComposition):
         constructor_learning_rate = self._optimizer_constructor_params
         learn_field_weights = self.parameters.learn_field_weights.spec
 
-        # BREADCRUMB:  REMOVE? (SINCE NOW DONE IN _parse_fields())?
-        # Handle dict specification for self.learning_rate
-        if constructor_learning_rate and isinstance(constructor_learning_rate, dict):
-            raise EMCompositionError(f"The 'learning_rate' arg for '{self.name}' is specified as a dict, "
-                                     f"which is not supported for an EMComposition;  "
-                                     f"use either its 'fields' arg or its 'learn_field_weights' arg instead.")
+        if not isinstance(learn_field_weights, (list, np.ndarray)):
+            assert not self.enable_learning, \
+                "PROGRAM ERROR: self.learn_field_weights is not a list, but should be by this point"
 
-        if self.enable_learning and isinstance(learn_field_weights, (list, np.ndarray)):
-            if (all(item is False for item in learn_field_weights)
-                    or len(self.query_input_nodes) == 1 or self.concatenate_queries_node):
-                for projection in field_weight_projections:
-                    projection.learnable = False
-                    projection.learning_rate = False
-                self._enable_learning_warning_flag = True
-                return
+        if (all(item is False for item in learn_field_weights)
+                or len(self.query_input_nodes) == 1 or self.concatenate_queries_node):
+            # If learning for all field weights is set to False, or there is a single query_input_node,
+            #   or concatenate is being used, then set learnable and learning_rate for all Projections to False
+            lr_dict = {}
+            for projection in field_weight_projections:
+                projection.learnable = False
+                projection.learning_rate = False
+                lr_dict[projection] = False
+            self._enable_learning_warning_flag = True
 
+        else:
             # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}
             if constructor_learning_rate:
-                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate
+                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate.pop(DEFAULT_LEARNING_RATE, None)
             for i, field in enumerate(self.fields):
                 if field.type == FieldType.KEY:
                     # Get Projection for field_weight_node
@@ -2708,10 +2712,9 @@ class EMComposition(AutodiffComposition):
                     else:
                         raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
                                                  f"({learn_field_weights[i]}) is not a valid value.")
-            self._optimizer_constructor_params = lr_dict
-        else:
-            assert not self.enable_learning, \
-                "PROGRAM ERROR: self.learn_field_weights is not a list, but should be by this point"
+
+        self.parameters.learning_rates_dict.set(lr_dict, context=None)
+        self._optimizer_constructor_params = lr_dict
 
     def _validate_options_with_learning(self,
                                         use_gating_for_weighting,

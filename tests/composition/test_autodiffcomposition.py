@@ -604,7 +604,7 @@ class TestAutodiffLearningRateArgs:
         ("dict_proj_not_learnable",
          "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
          "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
-         "is not 'False', or remove from it the dict.")
+         "is not 'False', or remove it from the dict.")
          ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -3736,9 +3736,10 @@ class TestMiscTrainingFunctionality:
             with pytest.raises(AutodiffCompositionError) as error_text:  # Warn, since default_input is NOT set
                 outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
-            assert ("Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() "
-                    "method for 'autodiff_composition' is not learnable; check that its 'learnable' attribute is set "
-                    "to 'True' and its learning_rate is not 'False', or remove from it the dict."
+            assert ("Projection ('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') specified "
+                    "in the dict for the 'learning_rate' arg of the learn() method for 'autodiff_composition' "
+                    "is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
+                    "is not 'False', or remove it from the dict."
                     in str(error_text.value))
             return
 
