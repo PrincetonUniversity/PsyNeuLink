@@ -365,6 +365,110 @@ class TestExecution:
 
         torch.set_default_dtype(entry_torch_dtype)
 
+    def test_gru_with_sequences(self):
+
+        import torch
+
+        from torch import nn
+        from torch.utils.data import DataLoader, TensorDataset
+
+        # Hyperparameters
+        num_sequences = 30    # Total number of sequences
+        batch_size = 8
+        input_size = 3          # Number of features per time step
+        hidden_size = 5
+        sequence_length = 10  # Length of each sequence
+        output_size = 1
+        num_epochs = 3
+        learning_rate = 0.01
+        bias = True
+        threshold = 15.0      # Threshold for classification
+        torch_dtype = torch.float64
+
+        torch.set_default_dtype(torch_dtype)
+
+        # Generate random training sequences
+        torch.manual_seed(42)
+        train_sequences = torch.rand((num_sequences, sequence_length, input_size)) * 10
+        train_labels = (train_sequences.sum(dim=(1, 2)) > threshold).double()
+        train_dataset = TensorDataset(train_sequences, train_labels)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+
+        # Define a simple GRU model
+        # Define the GRU-based model
+        class SimpleGRUClassifier(nn.Module):
+            def __init__(self, input_size, hidden_size, output_size):
+                super(SimpleGRUClassifier, self).__init__()
+                self.input = nn.Linear(input_size, input_size, bias=False)
+                self.input.weight.requires_grad = False
+                self.gru = nn.GRU(input_size, hidden_size, batch_first=True, bias=bias)
+                self.output = nn.Linear(hidden_size, output_size, bias=False)
+                self.sigmoid = nn.Sigmoid()
+
+            def forward(self, x):
+                x_after_in = self.input(x)  # Apply the input layer
+                _, h = self.gru(x_after_in)  # Only use the final hidden state
+                out = self.output(h[-1])  # Pass the final hidden state through the fully connected layer
+                return self.sigmoid(out)
+
+        # Initialize the model, loss function, and optimizer
+        model = SimpleGRUClassifier(input_size, hidden_size, output_size)
+        criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary classification
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(model.gru)
+        torch_output_initial_weights = model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
+
+        # # Training loop
+        torch_losses = []
+        for epoch in range(num_epochs):
+            model.train()
+            total_loss = 0
+            for sequences, labels in train_loader:
+                outputs = model(sequences)
+                labels = labels.unsqueeze(1)  # Reshape labels to match output shape
+                loss = criterion(outputs, labels)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                torch_losses.append(loss.item())
+                total_loss += loss.item()
+
+        # Set up and run PNL Autodiff model
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=input_size)
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=1, function=pnl.Logistic())
+        gru = GRUComposition(name='GRU COMP',
+                             input_size=input_size, hidden_size=hidden_size, bias=bias, learning_rate=learning_rate)
+        autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
+                                                pathways=[input_mech, gru, output_mech],
+                                                learning_rate=learning_rate,
+                                                loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
+        # FIX: 3/15/25 - NEED TO BE HARDWIRED IN CONSTRUCTION OF ?AUTODIFF OR GRUCOMPOSITION:
+        autodiff_comp.projections[0].learnable = False
+        autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
+        autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
+        target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
+        # Construct the inputs as a list of dictionaries
+        # inputs = {"inputs": inputs, "targets": {target_node[0]: targets}}
+        inputs = [{input_mech: seq, target_mechs[0]: torch.atleast_2d(target)} for seq, target in zip(train_sequences, train_labels)]
+
+        # Train the model
+        autodiff_comp.learn(inputs=inputs,
+                            epochs=num_epochs,
+                            minibatch_size=batch_size,
+                            execution_mode=pnl.ExecutionMode.PyTorch,
+                            )
+        results = autodiff_comp.results
+
+        np.testing.assert_allclose(torch_losses, autodiff_comp.torch_losses.squeeze())
+
     constructor_expected = [[ 0.23619161, 0.18558876, 0.16821693, 0.27253839, -0.18351431]]
     learn_method_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]

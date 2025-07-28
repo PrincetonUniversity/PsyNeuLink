@@ -478,18 +478,35 @@ class LLVMBuilderContext:
             return component._get_param_struct_type(self)
 
         def _param_struct(p):
-            val = p.get(None)   # this should use defaults
+            # TODO: Types should be based on the default value rather than
+            #       the value of context 'None'
+            val = p.get(None)
+
             if hasattr(val, "_get_compilation_params") or \
                hasattr(val, "_get_param_struct_type"):
                 return self.get_param_struct_type(val)
+
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
-            elif p.name == 'matrix':   # Flatten matrix
+
+            # matrices are represented as flat arrays
+            elif p.name == 'matrix':
                 val = np.asarray(val, dtype=float).ravel()
-            elif p.name == 'num_trials_per_estimate':  # Should always be int
+
+            # num_trials_per_estimate should be integer
+            elif p.name == 'num_trials_per_estimate':
                 val = np.int32(0) if val is None else np.int32(val)
-            elif np.ndim(val) == 0 and component._is_param_modulated(p):
-                val = [val]   # modulation adds array wrap
+
+            # seeds are represented as np.uint32, but need to be converted to
+            # float for compiled variant in order to support seed modulation
+            elif p.name in {'seed', 'function-seed'}:
+                val = float(val)
+
+            # Modulation turns scalars into arrays
+            # TODO: should this be 2d arrays?
+            if np.ndim(val) == 0 and component._is_param_modulated(p):
+                val = [val]
+
             return self.convert_python_struct_to_llvm_ir(val)
 
         elements = map(_param_struct, component._get_compilation_params())
@@ -501,14 +518,21 @@ class LLVMBuilderContext:
             return component._get_state_struct_type(self)
 
         def _state_struct(p):
-            val = p.get(None)   # this should use defaults
+            # TODO: Types should be based on the default value rather than
+            #       the value of context 'None'
+            val = p.get(None)
+
             if hasattr(val, "_get_compilation_state") or \
                hasattr(val, "_get_state_struct_type"):
                 return self.get_state_struct_type(val)
+
             if isinstance(val, ContentAddressableList):
                 return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
-            if p.name == 'matrix':   # Flatten matrix
+
+            # matrices are represented as flat arrays
+            if p.name == 'matrix':
                 val = np.asarray(val, dtype=float).ravel()
+
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 
@@ -527,6 +551,7 @@ class LLVMBuilderContext:
         if cache is None:
             cache = weakref.WeakKeyDictionary()
             setattr(composition, '_node_assemblies', cache)
+
         return cache.setdefault(node, _node_assembly(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
@@ -536,6 +561,8 @@ class LLVMBuilderContext:
 
         elif isinstance(t, (list, tuple)):
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+
+            # Use array if all elements are of the same type
             if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
                 return ir.ArrayType(elems_t[0], len(elems_t))
 
@@ -558,7 +585,14 @@ class LLVMBuilderContext:
             # observed here after compilation sync.
             # Avoid silent promotion to float (via Python's builtin int-type)
             if t.ndim == 0 and t.dtype == np.uint32:
-                return self.convert_python_struct_to_llvm_ir(t.reshape(1)[0])
+                return self.convert_python_struct_to_llvm_ir(t.flat[0])
+
+            # Convert to Python list. This reuses the above path
+            # and for decision between struct vs. array.
+            # It also converts np.integer values to Python "int" as there
+            # are situations in which PNL uses integer arrays for floating
+            # point data, e.g. variable default of '[1,2,3,4]' will be
+            # dtype np.int64.
             return self.convert_python_struct_to_llvm_ir(t.tolist())
 
         elif isinstance(t, np.random.RandomState):

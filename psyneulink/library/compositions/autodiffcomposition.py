@@ -676,6 +676,14 @@ class AutodiffComposition(Composition):
 
     device : torch.device
         the device on which the model is run.
+
+    full_sequence_mode: bool : default False
+        Whether to run the underlying Composition in full sequence mode or not. In full sequence mode, each element of
+    an input sequence for a trial is processed in a separate time step. This is needed only if there are sequential
+    dependencies between the mechanisms of the compositions. Note, if the composition contains GRU compositions wrappers
+    full sequence mode is not needed (and should be avoided to improve efficiency) because the composition wrapper
+    itself handles the  sequential dependencies between the mechanisms of the GRU composition.
+
     """
 
     componentCategory = AUTODIFF_COMPOSITION
@@ -755,23 +763,24 @@ class AutodiffComposition(Composition):
     @check_user_specified
     def __init__(self,
                  pathways=None,
-                 optimizer_type='sgd',
-                 loss_spec=Loss.MSE,
-                 weight_decay=0,
-                 learning_rate:Optional[Union[float,int,bool,dict,]]=.001,
-                 enable_learning:bool=True,
-                 force_no_retain_graph=False,
-                 refresh_losses=False,
-                 synch_projection_matrices_with_torch:Optional[str]=RUN,
-                 synch_node_variables_with_torch:Optional[str]=None,
-                 synch_node_values_with_torch:Optional[str]=RUN,
-                 synch_results_with_torch:Optional[str]=RUN,
-                 retain_torch_trained_outputs:Optional[str]=MINIBATCH,
-                 retain_torch_targets:Optional[str]=MINIBATCH,
-                 retain_torch_losses:Optional[str]=MINIBATCH,
+                 optimizer_type: str = 'sgd',
+                 loss_spec: Loss = Loss.MSE,
+                 weight_decay: float = 0.0,
+                 learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
+                 enable_learning: bool = True,
+                 force_no_retain_graph: bool = False,
+                 refresh_losses: bool = False,
+                 synch_projection_matrices_with_torch: Optional[str] = RUN,
+                 synch_node_variables_with_torch: Optional[str] = None,
+                 synch_node_values_with_torch: Optional[str] = RUN,
+                 synch_results_with_torch: Optional[str] = RUN,
+                 retain_torch_trained_outputs: Optional[str] = MINIBATCH,
+                 retain_torch_targets: Optional[str] = MINIBATCH,
+                 retain_torch_losses: Optional[str] = MINIBATCH,
                  device=None,
                  disable_cuda=True,
                  cuda_index=None,
+                 full_sequence_mode: bool = False,
                  name="autodiff_composition",
                  **kwargs):
 
@@ -820,6 +829,7 @@ class AutodiffComposition(Composition):
         self.loss_function = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
+        self.full_sequence_mode = full_sequence_mode
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -1301,7 +1311,9 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_inputs[component] = inputs[component]
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, synch_with_pnl_options, context)
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs, optimization_num=None,
+                                                       synch_with_pnl_options=synch_with_pnl_options,
+                                                       full_sequence_mode=self.full_sequence_mode, context=context)
 
         # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
@@ -1311,13 +1323,11 @@ class AutodiffComposition(Composition):
         curr_tensors_for_targets = {}
         for component, target in targets.items():
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-                curr_tensors_for_targets[component] = [target[:, i, :] for i in range(target.shape[1])]
+                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
             else:
                 # It's  a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(targets[component][0])
-                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i]
-                                                                    for batch_elem in target])
-                                                       for i in range(num_outputs)]
+                num_outputs = len(target[0][0])
+                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 
         # Map value of TARGET nodes to trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1331,17 +1341,22 @@ class AutodiffComposition(Composition):
         for component, outputs in curr_tensors_for_trained_outputs.items():
             trial_loss = 0
             targets = curr_target_tensors_for_trained_outputs[component]
-            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0])
+            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
             for i in range(num_outputs):
                 # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
 
                 # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
                 # need to index
-                output = outputs[:, i, :] if type(outputs) is torch.Tensor else torch.stack([batch_elem[i] for batch_elem in outputs])
+                output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
+
+                # If the sequence dimension is singleton, it can be dropped
+                if len(output.shape) > 1 and output.shape[1] == 1:
+                    output = output.squeeze(1)
+                    target = torch.atleast_1d(targets[i].squeeze(1))
 
                 comp_loss = self.loss_function(
                     output,
-                    torch.atleast_1d(targets[i])
+                    target
                 )
                 comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
                 trial_loss += comp_loss
@@ -1369,9 +1384,14 @@ class AutodiffComposition(Composition):
                 node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
-                output = outputs[:, idx, ...]
+                output = outputs[:, :, idx, ...]
             else:
-                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+
+            # If the sequence dimension is singleton, squeeze it away
+            if output.shape[1] == 1:
+                output = output.squeeze(1)
+
             output = output.detach().cpu().numpy().copy().tolist()
             if self.targets_from_outputs_map.values():
                 trained_output_values += [output]
@@ -1988,6 +2008,10 @@ class AutodiffComposition(Composition):
     def _update_results(self, results, trial_output, execution_mode, synch_with_pnl_options, context):
         """Track results at specified frequency during learning"""
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
+
+            # Drop the sequence dimension if its singleton
+
+
 
             # Check if the trial_output is atleast 3D
             is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
