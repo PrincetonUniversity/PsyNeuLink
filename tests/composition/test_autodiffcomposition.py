@@ -555,25 +555,28 @@ class TestAutodiffLearningRateArgs:
             with pytest.warns(UserWarning) as warning:
                 pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
                 assert ("The '_build_pytorch_representation() method for 'Outer Comp' has already been called "
-                        "direcdtly from the command line; this and any additional calls will be ignored. Make any "
+                        "directly from the command line; this and any additional calls will be ignored. Make any "
                         "desired modifications to parameters (e.g., learning_rates) either in the constructor for "
                         "the AutodiffComposition, or its learn() method. in warning[0].message.args[0]")
 
             # BREADCRUMB:  NEED TO FIX HANDLING OF refresh (ASSIGNS learning_rate DICT AS ACTUAL PARAM VALUE
-            # change a projection learning_rate using another call to _build_pytorch_representation()
-            outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
-                                                     refresh=True)
+            # change a projection learning_rate for composition using another call to _build_pytorch_representation()
+            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
+                                                                   refresh=True)
             # check that it has taken effect:
+            # pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
-            # check that it has taken effect after one call to learn():
+            # check that it has taken been assigned as default (in _optimizer_constructor_params);
+            #     i.e., that it persists after a call to learn():
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                                                learning_rate={"NESTED 2 PROJ BC": 99},)
+            pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
-            # check that it persists after another call to learn() (vs. learning_rates specifed in the call to learn()
+            # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14

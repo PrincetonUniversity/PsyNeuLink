@@ -296,9 +296,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
 
+        # BREADCRUMB: WHY DOESN'T THE FOLLOWING ASSIGNMENT RESULT IN SELF SHOWING UP
+        #             IN self.composition.parameters.pytorch_representation.values UNDER None CONTEXT?
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
-
+        old_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values]
         self.projection_wrappers = list(self.projections_map.values())
+        new_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values]
+        id(self) in new_pytorch_reps
+        assert True
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
@@ -489,7 +494,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
             # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
             # Add entries for both pnl_proj (user-specifie one) and projection (to input_CIM / from output_CIM)
-            #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimization_params())
+            #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimizer_params())
             pnl_proj_param_name_comp_tuple = ParamNameCompositionTuple(projection,
                                                                        pytorch_proj_wrapper.name,
                                                                        composition)
@@ -869,7 +874,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
                                f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
-
 
         # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}

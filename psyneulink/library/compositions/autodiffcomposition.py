@@ -1139,6 +1139,8 @@ class AutodiffComposition(Composition):
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
+
+        # Construct a new pytorch_representation if none exists or refresh is specified
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
@@ -1147,10 +1149,11 @@ class AutodiffComposition(Composition):
                                                   base_context=base_context)
         elif context.flags & ContextFlags.COMMAND_LINE:
             warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
-                          f"direcdtly from the command line; this and any additional calls will be ignored. "
+                          f"directly from the command line; this and any additional calls will be ignored. "
                           f"Make any desired modifications to parameters (e.g., learning_rates) either in the "
                           f"constructor for the AutodiffComposition, or its learn() method.")
 
+        # Get pytorch_representation (assigned in constructor for PytorchCompositionWrapper)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
         # Set up optimizer
