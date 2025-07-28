@@ -6565,9 +6565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   MATRIX:projection.matrix.base,
                                   LEARNABLE:projection.learnable,
                                   LEARNING_RATE:projection.learning_rate,
-                                  # # MODIFIED 4/24/25 NEW:
                                   PROXY_FOR:projection
-                                  # MODIFIED 4/24/25 END
                                   }
                              }
                 return self.add_projection(proj_spec,
