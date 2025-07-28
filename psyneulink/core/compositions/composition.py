@@ -9359,10 +9359,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Check that all keys in remaining entries are a Projection or a name (str)
             bad_keys = [spec for spec in _lr_dict_arg.keys() if not isinstance(spec, (str, MappingProjection))]
             if bad_keys:
-                raise CompositionError(f"The following keys in the dict specified for the 'learning_rate' arg "
-                                       f"of {source_str} are not MappingProjections (or names of ones) in that "
-                                       f"Composition:"
-                                       f" {', '.join([str(k) if not isinstance(k, str) else k for k in bad_keys])}').")
+                raise CompositionError(f"The following keys in the dict specified for the 'learning_rate' arg of "
+                                       f"{source_str} are not MappingProjections (or names of ones) in that "
+                                       f"Composition: '{', '.join([str(k) if not isinstance(k, str) else k for k in bad_keys])}'.")
 
             # Convert all entries to Projection names for consistency in later processing
             _lr_dict_arg = {(k.name if isinstance(k, MappingProjection) else k): v for k,v in _lr_dict_arg.items()}
@@ -9392,7 +9391,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign learning_rates_dict to context for the current execution
                 self.parameters.learning_rates_dict.set(lr_dict, context)
 
-            # Check that all entries in lr_dict are for Projections in the Composition
+        # BREADCRUMB:  NEEDEED DUE TO PERSISTENCE PROBLEM NOTED ABOVE
+        else:
+            # BREADCRUMB: IS THIS OK IF THE CALL IS FROM learn() AND THERE IS NO DICT?  WIPES OUT CONSTRUCDTOR-SPECIFIED
+            self.parameters.learning_rates_dict.set({}, None)
+
+        if context is not None and context.execution_id is not None:
+            lr_dict = self.parameters.learning_rates_dict.get(context)
+            # If called from learn(), check that all entries in lr_dict are for Projections in the Composition
             bad_keys = [proj_name for proj_name in lr_dict.keys() if proj_name not in self.projections]
             if bad_keys:
                 singular = ["entry appears", "its key is not a Projection", "name of one"]
@@ -9400,12 +9406,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 filler = singular if len(bad_keys) == 1 else plural
                 err_msg = (f"The following {filler[0]} in the dict specified for the 'learning_rate' arg of "
                            f"'{self.name}' but {filler[1]} or the {filler[2]} in that Composition:")
-                raise CompositionError(err_msg + f" '{' ,'.join(list(bad_keys))}'.")
-
-
-        # BREADCRUMB:  NEEDEED DUE TO PERSISTENCE PROBLEM NOTED ABOVE
-        else:
-            self.parameters.learning_rates_dict.set({}, None)
+                raise CompositionError(err_msg + f" '{', '.join(list(bad_keys))}'.")
 
         return learning_rate
 

@@ -209,7 +209,7 @@ class TestStructural:
                        execution_mode=pnl.ExecutionMode.PyTorch)
         pytorch_rep = autodiff.parameters.pytorch_representation.get(autodiff.name)
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == 99
-        assert proj.parameters.learning_rate.get(autodiff.name) == None
+        assert proj.parameters.learning_rate.get(autodiff.name) is None
         assert autodiff.learning_rate == 99
 
         # Test that learning_rate specs are restored to their original values at construction
@@ -220,23 +220,23 @@ class TestStructural:
         assert autodiff.learning_rate == comp_lr or .001
 
     error_test_args = [
-        # ("comp_lr_spec_str", True,
-        #  "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
-        # ("comp_lr_spec_proj", True,
-        #  "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
-        #  "must be a float, int, bool, None, or a dict."),
-        # ("dict_lr_val_str", False,
-        # "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-        # "must each be a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): 'goodbye'}]'."),
-        # ("dict_lr_val_proj", False,
-        #  "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
-        #  "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
-        # ("dict_illegal_key_str", True,
-        #  "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
-        #  "a Projection or the name of one in that Composition: 'woa a woa'."),
+        ("comp_lr_spec_str", True,
+         "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
+        ("comp_lr_spec_proj", True,
+         "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
+         "must be a float, int, bool, None, or a dict."),
+        ("dict_lr_val_str", False,
+        "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+        "must each be a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): 'goodbye'}]'."),
+        ("dict_lr_val_proj", False,
+         "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
+         "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
+        ("dict_illegal_key_str", True,
+         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
+         "a Projection or the name of one in that Composition: 'woa a woa'."),
         ("dict_illegal_key_int", False,
-         "The keys ('23') for all entries of the dict specified in 'learning_rate' arg for 'Comp' must all be "
-         "MappingProjections or names of ones."),
+         "The following keys in the dict specified for the 'learning_rate' arg of Comp are not MappingProjections "
+         "(or names of ones) in that Composition: '23'."),
         ("dict_key_bad_proj", True,
          "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
          "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),

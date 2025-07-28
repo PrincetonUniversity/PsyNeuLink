@@ -1159,24 +1159,26 @@ class AutodiffComposition(Composition):
         #    give precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
         #    over learning_rate specified in constructor (passed in above as learning_rate)
         default_learning_rate = self._runtime_learning_rate or learning_rate
-        if isinstance(learning_rate, dict) and optimizer_params:
-            # if learning_rate is a dict, optimizer_params should not have been passed in call
-            assert context.flags & ContextFlags.COMMAND_LINE, \
-                ("PROGRAM ERROR: 'optmizer_params' assigned when learning_rate assigned as a dict "
-                 "in internal call to _build_pytorch_representation() for '{self.name}'.")
-            assert False, \
-                ("PROGRAM ERROR:  Assignment of 'optimizer_params' in a direct call to "
-                 "_build_pytorch_representation() from the command line is not currently supported.")
+        if isinstance(learning_rate, dict):
+            if optimizer_params:
+                # if learning_rate is a dict, optimizer_params should not have been passed in call
+                assert context.flags & ContextFlags.COMMAND_LINE, \
+                    ("PROGRAM ERROR: 'optmizer_params' assigned when learning_rate assigned as a dict "
+                     "in internal call to _build_pytorch_representation() for '{self.name}'.")
+                assert False, \
+                    ("PROGRAM ERROR:  Assignment of 'optimizer_params' in a direct call to "
+                     "_build_pytorch_representation() from the command line is not currently supported.")
             lr_dict = default_learning_rate
             default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
+            optimizer_params = lr_dict
             for proj, lr in lr_dict.items():
                 if isinstance(proj, str):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
-                proj.parameters.learning_rate._set(lr, context)
+                proj.parameters.learning_rate.set(lr, context)
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
-        # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
         else:
+            # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
             self.parameters.learning_rate.set(default_learning_rate, context)
         # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
         # MODIFIED 6/29/25 OLD:
