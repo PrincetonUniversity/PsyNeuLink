@@ -4410,6 +4410,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except ValueError:
                 pass
 
+        for lr_dict in self.parameters.learning_rates_dict.values.values():
+            for proj in (node.path_afferents + node.efferents):
+                lr_dict.pop(proj.name, None)
+
         self.needs_update_graph_processing = True
         self.needs_update_scheduler = True
 
