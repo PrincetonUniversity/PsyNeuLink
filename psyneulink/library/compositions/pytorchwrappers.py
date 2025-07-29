@@ -870,7 +870,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
                 proj = self._pnl_refs_to_torch_param_names[proj_name].projection
-                proj.parameters.learning_rate.set(optimizer_params_parsed[proj_name].value, context)
+                proj_lr = optimizer_params_parsed[proj_name].value
+                if proj.learnable is False and proj_lr is None:
+                    proj_lr = False
+                proj.parameters.learning_rate.set(proj_lr, context)
             else:
                 assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
                                f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
@@ -936,7 +939,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     param.requires_grad = True
                 proj_wrapper_name = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
                 proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
-                if not proj_wrapper.projection.learnable:
+                proj_lr = proj_wrapper.projection.parameters.learning_rate.get(context)
+                if not proj_wrapper.projection.learnable and proj_lr is not False:
                     raise AutodiffCompositionError(
                         f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
                         f"the {self.get_source_str(source)} for '{self.composition.name}' is not learnable; check that "
