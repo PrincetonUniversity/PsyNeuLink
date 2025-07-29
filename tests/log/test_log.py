@@ -227,7 +227,8 @@ class TestLog:
         PS.run(inputs={T_1:[3,4]})
 
         assert T_1.logged_items == {'RESULT': 'EXECUTION', 'mod_noise': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
+                                   'learning_rate': 'OFF'}
 
         T_1.log.print_entries(contexts=PS)
         # assert T_1.log.print_entries() ==
@@ -506,7 +507,8 @@ class TestLog:
         assert T2.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
+                                   'learning_rate': 'OFF'}
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
@@ -551,6 +553,116 @@ class TestLog:
         log_array_T1_second_run = T1.log.nparray()
         log_array_T2_second_run = T2.log.nparray()
         assert log_array_T2_second_run[1][1][4][1:4] == [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
+
+    @pytest.mark.parametrize("log_entries_arg", [None, "value"])
+    @pytest.mark.parametrize(
+        "method, expected",
+        [
+            (
+                "reset",
+                {
+                    "Composition-0": {
+                        "Run": [[0], [1], [2]],
+                        "Trial": [[0], [0], [0]],
+                        "Pass": [[0], [0], [0]],
+                        "Time_step": [[0], [0], [0]],
+                        "RESULT": np.array([None, list([-1.0]), None], dtype=object),
+                        "func_value": np.array([None, None, None], dtype=object),
+                        "func_variable": np.array(
+                            [None, list([[-1.0]]), None], dtype=object
+                        ),
+                        "value": np.array([[[0.1]], [[0.3]], [[0.7]]]),
+                    }
+                },
+            ),
+            (
+                "execute",
+                {
+                    "Composition-0": {
+                        "Run": [[0], [1], [2]],
+                        "Trial": [[0], [0], [0]],
+                        "Pass": [[0], [0], [0]],
+                        "Time_step": [[0], [0], [0]],
+                        "InputPort-0": np.array([None, None, None], dtype=object),
+                        "RESULT": np.array([None, list([0.0]), None], dtype=object),
+                        "func_value": np.array([None, None, None], dtype=object),
+                        "func_variable": np.array(
+                            [None, list([[0.0]]), None], dtype=object
+                        ),
+                        "integrator_function_value": np.array(
+                            [None, list([[0.0]]), None], dtype=object
+                        ),
+                        "mod_integration_rate": np.array(
+                            [None, list([0.1]), None], dtype=object
+                        ),
+                        "mod_intercept": np.array(
+                            [None, list([0.0]), None], dtype=object
+                        ),
+                        "mod_noise": np.array([None, list([0.0]), None], dtype=object),
+                        "mod_offset-function": np.array(
+                            [None, list([0.0]), None], dtype=object
+                        ),
+                        "mod_offset-integrator_function": np.array(
+                            [None, list([0.0]), None], dtype=object
+                        ),
+                        "mod_rate": np.array([None, list([0.1]), None], dtype=object),
+                        "mod_scale": np.array([None, list([1.0]), None], dtype=object),
+                        "mod_slope": np.array([None, list([1.0]), None], dtype=object),
+                        "num_executions_before_finished": np.array(
+                            [None, 0, None], dtype=object
+                        ),
+                        "value": np.array([[[0.1]], [[0.3]], [[0.7]]]),
+                        "variable": np.array(
+                            [None, list([[-1.0]]), None], dtype=object
+                        ),
+                    }
+                },
+            ),
+        ],
+    )
+    # The intent of this test is to ensure that running the logged
+    # Component outside of a Composition between Composition runs does
+    # not disrupt collection of the logged values due to the Time
+    # objects associated with the Composition's runs not being in order
+    # and adjacent, meaning for example that the log values associated
+    # with the arrowed Time are not lost:
+    # Time(run=1, trial=1, pass=1, time_step=0)
+    # Time(run=1, trial=1, pass=1, time_step=1)
+    # Time(run=None, trial=None, pass=None, time_step=None)
+    # Time(run=None, trial=None, pass=None, time_step=None)
+    # Time(run=1, trial=1, pass=1, time_step=2)  <---
+    def test_run_after_reset(self, log_entries_arg, method, expected):
+        T1 = pnl.TransferMechanism(integrator_mode=True, integrator_function=pnl.SimpleIntegrator, integration_rate=.1)
+        COMP = pnl.Composition(pathways=[T1])
+        T1.set_log_conditions('value')
+
+        COMP.run(inputs={T1: [[1.0]]})
+        # using -1 to make the value for T1."value" identical in both
+        # reset and execute cases
+        getattr(T1, method)([[-1]], context=COMP)
+        getattr(T1, method)([[0]], context=COMP)
+        # COMP.reset()
+        COMP.run(inputs={T1: [[3.0]]})
+        COMP.run(inputs={T1: [[4.0]]})
+
+        if log_entries_arg is not None:
+            expected = {
+                COMP.name: {
+                    k: v
+                    for k, v in expected[COMP.name].items()
+                    if k in {"Run", "Trial", "Pass", "Time_step", log_entries_arg}
+                }
+            }
+
+        res = T1.log.nparray_dictionary(log_entries_arg)
+        assert res.keys() == {COMP.name}
+        assert res[COMP.name].keys() == expected[COMP.name].keys()
+        for k, res_v in res[COMP.name].items():
+            exp_v = expected[COMP.name][k]
+            if None in res_v or None in exp_v:
+                assert all(res_v == exp_v)
+            else:
+                np.testing.assert_array_almost_equal(res_v, exp_v)
 
     def test_log_dictionary_with_time(self):
 
@@ -1074,7 +1186,8 @@ class TestClearLog:
 
         assert list(log_dict_T_1.keys()) == [COMP.default_execution_id]
         assert list(log_dict_T_2.keys()) == [COMP.default_execution_id]
-        assert list(log_dict_PJ.keys()) == [COMP.default_execution_id]
+        assert sorted(log_dict_PJ.keys()) == [COMP.default_execution_id,
+                                              COMP.default_execution_id + pnl.DEFAULT_SUFFIX]
 
         # Confirm that values were logged correctly
         sys_log_dict = log_dict_T_1[COMP.default_execution_id]

@@ -1596,14 +1596,14 @@ class LinearCombination(
         # Note: the first dimension of x is batch, aggregate over the second dimension
         if self.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 1)
+                return lambda x: torch.sum(x * weights, 2)
             else:
-                return lambda x: torch.sum(x, 1)
+                return lambda x: torch.sum(x, 2)
         elif self.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights, 1)
+                return lambda x: torch.prod(x * weights, 2)
             else:
-                return lambda x: torch.prod(x, 1)
+                return lambda x: torch.prod(x, 2)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -2162,7 +2162,10 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
             if normalize:
                 return dot_product_with_normalization
             else:
-                return lambda x, y : torch.matmul(x, y)
+                def matmul(x, y):
+                    return torch.matmul(x, y)
+
+                return matmul
 
         elif operation is L0:
             if normalize:

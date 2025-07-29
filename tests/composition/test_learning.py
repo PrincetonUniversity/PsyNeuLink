@@ -168,8 +168,10 @@ class TestStructural:
                                  learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
 
-    @pytest.mark.parametrize("proj_lr", [.2, None, True, False])
-    @pytest.mark.parametrize("comp_lr", [.3, None, True, False])
+    @pytest.mark.parametrize("proj_lr", [.2, None, True, False],
+                             ids=["proj_lr_0.2", "proj_lr_None", "proj_lr_True", "proj_lr_False"])
+    @pytest.mark.parametrize("comp_lr", [.3, None, True, False],
+                             ids=["comp_lr_0.3", "comp_lr_None", "comp_lr_True", "comp_lr_False"])
     def test_default_and_False_learning_rates(self, proj_lr, comp_lr):
         mech_1 = pnl.ProcessingMechanism()
         mech_2 = pnl.ProcessingMechanism()
@@ -186,24 +188,36 @@ class TestStructural:
         # autodiff._build_pytorch_representation(learning_rate = 10)
         # autodiff._build_pytorch_representation(learning_rate = {proj:.2,
         #                                                         DEFAULT_LEARNING_RATE: 2.5})
+        if proj_lr is False or (proj_lr in {None, True} and comp_lr is False):
+            with pytest.raises(CompositionError) as error_text:
+                autodiff._build_pytorch_representation()
+            assert (f"There are no learnable Projections in 'autodiff_composition' nor any nested under it; this may "
+                    f"be because the learning_rates for all of the Projections and/or 'enable_learning' Parameters for "
+                    f"the Composition(s) are all set to 'False'. The learning_rate for at least one Projection must be "
+                    f"a non-False value within a Composition with 'enable_learning' set to 'True' in order to execute "
+                    f"the learn() method for autodiff_composition.") in str(error_text.value)
+            return
         pytorch_rep = autodiff._build_pytorch_representation()
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
         assert proj.learning_rate == proj_lr
-        assert autodiff.learning_rate == comp_lr
+        assert autodiff.learning_rate == comp_lr or .001
 
+        # Test learning_rate specs assinged in learn()
         autodiff.learn(inputs=autodiff.get_input_format(),
                        learning_rate={DEFAULT_LEARNING_RATE:99,
                                       proj:None},
                        execution_mode=pnl.ExecutionMode.PyTorch)
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == comp_lr
-        assert proj.parameters.learning_rate.get('autodiff_composition') == comp_lr
+        pytorch_rep = autodiff.parameters.pytorch_representation.get(autodiff.name)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == 99
+        assert proj.parameters.learning_rate.get(autodiff.name) is None
         assert autodiff.learning_rate == 99
 
+        # Test that learning_rate specs are restored to their original values at construction
         autodiff.learn(inputs=autodiff.get_input_format(),
                        execution_mode=pnl.ExecutionMode.PyTorch)
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
         assert proj.learning_rate == proj_lr
-        assert autodiff.learning_rate == comp_lr
+        assert autodiff.learning_rate == comp_lr or .001
 
     error_test_args = [
         ("comp_lr_spec_str", True,
@@ -212,18 +226,17 @@ class TestStructural:
          "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
          "must be a float, int, bool, None, or a dict."),
         ("dict_lr_val_str", False,
-        "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-        "('[{(MappingProjection INPUT PROJECTION): 'goodbye'}]') must each be a float, int, bool, or None."),
+        "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+        "must each be a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): 'goodbye'}]'."),
         ("dict_lr_val_proj", False,
-         "The values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "('[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]') "
-         "must each be a float, int, bool, or None."),
+         "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
+         "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
         ("dict_illegal_key_str", True,
          "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
          "a Projection or the name of one in that Composition: 'woa a woa'."),
         ("dict_illegal_key_int", False,
-         "The keys ('23') for all entries of the dict specified in 'learning_rate' arg for 'Comp' must all be "
-         "MappingProjections or names of ones."),
+         "The following keys in the dict specified for the 'learning_rate' arg of Comp are not MappingProjections "
+         "(or names of ones) in that Composition: '23'."),
         ("dict_key_bad_proj", True,
          "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
          "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),

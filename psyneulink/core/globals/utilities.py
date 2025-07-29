@@ -1724,6 +1724,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
+
 def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
@@ -1740,7 +1741,9 @@ def set_global_seed(new_seed):
         new seed to use for randomization
     """
     global _seed
-    _seed = new_seed
+
+    # Keep the same dtype as the original seed
+    _seed = _seed.dtype.type(new_seed)
 
 
 def safe_len(arr, fallback=1):

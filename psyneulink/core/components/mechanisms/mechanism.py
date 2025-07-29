@@ -2981,9 +2981,11 @@ class Mechanism_Base(Mechanism):
                 if p_input_data.type == p_function.args[2].type:
                     p_input = p_input_data
                 else:
-                    assert port in self.output_ports
+                    assert port in self.output_ports, \
+                        "Port {} with input shape mismatch, got: {} vs. expected: {}".format(port, p_input_data.type, p_function.args[2].type)
+
                     # Ports always take at least 2d input. However, parsing
-                    # the function result can result in 1d structure or scalar
+                    # the function result can result in a 1d structure or a scalar.
                     # Casting the pointer is LLVM way of adding dimensions
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     assert array_1d == p_function.args[2].type.pointee, \
@@ -2999,6 +3001,7 @@ class Mechanism_Base(Mechanism):
                 # Port input structure is: (data, [modulations]),
                 p_input = builder.alloca(p_function.args[2].type.pointee,
                                          name=group + "_port_" + str(i) + "_input")
+
                 # Fill in the data.
                 # FIXME: We can potentially hit the same dimensionality issue
                 #        as above, but it's more difficult to manifest and
@@ -3006,21 +3009,19 @@ class Mechanism_Base(Mechanism):
                 p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(p_input_data), p_data)
 
-            # Copy mod_afferent inputs
-            for idx, p_mod in enumerate(port.mod_afferents):
-                mech_mod_afferent_idx = mod_afferents.index(p_mod)
-                mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(len(self.input_ports)),
-                                                      ctx.int32_ty(mech_mod_afferent_idx)])
-                mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
-                afferent_val = builder.load(mod_in_ptr)
-                builder.store(afferent_val, mod_out_ptr)
+                # Copy mod_afferent/modulated inputs
+                for idx, p_mod in enumerate(port.mod_afferents):
+                    mech_mod_afferent_idx = mod_afferents.index(p_mod)
+                    mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(len(self.input_ports)),
+                                                          ctx.int32_ty(mech_mod_afferent_idx)])
+                    mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                    afferent_val = builder.load(mod_in_ptr)
+                    builder.store(afferent_val, mod_out_ptr)
 
             port_idx = group_ports.index(port)
-            p_params = builder.gep(ports_param, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(port_idx)])
-            p_state = builder.gep(ports_state, [ctx.int32_ty(0),
-                                                ctx.int32_ty(port_idx)])
+            p_params = builder.gep(ports_param, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
+            p_state = builder.gep(ports_state, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
 
             builder.call(p_function, [p_params, p_state, p_input, p_output])
 

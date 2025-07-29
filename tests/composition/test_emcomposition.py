@@ -978,9 +978,6 @@ class TestExecution:
             elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
                 with pytest.raises(AutodiffCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                # assert (f"The learn() method of 'EM_Composition' was called, but its 'enable_learning' Parameter "
-                #         f"(and the ones for any Compositions nested within) it are set to 'False'. "
-                #         f"Either set at least one to 'True', or use EM_Composition.run().") in str(error.value)
                 assert (f"There are no learnable Projections in 'EM_Composition' nor any nested under it; "
                         f"this is because the learning_rates for all of the Projections are set to 'False'. "
                         f"The learning_rate for at least one Projection must be a non-False value within "

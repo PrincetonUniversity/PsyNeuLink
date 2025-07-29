@@ -325,7 +325,7 @@ class TestAutodiffLearningRateArgs:
         # Projection lr overrides learn() lr
         ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
         ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
-        # learning_rate dict in Autodiff constructor overrides Projection lr
+        # # learning_rate dict in Autodiff constructor overrides Projection lr
         ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
         ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
         # learning_rate dict in learn() overrides Projection lr
@@ -387,6 +387,8 @@ class TestAutodiffLearningRateArgs:
         learn_method_learning_rate_dict = {input_proj: .2 if learn_dict_param == 'input' else None,
                                            nested_proj: .2 if learn_dict_param == 'hidden' else None,
                                            pnl.DEFAULT_LEARNING_RATE: learn_method_lr}
+
+        # Construct outer_comp
         outer_comp = pnl.AutodiffComposition(name='Outer Comp',
                                              pathways=pathway,
                                              learning_rate = (constructor_learning_rate_dict
@@ -553,28 +555,31 @@ class TestAutodiffLearningRateArgs:
             with pytest.warns(UserWarning) as warning:
                 pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
                 assert ("The '_build_pytorch_representation() method for 'Outer Comp' has already been called "
-                        "direcdtly from the command line; this and any additional calls will be ignored. Make any "
+                        "directly from the command line; this and any additional calls will be ignored. Make any "
                         "desired modifications to parameters (e.g., learning_rates) either in the constructor for "
                         "the AutodiffComposition, or its learn() method. in warning[0].message.args[0]")
 
             # BREADCRUMB:  NEED TO FIX HANDLING OF refresh (ASSIGNS learning_rate DICT AS ACTUAL PARAM VALUE
-            # # change a projection learning_rate using another call to _build_pytorch_representation()
-            # outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
-            #                                          refresh=True)
-            # # check that it has taken effect:
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
-            #
-            # # check that it has taken effect after one call to learn():
-            # learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
-            #                                    learning_rate={"NESTED 2 PROJ BC": 99},)
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
-            #
-            # # check that it persists after another call to learn() (vs. learning_rates specifed in the call to learn()
-            # learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
-            # assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            # change a projection learning_rate for composition using another call to _build_pytorch_representation()
+            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
+                                                                   refresh=True)
+            # check that it has taken effect:
+            # pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
+            # check that it has taken been assigned as default (in _optimizer_constructor_params);
+            #     i.e., that it persists after a call to learn():
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                               learning_rate={"NESTED 2 PROJ BC": 99},)
+            pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
+            # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
 
     error_test_args = [
@@ -602,7 +607,7 @@ class TestAutodiffLearningRateArgs:
         ("dict_proj_not_learnable",
          "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
          "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
-         "is not 'False', or remove from it the dict.")
+         "is not 'False', or remove it from the dict.")
          ]
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
@@ -3734,9 +3739,10 @@ class TestMiscTrainingFunctionality:
             with pytest.raises(AutodiffCompositionError) as error_text:  # Warn, since default_input is NOT set
                 outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
                 outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
-            assert ("Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() "
-                    "method for 'autodiff_composition' is not learnable; check that its 'learnable' attribute is set "
-                    "to 'True' and its learning_rate is not 'False', or remove from it the dict."
+            assert ("Projection ('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') specified "
+                    "in the dict for the 'learning_rate' arg of the learn() method for 'autodiff_composition' "
+                    "is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
+                    "is not 'False', or remove it from the dict."
                     in str(error_text.value))
             return
 
@@ -3821,18 +3827,18 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        # #                                                                  NOTE: the specs below are for values
-        # #                                                                        expected after construction; values
-        # #                                                                        after learn() are handled in the test
-        # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
+        #                                                                  NOTE: the specs below are for values
+        #                                                                        expected after construction; values
+        #                                                                        after learn() are handled in the test
+        #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
         ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
-        # # projection-specific specs takes precedence if no learn() method specs
+        # projection-specific specs takes precedence if no learn() method specs
         ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
         ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
-        # # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
+        # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
         ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
         # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
-        # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
         ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
         ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
         ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
@@ -4723,22 +4729,22 @@ class TestACLogging:
 
 
         if minibatch_size == 1:
-            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, :, :])
+            np.testing.assert_equal(in_np_dict_vals[0:4], xor_inputs[:, None, None, :, :])
         elif minibatch_size == 4:
             np.testing.assert_equal(in_np_vals[0:2][:, :, :], in_np_dict_vals)
 
         np.testing.assert_equal(in_np_vals, in_np_dict_vals)
-        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_in.input_shapes)
+        assert in_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_in.input_shapes)
 
         assert hid_map_np_dict_mats.shape == (expected_length, xor_in.input_shapes, xor_hid.input_shapes)
         np.testing.assert_equal(hid_map_np_mats, hid_map_np_dict_mats)
 
-        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_hid.input_shapes)
+        assert hid_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_hid.input_shapes)
 
         assert out_map_np_dict_mats.shape == (expected_length, xor_hid.input_shapes, xor_out.input_shapes)
         np.testing.assert_equal(out_map_np_mats, out_map_np_dict_mats)
 
-        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, xor_out.input_shapes)
+        assert out_np_dict_vals.shape == (expected_length, minibatch_size, 1, 1, xor_out.input_shapes)
 
         xor_out.log.print_entries()
 
@@ -4819,26 +4825,26 @@ class TestACLogging:
         # Outer OUTPUT Mechanism -----------
 
         # variable
-        expected = [[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]
+        expected = [[[[5.99972761, 5.99972761, 5.99972761, 5.99972761, 5.99972761]]]]
         # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].variable, expected)
         np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.variable.get('Outer Comp'), expected)
 
         # value
-        expected = [[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]
+        expected = [[[[0.9975267, 0.9975267, 0.9975267, 0.9975267, 0.9975267]]]]
         # np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].value, expected)
         np.testing.assert_allclose(outer_comp.nodes['Outer Mech OUT'].parameters.value.get('Outer Comp'), expected)
 
         # Nested INPUT Mechanism  ----------
 
         # variable
-        expected = [[[10, 10]]]
+        expected = [[[[10, 10]]]]
         # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].variable, expected)
         # np.testing.assert_allclose(outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].variable, expected)
         np.testing.assert_allclose(
             outer_comp.nodes['Inner Comp'].nodes['Inner Mech 1'].parameters.variable.get('Outer Comp'), expected)
 
         # value
-        expected = [[[0.9999546, 0.9999546]]]
+        expected = [[[[0.9999546, 0.9999546]]]]
         # np.testing.assert_allclose(inner_comp.nodes['Inner Mech 1'].value, expected)
         # np.testing.assert_allclose(['Inner Comp'].nodes['Inner Mech 1'].value, expected)
         np.testing.assert_allclose(
@@ -5067,13 +5073,15 @@ def test_training_xor_with_batching(batch_size, batched_results):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    torch.set_default_dtype(torch.float64)
+
     HIDDEN_SIZE = 5
     LEARNING_RATE = 0.1
     WEIGHT_DECAY = 0
     NUM_EPOCHS = 2
 
-    X = torch.FloatTensor([[0, 0], [0, 1], [1, 0], [1, 1]]).to(device)
-    Y = torch.FloatTensor([[0], [1], [1], [0]]).to(device)
+    X = torch.tensor([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=torch.get_default_dtype()).to(device)
+    Y = torch.tensor([[0], [1], [1], [0]], dtype=torch.get_default_dtype()).to(device)
 
     linear1 = nn.Linear(2, HIDDEN_SIZE, bias=False)
     linear2 = nn.Linear(HIDDEN_SIZE, 1, bias=False)
@@ -5091,6 +5099,14 @@ def test_training_xor_with_batching(batch_size, batched_results):
     # criterion = nn.BCELoss().to(device)
     criterion = nn.MSELoss().to(device)
     optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+
+    # x, y = X[0:0+batch_size].unsqueeze(1), Y[0:0+batch_size].unsqueeze(1)
+    #
+    # t = linear1(x); print(f"Linear1 Out: {torch.sum(t).item()}")
+    # t = sigmoid(t); print(f"Sigmoid1 Out: {torch.sum(t).item()}")
+    # t = linear2(t); print(f"Linear2 Out: {torch.sum(t).item()}")
+    # t = sigmoid(t); print(f"Sigmoid2 Out: {torch.sum(t).item()}")
+    # loss = criterion(t, y); print(f"Loss: {loss.item()}")
 
     # A generator to generate batches of X with batch_size, batches will be of shape
     # (batch_size, 1, 2)

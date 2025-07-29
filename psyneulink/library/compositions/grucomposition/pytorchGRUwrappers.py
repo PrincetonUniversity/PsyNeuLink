@@ -22,8 +22,9 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
-    ALL, CONTEXT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
@@ -96,12 +97,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
-    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, context, nested=False):
+    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, source:str, context, nested=False):
         """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
-
-        source = 'constructor' if context.source == ContextFlags.CONSTRUCTOR else 'learn() method'
 
         for spec in optimizer_param_specs:
             # Raise error for attempt to specify bias parameters when bias=False
@@ -111,10 +110,10 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 if bias_specs:
                     bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
                     bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
-                    raise GRUCompositionError(f"Attempt to set learning rate for bias(es) of GRU using "
-                                              f"'{' ,'.join(bias_specs)}' in the 'learning_rate' arg of "
-                                              f"the {source} for '{self.composition.name}' when its bias option "
-                                              f"is set to False; the spec(s) must be removed or bias set to True.")
+                    raise GRUCompositionError(
+                        f"Attempt to set learning rate for bias(es) of GRU using '{' ,'.join(bias_specs)}' in the "
+                        f"'learning_rate' arg of the {self.get_source_str(source)} for '{self.composition.name}' "
+                        f"when its bias option is set to False; the spec(s) must be removed or bias set to True.")
 
             # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
             bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
@@ -160,23 +159,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         For each PytorchGRUProjectionWrapper, assign the current weight matrix of the PNL Projection
         to the corresponding part of the tensor in the parameter of the Pytorch GRU module.
         """
-
-        class DummyProjection(Projection):
-            """Dummy Projection for access to the learning rate for the IH and WH torch parameter
-            The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
-            so DummyProjections are used to provide access to their learning_rates
-            """
-            def __init__(self, name):
-                self.name = name
-                self.learning_rate = None
-                self.learnable = True
-            def __getattr__(self, name):
-                if name not in {'learning_rate', 'name'}:
-                    raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
-                                         f"corresponding to the set of {self.name} Projections of a GRUComposition, "
-                                         f"that cannot be set directly.  It has only 'name', 'learnable', and"
-                                         f"'learning_rate' as attributes, and no others.")
-
         pnl = self.composition
         self.torch_gru_parameters = torch_gru.parameters
 
@@ -284,39 +266,42 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         Replace GRUComposition's nodes with gru_mech and projections to and from it.
         """
 
+        def _get_direct_proj(pnl_proj, direction:Literal['to', 'from'])-> Union[Projection, bool]:
+            """Get direct Projection to/from GRUComposition's gru_mech
+            Checks for existing Projection and returns that if found; otherwise, constructs it"""
+            sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
+            receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
+            dir_proj = outer_comp._check_for_existing_projections(sender=sender,
+                                                                  receiver=receiver,
+                                                                  in_composition=ANY)
+            if dir_proj:
+                assert len(dir_proj) == 1, (
+                    f"PROGRAM ERROR: More than one ({len(direct_proj)} Projections found from "
+                    f"{pnl_proj.sender.name} to {self.composition.gru_mech.name} in {outer_comp.name}. ")
+                dir_proj = dir_proj[0]
+            else:
+                dir_proj = MappingProjection(name="Projection to GRU COMP",
+                                             sender=sender,
+                                             receiver=receiver,
+                                             learnable=pnl_proj.learnable,
+                                             learning_rate=pnl_proj.learning_rate)
+                dir_proj._initialize_from_context(context, base_context)
+            return dir_proj
+
         direct_proj = None
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
             sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
             rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection to GRU COMP",
-                                                sender=pnl_proj.sender,
-                                                receiver=self.composition.gru_mech,
-                                                learnable=pnl_proj.learnable,
-                                                learning_rate=pnl_proj.learning_rate)
-            except DuplicateProjectionError:
-                direct_proj = self.composition.gru_mech.afferents[0]
-            else:
-                direct_proj._initialize_from_context(context, base_context)
+            direct_proj = _get_direct_proj(pnl_proj, 'to')
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
-            try:
-                direct_proj = MappingProjection(name="Projection from GRU COMP",
-                                                sender=self.composition.gru_mech,
-                                                receiver=pnl_proj.receiver,
-                                                learnable=pnl_proj.learnable,
-                                                learning_rate=pnl_proj.learning_rate)
-            except DuplicateProjectionError:
-                direct_proj = self.composition.gru_mech.efferents[0]
-            else:
-                direct_proj._initialize_from_context(context, base_context)
-            # gru_mech has only one output_port
+            direct_proj = _get_direct_proj(pnl_proj, 'from')
             sender_port_idx = 0
 
         else:
@@ -340,7 +325,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
@@ -475,7 +460,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         bias = self.composition.parameters.bias.get(context)
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
-                                 bias=bias).to(dtype=self.torch_dtype)
+                                 bias=bias, batch_first=True).to(dtype=self.torch_dtype)
         torch_GRU.name =  f"PytorchFunctionWrapper[GRU NODE]"
         torch_GRU._gen_pytorch_fct = lambda x,y : torch_GRU
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)
@@ -511,11 +496,24 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         if self.synch_with_pnl:
             self.torch_gru_internal_state_values = \
-                self._calculate_torch_gru_internal_state_values(self.input[0][0], self.hidden_state.detach())
+                self._calculate_torch_gru_internal_state_values(self.input[-1], self.hidden_state.detach())
 
         # Execute torch GRU module with input (variable) and hidden state
-        self.output, self.hidden_state = self.function(*[self.input, self.hidden_state])
-        # self.output, self.hidden_state = self.function.function(*[input, self.hidden_state])
+
+        # Flatten the input ports into a 1D tensor because GRU can only take 3D inputs
+        input_for_gru = torch.flatten(self.input, start_dim=2)
+
+        batched_hidden_state = self.hidden_state.expand(-1, input_for_gru.shape[0], -1)
+
+        self.output, output_hidden_state = self.function(input_for_gru, batched_hidden_state)
+
+        # Restore the input port dimension (a singleton now) to the output
+        self.output = self.output.unsqueeze(2)
+
+        # Take the final output but keep the sequence dimension intact
+        self.output = self.output[:, -1, ...].unsqueeze(1)
+
+        self.hidden_state = output_hidden_state
 
         # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
         # Note: this must be done in case the GRUComposition is run after learning,
@@ -552,15 +550,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         else:
             proj_wrapper = self.afferents[0]
-
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
-                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                    proj_wrapper._curr_sender_value = curr_val[:, :, proj_wrapper._value_idx, ...]
                 else:
-                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
-                    val = torch.stack(val)
-                    proj_wrapper._curr_sender_value = val
+                    proj_wrapper._curr_sender_value = torch.stack([torch.stack([s[proj_wrapper._value_idx] for s in b]) for b in curr_val])
             else:
                 val = torch.tensor(proj_wrapper.default_value)
 
@@ -577,27 +572,23 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Stack the results for this input port on the second dimension, we want to preserve
         # the first dimension as the batch
-        ip_res = torch.stack(ip_res, dim=1)
+        ip_res = torch.stack(ip_res, dim=2)
         res.append(ip_res)
 
         try:
             # Now stack the results for all input ports on the second dimension again, this keeps batch
-            # first again. We should now have a 4D tensor; (batch, input_port, projection, values)
-            res = torch.stack(res, dim=1)
+            # first again. We should now have a 5D tensor; (batch, sequence, input_port, projection, values)
+            res = torch.stack(res, dim=2)
         except (RuntimeError, TypeError):
-            # is ragged, will handle ports individually during execute
-            # We still need to reshape things so batch size is first dimension.
+            # res has a ragged structure, a list where each element corresponds to and input port. Each tensor
+            # for an input port is 4D (batch, seq, projection, values). We need to reshape this so that list of lists
+            # of lists where the dimensions are (batch, seq, input port, projection, values)
             batch_size = res[0].shape[0]
-            res = [[inp[b] for inp in res] for b in range(batch_size)]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
         return res
 
-    def execute_input_ports(self, variable)->torch.Tensor:
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-        assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
-                                                f"should be a torch.Tensor, but is {type(variable)}.")
-        # Return the input for the port for all items in the batch
-        return variable[:, 0, ...]
 
     def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->dict:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
@@ -619,17 +610,22 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             assert len(torch_gru_parameters) > 1, \
                 (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
                  f"but no bias weights were returned for torch_gru_parameters.")
-            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
+            torch_biases = list(torch_gru_parameters[1])
+            for i, bias in enumerate(torch_gru_parameters[1]):
+                torch_biases[i] = torch.tensor(bias, dtype=self.torch_dtype)
+
+            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_biases
         else:
             b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
 
         # Do calculations for internal state values
-        x = input.detach()
         h = hidden_state
-        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-        h_t = (1 - z_t) * n_t + z_t * h
+        for x in input:
+            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+            h_t = (1 - z_t) * n_t + z_t * h
+            h = h_t
 
         from psyneulink.library.compositions.grucomposition.grucomposition import GRU_INTERNAL_STATE_NAMES
         return {k:v for k,v in zip(GRU_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
@@ -650,8 +646,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             n_t, r_t, z_t, h_t = list(self.torch_gru_internal_state_values.values())
             try:
                 # Ensure that result of manual-calculated state values matches output of actual call to PyTorch module
-                np.testing.assert_allclose(h_t.detach().numpy(),
-                                           self.output.detach().numpy(),
+                output = self.output.squeeze(2).detach().numpy()
+                np.testing.assert_allclose(h_t.detach().numpy()[0],
+                                           output[-1],
                                            atol=1e-8)
             except ValueError:
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
@@ -757,3 +754,29 @@ class PytorchGRUProjectionWrapper(PytorchProjectionWrapper):
             detached_matrix = self.matrix.detach().cpu().numpy()
             self.projection.parameters.matrix._set(detached_matrix, context=self._context)
             self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
+
+
+class DummyProjection(Projection):
+    """Dummy Projection for access to the learning rate for the IH and WH torch parameter
+    The IH and HH (and corresponding biases) torch parameters correspond to multiple PNL Projections,
+    so DummyProjections are used to provide access to their learning_rates
+    """
+    name = ""
+
+    class Parameters(Projection.Parameters):
+        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
+
+    @check_user_specified
+    def __init__(self, name):
+        self.name = name
+        self._initialize_parameters(learning_rate=None, context=Context(execution_id=None))
+        self.parameters.learning_rate.set(None, None)
+        self.learnable = True
+
+    def __getattr__(self, name):
+        obj_name = f"{self.name} "
+        if name not in {'learning_rate', 'name'}:
+            raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
+                                 f"corresponding to the set of {obj_name}Projections of a GRUComposition, "
+                                 f"that cannot be set directly.  It has only 'name', 'learnable', and"
+                                 f"'learning_rate' as attributes, and no others.")

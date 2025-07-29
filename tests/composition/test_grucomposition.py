@@ -365,19 +365,124 @@ class TestExecution:
 
         torch.set_default_dtype(entry_torch_dtype)
 
+    def test_gru_with_sequences(self):
+
+        import torch
+
+        from torch import nn
+        from torch.utils.data import DataLoader, TensorDataset
+
+        # Hyperparameters
+        num_sequences = 30    # Total number of sequences
+        batch_size = 8
+        input_size = 3          # Number of features per time step
+        hidden_size = 5
+        sequence_length = 10  # Length of each sequence
+        output_size = 1
+        num_epochs = 3
+        learning_rate = 0.01
+        bias = True
+        threshold = 15.0      # Threshold for classification
+        torch_dtype = torch.float64
+
+        torch.set_default_dtype(torch_dtype)
+
+        # Generate random training sequences
+        torch.manual_seed(42)
+        train_sequences = torch.rand((num_sequences, sequence_length, input_size)) * 10
+        train_labels = (train_sequences.sum(dim=(1, 2)) > threshold).double()
+        train_dataset = TensorDataset(train_sequences, train_labels)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+
+        # Define a simple GRU model
+        # Define the GRU-based model
+        class SimpleGRUClassifier(nn.Module):
+            def __init__(self, input_size, hidden_size, output_size):
+                super(SimpleGRUClassifier, self).__init__()
+                self.input = nn.Linear(input_size, input_size, bias=False)
+                self.input.weight.requires_grad = False
+                self.gru = nn.GRU(input_size, hidden_size, batch_first=True, bias=bias)
+                self.output = nn.Linear(hidden_size, output_size, bias=False)
+                self.sigmoid = nn.Sigmoid()
+
+            def forward(self, x):
+                x_after_in = self.input(x)  # Apply the input layer
+                _, h = self.gru(x_after_in)  # Only use the final hidden state
+                out = self.output(h[-1])  # Pass the final hidden state through the fully connected layer
+                return self.sigmoid(out)
+
+        # Initialize the model, loss function, and optimizer
+        model = SimpleGRUClassifier(input_size, hidden_size, output_size)
+        criterion = nn.BCELoss()  # Binary Cross-Entropy Loss for binary classification
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
+        torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(model.gru)
+        torch_output_initial_weights = model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
+
+        # # Training loop
+        torch_losses = []
+        for epoch in range(num_epochs):
+            model.train()
+            total_loss = 0
+            for sequences, labels in train_loader:
+                outputs = model(sequences)
+                labels = labels.unsqueeze(1)  # Reshape labels to match output shape
+                loss = criterion(outputs, labels)
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                torch_losses.append(loss.item())
+                total_loss += loss.item()
+
+        # Set up and run PNL Autodiff model
+        input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=input_size)
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=1, function=pnl.Logistic())
+        gru = GRUComposition(name='GRU COMP',
+                             input_size=input_size, hidden_size=hidden_size, bias=bias, learning_rate=learning_rate)
+        autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
+                                                pathways=[input_mech, gru, output_mech],
+                                                learning_rate=learning_rate,
+                                                loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY)
+        # FIX: 3/15/25 - NEED TO BE HARDWIRED IN CONSTRUCTION OF ?AUTODIFF OR GRUCOMPOSITION:
+        autodiff_comp.projections[0].learnable = False
+        autodiff_comp.set_weights(autodiff_comp.nodes[0].efferents[0], torch_input_initial_weights)
+        autodiff_comp.nodes['GRU COMP'].set_weights(*torch_gru_initial_weights)
+        autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
+        target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
+        # Construct the inputs as a list of dictionaries
+        # inputs = {"inputs": inputs, "targets": {target_node[0]: targets}}
+        inputs = [{input_mech: seq, target_mechs[0]: torch.atleast_2d(target)} for seq, target in zip(train_sequences, train_labels)]
+
+        # Train the model
+        autodiff_comp.learn(inputs=inputs,
+                            epochs=num_epochs,
+                            minibatch_size=batch_size,
+                            execution_mode=pnl.ExecutionMode.PyTorch,
+                            )
+        results = autodiff_comp.results
+
+        np.testing.assert_allclose(torch_losses, autodiff_comp.torch_losses.squeeze())
+
     constructor_expected = [[ 0.23619161, 0.18558876, 0.16821693, 0.27253839, -0.18351431]]
     learn_method_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
-    test_specs = [('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
-                  ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
-                  ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
-                  ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
-                  ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
-                  ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
-                  ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
-                  ('specs_to_nested', pnl.INPUT_TO_HIDDEN, constructor_expected),
-                  ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
+    test_specs = [
+        ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
+        ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
+        ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+        ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
+        ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
+        ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
+        ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+        ('specs_to_nested', pnl.INPUT_TO_HIDDEN, constructor_expected),
+        ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
     def test_learning_rate_assignments(self, condition, gru_proj, expected):
@@ -388,12 +493,23 @@ class TestExecution:
                                  )
         input_proj = pnl.MappingProjection(input_mech, gru.input_node)
         output_proj = pnl.MappingProjection(gru.output_node, output_mech)
-        constructor_learning_rates = {gru_proj: .3,
-                                        input_proj: 2.9,
-                                        output_proj: .5}
-        learning_method_learning_rates = {gru_proj: .95,
-                                          input_proj: .66,
-                                          output_proj: 1.5}
+
+        lr_dict_spec = ("constructor" if condition in {'constructor'}
+                         else "learn_method" if condition in {'learn_method', 'both'} else None)
+
+        gru_proj_lr = .3 if lr_dict_spec == 'constructor' else .95 if lr_dict_spec == 'learn_method' else .001
+        input_proj_lr = 2.9 if lr_dict_spec == 'constructor' else .66 if lr_dict_spec == 'learn_method' else .001
+        output_proj_lr = .5 if lr_dict_spec == 'constructor' else 1.5 if lr_dict_spec == 'learn_method' else .001
+        if gru_proj == pnl.INPUT_TO_HIDDEN:
+            ih_lr = gru_proj_lr
+            hh_lr = .001
+        else:
+            ih_lr = .001
+            hh_lr = gru_proj_lr
+        learning_rates_dict = ({gru_proj: gru_proj_lr,
+                                input_proj: input_proj_lr,
+                                output_proj: output_proj_lr}
+                               if lr_dict_spec else None)
 
         # Test for error on attempt to set individual Projection learning rate
         if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
@@ -403,11 +519,10 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-                )
+                    learning_rate=learning_rates_dict)
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    learning_rate=learning_rates_dict)
             assert error_msg in str(error_text.value)
 
         # Test for error on attempt to set BIAS learning rate if bias option is False
@@ -419,11 +534,11 @@ class TestExecution:
             with pytest.raises(pnl.GRUCompositionError) as error_text:
                 outer = pnl.AutodiffComposition(
                     [input_mech, input_proj, gru, output_proj, output_mech],
-                    learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-                )
+                    learning_rate=learning_rates_dict)
                 outer.learn(
                     inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                    learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    # learning_rate=learning_method_learning_rates if condition in {'learn_method'} else None)
+                    learning_rate=learning_rates_dict)
             assert error_msg in str(error_text.value)
 
         # Test for assignment of learning_rates to nested Composition on its construction
@@ -440,16 +555,37 @@ class TestExecution:
 
         else:
             # Test assignment of learning_rate on construction
+            constr = condition in {'constructor', 'both'}
             outer = pnl.AutodiffComposition(
                 [input_mech, input_proj, gru, output_proj, output_mech],
-                learning_rate=constructor_learning_rates if condition in {'constructor'} else None
-            )
+                    learning_rate=learning_rates_dict if constr else None)
+            pytorch_rep = outer._build_pytorch_representation()
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
-                learning_rate=learning_method_learning_rates if condition in {'learn_method', 'both'} else None,
+                learning_rate=learning_rates_dict if condition in {'learn_method', 'both'} else None,
                 num_trials=2)
+            pytorch_rep = outer.pytorch_representation
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr
             np.testing.assert_allclose(expected, results)
+
+            # Check that values are returned to constructor defaults for new call to learn() w/o specs
+            results = outer.learn(
+                inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
+                learning_rate=None)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_unnested(self, bias):

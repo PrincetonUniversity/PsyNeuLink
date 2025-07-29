@@ -1510,7 +1510,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "variable", "value", "saved_values", "saved_samples",
                      "integrator_function_value", "termination_measure_value",
                      "execution_count", "intensity", "combined_costs",
-                     "adjustment_cost", "intensity_cost", "duration_cost", "learning_rate",
+                     "adjustment_cost", "intensity_cost", "duration_cost", "learning_rate", "learning_rates_dict",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",

@@ -866,7 +866,7 @@ class GRUComposition(AutodiffComposition):
         hidden_size = self.hidden_size
 
         self._construct_pnl_composition(input_size, hidden_size,
-                                    context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
+                                        context = Context(source=ContextFlags.COMMAND_LINE, string='FROM GRU'))
 
         self._assign_gru_specific_attributes(input_size, hidden_size)
 
@@ -1179,6 +1179,7 @@ class GRUComposition(AutodiffComposition):
             direct_proj_in = self._pytorch_projections[0]
             direct_proj_out = self._pytorch_projections[1]
         else:
+            # MODIFIED 7/26/25 OLD:
             try:
                 direct_proj_in = MappingProjection(name="Projection to GRU COMP",
                                                    sender=sender,
@@ -1187,7 +1188,8 @@ class GRUComposition(AutodiffComposition):
                                                    learning_rate=projection.learning_rate)
                 self._pytorch_projections.append(direct_proj_in)
             except DuplicateProjectionError:
-                assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
+                # assert False, "PROGRAM ERROR: Duplicate Projection to GRU COMP"
+                direct_proj_in = True
             try:
                 direct_proj_out = MappingProjection(name="Projection from GRU COMP",
                                                     sender=self.gru_mech,
@@ -1197,6 +1199,30 @@ class GRUComposition(AutodiffComposition):
                 self._pytorch_projections.append(direct_proj_out)
             except DuplicateProjectionError:
                 assert False, "PROGRAM ERROR: Duplicate Projection from GRU COMP"
+            # # MODIFIED 7/26/25 NEW:
+            # direct_proj_in = self._check_for_existing_projections(sender=sender,
+            #                                                       receiver=self.gru_mech,
+            #                                                       in_composition=ONLY)
+            # if not direct_proj:
+            #     MappingProjection(name="Projection to GRU COMP",
+            #                                        sender=sender,
+            #                                        receiver=self.gru_mech,
+            #                                        learnable=projection.learnable,
+            #                                        learning_rate=projection.learning_rate)
+            #     self._pytorch_projections.append(direct_proj_in)
+            # else:
+            #     direct_proj_in = True
+            # direct_proj_out = self._check_for_existing_projections(sender=self.gru_mech,
+            #                                                        receiver=self.output_CIM,
+            #                                                        in_composition=ONLY)
+            # if not direct_proj_out:
+            #     MappingProjection(name="Projection to GRU COMP",
+            #                                        sender=sender,
+            #                                        receiver=self.gru_mech,
+            #                                        learnable=projection.learnable,
+            #                                        learning_rate=projection.learning_rate)
+            #     self._pytorch_projections.append(direct_proj_in)
+            # # MODIFIED 7/26/25 END
 
         # BREADCRUMB: GET ALL EFFERENTS OF OUTPUT NODE HERE
         # output_node = self.output_CIM.output_port.efferents[0].receiver.owner
