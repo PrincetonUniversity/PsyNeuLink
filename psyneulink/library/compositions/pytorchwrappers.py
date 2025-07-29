@@ -296,14 +296,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
 
-        # BREADCRUMB: WHY DOESN'T THE FOLLOWING ASSIGNMENT RESULT IN SELF SHOWING UP
-        #             IN self.composition.parameters.pytorch_representation.values UNDER None CONTEXT?
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
-        old_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values.values()]
         self.projection_wrappers = list(self.projections_map.values())
-        new_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values.values()]
-        id(self) in new_pytorch_reps
-        assert True
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
