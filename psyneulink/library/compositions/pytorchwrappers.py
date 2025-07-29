@@ -299,9 +299,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # BREADCRUMB: WHY DOESN'T THE FOLLOWING ASSIGNMENT RESULT IN SELF SHOWING UP
         #             IN self.composition.parameters.pytorch_representation.values UNDER None CONTEXT?
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
-        old_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values]
+        old_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values.values()]
         self.projection_wrappers = list(self.projections_map.values())
-        new_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values]
+        new_pytorch_reps = [id(p) for p in self.composition.parameters.pytorch_representation.values.values()]
         id(self) in new_pytorch_reps
         assert True
 
