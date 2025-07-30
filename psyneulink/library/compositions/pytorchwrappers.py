@@ -1110,19 +1110,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
         #             MIGHT BE BETTER TO DO THAT, AS IT IS IMMUNE TO CONSTRUCTION OF NEW PTYORCH_REPRESENTATION
         #             BUT IT SEEMS ODD TO STORE optimizer_param_groups ON COMPOSITION
         #             SO, ALTERNATIVE IS TO STORE THESE ON self.composition.parameters.pytorch_representation.get(None)?
-        # # MODIFIED 7/29/25 OLD:
-        # self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-        # self._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
-        #                                          for proj in self.wrapped_projections}
-        # MODIFIED 7/29/25 NEW:
-        # self._constructor_proj_learning_rates_names = {proj._proxy_for.name if hasattr(proj, '_proxy_for')
-        #                                                else proj.name : proj.parameters.learning_rate.get(context)
-        #                                                for proj in self.wrapped_projections}
-        # assert self._constructor_proj_learning_rates_names == self.composition.parameters.learning_rates_dict.get(None)
-        constructor_pytorch_rep = self.composition.parameters.pytorch_representation.get(None)
-        constructor_pytorch_rep._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
-        constructor_pytorch_rep._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
-                                                                    for proj in self.wrapped_projections}
+        # MODIFIED 7/29/25 OLD:
+        self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        self._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
+                                                 for proj in self.wrapped_projections}
+        # # MODIFIED 7/29/25 NEW:
+        # # self._constructor_proj_learning_rates_names = {proj._proxy_for.name if hasattr(proj, '_proxy_for')
+        # #                                                else proj.name : proj.parameters.learning_rate.get(context)
+        # #                                                for proj in self.wrapped_projections}
+        # # assert self._constructor_proj_learning_rates_names == self.composition.parameters.learning_rates_dict.get(None)
+        # constructor_pytorch_rep = self.composition.parameters.pytorch_representation.get(None)
+        # constructor_pytorch_rep._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        # constructor_pytorch_rep._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
+        #                                                             for proj in self.wrapped_projections}
         # MODIFIED 7/29/25 END
 
 
