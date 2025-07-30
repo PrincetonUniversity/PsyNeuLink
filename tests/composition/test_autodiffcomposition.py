@@ -572,9 +572,11 @@ class TestAutodiffLearningRateArgs:
             #     i.e., that it persists after a call to learn():
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                                                learning_rate={"NESTED 2 PROJ BC": 99},)
-            pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            pytorch_rep_constructor = outer_comp.parameters.pytorch_representation.get(None)
+            assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
             # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
