@@ -829,6 +829,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                            source,
                                                                            context)
 
+        # MODIFIED 7/30/25 NEW:
+        if source == CONSTRUCTOR and self.optimizer:
+            # If user has specified dict with learning_rates in call to _build_pytorch_representation,
+            #    need to update the construct_param_groups with specififed values
+            self._update_constructor_param_groups(optimizer_params_user_specs)
+            assert True
+        # MODIFIED 7/30/25 END
+
         self._assign_learning_rates(optimizer,
                                     optimizer_torch_params_specified,
                                     run_time_default_learning_rate,
@@ -1104,6 +1112,93 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Store constructor-specified learning_rates (for reversion after learn())
             self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
 
+
+
+
+
+
+
+
+
+
+
+
+
+    def _update_constructor_param_groups(self, optimizer_params_user_specs:dict):
+        for proj, lr in optimizer_params_user_specs.items():
+            # BREADCRUMB: NEED TO HAVE ALREADY STORED _constructor_param_groups (IN INITIAL CALL TO _build_pytorch_represetnation
+            torch_param = self.get_torch_param_for_projection(proj)
+            param_groups = self._constructor_param_groups
+            for i, param_group in enumerate(param_groups.copy()):
+                # if id(torch_param) in [id(p) for p in param_group['params']]:
+                # id's for all params in param_groups: [id(p) for pg in param_groups for p in pg['params']]
+                param_idx = next((j for j, p_id in enumerate([id(p) for p in param_group['params']])
+                                  if p_id == id(torch_param)),None)
+                if not param_idx:
+                    continue
+                # Found torch_param in param_group i
+                if lr == param_group['lr']:
+                    # Already has value to be assigne
+                    # BREADCRUMB:  WARNING HERE THAT ASSIGNMENT IS REDUNDANT AND WILL BE IGNORED?
+                    return
+
+                # Check if there is a group with that lr:
+                #  - if so: add entry for param to group
+                #  - if not:  create new param_group with the specified lr
+                # Delete entry for torch_param from current group
+
+                # Move param from existing param_group to one for the specified learning_rate
+                # NOTE: removal of param from param_group must be done by identity using del, since
+                #       param_group.remove() is content-based and some parameters may have identical values
+                # # MODIFIED 7/31/25 OLD:
+                # del param_groups[i]['params'][next(j for j, p in enumerate(new_param_group['params'])
+                #                                    if p is param)]
+                # # Check if a param_group already exists for the specified learning_rate
+                # exisiting_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
+                #                                                if param_group['lr'] == specified_learning_rate),
+                #                                               None)
+                # if exisiting_param_group_with_specified_lr:
+                #     # Move to exisiting param_group with specified learning_rate
+                #     exisiting_param_group_with_specified_lr['params'].append(param)
+                # else:
+                #     # Create new param_group for the specified learning_rate
+                #     optimizer.add_param_group({'params': [param], 'lr': specified_learning_rate})
+                # MODIFIED 7/31/25 NEW:
+                del param_group['params'][param_idx]
+
+                # Check if a param_group already exists for the specified learning_rate
+                exisiting_param_group_with_specified_lr = next((param_group for param_group in param_groups
+                                                               if param_group['lr'] == lr),None)
+                if exisiting_param_group_with_specified_lr:
+                    # Move to exisiting param_group with specified learning_rate
+                    exisiting_param_group_with_specified_lr['params'].append(torch_param)
+                else:
+                    # Create new param_group for the specified learning_rate
+                    # MODIFIED 7/31/25 OLD:
+                    # self.optimizer.add_param_group({'params': [torch_param], 'lr': lr})
+                    # MODIFIED 7/31/25 NEW:
+                    # BREADCRUMB: ADD param_graop DIRECTLY TO param_groups
+                    new_param_group = param_group.copy()
+                    new_param_group['params'] = [torch_param]
+                    new_param_group['lr'] = lr
+                    param_groups.append(new_param_group)
+                    assert True
+                    # MODIFIED 7/31/25 END
+                # MODIFIED 7/31/25 END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def _store_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
         """Store Composition constructor-specified learning_rates and torch parameters for Projections"""
         # BREADCRUMB: THESE SHOULD BE REPLACED BY, OR AT LEAST COORDINATED WITH Composition.parameters.learning_rates_dict
@@ -1123,18 +1218,52 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # constructor_pytorch_rep._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         # constructor_pytorch_rep._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
         #                                                             for proj in self.wrapped_projections}
+        # # MODIFIED 7/29/25 NEWER:
+        # # BREADCRUMB: ADD CORRESPONDING TO RESTORE:
+        # self.composition._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        # self.composition._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
+        #                                                      for proj in self.wrapped_projections}
+        # MODIFIED 7/29/25 NEWEST:
+        # BREADCRUMB: ADD CORRESPONDING TO RESTORE:
+        # self.composition._constructor_optimizer = optimizer
+        # self.composition._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
+        #                                                      for proj in self.wrapped_projections}
         # MODIFIED 7/29/25 END
 
 
     def _restore_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
         """Restore Composition constructor-specified learning_rates and torch parameters for Projections"""
         # BREADCRUMB: THIS SHOULD BE REPLACED BY, OR AT LEAST COORDINATED WITH Composition.parameters.learning_rates_dict
+        # # MODIFIED 7/30/25 OLD:
         try:
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             for proj in self.wrapped_projections:
                 proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
             comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
             self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
+        # # MODIFIED 7/30/25 NEW:
+        # try:
+        #     self.optimizer.param_groups = self._copy_torch_param_groups(self.composition._constructor_param_groups)
+        #     for proj in self.wrapped_projections:
+        #         proj.parameters.learning_rate.set(self.composition._constructor_proj_learning_rates[proj], context)
+        #     comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
+        #     self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
+        # # MODIFIED 7/30/25 NEW:
+        # try:
+        #     self.optimizer = self.composition._constructor_optimizer
+        #     for proj in self.wrapped_projections:
+        #         proj.parameters.learning_rate.set(self.composition._constructor_proj_learning_rates[proj], context)
+        #     comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
+        #     self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
+        # MODIFIED 7/30/25 NEWER:
+        # try:
+        #     pytorch_rep_none = self.parameters.pytorch_representation.get(None)
+        #     self.optimizer.param_groups = self._copy_torch_param_groups(pytorch_rep_none._constructor_param_groups)
+        #     for proj in self.wrapped_projections:
+        #         proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
+        #     comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
+        #     self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
+        # MODIFIED 7/30/25 END
         except AttributeError:
             assert self.optimizer, (
                 f"PROGRAM ERROR: _restore_constructor_proj_learning_rates_and_torch_params() called for "

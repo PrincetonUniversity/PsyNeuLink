@@ -1188,12 +1188,14 @@ class AutodiffComposition(Composition):
                 if isinstance(proj, str):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
                 proj.parameters.learning_rate.set(lr, context)
-                # MODIFIED 7/29/25 NEW:
-                self._optimizer_constructor_params[proj.name] = lr
-                # THIS DOESNT EXIST YET IF REFRESH IS CALLED, IN WHICH CASE NEW PytorchCompositionWrapper IS CREATED
-            # self.parameters.pytorch_representation.get(None)._constructor_proj_learning_rates]
-            self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
+                # # MODIFIED 7/29/25 NEW:
+                # self._optimizer_constructor_params[proj.name] = lr
+                # self.parameters.pytorch_representation.get(None)._constructor_proj_learning_rates[proj] = lr
+                # param_groups = pytorch_rep._constructor_param_groups
                 # MODIFIED 7/29/25 END
+            # MODIFIED 7/30/25 NEW:
+            assert self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
+            # MODIFIED 7/30/25 END
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         else:
@@ -1231,6 +1233,7 @@ class AutodiffComposition(Composition):
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
                                                                     context)
+
         elif context.source is ContextFlags.SHOW_GRAPH:
         # Don't bother updating for call to show_graph()
                 pass

@@ -561,8 +561,11 @@ class TestAutodiffLearningRateArgs:
 
             # BREADCRUMB:  NEED TO FIX HANDLING OF refresh (ASSIGNS learning_rate DICT AS ACTUAL PARAM VALUE
             # change a projection learning_rate for composition using another call to _build_pytorch_representation()
-            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
-                                                                   refresh=True)
+            # # MODIFIED 7/30/25 OLD:
+            # pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
+            #                                                        refresh=True)
+            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14})
+            # MODIFIED 7/30/25 END
             # pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             # check that it has taken effect:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
