@@ -514,7 +514,8 @@ class TestAutodiffLearningRateArgs:
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
                                                    outer_comp.get_target_nodes()[0]: [[1]]},
                                            num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
-                                           learning_rate={input_proj:12, "NESTED 2 PROJ BC": 13,
+                                           learning_rate={input_proj:12,
+                                                          "NESTED 2 PROJ BC": 13,
                                                           nested_2_proj_DE: 15})
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
