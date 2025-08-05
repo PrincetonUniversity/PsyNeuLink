@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.17.0.0+125.g952dc110b documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.17.0.0+126.g81e47c05e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+125
+                  0.17.0.0+126
                 </div>
               
             
@@ -1540,11 +1540,8 @@ for input ports is expected</p>
 arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p><em>a default variable if possible</em></p></li>
-<li><p><em>None otherwise</em></p></li>
-</ul>
-</p>
+<dd class="field-odd"><p>a default variable if possible
+None otherwise</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1555,12 +1552,9 @@ arguments.</p>
 <dd><p>Take user-inputted argument <strong>input_ports</strong> and returns a defaults.variable-like object that it represents</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p><em>A, B where</em></p></li>
-<li><p><em>A is a defaults.variable-like object</em></p></li>
-<li><p><em>B is True if **input_ports*</em> contained an explicit variable specification, False otherwise*</p></li>
-</ul>
-</p>
+<dd class="field-odd"><p>A, B where
+A is a defaults.variable-like object
+B is True if <strong>input_ports</strong> contained an explicit variable specification, False otherwise</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1656,9 +1650,10 @@ if it is a OutputPort class ref, object or specification dict, it is placed in a
 <dd><p>Call Port._instantiate_parameter_ports to instantiate a ParameterPort
 for each parameter with modulable=True</p>
 <dl class="simple">
-<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_parameter_ports
-:param function:</p>
+<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_parameter_ports</p>
 </dd>
+</dl>
+<dl class="field-list simple">
 </dl>
 </dd></dl>
 
@@ -1780,10 +1775,11 @@ contexts.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputports"><span class="std std-ref">OutputPorts</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>List[value]</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>Mechanism’s output_values</strong> (<em>List[value]</em>) – list with the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputports"><span class="std std-ref">OutputPorts</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1844,17 +1840,18 @@ For each type-specific sub-dict,</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p><strong>dict</strong> – dict containing three sub-dicts, one for each of the three Port types, of the following form:</p>
+<dd class="field-odd"><p><ul>
+<li></li>
+<li><p><strong>dict</strong> (<em>{port_param_keyword : Port type-specific dict}</em>) – dict containing three sub-dicts, one for each of the three Port types, of the following form:</p>
 <dl class="simple">
 <dt>{‘&lt;Port type&gt;_PARAMS’: parameter of Port type or its function<span class="classifier">value,</span></dt><dd><p>’PORT_SPECIFIC_PARAMS’ : {&lt;Port or Port name&gt; : {parameter : value}}
 ‘&lt;Projection type&gt;_PARAMS’ : {parameter of Projection type or its function : value},
 ‘PROJECTION_SPECIFIC_PARAMS’ : {&lt;Projection or name&gt; : {parameter : value}}}</p>
 </dd>
 </dl>
+</li>
+</ul>
 </p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>{port_param_keyword : Port type-specific dict}</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2055,7 +2052,8 @@ Port specification(s) can be an Port object or the name of one.</p>
 <dd><p>Gets dict of Mechanism’s input and output port labels in a standardized form</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<dd class="field-odd"><p><dl>
+<dt>dict</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="n">INPUT_PORTS</span><span class="p">:</span>
             <span class="p">{(</span><span class="nb">int</span><span class="p">)</span> <span class="n">port_index</span><span class="p">:</span>
                     <span class="p">{{</span><span class="n">label_1</span><span class="p">:</span> <span class="n">value_1</span><span class="p">},</span>
@@ -2069,10 +2067,9 @@ Port specification(s) can be an Port object or the name of one.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+</dl>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2380,7 +2377,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=0199d087"></script>
+         <script src="_static/documentation_options.js?v=12f07624"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

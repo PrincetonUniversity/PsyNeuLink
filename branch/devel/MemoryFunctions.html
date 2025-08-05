@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.17.0.0+125.g952dc110b documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.17.0.0+126.g81e47c05e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+125
+                  0.17.0.0+126
                 </div>
               
             
@@ -426,51 +426,55 @@ constructor, it is applied to the key before storing, as follows:</p></li>
 <p>If the number of entries exceeds <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.max_entries" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.max_entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">max_entries</span></code></a>, the first (oldest) item in
 memory is deleted.</p>
 <dl class="field-list simple">
-<dt class="field-odd">param default_variable<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies a template for the key and value entries of the dictionary;  list must have two entries, each
+<dt class="field-odd">type default_variable<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param default_variable<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies a template for the key and value entries of the dictionary;  list must have two entries, each
 of which is a list or array;  first item is used as key, and second as value entry of dictionary.</p>
 </dd>
-<dt class="field-even">type default_variable<span class="colon">:</span></dt>
-<dd class="field-even"><p>list or 2d array : default class_defaults.variable</p>
+<dt class="field-odd">type default_variable<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or 2d array : default class_defaults.variable</p>
 </dd>
-<dt class="field-odd">type retrieval_prob<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dt class="field-even">type retrieval_prob<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
-<dt class="field-even">param retrieval_prob<span class="colon">:</span></dt>
-<dd class="field-even"><p>specifies probability of retrieiving a key from <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
+<dt class="field-odd">param retrieval_prob<span class="colon">:</span></dt>
+<dd class="field-odd"><p>specifies probability of retrieiving a key from <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
 </dd>
-<dt class="field-odd">type retrieval_prob<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float in interval [0,1] : default 1.0</p>
-</dd>
-<dt class="field-even">type storage_prob<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
-</dd>
-<dt class="field-odd">param storage_prob<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-</dd>
-<dt class="field-even">type storage_prob<span class="colon">:</span></dt>
+<dt class="field-even">type retrieval_prob<span class="colon">:</span></dt>
 <dd class="field-even"><p>float in interval [0,1] : default 1.0</p>
 </dd>
-<dt class="field-odd">type rate<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dt class="field-odd">type storage_prob<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
-<dt class="field-even">param rate<span class="colon">:</span></dt>
-<dd class="field-even"><p>specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
+<dt class="field-even">param storage_prob<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
+</dd>
+<dt class="field-odd">type storage_prob<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float in interval [0,1] : default 1.0</p>
+</dd>
+<dt class="field-even">type rate<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
+</dd>
+<dt class="field-odd">param rate<span class="colon">:</span></dt>
+<dd class="field-odd"><p>specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
 storing in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.rate" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> for details).</p>
 </dd>
-<dt class="field-odd">type rate<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float, list, or array : default 1.0</p>
+<dt class="field-even">type rate<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, list, or array : default 1.0</p>
 </dd>
-<dt class="field-even">type noise<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dt class="field-odd">type noise<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
-<dt class="field-odd">param noise<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
+<dt class="field-even">param noise<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
 storing in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.noise" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).</p>
 </dd>
-<dt class="field-even">type noise<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, list, array, or Function : default 0.0</p>
+<dt class="field-odd">type noise<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, list, array, or Function : default 0.0</p>
 </dd>
+<dt class="field-even">type initializer<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param initializer<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>. It must be of the following
 form: [[[key],[value]], [[key],[value]], …], such that each item in the outer dimension (axis 0)
@@ -481,7 +485,7 @@ lists of the same length.</p>
 <dd class="field-even"><p>3d array or list : default None</p>
 </dd>
 <dt class="field-odd">type distance_function<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.nonstateful.objectivefunctions.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.nonstateful.objectivefunctions.Distance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
 <dt class="field-even">param distance_function<span class="colon">:</span></dt>
 <dd class="field-even"><p>specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with keys in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
@@ -490,7 +494,7 @@ lists of the same length.</p>
 <dd class="field-odd"><p>Distance or function : default Distance(metric=COSINE)</p>
 </dd>
 <dt class="field-even">type selection_function<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.nonstateful.selectionfunctions.OneHot"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneHot</span></code></a>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.nonstateful.selectionfunctions.OneHot"><code class="xref py py-class docutils literal notranslate"><span class="pre">OneHot</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
 <dt class="field-odd">param selection_function<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item to return.</p>
@@ -499,7 +503,7 @@ lists of the same length.</p>
 <dd class="field-even"><p>OneHot or function : default OneHot(mode=ARG_MIN_VAL)</p>
 </dd>
 <dt class="field-odd">type equidistant_keys_select<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘random’, ‘oldest’, ‘newest’]]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'random'</span></code>, <code class="docutils literal notranslate"><span class="pre">'oldest'</span></code>, <code class="docutils literal notranslate"><span class="pre">'newest'</span></code>]]</span></p>
 </dd>
 <dt class="field-even">param equidistant_keys_select<span class="colon">:</span></dt>
 <dd class="field-even"><p>specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
@@ -509,7 +513,7 @@ lists of the same length.</p>
 <dd class="field-odd"><p>RANDOM | OLDEST | NEWEST : default RANDOM</p>
 </dd>
 <dt class="field-even">type duplicate_keys<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘overwrite’], <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'overwrite'</span></code>], <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
 <dt class="field-odd">param duplicate_keys<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
@@ -518,24 +522,28 @@ lists of the same length.</p>
 <dt class="field-even">type duplicate_keys<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool | OVERWRITE : default False</p>
 </dd>
-<dt class="field-odd">param max_entries<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies the maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
+<dt class="field-odd">type max_entries<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param max_entries<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies the maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory" title="psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
 (see <code class="xref any docutils literal notranslate"><span class="pre">max_entries</span></code>).</p>
 </dd>
-<dt class="field-even">type max_entries<span class="colon">:</span></dt>
-<dd class="field-even"><p>int : default None</p>
+<dt class="field-odd">type max_entries<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int : default None</p>
 </dd>
-<dt class="field-odd">type params<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</p>
+<dt class="field-even">type params<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
 </dd>
-<dt class="field-even">param params<span class="colon">:</span></dt>
-<dd class="field-even"><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<dt class="field-odd">param params<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
 </dd>
-<dt class="field-odd">type params<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[param keyword: param value] : default None</p>
+<dt class="field-even">type params<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[param keyword: param value] : default None</p>
 </dd>
+<dt class="field-odd">type owner<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
 <dt class="field-even">param owner<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 </dd>
@@ -549,7 +557,7 @@ arguments of the constructor.</p>
 <dd class="field-odd"><p>str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code></p>
 </dd>
 <dt class="field-even">type prefs<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BasePreferenceSet</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘_report_output_pref’, ‘_log_pref’, ‘_delivery_pref’, ‘_param_validation_pref’, ‘_verbose_pref’, ‘_runtime_param_modulation_pref’], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BasePreferenceSet</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'_report_output_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_log_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_delivery_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_param_validation_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_verbose_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_runtime_param_modulation_pref'</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
 </dd>
 <dt class="field-odd">param prefs<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
@@ -1776,7 +1784,7 @@ use np.array for multi-line printout</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=0199d087"></script>
+         <script src="_static/documentation_options.js?v=12f07624"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

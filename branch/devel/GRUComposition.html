@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GRUComposition &mdash; PsyNeuLink 0.17.0.0+125.g952dc110b documentation</title>
+  <title>GRUComposition &mdash; PsyNeuLink 0.17.0.0+126.g81e47c05e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+125
+                  0.17.0.0+126
                 </div>
               
             
@@ -978,7 +978,7 @@ and the Pytorch GRU Module’s parameters, and return its output value.</p>
 Replace GRUComposition’s nodes with gru_mech and projections to and from it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1007,7 +1007,7 @@ Returns a dictionary {output_node:value} with the output value for the torch GRU
 by the collect_afferents method(s) of the other node(s) that receive Projections from the GRUComposition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1015,7 +1015,12 @@ by the collect_afferents method(s) of the other node(s) that receive Projections
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru">
 <span class="sig-name descname"><span class="pre">get_parameters_from_torch_gru</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru" title="Link to this definition">¶</a></dt>
-<dd><p>Get parameters from PyTorch GRU module corresponding to GRUComposition’s Projections.
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span></p>
+</dd>
+</dl>
+<p>Get parameters from PyTorch GRU module corresponding to GRUComposition’s Projections.
 Format tensors:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1028,11 +1033,6 @@ Format tensors:</p>
 <li><p>in set_weights_from_torch_gru(), where they are converted to numpy arrays</p></li>
 <li><p>for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()</p></li>
 </ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1054,7 +1054,7 @@ These are needed for assigning to the corresponding nodes in the GRUComposition.
 Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1069,7 +1069,7 @@ If there are multiple input_ports, return a tensor (or list of tensors if input 
 <p>Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1116,7 +1116,12 @@ Note: if execute_mech=True requires that variable=True</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways">
 <span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
-<dd><p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+<p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
 Flattens nested compositions:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1128,11 +1133,6 @@ Flattens nested compositions:</p>
 <p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1144,7 +1144,7 @@ IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nes
 Return a list of all pathways from input_node -&gt; output node</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1332,7 +1332,7 @@ Return a list of all pathways from input_node -&gt; output node</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=0199d087"></script>
+         <script src="_static/documentation_options.js?v=12f07624"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

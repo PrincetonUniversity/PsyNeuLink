@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.17.0.0+125.g952dc110b documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.17.0.0+126.g81e47c05e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+125
+                  0.17.0.0+126
                 </div>
               
             
@@ -963,7 +963,7 @@ If there are multiple input_ports, return a tensor (or list of tensors if input 
 Enforce result to be 2d, and assign to self.output</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -992,7 +992,12 @@ Note: if execute_mech=True requires that variable=True</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.infer_backpropagation_learning_pathways">
 <span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
-<dd><p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+<p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
 Flattens nested compositions:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1004,11 +1009,6 @@ Flattens nested compositions:</p>
 <p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1026,17 +1026,17 @@ Flattens nested compositions:</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn">
 <span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_projection_matrices_with_torch=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_node_variables_with_torch=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_node_values_with_torch=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_results_with_torch=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_torch_trained_outputs=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_torch_targets=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_torch_losses=NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="Link to this definition">¶</a></dt>
-<dd><p>Override to handle synch and retain args
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+<p>Override to handle synch and retain args
 Note: defaults for synch and retain args are set to NotImplemented, so that the user can specify None if</p>
 <blockquote>
 <div><p>they want to locally override the default values for the AutodiffComposition (see docstrings for run()
 and _parse_synch_and_retain_args() for additonal details).</p>
 </div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1045,7 +1045,7 @@ and _parse_synch_and_retain_args() for additonal details).</p>
 <dd><p>Override to execute autodiff_forward() in learning mode if execute_mode is not Python</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1088,7 +1088,7 @@ in the AutodiffComposition are saved.</p></li>
 <dt class="sig sig-object py" id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load">
 <span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.load" title="Link to this definition">¶</a></dt>
 <dd><p>Loads all weight matrices for all MappingProjections in the AutodiffComposition from file
-:type path: <code class="xref py py-class docutils literal notranslate"><span class="pre">PosixPath</span></code>
+:type path: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">PosixPath</span></code></span>
 :param path: Path for file in which <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrices</span></code></a> are stored.</p>
 <blockquote>
 <div><p>This must be a legal PosixPath object; if it is specified <strong>directory</strong> and <strong>filename</strong> are ignored.</p>
@@ -1151,7 +1151,7 @@ results may go unnoticed.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1199,7 +1199,7 @@ and unexpected results may go unnoticed.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1211,7 +1211,7 @@ and unexpected results may go unnoticed.</p>
 Return tuple of torch.Tensor and MappingProjection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1228,11 +1228,6 @@ Return tuple of torch.Tensor and MappingProjection.</p>
 <dd><p>Returns:
 Components that must have values in a given Context for
 this Component to execute in that Context</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><code class="xref py py-class docutils literal notranslate"><span class="pre">Component</span></code></a>]</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1377,7 +1372,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=0199d087"></script>
+         <script src="_static/documentation_options.js?v=12f07624"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
