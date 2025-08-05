@@ -876,12 +876,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_lr = optimizer_params_parsed[proj_name].value
                 if proj.learnable is False and proj_lr is None:
                     proj_lr = False
-                # # MODIFIED 8/2/25 OLD:
-                proj.parameters.learning_rate.set(proj_lr, context)
+                # # # MODIFIED 8/2/25 OLD:
+                # BREADCRUMB 8/4/25: JUST COMMENTED THIS OUT:
+                # proj.parameters.learning_rate.set(proj_lr, context)
                 # # MODIFIED 8/2/25 NEW:
                 if source == CONSTRUCTOR:
                     # comp_name = self.composition.name
                     comp_name = self._pnl_refs_to_torch_param_names[proj.name].composition.name
+                    # BREADCRUMB: SHOULD DO THIS ONLY IF PROJECTION learning_rate IS SPECIFIED BY USER IN DICT,
+                    #             OTHERWISE IT SHOULD BE None
                     proj.parameters.learning_rate.set(proj_lr, comp_name + DEFAULT_SUFFIX)
                 else:
                     proj.parameters.learning_rate.set(proj_lr, context)
@@ -1030,6 +1033,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Get each param in the param_groups
             default_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
+                # MODIFIED 8/4/25 OLD:
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
@@ -1037,6 +1041,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                            if optimizer_torch_params_specified
                                               and param in optimizer_torch_params_specified
                                            else specified_learning_rate)
+                # # MODIFIED 8/4/25 NEW:
+                # # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
+                # specified_learning_rate = (optimizer_torch_params_specified[param]
+                #                            if optimizer_torch_params_specified
+                #                               and param in optimizer_torch_params_specified
+                #                            else (self._get_default_composition_learning_rate(proj_composition,
+                #                                                                              composition, context)
+                #                                  if self._get_default_composition_learning_rate(proj_composition,
+                #                                                                                 composition,
+                #                                                                                 context) is not None)
+                #                                  else run_time_default_learning_rate)
+                # # MODIFIED 8/4/25 NEWER:
+                # # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
+                # if optimizer_torch_params_specified and param in optimizer_torch_params_specified:
+                #     specified_learning_rate = optimizer_torch_params_specified[param]
+                # elif self._get_default_composition_learning_rate(proj_composition, composition, context) is not None:
+                #     specified_learning_rate =  self._get_default_composition_learning_rate(proj_composition,composition, context)
+                # else:
+                #     specified_learning_rate = run_time_default_learning_rate
+                # MODIFIED 8/4/25 END
                 # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
                 if specified_learning_rate is None:
                     specified_learning_rate = NotImplemented
@@ -1066,20 +1090,36 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Otherwise, use learning_rate specified at run time or in constructor for Composition
                     param.requires_grad = False if specified_learning_rate is False else True
                     if specified_learning_rate in {True, None}:
-                        # MODIFIED 8/2/25 NEW:
+                        # # MODIFIED 8/4/25 OLDISH:
+                        # proj_default_lr = projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
+                        # if is_numeric_scalar(proj_default_lr) and not isinstance(proj_default_lr, bool):
+                        #     specified_learning_rate = proj_default_lr
+                        # elif proj_comp_lr is False or comp_lr is False:
+                        #     # Composition or Projection specification of False takes precedence over runtime spec
+                        #     specified_learning_rate = False
+                        # else:
+                        #     # Use either run_time learning_rate or learning_rate for Composition, giving precedence
+                        #     #   to one to which the Projection belongs if it is in a nested Composition
+                        #     specified_learning_rate = \
+                        #         (run_time_default_learning_rate or
+                        #          self._get_default_composition_learning_rate(proj_composition, composition, context))
+                        # MODIFIED 8/4/25 NEW:
+                        # BREADCRUMB: IF A PROJECTION IS SPECIFIED AS NONE IN learn(), IT SHOULD USE COMPOSITION'S
+                        #             DEFAULT BEFORE IT USES ITS proj_default_lr (IF THAT WAS NOT AT CONSTRUCTION)
                         proj_default_lr = projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
-                        if is_numeric_scalar(proj_default_lr) and not isinstance(proj_default_lr, bool):
-                            specified_learning_rate = proj_default_lr
-                        # MODIFIED 8/2/25 END
-                        elif proj_comp_lr is False or comp_lr is False:
+                        if proj_default_lr is True:
+                            # Force call to _get_default_composition_learning_rate() under 'else' below
+                            proj_default_lr = None
+                        if proj_comp_lr is False or comp_lr is False:
                             # Composition or Projection specification of False takes precedence over runtime spec
                             specified_learning_rate = False
                         else:
                             # Use either run_time learning_rate or learning_rate for Composition, giving precedence
                             #   to one to which the Projection belongs if it is in a nested Composition
                             specified_learning_rate = \
-                                (run_time_default_learning_rate or
+                                (run_time_default_learning_rate or proj_default_lr or
                                  self._get_default_composition_learning_rate(proj_composition, composition, context))
+                        # MODIFIED 8/4/25 END
 
                     assert specified_learning_rate not in (None, NotImplemented),\
                         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"

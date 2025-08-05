@@ -3833,24 +3833,24 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        #                                                                  NOTE: the specs below are for values
-        #                                                                        expected after construction; values
-        #                                                                        after learn() are handled in the test
-        #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
-        ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
-        # projection-specific specs takes precedence if no learn() method specs
-        ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
-        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
-        # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
-        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
-        # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
-        #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
-        ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
-        ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
-        ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
-        ('inr_none_nimp',  None,     7,      None,      6.02,      None,  NotImplemented,   6.02,       7),
-        ('inr_none_none',  None,     7,      None,      6.02,      None,      None,         6.02,       7),
-        ('inr_lr_nimp',   1.414,     7,      None,      6.02,      None,  NotImplemented,  1.414,       7),
+        # #                                                                  NOTE: the specs below are for values
+        # #                                                                        expected after construction; values
+        # #                                                                        after learn() are handled in the test
+        # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
+        # ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
+        # # projection-specific specs takes precedence if no learn() method specs
+        # ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        # ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        # # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
+        # ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
+        # # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
+        # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        # ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
+        # ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
+        # ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
+        # ('inr_none_nimp',  None,     7,      None,      6.02,      None,  NotImplemented,   6.02,       7),
+        # ('inr_none_none',  None,     7,      None,      6.02,      None,      None,         6.02,       7),
+        # ('inr_lr_nimp',   1.414,     7,      None,      6.02,      None,  NotImplemented,  1.414,       7),
         ('inr_lr_none',   1.414,     7,      None,      6.02,      None,      None,        1.414,       7),
         ('outr_comp_lr',   None,     7,      None,      6.02,       2.7,      None,         6.02,       7),
         ('outr_comp_lr',   None,     7,      None,      None,       2.7,      None,       default,      7),
@@ -3880,6 +3880,8 @@ class TestMiscTrainingFunctionality:
         # inner_comp = AutodiffComposition(pathways=inner_pathway,
         #                                  learning_rate=inner_comp_lr,
         #                                  name="INNER COMP")
+
+        # BREADCRUMB
         inner_comp = AutodiffComposition(learning_rate=inner_comp_lr,
                                          name="INNER COMP")
         inner_comp.add_backpropagation_learning_pathway([inner_node_input,
@@ -3888,20 +3890,22 @@ class TestMiscTrainingFunctionality:
                                                          inner_proj_2,
                                                          inner_node_output],
                                                         learning_rate = pathway_lr)
+        # BREADCRUMB
         # Check inner_comp assignments from constructor
-        inner_comp._build_pytorch_representation()
-        inner_pytorch_rep = inner_comp.pytorch_representation
+        inner_pytorch_rep = inner_comp._build_pytorch_representation()
         # Ensure that params were assigned appropriate lr for the inner_comp
         assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
         assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
 
         # Construct outer Composition with nested inner
         outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
+
+        # BREADCRUMB
         outer_comp = AutodiffComposition([inner_comp, outer_node], learning_rate=outer_comp_lr, name="OUTER COMP")
 
         # Check outer_comp assignments from constructor
-        outer_comp._build_pytorch_representation()
-        outer_pytorch_rep = outer_comp.pytorch_representation
+        # BREADCRUMB
+        outer_pytorch_rep = outer_comp._build_pytorch_representation()
         outer_proj = outer_comp.nodes[-1].afferents[0]
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
@@ -3926,6 +3930,8 @@ class TestMiscTrainingFunctionality:
             proj_1_expected = outer_learn_lr or proj_1_lr or self.default
             proj_2_expected = outer_learn_lr or proj_2_lr or self.default
             outer_proj_expected = outer_learn_lr or outer_learn_lr or self.default
+
+        # BREADCRUMB
         outer_comp.learn(inputs={inner_node_input:[[1]]},
                          learning_rate=learning_rate_arg)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
@@ -3937,6 +3943,7 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_inner
         assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
 
+        # BREADCRUMB
         # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
