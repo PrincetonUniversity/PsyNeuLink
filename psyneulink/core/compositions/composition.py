@@ -1127,6 +1127,13 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
         Specifying *learning_rate* as a dict using Projection name(s) as key(s) can be useful at construction
         when the Projection itself may not yet have been constructed.
 
+    .. hint::
+        The learning_rate assigned to an individual Projection in a dict specified in the Composition's constructor
+        can be accessed by calling by ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``,
+        and a value assigned in the Composition's `learn <Composition.learn>` method can be accessed by calling
+        ``<MappingProjection>.parameters.learning_rate.get(<context>)``, where *<context>* is the value of the
+        **context** argument of the `learn <Composition.learn>` method (the default is the name of the Composition).
+
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::

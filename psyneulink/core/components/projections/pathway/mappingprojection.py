@@ -422,11 +422,12 @@ class MappingProjection(PathwayProjection_Base):
         Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
         `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
         The value assigned to *learning_rate* in the MappingProjection at construction is saved in
-        <MappingProjection.learning_rate; if it's value has been modified by a Composition, that can be accessed
-        by calling <MappingProjection>.parameters.learning_rate.get(<Composition.name>_default) for a value
-        assigned in the Composition's constructor, or <MappingProjection>.parameters.learning_rate.get(<context>)
-        for a value assigned in a Composition's `learn method <Composition_Learning_Methods>` (which applies only
-        for that call to the learn() method);  see `Composition_Learning_Rate` for additional details.
+        <MappingProjection.learning_rate, and remains the same even if the Projection has been assigned a different
+        learning rate in a Composition; if that is the case, a value assigned in the constructor to a Composition
+        can be accessed by calling ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``,
+        and a value assigned in the Composition's `learn <Composition.learn>` method can be accessed by calling
+        <MappingProjection>.parameters.learning_rate.get(<context>) (see `Composition_Learning_Rate` for additional
+        details.
 
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
