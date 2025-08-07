@@ -34,7 +34,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, PROXY_FOR
+from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, NodeRole
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -783,8 +783,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Relevant data structures:
             self.composition._optimizer_params: {Projection or Projection.name: lr}
             optimizer_params_user_specs: {Projection or Projection.name: lr}
-            optimizer_params_parsed: {Projection.name: TorchParamTuple(Projection or Projection.name, lr)}
-            optimizer_torch_params_specified:  {torch param: lr}
+            optimizer_params_user_parsed: {Projection.name: TorchParamTuple(Projection or Projection.name, lr)}
+            optimizer_torch_params_full_with_specified:  {torch param: lr}
             self._pnl_refs_to_torch_param_names: {Projection.name: ParamNameCompositionTuple(proj, wrapper name, comp)}
             self._torch_param_short_to_long_names_map: {local name of torch param: full hierarchical name}
             self.named_parameters(): (full hierarchical name of torch param, torch param)
@@ -824,11 +824,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         run_time_default_learning_rate = optimizer_params_user_specs.pop(DEFAULT_LEARNING_RATE, None)
 
-        optimizer_torch_params_specified = self._parse_learning_rate_specs(optimizer,
-                                                                           optimizer_params_user_specs,
-                                                                           run_time_default_learning_rate,
-                                                                           source,
-                                                                           context)
+        optimizer_params_user_parsed, optimizer_torch_params_full_with_specified = (
+            self._parse_learning_rate_specs(optimizer,
+                                            optimizer_params_user_specs,
+                                            run_time_default_learning_rate,
+                                            source,
+                                            context))
 
         # MODIFIED 7/30/25 NEW:
         if source == CONSTRUCTOR and self.optimizer:
@@ -839,7 +840,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # MODIFIED 7/30/25 END
 
         self._assign_learning_rates(optimizer,
-                                    optimizer_torch_params_specified,
+                                    optimizer_params_user_parsed,
+                                    optimizer_torch_params_full_with_specified,
                                     run_time_default_learning_rate,
                                     source,
                                     context)
@@ -849,7 +851,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    optimizer_params_user_specs:dict,
                                    run_time_default_learning_rate: Union[float, bool, None],
                                    source:str,
-                                   context:Context)-> dict:
+                                   context:Context)-> (dict, dict):
         """Parse user-specified learning_rates.
         User specifications can be in:
         - constructor for of outermost and/or nested AutodiffComposition
@@ -858,22 +860,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
-        # Replace any Projections in optimizer_torch_params_specified with their names
-        optimizer_params_parsed = {}
+        # Replace any Projections in optimizer_params_user_specs with their names -> optimizer_params_user_parsed
+        optimizer_params_user_parsed = {}
         if optimizer_params_user_specs:
-            optimizer_params_parsed = {(k.name if isinstance(k, Projection) else k): TorchParamTuple(k, v)
+            optimizer_params_user_parsed = {(k.name if isinstance(k, Projection) else k): TorchParamTuple(k, v)
                                        for k, v in optimizer_params_user_specs.items()}
 
-        if optimizer_params_parsed:
-            self._validate_optimizer_param_specs(set(optimizer_params_parsed.keys()), source, context)
+        if optimizer_params_user_parsed:
+            self._validate_optimizer_param_specs(set(optimizer_params_user_parsed.keys()), source, context)
 
         # Assign any user-specified Projection-specific learning_rates to the corresponding Projection.learning_rate
-        for proj_name in optimizer_params_parsed:
+        #    in prep for construction optimer_params_full_with_specs
+        #    (these will be overridden below if numerically specified)
+        for proj_name in optimizer_params_user_parsed:
             if proj_name == DEFAULT_LEARNING_RATE:
                 continue
             if proj_name in self._pnl_refs_to_torch_param_names:
                 proj = self._pnl_refs_to_torch_param_names[proj_name].projection
-                proj_lr = optimizer_params_parsed[proj_name].value
+                proj_lr = optimizer_params_user_parsed[proj_name].value
                 if proj.learnable is False and proj_lr is None:
                     proj_lr = False
                 # # # MODIFIED 8/2/25 OLD:
@@ -893,7 +897,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
                                f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
 
-        # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_parsed:
+        # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_user_parsed:
         #     {Projection.name: (Projection or Projection.name, learning_rate)}
         # # MODIFIED 8/5/25 OLD:
         projection_lr_specs = {proj.name:TorchParamTuple(proj, proj.parameters.learning_rate.get(context))
@@ -910,18 +914,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         #                                     if LEARNING in p._use and p.projection.learnable and
         #                                     is_numeric_scalar(p.projection.parameters.learning_rate.get(context))]}
         # MODIFIED 8/5/25 END
-        # Integrate optimizer_params_parsed, giving precedence to any learning_rates specified in learn() method()
-        projection_lr_specs.update(optimizer_params_parsed)
+        # Integrate optimizer_params_user_parsed, giving precedence to any learning_rates specified in learn() method()
+        projection_lr_specs.update(optimizer_params_user_parsed)
 
         if not projection_lr_specs and not run_time_default_learning_rate:
             if source == CONSTRUCTOR:
                 self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
-            return
+            return {}, {}
 
-        # Replace Projection names in projection_lr_specs for torch params (used in state_dict())
-        # with their actual torch parameter objects to genernate optimizer_torch_params_specified:
+        # Replace Projection names (in projection_lr_specs) for torch params (used in state_dict())
+        # with their actual torch parameter objects to genernate optimizer_torch_params_full_with_specified:
         #     {torch param: learning_rate}
-        optimizer_torch_params_specified = {}
+        optimizer_torch_params_full_with_specified = {}
         for pnl_param_name, param_tuple in projection_lr_specs.items():
             param_val = param_tuple.value
             param_orig_spec = param_tuple.orig_spec
@@ -986,9 +990,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
             #     param = torch.nn.Parameter(param[torch_param_slice])
 
-            optimizer_torch_params_specified[param] = projection_lr_specs[pnl_param_name].value
+            optimizer_torch_params_full_with_specified[param] = projection_lr_specs[pnl_param_name].value
 
-        return optimizer_torch_params_specified
+        return optimizer_params_user_parsed, optimizer_torch_params_full_with_specified
 
     def _validate_optimizer_param_specs(self, specs_to_validate:set, source:str, context, nested=False):
         """Allow override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
@@ -1022,7 +1026,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _assign_learning_rates(self,
                                optimizer:torch.optim.Optimizer,
-                               optimizer_torch_params_specified:dict,
+                               optimizer_user_parsed:dict,
+                               optimizer_torch_params_full_with_specified:dict,
                                run_time_default_learning_rate:Union[float, bool, None],
                                source:str,
                                context:Context):
@@ -1030,6 +1035,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         composition = self.composition
+
         comp_lr = run_time_default_learning_rate or composition.parameters.learning_rate.get(context)
         self.composition.parameters.learning_rate.set(comp_lr, context)
 
@@ -1044,26 +1050,45 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Get each param in the param_groups
             default_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
+                projection = self._torch_params_to_projections(old_param_groups)[param]
+                torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
+                proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+                # # MODIFIED 8/6/25 OLD:
+                # proj_lr = projection.parameters.learning_rate.get(context)
+                # MODIFIED 8/6/25 NEW:
+                if source == CONSTRUCTOR:
+                    proj_lr = projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
+                else:
+                    proj_lr = projection.parameters.learning_rate.get(context)
+                # MODIFIED 8/6/25 END
+                proj_comp_lr = proj_composition.parameters.learning_rate.get(context)
+
                 # MODIFIED 8/4/25 OLD:
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
                 # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
                 # # MODIFIED 8/5/25 OLD:
-                # specified_learning_rate = (optimizer_torch_params_specified[param]
-                #                            if optimizer_torch_params_specified
-                #                               and param in optimizer_torch_params_specified
+                # specified_learning_rate = (optimizer_torch_params_full_with_specified[param]
+                #                            if optimizer_torch_params_full_with_specified
+                #                               and param in optimizer_torch_params_full_with_specified
                 #                            else specified_learning_rate)
                 # MODIFIED 8/5/25 NEW:
+                # BREADCRUMB: COMPLETE COMMENT BELOW
+                # If learning rate is specified for a projection in call to learn(), that takes precedence over...
                 lr_specified_in_learn = False
-                if optimizer_torch_params_specified and param in optimizer_torch_params_specified:
-                    specified_learning_rate = optimizer_torch_params_specified[param]
-                    lr_specified_in_learn = True
+                if source == LEARN_OVERRIDE and optimizer_user_parsed:
+                    if projection.name in optimizer_user_parsed:
+                        specified_learning_rate = optimizer_user_parsed[projection.name].value
+                        lr_specified_in_learn = True
+                    elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_user_parsed:
+                        specified_learning_rate = optimizer_user_parsed[projection._proxy_for.name].value
+                        lr_specified_in_learn = True
                 # MODIFIED 8/5/25 END
                 # # MODIFIED 8/4/25 NEW:
                 # # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
-                # specified_learning_rate = (optimizer_torch_params_specified[param]
-                #                            if optimizer_torch_params_specified
-                #                               and param in optimizer_torch_params_specified
+                # specified_learning_rate = (optimizer_torch_params_full_with_specified[param]
+                #                            if optimizer_torch_params_full_with_specified
+                #                               and param in optimizer_torch_params_full_with_specified
                 #                            else (self._get_default_composition_learning_rate(proj_composition,
                 #                                                                              composition, context)
                 #                                  if self._get_default_composition_learning_rate(proj_composition,
@@ -1072,8 +1097,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #                                  else run_time_default_learning_rate)
                 # # MODIFIED 8/4/25 NEWER:
                 # # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
-                # if optimizer_torch_params_specified and param in optimizer_torch_params_specified:
-                #     specified_learning_rate = optimizer_torch_params_specified[param]
+                # if optimizer_torch_params_full_with_specified and param in optimizer_torch_params_full_with_specified:
+                #     specified_learning_rate = optimizer_torch_params_full_with_specified[param]
                 # elif self._get_default_composition_learning_rate(proj_composition, composition, context) is not None:
                 #     specified_learning_rate =  self._get_default_composition_learning_rate(proj_composition,composition, context)
                 # else:
@@ -1087,11 +1112,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
                         f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
                         f"it must be an int, float, bool or None.")
-                projection = self._torch_params_to_projections(old_param_groups)[param]
-                torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
-                proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
-                proj_lr = projection.parameters.learning_rate.get(context)
-                proj_comp_lr = proj_composition.parameters.learning_rate.get(context)
                 specified_learning_rate = False if proj_lr is False else specified_learning_rate
                 if proj_composition.enable_learning is False or projection.learnable is False:
                     # Disable learning for Projection if:
@@ -2550,7 +2570,7 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_torch_params_specified
+        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_torch_params_full_with_specified
         #           cf _update_optimizer_params():
         if projection.learnable is False:
             self.matrix.requires_grad = False

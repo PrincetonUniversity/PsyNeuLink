@@ -309,33 +309,33 @@ default_lr = .01
 
 class TestAutodiffLearningRateArgs:
     test_args = [
-        # NOTES:
-        #   Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
-        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
-        #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
-        #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
-        ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
-        # learn() lr
-        ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
-        # learn() lr overrides constructor lr
-        ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
-        # Projection lr (in constructor)
-        ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
-        ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
-        # Projection lr overrides learn() lr
-        ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
-        ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
-        # # learning_rate dict in Autodiff constructor overrides Projection lr
-        ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
-        ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
-        # learning_rate dict in learn() overrides Projection lr
-        ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
-        ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
-        # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
-        ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
-        ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
-        # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
-        #                                (use two different Projection lr's to be sure they don't matter)
+        # # NOTES:
+        # #   Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        # #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
+        # #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
+        # #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
+        # ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
+        # # learn() lr
+        # ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
+        # # learn() lr overrides constructor lr
+        # ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
+        # # Projection lr (in constructor)
+        # ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
+        # ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
+        # # Projection lr overrides learn() lr
+        # ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
+        # ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
+        # # # learning_rate dict in Autodiff constructor overrides Projection lr
+        # ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
+        # ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
+        # # learning_rate dict in learn() overrides Projection lr
+        # ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
+        # ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
+        # # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
+        # ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
+        # ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
+        # # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
+        # #                                (use two different Projection lr's to be sure they don't matter)
         ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False, inpt_learn_ovrd),
         ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,  hid_learn_ovrd),
         ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False, inpt_learn_ovrd),
@@ -563,8 +563,6 @@ class TestAutodiffLearningRateArgs:
             # BREADCRUMB:  NEED TO FIX HANDLING OF refresh (ASSIGNS learning_rate DICT AS ACTUAL PARAM VALUE
             # change a projection learning_rate for composition using another call to _build_pytorch_representation()
             # # MODIFIED 7/30/25 OLD:
-            # pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
-            #                                                        refresh=True)
             pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14})
             # MODIFIED 7/30/25 END
             # pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
@@ -572,7 +570,7 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
-            # check that it has taken been assigned as default (in _optimizer_constructor_params);
+            # check that it has been assigned as default (in _optimizer_constructor_params);
             #     i.e., that it persists after a call to learn():
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                                                learning_rate={"NESTED 2 PROJ BC": 99},)
@@ -3833,18 +3831,18 @@ class TestMiscTrainingFunctionality:
 
     default = .001
     test_specs_for_learning_rate_inheritance = [
-        #                                                                  NOTE: the specs below are for values
-        #                                                                        expected after construction; values
-        #                                                                        after learn() are handled in the test
-        #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
-        ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
-        # projection-specific specs takes precedence if no learn() method specs
-        ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
-        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
-        # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
-        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
-        # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
-        #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        # #                                                                  NOTE: the specs below are for values
+        # #                                                                        expected after construction; values
+        # #                                                                        after learn() are handled in the test
+        # #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
+        # ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
+        # # projection-specific specs takes precedence if no learn() method specs
+        # ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        # ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        # # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
+        # ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
+        # # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
+        # #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
         ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
         ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
         ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
