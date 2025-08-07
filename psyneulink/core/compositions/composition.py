@@ -8383,10 +8383,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _lr = learning_mech_lr if learning_mech_lr is not None else learning_rate
                 _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
                 learnable_projection.parameters.learning_rate.set(_lr, _context)
-                # BREADCRUMB:  THE FOLLOWING
-                self.learning_rates_dict[learnable_projection.name] = _lr
-                # # SHOULD BE:
-                # self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
+                self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
 
         return learning_pathway
 

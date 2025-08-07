@@ -406,12 +406,12 @@ class MappingProjection(PathwayProjection_Base):
 
     learning_rate : float, int, bool or None
         determines Projection-specific learning_rate, that takes effect only if the MappingProjection's `learnable
-        <MappingProjection.learnable>` attribute is True.  If it is a numeric value, that value is used, unless it
-        is overridden by a value specified for the MappingProjection in the `learning method
+        <MappingProjection.learnable>` attribute is True. If it is a numeric value, that value is used, unless it
+        is overridden by a value specified for the MappingProjection in the `learn method
         <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
         additional details); if it is ``False`` no learning occurs, even if `learnable <MappingProjection.learnable>`
         attribute is ``True``; however, this can later be changed, and also overidden by a specification of the
-        learning_rate for the MappingProjection in the `learning method <Composition_Learning_Methods>` of the
+        learning_rate for the MappingProjection in the `learn method <Composition_Learning_Methods>` of the
         Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
         `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
 
