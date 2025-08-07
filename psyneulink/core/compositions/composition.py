@@ -8067,9 +8067,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(n, tuple):
                     nodes[nodes.index(n)] = n[0]
 
-        # BREADCRUMB: SHOULD PASS PROJECTIONS FROM PATHWAY RATHER THAN projections THEMSELVES,
-        #             (SINCE "PROXIES" MAY BE USED IN PATHWAY FOR PROJECTIONS TO NESTED COMPOSITIONS)
-        #             OR MAP FROM PROJECTIONS TO PROXIES FOR LEARNING RATE ASSIGNMENTS
         self._assign_learning_rates(projections)
 
         specified_pathway = pathway
@@ -8379,7 +8376,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if proj_lr is not None:
                 # Keep Projection's specified learning_rate, as it takes precedence over pathway learning_rate
                 #   (see `Composition_Learning_Rate_Precedence_Hierarchy`)
-                # BREADCRUMB:  SHOULD CONTEXT BE DEFAULT_SUFFIX HERE??
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
@@ -9437,9 +9433,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dict
                 learning_rates_dict[proj_name] = proj.parameters.learning_rate.get(None) if proj.learnable else False
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
-            # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
-            #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED;
-            #              NEED TO USE get(context=<Composition.name>_default) TO SEE IT
             proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
             if _is_proxy:
                 proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], context)

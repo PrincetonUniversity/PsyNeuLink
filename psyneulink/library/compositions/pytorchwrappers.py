@@ -1129,11 +1129,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Store constructor-specified learning_rates (for reversion after learn())
             self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
 
-    # BREADCRUMB: GO THROUGH ALL pytroch_reps ON self.composition AND UPDATE THEIR _constructor_param_groups
     def _update_constructor_param_groups(cls, composition, optimizer_params_user_specs:dict):
         for pytorch_rep in composition.parameters.pytorch_representation.values.values():
             for proj, lr in optimizer_params_user_specs.items():
-                # BREADCRUMB: NEED TO HAVE ALREADY STORED _constructor_param_groups (IN INITIAL CALL TO _build_pytorch_represetnation
                 torch_param = pytorch_rep.get_torch_param_for_projection(proj)
                 param_groups = pytorch_rep._constructor_param_groups
                 for i, param_group in enumerate(param_groups.copy()):
@@ -1145,10 +1143,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         continue
                     # Found torch_param in param_group i
                     if lr == param_group['lr']:
-                        # Already has value to be assigne
-                        # BREADCRUMB:  WARNING HERE THAT ASSIGNMENT IS REDUNDANT AND WILL BE IGNORED?
+                        # Already has specified value
+                        warnings.warn(f"'{proj.name}' already has learning_rate of {lr} being assigned"
+                                      f"in constructor for '{self.composition.name}'.")
                         return
-
                     del param_group['params'][param_idx]
 
                     # Check if a param_group already exists for the specified learning_rate
@@ -1166,17 +1164,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _store_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
         """Store Composition constructor-specified learning_rates and torch parameters for Projections"""
-        # BREADCRUMB: THESE SHOULD BE REPLACED BY, OR AT LEAST COORDINATED WITH Composition.parameters.learning_rates_dict
-        #             MIGHT BE BETTER TO DO THAT, AS IT IS IMMUNE TO CONSTRUCTION OF NEW PTYORCH_REPRESENTATION
-        #             BUT IT SEEMS ODD TO STORE optimizer_param_groups ON COMPOSITION
-        #             SO, ALTERNATIVE IS TO STORE THESE ON self.composition.parameters.pytorch_representation.get(None)?
         self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
         self._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
                                                  for proj in self.wrapped_projections}
 
     def _restore_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
         """Restore Composition constructor-specified learning_rates and torch parameters for Projections"""
-        # BREADCRUMB: THIS SHOULD BE REPLACED BY, OR AT LEAST COORDINATED WITH Composition.parameters.learning_rates_dict
         try:
             self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
             for proj in self.wrapped_projections:
