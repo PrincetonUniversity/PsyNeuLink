@@ -9424,7 +9424,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         not_learnable = []
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
-        # MODIFIED 7/23/25 OLD:
         context = context or self.name + DEFAULT_SUFFIX
 
         for proj in projections:

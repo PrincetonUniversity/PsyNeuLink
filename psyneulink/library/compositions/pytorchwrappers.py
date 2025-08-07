@@ -880,8 +880,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if source == CONSTRUCTOR:
                     # comp_name = self.composition.name
                     comp_name = self._pnl_refs_to_torch_param_names[proj.name].composition.name
-                    # BREADCRUMB: SHOULD DO THIS ONLY IF PROJECTION learning_rate IS SPECIFIED BY USER IN DICT,
-                    #             OTHERWISE IT SHOULD BE None
                     proj.parameters.learning_rate.set(proj_lr, comp_name + DEFAULT_SUFFIX)
                 else:
                     proj.parameters.learning_rate.set(proj_lr, context)
@@ -999,7 +997,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _assign_learning_rates(self,
                                optimizer:torch.optim.Optimizer,
-                               optimizer_user_parsed:dict,
+                               optimizer_params_user_parsed:dict,
                                optimizer_torch_params_full_with_specified:dict,
                                run_time_default_learning_rate:Union[float, bool, None],
                                source:str,
@@ -1034,18 +1032,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                 # Get default learning_rate if specified in learn() method
                 specified_learning_rate = run_time_default_learning_rate
-                # Get learning_rate specified by the user (in learn(), or constructor for Compositon or Projection):
-                # BREADCRUMB: COMPLETE COMMENT BELOW
-                # If learning rate is specified for a projection in call to learn(), that takes precedence over...
                 lr_specified_in_learn = False
-                if source == LEARN_OVERRIDE and optimizer_user_parsed:
-                    if projection.name in optimizer_user_parsed:
-                        specified_learning_rate = optimizer_user_parsed[projection.name].value
+                if source == LEARN_OVERRIDE and optimizer_params_user_parsed:
+                    # Get learning_rate specified for Projection by the user in learn(),
+                    #   which should take precedence over all other specs
+                    if projection.name in optimizer_params_user_parsed:
+                        specified_learning_rate = optimizer_params_user_parsed[projection.name].value
                         lr_specified_in_learn = True
-                    elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_user_parsed:
-                        specified_learning_rate = optimizer_user_parsed[projection._proxy_for.name].value
+                    elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
+                        specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
                         lr_specified_in_learn = True
-                # If not specified, mark as 'NotImplemented' (since 'None' is a valid specification)
+                # If not specified, mark 'NotImplemented' for assignment below (since 'None' is a valid specification)
                 if specified_learning_rate is None:
                     specified_learning_rate = NotImplemented
                 if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
@@ -1069,8 +1066,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Otherwise, use learning_rate specified at run time or in constructor for Composition
                     param.requires_grad = False if specified_learning_rate is False else True
                     if specified_learning_rate in {True, None}:
-                        # BREADCRUMB: IF A PROJECTION IS SPECIFIED AS NONE IN learn(), THAT SHOULD BE ASSIGNED
-                        #             TO proj_default_lr HERE, AND THEN USED IN THE ASSIGNMENT BELOW
+                        # If a Projection is specified as None in learn(), that should be assigned to
+                        #             proj_default_lr here, to be used in assignment below
                         proj_default_lr = (specified_learning_rate if lr_specified_in_learn else
                                            projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX))
                         if proj_default_lr is True:
@@ -1080,10 +1077,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                             # Composition or Projection specification of False takes precedence over runtime spec
                             specified_learning_rate = False
                         else:
-                            # Use either run_time learning_rate or learning_rate for Composition, giving precedence
-                            #   to one to which the Projection belongs if it is in a nested Composition
-                            # BREADCRUMB: COMMENTING OUT proj_default_lr CAUSES FAIL IN test_learn_rate_with_3_levels...
-                            #             BUT LEAVING IT IN CAUSES FAILS IN test_learning_rate_inheritance...
+                            # Use either run_time learning_rate, projection's default, or learning_rate for Composition,
+                            # giving precedence to one to which the Projection belongs if it is in a nested Composition
                             specified_learning_rate = \
                                 (run_time_default_learning_rate or proj_default_lr or
                                  self._get_default_composition_learning_rate(proj_composition, composition, context))
