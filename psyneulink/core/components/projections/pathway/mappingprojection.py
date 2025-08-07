@@ -133,6 +133,13 @@ Learning can be disabled for a MappingProjection by specifying its **learnable**
 constructor.  This can be useful for disabling specific MappingProjections in the `learning pathway
 `learning pathway <Composition_Learning_Pathway>` of a `Composition`.
 
+By default, the `learning_rate <MappingProjection.learning_rate>` for a MappingProjection is `None`, which causes
+it to inherit the value of the `learning_rate <Composition.learning_rate>` Parameter of the `Composition` to which it
+belongs (if any).  However, a specific value for the `learning_rate <MappingProjection.learning_rate>` can be
+assigned in the **learning_rate** argument of the MappingProjection's constructor, or in the `learn method
+<Composition_Learning_Methods>` of the `Composition` to which it belongs. See
+`learning_rate <MappingProjection.learning_rate>` and `XXX COMPOSITION for additional details.
+
 See `LearningMechanism` for an overview of `learning components <LearningMechanism_Overview>` and a detailed
 description of `LearningMechanism_Learning_Configurations`; `Composition_Learning` for a description of how learning
 is implemented within a `Composition`;  `MappingProjection_Learning` below for a description of how learning
@@ -414,6 +421,12 @@ class MappingProjection(PathwayProjection_Base):
         learning_rate for the MappingProjection in the `learn method <Composition_Learning_Methods>` of the
         Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
         `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
+        The value assigned to *learning_rate* in the MappingProjection at construction is saved in
+        <MappingProjection.learning_rate; if it's value has been modified by a Composition, that can be accessed
+        by calling <MappingProjection>.parameters.learning_rate.get(<Composition.name>_default) for a value
+        assigned in the Composition's constructor, or <MappingProjection>.parameters.learning_rate.get(<context>)
+        for a value assigned in a Composition's `learn method <Composition_Learning_Methods>` (which applies only
+        for that call to the learn() method);  see `Composition_Learning_Rate` for additional details.
 
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
