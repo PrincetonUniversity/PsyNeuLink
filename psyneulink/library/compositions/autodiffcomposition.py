@@ -1100,6 +1100,7 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition
+
         Constructs PytorchCompositionWrapper that is used for learning in PyTorch.
             - if *learning_rate* is specified:
                 - as a dict (in a direct call):
@@ -1111,7 +1112,18 @@ class AutodiffComposition(Composition):
         A new pytorch_representation is constructed if:
             - none yet existis
             - refresh is specified
+
+        REFRESH:
         If called from the command_line more than once without refresh specified, warns and ignores
+
+        LEARNING_RATES:
+        learning_rates specified in the **learning_rate** argument of the constructor for the Compostion
+        are used by default (stored in self._learning_rates_dict). If a numeric value is specified in the
+        **learning_rate** argument of the call to _build_pytorch_representation, that is used as the
+        Composition's default learning_rate for the pytorch_representation constructed here; if a dict is
+        specified, it is used to replace the values for the specified Projections (and the Composition, if
+        DEFAULT_LEARNING_RATE is specified in the dict).
+
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
