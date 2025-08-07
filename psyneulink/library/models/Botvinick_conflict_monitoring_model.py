@@ -1,7 +1,9 @@
 import argparse
 
 import numpy as np
+
 import psyneulink as pnl
+from psyneulink.core import llvm as pnlvm
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
 # Conflict monitoring and cognitive control. Psychological Review, 108, 624–652.
@@ -252,34 +254,99 @@ Stimulus = [[CN_trial_initialize_input, CN_congruent_trial_input],
             [CN_trial_initialize_input, CN_incongruent_trial_input],
             [CN_trial_initialize_input, CN_control_trial_input]]
 
+
+# PsyNeuLinkView Graphics Info
+pnlv_graphics_spec = {
+    "components": {
+        "nodes": {
+            "COLORS_HIDDEN": {
+                "x": 399,
+                "y": 145
+            },
+            "WORDS_INPUT": {
+                "x": 887,
+                "y": 398
+            },
+            "TASK_INPUT": {
+                "x": 670,
+                "y": 435
+            },
+            "WORDS_HIDDEN": {
+                "x": 877,
+                "y": 141
+            },
+            "RESPONSE": {
+                "x": 674,
+                "y": 50
+            },
+            "COLORS_INPUT": {
+                "x": 412,
+                "y": 403
+            },
+            "TASK_LAYER": {
+                "x": 674,
+                "y": 278
+            }
+        }
+    }
+}
+
+
 # Run the Composition -------------------------------------------------------------------------------------------------
 ntrials0 = 500
 ntrials = 1000
 condition = 3
-for cond in range(condition):
-    # Initialize
-    System_Conflict_Monitoring.run(inputs=Stimulus[cond][0], num_trials=ntrials0)  # run System with initial input
-    System_Conflict_Monitoring.run(inputs=Stimulus[cond][1], num_trials=ntrials)  # run System with condition input
-    # Reinitialize composition after condition was run
-    color_hidden_layer.reset([[0, 0, 0]], context=System_Conflict_Monitoring)
-    word_hidden_layer.reset([[0, 0, 0]], context=System_Conflict_Monitoring)
-    response_layer.reset([[0, 0]], context=System_Conflict_Monitoring)
-    task_layer.reset([[0, 0]], context=System_Conflict_Monitoring)
+execution_mode = pnlvm.ExecutionMode.Python
+
+
+# other ExecutionMode options include PyTorch, compiled execution with
+# LLVMRun, among others
+def run(exec_mode):
+    for cond in range(condition):
+        # Initialize
+        # run System with initial input
+        System_Conflict_Monitoring.run(
+            inputs=Stimulus[cond][0],
+            num_trials=ntrials0,
+            execution_mode=exec_mode,
+        )
+        # run System with condition input
+        System_Conflict_Monitoring.run(
+            inputs=Stimulus[cond][1],
+            num_trials=ntrials,
+            execution_mode=exec_mode,
+        )
+        # Reinitialize composition after condition was run
+        color_hidden_layer.reset([[0, 0, 0]], context=System_Conflict_Monitoring)
+        word_hidden_layer.reset([[0, 0, 0]], context=System_Conflict_Monitoring)
+        response_layer.reset([[0, 0]], context=System_Conflict_Monitoring)
+        task_layer.reset([[0, 0]], context=System_Conflict_Monitoring)
+    return System_Conflict_Monitoring.results
+
 
 # Results -------------------------------------------------------------------------------------------------------------
+results = run(execution_mode)
+
 r2 = response_layer.log.nparray_dictionary('DECISION_ENERGY')[
     System_Conflict_Monitoring.name]  # get logged DECISION_ENERGY dictionary
 energy = r2['DECISION_ENERGY']  # save logged DECISION_ENERGY
 
-# Plot ----------------------------------------------------------------------------------------------------------------
-if args.enable_plot:
+# Plot
+# ----------------------------------------------------------------------------------------------------------------
+# NOTE: plotting requires logging of values at each time step, which is
+# not available when using compiled execution modes
+if (
+    args.enable_plot
+    and not execution_mode.is_compiled()
+):
     import matplotlib.pyplot as plt
 
     plt.figure()
-    x = np.arange(0, 1500, 1)  # create x-axis length
-    plt.plot(x, energy[:1500], 'r')  # plot congruent condition
-    plt.plot(x, energy[1500:3000], 'b')  # plot incongruent condition
-    plt.plot(x, energy[3000:4500], 'g')  # plot neutral condition
+    x_len = ntrials0 + ntrials
+    x = np.arange(0, x_len, 1)  # create x-axis length
+    plt.plot(x, energy[:x_len], "r")  # plot congruent condition
+    plt.plot(x, energy[x_len:2 * x_len], "b")  # plot incongruent condition
+    plt.plot(x, energy[2 * x_len:3 * x_len], "g")  # plot neutral condition
     plt.ylabel('ENERGY')  # add ylabel
     plt.xlabel('cycles')  # add x label
     legend = ['congruent', 'incongruent', 'neutral']
