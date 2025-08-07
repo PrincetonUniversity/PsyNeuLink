@@ -198,7 +198,7 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
         the Composition.
 
     COMMENT:
-    The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
+    The following set of `learning pathway methods <Composition_Learning_Methods>` can be used to add `Pathways
         <Component_Pathway>` that implement `learning <Composition_Learning>` to an existing Composition:
     COMMENT
 
@@ -856,16 +856,16 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-*Supervised Learning Methods*
-=============================
+*Supervised Learning Pathway Methods*
+=====================================
 
 Supervised learning is implemented in a Composition by specifying a `learning Pathway <Composition_Learning_Pathway>`
 in the **pathways** argumemt of the Composition's constructor, its `add_pathways <Composition.add_pathways>` method,
-or one of its learning methods.  If the constructor or `add_pathways <Composition.add_pathways>` method is used,
+or one of its learning pathway methods.  If the constructor or `add_pathways <Composition.add_pathways>` method is used,
 then the `Pathway specification <Pathway_Specification>` must be the first item in a tuple, followed by a
 `LearningFunction` as its 2nd item that specfies the type of learning.  Alternatively, a `learning Pathway
 <Composition_Learning_Pathway>` can be added to a Composition by specifying the `Pathway` to be learned in the one
-of the Composition's learning methods, of which there are currently three:
+of the Composition's learning pathway methods, of which there are currently three:
 
     • `add_reinforcement_learning_pathway` -- uses `Reinforcement`;
     • `add_td_learning_pathway` -- uses `TDLearning`;
@@ -887,7 +887,7 @@ matches as closely as possible a target value `specified as input <Composition_T
 `learn <Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their
 `function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
-`learning methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
+`learning pathway methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
 <Pathway.learning_components>` attribute is assigned a dict containing the set of learning components generated for
 the Pathway, as described below.
 
@@ -897,7 +897,8 @@ the Pathway, as described below.
 ================================
 
 For each `learning pathway <Composition_Learning_Pathway>` specified in the **pathways** argument of a Composition's
-constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
+constructor or one of its `learning pathway methods <Composition_Learning_Methods>`, it creates the following
+Components,
 and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
@@ -989,7 +990,7 @@ each the learning method determines how the sequence to be added relates to any 
 intersects, and automatically creates andconfigures the relevant learning components so that the error terms are
 properly computed and propagated by each LearningMechanism to the next in the configuration. It is important to note
 that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
-the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
+the individual sequences specified in the `learning pathway methods <Composition_Learning_Methods>` when building the
 Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
 method projects to a *OBJECTIVE_MECHANISM*, this may be superseded if multiple sequences are created. This is the
 case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
@@ -1243,7 +1244,7 @@ COMMENT:
 COMMENT
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
-is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
+is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning pathway methods
 <Composition_Learning_Methods>` -- in fact, they *cannot* be specified (see `warning
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically constructs all of the components
 needed for learning. While learning in an AutodiffComposition is currently restricted to the `BackPropagation` learning
@@ -8188,7 +8189,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         See `Composition_Learning` for a more detailed description of how learning is implemented in a
         Composition, including the `learning components <Composition_Learning_Components>` that are created,
-        as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
+        as well as other `learning pathway methods <Composition_Learning_Methods>` that can be used to implement
+        specific
         algorithms.
 
         The `learning components <Composition_Learning_Components>` created are placed in a dict

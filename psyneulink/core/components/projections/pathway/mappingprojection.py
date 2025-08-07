@@ -179,8 +179,8 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 <MappingProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
-is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway` or
-`learning methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
+is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway`, one of the `add learning
+`pathway methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
 `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _MappingProjection_Structure:
