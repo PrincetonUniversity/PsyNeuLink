@@ -134,15 +134,15 @@ constructor.  This can be useful for disabling specific MappingProjections in th
 `learning pathway <Composition_Learning_Pathway>` of a `Composition`.
 
 By default, the `learning_rate <MappingProjection.learning_rate>` for a MappingProjection is `None`, which causes
-it to inherit the value of the `learning_rate <Composition.learning_rate>` Parameter of the `Composition` to which it
-belongs (if any).  However, a specific value for the `learning_rate <MappingProjection.learning_rate>` can be
-assigned in the **learning_rate** argument of the MappingProjection's constructor, or in the `learn method
-<Composition_Learning_Methods>` of the `Composition` to which it belongs. See
-`learning_rate <MappingProjection.learning_rate>` and `XXX COMPOSITION for additional details.
+it to inherit the value of the `learning_rate <Composition.learning_rate>` Parameter of the `Composition` to which
+it belongs. However, a Projection-specific value can be assigned in the **learning_rate** argument of the
+MappingProjection's constructor, or in either the constructor for a Composition or its `learn method
+<Composition.learn>`.  See `learning_rate <MappingProjection.learning_rate>` and `Composition_Learning_Rate` for
+additional details.
 
 See `LearningMechanism` for an overview of `learning components <LearningMechanism_Overview>` and a detailed
 description of `LearningMechanism_Learning_Configurations`; `Composition_Learning` for a description of how learning
-is implemented within a `Composition`;  `MappingProjection_Learning` below for a description of how learning
+is implemented within a `Composition`; `MappingProjection_Learning` below for a description of how learning
 modifies a MappingProjection.
 
 .. _MappingProjection_Learning_Tuple_Specification:
@@ -676,43 +676,6 @@ class MappingProjection(PathwayProjection_Base):
                 )
 
         return value
-
-    # @property
-    # def learnable(self):
-    #     """
-    #     .. note::
-    #         This is a read-only property; it cannot be set directly, but can be set in the constructor for the
-    #         MappingProjection, or in the **learnable** argument of the `add_linear_processing_pathway` method of a
-    #         `Composition`.
-    #
-    #     :return: True if the MappingProjection's matrix can be modified by learning; False otherwise.
-    #     :rtype: bool
-    #     """
-    #     return self._learnable
-    #
-    # @learnable.setter
-    # def learnable(self, learnable):
-    #     """Set the MappingProjection's learnable attribute.
-    #
-    #     :param setting: True if the MappingProjection's matrix can be modified by learning; False otherwise.
-    #     :type setting: bool
-    #     """
-    #     if not isinstance(learnable, bool):
-    #         raise MappingError(f"MappingProjection's learnable attribute must be a boolean value, "
-    #                            f"but {value} was specified.")
-    #
-    #     if learnable is False:
-    #         # Make sure any specified learning_rates are all None or False
-    #         for context, lr in self.parameters.learning_rate.values.items():
-    #             if lr is not None and lr is not False:
-    #                 raise MappingError(f"The 'learnable' attribute of '{self.name}' is being set to 'False', "
-    #                                    f"but its learning_rate was specified as '{lr}' in context {context};"
-    #                                    f"it must be set to 'None' or 'False' in order to disable learning.")
-    #             if lr is None:
-    #                 # If learning_rate is None, set it to False
-    #                 self.parameters.learning_rate.set(False, context=context)
-    #
-    #     self._learnable = learnable
 
     @property
     def logPref(self):
