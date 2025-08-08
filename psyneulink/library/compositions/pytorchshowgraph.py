@@ -63,7 +63,7 @@ class PytorchShowGraph(ShowGraph):
             self.pytorch_rep = (
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
-                    refresh=False))
+                    new=False))
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)

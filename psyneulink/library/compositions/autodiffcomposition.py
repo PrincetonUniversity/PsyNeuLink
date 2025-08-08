@@ -1098,7 +1098,7 @@ class AutodiffComposition(Composition):
                                       learning_rate=None,
                                       optimizer_params=None,
                                       context=None,
-                                      refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
+                                      new=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition
 
         Constructs PytorchCompositionWrapper that is used for learning in PyTorch.
@@ -1111,10 +1111,10 @@ class AutodiffComposition(Composition):
                  - that is used for default value of learning_rate of specified projs
         A new pytorch_representation is constructed if:
             - none yet existis
-            - refresh is specified
+            - new is specified
 
-        REFRESH:
-        If called from the command_line more than once without refresh specified, warns and ignores
+        NEW:
+        If called from the command_line more than once without new specified, warns and ignores
 
         LEARNING_RATES:
         learning_rates specified in the **learning_rate** argument of the constructor for the Compostion
@@ -1129,8 +1129,8 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
 
-        # Construct a new pytorch_representation if none exists or refresh is specified
-        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
+        # Construct a new pytorch_representation if none exists or new is specified
+        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
                                                   device=self.device,
@@ -1177,8 +1177,8 @@ class AutodiffComposition(Composition):
         if self._runtime_learning_rate is not None:
             optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
 
-        if (old_opt is None or refresh) and refresh is not False:
-            # Instantiate a new optimizer if there isn't one yet or refresh has been called and is not blocked)
+        if (old_opt is None or new) and new is not False:
+            # Instantiate a new optimizer if there isn't one yet or new has been called and is not blocked)
             if context.runmode == ContextFlags.LEARNING_MODE:
                 # If optimizer is being constructed de novo in call to learn(),
                 #    instantiate it using params specified in constructor (if any) since:
@@ -2130,7 +2130,7 @@ class AutodiffComposition(Composition):
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
 
-        self._build_pytorch_representation(context=context, refresh=True)
+        self._build_pytorch_representation(context=context, new=True)
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
