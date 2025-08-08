@@ -227,7 +227,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
@@ -344,7 +344,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         bias = self.composition.parameters.bias.get(context)
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
-                                 bias=bias).to(dtype=self.torch_dtype)
+                                 bias=bias, batch_first=True).to(dtype=self.torch_dtype)
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)
 
         function_wrapper = PytorchGRUFunctionWrapper(torch_GRU, device, context)
@@ -377,11 +377,24 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         if self.synch_with_pnl:
             self.torch_gru_internal_state_values = \
-                self._calculate_torch_gru_internal_state_values(self.input[0][0], self.hidden_state.detach())
+                self._calculate_torch_gru_internal_state_values(self.input[-1], self.hidden_state.detach())
 
         # Execute torch GRU module with input (variable) and hidden state
-        self.output, self.hidden_state = self.function(*[self.input, self.hidden_state])
-        # self.output, self.hidden_state = self.function.function(*[input, self.hidden_state])
+
+        # Flatten the input ports into a 1D tensor because GRU can only take 3D inputs
+        input_for_gru = torch.flatten(self.input, start_dim=2)
+
+        batched_hidden_state = self.hidden_state.expand(-1, input_for_gru.shape[0], -1)
+
+        self.output, output_hidden_state = self.function(input_for_gru, batched_hidden_state)
+
+        # Restore the input port dimension (a singleton now) to the output
+        self.output = self.output.unsqueeze(2)
+
+        # Take the final output but keep the sequence dimension intact
+        self.output = self.output[:, -1, ...].unsqueeze(1)
+
+        self.hidden_state = output_hidden_state
 
         # Set GRUComposition's HIDDEN_NODE.value to GRU Node's hidden state
         # Note: this must be done in case the GRUComposition is run after learning,
@@ -419,15 +432,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         else:
             proj_wrapper = self.afferents[0]
-
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
-                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                    proj_wrapper._curr_sender_value = curr_val[:, :, proj_wrapper._value_idx, ...]
                 else:
-                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
-                    val = torch.stack(val)
-                    proj_wrapper._curr_sender_value = val
+                    proj_wrapper._curr_sender_value = torch.stack([torch.stack([s[proj_wrapper._value_idx] for s in b]) for b in curr_val])
             else:
                 val = torch.tensor(proj_wrapper.default_value)
 
@@ -444,27 +454,23 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Stack the results for this input port on the second dimension, we want to preserve
         # the first dimension as the batch
-        ip_res = torch.stack(ip_res, dim=1)
+        ip_res = torch.stack(ip_res, dim=2)
         res.append(ip_res)
 
         try:
             # Now stack the results for all input ports on the second dimension again, this keeps batch
-            # first again. We should now have a 4D tensor; (batch, input_port, projection, values)
-            res = torch.stack(res, dim=1)
+            # first again. We should now have a 5D tensor; (batch, sequence, input_port, projection, values)
+            res = torch.stack(res, dim=2)
         except (RuntimeError, TypeError):
-            # is ragged, will handle ports individually during execute
-            # We still need to reshape things so batch size is first dimension.
+            # res has a ragged structure, a list where each element corresponds to and input port. Each tensor
+            # for an input port is 4D (batch, seq, projection, values). We need to reshape this so that list of lists
+            # of lists where the dimensions are (batch, seq, input port, projection, values)
             batch_size = res[0].shape[0]
-            res = [[inp[b] for inp in res] for b in range(batch_size)]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
         return res
 
-    def execute_input_ports(self, variable)->torch.Tensor:
-        from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-        assert type(variable) == torch.Tensor, (f"PROGRAM ERROR: Input to GRUComposition in ExecutionMode.Pytorch "
-                                                f"should be a torch.Tensor, but is {type(variable)}.")
-        # Return the input for the port for all items in the batch
-        return variable[:, 0, ...]
 
     def _calculate_torch_gru_internal_state_values(self, input, hidden_state)->dict:
         """Manually calculate and store internal state values for torch GRU prior to backward pass
@@ -485,17 +491,22 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             assert len(torch_gru_parameters) > 1, \
                 (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
                  f"but no bias weights were returned for torch_gru_parameters.")
-            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_gru_parameters[1]
+            torch_biases = list(torch_gru_parameters[1])
+            for i, bias in enumerate(torch_gru_parameters[1]):
+                torch_biases[i] = torch.tensor(bias, dtype=self.torch_dtype)
+
+            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_biases
         else:
             b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
 
         # Do calculations for internal state values
-        x = input.detach()
         h = hidden_state
-        r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-        z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-        n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-        h_t = (1 - z_t) * n_t + z_t * h
+        for x in input:
+            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
+            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
+            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
+            h_t = (1 - z_t) * n_t + z_t * h
+            h = h_t
 
         from psyneulink.library.compositions.grucomposition.grucomposition import GRU_INTERNAL_STATE_NAMES
         return {k:v for k,v in zip(GRU_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
@@ -516,8 +527,9 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
             n_t, r_t, z_t, h_t = list(self.torch_gru_internal_state_values.values())
             try:
                 # Ensure that result of manual-calculated state values matches output of actual call to PyTorch module
-                np.testing.assert_allclose(h_t.detach().numpy(),
-                                           self.output.detach().numpy(),
+                output = self.output.squeeze(2).detach().numpy()
+                np.testing.assert_allclose(h_t.detach().numpy()[0],
+                                           output[-1],
                                            atol=1e-8)
             except ValueError:
                 assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} GRU Node."
