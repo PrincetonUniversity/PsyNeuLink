@@ -417,16 +417,17 @@ class MappingProjection(PathwayProjection_Base):
         is overridden by a value specified for the MappingProjection in the `learn method
         <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
         additional details); if it is ``False`` no learning occurs, even if `learnable <MappingProjection.learnable>`
-        attribute is ``True``; however, this can later be changed, and also overidden by a specification of the
+        attribute is ``True``; however, this can later be changed, and also overridden by a specification of the
         learning_rate for the MappingProjection in the `learn method <Composition_Learning_Methods>` of the
         Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
         `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
         The value assigned to *learning_rate* in the MappingProjection at construction is saved in
-        <MappingProjection.learning_rate, and remains the same even if the Projection has been assigned a different
-        learning rate in a Composition; if that is the case, a value assigned in the constructor to a Composition
-        can be accessed by calling ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``,
-        and a value assigned in the Composition's `learn <Composition.learn>` method can be accessed by calling
-        <MappingProjection>.parameters.learning_rate.get(<context>) (see `Composition_Learning_Rate` for additional
+        <MappingProjection>.learning_rate (also accessible as ``<MappingProjection.parameters.learning_rate.get(None)``,
+        and remains the same even if the Projection has been assigned a different learning rate in a Composition. If
+        the latter is the case, the value assigned in the constructor to that Composition can be accessed as
+        ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``, and a value assigned in the
+        Composition's `learn <Composition.learn>` method can be accessed as
+        ``<MappingProjection>.parameters.learning_rate.get(<context>) (see `Composition_Learning_Rate` for additional
         details.
 
     name : str

@@ -1122,26 +1122,23 @@ class AutodiffComposition(Composition):
         ---------
 
         new : bool or None : default None
-            Specifies creation of a new pytorch_representation, using self.composition._constructor_optimizer_params
+            specifies creation of a new pytorch_representation, using self._optimizer_constructor_params
             as the base values, and updated with any specified in the **learning_rates** arg.  If the method is called
             from the command_line more than once without **new** specified as `True`, warns and ignores.
 
-        JDC STILL WORKING HERE:
-        learning_rate : float, int, bool or dict : default None
-            If *learning_rate* is specified that is used as the default learning_rate for the
-            pytorch_representation; if a dict is specified, entries are moved to optmizer_params and those are used
-            used to replace the values for the specified Projections (and the Composition, if
-            DEFAULT_LEARNING_RATE is specified in the dict).
+        learning_rate : float, int, dict : default None
+            if None, then the values in self.learning_rates_dict (and stored in self._optimizer_constructor_params)
+            are used to assign learning_rates to all Projections in the Composition (and any nested within it)
+            (see `Composition_Learning_Rate` for details of specification); if a numeric values is specified,
+            that is used as the default learning_rate for the pytorch_representation (replacing
+            composition.learning_rate); if a dict is specified, entries are moved to optmizer_params and replace
+            values for the specified Projections as well as the Composition's learning_rate (if DEFAULT_LEARNING_RATE
+            is specified in the dict).
 
-            and,
-            if there is a DEFAULT_LEARNING_RATE entry, that is assigned to learning_rate.
-
-            **learning_rate** argument of the call to _build_pytorch_representation, that is used as the
-            Composition's default learning_rate for the pytorch_representation constructed here; if a dict is
-            specified, it is used to replace the values for the specified Projections (and the Composition, if
-            DEFAULT_LEARNING_RATE is specified in the dict).
-
-
+            .. note::
+               Projection-specific learning_rates specified in a dict assigned to **learning_rate** here, like
+               any specified in the constructor for the Composition, are stored in the corresponding Projections'
+               `learning_rate <MappingProjection.learning_rate>` Parameter under the context <self.name>.DEFAULT_SUFFIX.
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
@@ -1165,8 +1162,8 @@ class AutodiffComposition(Composition):
 
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
-        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified)
-        #    give precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
+        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),
+        #    giving precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
         #    over learning_rate specified in constructor (passed in above as learning_rate)
         default_learning_rate = self._runtime_learning_rate or learning_rate
         if isinstance(learning_rate, dict):
@@ -1186,14 +1183,15 @@ class AutodiffComposition(Composition):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
                 proj.parameters.learning_rate.set(lr, context)
             assert self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
+
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         else:
-            # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
             self.parameters.learning_rate.set(default_learning_rate, context)
-        # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
+
+        # BREADCRUMB: COMMENT OR REFACTOR THIS TO CLARIFY CONDITIONS UNDER WHICH IT IS NEEDED:
         if self._runtime_learning_rate is not None:
-            optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
+            optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
 
         if (old_opt is None or new) and new is not False:
             # Instantiate a new optimizer if there isn't one yet or new has been called and is not blocked)
