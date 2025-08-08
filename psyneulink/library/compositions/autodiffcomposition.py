@@ -1092,37 +1092,55 @@ class AutodiffComposition(Composition):
         dependency_dict[projection] = sender
         queue.append((receiver, comp))
 
-    # BREADCRUMB: move some of what's done in the methods below to a "validate_params" type of method
+    # BREADCRUMB: move some of what's done in the methods below to a "_validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self,
                                       learning_rate=None,
                                       optimizer_params=None,
                                       context=None,
-                                      new=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
+                                      new=None,
+                                      base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition
+        Constructs PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
+        self.pytorch_representation.
 
-        Constructs PytorchCompositionWrapper that is used for learning in PyTorch.
-            - if *learning_rate* is specified:
-                - as a dict (in a direct call):
-                    - entries are moved to optmizer_params
-                    - if there is a DEFAULT_LEARNING_RATE entry, that is assigned to learning_rate
-                - as a single value, that is left, and used as the default learning_learning
-            - if *optimizer_params* is specified (in a call from learn(),
-                 - that is used for default value of learning_rate of specified projs
         A new pytorch_representation is constructed if:
-            - none yet existis
-            - new is specified
+            self.pytorch_representation == None
+            **new** is specified as True
+        If _build_pytorch_representation() is called with **new**==None and a pytorch_representation already exists,
+            a warning issued and the call is ignored.
 
-        NEW:
-        If called from the command_line more than once without new specified, warns and ignores
+        By default (learning_rate=None), the learning_rates specified in the **learning_rate**
+        argument of the constructor for the Composition (and stored in self._learning_rates_dict) are
+        used to construct the pytorch_representation. However:
+        - if **learning_rate** is specified (in a call from the COMMANDLINE),
+           that can be used to override the default values, as described under the learning_rate argument below;
+        - if **optimizer_params** is specified (in a call from learn(), that is used to specify the learning_rates;
+        - if **optimizer_params** is specified in a call from COMMAND_LINE, an error is returned.
 
-        LEARNING_RATES:
-        learning_rates specified in the **learning_rate** argument of the constructor for the Compostion
-        are used by default (stored in self._learning_rates_dict). If a numeric value is specified in the
-        **learning_rate** argument of the call to _build_pytorch_representation, that is used as the
-        Composition's default learning_rate for the pytorch_representation constructed here; if a dict is
-        specified, it is used to replace the values for the specified Projections (and the Composition, if
-        DEFAULT_LEARNING_RATE is specified in the dict).
+        Arguments
+        ---------
+
+        new : bool or None : default None
+            Specifies creation of a new pytorch_representation, using self.composition._constructor_optimizer_params
+            as the base values, and updated with any specified in the **learning_rates** arg.  If the method is called
+            from the command_line more than once without **new** specified as `True`, warns and ignores.
+
+        JDC STILL WORKING HERE:
+        learning_rate : float, int, bool or dict : default None
+            If *learning_rate* is specified that is used as the default learning_rate for the
+            pytorch_representation; if a dict is specified, entries are moved to optmizer_params and those are used
+            used to replace the values for the specified Projections (and the Composition, if
+            DEFAULT_LEARNING_RATE is specified in the dict).
+
+            and,
+            if there is a DEFAULT_LEARNING_RATE entry, that is assigned to learning_rate.
+
+            **learning_rate** argument of the call to _build_pytorch_representation, that is used as the
+            Composition's default learning_rate for the pytorch_representation constructed here; if a dict is
+            specified, it is used to replace the values for the specified Projections (and the Composition, if
+            DEFAULT_LEARNING_RATE is specified in the dict).
+
 
         """
         optimizer_params = optimizer_params or {}
