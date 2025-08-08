@@ -402,7 +402,7 @@ class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.
 
     Used to specify the **loss_spec** argument of the constructor for an `AutodiffComposition`,
-    or in the `learning methods <Composition_Learning_Methods>` used to construct `learning pathways
+    or in the `learning pathway methods <Composition_Learning_Methods>` used to construct `learning pathways
     <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
     for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
     used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.

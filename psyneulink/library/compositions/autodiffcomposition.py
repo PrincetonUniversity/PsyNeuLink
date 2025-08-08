@@ -837,7 +837,6 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        # # MODIFIED 7/10/24 OLD:
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
                 self.device = torch.device('cuda')
@@ -849,28 +848,6 @@ class AutodiffComposition(Composition):
         else:
             self.device = device
             self.torch_dtype = None
-        # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
-        #  FIX: ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
-        # if device is None:
-        #     # Try setting device by default
-        #     if not disable_cuda and torch.cuda.is_available():
-        #         if cuda_index is None:
-        #             self.device = torch.device(CUDA)
-        #         else:
-        #             self.device = torch.device('cuda:' + str(cuda_index))
-        #     elif torch_available:
-        #         if torch.backends.mps.is_available():
-        #             from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
-        #             try:
-        #                 self.device = torch.device(MPS)
-        #                 test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
-        #             except AssertionError:
-        #                 self.device = torch.device(CPU)
-        #         else:
-        #             self.device = torch.device(CPU)
-        # else:
-        #     self.device = device
-        # # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
@@ -973,20 +950,10 @@ class AutodiffComposition(Composition):
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
-            # # MODIFIED 6/24/25 OLD:
-            # # Only consider pathways with 1 or 3 or more components (input -> projection -> ... -> output)
-            # #    since can't learn on only one mechanism (len==1)
-            # #    and a pathway can't have just one mechanism and one projection (len==2)
-            # # if len(pathway) >= 3:
-            # #     return pathway
-            # # else:
-            # #     return []
-            # MODIFIED 6/24/25 NEW:
             # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
             assert len(pathway)%2, \
                 f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
             return pathway
-            # MODIFIED 6/24/25 END
 
         # breadth-first search starting with input node
         while len(queue) > 0:
@@ -1133,6 +1100,7 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       refresh=None, base_context=Context(execution_id=None))->PytorchCompositionWrapper:
         """Builds a Pytorch representation of the AutodiffComposition
+
         Constructs PytorchCompositionWrapper that is used for learning in PyTorch.
             - if *learning_rate* is specified:
                 - as a dict (in a direct call):
@@ -1144,7 +1112,18 @@ class AutodiffComposition(Composition):
         A new pytorch_representation is constructed if:
             - none yet existis
             - refresh is specified
+
+        REFRESH:
         If called from the command_line more than once without refresh specified, warns and ignores
+
+        LEARNING_RATES:
+        learning_rates specified in the **learning_rate** argument of the constructor for the Compostion
+        are used by default (stored in self._learning_rates_dict). If a numeric value is specified in the
+        **learning_rate** argument of the call to _build_pytorch_representation, that is used as the
+        Composition's default learning_rate for the pytorch_representation constructed here; if a dict is
+        specified, it is used to replace the values for the specified Projections (and the Composition, if
+        DEFAULT_LEARNING_RATE is specified in the dict).
+
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
@@ -1188,19 +1167,15 @@ class AutodiffComposition(Composition):
                 if isinstance(proj, str):
                     proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
                 proj.parameters.learning_rate.set(lr, context)
+            assert self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
         if default_learning_rate is None:
             default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
         else:
             # BREADCRUMB: IS IT OK TO SET DEFAULT learning_rate FOR COMPOSITION HERE, EVEN IF IT IS IN CONTEXT?
             self.parameters.learning_rate.set(default_learning_rate, context)
         # BREADCRUMB: NOW THAT _runtime_learning_rate HAS BEEN ASSIGNED TO default_learning_rate, JUST USE THAT?
-        # MODIFIED 6/29/25 OLD:
         if self._runtime_learning_rate is not None:
             optimizer_params.update({DEFAULT_LEARNING_RATE: self._runtime_learning_rate})
-        # # MODIFIED 6/29/25 NEW:
-        # if default_learning_rate is not None:
-        #     optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
-        # MODIFIED 6/29/25 END
 
         if (old_opt is None or refresh) and refresh is not False:
             # Instantiate a new optimizer if there isn't one yet or refresh has been called and is not blocked)
@@ -1225,6 +1200,7 @@ class AutodiffComposition(Composition):
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
                                                                     context)
+
         elif context.source is ContextFlags.SHOW_GRAPH:
         # Don't bother updating for call to show_graph()
                 pass

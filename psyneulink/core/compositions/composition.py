@@ -198,7 +198,7 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
         the Composition.
 
     COMMENT:
-    The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
+    The following set of `learning pathway methods <Composition_Learning_Methods>` can be used to add `Pathways
         <Component_Pathway>` that implement `learning <Composition_Learning>` to an existing Composition:
     COMMENT
 
@@ -856,16 +856,16 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-*Supervised Learning Methods*
-=============================
+*Supervised Learning Pathway Methods*
+=====================================
 
 Supervised learning is implemented in a Composition by specifying a `learning Pathway <Composition_Learning_Pathway>`
 in the **pathways** argumemt of the Composition's constructor, its `add_pathways <Composition.add_pathways>` method,
-or one of its learning methods.  If the constructor or `add_pathways <Composition.add_pathways>` method is used,
+or one of its learning pathway methods.  If the constructor or `add_pathways <Composition.add_pathways>` method is used,
 then the `Pathway specification <Pathway_Specification>` must be the first item in a tuple, followed by a
 `LearningFunction` as its 2nd item that specfies the type of learning.  Alternatively, a `learning Pathway
 <Composition_Learning_Pathway>` can be added to a Composition by specifying the `Pathway` to be learned in the one
-of the Composition's learning methods, of which there are currently three:
+of the Composition's learning pathway methods, of which there are currently three:
 
     • `add_reinforcement_learning_pathway` -- uses `Reinforcement`;
     • `add_td_learning_pathway` -- uses `TDLearning`;
@@ -887,7 +887,7 @@ matches as closely as possible a target value `specified as input <Composition_T
 `learn <Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their
 `function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
-`learning methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
+`learning pathway methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
 <Pathway.learning_components>` attribute is assigned a dict containing the set of learning components generated for
 the Pathway, as described below.
 
@@ -897,7 +897,8 @@ the Pathway, as described below.
 ================================
 
 For each `learning pathway <Composition_Learning_Pathway>` specified in the **pathways** argument of a Composition's
-constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
+constructor or one of its `learning pathway methods <Composition_Learning_Methods>`, it creates the following
+Components,
 and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
@@ -989,7 +990,7 @@ each the learning method determines how the sequence to be added relates to any 
 intersects, and automatically creates andconfigures the relevant learning components so that the error terms are
 properly computed and propagated by each LearningMechanism to the next in the configuration. It is important to note
 that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
-the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
+the individual sequences specified in the `learning pathway methods <Composition_Learning_Methods>` when building the
 Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
 method projects to a *OBJECTIVE_MECHANISM*, this may be superseded if multiple sequences are created. This is the
 case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
@@ -1127,6 +1128,13 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
         Specifying *learning_rate* as a dict using Projection name(s) as key(s) can be useful at construction
         when the Projection itself may not yet have been constructed.
 
+    .. hint::
+        The learning_rate assigned to an individual Projection in a dict specified in the Composition's constructor
+        can be accessed by calling by ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``,
+        and a value assigned in the Composition's `learn <Composition.learn>` method can be accessed by calling
+        ``<MappingProjection>.parameters.learning_rate.get(<context>)``, where *<context>* is the value of the
+        **context** argument of the `learn <Composition.learn>` method (the default is the name of the Composition).
+
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::
@@ -1236,7 +1244,7 @@ COMMENT:
 COMMENT
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
 efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
-is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning methods
+is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning pathway methods
 <Composition_Learning_Methods>` -- in fact, they *cannot* be specified (see `warning
 <Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically constructs all of the components
 needed for learning. While learning in an AutodiffComposition is currently restricted to the `BackPropagation` learning
@@ -8067,9 +8075,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(n, tuple):
                     nodes[nodes.index(n)] = n[0]
 
-        # BREADCRUMB: SHOULD PASS PROJECTIONS FROM PATHWAY RATHER THAN projections THEMSELVES,
-        #             (SINCE "PROXIES" MAY BE USED IN PATHWAY FOR PROJECTIONS TO NESTED COMPOSITIONS)
-        #             OR MAP FROM PROJECTIONS TO PROXIES FOR LEARNING RATE ASSIGNMENTS
         self._assign_learning_rates(projections)
 
         specified_pathway = pathway
@@ -8184,7 +8189,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         See `Composition_Learning` for a more detailed description of how learning is implemented in a
         Composition, including the `learning components <Composition_Learning_Components>` that are created,
-        as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
+        as well as other `learning pathway methods <Composition_Learning_Methods>` that can be used to implement
+        specific
         algorithms.
 
         The `learning components <Composition_Learning_Components>` created are placed in a dict
@@ -8379,7 +8385,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if proj_lr is not None:
                 # Keep Projection's specified learning_rate, as it takes precedence over pathway learning_rate
                 #   (see `Composition_Learning_Rate_Precedence_Hierarchy`)
-                # BREADCRUMB:  SHOULD CONTEXT BE DEFAULT_SUFFIX HERE??
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
@@ -8387,10 +8392,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _lr = learning_mech_lr if learning_mech_lr is not None else learning_rate
                 _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
                 learnable_projection.parameters.learning_rate.set(_lr, _context)
-                # BREADCRUMB:  THE FOLLOWING
-                self.learning_rates_dict[learnable_projection.name] = _lr
-                # # SHOULD BE:
-                # self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
+                self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
 
         return learning_pathway
 
@@ -9424,8 +9426,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         not_learnable = []
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
-        # MODIFIED 7/23/25 OLD:
-        _context = context or self.name + DEFAULT_SUFFIX
+        context = context or self.name + DEFAULT_SUFFIX
 
         for proj in projections:
             _is_proxy = hasattr(proj, PROXY_FOR_ATTRIB)
@@ -9438,17 +9439,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign Projection's learning_rate to learning_rates_dict if it is not already specified in the dict
                 learning_rates_dict[proj_name] = proj.parameters.learning_rate.get(None) if proj.learnable else False
             # Set Projection's learning_rate to specified value in <Composition.name>_default context
-            # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
-            #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED;
-            #              NEED TO USE get(context=<Composition.name>_default) TO SEE IT
-            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], _context)
+            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
             if _is_proxy:
-                proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], _context)
+                proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
         if not_learnable:
             raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
                                    f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
                                    f"'learnable' attribute is set to True or remove them from the dict.")
-        assert True
 
     def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP

@@ -309,33 +309,33 @@ default_lr = .01
 
 class TestAutodiffLearningRateArgs:
     test_args = [
-        # NOTES:
-        #   Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
-        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
-        #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
-        #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
-        ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
-        # learn() lr
-        ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
-        # learn() lr overrides constructor lr
-        ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
-        # Projection lr (in constructor)
-        ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
-        ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
-        # Projection lr overrides learn() lr
-        ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
-        ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
-        # # learning_rate dict in Autodiff constructor overrides Projection lr
-        ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
-        ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
-        # learning_rate dict in learn() overrides Projection lr
-        ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
-        ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
-        # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
-        ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
-        ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
-        # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
-        #                                (use two different Projection lr's to be sure they don't matter)
+        # # NOTES:
+        # #   Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        # #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
+        # #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
+        # #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
+        # ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
+        # # learn() lr
+        # ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
+        # # learn() lr overrides constructor lr
+        # ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
+        # # Projection lr (in constructor)
+        # ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
+        # ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
+        # # Projection lr overrides learn() lr
+        # ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
+        # ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
+        # # # learning_rate dict in Autodiff constructor overrides Projection lr
+        # ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
+        # ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
+        # # learning_rate dict in learn() overrides Projection lr
+        # ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
+        # ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
+        # # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
+        # ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
+        # ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
+        # # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
+        # #                                (use two different Projection lr's to be sure they don't matter)
         ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False, inpt_learn_ovrd),
         ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,  hid_learn_ovrd),
         ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False, inpt_learn_ovrd),
@@ -514,7 +514,8 @@ class TestAutodiffLearningRateArgs:
         learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
                                                    outer_comp.get_target_nodes()[0]: [[1]]},
                                            num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
-                                           learning_rate={input_proj:12, "NESTED 2 PROJ BC": 13,
+                                           learning_rate={input_proj:12,
+                                                          "NESTED 2 PROJ BC": 13,
                                                           nested_2_proj_DE: 15})
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
@@ -561,20 +562,23 @@ class TestAutodiffLearningRateArgs:
 
             # BREADCRUMB:  NEED TO FIX HANDLING OF refresh (ASSIGNS learning_rate DICT AS ACTUAL PARAM VALUE
             # change a projection learning_rate for composition using another call to _build_pytorch_representation()
-            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14},
-                                                                   refresh=True)
+            # # MODIFIED 7/30/25 OLD:
+            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14})
+            # MODIFIED 7/30/25 END
             # pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             # check that it has taken effect:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
-            # check that it has taken been assigned as default (in _optimizer_constructor_params);
+            # check that it has been assigned as default (in _optimizer_constructor_params);
             #     i.e., that it persists after a call to learn():
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                                                learning_rate={"NESTED 2 PROJ BC": 99},)
-            pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
-            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            pytorch_rep_constructor = outer_comp.parameters.pytorch_representation.get(None)
+            assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
             # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
             learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
@@ -3874,6 +3878,8 @@ class TestMiscTrainingFunctionality:
         # inner_comp = AutodiffComposition(pathways=inner_pathway,
         #                                  learning_rate=inner_comp_lr,
         #                                  name="INNER COMP")
+
+        # BREADCRUMB
         inner_comp = AutodiffComposition(learning_rate=inner_comp_lr,
                                          name="INNER COMP")
         inner_comp.add_backpropagation_learning_pathway([inner_node_input,
@@ -3882,20 +3888,22 @@ class TestMiscTrainingFunctionality:
                                                          inner_proj_2,
                                                          inner_node_output],
                                                         learning_rate = pathway_lr)
+        # BREADCRUMB
         # Check inner_comp assignments from constructor
-        inner_comp._build_pytorch_representation()
-        inner_pytorch_rep = inner_comp.pytorch_representation
+        inner_pytorch_rep = inner_comp._build_pytorch_representation()
         # Ensure that params were assigned appropriate lr for the inner_comp
         assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
         assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
 
         # Construct outer Composition with nested inner
         outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
+
+        # BREADCRUMB
         outer_comp = AutodiffComposition([inner_comp, outer_node], learning_rate=outer_comp_lr, name="OUTER COMP")
 
         # Check outer_comp assignments from constructor
-        outer_comp._build_pytorch_representation()
-        outer_pytorch_rep = outer_comp.pytorch_representation
+        # BREADCRUMB
+        outer_pytorch_rep = outer_comp._build_pytorch_representation()
         outer_proj = outer_comp.nodes[-1].afferents[0]
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
@@ -3920,6 +3928,8 @@ class TestMiscTrainingFunctionality:
             proj_1_expected = outer_learn_lr or proj_1_lr or self.default
             proj_2_expected = outer_learn_lr or proj_2_lr or self.default
             outer_proj_expected = outer_learn_lr or outer_learn_lr or self.default
+
+        # BREADCRUMB
         outer_comp.learn(inputs={inner_node_input:[[1]]},
                          learning_rate=learning_rate_arg)
         learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
@@ -3931,6 +3941,7 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_inner
         assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
 
+        # BREADCRUMB
         # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg
         outer_comp.learn(inputs={inner_node_input:[[1]]})
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner

@@ -133,6 +133,13 @@ Learning can be disabled for a MappingProjection by specifying its **learnable**
 constructor.  This can be useful for disabling specific MappingProjections in the `learning pathway
 `learning pathway <Composition_Learning_Pathway>` of a `Composition`.
 
+By default, the `learning_rate <MappingProjection.learning_rate>` for a MappingProjection is `None`, which causes
+it to inherit the value of the `learning_rate <Composition.learning_rate>` Parameter of the `Composition` to which it
+belongs (if any).  However, a specific value for the `learning_rate <MappingProjection.learning_rate>` can be
+assigned in the **learning_rate** argument of the MappingProjection's constructor, or in the `learn method
+<Composition_Learning_Methods>` of the `Composition` to which it belongs. See
+`learning_rate <MappingProjection.learning_rate>` and `XXX COMPOSITION for additional details.
+
 See `LearningMechanism` for an overview of `learning components <LearningMechanism_Overview>` and a detailed
 description of `LearningMechanism_Learning_Configurations`; `Composition_Learning` for a description of how learning
 is implemented within a `Composition`;  `MappingProjection_Learning` below for a description of how learning
@@ -172,8 +179,8 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 <MappingProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
-is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway` or
-`learning methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
+is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway`, one of the `add learning
+`pathway methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
 `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _MappingProjection_Structure:
@@ -406,14 +413,21 @@ class MappingProjection(PathwayProjection_Base):
 
     learning_rate : float, int, bool or None
         determines Projection-specific learning_rate, that takes effect only if the MappingProjection's `learnable
-        <MappingProjection.learnable>` attribute is True.  If it is a numeric value, that value is used, unless it
-        is overridden by a value specified for the MappingProjection in the `learning method
+        <MappingProjection.learnable>` attribute is True. If it is a numeric value, that value is used, unless it
+        is overridden by a value specified for the MappingProjection in the `learn method
         <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
         additional details); if it is ``False`` no learning occurs, even if `learnable <MappingProjection.learnable>`
         attribute is ``True``; however, this can later be changed, and also overidden by a specification of the
-        learning_rate for the MappingProjection in the `learning method <Composition_Learning_Methods>` of the
+        learning_rate for the MappingProjection in the `learn method <Composition_Learning_Methods>` of the
         Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
         `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
+        The value assigned to *learning_rate* in the MappingProjection at construction is saved in
+        <MappingProjection.learning_rate, and remains the same even if the Projection has been assigned a different
+        learning rate in a Composition; if that is the case, a value assigned in the constructor to a Composition
+        can be accessed by calling ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``,
+        and a value assigned in the Composition's `learn <Composition.learn>` method can be accessed by calling
+        <MappingProjection>.parameters.learning_rate.get(<context>) (see `Composition_Learning_Rate` for additional
+        details.
 
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
@@ -459,7 +473,7 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
 
         """
-        learning_rate = Parameter(None, stateful=True)
+        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
         function = Parameter(MatrixTransform, stateful=False, loggable=False)
         matrix = FunctionParameter(DEFAULT_MATRIX,
                                    setter=_mapping_projection_matrix_setter)
