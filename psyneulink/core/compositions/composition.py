@@ -9425,7 +9425,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get learning_rates_dict for Composition's constructor
         learning_rates_dict = self.parameters.learning_rates_dict.get(None)
         # MODIFIED 7/23/25 OLD:
-        context = context or self.name + DEFAULT_SUFFIX
+        _context = context or self.name + DEFAULT_SUFFIX
 
         for proj in projections:
             _is_proxy = hasattr(proj, PROXY_FOR_ATTRIB)
@@ -9441,13 +9441,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # BREADCRUMB:  ADD NOTE TO DOCUMENTATION THAT LEARNING_RATE ASSIGNED TO A PROJECTION IN A COMPOSITION'S
             #              CONSTRUCTOR WILL NOT SHOW UP WHEN THE PROJECTION'S LEARNING_RATE IS INSPECTED;
             #              NEED TO USE get(context=<Composition.name>_default) TO SEE IT
-            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
+            proj.parameters.learning_rate.set(learning_rates_dict[proj_name], _context)
             if _is_proxy:
-                proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], context)
+                proj._proxy_for.parameters.learning_rate.set(learning_rates_dict[proj_name], _context)
         if not_learnable:
             raise CompositionError(f"The following Projection(s) in the dict specified for the 'learning_rate' arg of "
                                    f"'{self.name}' are not learnable: '{', '.join(not_learnable)}'; check that their "
                                    f"'learnable' attribute is set to True or remove them from the dict.")
+        assert True
 
     def _get_back_prop_error_sources(self, efferents, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
