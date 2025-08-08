@@ -9413,7 +9413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_rate
 
     def _assign_learning_rates(self, projections=None, context=None):
-        """Assign specified learning_rates for context to Projections & build dict of learning_rates for all Projections
+        """Assign specified learning_rates for context to Projections & build learning_rates_dict for all Projections
         """
         from psyneulink.library.compositions import AutodiffComposition
         projections = projections or []
