@@ -1007,6 +1007,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
         composition = self.composition
 
+        # BREADCRUMB: ?IS THIS STILL NEEDED:
+        # Set Composition default learning rate for the current context
         comp_lr = run_time_default_learning_rate or composition.parameters.learning_rate.get(context)
         self.composition.parameters.learning_rate.set(comp_lr, context)
 
@@ -1021,72 +1023,161 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Get each param in the param_groups
             default_learning_rate = old_param_group['lr']
             for param in old_param_group['params']:
-                projection = self._torch_params_to_projections(old_param_groups)[param]
-                torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
-                proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
-                if source == CONSTRUCTOR:
-                    proj_lr = projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
-                else:
-                    proj_lr = projection.parameters.learning_rate.get(context)
-                proj_comp_lr = proj_composition.parameters.learning_rate.get(context)
 
-                # Get default learning_rate if specified in learn() method
-                specified_learning_rate = run_time_default_learning_rate
-                lr_specified_in_learn = False
-                if source == LEARN_OVERRIDE and optimizer_params_user_parsed:
-                    # Get learning_rate specified for Projection by the user in learn(),
-                    #   which should take precedence over all other specs
-                    if projection.name in optimizer_params_user_parsed:
-                        specified_learning_rate = optimizer_params_user_parsed[projection.name].value
-                        lr_specified_in_learn = True
-                    elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
-                        specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
-                        lr_specified_in_learn = True
-                # If not specified, mark 'NotImplemented' for assignment below (since 'None' is a valid specification)
-                if specified_learning_rate is None:
+                # # MODIFIED 8/9/25 OLD:
+                # projection = self._torch_params_to_projections(old_param_groups)[param]
+                # torch_param_name = self._pnl_refs_to_torch_param_names[projection.name].param_name
+                # proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+                #
+                # # Get learning rate
+                # if source == CONSTRUCTOR:
+                #     proj_lr = projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
+                # else:
+                #     proj_lr = projection.parameters.learning_rate.get(context)
+                # proj_comp_lr = proj_composition.parameters.learning_rate.get(context)
+                #
+                # # Get default learning_rate if specified in learn() method
+                # specified_learning_rate = run_time_default_learning_rate
+                # lr_specified_in_learn = False
+                # if source == LEARN_OVERRIDE and optimizer_params_user_parsed:
+                #     # Get learning_rate specified for Projection by the user in learn(),
+                #     #   which should take precedence over all other specs
+                #     if projection.name in optimizer_params_user_parsed:
+                #         specified_learning_rate = optimizer_params_user_parsed[projection.name].value
+                #         lr_specified_in_learn = True
+                #     elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
+                #         specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
+                #         lr_specified_in_learn = True
+                # # If not specified, mark 'NotImplemented' for assignment below (since 'None' is a valid specification)
+                # # MODIFIED 8/9/25 OLD:
+                # if specified_learning_rate is None:
+                # # # MODIFIED 8/9/25 NEW:
+                # # if specified_learning_rate is None or (not lr_specified_in_learn and proj_lr not in {None, True}):
+                # # MODIFIED 8/9/25 END
+                #     specified_learning_rate = NotImplemented
+                # if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
+                #     raise AutodiffCompositionError(
+                #         f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
+                #         f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
+                #         f"it must be an int, float, bool or None.")
+                # specified_learning_rate = False if proj_lr is False else specified_learning_rate
+                # if proj_composition.enable_learning is False or projection.learnable is False:
+                #     # Disable learning for Projection if:
+                #     # - its learnable attribute is False
+                #     # - enable_learning is False for the Compositions to which it belongs
+                #     specified_learning_rate = False
+                #     projection.parameters.learning_rate._set(False, context)
+                #     param.requires_grad = False
+                # else:
+                #     # Learning is enabled for the Projection
+                #     # If learning_rate = True or None, use composition.learning_rate, else use specified value
+                #     if specified_learning_rate is NotImplemented:
+                #         specified_learning_rate = proj_lr
+                #     # Otherwise, use learning_rate specified at run time or in constructor for Composition
+                #     param.requires_grad = False if specified_learning_rate is False else True
+                #     if specified_learning_rate in {True, None}:
+                #         # If a Projection is specified as None in learn(), that should be assigned to
+                #         #             proj_default_lr here, to be used in assignment below
+                #         proj_default_lr = (specified_learning_rate if lr_specified_in_learn else
+                #                            projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX))
+                #         if proj_default_lr is True:
+                #             # Force call to _get_default_composition_learning_rate() under 'else' below
+                #             proj_default_lr = None
+                #         if proj_comp_lr is False or comp_lr is False:
+                #             # Composition or Projection specification of False takes precedence over runtime spec
+                #             specified_learning_rate = False
+                #         else:
+                #             # Use either run_time learning_rate, projection's default, or learning_rate for Composition,
+                #             # giving precedence to one to which the Projection belongs if it is in a nested Composition
+                #             specified_learning_rate = \
+                #                 (run_time_default_learning_rate or proj_default_lr or
+                #                  self._get_default_composition_learning_rate(proj_composition, composition, context))
+                #
+                #     assert specified_learning_rate not in (None, NotImplemented),\
+                #         f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"
+
+
+
+                # MODIFIED 8/9/25 NEW:
+
+                def _get_specified_learning_rate(param, context, source):
+                    """Get learning_rate specified for Projection by the user
+                    Specification should be made with following precedence (highest first)
+                        Projection-specific in call to learn() [optimizer_params_user_specs]
+                        Projection-specific in composition.learning_rates_dict(context) [_optimizer_constructor_params]
+                        run_time_default_learning_rate
+                        Composition.learning_rate(context) for the Composition to which the Projection belongs
+                    """
+                    projection = self._torch_params_to_projections(old_param_groups)[param]
+                    proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+                    proj_comp_lr = self._get_default_composition_learning_rate(proj_composition, composition, context)
                     specified_learning_rate = NotImplemented
-                if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
-                    raise AutodiffCompositionError(
-                        f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
-                        f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
-                        f"it must be an int, float, bool or None.")
-                specified_learning_rate = False if proj_lr is False else specified_learning_rate
-                if proj_composition.enable_learning is False or projection.learnable is False:
-                    # Disable learning for Projection if:
-                    # - its learnable attribute is False
-                    # - enable_learning is False for the Compositions to which it belongs
-                    specified_learning_rate = False
-                    projection.parameters.learning_rate._set(False, context)
-                    param.requires_grad = False
-                else:
-                    # Learning is enabled for the Projection
-                    # If learning_rate = True or None, use composition.learning_rate, else use specified value
-                    if specified_learning_rate is NotImplemented:
-                        specified_learning_rate = proj_lr
-                    # Otherwise, use learning_rate specified at run time or in constructor for Composition
-                    param.requires_grad = False if specified_learning_rate is False else True
-                    if specified_learning_rate in {True, None}:
-                        # If a Projection is specified as None in learn(), that should be assigned to
-                        #             proj_default_lr here, to be used in assignment below
-                        proj_default_lr = (specified_learning_rate if lr_specified_in_learn else
-                                           projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX))
-                        if proj_default_lr is True:
-                            # Force call to _get_default_composition_learning_rate() under 'else' below
-                            proj_default_lr = None
-                        if proj_comp_lr is False or comp_lr is False:
-                            # Composition or Projection specification of False takes precedence over runtime spec
+
+                    # # Try getting Projection-specific learning_rate
+                    # if source == CONSTRUCTOR:
+                    #     # BREADCRUMB: SHOULD THIS JUST BE FROM _optmizer_constructor_params?
+                    #     specified_learning_rate = (
+                    #         projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX))
+                    # elif source == LEARN_OVERRIDE:
+                    #     specified_learning_rate = projection.parameters.learning_rate.get(context)
+                    #     if optimizer_params_user_parsed:
+                    #         # Give precedence to learning_rate specified for Projection by the user in learn(),
+                    #         if projection.name in optimizer_params_user_parsed:
+                    #             specified_learning_rate = optimizer_params_user_parsed[projection.name].value
+                    #         elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
+                    #             specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
+                    # else:
+                    #     assert False, f"PROGRAM ERROR: source must be CONSTRUCTOR or LEARN_OVERRIDE, not {source}"
+
+                    specified_learning_rate = \
+                        projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
+
+                    if optimizer_params_user_parsed:
+                        # Give precedence to learning_rate specified for Projection by the user in learn(),
+                        if projection.name in optimizer_params_user_parsed:
+                            specified_learning_rate = optimizer_params_user_parsed[projection.name].value
+                        elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
+                            specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
+
+                    # No Projection-specific learning_rate specified, so get default one
+                    if specified_learning_rate in {None, True}:
+                        if (specified_learning_rate is None and proj_comp_lr is False):
                             specified_learning_rate = False
                         else:
                             # Use either run_time learning_rate, projection's default, or learning_rate for Composition,
                             # giving precedence to one to which the Projection belongs if it is in a nested Composition
-                            specified_learning_rate = \
-                                (run_time_default_learning_rate or proj_default_lr or
-                                 self._get_default_composition_learning_rate(proj_composition, composition, context))
+                            specified_learning_rate = (run_time_default_learning_rate or proj_comp_lr)
 
-                    assert specified_learning_rate not in (None, NotImplemented),\
-                        f"PROGRAM ERROR: learning_rate for '{projection.name}' is None or NotImplemented"
+                    if not isinstance(specified_learning_rate, (int, float, bool, type(None), type(NotImplemented))):
+                        raise AutodiffCompositionError(
+                            f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
+                            f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
+                            f"it must be an int, float, bool or None.")
+
+                    if proj_composition.enable_learning is False or projection.learnable is False:
+                        specified_learning_rate = False
+                        projection.parameters.learning_rate._set(False, context)
+                        param.requires_grad = False
+                    else:
+                        # Learning is enabled for the Projection
+                        # If learning_rate = True or None, use composition.learning_rate, else use specified value
+                        # Otherwise, use learning_rate specified at run time or in constructor for Composition
+                        param.requires_grad = False if specified_learning_rate is False else True
+
+                        assert specified_learning_rate not in {None, NotImplemented}, \
+                            (f"PROGRAM ERROR: Unable to determine learning_rate ({specified_learning_rate}) "
+                             f"for '{projection.name}'")
+
+                    return specified_learning_rate
+
+                specified_learning_rate = _get_specified_learning_rate(param, context, source)
+
+                # MODIFIED 8/9/25 END
+
+
+
+                # Move param from existing param_group to one for the specified learning_rate
                 if specified_learning_rate != old_param_group['lr']:
-                    # Move param from existing param_group to one for the specified learning_rate
                     # NOTE: removal of param from param_group must be done by identity using del, since
                     #       param_group.remove() is content-based and some parameters may have identical values
                     del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])

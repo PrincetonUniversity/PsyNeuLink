@@ -1214,7 +1214,7 @@ determining the learning_rate for a Projection used at execution:
       If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
       assigned the default learning_rate for the nested Composition to which it belongs, and not any outer ones;
       if nested Projections should be assigned the learning_rate of an outer Composition, then that value should be
-      specified in the **learning_rate** argument for the constructor of the nested Composition.
+      specified in the **learning_rate** argument for the constructor for the nested Composition.
 
    .. note::
       `enable_learning <Composition.enable_learning>` (for a Composition) and `learnable <MappingProjection.learnable>`
