@@ -198,7 +198,9 @@ class TestStructural:
                     f"the learn() method for autodiff_composition.") in str(error_text.value)
             return
         pytorch_rep = autodiff._build_pytorch_representation()
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
+                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
+
         assert proj.learning_rate == proj_lr
         assert autodiff.learning_rate == comp_lr or .001
 
@@ -215,7 +217,8 @@ class TestStructural:
         # Test that learning_rate specs are restored to their original values at construction
         autodiff.learn(inputs=autodiff.get_input_format(),
                        execution_mode=pnl.ExecutionMode.PyTorch)
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
+                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
         assert proj.learning_rate == proj_lr
         assert autodiff.learning_rate == comp_lr or .001
 
