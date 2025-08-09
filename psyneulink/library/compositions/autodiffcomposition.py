@@ -1191,6 +1191,7 @@ class AutodiffComposition(Composition):
 
         # BREADCRUMB: COMMENT OR REFACTOR THIS TO CLARIFY CONDITIONS UNDER WHICH IT IS NEEDED:
         if self._runtime_learning_rate is not None:
+            # If _runtime_learning_rate has been specified in call to learn(), make sure that is used
             optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
 
         if (old_opt is None or new) and new is not False:

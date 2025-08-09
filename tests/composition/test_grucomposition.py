@@ -560,10 +560,10 @@ class TestExecution:
                 [input_mech, input_proj, gru, output_proj, output_mech],
                     learning_rate=learning_rates_dict if constr else None)
             pytorch_rep = outer._build_pytorch_representation()
-            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
 
             # Test assignment of learning_Rate on learning
             results = outer.learn(
@@ -581,10 +581,10 @@ class TestExecution:
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
                 learning_rate=None)
-            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr if constr else .001
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr if constr else .001
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
 
 
     @pytest.mark.parametrize("bias", [False, True])
