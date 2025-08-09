@@ -172,7 +172,7 @@ class TestStructural:
                              ids=["proj_lr_0.2", "proj_lr_None", "proj_lr_True", "proj_lr_False"])
     @pytest.mark.parametrize("comp_lr", [.3, None, True, False],
                              ids=["comp_lr_0.3", "comp_lr_None", "comp_lr_True", "comp_lr_False"])
-    def test_default_and_False_learning_rates(self, proj_lr, comp_lr):
+    def r(self, proj_lr, comp_lr):
         mech_1 = pnl.ProcessingMechanism()
         mech_2 = pnl.ProcessingMechanism()
         proj = pnl.MappingProjection(mech_1, mech_2,

@@ -386,17 +386,12 @@ class TestAutodiffLearningRateArgs:
         constructor_learning_rate_dict = {input_proj: .3 if constructor_dict_param == 'input' else None,
                                           nested_proj: .3 if constructor_dict_param == 'hidden' else None,
                                           pnl.DEFAULT_LEARNING_RATE: constructor_lr}
-        # MODIFIED 8/9/25 OLD:
-        # learn_method_learning_rate_dict = {input_proj: .2 if learn_dict_param == 'input' else None,
-        #                                    nested_proj: .2 if learn_dict_param == 'hidden' else None,
-        #                                    pnl.DEFAULT_LEARNING_RATE: learn_method_lr}
-        # MODIFIED 8/9/25 NEW:
+
         learn_method_learning_rate_dict = {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}
         if learn_dict_param == 'input':
             learn_method_learning_rate_dict.update({input_proj: .2})
         if learn_dict_param == 'hidden':
             learn_method_learning_rate_dict.update({nested_proj: .2})
-        # MODIFIED 8/9/25 END
 
         # Construct outer_comp
         outer_comp = pnl.AutodiffComposition(name='Outer Comp',
