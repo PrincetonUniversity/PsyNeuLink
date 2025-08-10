@@ -263,6 +263,15 @@ class TestStructural:
         ("inner_false",  None, False, None, None, None, None, .9, False, .001,  .001,  .9,  .9,  .9, False, .001, .001),
         ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
         ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
+        # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("inner_True_m",  True, False, None,  .4,   None, None, .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
+        # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
+        ("inner_True_o",  True, False, None, False, None, .5,   .9,  .5, False,  .5,   .9,  .9,  .9,  .5,  False, .5),
+        # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
+        ("inner_True_d",  True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9, .001, False,.001),
+        # inner_proj=True, all comps=False, should be forced to be False
+        ("i_True_all_f", True, False, None, False, None, False, .9,False, False, False, .9,  .9, .9, False,False,False),
     ]
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",

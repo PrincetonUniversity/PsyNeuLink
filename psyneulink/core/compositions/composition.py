@@ -1245,7 +1245,7 @@ determining the learning_rate for a Projection used at execution:
       assigning 'False' to the `learning_rate <Composition.learning_rate>` of the Composition to which it
       belongs or any within which that is nested, and forces use of a default value procured from a Composition
       within which it is nested; however, if there is no such Composition, or the outermost one is set to ``False``,
-      then that will apply.  Nevertheless, the safest way to fully disable learning for a Composition is to set its
+      then that will apply. Nevertheless, the safest way to fully disable learning for a Composition is to set its
       `enable_learning <Composition.enable_learning>` attribute to ``False``.
 
 .. _Composition_Learning_AutodiffComposition:
