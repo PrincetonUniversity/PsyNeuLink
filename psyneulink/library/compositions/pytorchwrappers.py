@@ -1094,8 +1094,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if specified_learning_rate in {None, True}:
             # No Projection-specific learning_rate specified, so get default one from a Composition in the hierarchy
             if (specified_learning_rate is None and proj_comp_lr is False):
-                # If Projectdion's learning_rate is None, then assign False
-                specified_learning_rate = False
+                # If Projection's learning_rate is None, then assign runtime value if specified, otherwise False
+                specified_learning_rate = run_time_default_learning_rate or False
             else:
                 # If Projection's learning_rate is:
                 #   - None and the Composition's is *not* False or
