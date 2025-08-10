@@ -1212,9 +1212,11 @@ determining the learning_rate for a Projection used at execution:
 
    .. hint::
       If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
-      assigned the default learning_rate for the nested Composition to which it belongs, and not any outer ones;
-      if nested Projections should be assigned the learning_rate of an outer Composition, then that value should be
-      specified in the **learning_rate** argument for the constructor for the nested Composition.
+      assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
+      specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
+      of the first Composition within which it is nested that has an explicitly specified `learning_rate
+      <Composition.learning_rate>`, or the default learning_rate for the outermost Composition if no Composition
+      learning_rates are explicitly specified.
 
    .. note::
       `enable_learning <Composition.enable_learning>` (for a Composition) and `learnable <MappingProjection.learnable>`
@@ -1235,10 +1237,11 @@ determining the learning_rate for a Projection used at execution:
       `learning_rate <Composition.learning_rate>` found in the nesting hierarchy (that is not ``False``), or the default
       learning_rate for the outermost Composition if no Composition learning_rates are explicitly specified; that is,
       specifying a Projection's `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against
-      the assignment of 'False' to the `learning_rate <Composition.learning_rate>` of the Composition to which it
-      belongs or any within which that is nested, and forces use of a default value procured from its Composition or
-      one within which it is nested.  To fully disable learning for a Composition, its `enable_learning
-      <Composition.enable_learning>` attribute should be set to ``False``.
+      assigning 'False' to the `learning_rate <Composition.learning_rate>` of the Composition to which it
+      belongs or any within which that is nested, and forces use of a default value procured from a Composition
+      within which it is nested; however, if there is no such Composition, or the outermost one is set to ``False``,
+      then that will apply.  Nevertheless, the safest way to fully disable learning for a Composition is to set its
+      `enable_learning <Composition.enable_learning>` attribute to ``False``.
 
 .. _Composition_Learning_AutodiffComposition:
 
