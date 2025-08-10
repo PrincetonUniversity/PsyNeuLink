@@ -1166,7 +1166,11 @@ higher level, more general ones. More specifically:
     learning and `nested Compositions <Composition_Nested>`)
 
   * 'False' specified for a Composition (in its constructor or `learn <Composition.learn>` method) only applies
-    to Projections within its scope that are assigned 'None' or 'True' (that is, it functions as the default).
+    to Projections within its scope that are assigned 'None' (that is, it functions as the default), and can be
+    overridden either by specifying the `learning_rate <MappingProjection.learning_rate>` of a Projectdion in a
+    `nested Composition <Composition_Nested>` to ``True`` (in which case it is assigned the first explicitly
+    specified Composition `learning_rate <Composition.learning_rate>` found in the nesting hierarchy, or by specifying
+    a numeric value for the **learning_rate** argument of the Composition's `learn <Composition.learn>` method.
 
 Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
 determining the learning_rate for a Projection used at execution:
@@ -1225,9 +1229,10 @@ determining the learning_rate for a Projection used at execution:
 
    .. warning::
       Setting the `learning_rate <Composotion.learning_rate>` to ``False`` does not necessarily disalbe learning for
-      the Composition; it only does so for Projections within its scope that are assigned 'None' or 'True'.  To fully
-      disable learning for a Composition, its `enable_learning <Composition.enable_learning>` attribute should be set
-      to ``False``.
+      the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
+      overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
+      <Composition.learn>` method.To fully disable learning for a Composition, its `enable_learning
+      <Composition.enable_learning>` attribute should be set to ``False``.
 
    .. note::
       specifying *learning_rate* as 'False' in the constructor or `learn() <Composition.learn>` method of a Composition
