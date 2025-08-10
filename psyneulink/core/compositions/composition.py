@@ -1155,7 +1155,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
 
 As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
 general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
-higher level, more general ones.  More specifically:
+higher level, more general ones. More specifically:
 
   * *projection-specific* specifications take precendence over those for a Composition's learning_rate;
 
@@ -1221,7 +1221,13 @@ determining the learning_rate for a Projection used at execution:
       (for Projections) take precedence over any other assignments; if either is ``False``, then no learning takes place
       for that object (though, for a Composition, learning may occur for Compositions nested within it).
 
-   COMMENT:  BREADCRUMB - UNCOMMENT ONCE IMPLEMENTED
+   .. warning::
+      Setting the `learning_rate <Composotion.learning_rate>` to ``False`` does not necessarily disalbe learning for
+      the Composition; it only does so for Projections within its scope that are assigned 'None' or 'True'.  To fully
+      disable learning for a Composition, its `enable_learning <Composition.enable_learning>` attribute should be set
+      to ``False``.
+
+   COMMENT:  BREADCRUMB - UNCOMMENT ONCE IMPLEMENTED;  CURRENTLY True functions like None
    .. note::
       specifying *learning_rate* as 'False' in the constructor or `learn() <Composition.learn>` method of a Composition
       applies only to Projections within its scope that are assigned 'None' (that is, it functions as the default for

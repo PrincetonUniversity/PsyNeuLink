@@ -140,22 +140,24 @@ for nested Compositions is inherited from the enclosing Composition unless it is
 ~~~~~~~~~~~~~~~~
 
 The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used to
-specify both a `learning_rate <AutodiffComposition.learning_rate>` for the entire AutodiffComposition and/or individual
-MappingProjections within it (see `Composition_Learning_rate` for details of specification). Learning_rates specified
-for individual MappingProjections are passed to the corresponding parameters of the AutodiffComposition's
+specify both a `learning_rate <AutodiffComposition.learning_rate>` for the entire AutodiffComposition and/or
+individual MappingProjections within it (see `Composition_Learning_rate` for details of specification). Learning_rates
+specified for individual MappingProjections are passed to the corresponding parameters of the AutodiffComposition's
 `pytorch_representation <AutodiffComposition.pytorch_representation>` when it is executed. Specifications made in the
-constructor for the AutodiffComposition are used for all executions of its `learn <AutodiffComposition.learn>`
-method. Specifications made in the call to the `learn() <AutodiffComposition.learn>` method itself are used only for
-that execution. A warning is issued if a learning_rate is specified for a Projection with a `learnable
-<MappingProjection.learnable>` attribute set to ``False``, and an error is generated if the Projection is associated
-with a PyTorch Parameter that is not learnable. See `Composition_Learning_rate` for additional information about
-specifying learning_rates, including how the `learning_rate <MappingProjection.learning_rate>` is determined for
-MappingProjections that are not expliclity specified.
+constructor for the AutodiffComposition are used as the default learning_rates for all executions of the `learn
+<AutodiffComposition.learn>`; specifications made in the call to the `learn() <AutodiffComposition.learn>` method
+override any made in the constructor, but are used only for that execution. A warning is issued if a learning_rate is
+specified for a Projection with a `learnable <MappingProjection.learnable>` attribute set to ``False``, and an error
+is generated if the Projection is associated with a PyTorch Parameter that is not learnable.
+See `Composition_Learning_rate` for additional information about specifying learning_rates, including how the
+`learning_rate <MappingProjection.learning_rate>` is determined for Projections that are not expliclity specified.
 
+COMMENT:
 .. note::
    An outermost AutodiffComposition's learning rate is applied to any `nested AutodiffCompositions
    <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
    <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
+COMMENT
 
 .. hint::
    To disable learning for a particular `MappingProjection` in an AutodiffComposition, specify either the
@@ -1615,9 +1617,14 @@ class AutodiffComposition(Composition):
 
         learning_rate : float, int, bool or dict : default 0.001
             specifies the learning rate(s) passed to the optimizer, that overrides any learning_rate specifications
-            made in AutodiffComposition constructor and/or individual MappingProjections. A dict can be used to specify
-            `MappingProjection`\\-specific learning_rate(s); if the dict is used, and it does not contain a
-            *DEFAULT_LEARNING_RATE* entry, then the default indicated above is used for all other MappingProjections
+            made in AutodiffComposition constructor and/or individual MappingProjections. If a value is specified,
+            it overrides the default learning rate for the Composition, and is used as the default learning rate for
+            all MappingProjections in the Composition (and any nested within it) that do not have a specific
+            learning_rate specified in their constructor.  A dict can be used to specify
+            `MappingProjection`\\-specific learning_rate(s); if it contains a *DEFAULT_LEARNING_RATE* entry,
+            that is used in the same was as specifing numeric value; if the dict does not contain a
+            *DEFAULT_LEARNING_RATE* entry, then the default indicated above is used for all MappingProjections
+            in the Composition, and MappingProjections in any nested Compositions use their default learning_rate
             (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
         synch_projection_matrices_with_torch : [LEARNING_SCALE_LITERALS] : Default None

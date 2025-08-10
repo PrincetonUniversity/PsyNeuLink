@@ -1094,6 +1094,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # No Projection-specific learning_rate specified, so get default one
         if specified_learning_rate in {None, True}:
             # If the default for the Composition to which the Projectdion belongs is False, impose that
+            # if (specified_learning_rate is None and proj_comp_lr is False):
             if (specified_learning_rate is None and proj_comp_lr is False):
                 specified_learning_rate = False
             else:
