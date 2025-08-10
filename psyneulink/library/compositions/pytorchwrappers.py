@@ -1084,33 +1084,43 @@ class PytorchCompositionWrapper(torch.nn.Module):
         specified_learning_rate = \
             projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
 
-        # Get Projection-specific learning_rate if specified in call to constructor or in learn()
         if optimizer_params_user_parsed:
+            # Get Projection-specific learning_rate if specified in call to constructor or in learn()
             if projection.name in optimizer_params_user_parsed:
                 specified_learning_rate = optimizer_params_user_parsed[projection.name].value
             elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
                 specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
 
-        # No Projection-specific learning_rate specified, so get default one
         if specified_learning_rate in {None, True}:
-            # If the default for the Composition to which the Projectdion belongs is False, impose that
-            # if (specified_learning_rate is None and proj_comp_lr is False):
+            # No Projection-specific learning_rate specified, so get default one from a Composition in the hierarchy
             if (specified_learning_rate is None and proj_comp_lr is False):
+                # If Projectdion's learning_rate is None, then assign False
                 specified_learning_rate = False
             else:
-                # Use either run_time learning_rate, or the Composition default learning_rate,
-                # giving precedence to one to which the Projection belongs if it is in a nested Composition
-                specified_learning_rate = (run_time_default_learning_rate or proj_comp_lr)
+                # If Projection's learning_rate is:
+                #   - None and the Composition's is *not* False or
+                #   - True, irrespective of whether Composition's *is* False,
+                # Then assign, in order of precedence:
+                #   - run_time learning_rate if that is specified,
+                #   - default learning_rate for Composition to which Projection belongs if that is explicitly specified,
+                #   - search up the nesting hierarchy for the first default learning_rate that is explicity specified
+                #   - default learning_rate for outermost Composition
+                specified_learning_rate = (run_time_default_learning_rate
+                                           or proj_comp_lr
+                                           or  self._get_default_composition_learning_rate(proj_composition,
+                                                                                           self.composition,
+                                                                                           context,
+                                                                                           ignore_false=True))
 
-        # Check for bad value
         if not isinstance(specified_learning_rate, (int, float, bool)):
+            # Check for bad value
             raise AutodiffCompositionError(
                 f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
                 f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
                 f"it must be an int, float, bool or None.")
 
-        # If learning is not enabled for the Projection or Composition, set learning_rate to False
         if proj_composition.enable_learning is False or projection.learnable is False:
+            # If learning is not enabled for the Projection or Composition, set learning_rate to False
             specified_learning_rate = False
             projection.parameters.learning_rate._set(False, context)
             param.requires_grad = False
@@ -1303,11 +1313,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def _torch_params_for_execution(self)->dict:
         return {proj: self.get_torch_learning_rate_for_projection(proj) for proj in self.wrapped_projections}
 
-    def _get_default_composition_learning_rate(self, nested_comp, outer_comp, context):
+    def _get_default_composition_learning_rate(self, nested_comp, outer_comp, context, ignore_false=False):
+        """Get learning_rate for first Composition for which a learning_rate has been explicitly specified
+        Search recursively through Composition hierarchy, from nested_comp to outer_comp, for first Composition
+        that has a learning_rate that is explicitly specified with a numeric value, returning default_learning_rate
+        for outer_comp if not is found;
+        If **ignore_false** is True, then search continues if the learning_rate for a Composition is False;
+        this is to accomodate assigning  a Projection's learning_rate as``True``, which "protects" if from False
+        and uses the first learning_rate found above its Composition in the hierarchy.
+         """
         comp_nesting_hierarchy = nested_comp._get_outer_compositions(outer_comp)
         for comp in comp_nesting_hierarchy:
             if comp.parameters.learning_rate._user_specified:
-                return comp.parameters.learning_rate.get(context)
+                comp_lr = comp.parameters.learning_rate.get(context)
+                if comp_lr is False and ignore_false:
+                    continue
+                return comp_lr
         return comp.parameters.learning_rate.get(context)
 
     def _optimizer_error(self, method:str):
