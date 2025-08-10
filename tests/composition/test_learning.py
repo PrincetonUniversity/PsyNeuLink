@@ -252,11 +252,12 @@ class TestStructural:
         # **c = expected learning_rate after construction
         # **l = expected lr's after 1st execution of learn() method with lr specifications
         # **r = expected lr's after 2nd execution of learn() method w/o lr specs (expect reset to constructor values)
-        # condition      ip    ic   m1    mc    op    oc     lr   ipc   m1c   o2c   ipl   m1l   o2l   ipr   m1r   o2r
-        ("None",        None, None, None, None, None, None,  .9, .001, .001, .001,  .9,   .9,   .9, .001, .001, .001),
-        ("inner",       None,  .1, None, None, None, None,   .9,  .1,  .001, .001,  .9,   .9,   .9,  .1,  .001,.001),
-        ("middle",      None, None, None,  .2, None, None,   .9,  .2,   .2,  .001,  .9,   .9,   .9,  .2,   .2, .001),
-        ("outer",       None, None, None, None, None, .3,    .9,  .3,   .3,   .3,   .9,   .9,   .9,  .3,   .3,   .3),
+        # condition      ip    ic   m1    mc    op    oc   learn()  ipc   m1c   o2c   ipl   m1l   o2l  ipr   m1r   o2r
+        ("None",        None, None, None, None, None, None,  .9,   .001, .001, .001,  .9,   .9,   .9, .001, .001, .001),
+        ("inner",       None,  .1,  None, None, None, None,  .9,    .1,  .001, .001,  .9,   .9,   .9,  .1,  .001 ,.001),
+        ("middle",      None, None, None,  .2,  None, None,  .9,    .2,   .2,  .001,  .9,   .9,   .9,  .2,   .2,  .001),
+        ("outer",       None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,   .9,   .9,  .3,   .3,   .3),
+        ("all",         None,  .1,  None,   .2, None,  .3,   .9,    .1,   .2,   .3,   .9,   .9,   .9,  .1,   .2,   .3),
     ]
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
