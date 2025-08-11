@@ -274,20 +274,11 @@ class TestStructural:
     ]
     test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
                          "d_icf": {DEFAULT_LEARNING_RATE: False},
-                         "d_mc": {"MIDDLE PROJECTION 1": .4,
-                                  DEFAULT_LEARNING_RATE: .5},
-                         "d_mcf": {"INNER PROJECTION": True,
-                                   "MIDDLE PROJECTION 1": .4,
-                                   DEFAULT_LEARNING_RATE: False},
-                         "d_oc": {"INNER PROJECTION": True,
-                                  "OUTER PROJECTION 2": .4,
-                                  DEFAULT_LEARNING_RATE: False},
-                         "d_lc": {"INNER PROJECTION": True,
-                                  "MIDDLE PROJECTION 1": .4,
-                                  DEFAULT_LEARNING_RATE: False},
-                         "d_lct": {"INNER PROJECTION": True,
-                                  "MIDDLE PROJECTION 1": .4,
-                                  "OUTER PROJECTION 2": .5}}
+                         "d_mc": {"MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: .5},
+                         "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                         "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
+                         "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                         "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5}}
 
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
