@@ -265,20 +265,24 @@ class TestStructural:
         # DICT ASSIGNMENTS
         ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,   .2,    .3, .001, .2,  .3,  .001,  .2,   .3, .001),
         ("d_mc",      None,  None,   .1, "d_mc", None, None,  None,   .5,    .4, .001, .5,  .4,  .001,  .5,   .4, .001),
-        # Note: below, inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
+        # Test that inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
         ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None,  .001,   .4,  .1, .001, .4,    .1, .001,  .4,   .1),
-        # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
+        # Test that inner_proj=False even though it is assigned True in dict since outer_comp default=False
         ("d_oc",      None,  None,  None, None, None, "d_oc", None,  False,False, .4, False,False, .4, False,False, .4),
         ("d_lc",       .1,   None,   .2,  None, .3,   None,  "d_lc",  .1,    .2,  .3, False, .4,   .3,  .1,   .2,   .3),
-        # Note: below, runtime assignment of True to inner_proj supercedes is assignment of inner_comp=False
+        # Test that runtime assignment of True to inner_proj supersedes assignment of inner_comp=False
         ("d_icf_lct", None, "d_icf", .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
         ("d_icf_lct", None,  False,  .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
-        # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
+        # Test that runtime specification of default=.6 supersedes inner_proj=None with inner_comp=False
         ("d_icf_lc",  None, "d_icf", .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
-        ("d_icf_lc",  None,  False,  .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3)
+        ("d_icf_lc",  None,  False,  .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
+        # Test that assignment of inner_proj=False is not overridden by runtime assignment of default_learning_rate=.6
+        ("if_lcn",    False, None,   .2, None,  .3,   None,   .6,    False,  .2,  .3, False, .2,   .3, False, .2,   .3),
+        ("d_if_lcn",  False, None,   .2, None,  .3,   None, "d_lcn", False,  .2,  .3, False, .4,   .5, False, .2,   .3)
     ]
     @pytest.fixture
     def test_nested_dicts(self):
+        # Need to make these a fixture so that popping DEFAULT_LEARNING_RATE doesn't interfere with other tests
         def _get_learning_rate_dicts(dict):
             test_nested_dicts = \
                 {"d_ic": {"INNER PROJECTION": .2},
