@@ -470,8 +470,6 @@ if args.enable_plot:
 #     plt.plot(x, np.mean(c_1, axis=0), 'r', label='congruent')
 #     plt.plot(x, np.mean(c_2, axis=0), 'b', label='incongruent')
 #     plt.plot(x, np.mean(c_3, axis=0), 'g', label='neutral')
-#     # plot neutral condition
-#
 #     plt.ylabel('Energy')  # add ylabel
 #     plt.xlabel('Cycle')  # add x label
 #     legend = ['congruent', 'incongruent', 'neutral']
