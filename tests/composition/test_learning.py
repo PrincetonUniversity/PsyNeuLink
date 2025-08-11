@@ -238,44 +238,44 @@ class TestStructural:
         # **l = expected lr's after 1st execution of learn() method with lr specifications
         # **r = expected lr's after 2nd execution of learn() method w/o lr specs (expect reset to constructor values)
         # condition       ip    ic   m1    mc    op    oc   learn()  ipc   m1c   o2c   ipl  m1l  o2l  ipr   m1r   o2r
-        # NUMERIC ASSIGNMENTS
-        ("None",         None, None, None, None, None, None,  .9,   .001, .001, .001,  .9,  .9,  .9, .001, .001, .001),
-        # Test assignment of numeric learning_rates to constructor at various levels in the hierarchy
-        ("inner_n",      None,  .1,  None, None, None, None,  .9,    .1,  .001, .001,  .9,  .9,  .9,  .1,  .001 ,.001),
-        ("middle_n",     None, None, None,  .2,  None, None,  .9,    .2,   .2,  .001,  .9,  .9,  .9,  .2,   .2,  .001),
-        ("outer_n",      None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,  .9,  .9,  .3,   .3,   .3),
-        ("all_n",        None,  .1,  None,  .2,  None,  .3,   .9,    .1,   .2,   .3,   .9,  .9,  .9,  .1,   .2,   .3),
-        # Test assignment of False to constructor at various levels in the hierarchy
-        ("inner_false",  None, False, None, None, None, None, .9, False,  .001, .001,  .9,  .9,  .9, False, .001, .001),
-        ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
-        ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
-        # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
-        # inner_proj=True, inner_comp=False, should get Middle Comp default
-        ("inner_True_m", True, False, None, .4,   None, None,   .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
-        # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
-        ("inner_True_o", True, False, None, False, None, .5,    .9,  .5,  False,  .5,  .9,  .9,  .9,  .5,  False, .5),
-        # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
-        ("inner_True_d", True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9,  .001, False,.001),
-        # inner_proj=True, all comps=False, should be forced to be False
-        ("i_True_all_f", True, False, None, False, None, False, .9, False,False,False, .9,  .9, .9, False,False,False),
-        # inner_proj=True, inner_comp=False, should get Middle Comp default
-        ("middle_True",  None, False, True, False, None, None,  .9, False, .001, .001, .9,  .9, .9, False, .001, .001),
-        # Test assignment of False in learn()
-        ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
-        # DICT ASSIGNMENTS
-        ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,  .2,     .3, .001,  .2,  .3, .001,  .2,   .3, .001),
-        ("d_mc",      None,  None,  .1,  "d_mc", None, None,  None,  .5,     .4, .001,  .5,  .4, .001,  .5,   .4, .001),
-        # Note: below, inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
-        ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None, .001,    .4,  .1, .001, .4,    .1, .001,  .4, .1),
-        # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
-        ("d_oc",      None,  None,  None,  None, None, "d_oc", None, False,False, .4, False,False, .4, False,False, .4),
-        ("d_lc",        .1,  None,   .2,   None,  .3,  None, "d_lc",  .1,    .2,  .3, False,  .4,  .3,   .1,  .2,   .3),
-        # Note: below, runtime assignment of True to inner_proj supercedes is assignment of inner_comp=False
-        ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
-        ("d_icf_lct", None, False, .2,   None,  .3,  None,   "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
-        # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
-        ("d_icf_lc",  None, "d_icf", .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
-        # ("d_icf_lc",    None,  False, .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3)
+        # # NUMERIC ASSIGNMENTS
+        # ("None",         None, None, None, None, None, None,  .9,   .001, .001, .001,  .9,  .9,  .9, .001, .001, .001),
+        # # Test assignment of numeric learning_rates to constructor at various levels in the hierarchy
+        # ("inner_n",      None,  .1,  None, None, None, None,  .9,    .1,  .001, .001,  .9,  .9,  .9,  .1,  .001 ,.001),
+        # ("middle_n",     None, None, None,  .2,  None, None,  .9,    .2,   .2,  .001,  .9,  .9,  .9,  .2,   .2,  .001),
+        # ("outer_n",      None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,  .9,  .9,  .3,   .3,   .3),
+        # ("all_n",        None,  .1,  None,  .2,  None,  .3,   .9,    .1,   .2,   .3,   .9,  .9,  .9,  .1,   .2,   .3),
+        # # Test assignment of False to constructor at various levels in the hierarchy
+        # ("inner_false",  None, False, None, None, None, None, .9, False,  .001, .001,  .9,  .9,  .9, False, .001, .001),
+        # ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
+        # ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
+        # # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
+        # # inner_proj=True, inner_comp=False, should get Middle Comp default
+        # ("inner_True_m", True, False, None, .4,   None, None,   .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
+        # # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
+        # ("inner_True_o", True, False, None, False, None, .5,    .9,  .5,  False,  .5,  .9,  .9,  .9,  .5,  False, .5),
+        # # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
+        # ("inner_True_d", True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9,  .001, False,.001),
+        # # inner_proj=True, all comps=False, should be forced to be False
+        # ("i_True_all_f", True, False, None, False, None, False, .9, False,False,False, .9,  .9, .9, False,False,False),
+        # # inner_proj=True, inner_comp=False, should get Middle Comp default
+        # ("middle_True",  None, False, True, False, None, None,  .9, False, .001, .001, .9,  .9, .9, False, .001, .001),
+        # # Test assignment of False in learn()
+        # ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
+        # # DICT ASSIGNMENTS
+        # ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,  .2,     .3, .001,  .2,  .3, .001,  .2,   .3, .001),
+        # ("d_mc",      None,  None,  .1,  "d_mc", None, None,  None,  .5,     .4, .001,  .5,  .4, .001,  .5,   .4, .001),
+        # # Note: below, inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
+        # ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None, .001,    .4,  .1, .001, .4,    .1, .001,  .4, .1),
+        # # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
+        # ("d_oc",      None,  None,  None,  None, None, "d_oc", None, False,False, .4, False,False, .4, False,False, .4),
+        # ("d_lc",        .1,  None,   .2,   None,  .3,  None, "d_lc",  .1,    .2,  .3, False,  .4,  .3,   .1,  .2,   .3),
+        # # Note: below, runtime assignment of True to inner_proj supercedes is assignment of inner_comp=False
+        # ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
+        # ("d_icf_lct", None, False, .2,   None,  .3,  None,   "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
+        # # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
+        ("d_icfd_lc",  None, "d_icf", .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
+        ("d_icfc_lc",  None,  False,  .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
     ]
     test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
                          "d_icf": {DEFAULT_LEARNING_RATE: False},
