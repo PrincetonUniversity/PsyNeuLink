@@ -263,19 +263,19 @@ class TestStructural:
         # Test assignment of False in learn()
         ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
         # DICT ASSIGNMENTS
-        ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,  .2,     .3, .001,  .2,  .3, .001,  .2,   .3, .001),
-        ("d_mc",      None,  None,  .1,  "d_mc", None, None,  None,  .5,     .4, .001,  .5,  .4, .001,  .5,   .4, .001),
+        ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,   .2,    .3, .001, .2,  .3,  .001,  .2,   .3, .001),
+        ("d_mc",      None,  None,   .1, "d_mc", None, None,  None,   .5,    .4, .001, .5,  .4,  .001,  .5,   .4, .001),
         # Note: below, inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
-        ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None, .001,    .4,  .1, .001, .4,    .1, .001,  .4, .1),
+        ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None,  .001,   .4,  .1, .001, .4,    .1, .001,  .4,   .1),
         # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
-        ("d_oc",      None,  None,  None,  None, None, "d_oc", None, False,False, .4, False,False, .4, False,False, .4),
-        ("d_lc",        .1,  None,   .2,   None,  .3,  None, "d_lc",  .1,    .2,  .3, False,  .4,  .3,   .1,  .2,   .3),
+        ("d_oc",      None,  None,  None, None, None, "d_oc", None,  False,False, .4, False,False, .4, False,False, .4),
+        ("d_lc",       .1,   None,   .2,  None, .3,   None,  "d_lc",  .1,    .2,  .3, False, .4,   .3,  .1,   .2,   .3),
         # Note: below, runtime assignment of True to inner_proj supercedes is assignment of inner_comp=False
-        ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
-        ("d_icf_lct", None, False, .2,   None,  .3,  None,   "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
+        ("d_icf_lct", None, "d_icf", .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
+        ("d_icf_lct", None,  False,  .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
         # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
-        ("d_icf_lc",  None, "d_icf", .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
-        ("d_icf_lc",    None,  False, .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3)
+        ("d_icf_lc",  None, "d_icf", .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
+        ("d_icf_lc",  None,  False,  .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3)
     ]
     @pytest.fixture
     def test_nested_dicts(self):
