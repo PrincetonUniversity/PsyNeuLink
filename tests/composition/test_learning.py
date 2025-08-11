@@ -198,7 +198,9 @@ class TestStructural:
                     f"the learn() method for autodiff_composition.") in str(error_text.value)
             return
         pytorch_rep = autodiff._build_pytorch_representation()
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
+                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
+
         assert proj.learning_rate == proj_lr
         assert autodiff.learning_rate == comp_lr or .001
 
@@ -215,9 +217,148 @@ class TestStructural:
         # Test that learning_rate specs are restored to their original values at construction
         autodiff.learn(inputs=autodiff.get_input_format(),
                        execution_mode=pnl.ExecutionMode.PyTorch)
-        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_lr or comp_lr or .001
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
+                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
         assert proj.learning_rate == proj_lr
         assert autodiff.learning_rate == comp_lr or .001
+
+    test_nested_args = [
+        # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
+        #    condition       composition_lr    learn_lr   proj_constr_lr   post_constr   expected
+        # Note: only test middle_proj_1 (not middle_proj_2) and output_proj (not input_proj) for simplicity
+        #       while covering an input_proj (middle_proj_1) and an output_proj (op)
+        # ip = inner_proj learning rate
+        # ic = inner_comp learning rate
+        # m1 = middle_proj_1 learning rate
+        # mc = middle_comp learning rate
+        # o2 = output_proj learning rate
+        # oc = outer_comp learning rate
+        # **c = expected learning_rate after construction
+        # **l = expected lr's after 1st execution of learn() method with lr specifications
+        # **r = expected lr's after 2nd execution of learn() method w/o lr specs (expect reset to constructor values)
+        # condition       ip    ic   m1    mc    op    oc   learn()  ipc   m1c   o2c   ipl  m1l  o2l  ipr   m1r   o2r
+        # NUMERIC ASSIGNMENTS
+        ("None",         None, None, None, None, None, None,  .9,   .001, .001, .001,  .9,  .9,  .9, .001, .001, .001),
+        # Test assignment of numeric learning_rates to constructor at various levels in the hierarchy
+        ("inner_n",      None,  .1,  None, None, None, None,  .9,    .1,  .001, .001,  .9,  .9,  .9,  .1,  .001 ,.001),
+        ("middle_n",     None, None, None,  .2,  None, None,  .9,    .2,   .2,  .001,  .9,  .9,  .9,  .2,   .2,  .001),
+        ("outer_n",      None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,  .9,  .9,  .3,   .3,   .3),
+        ("all_n",        None,  .1,  None,  .2,  None,  .3,   .9,    .1,   .2,   .3,   .9,  .9,  .9,  .1,   .2,   .3),
+        # Test assignment of False to constructor at various levels in the hierarchy
+        ("inner_false",  None, False, None, None, None, None, .9, False,  .001, .001,  .9,  .9,  .9, False, .001, .001),
+        ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
+        ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
+        # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("inner_True_m", True, False, None, .4,   None, None,   .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
+        # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
+        ("inner_True_o", True, False, None, False, None, .5,    .9,  .5,  False,  .5,  .9,  .9,  .9,  .5,  False, .5),
+        # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
+        ("inner_True_d", True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9,  .001, False,.001),
+        # inner_proj=True, all comps=False, should be forced to be False
+        ("i_True_all_f", True, False, None, False, None, False, .9, False,False,False, .9,  .9, .9, False,False,False),
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("middle_True",  None, False, True, False, None, None,  .9, False, .001, .001, .9,  .9, .9, False, .001, .001),
+        # Test assignment of False in learn()
+        ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
+        # DICT ASSIGNMENTS
+        ("d_ic",        .1, "d_ic", None,  .3,   None, None,  None,  .2,  .3, .001,   .2,  .3,   .001,  .2,  .3, .001),
+        ("d_mc",       None, None,  .1,  "d_mc", None, None,  None,  .5,  .4, .001,   .5,  .4,   .001,  .5,  .4, .001),
+    #     ("d_oc",       None, None, None, None, None, "d_oc", None, .001, False, .4, .001, False, .4, .001, False, .4),
+    ]
+    test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
+                         "d_mc": {"MIDDLE PROJECTION 1": .4,
+                                  DEFAULT_LEARNING_RATE: .5},
+                         "d_oc": {"INNER PROJECTION": True,
+                                  "OUTER PROJECTION 2": .4,
+                                  DEFAULT_LEARNING_RATE: False}}
+
+    @pytest.mark.parametrize("condition, "
+                             "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
+                             test_nested_args, ids=[f"{x[0]}" for x in test_nested_args])
+    def test_3_level_nested_learning_rates(self, condition,
+                                           ip, ic, m1, mc, o2, oc, lr,
+                                           ipc, m1c, o2c,
+                                           ipl, m1l,o2l,
+                                           ipr, m1r, o2r):
+
+        # These are not parameterized, and since they are assigned in Projection constructors, should always be the same
+        m2 = m2c = m2l = m2r = .98
+        o1 = o1c = o1l = o1r = .99
+
+        if isinstance(ic, str):
+            ic = self.test_nested_dicts[ic]
+        if isinstance(mc, str):
+            mc = self.test_nested_dicts[mc]
+        if isinstance(oc, str):
+            oc = self.test_nested_dicts[oc]
+
+        inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
+        inner_mech_2 = pnl.ProcessingMechanism(name='INNER NODE 2')
+        inner_proj = pnl.MappingProjection(inner_mech_1, inner_mech_2,
+                                           learning_rate=ip,
+                                           name="INNER PROJECTION")
+        inner_comp = pnl.AutodiffComposition(name='INNER Comp', pathways=[inner_mech_1, inner_proj, inner_mech_2],
+                                             learning_rate=ic)
+
+        # Middle Composition
+        middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
+        middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
+        middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech_1,
+                                              learning_rate=m1,
+                                              name="MIDDLE PROJECTION 1")
+        middle_proj_2 = pnl.MappingProjection(inner_mech_2, middle_mech_2,
+                                              learning_rate=m2,
+                                              name="MIDDLE PROJECTION 2")
+        middle_comp = pnl.AutodiffComposition(name='MIDDLE Comp',
+                                              pathways=[middle_mech_1, middle_proj_1,
+                                                        inner_comp, middle_proj_2, middle_mech_2],
+                                              learning_rate=mc)
+
+        # Outer Composition
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
+                                           learning_rate=o1,
+                                           name="OUTER PROJECTION 1")
+        outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
+                                            learning_rate=o2,
+                                            name="OUTER PROJECTION 2")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
+                                             name='Outer Comp',
+                                             learning_rate=oc)
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipc
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2c
+
+        # First run of learning
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2,
+                         execution_mode=pnl.ExecutionMode.PyTorch,
+                         learning_rate=lr)
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipl
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2l
+
+        # Second run of learning to test rest to constructor learning_rates
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2,
+                         execution_mode=pnl.ExecutionMode.PyTorch)
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2r
 
     error_test_args = [
         ("comp_lr_spec_str", True,
