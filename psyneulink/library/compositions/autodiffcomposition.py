@@ -1167,7 +1167,8 @@ class AutodiffComposition(Composition):
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),
         #    giving precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
         #    over learning_rate specified in constructor (passed in above as learning_rate)
-        default_learning_rate = self._runtime_learning_rate or learning_rate
+        default_learning_rate = \
+            (self._runtime_learning_rate if self._runtime_learning_rate is not None else learning_rate)
         if isinstance(learning_rate, dict):
             if optimizer_params:
                 # if learning_rate is a dict, optimizer_params should not have been passed in call

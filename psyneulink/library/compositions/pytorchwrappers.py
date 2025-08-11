@@ -1101,16 +1101,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #   - None and the Composition's is *not* False or
                 #   - True, irrespective of whether Composition's *is* False,
                 # Then assign, in order of precedence:
-                #   - run_time learning_rate if that is specified,
+                #   - run_time_default_learning_rate if that is specified,
                 #   - default learning_rate for Composition to which Projection belongs if that is explicitly specified,
                 #   - search up the nesting hierarchy for the first default learning_rate that is explicity specified
                 #   - default learning_rate for outermost Composition
-                specified_learning_rate = (run_time_default_learning_rate
-                                           or proj_comp_lr
-                                           or  self._get_default_composition_learning_rate(proj_composition,
+                # MODIFIED 8/10/25 OLD:
+                # specified_learning_rate = (run_time_default_learning_rate
+                #                            or proj_comp_lr
+                #                            or  self._get_default_composition_learning_rate(proj_composition,
+                #                                                                            self.composition,
+                #                                                                            context,
+                #                                                                            ignore_false=True))
+                # MODIFIED 8/10/25 NEW:
+                specified_learning_rate = (run_time_default_learning_rate if
+                                           (run_time_default_learning_rate is False or run_time_default_learning_rate)
+                                           else proj_comp_lr if proj_comp_lr
+                                           else  self._get_default_composition_learning_rate(proj_composition,
                                                                                            self.composition,
                                                                                            context,
                                                                                            ignore_false=True))
+                # MODIFIED 8/10/25 END
 
         if not isinstance(specified_learning_rate, (int, float, bool)):
             # Check for bad value

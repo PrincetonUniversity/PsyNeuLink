@@ -222,21 +222,6 @@ class TestStructural:
         assert proj.learning_rate == proj_lr
         assert autodiff.learning_rate == comp_lr or .001
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     test_nested_args = [
         # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
         #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
@@ -260,18 +245,22 @@ class TestStructural:
         ("outer_n",      None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,  .9,  .9,  .3,   .3,   .3),
         ("all_n",        None,  .1,  None,   .2, None,  .3,   .9,    .1,   .2,   .3,   .9,  .9,  .9,  .1,   .2,   .3),
         # Test assignment of False to constructor at various levels in the hierarchy
-        ("inner_false",  None, False, None, None, None, None, .9, False, .001,  .001,  .9,  .9,  .9, False, .001, .001),
+        ("inner_false",  None, False, None, None, None, None, .9, False,  .001, .001,  .9,  .9,  .9, False, .001, .001),
         ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
         ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
         # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
         # inner_proj=True, inner_comp=False, should get Middle Comp default
-        ("inner_True_m",  True, False, None,  .4,   None, None, .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
+        ("inner_True_m", True, False, None,  .4,   None, None,  .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
         # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
-        ("inner_True_o",  True, False, None, False, None, .5,   .9,  .5, False,  .5,   .9,  .9,  .9,  .5,  False, .5),
+        ("inner_True_o", True, False, None, False, None, .5,    .9,  .5,  False,  .5,  .9,  .9,  .9,  .5,  False, .5),
         # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
-        ("inner_True_d",  True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9, .001, False,.001),
+        ("inner_True_d", True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9,  .001, False,.001),
         # inner_proj=True, all comps=False, should be forced to be False
-        ("i_True_all_f", True, False, None, False, None, False, .9,False, False, False, .9,  .9, .9, False,False,False),
+        ("i_True_all_f", True, False, None, False, None, False, .9, False,False,False, .9,  .9, .9, False,False,False),
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("middle_True",  None, False, True, False, None, None,  .9, False, .001, .001, .9,  .9, .9, False, .001, .001),
+        # Test assignment of False in learn()
+        ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
     ]
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
@@ -281,7 +270,7 @@ class TestStructural:
                                            ipc, m1c, o2c,
                                            ipl, m1l,o2l,
                                            ipr, m1r, o2r):
-        
+
         # These are not parameterized, and since they are assigned in Projection constructors, should always be the same
         m2 = m2c = m2l = m2r = .98
         o1 = o1c = o1l = o1r = .99
@@ -351,23 +340,6 @@ class TestStructural:
         assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2r
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1r
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2r
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     error_test_args = [
         ("comp_lr_spec_str", True,
