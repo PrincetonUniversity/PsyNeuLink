@@ -1220,16 +1220,18 @@ determining the learning_rate for a Projection used at execution:
       learning_rates are explicitly specified.
 
    .. note::
-      Specifying a numeric value for the **learning_rate** argument of the `learn <Composition.learn>` method
-      overrides all other learning_rate specifications, including ``False``, but applies only for that execution;
-      however, it does not override the `enable_learning <Composition.enable_learning>` attribute (for a Composition)
-      or `learnable <MappingProjection.learnable>` (for a Projection) (see next note).
+      Specifying a numeric value for the **learning_rate** argument of a Composition's `learn <Composition.learn>`
+      method overrides all other specifications, except assignment of ``False`` to the `learning_rate
+      <MappingProjection.learning_rate>` Parameter or `learnable <MappingProjection.learnable>` attribute of a
+      Projection, or the `enable_learning <Composition.enable_learning>` attribute of a Composition (see next note);
+      however, it applies only for that execution.
 
    .. note::
       Setting `enable_learning <Composition.enable_learning>` (for a Composition) and/or `learnable
       <MappingProjection.learnable>` (for Projections) to ``False`` take precedence over any other assignments;
       in either case, no learning takes place for that object (though, for a Composition, learning may occur for
-      Compositions nested within it).
+      Compositions nested within it), irrespective of any specifications in the **learning_rate** argument of
+      the Composition's constructor and/or its `learn <Composition.learn>` method.
 
    .. _Composition_Learning_Rate_False:
 
