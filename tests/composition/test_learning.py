@@ -263,16 +263,31 @@ class TestStructural:
         # Test assignment of False in learn()
         ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
         # DICT ASSIGNMENTS
-        ("d_ic",        .1, "d_ic", None,  .3,   None, None,  None,  .2,  .3, .001,   .2,  .3,   .001,  .2,  .3, .001),
-        ("d_mc",       None, None,  .1,  "d_mc", None, None,  None,  .5,  .4, .001,   .5,  .4,   .001,  .5,  .4, .001),
-    #     ("d_oc",       None, None, None, None, None, "d_oc", None, .001, False, .4, .001, False, .4, .001, False, .4),
+        ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,  .2,     .3, .001,  .2,  .3, .001,  .2,   .3, .001),
+        ("d_mc",      None,  None,  .1,  "d_mc", None, None,  None,  .5,     .4, .001,  .5,  .4, .001,  .5,   .4, .001),
+        # Note: below, inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
+        ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None, .001,    .4,  .1, .001, .4,    .1, .001,  .4, .1),
+        # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
+        ("d_oc",      None,  None,  None,  None, None, "d_oc", None, False,False, .4, False,False, .4, False,False, .4),
+        ("d_lc",        .1,  None,   .2,   None,  .3,  None, "d_lc",  .1,    .2,  .3, False,  .4,  .3,   .1,  .2,   .3),
+        ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3)
     ]
     test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
+                         "d_icf": {DEFAULT_LEARNING_RATE: False},
                          "d_mc": {"MIDDLE PROJECTION 1": .4,
                                   DEFAULT_LEARNING_RATE: .5},
+                         "d_mcf": {"INNER PROJECTION": True,
+                                   "MIDDLE PROJECTION 1": .4,
+                                   DEFAULT_LEARNING_RATE: False},
                          "d_oc": {"INNER PROJECTION": True,
                                   "OUTER PROJECTION 2": .4,
-                                  DEFAULT_LEARNING_RATE: False}}
+                                  DEFAULT_LEARNING_RATE: False},
+                         "d_lc": {"INNER PROJECTION": True,
+                                  "MIDDLE PROJECTION 1": .4,
+                                  DEFAULT_LEARNING_RATE: False},
+                         "d_lct": {"INNER PROJECTION": True,
+                                  "MIDDLE PROJECTION 1": .4,
+                                  "OUTER PROJECTION 2": .5}}
 
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
@@ -293,6 +308,8 @@ class TestStructural:
             mc = self.test_nested_dicts[mc]
         if isinstance(oc, str):
             oc = self.test_nested_dicts[oc]
+        if isinstance(lr, str):
+            lr = self.test_nested_dicts[lr]
 
         inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
         inner_mech_2 = pnl.ProcessingMechanism(name='INNER NODE 2')
@@ -359,6 +376,7 @@ class TestStructural:
         assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2r
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1r
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2r
+
 
     error_test_args = [
         ("comp_lr_spec_str", True,

@@ -1067,7 +1067,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                source,
                                                context):
         """Get learning_rate specified for Projection by the user or appropriate default
-        learning_rate is assigned made with following precedence (highest first)
+        learning_rate assignment is made with the following precedence, highest first
         (also see _Composition_Learning_Rate_Precedence_Hierarchy):
             Projection-specific in call to learn() [optimizer_params_user_specs]
             Projection-specific in composition.learning_rates_dict(context) [_optimizer_constructor_params]
@@ -1113,8 +1113,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #                                                                            context,
                 #                                                                            ignore_false=True))
                 # MODIFIED 8/10/25 NEW:
-                specified_learning_rate = (run_time_default_learning_rate if
-                                           (run_time_default_learning_rate is False or run_time_default_learning_rate)
+                specified_learning_rate = (run_time_default_learning_rate if run_time_default_learning_rate is not None
                                            else proj_comp_lr if proj_comp_lr
                                            else  self._get_default_composition_learning_rate(proj_composition,
                                                                                            self.composition,
