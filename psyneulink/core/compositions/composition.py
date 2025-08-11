@@ -1163,14 +1163,11 @@ higher level, more general ones. More specifically:
 
   * *inner* Composition specifications take precedence over those for ones within which they are nested, for cases
     in which learning is supported for nested Compositions (see `note <Composition_Learning_Nested>` above for
-    learning and `nested Compositions <Composition_Nested>`)
+    learning and `nested Compositions <Composition_Nested>`);
 
   * 'False' specified for a Composition (in its constructor or `learn <Composition.learn>` method) only applies
-    to Projections within its scope that are assigned 'None' (that is, it functions as the default), and can be
-    overridden either by specifying the `learning_rate <MappingProjection.learning_rate>` of a Projectdion in a
-    `nested Composition <Composition_Nested>` to ``True`` (in which case it is assigned the first explicitly
-    specified Composition `learning_rate <Composition.learning_rate>` found in the nesting hierarchy, or by specifying
-    a numeric value for the **learning_rate** argument of the Composition's `learn <Composition.learn>` method.
+    to Projections within its scope that are assigned 'None' (that is, it functions as the default) (see `note
+    <Composition_Learning_Rate_False>` below for addition details).
 
 Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
 determining the learning_rate for a Projection used at execution:
@@ -1228,25 +1225,28 @@ determining the learning_rate for a Projection used at execution:
       for that object (though, for a Composition, learning may occur for Compositions nested within it).
 
    .. warning::
-      Setting the `learning_rate <Composotion.learning_rate>` to ``False`` does not necessarily disalbe learning for
+      Setting the `learning_rate <Composotion.learning_rate>` to ``False`` does not necessarily disable learning for
       the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
       overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
-      <Composition.learn>` method.To fully disable learning for a Composition, its `enable_learning
+      <Composition.learn>` method. To fully disable learning for a Composition, its `enable_learning
       <Composition.enable_learning>` attribute should be set to ``False``.
 
+   .. _Composition_Learning_Rate_False:
+
    .. note::
-      specifying *learning_rate* as 'False' in the constructor or `learn() <Composition.learn>` method of a Composition
-      applies only to Projections within its scope that are assigned 'None' (that is, it functions as the default for
-      those Projections); any Projecions directly assigned a `learning_rate <MappingProjection.learning_rate>` that is
-      a scalar value will use that value, and any assigned `True` will use the first explicitly specified Composition
-      `learning_rate <Composition.learning_rate>` found in the nesting hierarchy (that is not ``False``), or the default
-      learning_rate for the outermost Composition if no Composition learning_rates are explicitly specified; that is,
-      specifying a Projection's `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against
-      assigning 'False' to the `learning_rate <Composition.learning_rate>` of the Composition to which it
-      belongs or any within which that is nested, and forces use of a default value procured from a Composition
-      within which it is nested; however, if there is no such Composition, or the outermost one is set to ``False``,
-      then that will apply. Nevertheless, the safest way to fully disable learning for a Composition is to set its
-      `enable_learning <Composition.enable_learning>` attribute to ``False``.
+
+      Specifying **learning_rate** as ``False`` in Composition's constructor or `learn() <Composition.learn>` method
+      applies only to Projections within its scope assigned 'None' (i.e., it functions as the default `learning_rate
+      <MappingProjection.learning_rate>` for those Projections); Projecions assigned a numeric value use that value,
+      and any assigned `True` use the first explicitly specified Composition `learning_rate <Composition.learning_rate>`
+      that is not ``False`` found in the nesting hierarchy, or the default learning_rate for the outermost
+      Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection's
+      `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against assigning 'False' to the
+      `learning_rate <Composition.learning_rate>` of the Composition to which it belongs or any within which that is
+      nested, and forces use of a default value procured from a Composition within which it is nested; however, if
+      there is no such Composition, or the outermost one is set to ``False``, then it will be assigned ``False``.
+      Nevertheless, as noted in the warning above, the safest way to fully disable learning for a Composition is to
+      set its `enable_learning <Composition.enable_learning>` attribute to ``False``.
 
 .. _Composition_Learning_AutodiffComposition:
 

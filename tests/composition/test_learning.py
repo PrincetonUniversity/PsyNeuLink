@@ -270,7 +270,12 @@ class TestStructural:
         # Note: below, inner_proj=False even though it is assigned True in dict since outer_comp default=False
         ("d_oc",      None,  None,  None,  None, None, "d_oc", None, False,False, .4, False,False, .4, False,False, .4),
         ("d_lc",        .1,  None,   .2,   None,  .3,  None, "d_lc",  .1,    .2,  .3, False,  .4,  .3,   .1,  .2,   .3),
-        ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3)
+        # Note: below, runtime assignment of True to inner_proj supercedes is assignment of inner_comp=False
+        ("d_icf_lct", None, "d_icf", .2,   None,  .3,  None, "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
+        ("d_icf_lct", None, False, .2,   None,  .3,  None,   "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
+        # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
+        ("d_icf_lc",  None, "d_icf", .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
+        # ("d_icf_lc",    None,  False, .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3)
     ]
     test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
                          "d_icf": {DEFAULT_LEARNING_RATE: False},
@@ -278,7 +283,8 @@ class TestStructural:
                          "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
                          "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
                          "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
-                         "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5}}
+                         "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5},
+                         "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6}}
 
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
