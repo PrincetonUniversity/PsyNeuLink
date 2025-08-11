@@ -525,8 +525,8 @@ if args.enable_plot:
 
     plt.plot(reg, '-s')  # plot color naming
     plt.plot(reg2, '-or')  # plot word reading
-    plt.title('GRAIN MODEL with bidirectional weights')
-    plt.legend(['color naming', 'word reading'])
-    plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
-    plt.ylabel('reaction time in ms')
+    plt.title('GRAIN MODEL with Bidirectional Weights')
+    plt.legend(['Color Naming', 'Word Reading'])
+    plt.xticks(np.arange(3), ('Control', 'Conflict', 'Congruent'))
+    plt.ylabel('Reaction Time (ms)')
     plt.show(block=not pnl._called_from_pytest)
