@@ -8412,7 +8412,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
                 # otherwise assign LearningMechanism's learning rate or default to Projection
-                _lr = learning_mech_lr if learning_mech_lr not in {None, True} else learning_rate
+                _lr = (learning_mech_lr if (learning_mech_lr is not None and learning_mech_lr is not True)
+                       else learning_rate)
                 _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
                 learnable_projection.parameters.learning_rate.set(_lr, _context)
                 self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
