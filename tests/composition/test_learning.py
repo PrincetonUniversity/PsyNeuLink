@@ -275,16 +275,21 @@ class TestStructural:
         ("d_icf_lct", None, False, .2,   None,  .3,  None,   "d_lct", False, .2,  .3, .001,   .4,  .5, False, .2,   .3),
         # Note: below, runtime specification of default=.6 supercedes inner_proj=None with inner_comp=False
         ("d_icf_lc",  None, "d_icf", .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3),
-        # ("d_icf_lc",    None,  False, .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3)
+        ("d_icf_lc",    None,  False, .2,   None,  .3,  None, "d_lcn", False, .2,  .3,  .6,  .4,  .5, False, .2,   .3)
     ]
-    test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
-                         "d_icf": {DEFAULT_LEARNING_RATE: False},
-                         "d_mc": {"MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: .5},
-                         "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
-                         "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
-                         "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
-                         "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5},
-                         "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6}}
+    @pytest.fixture
+    def test_nested_dicts(self):
+        def _get_learning_rate_dicts(dict):
+            test_nested_dicts = {"d_ic": {"INNER PROJECTION": .2},
+                                 "d_icf": {DEFAULT_LEARNING_RATE: False},
+                                 "d_mc": {"MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: .5},
+                                 "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                                 "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
+                                 "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                                 "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5},
+                                 "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6}}
+            return test_nested_dicts[dict]
+        return _get_learning_rate_dicts
 
     @pytest.mark.parametrize("condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
@@ -293,20 +298,21 @@ class TestStructural:
                                            ip, ic, m1, mc, o2, oc, lr,
                                            ipc, m1c, o2c,
                                            ipl, m1l,o2l,
-                                           ipr, m1r, o2r):
+                                           ipr, m1r, o2r,
+                                           test_nested_dicts):
 
         # These are not parameterized, and since they are assigned in Projection constructors, should always be the same
         m2 = m2c = m2l = m2r = .98
         o1 = o1c = o1l = o1r = .99
 
         if isinstance(ic, str):
-            ic = self.test_nested_dicts[ic]
+            ic = test_nested_dicts(ic)
         if isinstance(mc, str):
-            mc = self.test_nested_dicts[mc]
+            mc = test_nested_dicts(mc)
         if isinstance(oc, str):
-            oc = self.test_nested_dicts[oc]
+            oc = test_nested_dicts(oc)
         if isinstance(lr, str):
-            lr = self.test_nested_dicts[lr]
+            lr = test_nested_dicts(lr)
 
         inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
         inner_mech_2 = pnl.ProcessingMechanism(name='INNER NODE 2')
