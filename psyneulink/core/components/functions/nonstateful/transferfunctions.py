@@ -61,8 +61,8 @@ Functions can compute the derivative using the function's output, either directl
 inferring the input from the **output** and then computing the derivative for that value (such as `ReLU.derivative`)
 
 
-TranferFunction Class References
---------------------------------
+TransferFunction Class References
+---------------------------------
 
 
 """
