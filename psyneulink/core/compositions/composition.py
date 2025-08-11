@@ -1109,7 +1109,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
     * *int or float*: the value is used as the learning_rate.
 
     * *True or None*: if used to specify the learning_rate for a MappingProjection, it is assigned the value of the
-       Composition's `learning_rate <Composition.learning_rate>`;  if used to specify the learning_rate for a
+       Composition's `learning_rate <Composition.learning_rate>`; if used to specify the learning_rate for a
        Composition, the Composition's default learning_rate is used.
 
     * *False*: causes the MappingProjection or Composition to not be learnable (i.e., sets the `learnable
@@ -8405,14 +8405,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  f"learning_components for {learning_pathway.name} being constructed for '{self.name}'.")
             learning_mech_lr = learning_mech.parameters.learning_rate.get(context)
             proj_lr = learnable_projection.parameters.learning_rate.get(context)
-            if proj_lr is not None:
+            if proj_lr not in {None, True}:
                 # Keep Projection's specified learning_rate, as it takes precedence over pathway learning_rate
                 #   (see `Composition_Learning_Rate_Precedence_Hierarchy`)
                 # if Projection has a learning_rate, assign to LearningMechanism
                 learning_mech.parameters.learning_rate.set(proj_lr, context)
             else:
                 # otherwise assign LearningMechanism's learning rate or default to Projection
-                _lr = learning_mech_lr if learning_mech_lr is not None else learning_rate
+                _lr = learning_mech_lr if learning_mech_lr not in {None, True} else learning_rate
                 _context = context if context and context.execution_id is not None else self.name + DEFAULT_SUFFIX
                 learnable_projection.parameters.learning_rate.set(_lr, _context)
                 self.parameters.learning_rates_dict._get(context)[learnable_projection.name] = _lr
@@ -9371,6 +9371,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"The 'learning_rate' arg for '{source_str}' ('{learning_rate}') "
                 f"must be a float, int, bool, None, or a dict.")
+        if learning_rate is True:
+            learning_rate = None
         if isinstance(learning_rate, dict):
             _lr_dict_arg = learning_rate
             # Check that the learning_rate specification(s) are all legal
