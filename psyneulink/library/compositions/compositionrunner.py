@@ -20,6 +20,7 @@ from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, 
                                               RUN, TRAINING_SET, TRIAL, NODE_VALUES, NODE_VARIABLES)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
+from psyneulink.core.globals.utilities import call_with_pruned_args
 from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
@@ -205,12 +206,13 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # BREADCRUMB: THIS SHOULD SET SPECIFIED PARAMETER VALUES FOR MULTIPLE OPTIMIZATIONS
                         #             (E.G., EMCOMPOSITION.STORAGE_PROB=0 FOR EGO MODEL
                         #             AND SET "multipoptimization flag" TO True)
-                        pytorch_rep._call_after_first_optimization()
+                        if self._composition.custom_optimization:
+                            self._composition.call_after_first_optimization(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
@@ -218,7 +220,8 @@ class CompositionRunner():
                         # BREADCRUMB: THIS SHOULD RESET SPECIFIED PARAMETER VALUES TO STANDARD OPTIMIZATION VALUES
                         #             (E.G., EMCOMPOSITION.STORAGE_PROB TO WHATEVER IT WAS FOR REG RUN OF THE EGO MODEL
                         #             AND SET "multipoptimization flag" TO False)
-                        pytorch_rep._call_after_last_optimization()
+                        if self._composition.custom_optimization:
+                            self._composition.call_after_last_optimization(context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,

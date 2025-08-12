@@ -11555,6 +11555,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
+            include_in_multiple_optimizations:Optional[dict]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
@@ -11630,6 +11631,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
                    for a pattern of activation in response to a given input (or set of inputs) that is useful for some
                    downstream purpose.
+
+            include_in_multiple_optimizations : set{`Node <Composition_Nodes>`, ...} (default None)
+                specifies which `Nodes <Composition_Nodes>` of the Compositoin should be included in the forward pass
+                for each optimization after the first.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch
