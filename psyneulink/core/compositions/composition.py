@@ -11632,9 +11632,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    for a pattern of activation in response to a given input (or set of inputs) that is useful for some
                    downstream purpose.
 
-            include_in_multiple_optimizations : set{`Node <Composition_Nodes>`, ...} (default None)
-                specifies which `Nodes <Composition_Nodes>` of the Compositoin should be included in the forward pass
-                for each optimization after the first.
+            include_in_multiple_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
+                specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
+                for each optimization after the first (see **optimizations_per_minibatch** for additional information);
+                the key for each entry is a `Node <Composition_Nodes>` that to be executed for optimizations after the
+                first, and it value can be either None, or a list of tuples specifying a Parameter of the node and
+                the value it should be assigned for those optimizations.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch

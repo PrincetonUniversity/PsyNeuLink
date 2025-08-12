@@ -1204,7 +1204,8 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_inputs[component] = inputs[component]
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs, optimization_num=None,
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs,
+                                                       optimization_num=None,
                                                        synch_with_pnl_options=synch_with_pnl_options,
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
