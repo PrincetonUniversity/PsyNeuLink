@@ -3870,12 +3870,12 @@ class TestMiscTrainingFunctionality:
         ('outr_comp_lr',   None,     7,      None,      6.02,       2.7,      None,         6.02,       7),
         ('outr_comp_lr',   None,     7,      None,      None,       2.7,      None,       default,      7),
     ]
-    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, pathway_lr, "
+    @pytest.mark.parametrize("_condition, proj_1_lr, proj_2_lr, pathway_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
                              "expected_proj_1_inner, expected_proj_2_inner",
                              test_specs_for_learning_rate_inheritance,
                              ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
-    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_1_lr, proj_2_lr, pathway_lr,
+    def test_learning_rate_inheritance_in_nested_comp(self, _condition, proj_1_lr, proj_2_lr, pathway_lr,
                                                       inner_comp_lr, outer_comp_lr, outer_learn_lr,
                                                       expected_proj_1_inner, expected_proj_2_inner):
 
