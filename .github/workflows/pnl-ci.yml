@@ -89,7 +89,7 @@ jobs:
     # version string from versioneer (must have history to a prior tag);
     # otherwise install fails due to circular dependency with modeci_mdf
     - name: Checkout sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 200
 
