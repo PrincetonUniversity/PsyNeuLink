@@ -3884,7 +3884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
-        self.include_in_multiple_optimizations = {}
+        self.execute_in_multiple_optimizations = {}
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -11556,7 +11556,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
-            include_in_multiple_optimizations:Optional[dict]=None,
+            execute_in_multiple_optimizations:Optional[dict]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
@@ -11633,7 +11633,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    for a pattern of activation in response to a given input (or set of inputs) that is useful for some
                    downstream purpose.
 
-            include_in_multiple_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
+            execute_in_multiple_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
                 specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
                 for each optimization after the first (see **optimizations_per_minibatch** for additional information);
                 the key for each entry is a `Node <Composition_Nodes>` that to be executed for optimizations after the
@@ -11732,8 +11732,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
 
-        elif include_in_multiple_optimizations:
-            self._validate_and_parse_multiple_optimizations(include_in_multiple_optimizations)
+        elif execute_in_multiple_optimizations:
+            self._validate_and_parse_multiple_optimizations(execute_in_multiple_optimizations)
 
         result = runner.run_learning(
             inputs=inputs,
@@ -12959,22 +12959,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pass
 
     def _validate_and_parse_multiple_optimizations(self, user_specs:dict):
-        """Validate entries of dict specified for include_in_multiple_optimizations argument of learn()
+        """Validate entries of dict specified for execute_in_multiple_optimizations argument of learn()
         Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
         values to use during multiple optimizations, or None if no Parameters should be modified for that node.
         """
-        self._validate_and_assign_multiple_optimizations(user_specs)
+        if not instances(user_specs, dict):
+            raise CompositionError(f"Specification for 'execute_in_multiple_optimizations' arg in learn() method of "
+                                   f"of '{self.name}' must be a dict: {user_specs}.")
+        nodes_to_execute = set()
+        params_to_modify = {}
         bad_nodes = []
+
         for node, params in user_specs.items():
             if node not in self._get_nested_compositions():
                 bad_nodes.append(node)
                 continue
+            if isinstance(node, Composition):
+                nodes_to_execute.add(node.nodes)
+            else:
+                nodes_to_execute.add(node)
+
+            # Validate any Parameters specified and their values
+            if params:
+                if isinstance(params, tuple):
+                    params = [params]
+                if (not isinstance(params, list) or
+                    not all(isintance(param,tuple)) and len(param)==2 for param in params):
+                    bad_nodes.append(node)
+                    continue
+                for param in params:
+                    if not param[0] in node.parameters:
+                        raise CompositionError(f"Specification of Parameter ('{param[0]}') for '{node.name}' in "
+                                               f"'execute_in_multiple_optimizations' arg of learn() method for "
+                                               f"'{self.name}' is not a Parameter of that node.")
+                    # BREADCRUMB:  CHECK THAT param[1] IS A VALID VALUE FOR param
+                params_to_modify.update({node: params})
+
         if bad_nodes:
             raise CompositionError(
-                f"The following nodes were specified in the `include_in_multiple_optimizations` arg for {self.name} "
-                f"but were not found in the Composition or any nested within it: {', '.join(bad_nodes)}.")
+                f"The following nodes were specified in the 'execute_in_multiple_optimizations' arg of learn() method"
+                f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
+                f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
 
-        self.include_in_multiple_optimizations = user_specs
+        self._nodes_to_execute_in_multiple_optimizations = nodes_to_execute
+        self._params_to_modify_in_multiple_optimizations = params_to_modify
+
+    def _after_first_optimization(self):
+        pass
+
+    def _after_last_optimization(self):
+        pass
 
 
     @handle_external_context(fallback_most_recent=True)
