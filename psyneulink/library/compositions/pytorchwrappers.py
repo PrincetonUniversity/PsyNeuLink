@@ -1275,7 +1275,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
         projections_to_torch_params = {}
         for projection in self.wrapped_projections:
-                projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
+            projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
         # Call recursively on any nested PytorchCompositionWrappers,
         #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():

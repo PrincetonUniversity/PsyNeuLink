@@ -462,7 +462,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                                  hidden_size=hidden_size,
                                  bias=bias,
                                  batch_first=True).to(dtype=self.torch_dtype)
-        torch_GRU.name =  f"PytorchFunctionWrapper[GRU NODE]"
+        torch_GRU.name = f"PytorchFunctionWrapper[GRU NODE]"
         torch_GRU._gen_pytorch_fct = lambda x,y : torch_GRU
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)
 
