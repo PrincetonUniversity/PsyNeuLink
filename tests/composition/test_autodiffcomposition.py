@@ -416,7 +416,6 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == hidden_proj_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == outer_comp_proj_lr
 
-        # BREADCRUMB: BUT MAKE SURE ASSIGNMENT IS TO None CONTEXT AND NOT LATEST
         # This should have no effet since done post construction
         if post_constr:
             input_proj.learning_rate = .9
@@ -527,15 +526,15 @@ class TestAutodiffLearningRateArgs:
                                              name='Outer Comp',
                                              learning_rate = outer_comp_lr)
 
-        pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
+        outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
 
         # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
-        learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]],
-                                                   outer_comp.get_target_nodes()[0]: [[1]]},
-                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
-                                           learning_rate={input_proj:12,
-                                                          "NESTED 2 PROJ BC": 13,
-                                                          nested_2_proj_DE: 15})
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                         learning_rate={input_proj:12,
+                                        "NESTED 2 PROJ BC": 13,
+                                        nested_2_proj_DE: 15})
         pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 13
@@ -550,8 +549,8 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 12
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
 
-        learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
-                                           num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
+        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
 
         # learning_rates should revert to constructor-speficied values (e.g., input_proj) or composition defaults
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
@@ -573,7 +572,7 @@ class TestAutodiffLearningRateArgs:
 
             # check that nothing happens without specifying new in the call
             with pytest.warns(UserWarning) as warning:
-                pytorch_rep = outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
+                outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
                 assert ("The '_build_pytorch_representation() method for 'Outer Comp' has already been called "
                         "directly from the command line; this and any additional calls will be ignored. Make any "
                         "desired modifications to parameters (e.g., learning_rates) either in the constructor for "
@@ -587,8 +586,8 @@ class TestAutodiffLearningRateArgs:
 
             # check that it has been assigned as default (in _optimizer_constructor_params);
             #     i.e., that it persists after a call to learn():
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
-                                               learning_rate={"NESTED 2 PROJ BC": 99},)
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                             learning_rate={"NESTED 2 PROJ BC": 99},)
             pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
             assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
@@ -596,7 +595,7 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
             # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
-            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
@@ -3734,7 +3733,10 @@ class TestMiscTrainingFunctionality:
         learning_method_learning_rate_dict = {input_proj: learn_method_lr_input_proj,
                                               output_proj: learn_method_lr_output_proj}
 
+        opt_params = None
+
         if condition in {'bad_proj', 'bad_lr'}:
+            err_msg = None
             if condition == 'bad_proj':
                 opt_params = {condition: .66}
                 err_msg = ("The following Projection specified in the 'learning_rate' arg of the learn() method "
@@ -3868,12 +3870,12 @@ class TestMiscTrainingFunctionality:
         ('outr_comp_lr',   None,     7,      None,      6.02,       2.7,      None,         6.02,       7),
         ('outr_comp_lr',   None,     7,      None,      None,       2.7,      None,       default,      7),
     ]
-    @pytest.mark.parametrize("condition, proj_1_lr, proj_2_lr, pathway_lr, "
+    @pytest.mark.parametrize("_condition, proj_1_lr, proj_2_lr, pathway_lr, "
                              "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
                              "expected_proj_1_inner, expected_proj_2_inner",
                              test_specs_for_learning_rate_inheritance,
                              ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
-    def test_learning_rate_inheritance_in_nested_comp(self, condition, proj_1_lr, proj_2_lr, pathway_lr,
+    def test_learning_rate_inheritance_in_nested_comp(self, _condition, proj_1_lr, proj_2_lr, pathway_lr,
                                                       inner_comp_lr, outer_comp_lr, outer_learn_lr,
                                                       expected_proj_1_inner, expected_proj_2_inner):
 
@@ -3963,8 +3965,7 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
-    @pytest.mark.parametrize("bias", [False, True])
-    def test_pytorch_identicality_of_learning_rates_nested(self, bias):
+    def test_pytorch_identicality_of_learning_rates_nested(self):
         """Test ideinticality with assignment of learning rates in learning_rate of nested Composition"""
         import torch
         entry_torch_dtype = torch.get_default_dtype()

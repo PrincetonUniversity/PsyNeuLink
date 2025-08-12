@@ -227,7 +227,7 @@ COMMENT:
 .. _AutodiffComposition_PyTorch_LearningScale:
    ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTION OF pytorch_rep:
       OPTIMIZATION STEP:
-      for AutodiffCompositions, this corresponds to a single call to `foward()` and `backward()`
+      for AutodiffCompositions, this corresponds to a single call to `forward()` and `backward()`
             methods of the Pytorch model
 COMMENT
 
@@ -1192,7 +1192,6 @@ class AutodiffComposition(Composition):
         else:
             self.parameters.learning_rate.set(default_learning_rate, context)
 
-        # BREADCRUMB: COMMENT OR REFACTOR THIS TO CLARIFY CONDITIONS UNDER WHICH IT IS NEEDED:
         if self._runtime_learning_rate is not None:
             # If _runtime_learning_rate has been specified in call to learn(), make sure that is used
             optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
@@ -1263,7 +1262,6 @@ class AutodiffComposition(Composition):
         if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator
             assert len(list(params)) == 0, (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
                                             f"but no entries in its state_dict()")
-            # BREADCRUMB: 6/10/25 SHOULDN'T THIS BE AN ERROR (SAME AS FOR all_requires_grads_false
             warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
             return
         if self.optimizer_type == 'sgd':

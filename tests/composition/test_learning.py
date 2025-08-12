@@ -124,13 +124,11 @@ class TestStructural:
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
     @pytest.mark.parametrize("comp_constructor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
-    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
+    @pytest.mark.parametrize("_condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
-    def test_projection_specific_learning_rates(self,
-                                                condition, comp_lr, learn_method_lr,
+    def test_projection_specific_learning_rates(self, _condition,
+                                                comp_lr, learn_method_lr,
                                                 proj_constr, comp_constructor_lr_dict, post_constr, expected):
-
-        #  BREADCRUMB: ADD TEST FOR precedence of pathway lr specification
 
         in_shape = 4
         hidden_1_shape = 3
@@ -168,27 +166,34 @@ class TestStructural:
                                  learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
 
-    @pytest.mark.parametrize("proj_lr", [.2, None, True, False],
-                             ids=["proj_lr_0.2", "proj_lr_None", "proj_lr_True", "proj_lr_False"])
     @pytest.mark.parametrize("comp_lr", [.3, None, True, False],
-                             ids=["comp_lr_0.3", "comp_lr_None", "comp_lr_True", "comp_lr_False"])
-    def test_default_and_False_learning_rates(self, proj_lr, comp_lr):
+                             ids=["comp_0.3", "comp_None", "comp_True", "comp_False"])
+    @pytest.mark.parametrize("pway_lr", [.2, None, True, False],
+                             ids=["pway_0.2", "pway_lr_None", "pway_True", "pway_False"])
+    @pytest.mark.parametrize("proj_lr", [.1, None, True, False],
+                             ids=["proj_0.1", "proj_None", "proj_True", "proj_False"])
+    def test_single_level_proj_pathway_comp_learning_rates(self, proj_lr, pway_lr, comp_lr):
+        comp_exp_lr = .001 if comp_lr in {None, True} else comp_lr
+        if proj_lr not in {None, True}:
+            proj_exp_lr = proj_lr
+        elif pway_lr not in {None, True}:
+            proj_exp_lr = pway_lr
+        elif comp_lr not in {None, True}:
+            proj_exp_lr = comp_lr
+        elif comp_lr is False:
+            proj_exp_lr = False
+        else:
+            proj_exp_lr = .001
+
         mech_1 = pnl.ProcessingMechanism()
         mech_2 = pnl.ProcessingMechanism()
         proj = pnl.MappingProjection(mech_1, mech_2,
                                      learning_rate=proj_lr,
                                      name='PROJECTION')
-
-        autodiff = pnl.AutodiffComposition([mech_1, proj, mech_2],
-                                           # learning_rate = {proj:1,
-                                           #                  DEFAULT_LEARNING_RATE: 1.5},
-                                           # learning_rate = 2
-                                           learning_rate = comp_lr
-                                           )
-        # autodiff._build_pytorch_representation(learning_rate = 10)
-        # autodiff._build_pytorch_representation(learning_rate = {proj:.2,
-        #                                                         DEFAULT_LEARNING_RATE: 2.5})
-        if proj_lr is False or (proj_lr in {None, True} and comp_lr is False):
+        autodiff = pnl.AutodiffComposition(learning_rate = comp_lr)
+        autodiff.add_backpropagation_learning_pathway(pathway=[mech_1, proj, mech_2],
+                                                      learning_rate=pway_lr)
+        if proj_exp_lr is False:
             with pytest.raises(CompositionError) as error_text:
                 autodiff._build_pytorch_representation()
             assert (f"There are no learnable Projections in 'autodiff_composition' nor any nested under it; this may "
@@ -198,11 +203,8 @@ class TestStructural:
                     f"the learn() method for autodiff_composition.") in str(error_text.value)
             return
         pytorch_rep = autodiff._build_pytorch_representation()
-        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
-                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
-
-        assert proj.learning_rate == proj_lr
-        assert autodiff.learning_rate == comp_lr or .001
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
+        assert autodiff.learning_rate == comp_exp_lr
 
         # Test learning_rate specs assinged in learn()
         autodiff.learn(inputs=autodiff.get_input_format(),
@@ -217,10 +219,8 @@ class TestStructural:
         # Test that learning_rate specs are restored to their original values at construction
         autodiff.learn(inputs=autodiff.get_input_format(),
                        execution_mode=pnl.ExecutionMode.PyTorch)
-        assert (pytorch_rep.get_torch_learning_rate_for_projection(proj) ==
-                (proj_lr if proj_lr not in {True, None} else comp_lr if comp_lr else .001))
-        assert proj.learning_rate == proj_lr
-        assert autodiff.learning_rate == comp_lr or .001
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
+        assert autodiff.learning_rate == comp_exp_lr
 
     test_nested_args = [
         # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
@@ -296,10 +296,10 @@ class TestStructural:
             return test_nested_dicts[dict]
         return _get_learning_rate_dicts
 
-    @pytest.mark.parametrize("condition, "
+    @pytest.mark.parametrize("_condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
                              test_nested_args, ids=[f"{x[0]}" for x in test_nested_args])
-    def test_3_level_nested_learning_rates(self, condition,
+    def test_3_level_nested_learning_rates(self, _condition,
                                            ip, ic, m1, mc, o2, oc, lr,
                                            ipc, m1c, o2c,
                                            ipl, m1l,o2l,
@@ -917,19 +917,19 @@ class TestStructural:
 
             xor_comp = pnl.Composition()
 
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
             # Try read the same learning pathway (shouldn't error)
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
 
         def test_run_no_targets(self):
             in_to_hidden_matrix = np.random.rand(2,10)
@@ -958,12 +958,12 @@ class TestStructural:
 
             xor_comp = pnl.Composition()
 
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
             # Try to run without any targets (non-learning
             xor_inputs = np.array(  # the inputs we will provide to the model
                 [[0, 0],

@@ -51,7 +51,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
-           'ENTER_NESTED', 'EXIT_NESTED', 'TorchParam ParamNameCompositionTuple']
+           'ENTER_NESTED', 'EXIT_NESTED', 'ParamNameCompositionTuple']
 
 ENTER_NESTED = 0
 EXIT_NESTED = 1
@@ -1077,7 +1077,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         proj_composition = self._pnl_refs_to_torch_param_names[projection.name].composition
         proj_comp_lr = self._get_default_composition_learning_rate(proj_composition, self.composition, context)
-        specified_learning_rate = NotImplemented
 
         # Get default learning_rate for Projection for current Composition
         specified_learning_rate = \
@@ -1130,7 +1129,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Otherwise, use learning_rate specified at run time or in constructor for Composition
             param.requires_grad = False if specified_learning_rate is False else True
 
-            assert specified_learning_rate not in {None, NotImplemented}, \
+            assert specified_learning_rate is not None, \
                 (f"PROGRAM ERROR: Unable to determine learning_rate ({specified_learning_rate}) "
                  f"for '{projection.name}'")
 
