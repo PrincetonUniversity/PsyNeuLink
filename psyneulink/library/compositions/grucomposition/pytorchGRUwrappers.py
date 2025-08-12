@@ -102,30 +102,29 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         from psyneulink.library.compositions.grucomposition.grucomposition import (
             GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
 
-        for spec in optimizer_param_specs:
-            # Raise error for attempt to specify bias parameters when bias=False
-            if not self.composition.bias:
-                bias_specs = [spec for spec in optimizer_param_specs
-                              if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
-                if bias_specs:
-                    bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
-                    bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
-                    raise GRUCompositionError(
-                        f"Attempt to set learning rate for bias(es) of GRU using '{' ,'.join(bias_specs)}' in the "
-                        f"'learning_rate' arg of the {self.get_source_str(source)} for '{self.composition.name}' "
-                        f"when its bias option is set to False; the spec(s) must be removed or bias set to True.")
+        # Raise error for attempt to specify bias parameters when bias=False
+        if not self.composition.bias:
+            bias_specs = [spec for spec in optimizer_param_specs
+                          if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
+            if bias_specs:
+                bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
+                bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
+                raise GRUCompositionError(
+                    f"Attempt to set learning rate for bias(es) of GRU using '{' ,'.join(bias_specs)}' in the "
+                    f"'learning_rate' arg of the {self.get_source_str(source)} for '{self.composition.name}' "
+                    f"when its bias option is set to False; the spec(s) must be removed or bias set to True.")
 
-            # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
-            bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
-            if bad_ih_specs:
-                raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
-                                          f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
-                                          f"use 'INPUT_TO_HIDDEN' to set learning rate for all such weights.")
-            bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
-            if bad_hh_specs:
-                raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
-                                          f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
-                                          f"use 'HIDDEN_TO_HIDDEN' to set learning rate for all such weights.")
+        # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
+        bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
+        if bad_ih_specs:
+            raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
+                                      f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
+                                      f"use 'INPUT_TO_HIDDEN' to set learning rate for all such weights.")
+        bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
+        if bad_hh_specs:
+            raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
+                                      f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
+                                      f"use 'HIDDEN_TO_HIDDEN' to set learning rate for all such weights.")
 
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""

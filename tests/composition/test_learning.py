@@ -917,19 +917,19 @@ class TestStructural:
 
             xor_comp = pnl.Composition()
 
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
             # Try read the same learning pathway (shouldn't error)
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
 
         def test_run_no_targets(self):
             in_to_hidden_matrix = np.random.rand(2,10)
@@ -958,12 +958,12 @@ class TestStructural:
 
             xor_comp = pnl.Composition()
 
-            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                              in_to_hidden_comp,
-                                                                              hidden_comp,
-                                                                              hidden_to_out_comp,
-                                                                              output_comp],
-                                                                             learning_rate=10)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
             # Try to run without any targets (non-learning
             xor_inputs = np.array(  # the inputs we will provide to the model
                 [[0, 0],

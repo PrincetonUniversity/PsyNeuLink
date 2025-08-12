@@ -94,6 +94,7 @@ def gen_data_loader(paradigm, probs=[1., 1., 1.], n=1):
         n_samples_per_context = [n]
         ds = CSWDataset(n_samples_per_context, contexts_to_load, probs=[1.])
 
+    ds = None
     if paradigm == 'blocked':
         contexts_to_load = [0, 1, 0, 1] + [randint(0, 2) for _ in range(n)]
         n_samples_per_context = [n, n, n, n] + [1] * n
