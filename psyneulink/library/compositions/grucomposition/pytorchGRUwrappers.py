@@ -268,7 +268,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         def _get_direct_proj(pnl_proj, direction:Literal['to', 'from'])-> Union[Projection, bool]:
             """Get direct Projection to/from GRUComposition's gru_mech
-            Checks for existing Projection and returns that if found; otherwise, constructs it"""
+            Checks for existing Projection and returns that if found; otherwise, constructs it.
+            """
             sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
             receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
             dir_proj = outer_comp._check_for_existing_projections(sender=sender,
@@ -460,7 +461,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         bias = self.composition.parameters.bias.get(context)
         torch_GRU = torch.nn.GRU(input_size=input_size,
                                  hidden_size=hidden_size,
-                                 bias=bias, batch_first=True).to(dtype=self.torch_dtype)
+                                 bias=bias,
+                                 batch_first=True).to(dtype=self.torch_dtype)
         torch_GRU.name =  f"PytorchFunctionWrapper[GRU NODE]"
         torch_GRU._gen_pytorch_fct = lambda x,y : torch_GRU
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)

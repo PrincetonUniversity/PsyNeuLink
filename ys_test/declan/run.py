@@ -16,8 +16,8 @@ def run_participant(params, data_loader, len_memory=2):
 
         # For each state, optimize the context representation for predicting the next state over n_optimization_steps.
         for o in range(params['n_optimization_steps']):
-              # retrieve the context representation from the integrator.
-             # Initialize context if not already done.
+            # retrieve the context representation from the integrator.
+            # Initialize context if not already done.
             # Skip first state bc which sequence within the context is randomly assigned.
             # i.e., we have not yet observed a full state transition.
             if trial > 0:
