@@ -18,7 +18,7 @@ jobs:
       wheel: ${{ steps.create_dist.outputs.wheel }}
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -116,7 +116,7 @@ jobs:
       run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
 
     - name: Get tests from the repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Run tests
       shell: bash
