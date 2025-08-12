@@ -416,7 +416,6 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == hidden_proj_lr
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == outer_comp_proj_lr
 
-        # BREADCRUMB: BUT MAKE SURE ASSIGNMENT IS TO None CONTEXT AND NOT LATEST
         # This should have no effet since done post construction
         if post_constr:
             input_proj.learning_rate = .9

@@ -1582,18 +1582,17 @@ class Port_Base(Port):
                 return spec
             receiver_port = _get_receiver_port(receiver)
             connection_receiver_port = _get_receiver_port(connection)
-            if receiver_port != connection_receiver_port:
-                raise PortError("PROGRAM ERROR: Port specified as receiver ({}) should "
-                                 "be the same as the one specified in the connection {}.".
-                                 format(receiver_port, connection_receiver_port))
+            assert receiver_port == connection_receiver_port, \
+                (f"PROGRAM ERROR: Port specified as receiver ({receiver_port}) should be the same "
+                 f"as the one specified in the connection {connection_receiver_port}.")
 
             if (not isinstance(connection, ProjectionTuple)
-                and receiver
-                and not isinstance(receiver, (Port, Mechanism))
-                and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
-                raise PortError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
-                                 format(receiver, projection_spec, self.name,
-                                        Port.__name__, Mechanism.__name__, ProjectionTuple.__name__))
+                    and receiver
+                    and not isinstance(receiver, (Port, Mechanism))
+                    and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
+                raise PortError(
+                    f"Receiver ({receiver}) of {projection_spec} from {self.name} must be a {Port.__name__}, "
+                    f"{Mechanism.__name__}, a class of one, or a {ProjectionTuple.__name__}.")
 
             if isinstance(receiver, Mechanism):
                 from psyneulink.core.components.ports.inputport import InputPort
@@ -1603,19 +1602,16 @@ class Port_Base(Port):
                 #    use primary InputPort (and warn if verbose is set)
                 if isinstance(default_projection_type, (MappingProjection, GatingProjection)):
                     if self.owner.verbosePref:
-                        warnings.warn("Receiver {} of {} from {} is a {} and {} is a {}, "
-                                      "so its primary {} will be used".
-                                      format(receiver, projection_spec, self.name, Mechanism.__name__,
-                                             Projection.__name__, default_projection_type.__name__,
-                                             InputPort.__name__))
+                        warnings.warn(
+                            f"Receiver {receiver} of {projection_spec} from {self.name} is a {Mechanism.__name__} "
+                            f"and {Projection.__name__} is a {default_projection_type.__name__}, "
+                            f"so its primary {InputPort.__name__} will be used.")
                     receiver = receiver.input_port
 
-                    raise PortError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
-                                     "target {} can't be determined".
-                                     format(receiver, projection_spec, self.name, Mechanism.__name__,
-                                            Projection.__name__, default_projection_type.__name__,
-                                            ParameterPort.__name__))
-
+                    raise PortError(
+                        f"Receiver {receiver} of {projection_spec} from {self.name} is a {Mechanism.__name__}, "
+                        f"but the specified {Projection.__name__} is a {default_projection_type.__name__} "
+                        f"so target {ParameterPort.__name__} can't be determined.")
 
             # GET Projection --------------------------------------------------------
 
