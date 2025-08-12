@@ -2115,7 +2115,7 @@ class EMComposition(AutodiffComposition):
             learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
             lfw_values_specified_individually = False
         if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
-            for i, vals  in enumerate(zip(parsed_field_weights, learn_field_weights)):
+            for i, vals in enumerate(zip(parsed_field_weights, learn_field_weights)):
                 fw, lfw = vals
                 if fw is None:
                     # Field is a value field, so no learning allowed
@@ -2457,7 +2457,8 @@ class EMComposition(AutodiffComposition):
 
     def _construct_field_weight_nodes(self, concatenate_queries, use_gating_for_weighting):
         """Create ProcessingMechanisms that weight each key's contribution to the retrieved values.
-        Note: not constructed if only one key is specified, since in that case there is no point in weighting."""
+        Note: not constructed if only one key is specified, since in that case there is no point in weighting.
+        """
         if not concatenate_queries and self.num_keys > 1:
             for field in [self.fields[i] for i in self.key_indices]:
                 name = WEIGHT if self.num_keys == 1 else f'{field.name}{WEIGHT_AFFIX}'

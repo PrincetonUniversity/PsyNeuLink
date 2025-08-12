@@ -84,10 +84,9 @@ def _get_pytorch_function(obj, device, context):
         return pytorch_fct(device, context)
 
 
-class PytorchCompositionWrapper(torch.nn.Module):
 # NEEDED FOR torch MPS SUPPORT
-# class PytorchCompositionWrapper(torch.jit.ScriptModule):
-# END
+# class PytorchCompositionWrapper(torch.jit.ScriptModule)
+class PytorchCompositionWrapper(torch.nn.Module):
     """Wrapper for a Composition as a Pytorch Module.
 
     Wraps an `AutodiffComposition` as a `PyTorch module
@@ -307,11 +306,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
-                # Assign attributes
+        # Assign attributes
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
-                                # as the latter is needed to pass the parameters to the optimizer
+        # as the latter is needed to pass the parameters to the optimizer
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
@@ -851,9 +850,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                    context:Context)-> (dict, dict):
         """Parse user-specified learning_rates.
         User specifications can be in:
-        - constructor for of outermost and/or nested AutodiffComposition
-        - learn() method of outermost AutodiffComposition
-        - """
+        - constructor for of outermost and/or nested AutodiffComposition;
+        - learn() method of outermost AutodiffComposition.
+        """
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
@@ -1045,9 +1044,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 # must be that enable_learning is True but no Projections are learnable
                 insert = f"this is because the learning_rates for all of the Projections are set to 'False'. "
-            err_msg_end =  (f"The learning_rate for at least one Projection must be a non-False value within a "
-                            f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
-                            f"method for {self.composition.name}.")
+            err_msg_end = (f"The learning_rate for at least one Projection must be a non-False value within a "
+                           f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
+                           f"method for {self.composition.name}.")
             raise AutodiffCompositionError(err_msg_start + insert + err_msg_end)
 
         # Remove any remaining empty param_groups
@@ -1076,7 +1075,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
         from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
-        proj_composition =  self._pnl_refs_to_torch_param_names[projection.name].composition
+        proj_composition = self._pnl_refs_to_torch_param_names[projection.name].composition
         proj_comp_lr = self._get_default_composition_learning_rate(proj_composition, self.composition, context)
 
         # Get default learning_rate for Projection for current Composition
@@ -1104,21 +1103,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #   - default learning_rate for Composition to which Projection belongs if that is explicitly specified,
                 #   - search up the nesting hierarchy for the first default learning_rate that is explicity specified
                 #   - default learning_rate for outermost Composition
-                # MODIFIED 8/10/25 OLD:
-                # specified_learning_rate = (run_time_default_learning_rate
-                #                            or proj_comp_lr
-                #                            or  self._get_default_composition_learning_rate(proj_composition,
-                #                                                                            self.composition,
-                #                                                                            context,
-                #                                                                            ignore_false=True))
                 # MODIFIED 8/10/25 NEW:
                 specified_learning_rate = (run_time_default_learning_rate if run_time_default_learning_rate is not None
                                            else proj_comp_lr if proj_comp_lr
-                                           else  self._get_default_composition_learning_rate(proj_composition,
-                                                                                           self.composition,
-                                                                                           context,
-                                                                                           ignore_false=True))
-                # MODIFIED 8/10/25 END
+                                           else self._get_default_composition_learning_rate(proj_composition,
+                                                                                            self.composition,
+                                                                                            context,
+                                                                                            ignore_false=True))
 
         if not isinstance(specified_learning_rate, (int, float, bool)):
             # Check for bad value
@@ -1284,7 +1275,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
         projections_to_torch_params = {}
         for projection in self.wrapped_projections:
-                projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
+            projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
         # Call recursively on any nested PytorchCompositionWrappers,
         #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
         for comp_wrapper in self.get_all_nested_composition_wrappers():
@@ -1295,9 +1286,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def projections_with_learnable_torch_params(self)->list:
         """Return list of Projections for which torch parameters are learnable"""
         return [pw.projection for pw in self.projection_wrappers if pw.matrix.requires_grad]
-        # return [self.torch_params_to_projections()[param]
-        #         for param_group in self.optimizer.param_groups
-        #         for param in param_group['params']  if param.requires_grad]
 
     def _torch_params_to_projections(self, param_groups:list)->dict:
         """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
@@ -1313,7 +1301,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
     @property
     def _torch_param_short_to_long_names_map(self)->dict:
         """Return map of short torch Parameter names to their full (hierarchical) names in named_parameters()
-        The "full" names should include prefixes for parameters in nested PytorchCompositionWrappers."""
+        The "full" names should include prefixes for parameters in nested PytorchCompositionWrappers.
+        """
         return {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
 
     @property

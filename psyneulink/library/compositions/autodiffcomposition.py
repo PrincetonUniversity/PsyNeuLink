@@ -953,7 +953,7 @@ class AutodiffComposition(Composition):
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
             # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
-            assert len(pathway)%2, \
+            assert len(pathway) % 2, \
                 f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
             return pathway
 
@@ -1102,8 +1102,8 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       new=None,
                                       base_context=Context(execution_id=None))->PytorchCompositionWrapper:
-        """Builds a Pytorch representation of the AutodiffComposition
-        Constructs PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
+        """Build a Pytorch representation of the AutodiffComposition
+        Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
 
         A new pytorch_representation is constructed if:
@@ -1221,8 +1221,8 @@ class AutodiffComposition(Composition):
                                                                     context)
 
         elif context.source is ContextFlags.SHOW_GRAPH:
-        # Don't bother updating for call to show_graph()
-                pass
+            # Don't bother updating for call to show_graph()
+            pass
         else:
             # Otherwise, just update it
             pytorch_rep._update_optimizer_params(old_opt,
