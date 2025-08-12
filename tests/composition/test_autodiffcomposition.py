@@ -717,6 +717,7 @@ class TestAutodiffLearningRateArgs:
         assert set(param_to_proj_dict.values()) == set(proj_to_param_dict.keys())
         assert set(proj_to_param_dict.values()) == set(param_to_proj_dict.keys())
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("enable_learning", ['before_run', 'after_run'])
     def test_enable_learning(self, enable_learning):
         # Test construction with enable_learning=False, running, and then enabling learning
