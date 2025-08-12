@@ -456,6 +456,7 @@ class TestAutodiffLearningRateArgs:
 
         np.testing.assert_allclose(pytorch_result, expected)
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("build_pytorch_rep_spec", [None, 10, 'dict'])
     def test_learning_rate_with_3_levels_of_nesting_and_build_pytorch_rep_spec(self, build_pytorch_rep_spec):
         # Test construction with enable_learning=False, running, and then enabling learning
@@ -677,6 +678,7 @@ class TestAutodiffLearningRateArgs:
             outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
         assert error_msg in str(error_text.value)
 
+    @pytest.mark.pytorch
     def test_learning_rate_utility_functions(self):
         import torch
         nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1')
@@ -716,6 +718,7 @@ class TestAutodiffLearningRateArgs:
         assert set(param_to_proj_dict.values()) == set(proj_to_param_dict.keys())
         assert set(proj_to_param_dict.values()) == set(param_to_proj_dict.keys())
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("enable_learning", ['before_run', 'after_run'])
     def test_enable_learning(self, enable_learning):
         # Test construction with enable_learning=False, running, and then enabling learning
