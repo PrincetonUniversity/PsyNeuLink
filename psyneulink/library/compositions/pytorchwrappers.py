@@ -986,6 +986,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
                 if optmization_num and self.composition.include_in_multiple_optimizations:
+                    if optimization_num == 1:
+                        self.composition._before_last_optimization()
                     # If optimization_num is specified, only run nodes that are specified for multiple optimizations
                     current_exec_set = {node for node in current_exec_set
                                         if node.mechanism in self.composition.include_in_multiple_optimizations}
@@ -1102,6 +1104,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+
+                    if optimization_num + 1 == self.composition.optimizations_per_minibatch:
+                        self.composition._after_last_optimization()
+
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:

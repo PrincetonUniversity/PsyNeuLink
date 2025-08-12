@@ -3884,6 +3884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.disable_learning = disable_learning
         self.learning_rate = learning_rate
         self._runtime_learning_rate = None
+        self.include_in_multiple_optimizations = {}
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -11731,6 +11732,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
 
+        elif include_in_multiple_optimizations:
+            self._validate_and_parse_multiple_optimizations(include_in_multiple_optimizations)
+
         result = runner.run_learning(
             inputs=inputs,
             targets=targets,
@@ -12953,6 +12957,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
+
+    def _validate_and_parse_multiple_optimizations(self, user_specs:dict):
+        """Validate entries of dict specified for include_in_multiple_optimizations argument of learn()
+        Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
+        values to use during multiple optimizations, or None if no Parameters should be modified for that node.
+        """
+        self._validate_and_assign_multiple_optimizations(user_specs)
+        bad_nodes = []
+        for node, params in user_specs.items():
+            if node not in self._get_nested_compositions():
+                bad_nodes.append(node)
+                continue
+        if bad_nodes:
+            raise CompositionError(
+                f"The following nodes were specified in the `include_in_multiple_optimizations` arg for {self.name} "
+                f"but were not found in the Composition or any nested within it: {', '.join(bad_nodes)}.")
+
+        self.include_in_multiple_optimizations = user_specs
+
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):
