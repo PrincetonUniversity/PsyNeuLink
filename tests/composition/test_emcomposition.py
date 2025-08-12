@@ -546,6 +546,7 @@ class TestConstruction:
     @pytest.mark.parametrize('condition, learning_rate, fields, error_message', test_args_for_learning_rate_errors,
                              ids=[x[0] for x in test_args_for_learning_rate_errors])
     def test_learning_rate_specification_errors(self, condition, learning_rate, fields, error_message):
+        assert condition
         learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
         fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
         with pytest.raises(EMCompositionError) as error_text:

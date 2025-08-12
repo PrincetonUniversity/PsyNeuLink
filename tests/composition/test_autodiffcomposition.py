@@ -3965,8 +3965,7 @@ class TestMiscTrainingFunctionality:
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
 
-    @pytest.mark.parametrize("bias", [False, True])
-    def test_pytorch_identicality_of_learning_rates_nested(self, bias):
+    def test_pytorch_identicality_of_learning_rates_nested(self):
         """Test ideinticality with assignment of learning rates in learning_rate of nested Composition"""
         import torch
         entry_torch_dtype = torch.get_default_dtype()
