@@ -124,12 +124,12 @@ class TestStructural:
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
     @pytest.mark.parametrize("comp_constructor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
-    @pytest.mark.parametrize("condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
+    @pytest.mark.parametrize("_condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
-    def test_projection_specific_learning_rates(self, condition,
+    def test_projection_specific_learning_rates(self, _condition,
                                                 comp_lr, learn_method_lr,
                                                 proj_constr, comp_constructor_lr_dict, post_constr, expected):
-        assert condition
+
         in_shape = 4
         hidden_1_shape = 3
         hidden_2_shape = 2
@@ -296,16 +296,15 @@ class TestStructural:
             return test_nested_dicts[dict]
         return _get_learning_rate_dicts
 
-    @pytest.mark.parametrize("condition, "
+    @pytest.mark.parametrize("_condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
                              test_nested_args, ids=[f"{x[0]}" for x in test_nested_args])
-    def test_3_level_nested_learning_rates(self, condition,
+    def test_3_level_nested_learning_rates(self, _condition,
                                            ip, ic, m1, mc, o2, oc, lr,
                                            ipc, m1c, o2c,
                                            ipl, m1l,o2l,
                                            ipr, m1r, o2r,
                                            test_nested_dicts):
-        assert condition
 
         # These are not parameterized, and since they are assigned in Projection constructors, should always be the same
         m2 = m2c = m2l = m2r = .98
