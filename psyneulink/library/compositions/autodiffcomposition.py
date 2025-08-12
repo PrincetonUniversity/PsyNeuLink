@@ -401,10 +401,6 @@ else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
-
 from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

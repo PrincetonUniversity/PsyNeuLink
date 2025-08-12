@@ -166,6 +166,7 @@ class TestStructural:
                                  learning_rate=learn_method_lr)
         np.testing.assert_allclose(comp_result, expected)
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("comp_lr", [.3, None, True, False],
                              ids=["comp_0.3", "comp_None", "comp_True", "comp_False"])
     @pytest.mark.parametrize("pway_lr", [.2, None, True, False],
@@ -296,6 +297,7 @@ class TestStructural:
             return test_nested_dicts[dict]
         return _get_learning_rate_dicts
 
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("_condition, "
                              "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
                              test_nested_args, ids=[f"{x[0]}" for x in test_nested_args])
