@@ -33,7 +33,7 @@ def main():
     if RUN_PSY_EGO:
         utils.set_random_seed_and_capture_state(0)
         model, context, state, em = construct_model(memory_capacity=len(ego_inputs))
-        ego_results = run_model(model, context, state, em, ego_inputs)
+        ego_results = run_model(model, ego_inputs)
         # plot_results(ego_results, ego_targets, axes[0])
     if RUN_DECLAN:
         utils.set_random_seed_and_capture_state(0)

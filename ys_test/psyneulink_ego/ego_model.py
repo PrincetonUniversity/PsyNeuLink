@@ -153,7 +153,7 @@ def construct_model(
     return EGO_comp, context_layer, state_input_layer, em
 
 
-def run_model(model, trials):
+def run_model(model, inputs):
     for t in trials:
         model.learn(inputs={params_ego['state_input_layer_name']: [t]},
                     learning_rate=params_ego['learning_rate'],
@@ -166,7 +166,7 @@ def run_model(model, trials):
 
 
 if __name__ == '__main__':
-    trials = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]
+    inputs = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]
     model, _, _, _ = construct_model(memory_capacity=5, state_size=5, context_size=5)
-    results = run_model(model, trials)
+    results = run_model(model, inputs)
     print(results)

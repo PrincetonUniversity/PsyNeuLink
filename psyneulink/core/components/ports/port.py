@@ -1484,7 +1484,6 @@ class Port_Base(Port):
 
             self.owner._projection_added(projection, context)
 
-
         return new_projections
 
     # FIX: MOVE TO OutputPort or...
@@ -1530,7 +1529,6 @@ class Port_Base(Port):
         # projection_type = None   # stores type of projection to instantiate
         # projection_params = {}
 
-
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
         #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_port())
 
@@ -1573,7 +1571,7 @@ class Port_Base(Port):
                         return spec.receiver
                     except AttributeError:
                         return spec._init_args[RECEIVER]
-                    except:
+                    except Exception:
                         raise PortError(f"Unrecognized specification of receiver for Projection "
                                         f"from '{self.name}' of '{self.owner.name}'.")
                 # FIX: 11/25/17 -- NEEDS TO CHECK WHETHER PRIMARY SHOULD BE INPUT_PORT OR PARAMETER_PORT
@@ -1733,12 +1731,12 @@ class Port_Base(Port):
                         # should be defaults.value?
                         try:
                             mod_proj_spec_value = match_modulation_to_value(projection.value, mod_param_value)
-                        except TypeError as error:
+                        except TypeError:
                             raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
                                             f"not match the format ({mod_param_value}) of the Parameter it modulates "
                                             f"({receiver.owner.name}[{mod_param_name}]).")
                         if (mod_param_value is not None
-                            and not iscompatible(mod_param_value, mod_proj_spec_value)):
+                                and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
                                             f"with the value of {receiver.name} ({mod_param_value}).")
 
@@ -1763,20 +1761,20 @@ class Port_Base(Port):
             self.projections.remove(projection)
         try:
             if projection in self.mod_afferents or projection in self.path_afferents:
-                self._remove_projection_to_port(projection, context=context)
+                self._remove_projection_to_port(projection)
         except PortError:
             pass
         try:
             if projection in self.efferents:
-                self._remove_projection_from_port(projection, context=context)
+                self._remove_projection_from_port(projection)
         except PortError:
             pass
 
-    def _remove_projection_from_port(self, projection, context=None):
+    def _remove_projection_from_port(self, projection):
         """Remove Projection entry from Port.efferents."""
         del self.efferents[self.efferents.index(projection)]
 
-    def _remove_projection_to_port(self, projection, context=None):
+    def _remove_projection_to_port(self, projection):
         """
         If projection is in mod_afferents, remove that projection from self.mod_afferents.
         Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly.
