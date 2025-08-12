@@ -401,6 +401,10 @@ else:
     from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
+
 from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -1102,8 +1106,8 @@ class AutodiffComposition(Composition):
                                       context=None,
                                       new=None,
                                       base_context=Context(execution_id=None))->PytorchCompositionWrapper:
-        """Builds a Pytorch representation of the AutodiffComposition
-        Constructs PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
+        """Build a Pytorch representation of the AutodiffComposition
+        Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
 
         A new pytorch_representation is constructed if:
