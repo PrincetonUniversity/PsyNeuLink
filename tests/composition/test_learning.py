@@ -123,6 +123,7 @@ class TestStructural:
     ]
     # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
     #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("comp_constructor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
     @pytest.mark.parametrize("_condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
                              test_args, ids=[f"{x[0]}" for x in test_args])
