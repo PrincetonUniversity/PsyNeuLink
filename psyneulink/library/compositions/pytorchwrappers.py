@@ -985,7 +985,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
-                if optmization_num and self.composition._nodes_to_execute_in_additional_optimizations:
+                if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
                     if optimization_num == 1:
                         self.composition._before_last_optimization()
                     # If optimization_num is specified, only run nodes that are specified for multiple optimizations
@@ -1105,7 +1105,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
 
-                    if optimization_num + 1 == self.composition.optimizations_per_minibatch:
+                    if optimization_num and optimization_num + 1 == self.composition.optimizations_per_minibatch:
                         self.composition._after_last_optimization()
 
 
