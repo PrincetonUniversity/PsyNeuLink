@@ -1241,7 +1241,7 @@ class AutodiffComposition(Composition):
 
         return pytorch_rep
 
-    def _instantiate_optimizer(self, learning_rate, optimizer_params, context)->torch.optim.Optimizer:
+    def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
 
         if isinstance(learning_rate, dict):
             # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value
