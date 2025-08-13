@@ -418,6 +418,7 @@ if __name__ == '__main__':
               f"using {model_params['curriculum_type']} training starting with {sequence_context}, {sequence_state}...")
         context = model_params['name']
         start_time = timeit.default_timer()
+        # FOR DEBUGGING:
         torch.autograd.set_detect_anomaly(True)
         model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
                   # report_output=REPORT_OUTPUT,
