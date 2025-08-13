@@ -4,7 +4,6 @@ import os
 import numpy as np
 
 import pytest
-import torch.nn
 from fontTools.mtiLib import parseSingleSubst
 
 import psyneulink as pnl
