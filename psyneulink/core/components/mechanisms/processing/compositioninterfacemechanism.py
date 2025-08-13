@@ -214,9 +214,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context=context)
         return ports
 
-    @handle_external_context()
-    def remove_ports(self, ports, context=None):
-        super(CompositionInterfaceMechanism, self).remove_ports(ports, context)
+    def remove_ports(self, ports):
+        super(CompositionInterfaceMechanism, self).remove_ports(ports)
         input_ports_marked_for_deletion = set()
         for port in self.user_added_ports[INPUT_PORTS]:
             if port not in self.input_ports:

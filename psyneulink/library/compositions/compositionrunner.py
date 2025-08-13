@@ -48,7 +48,7 @@ class CompositionRunner():
             total_loss += comparator.value[0][0]
         return total_loss
 
-    def convert_to_torch(self, v):
+    def convert_to_torch(self, v, add_sequence_dim):
         """Convert a list of numpy arrays to a list of PyTorch tensors"""
 
         import torch
@@ -74,16 +74,25 @@ class CompositionRunner():
         if type(t) is not list and t.dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
             t = t.double()
 
+        # Even though this is not an input of sequences, we need to add a singleton dimension for sequence. This
+        # will be the second dimension, after the batch dimension.
+        if add_sequence_dim:
+            try:
+                t = t[:, None, ...]
+            except TypeError:
+                # We are dealing with a list.
+                t = [[[x for x in y]] for y in t]
+
         return t
 
-    def convert_input_to_arrays(self, inputs, execution_mode):
+    def convert_input_to_arrays(self, inputs, execution_mode, add_sequence_dim: bool = False):
         """If the inputs are not numpy arrays or torch tensors, convert them"""
 
         array_inputs = {}
         for k, v in inputs.items():
             if type(v) is list:
                 if execution_mode is ExecutionMode.PyTorch:
-                    array_inputs[k] = self.convert_to_torch(v)
+                    array_inputs[k] = self.convert_to_torch(v, add_sequence_dim)
                 else:
                     array_inputs[k] = np.array(v)
             else:
@@ -129,7 +138,40 @@ class CompositionRunner():
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
 
-        inputs = self.convert_input_to_arrays(inputs, execution_mode)
+        if isinstance(inputs, dict):
+            inputs = self.convert_input_to_arrays(inputs, execution_mode, add_sequence_dim=True)
+
+        elif isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs):
+            inputs = [self.convert_input_to_arrays(i, execution_mode, add_sequence_dim=False) for i in inputs]
+
+            import torch
+            from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+
+            # Now, we need to pad the sequences to the same length
+            packed_inputs = {}
+            for k in inputs[0].keys():
+
+                # Get the length of each sequence for each trial for this input
+                lengths = torch.tensor([trial_inp[k].shape[0] for trial_inp in inputs])
+
+                dims = [trial_inp[k].ndim for trial_inp in inputs]
+
+                # For any input that isn't 3D (seq_len, input_port, variable), we need to add the input port dimension.
+                # We know that this messing dimension is the input port because this is a sequence input (a list of dicts)
+                for i, dim in enumerate(dims):
+                    inputs[i][k] = inputs[i][k][:, None, :]
+
+                # If all the lengths are the same, just stack them into one tensor, no need to pad
+                if all(length == lengths[0] for length in lengths):
+                    packed_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
+
+                # Otherwise, we will make a packed padded sequence
+                else:
+                    padded_input = pad_sequence([trial_inp[k] for trial_inp in inputs], batch_first=True)
+                    packed_inputs[k] = padded_input
+                    # packed_inputs[k] = pack_padded_sequence(padded_input, lengths, batch_first=True, enforce_sorted=False)
+
+            inputs = packed_inputs
 
         # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -251,7 +293,7 @@ class CompositionRunner():
                         break
                     batch_ran = True
 
-                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode)
+                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode, add_sequence_dim=True)
 
                     yield input_batch
 
@@ -291,6 +333,7 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      execution_mode:ExecutionMode = ExecutionMode.Python,
+                     skip_initialization=False,
                      **kwargs)->np.ndarray:
         """
         Runs the composition repeatedly with the specified parameters.
@@ -327,7 +370,8 @@ class CompositionRunner():
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
-        if isinstance(inputs, dict) or callable(inputs):
+        if (isinstance(inputs, dict) or callable(inputs) or
+                (isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs))):
             inputs = [inputs]
 
         if isgeneratorfunction(targets):
@@ -346,18 +390,21 @@ class CompositionRunner():
         elif epochs is None:
             epochs = inf_yield_val(1)
 
-        skip_initialization = False
-
         # FIX JDC 12/10/22: PUT with Report HERE, TREATING OUTER LOOP AS RUN, AND RUN AS TRIAL
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
-                                                                                  targets=stim_target,
-                                                                                  execution_mode=execution_mode,
-                                                                                  context=context)
+            # By-pass parse learning spec if we are dealing with sequences for now
+            if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
+                stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
+                                                                                      targets=stim_target,
+                                                                                      execution_mode=execution_mode,
+                                                                                      context=context)
+            else:
+                num_trials = len(stim_input)
+
             if num_trials is None:
                 num_trials = num_input_trials
 

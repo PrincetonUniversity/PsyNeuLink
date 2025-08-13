@@ -45,15 +45,16 @@ from psyneulink.core.components.functions.function import (DEFAULT_SEED, Functio
                                                            _seed_setter, _noise_setter)
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    (ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM,
-     DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION,
-     DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION,
-     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE,
-     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION,
-     MODEL_SPEC_ID_MDF_VARIABLE, MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION,
-     OUTPUT_PORTS, PREVIOUS_VALUE, PRODUCT,  RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE,
-     THRESHOLD, VARIABLE)
+from psyneulink.core.globals.keywords import (
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM,
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION,
+    DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION,
+    INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE,
+    INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION,
+    MODEL_SPEC_ID_MDF_VARIABLE, MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION,
+    OUTPUT_PORTS, PREVIOUS_VALUE, PRODUCT, RATE, REST, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE,
+    THRESHOLD, VARIABLE, DEFAULT,
+)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import ValidParamSpecType, all_within_range, is_numeric_scalar, \
@@ -714,7 +715,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. math::
 
-        previous_value + rate * variable + noise + offset
+        previous\\_value + rate * variable + noise + offset
 
     *Modulatory Parameters:*
 
@@ -946,7 +947,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
 
     .. math::
-        ((1-rate) * previous_value) + (rate * variable)  + noise + offset
+        ((1-rate) * previous\\_value) + (rate * variable)  + noise + offset
 
     *Modulatory Parameters:*
 
@@ -2411,7 +2412,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(0.0, initializer='non_decision_time')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2984,7 +2985,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter([0, 0], initalizer='variable', dependencies=dimension, stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3453,7 +3454,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         non_decision_time = Parameter(0.0, modulable=True)
         previous_time = Parameter(0.0, initializer='non_decision_time', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3924,6 +3925,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             d_v + e_v * w + f_v * I_{ext}
 
     where
+
     .. math::
             time\\_constant_w * \\frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\\_activity
 

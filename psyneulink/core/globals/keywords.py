@@ -476,7 +476,7 @@ PNL = 'psyneulink'
 
 ON = True
 OFF = False
-DEFAULT = False
+DEFAULT = 'default'
 # AUTO = True  # MODIFIED 7/14/17 CW
 ASSERT = True
 

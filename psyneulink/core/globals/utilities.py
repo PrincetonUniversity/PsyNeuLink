@@ -1614,7 +1614,7 @@ def get_class_attributes(cls):
             if item[0] not in boring]
 
 
-def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
+def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None, dtype=None):
     """
         Recursively converts all items in **arr** to numpy arrays, optionally casting
         items of type/dtype **cast_from** to type/dtype **cast_to**
@@ -1623,6 +1623,8 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         ---------
             cast_from - type, numpy.dtype - type when encountered to cast to **cast_to**
             cast_to - type, numpy.dtype - type to cast **cast_from** to
+            dtype - type, numpy.dtype - if not using **cast_from** and
+            **cast_to**, dtype for result array
 
         Returns
         -------
@@ -1636,7 +1638,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
                 return arr
 
         if isinstance(arr, np.number):
-            return np.asarray(arr)
+            return np.asarray(arr, dtype=dtype)
 
         if cast_from is not None and isinstance(arr, cast_from):
             return cast_to(arr)
@@ -1646,7 +1648,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
         if isinstance(arr, np.matrix):
             if arr.dtype == object:
-                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)])
+                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)], dtype=dtype)
             else:
                 return arr
 
@@ -1656,7 +1658,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             warnings.filterwarnings('error', message='.*ragged.*', category=np_exceptions.VisibleDeprecationWarning)
             try:
                 # the elements are all uniform in shape, so we can use numpy's standard behavior
-                return np.asarray(subarr)
+                return np.asarray(subarr, dtype=dtype)
             except np_exceptions.VisibleDeprecationWarning:
                 pass
             except ValueError as e:
@@ -1677,7 +1679,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
         # only wrap a noniterable if it's the outermost value
-        return np.asarray(arr)
+        return np.asarray(arr, dtype=dtype)
     else:
         return recurse(arr)
 
@@ -1719,6 +1721,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
+
 def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
@@ -1735,7 +1738,9 @@ def set_global_seed(new_seed):
         new seed to use for randomization
     """
     global _seed
-    _seed = new_seed
+
+    # Keep the same dtype as the original seed
+    _seed = _seed.dtype.type(new_seed)
 
 
 def safe_len(arr, fallback=1):

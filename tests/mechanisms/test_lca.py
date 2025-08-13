@@ -271,6 +271,12 @@ class TestLCA:
         result1 = comp1.run(inputs={lca:[1, -1]}, execution_mode=comp_mode)
         np.testing.assert_allclose(result1, [[0.52497918747894, 0.47502081252106]])
 
+    @pytest.mark.lca_mechanism
+    def test_LCAMechanism_termination_threshold(self):
+        lca = LCAMechanism(termination_threshold=0)
+        assert lca.defaults.termination_threshold == 0
+        assert lca.parameters.termination_threshold in lca.parameter_ports
+
 
 class TestLCAReset:
 

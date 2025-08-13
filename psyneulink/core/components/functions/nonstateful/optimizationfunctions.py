@@ -49,9 +49,10 @@ from psyneulink.core.components.functions.function import (
 )
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
-from psyneulink.core.globals.keywords import \
-    BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
-    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE
+from psyneulink.core.globals.keywords import (
+    BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION,
+    OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, DEFAULT,
+)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args, convert_to_np_array
@@ -450,17 +451,17 @@ class OptimizationFunction(Function_Base):
         if search_termination_function is None:
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
 
-        self.randomization_dimension = randomization_dimension
-        if self.search_space:
+        if search_space and randomization_dimension is not None:
             # Make randomization dimension of search_space last for standardization of treatment
-            self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
-            self.randomization_dimension = len(self.search_space)
+            search_space.append(search_space.pop(search_space.index(randomization_dimension)))
+            randomization_dimension = len(search_space)
 
         super().__init__(
             default_variable=default_variable,
             save_samples=save_samples,
             save_values=save_values,
             max_iterations=max_iterations,
+            randomization_dimension=randomization_dimension,
             search_space=search_space,
             objective_function=objective_function,
             aggregation_function=aggregation_function,
@@ -1607,7 +1608,7 @@ class GridSearch(OptimizationFunction):
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE

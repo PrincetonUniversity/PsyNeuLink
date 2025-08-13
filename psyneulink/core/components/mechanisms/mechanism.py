@@ -1098,7 +1098,7 @@ from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import 
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import \
-    REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
+    PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 # TODO: remove unused keywords
@@ -1111,12 +1111,17 @@ from psyneulink.core.globals.keywords import \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
-from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import (
+    Parameter,
+    ParameterNoValueError,
+    check_user_specified,
+    copy_parameter_value,
+)
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier
+    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier, safe_len
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -1140,7 +1145,7 @@ class MechParamsDict(UserDict):
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
         return convert_all_elements_to_np_array([input_port.parameters.variable._get(context) for input_port in owning_component.input_ports])
-    except (AttributeError, TypeError):
+    except (AttributeError, ParameterNoValueError, TypeError):
         return None
 
 
@@ -1617,6 +1622,16 @@ class Mechanism_Base(Mechanism):
             structural=True,
         )
 
+        def _parse_variable(self, variable):
+            if variable is None:
+                return None
+            # 2d empty port causes input problems.
+            # occurs for CIMs of empty Compositions, or when remove_port
+            # called on only input port
+            if safe_len(variable) == 0:
+                return np.array([])
+            return convert_to_np_array(variable, dimension=2)
+
         def _parse_input_ports(self, input_ports):
             if input_ports is None:
                 return input_ports
@@ -1872,7 +1887,7 @@ class Mechanism_Base(Mechanism):
         input_port_variable_was_specified = None
 
         if (
-            not isinstance(input_ports, list)
+            not isinstance(input_ports, (list, UserList))
             and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
         ):
             input_ports = [input_ports]
@@ -2966,9 +2981,11 @@ class Mechanism_Base(Mechanism):
                 if p_input_data.type == p_function.args[2].type:
                     p_input = p_input_data
                 else:
-                    assert port in self.output_ports
+                    assert port in self.output_ports, \
+                        "Port {} with input shape mismatch, got: {} vs. expected: {}".format(port, p_input_data.type, p_function.args[2].type)
+
                     # Ports always take at least 2d input. However, parsing
-                    # the function result can result in 1d structure or scalar
+                    # the function result can result in a 1d structure or a scalar.
                     # Casting the pointer is LLVM way of adding dimensions
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     assert array_1d == p_function.args[2].type.pointee, \
@@ -2984,6 +3001,7 @@ class Mechanism_Base(Mechanism):
                 # Port input structure is: (data, [modulations]),
                 p_input = builder.alloca(p_function.args[2].type.pointee,
                                          name=group + "_port_" + str(i) + "_input")
+
                 # Fill in the data.
                 # FIXME: We can potentially hit the same dimensionality issue
                 #        as above, but it's more difficult to manifest and
@@ -2991,21 +3009,19 @@ class Mechanism_Base(Mechanism):
                 p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(p_input_data), p_data)
 
-            # Copy mod_afferent inputs
-            for idx, p_mod in enumerate(port.mod_afferents):
-                mech_mod_afferent_idx = mod_afferents.index(p_mod)
-                mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
-                                                      ctx.int32_ty(len(self.input_ports)),
-                                                      ctx.int32_ty(mech_mod_afferent_idx)])
-                mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
-                afferent_val = builder.load(mod_in_ptr)
-                builder.store(afferent_val, mod_out_ptr)
+                # Copy mod_afferent/modulated inputs
+                for idx, p_mod in enumerate(port.mod_afferents):
+                    mech_mod_afferent_idx = mod_afferents.index(p_mod)
+                    mod_in_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(len(self.input_ports)),
+                                                          ctx.int32_ty(mech_mod_afferent_idx)])
+                    mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
+                    afferent_val = builder.load(mod_in_ptr)
+                    builder.store(afferent_val, mod_out_ptr)
 
             port_idx = group_ports.index(port)
-            p_params = builder.gep(ports_param, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(port_idx)])
-            p_state = builder.gep(ports_state, [ctx.int32_ty(0),
-                                                ctx.int32_ty(port_idx)])
+            p_params = builder.gep(ports_param, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
+            p_state = builder.gep(ports_state, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
 
             builder.call(p_function, [p_params, p_state, p_input, p_output])
 
@@ -3816,7 +3832,7 @@ class Mechanism_Base(Mechanism):
                 OUTPUT_PORTS: instantiated_output_ports}
 
     @beartype
-    def remove_ports(self, ports, context=REMOVE_PORTS):
+    def remove_ports(self, ports):
         """
         remove_ports(ports)
 
@@ -3900,7 +3916,7 @@ class Mechanism_Base(Mechanism):
                                               category=category,
                                               component=port)
 
-        self.defaults.variable = self.input_values
+        self.defaults.variable = [copy_parameter_value(ip.defaults.value) for ip in self.input_ports]
 
     def _delete_mechanism(mechanism):
         mechanism.remove_ports(mechanism.input_ports)
@@ -4246,14 +4262,14 @@ class Mechanism_Base(Mechanism):
         for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
             model.parameters.append(mdf.Parameter(id=name, value=val))
 
+        input_ports = self.parameters.input_ports.get(fallback_value=None)
         if (
-            self.input_ports is None
+            input_ports is None
             and self.initialization_status is ContextFlags.DEFERRED_INIT
         ):
             input_ports = []
             primary_input_port = None
         else:
-            input_ports = self.input_ports
             primary_input_port = self.input_ports[0]
 
         primary_function_input_ids = []
@@ -4309,7 +4325,7 @@ class Mechanism_Base(Mechanism):
                 model.input_ports.append(ip_model)
                 primary_function_input_ids.append(ip_model.id)
 
-        output_ports = self.output_ports
+        output_ports = self.parameters.output_ports.get(fallback_value=None)
         if (
             output_ports is None
             and self.initialization_status is ContextFlags.DEFERRED_INIT
@@ -4330,11 +4346,12 @@ class Mechanism_Base(Mechanism):
         else:
             primary_function_input_id = f"numpy.array([{', '.join(primary_function_input_ids)}])"
 
+        function = self.parameters.function.get(fallback_value=None)
         if (
-            self.function is not None
-            or self.initialization_status is not ContextFlags.DEFERRED_INIT
+            function is not None
+            and self.initialization_status is not ContextFlags.DEFERRED_INIT
         ):
-            self.function._assign_to_mdf_model(model, primary_function_input_id)
+            function._assign_to_mdf_model(model, primary_function_input_id)
 
         return model
 
