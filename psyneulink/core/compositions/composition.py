@@ -11640,9 +11640,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
                 for any additional optimization steps after the first (see **optimizations_per_minibatch** for
                 additional information); each key should be a `Node <Composition_Nodes>` in the Composition or one
-                nested within it, and the value can be None, or either a 2-item tuple or list of ones, the first
-                item of which is a Parameter of the Node and the second the value it should be assgined during
-                additional optimizations.
+                nested within it, and the value can be either None, a 2-item tuple, or list of ones, in which the first
+                item of each tuple is a Parameter of the Node and the second item is the value it should be assgined
+                during additional optimizations.  If a Composition is specified, then all Nodes within that Composition
+                and any nested within it are included.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch
@@ -12980,12 +12981,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bad_nodes.append(node)
                 continue
             if isinstance(node, Composition):
-                # Add all nodes within a referenced nested Composition
+                # Add Composition
                 nodes_to_execute.add(node)
+                # Add all nodes within that Composition and any nested within in
+                nodes_to_execute.update(node._get_all_nodes())
             else:
                 nodes_to_execute.add(node)
                 if node not in self.nodes:
-                    # For a nested node, add its Composition to nodes_toe_execute since that will be needed by forward
+                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward
                     try:
                         comp = next(item[1] for item in self._get_nested_nodes() if node is item[0])
                     except StopIteration:

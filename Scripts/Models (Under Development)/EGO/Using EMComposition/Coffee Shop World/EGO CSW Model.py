@@ -431,9 +431,10 @@ if __name__ == '__main__':
                     synch_results_with_torch=model_params['synch_results'],
                     learning_rate=model_params['learning_rate'],
                     execution_mode= model_params['execution_mode'],
-                    execute_in_additional_optimizations={model.nodes[3]:('storage_prob',1),
-                                                         model.nodes[4]:None,
-                                                         model.nodes[5]:None}
+                    execute_in_additional_optimizations={model.nodes['EM']:('storage_prob',0),
+                                                         model.nodes['PREDICTION']:None,
+                                                         model.nodes['EM'].nodes['PREVIOUS STATE [RETRIEVED]']:None,
+                                                         model.nodes['EM'].nodes['CONTEXT [RETRIEVED]']:None}
                     # minibatch_size=1,
                     # epochs=1
                   )
