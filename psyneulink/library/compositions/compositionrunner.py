@@ -208,6 +208,7 @@ class CompositionRunner():
                     if execution_mode is ExecutionMode.PyTorch:
                         # MODIFIED 8/13/25 NEW:
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # Set _optimization_num for use by pytorchwrapper.forward()
                         pytorch_rep._optimization_num = optimization_num
                         # MODIFIED 8/13/25 END
                         if optimization_num == 1 and self._composition.execute_in_additional_optimizations:
