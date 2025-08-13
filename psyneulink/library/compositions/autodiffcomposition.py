@@ -1101,7 +1101,7 @@ class AutodiffComposition(Composition):
                                       optimizer_params=None,
                                       context=None,
                                       new=None,
-                                      base_context=Context(execution_id=None))->PytorchCompositionWrapper:
+                                      base_context=Context(execution_id=None)):
         """Build a Pytorch representation of the AutodiffComposition
         Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
