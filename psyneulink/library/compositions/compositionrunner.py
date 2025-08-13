@@ -205,21 +205,21 @@ class CompositionRunner():
 
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
+                    # MODIFIED 8/13/25 NEW:
+                    pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                    pytorch_rep._optimization_num = optimization_num
+                    # MODIFIED 8/13/25 END
                     if execution_mode is ExecutionMode.PyTorch:
-                        # BREADCRUMB: THIS SHOULD SET SPECIFIED PARAMETER VALUES FOR MULTIPLE OPTIMIZATIONS
-                        #             (E.G., EMCOMPOSITION.STORAGE_PROB=0 FOR EGO MODEL
-                        #             AND SET "multipoptimization flag" TO True)
                         if optimization_num == 1 and self._composition.execute_in_additional_optimizations:
                             self._composition._call_after_first_optimization(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # MODIFIED 8/13/25 OLD:
+                        # pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # MODIFIED 8/13/25 END
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                        # BREADCRUMB: THIS SHOULD RESET SPECIFIED PARAMETER VALUES TO STANDARD OPTIMIZATION VALUES
-                        #             (E.G., EMCOMPOSITION.STORAGE_PROB TO WHATEVER IT WAS FOR REG RUN OF THE EGO MODEL
-                        #             AND SET "multipoptimization flag" TO False)
                         if (optimization_num + 1 == optimizations_per_minibatch and
                                 self._composition.execute_in_additional_optimizations):
                             self._composition._call_after_last_optimization(context=context)

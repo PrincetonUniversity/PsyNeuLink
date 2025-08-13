@@ -284,6 +284,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
+        # MODIFIED 8/13/25 NEW:
+        self._optimization_num = None
+        # MODIFIED 8/13/25 END
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
 
@@ -983,12 +986,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
+            # MODIFIED 8/13/25 NEW:
+            optimization_num = optimization_num if optimization_num is not None else self._optimization_num
+            # MODIFIED 8/13/25 END
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
                 if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
-                    if optimization_num == 1:
-                        self.composition._before_last_optimization()
-                    # If optimization_num is specified, only run nodes that are specified for multiple optimizations
+                    # If _nodes_to_execute_in_additional_optimizations is specified,
+                    #    only execute specified nodes for all optmizations >= 1
                     current_exec_set = {node for node in current_exec_set
                                         if node.mechanism in self.composition.execute_in_additional_optimizations}
                 for node in current_exec_set:
@@ -1104,10 +1109,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
-
-                    if optimization_num and optimization_num + 1 == self.composition.optimizations_per_minibatch:
-                        self.composition._after_last_optimization()
-
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
