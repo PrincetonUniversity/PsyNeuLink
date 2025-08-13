@@ -209,7 +209,7 @@ class CompositionRunner():
                         # BREADCRUMB: THIS SHOULD SET SPECIFIED PARAMETER VALUES FOR MULTIPLE OPTIMIZATIONS
                         #             (E.G., EMCOMPOSITION.STORAGE_PROB=0 FOR EGO MODEL
                         #             AND SET "multipoptimization flag" TO True)
-                        if optimization_num and self._composition.execute_in_additional_optimizations:
+                        if optimization_num == 1 and self._composition.execute_in_additional_optimizations:
                             self._composition._call_after_first_optimization(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
