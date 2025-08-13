@@ -209,7 +209,7 @@ class CompositionRunner():
                         # BREADCRUMB: THIS SHOULD SET SPECIFIED PARAMETER VALUES FOR MULTIPLE OPTIMIZATIONS
                         #             (E.G., EMCOMPOSITION.STORAGE_PROB=0 FOR EGO MODEL
                         #             AND SET "multipoptimization flag" TO True)
-                        if optimization_num and self._composition._nodes_to_execute_in_additional_optimizations:
+                        if optimization_num and self._composition.execute_in_additional_optimizations:
                             self._composition._call_after_first_optimization(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
@@ -221,7 +221,7 @@ class CompositionRunner():
                         #             (E.G., EMCOMPOSITION.STORAGE_PROB TO WHATEVER IT WAS FOR REG RUN OF THE EGO MODEL
                         #             AND SET "multipoptimization flag" TO False)
                         if (optimization_num + 1 == optimizations_per_minibatch and
-                                self._composition._nodes_to_execute_in_additional_optimizations):
+                                self._composition.execute_in_additional_optimizations):
                             self._composition._call_after_last_optimization(context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified

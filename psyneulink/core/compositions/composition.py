@@ -13023,20 +13023,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._nodes_to_execute_in_additional_optimizations = nodes_to_execute
         self._params_to_modify_in_additional_optimizations = params_to_modify
+        self.execute_in_additional_optimizations = user_specs
 
     def _call_after_first_optimization(self, context):
-        """Assign specified Parameters values used for additional optimizations"""
-        for node, params in self._params_to_modify_in_additional_optimizations:
-            for param in params:
-                # BREADCRUMB: ASSIGN VALUE HERE
-                pass
+        """Assign specified Parameters values used for additional optimizations
+        Get values to assigne from self._params_to_modify_in_additional_optimizations,
+        and then use that to cache old values until _call_after_last_optimization is called.
+        """
+        # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+        for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+            for i, item in enumerate(params_list.copy()):
+                param, mod_value = item
+                orig_value = param.get(context)
+                param._set(mod_value, context)
+                # Cache old value in place of new one in params list
+                params_list[i] = (param, orig_value)
 
     def _call_after_last_optimization(self, context):
-        """Restore Parameters values used for additional optimizations to original values"""
-        for node, params in self._params_to_modify_in_additional_optimizations:
-            for param in params:
-                # BREADCRUMB: RESETOR VALUE HERE
-                pass
+        """Restore Parameter values that were modified during additional optimizations to their original values
+        Get values to restore from ones cached in self._params_to_modify_in_additional_optimizations
+        """
+        # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+        for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+            for i, item in enumerate(params_list.copy()):
+                param, orig_value = item
+                mod_value = param.get(context)
+                # Resore original value of Parameter
+                param._set(orig_value, context)
+                # Restore values used for additional optimizations in self._params_to_modify_in_additional_optimizations
+                #   for use in subsequent trials
+                params_list[i] = (param, mod_value)
 
 
     @handle_external_context(fallback_most_recent=True)
