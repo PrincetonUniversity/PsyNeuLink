@@ -13038,10 +13038,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._params_to_modify_in_additional_optimizations = params_to_modify
         self.execute_in_additional_optimizations = user_specs
 
-    def _call_after_first_optimization(self, context):
+    def _call_before_additional_optimizations(self, context):
         """Assign specified Parameters values used for additional optimizations
         Get values to assigne from self._params_to_modify_in_additional_optimizations,
-        and then use that to cache old values until _call_after_last_optimization is called.
+        and then use that to cache old values until _call_after_additional_optimizations is called.
         """
         # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
         for node, params_list in self._params_to_modify_in_additional_optimizations.items():
@@ -13052,7 +13052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Cache old value in place of new one in params list
                 params_list[i] = (param, orig_value)
 
-    def _call_after_last_optimization(self, context):
+    def _call_after_additional_optimizations(self, context):
         """Restore Parameter values that were modified during additional optimizations to their original values
         Get values to restore from ones cached in self._params_to_modify_in_additional_optimizations
         """
