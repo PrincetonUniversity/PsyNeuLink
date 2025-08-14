@@ -995,7 +995,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # If _nodes_to_execute_in_additional_optimizations is specified,
                     #    only execute specified nodes for all optmizations >= 1
                     current_exec_set = {node for node in current_exec_set
-                                        if node.mechanism in self.composition.execute_in_additional_optimizations}
+                                        if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
                 for node in current_exec_set:
 
                     # If node is nested Composition (wrapped in PytorchCompositionWrapper),

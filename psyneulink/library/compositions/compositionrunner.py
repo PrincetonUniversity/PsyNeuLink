@@ -203,6 +203,11 @@ class CompositionRunner():
                     # Return current set of stimuli for minibatch
                     yield copy_parameter_value(inputs_for_minibatch)
 
+                    do_additional_optimizations = (optimization_num
+                                                   and self._composition.execute_in_additional_optimizations)
+                    end_extra_optimizations = (optimization_num + 1 == optimizations_per_minibatch
+                                              and self._composition.execute_in_additional_optimizations)
+
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
@@ -211,7 +216,7 @@ class CompositionRunner():
                         # Set _optimization_num for use by pytorchwrapper.forward()
                         pytorch_rep._optimization_num = optimization_num
                         # MODIFIED 8/13/25 END
-                        if optimization_num == 1 and self._composition.execute_in_additional_optimizations:
+                        if do_additional_optimizations:
                             self._composition._call_after_first_optimization(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         # MODIFIED 8/13/25 OLD:
@@ -220,9 +225,11 @@ class CompositionRunner():
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                if (do_additional_optimizations and node.mechanism not in
+                                        self._composition._nodes_to_execute_in_additional_optimizations):
+                                    continue
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                        if (optimization_num + 1 == optimizations_per_minibatch and
-                                self._composition.execute_in_additional_optimizations):
+                        if end_extra_optimizations:
                             self._composition._call_after_last_optimization(context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
