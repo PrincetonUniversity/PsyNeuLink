@@ -18,7 +18,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
-from tests.mdf.stroop_conflict_monitoring import output
+
 
 logger = logging.getLogger(__name__)
 
