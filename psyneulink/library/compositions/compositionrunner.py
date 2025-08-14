@@ -208,8 +208,9 @@ class CompositionRunner():
                     if execution_mode is ExecutionMode.PyTorch:
                         do_additional_optimizations = (optimization_num
                                                        and self._composition.execute_in_additional_optimizations)
-                        end_extra_optimizations = (optimization_num + 1 == optimizations_per_minibatch
-                                                  and self._composition.execute_in_additional_optimizations)
+                        before_additional_optimizations = do_additional_optimizations and optimization_num == 1
+                        end_extra_optimizations = (do_additional_optimizations
+                                                   and optimization_num + 1 == optimizations_per_minibatch)
 
                         # MODIFIED 8/13/25 NEW: MOVED HERE (FROM BELOW) TO BE ABLE TO ASSIGN _optimization_num BELOW
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
@@ -218,7 +219,7 @@ class CompositionRunner():
                         pytorch_rep._optimization_num = optimization_num
                         # MODIFIED 8/13/25 END
 
-                        if do_additional_optimizations:
+                        if before_additional_optimizations:
                             # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
 
