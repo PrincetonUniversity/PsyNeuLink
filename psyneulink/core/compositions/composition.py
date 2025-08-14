@@ -11640,10 +11640,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
                 for any additional optimization steps after the first (see **optimizations_per_minibatch** for
                 additional information); each key should be a `Node <Composition_Nodes>` in the Composition or one
-                nested within it, and the value can be either None, a 2-item tuple, or list of ones, in which the first
-                item of each tuple is a Parameter of the Node and the second item is the value it should be assgined
-                during additional optimizations.  If a Composition is specified, then all Nodes within that Composition
-                and any nested within it are included.
+                nested within it, and the value can be one of the following:
+
+                  *None* or *True*: execute in additional optimizations without any modificadtion(s) to its Parameters;
+
+                  *False* or *EXECLUDE*: exclude from execution during additional optimizations;  this is useful
+                    primarly when a nested Composition is specified but nodes within it should be excluded;
+
+                  *(Parameter, value)* or *[(Parameter, value), ...]*: assign specified Parameter values during
+                    execution of additional optimizations, and restore to previous value for first execution on next
+                    trial.
+
+                If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
+                are included, except for ones explicitly excluded.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch
@@ -13002,13 +13011,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Validate any Parameters specified and their values
             if param_specs:
                 if isinstance(param_specs, tuple):
+                    # "Listify" to standardize treatment below
                     param_specs = convert_to_list(param_specs)
                 if (not isinstance(param_specs, list) or
                     not all(isinstance(param,tuple) and len(param)==2 for param in param_specs)):
+                    # Designate as bad any specifications that are not a 2-item tuple or a list of such
                     bad_nodes.append(node)
                     continue
                 params = []
                 for param_name, param_val in param_specs:
+                    # Assign values to corresponding Parameters
                     try:
                         param = getattr(node.parameters, param_name)
                     except AttributeError:
