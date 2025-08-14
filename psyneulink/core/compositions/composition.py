@@ -3077,7 +3077,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
     (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY,
-     DEFAULT, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
+     DEFAULT, DEFAULT_VARIABLE, DICT, EXCLUDE, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX,
      INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
      LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
      LEARNING_SIGNAL, Loss,
@@ -12971,29 +12971,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not isinstance(user_specs, dict):
             raise CompositionError(f"Specification for 'execute_in_additional_optimizations' arg in learn() method of "
                                    f"of '{self.name}' must be a dict: {user_specs}.")
-        nodes_to_execute = set()
+        nodes_to_include = set()
+        nodes_to_exclude = set()
         params_to_modify = {}
         bad_nodes = []
 
         for node, param_specs in user_specs.items():
-            # if node not in self._get_nested_compositions():
             if node not in self._get_all_nodes() + self._get_nested_compositions():
+                # Node is not in the COmposition or any nested within it
                 bad_nodes.append(node)
+                continue
+            if param_specs is False or param_specs == EXCLUDE:
+                nodes_to_exclude.add(node)
                 continue
             if isinstance(node, Composition):
                 # Add Composition
-                nodes_to_execute.add(node)
+                nodes_to_include.add(node)
                 # Add all nodes within that Composition and any nested within in
-                nodes_to_execute.update(node._get_all_nodes())
+                nodes_to_include.update(node._get_all_nodes())
             else:
-                nodes_to_execute.add(node)
+                nodes_to_include.add(node)
                 if node not in self.nodes:
                     # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward
                     try:
                         comp = next(item[1] for item in self._get_nested_nodes() if node is item[0])
                     except StopIteration:
                         assert False, f"PROGRAM ERROR: Can't find nested Composition to which {node.name} belongs."
-                    nodes_to_execute.add(comp)
+                    nodes_to_include.add(comp)
 
             # Validate any Parameters specified and their values
             if param_specs:
@@ -13018,13 +13022,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     params.append((param, param_val))
                 params_to_modify.update({node: params})
 
+
         if bad_nodes:
             raise CompositionError(
                 f"The following nodes were specified in the 'execute_in_additional_optimizations' arg of learn() method"
                 f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
                 f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
 
-        self._nodes_to_execute_in_additional_optimizations = nodes_to_execute
+        # Remove any specified for exclusion
+        # Note: do this after the for loop since
+        #       some might have been added from a nested Composition before being indentified for exclusion
+        nodes_to_include -= nodes_to_exclude
+
+        self._nodes_to_execute_in_additional_optimizations = nodes_to_include
         self._params_to_modify_in_additional_optimizations = params_to_modify
         self.execute_in_additional_optimizations = user_specs
 
