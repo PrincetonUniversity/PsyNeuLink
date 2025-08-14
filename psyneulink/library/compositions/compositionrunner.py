@@ -203,23 +203,27 @@ class CompositionRunner():
                     # Return current set of stimuli for minibatch
                     yield copy_parameter_value(inputs_for_minibatch)
 
-                    do_additional_optimizations = (optimization_num
-                                                   and self._composition.execute_in_additional_optimizations)
-                    end_extra_optimizations = (optimization_num + 1 == optimizations_per_minibatch
-                                              and self._composition.execute_in_additional_optimizations)
-
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        # MODIFIED 8/13/25 NEW:
+                        do_additional_optimizations = (optimization_num
+                                                       and self._composition.execute_in_additional_optimizations)
+                        end_extra_optimizations = (optimization_num + 1 == optimizations_per_minibatch
+                                                  and self._composition.execute_in_additional_optimizations)
+
+                        # MODIFIED 8/13/25 NEW: MOVED HERE (FROM BELOW) TO BE ABLE TO ASSIGN _optimization_num BELOW
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                        # Set _optimization_num for use by pytorchwrapper.forward()
+                        # BREADCRUMB: HACK SINCE optimization_num CAN'T CURRENTLY BE PASSED DIRECTLY TO forward()
+                        # Set _optimization_num for use by PytorchCompositionWrapper.forward()
                         pytorch_rep._optimization_num = optimization_num
                         # MODIFIED 8/13/25 END
+
                         if do_additional_optimizations:
+                            # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
+
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        # MODIFIED 8/13/25 OLD:
+                        # MODIFIED 8/13/25 OLD: MOVED TO ABOVE
                         # pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # MODIFIED 8/13/25 END
                         from torch import no_grad
@@ -229,7 +233,9 @@ class CompositionRunner():
                                         self._composition._nodes_to_execute_in_additional_optimizations):
                                     continue
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
+
                         if end_extra_optimizations:
+                            # Restore parameters back to their usual values
                             self._composition._call_after_additional_optimizations(context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
