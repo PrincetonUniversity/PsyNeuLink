@@ -70,9 +70,10 @@ class CompositionFunctionApproximator(Composition):
     """Subclass of `Composition` that implements a FunctionApproximator as the `agent_rep
     <OptimizationControlMechanism.agent>` of an `OptimizationControlMechanism`.
 
-    Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
-    <Controlmechanism.net_outcome>` for a set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
-    and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
+    Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a
+    `net_outcome <ControlMechanism.net_outcome>` for a set of `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` and a `control_allocation
+    <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
 
     See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
 
@@ -82,9 +83,10 @@ class CompositionFunctionApproximator(Composition):
     param_defaults : LearningFunction, function or method
         specifies the function parameterized by the CompositionFunctionApproximator's `adapt
         <CompositionFunctionApproximator.adapt>` method, and used by its `evaluate
-        <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
-        <ControlMechanism.net_outcome>` for a set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
-        and a `control_allocation <OptimizationControlMechanism>` provided by an `OptimizationControlMechanism`.
+        <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted
+        `net_outcome <ControlMechanism.net_outcome>` for a set of `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>` and a `control_allocation
+        <OptimizationControlMechanism>` provided by an `OptimizationControlMechanism`.
 
     Attributes
     ----------
@@ -99,8 +101,8 @@ class CompositionFunctionApproximator(Composition):
     prediction_parameters : 1d array
         parameters adjusted by `adapt <CompositionFunctionApproximator.adapt>` method, and used by `function
         <FunctionAppproximator.function>` to predict the `net_outcome <ControlMechanism.net_outcome>`
-        for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
-        <ControlMechanism.control_allocation>`.
+        for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
+        and `control_allocation <ControlMechanism.control_allocation>`.
 
     """
 
