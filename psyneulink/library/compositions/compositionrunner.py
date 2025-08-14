@@ -217,7 +217,7 @@ class CompositionRunner():
                         pytorch_rep._optimization_num = optimization_num
                         # MODIFIED 8/13/25 END
                         if do_additional_optimizations:
-                            self._composition._call_after_first_optimization(context=context)
+                            self._composition._call_before_additional_optimizations(context=context)
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         # MODIFIED 8/13/25 OLD:
                         # pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
@@ -230,7 +230,7 @@ class CompositionRunner():
                                     continue
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
                         if end_extra_optimizations:
-                            self._composition._call_after_last_optimization(context=context)
+                            self._composition._call_after_additional_optimizations(context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
