@@ -10,7 +10,6 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.globals.keywords import Loss
-# from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
 
 
 def xor_network(comp_type, comp_learning_rate, pathway_learning_rate):
