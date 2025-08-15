@@ -18,7 +18,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
-from tests.mdf.stroop_conflict_monitoring import output
+
 
 logger = logging.getLogger(__name__)
 
@@ -627,6 +627,7 @@ class TestAutodiffLearningRateArgs:
          "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
          "is not 'False', or remove it from the dict.")
          ]
+    @pytest.mark.pytorch
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
     def test_learning_rate_specification_errors(self, condition, error_msg):
