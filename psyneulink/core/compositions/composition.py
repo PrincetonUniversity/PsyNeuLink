@@ -11624,7 +11624,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             optimizations_per_minibatch : int (default=1)
                 specifies the number of executions and weight updates of learnable pathways (forward and backward
                 passes -- or optimization steps -- in PyTorch), that are carried out for each set of stimuli in a
-                `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's default value; optimization
+                `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's default value. Optimization
                 steps after the first can be restricted to a subset of nodes using the
                 **execute_in_additional_optimizations** argument (see below), which can also designate particular
                 Parameter values used for those optimization steps.
@@ -11644,12 +11644,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                   *None* or *True*: execute in additional optimizations without any modificadtion(s) to its Parameters;
 
-                  *False* or *EXECLUDE*: exclude from execution during additional optimizations;  this is useful
+                  *False* or *EXCLUDE*: exclude from execution during additional optimizations;  this is useful
                     primarly when a nested Composition is specified but nodes within it should be excluded;
 
                   *(Parameter, value)* or *[(Parameter, value), ...]*: assign specified Parameter values during
-                    execution of additional optimizations, and restore to previous value for first execution on next
-                    trial.
+                    execution of additional optimizations, restoring to previous value(s) for first optimization
+                    of next trial.
 
                 If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
                 are included, except for ones explicitly excluded.
@@ -13012,6 +13012,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Validate any Parameters specified and their values
             if param_specs:
+                if param_specs is True:
+                    continue
                 if isinstance(param_specs, tuple):
                     # "Listify" to standardize treatment below
                     param_specs = convert_to_list(param_specs)
