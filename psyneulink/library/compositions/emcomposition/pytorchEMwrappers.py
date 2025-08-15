@@ -87,7 +87,6 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
             # Only execute store after last optimization repetition for current mini-batch
-            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
             if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
                 self.store_memory(variable, context)
         else:
@@ -162,11 +161,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 axis = 0
                 if concatenation_node is None:
                     # Double check that the memory passed in is the output of the projection for the correct field
-                    # BREADCRUMB: DOESN'T WORK CURRENTLY WITH num_optimizations > 1
-                    pass
-                    # assert (memory_to_store_indexed == entry_to_store).all(), \
-                    #     (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
-                    #      f"and value of projection to corresponding field.")
+                    assert (memory_to_store_indexed == entry_to_store).all(), \
+                        (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
+                         f"and value of projection to corresponding field.")
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)
