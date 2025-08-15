@@ -212,21 +212,16 @@ class CompositionRunner():
                         end_extra_optimizations = (do_additional_optimizations
                                                    and optimization_num + 1 == optimizations_per_minibatch)
 
-                        # MODIFIED 8/13/25 NEW: MOVED HERE (FROM BELOW) TO BE ABLE TO ASSIGN _optimization_num BELOW
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # BREADCRUMB: HACK SINCE optimization_num CAN'T CURRENTLY BE PASSED DIRECTLY TO forward()
                         # Set _optimization_num for use by PytorchCompositionWrapper.forward()
                         pytorch_rep._optimization_num = optimization_num
-                        # MODIFIED 8/13/25 END
 
                         if before_additional_optimizations:
                             # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
 
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        # MODIFIED 8/13/25 OLD: MOVED TO ABOVE
-                        # pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                        # MODIFIED 8/13/25 END
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
