@@ -23,6 +23,7 @@ from psyneulink.library.compositions.grucomposition.grucomposition import GRUCom
 # ---------------------
 # HOOK FOR torch.GRU module for use in debugging internal calculations
 
+@pytest.mark.pytorch
 def _pytorch_gru_module_values_hook(module, input):
     import torch
     in_len = module.input_size
