@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink import CompositionError, AutodiffComposition, HIDDEN_TO_HIDDEN
 
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
@@ -100,10 +99,10 @@ def _pytorch_gru_module_values_hook(module, input):
 class TestConstruction:
     def test_disallow_modification(self):
         gru = GRUComposition()
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(pnl.CompositionError) as error_text:
             gru.add_node(pnl.ProcessingMechanism())
         assert 'Nodes cannot be added to a GRUComposition' in str(error_text.value)
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(pnl.CompositionError) as error_text:
             gru.add_projection(pnl.MappingProjection())
         assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
