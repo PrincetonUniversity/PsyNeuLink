@@ -11746,8 +11746,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
 
-        elif execute_in_additional_optimizations:
-            self._validate_and_parse_additional_optimizations(execute_in_additional_optimizations)
+        else:
+            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
+            if execute_in_additional_optimizations:
+                self._validate_and_parse_additional_optimizations(execute_in_additional_optimizations)
 
         result = runner.run_learning(
             inputs=inputs,

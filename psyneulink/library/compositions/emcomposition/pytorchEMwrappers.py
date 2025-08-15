@@ -101,7 +101,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
 
         For each node in query_input_nodes and value_input_nodes,
         assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
-        - memory = matrix of entries made up vectors for each field in each entry (row)
+        - memory = matrix of entries made up of vectors for each field in each entry (row)
         - entry_to_store = query_input or value_input to store
         - field_projections = Projections the matrices of which comprise memory
 
@@ -152,7 +152,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
             field_idx = pytorch_rep.composition._field_index_map[field_projection._pnl_proj]
             if field_projection in pytorch_rep.match_projection_wrappers:
                 # For match projections:
-                # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
+                # - get entry to store from value of Projection's sender (to accommodate concatenation_node)
                 entry_to_store = field_projection.sender_wrapper.output
 
                 # Retrieve the correct field (for each batch, batch is first dimension)
@@ -162,9 +162,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 axis = 0
                 if concatenation_node is None:
                     # Double check that the memory passed in is the output of the projection for the correct field
-                    # BREADCRUMB:
+                    # BREADCRUMB: DOESN'T WORK CURRENTLY WITH num_optimizations > 1
                     pass
-                    # assert (entry_to_store == memory_to_store_indexed).all(), \
+                    # assert (memory_to_store_indexed == entry_to_store).all(), \
                     #     (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
                     #      f"and value of projection to corresponding field.")
             else:
@@ -185,5 +185,5 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                                                     random_state=random_state)
             values.append(field_projection.matrix)
 
-        self.value = values
+            self.value = values
         return values
