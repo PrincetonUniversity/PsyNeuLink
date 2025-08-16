@@ -309,6 +309,8 @@ class CompositionRunner():
 
                 for idx in range(i, i + minibatch_size):
                     try:
+                        # BREADCRUMB: PRINT
+                        self._composition._STIM_NUM = i
                         input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,
