@@ -7,9 +7,10 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 
 try:
     import torch
-    from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 except ImportError:
-    torch = None
+    pass
+else:
+    from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
