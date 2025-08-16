@@ -4,7 +4,12 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
-from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
+
+try:
+    import torch
+    from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
+except ImportError:
+    torch = None
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
