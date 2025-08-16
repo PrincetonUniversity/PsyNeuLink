@@ -198,10 +198,13 @@ class CompositionRunner():
                     else: # list because ragged
                         inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
+                # BREADCRUMB PRINT
+                self._composition._STIM_NUM = i
+
                 # Cycle over optimizations per trial (stimulus)
                 for optimization_num in range(optimizations_per_minibatch):
                     # Return current set of stimuli for minibatch
-                    yield copy_parameter_value(inputs_for_minibatch)
+                    yield copy_parameter_value(inputs_for_minibatch), optimization_num
 
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
@@ -221,6 +224,8 @@ class CompositionRunner():
                             # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
 
+                        # BREADCRUMB PRINT
+                        print(f"\nGRADIENT UPDATE FOR optimization_num {optimization_num}")
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         from torch import no_grad
                         with no_grad():

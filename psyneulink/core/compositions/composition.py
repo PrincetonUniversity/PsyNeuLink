@@ -11421,6 +11421,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ):
                     break
 
+                optimization_num = None
+
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 if input_nodes:
@@ -11433,7 +11435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # from the call to _parse_learning_spec
                         if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
                                                     'CompositionRunner._batch_function_inputs' in str(inputs)):
-                            execution_stimuli = next(inputs)
+                            execution_stimuli, optimization_num = next(inputs)
                         else:
                             execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
 
@@ -11445,6 +11447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
+                                            optimization_num=optimization_num,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
                                             call_before_time_step=call_before_time_step,

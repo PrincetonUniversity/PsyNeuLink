@@ -1179,7 +1179,9 @@ class AutodiffComposition(Composition):
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
         return super(AutodiffComposition, self).get_target_nodes()
 
-    def autodiff_forward(self, inputs, targets,
+    def autodiff_forward(self,
+                         inputs, targets,
+                         optimization_num,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
         """
@@ -1205,7 +1207,7 @@ class AutodiffComposition(Composition):
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
         curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs,
-                                                       optimization_num=None,
+                                                       optimization_num=optimization_num,
                                                        synch_with_pnl_options=synch_with_pnl_options,
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
@@ -1625,6 +1627,7 @@ class AutodiffComposition(Composition):
                 num_trials=None,
                 minibatch_size=1,
                 optimizations_per_minibatch=1,
+                optimization_num=None,
                 do_logging=False,
                 scheduler=None,
                 termination_processing=None,
@@ -1693,6 +1696,7 @@ class AutodiffComposition(Composition):
                 trained_output_values, all_output_values = \
                                                 self.autodiff_forward(inputs=autodiff_inputs,
                                                                       targets=autodiff_targets,
+                                                                      optimization_num=optimization_num,
                                                                       synch_with_pnl_options=synch_with_pnl_options,
                                                                       retain_in_pnl_options=retain_in_pnl_options,
                                                                       execution_mode=execution_mode,

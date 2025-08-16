@@ -436,7 +436,7 @@ if __name__ == '__main__':
                     execute_in_additional_optimizations={model.nodes['PREDICTION']:None,
                                                          model.nodes['EM'].nodes['PREVIOUS STATE [RETRIEVED]']:None,
                                                          model.nodes['EM'].nodes['CONTEXT [RETRIEVED]']:None,
-                                                         model.nodes['EM']:None
+                                                         model.nodes['EM']:None,
                                                          # model.nodes['EM'].nodes['STORE']: EXCLUDE
                                                          }
                     # minibatch_size=1,

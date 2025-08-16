@@ -86,12 +86,11 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
-            # Only execute store after last optimization repetition for current mini-batch
+            # Only execute store on last optimization repetition for current mini-batch
             if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
                 self.store_memory(variable, context)
                 # BREADCRUMB:
-                # print(f"'STORE MEMORY': {optimization_num}; {variable}")
-                print(f"'STORE MEMORY': {optimization_num}")
+                print(f"'STORE MEMORY': {optimization_num}\n")
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
 

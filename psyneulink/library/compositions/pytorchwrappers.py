@@ -284,9 +284,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
-        # MODIFIED 8/13/25 NEW:
         self._optimization_num = None
-        # MODIFIED 8/13/25 END
+
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
 
@@ -986,14 +985,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
-            # MODIFIED 8/13/25 NEW:
-            optimization_num = optimization_num if optimization_num is not None else self._optimization_num
-            # MODIFIED 8/13/25 END
+            # optimization_num = optimization_num if optimization_num is not None else self._optimization_num
+            # # BREADCRUMB PRINT
+            print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._STIM_NUM})")
+
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
                 if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
                     # If _nodes_to_execute_in_additional_optimizations is specified,
-                    #    only execute specified nodes for all optmizations >= 1
+                    #    only execute specified nodes for all optmization_num > 0
                     current_exec_set = {node for node in current_exec_set
                                         if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
                 for node in current_exec_set:
@@ -1085,8 +1085,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
-                    # BREADCRUMB:
-                    print(f"{node.name}: {optimization_num}")
+
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
@@ -1106,11 +1105,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                    # BREADCRUMB PRINT
+                    print(f"{node.name}: {optimization_num} (STIM {self.composition._STIM_NUM})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+
+            # BREADCRUMB PRINT
+            print(f"END FORWARD for optimization_num {optimization_num}\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
