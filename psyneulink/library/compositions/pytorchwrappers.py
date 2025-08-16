@@ -1085,6 +1085,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
+                    # BREADCRUMB:
+                    print(f"{node.name}: {optimization_num}")
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
