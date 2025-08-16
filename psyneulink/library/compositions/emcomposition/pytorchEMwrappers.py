@@ -90,7 +90,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
             if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
                 self.store_memory(variable, context)
                 # BREADCRUMB PRINT:
-                print(f"\n'STORE MEMORY': {optimization_num}\n")
+                print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
+                print(f"'CONTEXT VALUE stored': {variable[0][0][2]}\n")
+
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
 
