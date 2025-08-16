@@ -89,6 +89,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
             # Only execute store after last optimization repetition for current mini-batch
             if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
                 self.store_memory(variable, context)
+                # BREADCRUMB:
+                # print(f"'STORE MEMORY': {optimization_num}; {variable}")
+                print(f"'STORE MEMORY': {optimization_num}")
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
 

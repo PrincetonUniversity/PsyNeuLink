@@ -30,9 +30,12 @@ model_params = dict(
 
     # Processing
     integration_rate = .69, # rate at which state is integrated into new context
-    state_weight = 1, # weight of the state used during memory retrieval
-    context_weight = 1, # weight of the context used during memory retrieval
+    # state_weight = 1, # weight of the state used during memory retrieval
+    # context_weight = 1, # weight of the context used during memory retrieval
     # normalize_field_weights = False, # whether to normalize the field weights during memory retrieval
+    previous_state_weight = .5, # weight of the state used during memory retrieval
+    context_weight = .5, # weight of the context used during memory retrieval
+    state_weight = None, # weight of the state used during memory retrieval
     normalize_field_weights = True, # whether to normalize the field weights during memory retrieval
     normalize_memories = False, # whether to normalize the memory during memory retrieval
     # softmax_temperature = None, # temperature of the softmax used during memory retrieval (smaller means more argmax-like
@@ -51,7 +54,7 @@ model_params = dict(
     # loss_spec = Loss.CROSS_ENTROPY,
     # loss_spec = Loss.MSE,
     learning_rate = .5,
-    num_optimization_steps = 10,
+    num_optimization_steps = 3,
     synch_weights = RUN,
     synch_values = RUN,
     synch_results = RUN,
