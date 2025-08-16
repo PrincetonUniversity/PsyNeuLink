@@ -1090,7 +1090,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
                         if node.exclude_from_gradient_calc == AFTER:
-                            # Cache variable for later exce execution
+                            # BREADCRUMB: ?COULD THIS BE THE PROBLEM WITH MULTILE OPTIMZIATIONS:
+                            # Cache variable for later execution
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
                         elif node.exclude_from_gradient_calc == BEFORE:

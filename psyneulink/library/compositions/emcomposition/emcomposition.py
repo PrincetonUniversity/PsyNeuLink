@@ -670,6 +670,10 @@ When the EMComposition is executed, the following sequence of operations occur
        `query_input_node <EMComposition.query_input_nodes>` to the corresponding `match_node
        <EMComposition.match_nodes>` (see note `above <EMComposition_Memory_Storage>` for additional details).
 
+  .. note::
+     During training, storage occurs after the weights have been updated for a given input (see `note
+     <EMComposition_Storage_Learning>` below).
+
 COMMENT:
 FROM CodePilot: (OF HISTORICAL INTEREST?)
 inputs to its `query_input_nodes <EMComposition.query_input_nodes>` and
@@ -719,6 +723,13 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
      <EMComposition.field_weights>` are modified during learning.  Furthermore, when run in PyTorch mode, storage
      is executed after the forward() and backward() passes are complete, and is not considered as part of the
      gradient calculations.
+
+  .. _EMComposition_Storage_Learning:
+
+  .. note:
+     Storage always occurs *after* the learning (gradient calculation and weight updates) has occured for each stimulus;
+     if `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` (the number of weight updates that
+     occur for each input) is greater than 1, then storage occurs after the last weight update for a given stimulus.
 
 .. _EMComposition_Examples:
 
@@ -2658,8 +2669,9 @@ class EMComposition(AutodiffComposition):
     def _store_memory(self, inputs, context):
         """Store inputs to query and value nodes in memory
         Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values).
+        Always executes after gradient calculation;  if num_optimization > 1, only executes after last optimization.
         Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
-              storage is handled by call to EMComopsition._encode_memory
+              storage is handled by call to EMComposition._encode_memory
         """
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
         random_state = self._get_current_parameter_value('random_state', context)
