@@ -1126,6 +1126,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                   f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
             print(f"{self.composition.nodes['CONTEXT'].name}:"
                   f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
+            print(f"{self.composition.nodes['PREDICTION'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
             print(f"END FORWARD for optimization_num {optimization_num}\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
