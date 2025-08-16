@@ -190,8 +190,8 @@ def run_model(model,
     #             )
     # memory = em.memory
     print(model.results)
-    return model.results[config['num_optimization_steps'] - 1::config['num_optimization_steps']][:, 2]
-
+    # return model.results[config['num_optimization_steps'] - 1::config['num_optimization_steps']][:, 2]
+    return model.results[::config['num_optimization_steps']][:, 2]
 
 if __name__ == '__main__':
     trials = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]

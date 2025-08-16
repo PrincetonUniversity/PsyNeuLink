@@ -19,7 +19,7 @@ def run_participant(params, data_loader, len_memory=2):
 
             # Skip first state bc which sequence within the context is randomly assigned.
             # i.e., we have not yet observed a full state transition.
-            if trial >= 0:
+            if trial > 0:
                 optimizer.zero_grad()  # Zero the gradients before each optimization step.
                 pred_em = em_module(x, context)  # retrieve the next state prediction from the EM module.
                 loss = loss_fn(pred_em, y)  # calculate the loss between the predicted and actual next state.
