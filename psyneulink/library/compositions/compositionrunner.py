@@ -230,9 +230,10 @@ class CompositionRunner():
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                if (do_additional_optimizations and node.mechanism in
+                                if (do_additional_optimizations and node.mechanism not in
                                         self._composition._nodes_to_execute_in_additional_optimizations):
-                                    node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                                    continue
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
 
                         if end_extra_optimizations:
                             # Restore parameters back to their usual values

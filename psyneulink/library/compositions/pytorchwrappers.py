@@ -991,7 +991,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
-                
 
                 if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
                     # If _nodes_to_execute_in_additional_optimizations is specified,
