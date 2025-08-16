@@ -169,6 +169,7 @@ def run_model(model,
                 synch_results_with_torch=RUN,
                 execute_in_additional_optimizations={model.nodes['PREDICTION']: None,
                                                      model.nodes['EM']: None,
+                                                     model.nodes['EM'].nodes['STORE']: EXCLUDE,
                                                      }
                 #             execute_in_additional_optimizations=
                 #             {model.nodes["EM"]:("storage_prob", 0),
