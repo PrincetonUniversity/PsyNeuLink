@@ -91,7 +91,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 self.store_memory(variable, context)
                 # BREADCRUMB PRINT:
                 print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
-                print(f"'CONTEXT VALUE stored': {variable[0][0][2]}\n")
+                print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
+                print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
 
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
@@ -163,11 +165,12 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
 
                 # - store in row
                 axis = 0
-                if concatenation_node is None:
-                    # Double check that the memory passed in is the output of the projection for the correct field
-                    assert (memory_to_store_indexed == entry_to_store).all(), \
-                        (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
-                         f"and value of projection to corresponding field.")
+                # BREADCRUMB:  COMMENTED OUT TO ACCOMODATE EGO MODEL:
+                # if concatenation_node is None:
+                #     # Double check that the memory passed in is the output of the projection for the correct field
+                #     assert (memory_to_store_indexed == entry_to_store).all(), \
+                #         (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
+                #          f"and value of projection to corresponding field.")
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)

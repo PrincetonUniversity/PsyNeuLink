@@ -1093,6 +1093,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         if node.exclude_from_gradient_calc == AFTER:
                             # BREADCRUMB: ?COULD THIS BE THE PROBLEM WITH MULTILE OPTIMZIATIONS:
                             # Cache variable for later execution
+                            # MODIFIED 8/16/24 NEW:
+                            if node.mechanism.name == 'STORE' and optimization_num:
+                                continue
+                            # MODIFIED 8/16/24 END
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
                         elif node.exclude_from_gradient_calc == BEFORE:
@@ -1116,6 +1120,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         outputs[node.mechanism] = node.output
 
             # BREADCRUMB PRINT
+            print(f"{self.composition.nodes['STATE'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['STATE']].output}")
+            print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
             print(f"{self.composition.nodes['CONTEXT'].name}:"
                   f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
             print(f"END FORWARD for optimization_num {optimization_num}\n")
