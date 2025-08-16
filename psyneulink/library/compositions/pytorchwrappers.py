@@ -1087,16 +1087,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
 
-
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
-                        if node.exclude_from_gradient_calc == AFTER:
-                            # BREADCRUMB: ?COULD THIS BE THE PROBLEM WITH MULTILE OPTIMZIATIONS:
+                        if node.exclude_from_gradient_calc in {AFTER, LAST}:
                             # Cache variable for later execution
                             # MODIFIED 8/16/24 NEW:
-                            if node.mechanism.name == 'STORE' and optimization_num:
+                            if node.exclude_from_gradient_calc == LAST and optimization_num:
+                                # Node will be executed after last optimization step, but need variable from first
+                                # since that is the only one in which it is assured all nodes are executed
                                 continue
                             # MODIFIED 8/16/24 END
+                            # Store variable for execution after gradient calculations are complete
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
                         elif node.exclude_from_gradient_calc == BEFORE:
@@ -1303,10 +1304,17 @@ class PytorchMechanismWrapper(torch.nn.Module):
     efferents : List[PytorchProjectionWrapper]
         list of `PytorchProjectionWrapper` objects that project from the PytorchMechanismWrapper.
 
-    exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
-        used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
-        the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
-        `update_learning_parameters` method.  BEFORE is not currently supported
+    exclude_from_gradient_calc : bool or str[BEFORE | AFTER | LAST]: False
+        prevents a node from being included in the Pytorch gradient calculation by execluding it in calls to
+        Autodiff.autodiff_backward(); entered in PytorchCompositionWrapper._nodes_to_execute_after_gradient_calc
+        as a key, and the current variable that it uses for execution at the end of CompositionRuner._batch_input().
+
+        * *AFTER*: the node is executed on every optimization step, after all gradient updates have been done;
+
+        * *LAST*: if `Compositon.optimizations_per_minibatch` is greater than 1, the node is executed only
+          after the last optimization step
+
+        * *BEFORE*: not currently supported
 
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords (see
@@ -1349,7 +1357,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
+        self.exclude_from_gradient_calc = False # Used to execute node before or after, and/or on last optimization step
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \

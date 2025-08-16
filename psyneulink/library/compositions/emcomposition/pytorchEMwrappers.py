@@ -165,7 +165,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
 
                 # - store in row
                 axis = 0
-                # BREADCRUMB:  COMMENTED OUT TO ACCOMODATE EGO MODEL:
+                # BREADCRUMB: COMMENTED OUT TO ACCOMMODATE EGO MODEL; RESTORE WHEN WORKING?
                 # if concatenation_node is None:
                 #     # Double check that the memory passed in is the output of the projection for the correct field
                 #     assert (memory_to_store_indexed == entry_to_store).all(), \
