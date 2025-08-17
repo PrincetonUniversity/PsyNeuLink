@@ -284,8 +284,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
-        self._optimization_num = None
-
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
 
@@ -985,7 +983,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
-            # optimization_num = optimization_num if optimization_num is not None else self._optimization_num
             # # BREADCRUMB PRINT
             # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._STIM_NUM})")
 
