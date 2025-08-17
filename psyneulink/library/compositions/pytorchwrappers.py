@@ -987,7 +987,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             # optimization_num = optimization_num if optimization_num is not None else self._optimization_num
             # # BREADCRUMB PRINT
-            print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._STIM_NUM})")
+            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._STIM_NUM})")
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
@@ -1106,24 +1106,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                    # BREADCRUMB PRINT
-                    print(f"{node.name}: {optimization_num} (STIM {self.composition._STIM_NUM})")
+                    # # BREADCRUMB PRINT
+                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._STIM_NUM})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
 
-            # BREADCRUMB PRINT
-            print(f"{self.composition.nodes['STATE'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['STATE']].output}")
-            print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
-            print(f"{self.composition.nodes['CONTEXT'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
-            print(f"{self.composition.nodes['PREDICTION'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
-            print(f"END FORWARD for optimization_num {optimization_num}\n")
+            # # BREADCRUMB PRINT
+            # print(f"{self.composition.nodes['STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['STATE']].output}")
+            # print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
+            # print(f"{self.composition.nodes['CONTEXT'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
+            # print(f"{self.composition.nodes['PREDICTION'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
+            # print(f"END FORWARD for optimization_num {optimization_num}\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
