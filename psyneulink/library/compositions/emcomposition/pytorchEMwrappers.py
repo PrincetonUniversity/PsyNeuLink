@@ -87,7 +87,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
             num_optimizations = self._context.composition.optimizations_per_minibatch
-            store_on_optimization = self.composition.store_on_optimization
+            store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
             if store_on_optimization == FIRST and optimization_num == 0:
                 store = True
             elif store_on_optimization == LAST and ((optimization_num + 1) == num_optimizations):
