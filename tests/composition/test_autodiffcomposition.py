@@ -4,19 +4,21 @@ import os
 import numpy as np
 
 import pytest
+from fontTools.mtiLib import parseSingleSubst
 
 import psyneulink as pnl
-from numpy.ma.core import ones_like
+from psyneulink import RANDOM_CONNECTIVITY_MATRIX
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
-from psyneulink.core.globals.keywords import TRAINING_SET, Loss
+from psyneulink.core.globals.keywords import Loss, DEFAULT_LEARNING_RATE, TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, AutodiffCompositionError
 from psyneulink.core.compositions.report import ReportOutput
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,6 @@ NAME = 'proj_name'
 @pytest.mark.pytorch
 @pytest.mark.autodiff_constructor
 class TestAutodiffConstructor:
-
 
     def test_no_args(self):
         comp = AutodiffComposition()
@@ -287,6 +288,493 @@ class TestAutodiffConstructor:
     # def test_patience(self):
         # comp = AutodiffComposition()
         # assert comp.patience == 10
+
+
+# Expected results for test_projection_specific_learning_rates()
+# NOTE: these should be kept consistent with test_learning/test_projection_specific_learning_rates()
+#       to additionally test for identicality of effects with Python learning
+baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
+learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
+input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
+hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
+inpt_learn_ovrd = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
+hid_learn_ovrd = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+input_dict_cnstr = [[3.2844555, 3.2844555, 3.2844555, 3.2844555, 3.2844555]]
+hid_dict_constr = [[11.45824471, 11.45824471, 11.45824471, 11.45824471, 11.45824471]]
+inp_cnstr_ovrd = [[0.12288, 0.12288, 0.12288, 0.12288, 0.12288]]
+hid_cnstr_ovrd = [[-0.14778898, -0.14778898, -0.14778898, -0.14778898, -0.14778898]]
+default_lr = .01
+# [[1.51359819 1.51359819 1.51359819 1.51359819 1.51359819]]
+
+class TestAutodiffLearningRateArgs:
+    test_args = [
+        # NOTES:
+        #   Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
+        #   Tests both Projection *to* nested Composition (input) and Projection *in* nested Comopsition (hidden)
+        #   condition          constructor_lr   lrn()_lr  inp_lr  hid_lr  cstr_dict learn_dict post_cstr expected
+        ("baseline",               default_lr,    None,    None,    None,    None,     None,    False,   baseline),
+        # learn() lr
+        ("lrn_method",              None,          .1,     None,    None,    None,     None,    False,   learn_method),
+        # learn() lr overrides constructor lr
+        ("lrn_override",           default_lr,     .1,     None,    None,    None,     None,    False,   learn_method),
+        # Projection lr (in constructor)
+        ("input_proj",             default_lr,    None,    .2,      None,    None,     None,    False,   input_proj),
+        ("hidden_proj",            default_lr,    None,    None,     .2,     None,     None,    False,   hidden_proj),
+        # Projection lr overrides specificdation of default lr in learning()
+        #   note: learn_dict = None -> don't include either Projection specification in learn();
+        #         assignments of None to entries in the dict itself are tested in
+        #         test_projection_specific_learning_rates() and test_learning/test_default_and_False_learning_rates()
+        ("inpt_override_lrn",      default_lr,     .1,     .2,      None,    None,     None,    False,   inpt_learn_ovrd),
+        ("hidn_override_lrn",      default_lr,     .1,     None,     .2,     None,     None,    False,   hid_learn_ovrd),
+        # # Specifications of learning_rates in dict in Autodiff constructor overrides Projection lr
+        ("input_dict_constructor", default_lr,    None,     .2,     None,  'input',    None,    False,   input_dict_cnstr),
+        ("hidden_dict_constructor",default_lr,    None,    None,     .2,   'hidden',   None,    False,   hid_dict_constr),
+        # learning_rate dict in learn() overrides Projection lr
+        ("input_dict_learn",       default_lr,    None,     .3,     None,   None,    'input',   False,   input_proj),
+        ("hidden_dict_learn",      default_lr,    None,    None,     .3,    None,    'hidden',  False,   hidden_proj),
+        # Projection spec in learning_rate dict in Autodiff constructor overrides default lr and Projection lr
+        ("inpt_ovrd_constructor",  default_lr,     .1,      .2,     None,  'input',    None,    False,  inp_cnstr_ovrd),
+        ("hid_ovrd_constructor",   default_lr,     .1,     None,     .2,   'hidden',   None,    False,  hid_cnstr_ovrd),
+        # Projection spec in learning_rate dict in learn() overrides default lr and Projection lr
+        #                                (use two different Projection lr's to be sure they don't matter)
+        ("in_ovrd_learn_method3",  default_lr,     .1,      .3,     None,   None,    'input',   False, inpt_learn_ovrd),
+        ("hid_ovrd_learn_method3", default_lr,     .1,     None,     .3,    None,    'hidden',  False,  hid_learn_ovrd),
+        ("in_ovrd_learn_method5",  default_lr,     .1,      .5,     None,   None,    'input',   False, inpt_learn_ovrd),
+        ("hid_ovrd_learn_method5", default_lr,     .1,     None,     .5,    None,    'hidden',  False,  hid_learn_ovrd),
+        # Projection spec in learning_rate dict in learn() overrides everything else, including constructor dict
+        ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   False,   inpt_learn_ovrd),
+        ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  False,   hid_learn_ovrd),
+        # Projection spec made after AutodiffComposition contruction (should have no effect, since post-construction)
+        ("inpt_learn_constructor", default_lr,     .1,      .4,     None,  'input',  'input',   True,    inpt_learn_ovrd),
+        ("hid_learn_constructor",  default_lr,     .1,     None,     .4,   'hidden', 'hidden',  True,    hid_learn_ovrd),
+    ]
+    # NOTE: this should be kept consistent with test_learning/test_projection_specific_learning_rates()
+    #       to additionally test for identicality of effects with Python learning
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    @pytest.mark.parametrize("condition, constructor_lr, learn_method_lr, "
+                             "input_lr, hidden_lr, constructor_dict_param, learn_dict_param, post_constr, expected",
+                             test_args, ids=[f"{x[0]}" for x in test_args])
+    def test_projection_specific_learning_rates(self, condition, constructor_lr, learn_method_lr, input_lr, hidden_lr,
+                                                constructor_dict_param, learn_dict_param, post_constr, expected):
+        in_shape = 4
+        nested_1_shape = 3
+        nested_2_shape = 2
+        out_shape = 5
+        input_stims = [[.1,.2,.3,.4]]
+        target_vals = [[1,1,1,1,1]]
+        num_trials = 3
+
+        # Construct nested_comp
+        nested_mech_1 = pnl.ProcessingMechanism(name='Nested Mech 1', input_shapes=nested_1_shape)
+        nested_mech_2 = pnl.ProcessingMechanism(name='Nested Mech 2', input_shapes=nested_2_shape)
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2, name="INNER PROJECTION",
+                                            learning_rate=hidden_lr)
+        nested_comp = pnl.AutodiffComposition(name='Inner Comp',
+                                              pathways=[nested_mech_1, nested_proj, nested_mech_2],
+                                              # Need to explicitly set this to maintain compatibility with PNL
+                                              learning_rate = default_lr)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='Outer Mech IN', input_shapes=in_shape)
+        outer_mech_out = pnl.ProcessingMechanism(name='Outer Mech OUT', input_shapes=out_shape)
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1,
+                                           name="OUTER INPUT PROJECTION",
+                                           learning_rate=input_lr)
+        pathway = [outer_mech_in, input_proj, nested_comp, outer_mech_out]
+        constructor_learning_rate_dict = {input_proj: .3 if constructor_dict_param == 'input' else None,
+                                          nested_proj: .3 if constructor_dict_param == 'hidden' else None,
+                                          pnl.DEFAULT_LEARNING_RATE: constructor_lr}
+
+        learn_method_learning_rate_dict = {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}
+        if learn_dict_param == 'input':
+            learn_method_learning_rate_dict.update({input_proj: .2})
+        if learn_dict_param == 'hidden':
+            learn_method_learning_rate_dict.update({nested_proj: .2})
+
+        # Construct outer_comp
+        outer_comp = pnl.AutodiffComposition(name='Outer Comp',
+                                             pathways=pathway,
+                                             learning_rate = (constructor_learning_rate_dict
+                                                              if "constructor" in condition
+                                                              else {pnl.DEFAULT_LEARNING_RATE: constructor_lr}))
+        # Test for specified learning rates in constructor
+        input_proj_lr = \
+            .3 if constructor_dict_param == 'input' \
+                else input_lr if input_lr \
+                else constructor_lr if constructor_lr is not None \
+                else .001
+        hidden_proj_lr = \
+            .3 if constructor_dict_param == 'hidden' \
+                else hidden_lr if hidden_lr \
+                else constructor_lr if constructor_lr is not None \
+                else default_lr
+        outer_comp_proj_lr = constructor_lr if constructor_lr is not None else .001
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr # (vs. .2 in "...lr_2_MOD"
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == hidden_proj_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) == outer_comp_proj_lr
+
+        # This should have no effet since done post construction
+        if post_constr:
+            input_proj.learning_rate = .9
+            nested_proj.learning_rate = .7
+
+        # Test learning
+        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        pytorch_result = outer_comp.learn(
+            inputs={outer_mech_in:input_stims, targets[0]: target_vals},
+            num_trials=num_trials,
+            execution_mode=pnl.ExecutionMode.PyTorch,
+            # learning_rate=learn_method_lr
+            learning_rate=(learn_method_learning_rate_dict if "learn" in condition
+                           else {pnl.DEFAULT_LEARNING_RATE: learn_method_lr}))
+
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        # assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 0.3 # (vs. .2 in "...lr_2_MOD"
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(input_proj) ==
+                (learn_method_learning_rate_dict[input_proj] if learn_dict_param == 'input'
+                 else constructor_learning_rate_dict[input_proj] if constructor_dict_param == 'input'
+                else input_lr if input_lr not in {None, True}
+                # else learn_method_lr if (pnl.DEFAULT_LEARNING_RATE in learn_method_learning_rate_dict and
+                #                          learn_method_learning_rate_dict[pnl.DEFAULT_LEARNING_RATE] not in {None, True})
+                else learn_method_lr if (learn_method_learning_rate_dict and learn_method_lr not in {None, True})
+                else .9 if post_constr
+                else default_lr))
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) ==
+                (learn_method_learning_rate_dict[nested_proj] if learn_dict_param == 'hidden'
+                 else constructor_learning_rate_dict[nested_proj] if constructor_dict_param == 'hidden'
+                else hidden_lr if hidden_lr not in {None, True}
+                else learn_method_lr if (learn_method_learning_rate_dict and learn_method_lr not in {None, True})
+                else .7 if post_constr
+                else default_lr))
+        assert (pytorch_rep.get_torch_learning_rate_for_projection(outer_comp.projections[1]) ==
+                (learn_method_lr if learn_method_lr is not None
+                 else constructor_lr if constructor_lr is not None
+                else .1))
+
+        np.testing.assert_allclose(pytorch_result, expected)
+
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("build_pytorch_rep_spec", [None, 10, 'dict'])
+    def test_learning_rate_with_3_levels_of_nesting_and_build_pytorch_rep_spec(self, build_pytorch_rep_spec):
+        # Test construction with enable_learning=False, running, and then enabling learning
+        if build_pytorch_rep_spec == 'dict':
+            build_pytorch_rep_spec = {DEFAULT_LEARNING_RATE: 10,
+                                      "NESTED 2 PROJ CD": .9 }
+        nested_2_proj_AB_lr = .1
+        nested_2_proj_BC_lr = None
+        nested_2_proj_CD_lr = True
+        nested_2_proj_DE_lr = False
+        nested_2_comp_lr = None
+        nested_1_proj_in_lr = .2
+        nested_1_proj_out_lr = True
+        nested_1_comp_lr = None if build_pytorch_rep_spec else .3
+        input_proj_lr = True
+        output_proj_lr = .4
+        outer_comp_lr = None if build_pytorch_rep_spec else .5
+
+        nested_2_mech_A = pnl.ProcessingMechanism(name='NESTED 2 NODE A', input_shapes=2)
+        nested_2_mech_B = pnl.ProcessingMechanism(name='NESTED 2 NODE B', input_shapes=5)
+        nested_2_mech_C = pnl.ProcessingMechanism(name='NESTED 2 NODE C', input_shapes=4)
+        nested_2_mech_D = pnl.ProcessingMechanism(name='NESTED 2 NODE D', input_shapes=3)
+        nested_2_mech_E = pnl.ProcessingMechanism(name='NESTED 2 NODE E', input_shapes=2)
+        nested_2_proj_AB = pnl.MappingProjection(nested_2_mech_A, nested_2_mech_B,
+                                                 name="NESTED 2 PROJ AB",
+                                                 matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                                 learning_rate=nested_2_proj_AB_lr)
+        nested_2_proj_BC = pnl.MappingProjection(nested_2_mech_B, nested_2_mech_C,
+                                                 name="NESTED 2 PROJ BC",
+                                                 learning_rate=nested_2_proj_BC_lr)
+        nested_2_proj_CD = pnl.MappingProjection(nested_2_mech_C, nested_2_mech_D,
+                                                 name="NESTED 2 PROJ CD",
+                                                 learning_rate=nested_2_proj_CD_lr)
+        nested_2_proj_DE = pnl.MappingProjection(nested_2_mech_D, nested_2_mech_E,
+                                                 name="NESTED 2 PROJ DE",
+                                                 learning_rate=nested_2_proj_DE_lr)
+        nested_2_comp = pnl.AutodiffComposition(name='Nested 2 Comp',
+                                                pathways=[nested_2_mech_A, nested_2_proj_AB,
+                                                          nested_2_mech_B, nested_2_proj_BC,
+                                                          nested_2_mech_C, nested_2_proj_CD,
+                                                          nested_2_mech_D, nested_2_proj_DE,
+                                                          nested_2_mech_E],
+                                                learning_rate=nested_2_comp_lr)
+
+        nested_1_mech_IN = pnl.ProcessingMechanism(name='NESTED 1 NODE IN', input_shapes=4)
+        nested_1_mech_OUT = pnl.ProcessingMechanism(name='NESTED 1 NODE OUT', input_shapes=3)
+        nested_1_proj_in = pnl.MappingProjection(nested_1_mech_IN, nested_2_mech_A,
+                                                 name="NESTED 1 PROJ IN",
+                                                 learning_rate=nested_1_proj_in_lr)
+        nested_1_proj_out = pnl.MappingProjection(nested_2_mech_E, nested_1_mech_OUT,
+                                                  learning_rate=nested_1_proj_out_lr,
+                                                  name="NESTED 1 PROJ OUT")
+        nested_1_comp = pnl.AutodiffComposition(name='Nested 1 Comp',
+                                                pathways=[nested_1_mech_IN,
+                                                          nested_1_proj_in,
+                                                          nested_2_comp,
+                                                          nested_1_proj_out,
+                                                          nested_1_mech_OUT],
+                                                learning_rate = nested_1_comp_lr)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='OUTER NODE IN')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTER NODE OUT')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_1_mech_IN, learning_rate=input_proj_lr,
+                                           name="OUTER PROJ TO NESTED 1")
+        output_proj = pnl.MappingProjection(nested_1_mech_OUT, outer_mech_out, learning_rate=output_proj_lr,
+                                            name="OUTER PROJ FROM NESTED 1")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_1_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp',
+                                             learning_rate = outer_comp_lr)
+
+        outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
+
+        # learning_rates should reflect values specified in _build_pytorch_repreentation() and learn()
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                         learning_rate={input_proj:12,
+                                        "NESTED 2 PROJ BC": 13,
+                                        nested_2_proj_DE: 15})
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 13
+        if build_pytorch_rep_spec:
+            assert (pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) ==
+                    build_pytorch_rep_spec["NESTED 2 PROJ CD"] if isinstance(build_pytorch_rep_spec, dict) else 10)
+        else:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) == 15
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == (nested_1_comp_lr or 10)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 12
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+
+        outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # learning_rates should revert to constructor-speficied values (e.g., input_proj) or composition defaults
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_AB) == nested_2_proj_AB_lr
+        if build_pytorch_rep_spec:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 10
+            assert (pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) ==
+                    build_pytorch_rep_spec["NESTED 2 PROJ CD"] if isinstance(build_pytorch_rep_spec, dict) else 10)
+        else:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == nested_1_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == nested_1_comp_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_DE) is False
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_in) == nested_1_proj_in_lr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_1_proj_out) == (nested_1_comp_lr or 10)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (outer_comp_lr or 10)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+
+        # Test additional calls to _build_pytorch_representation()
+        if build_pytorch_rep_spec is None:  # just need to do these tests once:
+
+            # check that nothing happens without specifying new in the call
+            with pytest.warns(UserWarning) as warning:
+                outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
+                assert ("The '_build_pytorch_representation() method for 'Outer Comp' has already been called "
+                        "directly from the command line; this and any additional calls will be ignored. Make any "
+                        "desired modifications to parameters (e.g., learning_rates) either in the constructor for "
+                        "the AutodiffComposition, or its learn() method. in warning[0].message.args[0]")
+
+            # change a projection learning_rate for composition using another call to _build_pytorch_representation()
+            pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14})
+            # check that it has taken effect:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
+            # check that it has been assigned as default (in _optimizer_constructor_params);
+            #     i.e., that it persists after a call to learn():
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                             learning_rate={"NESTED 2 PROJ BC": 99},)
+            pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
+            assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+            pytorch_rep_constructor = outer_comp.parameters.pytorch_representation.get(None)
+            assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
+            # check that it persists after another call to learn() (vs. learning_rate specifed in the call to learn()
+            outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]})
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
+
+    error_test_args = [
+        ("comp_lr_spec_str",
+         "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
+        ("comp_lr_spec_proj",
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
+        ("dict_lr_val_str",
+         "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
+        ("dict_lr_val_proj",
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
+        ("dict_illegal_key_str",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'woa a woa'."),
+        ("dict_illegal_key_int",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: '23'."),
+        ("dict_key_bad_proj",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
+        ("dict_proj_not_learnable",
+         "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
+         "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
+         "is not 'False', or remove it from the dict.")
+         ]
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("condition, error_msg", error_test_args,
+                             ids=[f"{x[0]}" for x in error_test_args])
+    def test_learning_rate_specification_errors(self, condition, error_msg):
+        # Test for errors with learning_rates specified in Composition constructor
+        nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1')
+        nested_mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 2')
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2, learning_rate=.3, name="NESTED PROJECTION")
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[nested_mech_1, nested_proj, nested_mech_2],)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1,
+                                           learning_rate=False if condition == 'dict_proj_not_learnable' else .2,
+                                           name="INPUT PROJECTION")
+        pathway = [outer_mech_in, input_proj, nested_comp, outer_mech_out]
+
+        comp_lr = None
+        default_lr = .1
+        key_spec = input_proj
+        val_spec = .2
+
+        error_type = AutodiffCompositionError
+        if condition == 'comp_lr_spec_str':
+            comp_lr = 'hello'
+            error_type = pnl.CompositionError
+        elif condition == 'comp_lr_spec_proj':
+            comp_lr = input_proj
+            error_type = pnl.CompositionError
+        elif condition == "dict_lr_val_str":
+            val_spec = "goodbye"
+        elif condition == "dict_lr_val_proj":
+            val_spec = input_proj
+        elif condition == "dict_illegal_key_str":
+            key_spec = "woa a woa"
+        elif condition == "dict_illegal_key_int":
+            key_spec = 23
+        elif condition == "dict_key_bad_proj":
+            key_spec = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=.4, name="BAD PROJECTION")
+        elif condition == "dict_proj_not_learnable":
+            error_type = AutodiffCompositionError
+            comp_lr = None
+            input_proj.learnable = False
+
+        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
+
+        with pytest.raises(error_type) as error_text:
+            outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
+            outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
+        assert error_msg in str(error_text.value)
+
+    @pytest.mark.pytorch
+    def test_learning_rate_utility_functions(self):
+        import torch
+        nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1')
+        nested_mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 2')
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2, learning_rate=.3, name="NESTED PROJECTION")
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[nested_mech_1, nested_proj, nested_mech_2],)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1,
+                                           learning_rate=2.5,
+                                           name="INPUT PROJECTION")
+        output_proj = pnl.MappingProjection(nested_mech_2, outer_mech_out,
+                                            learning_rate=.13,
+                                            name="OUTPUT PROJECTION")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp')
+
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection("INPUT PROJECTION") == 2.5
+        assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == 2.5
+        assert pytorch_rep.get_torch_learning_rate_for_projection('NESTED PROJECTION') == .3
+        assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == .3
+        assert pytorch_rep.get_torch_learning_rate_for_projection("OUTPUT PROJECTION") == .13
+        assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .13
+
+        param_to_proj_dict = pytorch_rep.torch_params_to_projections()
+        assert len(param_to_proj_dict) == 3
+        assert all(isinstance(param, torch.nn.Parameter) for param in param_to_proj_dict.keys())
+        assert all(isinstance(proj, MappingProjection) for proj in param_to_proj_dict.values())
+
+        proj_to_param_dict = pytorch_rep.projections_to_torch_params()
+        assert len(proj_to_param_dict) == 3
+        assert all(isinstance(proj, MappingProjection) for proj in proj_to_param_dict.keys())
+        assert all(isinstance(param, torch.nn.Parameter) for param in proj_to_param_dict.values())
+
+        assert set(param_to_proj_dict.values()) == set(proj_to_param_dict.keys())
+        assert set(proj_to_param_dict.values()) == set(param_to_proj_dict.keys())
+
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("enable_learning", ['before_run', 'after_run'])
+    def test_enable_learning(self, enable_learning):
+        # Test construction with enable_learning=False, running, and then enabling learning
+
+        enable_learning = enable_learning == 'before_run'
+        nested_proj_lr = .25
+        input_proj_lr = True
+        output_proj_lr = 1.9
+        outer_comp_lr = .3
+
+        nested_mech_1 = pnl.ProcessingMechanism(name='NESTED NODE 1', input_shapes=2)
+        nested_mech_2 = pnl.ProcessingMechanism(name='NESTED NODE 2', input_shapes=3)
+        nested_proj = pnl.MappingProjection(nested_mech_1, nested_mech_2,
+                                            matrix=RANDOM_CONNECTIVITY_MATRIX,
+                                            learning_rate=nested_proj_lr, name="NESTED PROJECTION")
+        nested_comp = pnl.AutodiffComposition(name='Nested Comp', pathways=[nested_mech_1, nested_proj, nested_mech_2],
+                                              enable_learning = enable_learning)
+
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        input_proj = pnl.MappingProjection(outer_mech_in, nested_mech_1, learning_rate=input_proj_lr,
+                                           name="INPUT PROJECTION")
+        output_proj = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=output_proj_lr,
+                                            name="OUTPUT PROJECTION")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, input_proj, nested_comp, output_proj, outer_mech_out],
+                                             name='Outer Comp',
+                                             enable_learning = enable_learning,
+                                             learning_rate = outer_comp_lr)
+
+        if enable_learning:
+            # Execute learning without run
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                               num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                               learning_rate={input_proj:input_proj_lr})
+
+        else:
+            # Execute run, then enable learning and execute learning()
+            run_result = outer_comp.run(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                        num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch)
+
+            # Check that learning rates are ones from construction
+            # pytorch_rep = outer_comp._build_pytorch_representation(learning_rate=10)
+            nested_comp.enable_learning = True
+            outer_comp.enable_learning = True
+            pytorch_rep = outer_comp._build_pytorch_representation()
+            assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == outer_comp_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(nested_proj) == nested_proj_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+            learning_result = outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
+                                               num_trials=2, execution_mode=pnl.ExecutionMode.PyTorch,
+                                               learning_rate={input_proj:input_proj_lr})
+            # Ensure learning occurred
+            assert learning_result != run_result
+
+        # Should get same result after learning in both cases
+        np.testing.assert_allclose(learning_result,[[-0.35035038561297505]])
 
 # Note: don't use @pytest.mark.composition here to force test of Autodiff without torch installed
 @pytest.mark.composition
@@ -1088,10 +1576,10 @@ class TestTrainingCorrectness:
             }
         }
 
-        pih = MappingProjection(matrix=wih)
-        pch = MappingProjection(matrix=wch)
-        pco = MappingProjection(matrix=wco)
-        pho = MappingProjection(matrix=who, learnable=False)
+        pih = MappingProjection(matrix=wih, name='pih')
+        pch = MappingProjection(matrix=wch, name='pch')
+        pco = MappingProjection(matrix=wco, name='pco')
+        pho = MappingProjection(matrix=who, name='pho', learnable=False)
 
         mnet = AutodiffComposition(learning_rate=learning_rate)
 
@@ -1105,13 +1593,14 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
 
-        mnet.learn(
+        result = mnet.learn(
             inputs=input_set,
             minibatch_size=1,
             patience=patience,
             min_delta=min_delt,
             execution_mode=pnl.ExecutionMode.PyTorch,
         )
+
         mnet.run(
             inputs=input_set['inputs']
         )
@@ -1997,6 +2486,14 @@ class TestNestedLearning:
                        execution_mode=execution_mode)
             return comp.results
         return _execute_learning
+
+    def test_warning_for_no_learning_in_solo_nested_comp(self):
+        with pytest.warns(UserWarning) as warning:
+            inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
+            outer = pnl.AutodiffComposition([inner])
+            outer._build_pytorch_representation()
+        assert (f"'autodiff_composition-1' contains no Projections, so it has no params for Pytorch to learn."
+                in repr(warning[0].message.args[0]))
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 1, 1)
@@ -3026,7 +3523,6 @@ class TestMiscTrainingFunctionality:
         # np.testing.assert_allclose(pt_weights_hid_bp, pt_weights_hid_ap)
         # np.testing.assert_allclose(pt_weights_out_bp, pt_weights_out_ap)
 
-
     @pytest.mark.parametrize(
         'loss, expected', [
             (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
@@ -3090,7 +3586,6 @@ class TestMiscTrainingFunctionality:
         xor.learn(inputs={"inputs": {xor_in: xor_inputs}, "targets": {xor_out: xor_targets}, "epochs": 10},
                   execution_mode=autodiff_mode)
 
-
     @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
         'learning_rate, weight_decay, optimizer_type, expected', [
@@ -3144,6 +3639,468 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+
+    # Data for test_learning_rate_assignments():
+    default_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]      # lr = .0001
+    proj_expected = [[1.01985553, 0.78611892, 1.08238162, 1.013176, 0.89058437]]
+    constructor_expected = [[1.0546317, 0.43073145, 1.22167948, 1.03716997, 0.70922113]]
+    learn_method_expected = [[1.01678782, 0.82604229, 1.06786732, 1.01146838, 0.91116669]]
+    no_learning_expected = [[1.07518731, 0.2334628, 1.30069345, 1.05196273, 0.60886095]]
+    override_false_expected = [[1.0329353930306493, 0.4250751763513295, 1.1938294699940157,
+                                1.0114375211126878, 0.7007802232778438]]
+
+    default_lr = .001
+
+    test_specs_for_learning_rates = [
+        #                  |      specify        | cnstr spec | learn() spec |  proj spec  |
+        #     condition    | constrctr | learn() | inp   outp |  inp   outp  |  inp   outp |     expected
+        #                  |   learning_rate     | projection |  projection  |  projection |     results
+        #
+        # Test that AutodiffComposition.learning_rate is used
+        # ('all_defaults',       False,   False,   None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_only',          False,   False,   None,  None,   None,  None,  2.7,   1.4,     proj_expected),
+        ('proj_nones',         False,   False,   2.9,    .5,   .66,     1.5,  None, None,     default_expected),
+        # Test that Projection.learning_rate == False prevents learning
+        ('proj_False_w_nones', False,   False,   None,  None,   None,  None, False, False,    no_learning_expected),
+        ('proj_False_w_vals',  False,   False,   2.9,    .5,   .66,     1.5, False, False,    no_learning_expected),
+        # Test that Projection.learning_rate is used
+        ('proj_like_constr',   False,   False,   None,  None,   None,  None,  2.9,  .5,       constructor_expected),
+        # Test that Projection.learning_rate spec supercedes specification in Autodiff constructor
+        # ('constr_over_proj',   True,   False,    2.9,    .5,    None,  None,   2.9,  .5,      constructor_expected),
+        # Test specs in constructor (with Projecton.learning_rate None or True)
+        ('learn_over_proj',    False,   True,    None,  None,   .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        # Test that Autodiff constructor spec superceded Projection.learning_rate spec
+        ('learn_over_all',     True,   True,     2.9,    .5,    .66,   1.5,   2.7,  1.4,      learn_method_expected),
+        # Test that Autodiff constructor spec superceded Projection.learning_rate spec
+        ('constructor_only',   True,    False,   2.9,    .5,    None,  None,  None,  True,    constructor_expected),
+        # Test specs in learn() method (with Projecton.learning_rate None or True)
+        ('learn_method_only',  False,   True,    None,  None,   .66,   1.5,   True,  None,    learn_method_expected),
+        # Test that learn() method params supercede constructor params
+        ('both',               True,    True,    2.9,    .5,    .66,   1.5,   None,  None,    learn_method_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_True',   True,    False,   True,  True,   None,  None,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_True',  False,   True,    None,  None,   True,  True,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('constructor_None',   True,    False,   None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that AutodiffComposition.learning_rate is used
+        ('learn_method_None',  False,   True,    None,  None,   None,  None,  None,  None,    default_expected),
+        # Test that no learning occurs
+        ('constructor_False',  True,    False,   False, False,  None,  None,  None,  None,    no_learning_expected),
+        # Test that no learning occurs
+        ('learn_method_False', False,   True,    None,  None,   False, False, None,  None,    no_learning_expected),
+        # Test that learning does *not* occur
+        # ('cnstr_val_lrn_False',True,    True,     2.9,   .5,    False, False, None,  None,    no_learning_expected),
+        # Test warning for non-learnable Projection to, within & fron nested Composition
+        ('projs_not_lrnable',  True,    True,     2.9,   .5,     .66,   1.5,  None,  None,          None),
+        # Test error for assigning False in constructor but learning_rate in learn()
+        ('cnstr_False_lrn_val',True,    True,    False, False,   .66,   1.5,  None,  None,    override_false_expected),
+        # Test error bad Projection specification
+        ('bad_proj',           True,    True,     2.9,   .5,     .66,   1.5,  None,  None,          None),
+        # Test error bad learning_rate spec
+        ('bad_lr',             True,    True,     2.9,   .5,     .66,   1.5,  None,  None,          None),
+    ]
+    @pytest.mark.parametrize("condition, use_constructor, use_learn_method, "
+                             "constructor_lr_input_proj, constructor_lr_output_proj,"
+                             "learn_method_lr_input_proj, learn_method_lr_output_proj,"
+                             "projection_lr_input_proj, projection_lr_output_proj,"
+                             "expected", test_specs_for_learning_rates,
+                             ids=[f"{x[0]}" for x in test_specs_for_learning_rates])
+    def test_learning_rate_assignments(self, condition,
+                                   use_constructor, use_learn_method,
+                                   constructor_lr_input_proj, constructor_lr_output_proj,
+                                   learn_method_lr_input_proj, learn_method_lr_output_proj,
+                                   projection_lr_input_proj, projection_lr_output_proj,
+                                   expected):
+        nested_hidden_mech_1 = pnl.ProcessingMechanism(function=pnl.Linear, input_shapes=4, name='nested_1')
+        nested_hidden_mech_2 = pnl.ProcessingMechanism(function=Logistic, input_shapes=4, name='nested_2')
+        hidden_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2, matrix=pnl.IDENTITY_MATRIX)
+        nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, hidden_proj, nested_hidden_mech_2], name="NESTED")
+        input_mech = pnl.ProcessingMechanism(input_shapes=3, name='input_mech')
+        output_mech = pnl.ProcessingMechanism(input_shapes=5, name='output_mech')
+        input_proj = pnl.MappingProjection(name='INPUT PROJECTION',
+                                           sender=input_mech,
+                                           receiver=nested_hidden_mech_1,
+                                           matrix=pnl.RANDOM_CONNECTIVITY_MATRIX,
+                                           learning_rate=projection_lr_input_proj)
+        output_proj = pnl.MappingProjection(name='OUTPUT PROJECTION',
+                                            sender=nested_hidden_mech_2,
+                                            receiver=output_mech,
+                                            matrix=pnl.RANDOM_CONNECTIVITY_MATRIX,
+                                            learning_rate=projection_lr_output_proj)
+        inputs={input_mech: [[.1, .2, .3]]}
+        targets={output_mech: [[1,1,1,1,1]]}
+        constructor_learning_rate_dict = {input_proj: constructor_lr_input_proj,
+                                          output_proj: constructor_lr_output_proj}
+        learning_method_learning_rate_dict = {input_proj: learn_method_lr_input_proj,
+                                              output_proj: learn_method_lr_output_proj}
+
+        opt_params = None
+
+        if condition in {'bad_proj', 'bad_lr'}:
+            err_msg = None
+            if condition == 'bad_proj':
+                opt_params = {condition: .66}
+                err_msg = ("The following Projection specified in the 'learning_rate' arg of the learn() method "
+                           "for 'OUTER' is not in that Composition or any nested within it: 'bad_proj'.")
+            elif condition == 'bad_lr':
+                opt_params = {input_proj: condition}
+                err_msg = ("A value ('bad_lr') specified in the 'learning_rate' arg of the learn() method for 'OUTER' "
+                           "is not valid; it must be an int, float, bool or None.")
+            with pytest.raises(AutodiffCompositionError) as error_text:
+                outer_comp = pnl.AutodiffComposition(
+                    [input_mech, input_proj, nested_comp, output_proj, output_mech], name='OUTER')
+                outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
+            assert err_msg in str(error_text.value)
+            return
+
+        elif condition == 'projs_not_lrnable':
+            input_proj.learnable = True
+            hidden_proj.learnable = False
+            output_proj.learnable = False
+            opt_params = {input_proj: 1.16, hidden_proj: 21.6, output_proj: 3.99}
+            with pytest.raises(AutodiffCompositionError) as error_text:  # Warn, since default_input is NOT set
+                outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech])
+                outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params)
+            assert ("Projection ('MappingProjection from nested_1[OutputPort-0] to nested_2[InputPort-0]') specified "
+                    "in the dict for the 'learning_rate' arg of the learn() method for 'autodiff_composition' "
+                    "is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
+                    "is not 'False', or remove it from the dict."
+                    in str(error_text.value))
+            return
+
+        elif condition == 'cnstr_False_lrn_val':
+            # Validate the learn() method specifications override constructor projection-specific assignments of False
+            opt_params = {input_proj: False, hidden_proj: 21.6, output_proj: False}
+            outer_comp = pnl.AutodiffComposition([input_mech, input_proj, nested_comp, output_proj, output_mech],
+                                                 learning_rate=opt_params)
+            opt_params = {input_proj: 0.66, hidden_proj: 21.6, output_proj: 0.5}
+            results = outer_comp.learn(inputs=inputs, targets=targets, learning_rate=opt_params, num_trials=2)
+
+            outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('autodiff_composition')
+
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == opt_params[input_proj]
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == opt_params[hidden_proj]
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == opt_params[output_proj]
+            np.testing.assert_allclose(expected, results)
+            return
+
+        # Construct outer Composition
+        outer_comp = pnl.AutodiffComposition(
+            [input_mech, input_proj, nested_comp, output_proj, output_mech],
+            learning_rate=constructor_learning_rate_dict if use_constructor else None,
+            name="OUTER")
+
+        # Test after learning with assigned values
+        results = outer_comp.learn(
+            inputs=inputs, targets=targets,
+            learning_rate=learning_method_learning_rate_dict if use_learn_method else None,
+            num_trials=2)
+
+        if use_learn_method:
+            input_proj_lr = (learn_method_lr_input_proj
+                             if ((learn_method_lr_input_proj and learn_method_lr_input_proj is not True)
+                                 or learn_method_lr_input_proj is False)
+                             else (constructor_lr_input_proj
+                                   if (constructor_lr_input_proj and constructor_lr_input_proj is not True)
+                                   else (projection_lr_input_proj or self.default_lr)))
+            hidden_proj_lr = self.default_lr
+            output_proj_lr = (learn_method_lr_output_proj
+                              if ((learn_method_lr_output_proj and learn_method_lr_output_proj is not True)
+                                  or learn_method_lr_output_proj is False)
+                              else (constructor_lr_output_proj
+                                    if (constructor_lr_output_proj and constructor_lr_output_proj is not True)
+                                    else (constructor_lr_output_proj or self.default_lr)))
+        elif use_constructor:
+            input_proj_lr = (constructor_lr_input_proj
+                             if ((constructor_lr_input_proj and constructor_lr_input_proj is not True)
+                                 or constructor_lr_input_proj is False)
+                             else (projection_lr_input_proj or self.default_lr))
+            hidden_proj_lr = self.default_lr
+            output_proj_lr = (constructor_lr_output_proj
+                              if ((constructor_lr_output_proj and constructor_lr_output_proj is not True)
+                                  or constructor_lr_output_proj is False)
+                              else (projection_lr_output_proj or self.default_lr))
+        else:
+            input_proj_lr = projection_lr_input_proj if projection_lr_input_proj is not None else self.default_lr
+            hidden_proj_lr = self.default_lr
+            output_proj_lr = projection_lr_output_proj if projection_lr_output_proj is not None else self.default_lr
+
+        outer_comp_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER')
+        assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
+        assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == hidden_proj_lr
+        assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
+        np.testing.assert_allclose(expected, results)
+
+        # Learning rate should return to default values if not specified again
+        outer_comp.learn(inputs=inputs, targets=targets)
+        if condition == 'both':
+            # Should return to defaults specified in constructor (even though specified in previous call to learning)
+            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == constructor_lr_input_proj or self.default_lr
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == 0.001
+            assert (outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == constructor_lr_output_proj or self.default_lr)
+        elif condition == 'learn_method':
+            # Should return to default for optimizer (since none specified for constructor)
+            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == self.default_lr
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == self.default_lr
+            assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == self.default_lr
+
+
+    default = .001
+    test_specs_for_learning_rate_inheritance = [
+        #                                                                  NOTE: the specs below are for values
+        #                                                                        expected after construction; values
+        #                                                                        after learn() are handled in the test
+        #  condition    p_1_lr  p_2_lr  pathway_lr  in_cmp_lr  out_cmp_lr  out_lrn_lr  exp_p_1_in exp_p2_in
+        ('defaults',       None,   None,     None,      None,      None,  NotImplemented, default,  default),
+        # projection-specific specs takes precedence if no learn() method specs
+        ('proj_lr_nimp',  1.414,     7,      None,      6.02,       2.7,  NotImplemented,  1.414,       7),
+        ('proj_lr_none',  1.414,     7,      None,      6.02,       2.7,      None,        1.414,       7),
+        # projection-specific specs takes precedence over pathway, but pathay takes precedence over comp lr's
+        ('pathway_lr',    1.414,   None,     2.99,      6.02,       1.6,      3.14,        1.414,      2.99),
+        # learn() method takes precedence, and specifying None for Projections forces them to use relevant default
+        #        NOTE:  out_lrn_lr only applied to inner_proj_1 or inner_proj_2
+        ('learn_only',     None,   None,     None,      None,      None,      3.14,       default,  default),
+        ('inr_p2_none',   1.414,   None,     None,      None,      None,      3.14,        1.414,   default),
+        ('inr_outr',      1.414,   None,     None,      6.02,      None,      3.14,        1.414,     6.02),
+        ('inr_none_nimp',  None,     7,      None,      6.02,      None,  NotImplemented,   6.02,       7),
+        ('inr_none_none',  None,     7,      None,      6.02,      None,      None,         6.02,       7),
+        ('inr_lr_nimp',   1.414,     7,      None,      6.02,      None,  NotImplemented,  1.414,       7),
+        ('inr_lr_none',   1.414,     7,      None,      6.02,      None,      None,        1.414,       7),
+        ('outr_comp_lr',   None,     7,      None,      6.02,       2.7,      None,         6.02,       7),
+        ('outr_comp_lr',   None,     7,      None,      None,       2.7,      None,       default,      7),
+    ]
+    @pytest.mark.parametrize("_condition, proj_1_lr, proj_2_lr, pathway_lr, "
+                             "inner_comp_lr, outer_comp_lr, outer_learn_lr, "
+                             "expected_proj_1_inner, expected_proj_2_inner",
+                             test_specs_for_learning_rate_inheritance,
+                             ids=[f"{x[0]}" for x in test_specs_for_learning_rate_inheritance])
+    def test_learning_rate_inheritance_in_nested_comp(self, _condition, proj_1_lr, proj_2_lr, pathway_lr,
+                                                      inner_comp_lr, outer_comp_lr, outer_learn_lr,
+                                                      expected_proj_1_inner, expected_proj_2_inner):
+
+        # Construct inner Composition
+        inner_node_input = pnl.ProcessingMechanism(name="INPUT NODE")
+        inner_node_hidden = pnl.ProcessingMechanism(name="HIDDEN NODE")
+        inner_node_output = pnl.ProcessingMechanism(name="OUTPUT NODE")
+        inner_proj_1 = pnl.MappingProjection(inner_node_input,
+                                           inner_node_hidden,
+                                           learning_rate = proj_1_lr,
+                                           name="INNER PROJECTION 1")
+        inner_proj_2 = pnl.MappingProjection(inner_node_hidden,
+                                           inner_node_output,
+                                           learning_rate = proj_2_lr,
+                                           name="INNER PROJECTION 2")
+        # inner_pathway = [inner_node_input, inner_proj_1, inner_node_hidden, inner_proj_2, inner_node_output]
+        # inner_comp = AutodiffComposition(pathways=inner_pathway,
+        #                                  learning_rate=inner_comp_lr,
+        #                                  name="INNER COMP")
+
+        # BREADCRUMB
+        inner_comp = AutodiffComposition(learning_rate=inner_comp_lr,
+                                         name="INNER COMP")
+        inner_comp.add_backpropagation_learning_pathway([inner_node_input,
+                                                         inner_proj_1,
+                                                         inner_node_hidden,
+                                                         inner_proj_2,
+                                                         inner_node_output],
+                                                        learning_rate = pathway_lr)
+        # BREADCRUMB
+        # Check inner_comp assignments from constructor
+        inner_pytorch_rep = inner_comp._build_pytorch_representation()
+        # Ensure that params were assigned appropriate lr for the inner_comp
+        assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert inner_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
+
+        # Construct outer Composition with nested inner
+        outer_node = pnl.ProcessingMechanism(name="OUTER NODE")
+
+        # BREADCRUMB
+        outer_comp = AutodiffComposition([inner_comp, outer_node], learning_rate=outer_comp_lr, name="OUTER COMP")
+
+        # Check outer_comp assignments from constructor
+        # BREADCRUMB
+        outer_pytorch_rep = outer_comp._build_pytorch_representation()
+        outer_proj = outer_comp.nodes[-1].afferents[0]
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
+        assert outer_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
+
+        # Check outer_comp assignments after learn() method
+        if outer_learn_lr == NotImplemented:
+            learning_rate_arg = None
+            # proj_1_expected = proj_1_lr or inner_comp_lr or outer_comp_lr or self.default
+            proj_1_expected = proj_1_lr or inner_comp_lr or outer_comp_lr or self.default
+            proj_2_expected = proj_2_lr or inner_comp_lr or outer_comp_lr or self.default
+            outer_proj_expected = outer_comp_lr or self.default
+        elif outer_learn_lr is None:
+            learning_rate_arg = {inner_proj_1: None,
+                             outer_proj: None}
+            proj_1_expected = inner_comp_lr or proj_1_lr or outer_comp_lr
+            proj_2_expected = inner_comp_lr or proj_2_lr or self.default
+            outer_proj_expected = outer_comp_lr or self.default
+        else:
+            learning_rate_arg = {inner_proj_1: outer_learn_lr,
+                             outer_proj: outer_learn_lr}
+            proj_1_expected = outer_learn_lr or proj_1_lr or self.default
+            proj_2_expected = outer_learn_lr or proj_2_lr or self.default
+            outer_proj_expected = outer_learn_lr or outer_learn_lr or self.default
+
+        # BREADCRUMB
+        outer_comp.learn(inputs={inner_node_input:[[1]]},
+                         learning_rate=learning_rate_arg)
+        learn_pytorch_rep = outer_comp.parameters.pytorch_representation.get('OUTER COMP')
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == proj_1_expected
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_proj_expected
+        # Check that _learing_params_for_execution works properly
+        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_1] == proj_1_expected
+        assert learn_pytorch_rep._torch_params_for_execution[inner_proj_2] == expected_proj_2_inner
+        assert learn_pytorch_rep._torch_params_for_execution[outer_proj] == outer_proj_expected
+
+        # BREADCRUMB
+        # Check that learning_rates return to those at construction after another call to learn() w/o learning_rate_arg
+        outer_comp.learn(inputs={inner_node_input:[[1]]})
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
+        assert learn_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
+
+    def test_pytorch_identicality_of_learning_rates_nested(self):
+        """Test ideinticality with assignment of learning rates in learning_rate of nested Composition"""
+        import torch
+        entry_torch_dtype = torch.get_default_dtype()
+        torch.set_default_dtype(torch.float64)
+
+        INPUT_SIZE = 3
+        HIDDEN_SIZE = 2
+        NESTED_1_SIZE = 3
+        NESTED_2_SIZE = 2
+        OUTPUT_SIZE = 5
+        LEARNING_RATE = .001
+        INPUT_LEARNING_RATE = 1.414
+        HIDDEN_LEARNING_RATE = 6.02
+        OUTPUT_LEARNING_RATE = 2.7
+        input_stim = [[1.,2.,3.]]
+        target_stim = [[1.,1.,1.,1.,1.]]
+
+        #  TorchModel:
+        #  input_wts      hidden_wts       output_wts
+        #    ->     input     ->    hidden    ->    output
+        #        INPUT_SIZE       HIDDEN_SIZE     OUTPUT_SIZE
+        #
+        #  PNL Model:
+        #       input_proj          nested_proj          output_proj
+        #  input    ->    [ nested_1    ->     nested_2 ]   ->     output
+        # INPUT_SIZE       INPUT_SIZE        HIDDEN_SIZE         OUTPUT_SIZE
+        #
+        # Mapping of weights between models:
+        #   Torch           PNL
+        # input_wts   ->   input_proj
+        # hidden_wts  ->   nested_proj
+        # output_wts  ->   output_proj
+
+        # Set up and run torch model ----------------------------------------------------------------------
+
+        # Set up torch model
+        class TorchModel(torch.nn.Module):
+            def __init__(self):
+                super(TorchModel, self).__init__()
+                self.input = torch.nn.Linear(INPUT_SIZE, INPUT_SIZE, bias=False)
+                self.hidden = torch.nn.Linear(INPUT_SIZE, HIDDEN_SIZE, bias=False)
+                self.output = torch.nn.Linear(HIDDEN_SIZE, OUTPUT_SIZE, bias=False)
+
+            def forward(self, x):
+                after_input = self.input(x)
+                after_hidden = self.hidden(after_input)
+                after_output = self.output(after_hidden)
+                return after_output
+
+        # Set up Torch optimizer
+        torch_model = TorchModel()
+        torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_model.parameters())
+        del torch_optimizer.param_groups[0]
+        torch_param_names_map = {p[0]:p[1] for p in torch_model.named_parameters()}
+        torch_optimizer.add_param_group({'params': torch_param_names_map['input.weight'], 'lr': INPUT_LEARNING_RATE})
+        torch_optimizer.add_param_group({'params': torch_param_names_map['hidden.weight'], 'lr': HIDDEN_LEARNING_RATE})
+        torch_optimizer.add_param_group({'params': torch_param_names_map['output.weight'], 'lr': OUTPUT_LEARNING_RATE})
+        loss_fct = torch.nn.MSELoss(reduction='mean')
+
+        # Get initial weights (to initialize autodiff below with same initial conditions)
+        torch_input_initial_weights = torch_model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
+        torch_hidden_initial_weights = torch_model.state_dict()['hidden.weight'].T.detach().cpu().numpy().copy()
+        torch_output_initial_weights = torch_model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
+
+        # Execute model without learning
+        torch_result_before_learning = torch_model(torch.tensor(np.array(input_stim)))
+
+        # Compute loss and update weights
+        torch_optimizer.zero_grad()
+        torch_loss = loss_fct(torch_result_before_learning, torch.tensor(target_stim))
+        torch_loss.backward()
+        torch_optimizer.step()
+
+        # Get output after learning
+        torch_result_after_learning = torch_model(torch.tensor(np.array(input_stim)))
+
+        # Set up and run PNL Autodiff model ------------------------------------------------------------
+
+        # Nested Composition
+        nested_hidden_mech_1 = pnl.ProcessingMechanism(input_shapes=INPUT_SIZE, name='nested_1')
+        nested_hidden_mech_2 = pnl.ProcessingMechanism(input_shapes=HIDDEN_SIZE, name='nested_2')
+        nested_proj = pnl.MappingProjection(nested_hidden_mech_1, nested_hidden_mech_2,
+                                            matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        nested_comp = pnl.AutodiffComposition([nested_hidden_mech_1, nested_proj, nested_hidden_mech_2],
+                                              name='NESTED COMP')
+        # Outer Composition
+        input_mech = pnl.ProcessingMechanism(input_shapes=INPUT_SIZE, name='input_mech')
+        output_mech = pnl.ProcessingMechanism(input_shapes=OUTPUT_SIZE, name='output_mech')
+        input_proj = pnl.MappingProjection(input_mech, nested_hidden_mech_1, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        output_proj = pnl.MappingProjection(nested_hidden_mech_2, output_mech, matrix=pnl.RANDOM_CONNECTIVITY_MATRIX)
+        inputs={input_mech: input_stim}
+        targets={output_mech: target_stim}
+        learning_rate={pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                       input_proj: INPUT_LEARNING_RATE,
+                       nested_proj: HIDDEN_LEARNING_RATE,
+                       output_proj: OUTPUT_LEARNING_RATE}
+        outer_comp = pnl.AutodiffComposition(
+            name='OUTER COMP',
+            pathways=[input_mech, input_proj, nested_comp, output_proj, output_mech],
+            learning_rate=learning_rate
+        )
+
+        # Assign initial weights from TorchModel to PNL:
+        #   Torch           PNL
+        # input_wts   ->   input_proj
+        # hidden_wts  ->   nested_proj
+        # output_wts  ->   output_proj
+        outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
+        nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
+        outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
+        target_mechs = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+
+        # Execute autodiff with learning (but not weight updates yet)
+        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
+                                                           execution_mode=pnl.ExecutionMode.PyTorch,
+                                                           )
+        # Get results after learning (with weight updates)
+        autodiff_result_after_learning = outer_comp.run(inputs={input_mech:input_stim},
+                                                        execution_mode=pnl.ExecutionMode.PyTorch)
+
+        # Compare results ------------------------------------------------------------
+
+        # Test of forward pass (without effects of learning yet):
+        np.testing.assert_allclose(torch_result_before_learning.detach().numpy(),
+                                   autodiff_result_before_learning, atol=1e-8)
+
+        # Test of execution after backward pass (learning):
+        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses.squeeze())
+        np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
+                                   autodiff_result_after_learning, atol=1e-8)
+
+        torch.set_default_dtype(entry_torch_dtype)
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):

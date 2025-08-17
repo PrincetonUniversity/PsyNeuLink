@@ -1536,14 +1536,14 @@ class Log:
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             log_dict[eid] = OrderedDict()
 
-            # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
+            # If all time values are recorded: log_dict = {"Run": array, "Trial": array, "Time_step": array}
             if time_values:
                 for i in range(NUM_TIME_SCALES):
                     row = [[t[i]] for t in time_values]
                     time_header = TIME_SCALE_NAMES[i].capitalize()
                     log_dict[eid][time_header] = row
 
-            # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
+            # If ANY time values are empty (components were run outside of a Composition): log_dict = {"Index": array}
             else:
                 # find number of values logged by zeroth component
                 num_indicies = len(self.logged_entries[entries[0]])

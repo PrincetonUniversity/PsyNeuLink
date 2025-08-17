@@ -954,12 +954,7 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
         Sorts graph by node name for consistency in display
         """
-        # MODIFIED 3/16/25 OLD:
         return composition.graph_processing.dependency_dict
-        # MODIFIED 3/16/25 NEW:
-        # return {k: composition.graph_processing.dependency_dict[k]
-        #         for k in sorted(composition.graph_processing.dependency_dict.keys())}
-        # MODIFIED 3/16/25 END
 
     def _get_nodes(self, composition ,context):
         """Helper method that allows override by subclass to filter nodes used for graph"""

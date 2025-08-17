@@ -472,7 +472,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         <ContrastiveHebbian_Fields>`.
 
     mode : SIMPLE_HEBBIAN or None : default None
-        specifies configuratoin that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning
+        specifies configuration that emulates standard `RecurrentTransferMechanism` using `Hebbian` learning
         (see `SIMPLE_HEBBIAN mode <ContrastiveHebbian_SIMPLE_HEBBIAN>` for details).
 
     combination_function : function : default None

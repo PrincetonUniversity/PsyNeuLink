@@ -176,13 +176,15 @@ class UtilitiesError(Exception):
         return repr(self.error_value)
 
 
-
-def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
+def deprecation_warning(component, kwargs:dict, deprecated_args:dict,
+                        method:str= None, additional_msg:str=None) -> (dict):
     """Identify and warn about any deprecated args, and return their values for reassignment
     Format of deprecated_args dict:  {'deprecated_arg_name':'real_arg"name')}
     Format of returned dict:  {'real_arg_name':<value assigned to deprecated arg>)}
     """
     value_assignments = dict()
+    method = method or "constructor"
+    additional_msg = additional_msg or ''
     for deprecated_arg in deprecated_args:
         if deprecated_arg in kwargs:
             real_arg = deprecated_args[deprecated_arg]
@@ -190,15 +192,16 @@ def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
             if arg_value:
                 # Value for real arg was also specified:
                 warnings.warn(f"Both '{deprecated_arg}' and '{real_arg}' "
-                              f"were specified in the constructor for a(n) {component.__class__.__name__}; "
+                              f"were specified in the {method} for a(n) {component.__class__.__name__}; "
                               f"{deprecated_arg} ({arg_value}) will be used,"
-                              f"but note that it is deprecated  and may be removed in the future.")
+                              f"but note that it is deprecated  and may be removed in the future."
+                              f"{additional_msg}")
             else:
                 # Only deprecated arg was specified:
                 warnings.warn(f"'{deprecated_arg}' was specified in the constructor for a(n)"
                               f" {component.__class__.__name__}; note that this has been deprecated "
                               f"and may be removed in the future; '{real_arg}' "
-                              f"should be used instead.")
+                              f"should be used instead.{additional_msg}")
             value_assignments.update({real_arg:arg_value})
         continue
     return value_assignments
@@ -1267,7 +1270,7 @@ class ContentAddressableList(UserList):
 
     key : str : default `name`
         specifies the attribute of **component_type** used to key items in the list by content;
-        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
+        **component_type** must have this attribute or, if it is not provided, a 'name' attribute.
 
     list : List : default None
         specifies a list used to initialize the list;
