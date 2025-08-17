@@ -87,10 +87,9 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
             if optimization_num == 0:
-                # Only execute store on first optimization repetition for current mini-batch
-                # to ensure that current values of 'PREVIOUS STATE' and 'CONTEXT' nodes are stored
-                # before their values are updated at the end of the full call to run in the first optimization step
-                # (cf. technical_note under `EMComposition_Training` for addition explanation)
+                # Only execute store on first optimization step for current mini-batch to ensure that current values
+                # of nodes are stored before their values are updated at the end of the full call to run in the first
+                # optimization step (cf. technical_note under `EMComposition_Training` for more detailed explanation)
                 self.store_memory(variable, context)
                 # # BREADCRUMB PRINT:
                 # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
