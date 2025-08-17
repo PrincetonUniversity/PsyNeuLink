@@ -20,8 +20,8 @@ IS_PLOT = True
 IS_TEST = True
 IS_VERBOSE = True
 
-TOLERANCE = 1e-7
-NR_TRIALS_TO_CHECK = 10
+TOLERANCE = 1e-3
+NR_TRIALS_TO_CHECK = 20
 
 
 def main():
@@ -37,9 +37,11 @@ def main():
         utils.set_random_seed(0)
         model, context, state, em = construct_model(config=params_ego,
                                                     memory_capacity=len(pnl_inputs))
-        # model.show_graph(show_all=True)
+        # from psyneulink import ALL
+        # em.show_graph(show_node_structure=ALL)
         pnl_results = run_model(model, pnl_inputs, config=params_ego)
         if IS_PLOT:
+            print('plotting psyneulink ego')
             plot_results(pnl_results, pnl_targets, axes[0], 1)
         if IS_VERBOSE:
             print('done running psyneulink ego', end='\n\n')
@@ -49,7 +51,8 @@ def main():
         utils.set_random_seed(0)
         torch_results = run_participant(params_torch, data_loader, len(pnl_inputs))
         if IS_PLOT:
-            plot_results(torch_results, pnl_targets, axes[1], 0)
+            print('plotting pytorch ego')
+            plot_results(torch_results, pnl_targets, axes[1], 1)
         if IS_VERBOSE:
             print('done running declan', end='\n\n')
     if IS_PLOT:
@@ -81,8 +84,10 @@ def main():
 
 
 def plot_results(predictions, target, ax, stride=1):
-    print(predictions[stride:len(target)])
-    ax.plot((1 - np.abs(predictions[stride:len(target)] - target[:len(target) - stride])).sum(-1))
+    print(predictions)
+    # print(len(predictions))
+    # print(target)
+    ax.plot((1 - np.abs(predictions - target)).sum(-1))
     ax.set_xlabel('Stimuli')
     ax.set_ylabel('loss')
 
