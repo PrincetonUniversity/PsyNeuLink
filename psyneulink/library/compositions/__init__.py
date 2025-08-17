@@ -3,7 +3,6 @@ from .compositionrunner import *
 from .autodiffcomposition import *
 from .emcomposition import *
 from psyneulink.library.compositions.emcomposition.emcomposition import *
-from psyneulink.library.compositions.grucomposition.grucomposition import *
 __all__ = list(regressioncfa.__all__)
 __all__.extend(compositionrunner.__all__)
 __all__.extend(autodiffcomposition.__all__)
@@ -13,6 +12,7 @@ try:
     import torch
     from torch import nn
 
+    from psyneulink.library.compositions.grucomposition.grucomposition import *
     from .grucomposition import *
     __all__.extend(grucomposition.__all__)
 
