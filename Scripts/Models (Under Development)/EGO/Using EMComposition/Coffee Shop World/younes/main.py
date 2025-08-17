@@ -60,8 +60,8 @@ def main():
             raise ValueError('Both models must be run for testing.')
 
         # First, check they are NumPy arrays (or convertible)
-        pnl_results = np.asarray(pnl_results[1:])
-        torch_results = np.asarray(torch_results[:-1])
+        pnl_results = np.asarray(pnl_results)
+        torch_results = np.asarray(torch_results)
 
         # Check shape matches
         if pnl_results.shape != torch_results.shape:
