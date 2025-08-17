@@ -198,8 +198,7 @@ class CompositionRunner():
                     else: # list because ragged
                         inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
-                # BREADCRUMB PRINT
-                self._composition._STIM_NUM = i
+                self._composition._stim_num = i # For debugging
 
                 # Cycle over optimizations per trial (stimulus)
                 for optimization_num in range(optimizations_per_minibatch):
@@ -214,7 +213,7 @@ class CompositionRunner():
                         before_additional_optimizations = do_additional_optimizations and optimization_num == 1
                         end_extra_optimizations = (do_additional_optimizations
                                                    and optimization_num + 1 == optimizations_per_minibatch)
-                        
+
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
 
                         if before_additional_optimizations:
@@ -307,8 +306,7 @@ class CompositionRunner():
 
                 for idx in range(i, i + minibatch_size):
                     try:
-                        # BREADCRUMB: PRINT
-                        self._composition._STIM_NUM = i
+                        self._composition._stim_num = i # For debugging
                         input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,

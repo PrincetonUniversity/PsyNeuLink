@@ -92,11 +92,11 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 # before their values are updated at the end of the full call to run in the first optimization step
                 # (cf. technical_note under `EMComposition_Training` for addition explanation)
                 self.store_memory(variable, context)
-                # BREADCRUMB PRINT:
-                print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
-                print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
-                print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
-                print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
+                # # BREADCRUMB PRINT:
+                # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
+                # print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
+                # print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                # print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
 
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)

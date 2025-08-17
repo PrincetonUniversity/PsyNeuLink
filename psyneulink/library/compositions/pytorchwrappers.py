@@ -984,7 +984,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 inputs_to_run = inputs
 
             # # BREADCRUMB PRINT
-            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._STIM_NUM})")
+            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._stim_num})")
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
@@ -1104,7 +1104,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
                     # # BREADCRUMB PRINT
-                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._STIM_NUM})")
+                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened

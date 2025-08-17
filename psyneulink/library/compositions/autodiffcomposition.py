@@ -1259,8 +1259,8 @@ class AutodiffComposition(Composition):
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
 
-        # BREADCRUMB PRINT:
-        print(f"LOSS for optimization_num {optimization_num}: {comp_loss} ")
+        # # BREADCRUMB PRINT:
+        # print(f"LOSS for optimization_num {optimization_num}: {comp_loss} ")
 
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 

@@ -11401,7 +11401,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    content='run_start',
                    context=context)
 
-            self.TRIAL_NUM = -1
+            self._trial_num = -1 # For debugging
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
