@@ -325,9 +325,7 @@ class CompositionRunner():
                     if call_after_minibatch:
                         call_after_minibatch()
 
-                    # 7/10/24 - FIX: REVISE TO ACCOMODATE optimizations_per_minibatch
-                    #                AND ADD HANDLING OF synch_with_pnl_options AND retain_in_pnl_options
-                    # Update weights if in PyTorch execution_mode;
+                    # Update weights (optimization step) if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context)

@@ -51,7 +51,7 @@ params_ego = dict(
     context_d=CONTEXT_D,  # length of context vector
     memory_capacity=ALL,  # number of entries in EM memory; ALL=> match to number of stims
     memory_init=MEMORY_INIT,  # .001,  # Initialize memory with random values in interval
-    concatenate_queries=True,  # whether to concatenate queries before retrieval
+    concatenate_queries=False,  # whether to concatenate queries before retrieval
 
     # environment
     curriculum_type='Blocked',
