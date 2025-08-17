@@ -170,12 +170,11 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
 
                 # - store in row
                 axis = 0
-                # BREADCRUMB: COMMENTED OUT TO ACCOMMODATE EGO MODEL; RESTORE WHEN WORKING?
-                # if concatenation_node is None:
-                #     # Double check that the memory passed in is the output of the projection for the correct field
-                #     assert (memory_to_store_indexed == entry_to_store).all(), \
-                #         (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
-                #          f"and value of projection to corresponding field.")
+                if concatenation_node is None:
+                    # Double check that the memory passed in is the output of the projection for the correct field
+                    assert (memory_to_store_indexed == entry_to_store).all(), \
+                        (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
+                         f"and value of projection to corresponding field.")
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)

@@ -1091,17 +1091,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if node.exclude_from_gradient_calc:
                         # if node.exclude_from_gradient_calc in {AFTER, LAST}:
                         if node.exclude_from_gradient_calc == AFTER:
-                            # Cache variable for later execution
-                            # MODIFIED 8/16/24 OLD:
-                            if node.mechanism.name == 'STORE' and optimization_num:
-                                # BREADCRUMB HACK FOR EGO MODEL:
-                                continue
-                            # # MODIFIED 8/16/24 NEW:
-                            # if node.exclude_from_gradient_calc == LAST and optimization_num:
-                            #     # Node will be executed after last optimization step, but need variable from first
-                            #     # since that is the only one in which it is assured all nodes are executed
-                            #     continue
-                            # MODIFIED 8/16/24 END
                             # Store variable for execution after gradient calculations are complete
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
