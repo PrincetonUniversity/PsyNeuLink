@@ -19,7 +19,7 @@ from typing import Optional
 
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
-from psyneulink.core.globals.keywords import AFTER
+from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST
 
 __all__ = ['PytorchEMCompositionWrapper']
 
@@ -86,7 +86,17 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
-            if optimization_num == 0:
+            num_optimizations = self._context.composition.optimizations_per_minibatch
+            store_on_optimization = self.composition.store_on_optimization
+            if store_on_optimization == FIRST and optimization_num == 0:
+                store = True
+            elif store_on_optimization == LAST and ((optimization_num + 1) == num_optimizations):
+                store = True
+            elif store_on_optimization == ALL:
+                store = True
+            else:
+                store = False
+            if store:
                 # Only execute store on first optimization step for current mini-batch to ensure that current values
                 # of nodes are stored before their values are updated at the end of the full call to run in the first
                 # optimization step (cf. technical_note under `EMComposition_Training` for more detailed explanation)

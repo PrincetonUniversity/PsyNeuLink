@@ -20,14 +20,14 @@ Contents
      - `Capacity <EMComposition_Memory_Capacity>`
      - `Fields <EMComposition_Fields>`
      - `Storage and Retrieval <EMComposition_Retrieval_Storage>`
-     - `Learning <EMComposition_Learning>`
+     - `Learning <EMComposition_Learning_Creation>`
   * `EMComposition_Structure`
      - `Input <EMComposition_Input>`
      - `Memory <EMComposition_Memory_Structure>`
      - `Output <EMComposition_Output>`
   * `EMComposition_Execution`
      - `Processing <EMComposition_Processing>`
-     - `Learning <EMComposition_Training>`
+     - `Learning <EMComposition_Learning_Execution>`
   * `EMComposition_Examples`
      - `Memory Template and Fill <EMComposition_Example_Memory_Template>`
      - `Field Weights <EMComposition_Example_Field_Weights>`
@@ -125,7 +125,7 @@ Creation
 An EMComposition is created by calling its constructor.  There are four major elements that can be configured:
 the structure of its `memory <EMComposition_Memory_Specification>; the fields <EMComposition_Fields>` for the entries
 in memory; how `storage and retrieval <EMComposition_Retrieval_Storage>` operate; and whether and how `learning
-<EMComposition_Learning>` is carried out.
+<EMComposition_Learning_Creation>` is carried out.
 
 .. _EMComposition_Memory_Specification:
 
@@ -415,7 +415,7 @@ that is propagated through the EMComposition.
   entry is multiplied by its `field_weight <EMComposition_Field_Weighting>` to determine which entry is the weakest and
   will be replaced.
 
-.. _EMComposition_Learning:
+.. _EMComposition_Learning_Creation:
 
 *Learning*
 ~~~~~~~~~~
@@ -685,15 +685,15 @@ softmaxed values for each memory with the corresponding value for each memory, a
 corresponding `output <Composition.output>` item.
 COMMENT
 
-.. _EMComposition_Training:
+.. _EMComposition_Learning_Execution:
 
-*Training*
+*Learning*
 ~~~~~~~~~~
 
 If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True, then errors
 will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified for learning
-(see `Learning <EMComposition_Learning>` for details about specification). These errors are derived either from any
-errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`,
+(see `Learning <EMComposition_Learning_Creation>` for details about specification). These errors are derived either
+from any errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`,
 or locally by the difference between the `retrieved_nodes <EMComposition.retrieved_nodes>` and the `target_nodes
 <EMComposition.target_nodes>` that are created for each of the `retrieved_nodes <EMComposition.retrieved_nodes>`
 that do not project to an outer Composition. These errors are then backpropagated through the EMComposition to the
@@ -727,20 +727,31 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
   .. _EMComposition_Storage_Learning:
 
   .. note:
-     Storage always occurs *after* the learning (gradient calculation and weight updates) has occured for each stimulus;
-     if `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` (the number of weight updates that
-     occur for each input) is greater than 1, then storage occurs during the first update (optimization step); this
-     means that any values generated during additional optimization steps will not be stored in EM, and the effect
-     of those optimizations on any values stored subsequently will not be observed until the next input is presented
-     (i.e., the next `TRIAL <TimeScale.TRIAL>`).
+     Storage always occurs *after* the learning (gradient calculation and weight updates) has occured for an input;
+     if there this is more than one optimization step for a given input (i.e., if `optimizations_per_minibatch
+     <Composition.optimizations_per_minibatch>` is greater than 1), then storage occurs on the optimizaton step(s)
+     determined by the `store_on_optimization <EMComposition.store_on_optimization>` Parameter, which can have the
+     following values:
 
-     .. technical_note::
-        Execution of storage during the first optimization step is implemented enforced in
-        `PytorchEMMechanismWrapper.execute` (for optimization_num==0); this is to ensure that the current values of
-        any input nodes (reflecting the *last input*) are stored before their values are updated to the current
-        inputs (at the end of a full execution of `Composition.execute` in the first optimization step), to deal with
-        cases in which EM is executed before those, as in the EGO model for *PREVIOUS STATE* and *CONTEXT*:
-        <EGO Model>.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer)).
+     * *FIRST* * storage occurs after the first optimization step (weight update); this means that any values
+       generated during additional optimization steps will not be stored in EM, and the effect of those optimizations
+       on any values stored subsequently will not be observed until the next input is presented (i.e., the next `TRIAL
+       <TimeScale.TRIAL>`'
+
+      * *LAST* * storage occurs after the last optimization step (weight update); this means that any values
+        generated during the preceding optimization steps will not be stored in EM, and the effect of those
+        optimizations will not be observed until the next input is presented (i.e., the next `TRIAL <TimeScale.TRIAL>`'
+
+      * *ALL* * storage occurs after all optimization steps (weight update), so that values generated during preceding
+        optimzation steps will impact subsequent optimization steps for the same input (i.e., `TRIAL <TimeScale.TRIAL>`'
+
+      .. technical_note::
+         Execution of storage during the first optimization step is implemented in `PytorchEMMechanismWrapper.execute`;
+         by default, this is for optimization_num==0, to ensure that the current values of any input nodes
+         (reflecting the *previous input*) are stored before their values are updated to the current inputs
+         (at the end of a full  execution of `Composition.execute` in the first optimization step), to deal
+         with cases in which EM is executed before those, as in the EGO model for *PREVIOUS STATE* and *CONTEXT*:
+         <EGO Model>.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer)).
 
 .. _EMComposition_Examples:
 
@@ -970,8 +981,8 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     (ADAPTIVE, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
-     EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
+     EM_COMPOSITION, FIRST, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, L0,
+     LAST, MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
@@ -1186,6 +1197,7 @@ class EMComposition(AutodiffComposition):
         normalize_memories=True,        \
         softmax_gain=THRESHOLD,         \
         storage_prob=1.0,               \
+        store_on_optimization=FIRST,    \
         memory_decay_rate=AUTO,         \
         enable_learning=True,           \
         target_fields=None,             \
@@ -1269,6 +1281,10 @@ class EMComposition(AutodiffComposition):
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
         additional details).
 
+    store_on_optimization : FIRST, LAST, ALL : default FIRST
+        specifies the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
+        learning (see `EMComposition_Storage_Learning` for details).
+
     memory_decay_rate : float : AUTO
         specifies the rate at which items in the EMComposition's memory decay
         (see `memory_decay_rate <EMComposition_Memory_Decay_Rate>` for details).
@@ -1278,7 +1294,7 @@ class EMComposition(AutodiffComposition):
         replace when a new one is stored (see `purge_by_field_weight <EMComposition_Purge_by_Weight>` for details).
 
     enable_learning : bool : default True
-        specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning>`
+        specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning_Creation>`
         for additional details); **use_gating_for_weighting** must be False.
 
     target_fields : list[bool]: default None
@@ -1341,7 +1357,7 @@ class EMComposition(AutodiffComposition):
 
     learn_field_weights : bool or list[bool, int, float]
         determines whether the `field_weight <EMComposition.field_weights>` for each `field <EMComposition_Fields>
-        is learnable (see `learn_field_weights <EMComposition_Learning>` for additional details).
+        is learnable (see `learn_field_weights <EMComposition_Learning_Creation>` for additional details).
 
     learning_rate : float
         determines the default learning_rate for `field_weights <EMComposition.field_weights>`
@@ -1378,6 +1394,10 @@ class EMComposition(AutodiffComposition):
         determines the probability that an item will be stored in `memory <EMComposition.memory>`
         when the EMComposition is executed (see `Retrieval and Storage <EMComposition_Storage>` for
         additional details).
+        
+    store_on_optimization : str
+        determines the optimization step(s) on which items are stored in `memory <EMComposition.memory>` during
+        learning (see `EMComposition_Storage_Learning` for details).
 
     memory_decay_rate : float
         determines the rate at which items in the EMComposition's memory decay
@@ -1389,7 +1409,7 @@ class EMComposition(AutodiffComposition):
 
     enable_learning : bool
         determines whether learning is enabled for the EMCComposition
-        (see `Learning <EMComposition_Learning>` for additional details).
+        (see `Learning <EMComposition_Learning_Creation>` for additional details).
 
     target_fields : list[bool]
         determines which fields convey error signals during learning
@@ -1605,6 +1625,12 @@ class EMComposition(AutodiffComposition):
 
                     :default value: 1.0
                     :type: ``float``
+                    
+                store_on_optimization
+                    see `store_on_optimization <EMComposition.store_on_optimization>`
+                    
+                    :default value: FIRST
+                    :type: ``str``
         """
         memory = Parameter(None, loggable=True, getter=_memory_getter, read_only=True)
         memory_template = Parameter([[0],[0]], structural=True, valid_types=(tuple, list, np.ndarray), read_only=True)
@@ -1620,6 +1646,7 @@ class EMComposition(AutodiffComposition):
         softmax_threshold = Parameter(.001, modulable=True, specify_none=True)
         softmax_choice = Parameter(WEIGHTED_AVG, modulable=False, specify_none=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        store_on_optimization = Parameter(FIRST)
         memory_decay_rate = Parameter(AUTO, modulable=True)
         purge_by_field_weights = Parameter(False, structural=True)
         enable_learning = Parameter(True, structural=True)
@@ -1686,6 +1713,10 @@ class EMComposition(AutodiffComposition):
             if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
                 return f"must be a float in the interval [0,1]."
 
+        def _validate_store_on_optimization(self, option):
+            if not option in {FIRST, LAST, ALL}:
+                return f"must be one of the following keywords: FIRST, LAST or ALL."
+
     @check_user_specified
     def __init__(self,
                  memory_template:Union[tuple, list, np.ndarray]=[[0],[0]],
@@ -1703,6 +1734,7 @@ class EMComposition(AutodiffComposition):
                  softmax_threshold:Optional[float]=.001,
                  softmax_choice:Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]]=WEIGHTED_AVG,
                  storage_prob:float=1.0,
+                 store_on_optimization:Union[FIRST, LAST, ALL]=FIRST,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  purge_by_field_weights:bool=False,
                  enable_learning:bool=True,
@@ -1772,6 +1804,7 @@ class EMComposition(AutodiffComposition):
                          softmax_threshold = softmax_threshold,
                          softmax_choice = softmax_choice,
                          storage_prob = storage_prob,
+                         store_on_optimization = store_on_optimization,
                          memory_decay_rate = memory_decay_rate,
                          purge_by_field_weights = purge_by_field_weights,
                          enable_learning = enable_learning,
