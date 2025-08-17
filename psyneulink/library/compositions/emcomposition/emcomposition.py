@@ -729,7 +729,18 @@ signals are passed to the nodes that project to  its `query_input_nodes <EMCompo
   .. note:
      Storage always occurs *after* the learning (gradient calculation and weight updates) has occured for each stimulus;
      if `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` (the number of weight updates that
-     occur for each input) is greater than 1, then storage occurs after the last weight update for a given stimulus.
+     occur for each input) is greater than 1, then storage occurs during the first update (optimization step); this
+     means that any values generated during additional optimization steps will not be stored in EM, and the effect
+     of those optimizations on any values stored subsequently will not be observed until the next input is presented
+     (i.e., the next `TRIAL <TimeScale.TRIAL>`).
+
+     .. technical_note::
+        Execution of storage during the first optimization step is implemented enforced in
+        `PytorchEMMechanismWrapper.execute` (for optimization_num==0); this is to ensure that the current values of
+        any input nodes (reflecting the *last input*) are stored before their values are updated to the current
+        inputs (at the end of a full execution of `Composition.execute` in the first optimization step), to deal with
+        cases in which EM is executed before those, as in the EGO model for *PREVIOUS STATE* and *CONTEXT*:
+        <EGO Model>.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer)).
 
 .. _EMComposition_Examples:
 
@@ -2668,8 +2679,8 @@ class EMComposition(AutodiffComposition):
 
     def _store_memory(self, inputs, context):
         """Store inputs to query and value nodes in memory
-        Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values).
-        Always executes after gradient calculation;  if num_optimization > 1, only executes after last optimization.
+        Store memories in weights of Projections to match_nodes (queries) and retrieved_nodes (values). Always executes
+        after gradient calculation (see PytorchEMMechanismWrapper.execute for handling in ExecutionMode.PyTorch).
         Note: inputs argument is ignored (included for compatibility with function of MemoryFunctions class;
               storage is handled by call to EMComposition._encode_memory
         """
