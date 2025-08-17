@@ -216,9 +216,6 @@ class CompositionRunner():
                                                    and optimization_num + 1 == optimizations_per_minibatch)
 
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                        # # BREADCRUMB: HACK SINCE optimization_num CAN'T CURRENTLY BE PASSED DIRECTLY TO forward()
-                        # # Set _optimization_num for use by PytorchCompositionWrapper.forward()
-                        # pytorch_rep._optimization_num = optimization_num
 
                         if before_additional_optimizations:
                             # Modify any parameter values  specified for additional optimizations
