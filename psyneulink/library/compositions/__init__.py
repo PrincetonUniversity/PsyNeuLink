@@ -12,6 +12,7 @@ __all__.extend(emcomposition.__all__)
 try:
     import torch
     from torch import nn
+
     from .grucomposition import *
     __all__.extend(grucomposition.__all__)
 
