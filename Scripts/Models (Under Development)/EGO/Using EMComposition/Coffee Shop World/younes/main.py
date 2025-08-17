@@ -20,8 +20,8 @@ IS_PLOT = True
 IS_TEST = True
 IS_VERBOSE = True
 
-TOLERANCE = 1e-5
-NR_TRIALS_TO_CHECK = 3
+TOLERANCE = 1e-7
+NR_TRIALS_TO_CHECK = 10
 
 
 def main():
@@ -77,6 +77,7 @@ def main():
                 torch_results[:NR_TRIALS_TO_CHECK],
                 atol=TOLERANCE, rtol=TOLERANCE):
             raise AssertionError("PNL and torch results differ beyond allowed tolerance")
+        print(f"PNL and torch produce identical results w/in tolerance of {TOLERANCE}")
 
 
 def plot_results(predictions, target, ax, stride=1):
