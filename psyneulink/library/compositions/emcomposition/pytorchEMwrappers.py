@@ -86,20 +86,17 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
-            num_optimizations = self._context.composition.optimizations_per_minibatch
+            num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
             store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
-            if store_on_optimization == FIRST and optimization_num == 0:
+            if optimization_num == 0 and store_on_optimization == FIRST:
                 store = True
-            elif store_on_optimization == LAST and ((optimization_num + 1) == num_optimizations):
+            elif ((optimization_num + 1) == num_optimizations) and store_on_optimization == LAST:
                 store = True
             elif store_on_optimization == ALL:
                 store = True
             else:
                 store = False
             if store:
-                # Only execute store on first optimization step for current mini-batch to ensure that current values
-                # of nodes are stored before their values are updated at the end of the full call to run in the first
-                # optimization step (cf. technical_note under `EMComposition_Training` for more detailed explanation)
                 self.store_memory(variable, context)
                 # # BREADCRUMB PRINT:
                 # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
