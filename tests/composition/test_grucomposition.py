@@ -479,6 +479,7 @@ class TestExecution:
     learn_method_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
+
     test_specs = [
         ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
         ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
