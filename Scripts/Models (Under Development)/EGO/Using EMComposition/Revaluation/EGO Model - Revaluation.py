@@ -226,10 +226,10 @@ assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGR
      f"and RETRIEVED_CONTEXT_WEIGHT ({model_params['retrieved_context_weight']}) must equal 1")
 
 # EM retrieval
-STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
-TIME_RETRIEVAL_WEIGHT = model_params['time_weight']       # weight of time field in retrieval from EM
-CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
-REWARD_RETRIEVAL_WEIGHT = None                            # weight of reward field in retrieval from EM
+STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM (key)
+TIME_RETRIEVAL_WEIGHT = model_params['time_weight']       # weight of time field in retrieval from EM (key)
+CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM (key)
+REWARD_RETRIEVAL_WEIGHT = None                            # weight of reward field in retrieval from EM (value)
 RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
 # RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
 
