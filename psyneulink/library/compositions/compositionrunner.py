@@ -227,8 +227,8 @@ class CompositionRunner():
                             # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
 
-                        # # BREADCRUMB PRINT
-                        # print(f"GRADIENT UPDATE FOR optimization_num {optimization_num}")
+                        # BREADCRUMB PRINT
+                        print(f"GRADIENT UPDATE FOR optimization_num {optimization_num}")
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         # # MODIFIED 8/18/25 NEW: from torch_lr
                         # # Need to get pytorch_representation after yield above (which forces its construction)
