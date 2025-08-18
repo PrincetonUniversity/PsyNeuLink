@@ -1173,7 +1173,7 @@ def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     assert composition.controller is None
 
     context = composition._context_for_pytorch
-    composition._build_pytorch_representation(context)
+    composition._build_pytorch_representation(context=context)
     pytorch_model = composition.parameters.pytorch_representation.get(context)
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args

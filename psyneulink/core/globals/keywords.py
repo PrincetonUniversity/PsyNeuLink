@@ -45,8 +45,8 @@ __all__ = [
     'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'CPU', 'COSINE', 'COSINE_SIMILARITY',
     'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CUDA', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DECELERATING_TIMER_FUNCTION',
-    'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_MATRIX',
-    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
+    'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_LEARNING_RATE', 'DEFAULT_MATRIX',
+    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SUFFIX', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
     'DETERMINISTIC', 'DETERMINISTIC_TRANSFER_FUNCTION_TYPE',
     'DICT', 'DictionaryMemory_FUNCTION', 'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIRECT', 'DISABLE', 'DISABLE_PARAM',
@@ -402,7 +402,7 @@ class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.
 
     Used to specify the **loss_spec** argument of the constructor for an `AutodiffComposition`,
-    or in the `learning methods <Composition_Learning_Methods>` used to construct `learning pathways
+    or in the `learning pathway methods <Composition_Learning_Methods>` used to construct `learning pathways
     <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
     for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
     used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
@@ -477,7 +477,7 @@ PNL = 'psyneulink'
 ON = True
 OFF = False
 DEFAULT = 'default'
-# AUTO = True  # MODIFIED 7/14/17 CW
+DEFAULT_SUFFIX = '_'+ DEFAULT
 ASSERT = True
 
 # Used by initDirective
@@ -622,6 +622,7 @@ TARGETS = 'targets'
 EPOCHS = 'epochs'
 SYNCH_WITH_PNL_OPTIONS = 'synch_with_pnl_options'
 RETAIN_IN_PNL_OPTIONS = 'retain_in_pnl_options'
+DEFAULT_LEARNING_RATE = 'default_learning_rate'
 
 # Used in show_graph for show_nested
 NESTED = 'nested'
@@ -641,6 +642,7 @@ PREVIOUS_VALUE = 'previous_value'
 LABELS = 'labels'
 PARAMS = "params"
 PARAMETERS = 'params'
+PARAM_NAME = 'param_name'
 NAME = "name"
 PREFS_ARG = "prefs"
 CONTEXT = "context"
@@ -881,7 +883,6 @@ FUNCTIONS = 'functions'
 
 #region ------------------------------------------  AUTODIFF COMPOSITION  ----------------------------------------------
 
-LEARNING_RATE = "learning_rate"
 TRAINING_SET = 'training set'
 TRAINED_OUTPUTS = 'trained_outputs'
 SHOW_GRAPH = 'SHOW_GRAPH'
@@ -1102,6 +1103,7 @@ RECEIVER_ARG = 'receiver'
 FEEDBACK = 'feedback'
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 LEARNABLE = 'learnable'
+LEARNING_RATE = "learning_rate"
 MATRIX_WEIGHTS = 'matrix_weights'
 AUTO = 'auto'
 HETERO = 'hetero'

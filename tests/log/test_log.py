@@ -106,6 +106,7 @@ class TestLog:
             'func_operation': 'OFF',
             'func_value': 'OFF',
             'has_initializers': 'OFF',
+            'learning_rate': 'OFF',
             'func_variable': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
@@ -211,6 +212,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
             'mod_matrix': 'EXECUTION',
@@ -225,7 +227,8 @@ class TestLog:
         PS.run(inputs={T_1:[3,4]})
 
         assert T_1.logged_items == {'RESULT': 'EXECUTION', 'mod_noise': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
+                                   'learning_rate': 'OFF'}
 
         T_1.log.print_entries(contexts=PS)
         # assert T_1.log.print_entries() ==
@@ -375,6 +378,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
             'mod_matrix': 'OFF',
@@ -483,6 +487,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
             'mod_matrix': 'EXECUTION',
@@ -502,7 +507,8 @@ class TestLog:
         assert T2.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
+                                   'learning_rate': 'OFF'}
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
@@ -1180,7 +1186,8 @@ class TestClearLog:
 
         assert list(log_dict_T_1.keys()) == [COMP.default_execution_id]
         assert list(log_dict_T_2.keys()) == [COMP.default_execution_id]
-        assert list(log_dict_PJ.keys()) == [COMP.default_execution_id]
+        assert sorted(log_dict_PJ.keys()) == [COMP.default_execution_id,
+                                              COMP.default_execution_id + pnl.DEFAULT_SUFFIX]
 
         # Confirm that values were logged correctly
         sys_log_dict = log_dict_T_1[COMP.default_execution_id]

@@ -509,8 +509,8 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 .. _LearningMechanism_Targets:
 
-`TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is
-implemented using one of a Composition's `learning methods <Composition_Learning_Methods>`, it automatically creates a
+`TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is implemented
+using one of a Composition's `learning pathway methods <Composition_Learning_Methods>`, it automatically creates a
 number of  `learning-related Components <Composition_Learning_Components>`.  This includes a `TARGET_MECHANISM`, that
 receives the target stimulus specifed in the **inputs** argument of the Composition's `learn <Composition.learn>`
 method; and a `OBJECTIVE_MECHANISM`, that computes the error_signal for the sequence.  The output of the
@@ -1135,7 +1135,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             prefs=prefs,
             **kwargs
         )
-        # If default to value assigned to its function, so any later assignments can be detected
+        # Set default value, so any later assignments can be detected
         #    (e.g., in CompositionRunner.run_learning)
         self.defaults.learning_rate = self.parameters.learning_rate.get()
 

@@ -212,8 +212,8 @@ CONTEXT_DRIFT_RATE=.1 # drift rate used for DriftOnASphereIntegrator (function o
 NUM_TRIALS = 48 # number of stimuli presented in a trial sequence
 
 # Names of Compositions and Mechanisms:
-NBACK_MODEL = "nback Model"
-FFN_COMPOSITION = "WORKING MEMORY (fnn)"
+NBACK_MODEL = "N-Back Model"
+FFN_COMPOSITION = "WORKING MEMORY"
 FFN_STIMULUS_INPUT = "CURRENT STIMULUS"
 FFN_CONTEXT_INPUT = "CURRENT CONTEXT"
 FFN_STIMULUS_RETRIEVED = "RETRIEVED STIMULUS"
@@ -225,7 +225,7 @@ FFN_OUTPUT = "OUTPUT LAYER"
 MODEL_STIMULUS_INPUT ='STIM'
 MODEL_CONTEXT_INPUT = 'CONTEXT'
 MODEL_TASK_INPUT = "TASK"
-EM = "EPISODIC MEMORY (dict)"
+EM = "EPISODIC MEMORY"
 DECISION = "DECISION"
 CONTROLLER = "READ/WRITE CONTROLLER"
 
@@ -447,6 +447,7 @@ def construct_model(stim_size:int = STIM_SIZE,
 
     if DISPLAY_MODEL:
         nback_model.show_graph(
+            show_nested=False,
             # show_cim=True,
             # show_node_structure=ALL,
             # show_dimensions=True

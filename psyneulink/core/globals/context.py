@@ -170,6 +170,8 @@ class ContextFlags(enum.IntFlag):
     """Call by method of the Component other than its constructor."""
     COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
+    SHOW_GRAPH = enum.auto()
+    """Call by show_graph method of Composition."""
 
     NONE = enum.auto()
 

@@ -129,6 +129,8 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        pytorch_rep = None
+
         if type(minibatch_size) == np.ndarray:
             minibatch_size = minibatch_size.item()
 
@@ -206,21 +208,20 @@ class CompositionRunner():
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        from torch import no_grad
-                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                        with no_grad():
-                            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
-
+                        # Need to get pytorch_representation after yield above (which forces its construction)
+                        if pytorch_rep is None:
+                            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
                                                           [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
 
                 if execution_mode is ExecutionMode.PyTorch:
+                    from torch import no_grad
+                    with no_grad():
+                        for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                            node.execute(variable, optimization_num, synch_with_pnl_options, context)
                     # Synchronize specified outcomes after every stimulus (i.e., trial)
                     pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
-
-                if execution_mode is ExecutionMode.PyTorch:
                     # Synchronize specified outcomes after every minibatch
                     pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, MINIBATCH, context)
 
