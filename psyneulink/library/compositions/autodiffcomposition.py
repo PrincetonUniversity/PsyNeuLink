@@ -1829,6 +1829,7 @@ class AutodiffComposition(Composition):
                 num_trials=None,
                 minibatch_size=1,
                 optimizations_per_minibatch=1,
+                optimization_num=None,
                 do_logging=False,
                 scheduler=None,
                 termination_processing=None,
@@ -1901,6 +1902,7 @@ class AutodiffComposition(Composition):
                     trained_output_values, all_output_values = \
                                                     self.autodiff_forward(inputs=autodiff_inputs,
                                                                           targets=autodiff_targets,
+                                                                          optimization_num=optimization_num,
                                                                           synch_with_pnl_options=synch_with_pnl_options,
                                                                           retain_in_pnl_options=retain_in_pnl_options,
                                                                           execution_mode=execution_mode,
