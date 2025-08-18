@@ -118,7 +118,10 @@ from psyneulink import *
 from psyneulink._typing import Union, Literal
 from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
 
-# Settings for running script:
+#region SCRIPT CONTROL
+# ======================================================================================================================
+#                                                 SCRIPT CONTROL
+# ======================================================================================================================
 
 NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
 NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
@@ -129,17 +132,17 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = False                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True                       # True => run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# REPORT_OUTPUT = ReportOutput.FULL      # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = False                  # print model.results after execution
+PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-
+#endregion
 
 #region   PARAMETERS
 # ======================================================================================================================
@@ -616,7 +619,6 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
-    
 
     EGO_comp = Composition(name=model_name,
                            # # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved
