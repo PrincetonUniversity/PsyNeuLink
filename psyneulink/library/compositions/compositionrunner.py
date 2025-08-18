@@ -114,7 +114,7 @@ class CompositionRunner():
                       call_after_minibatch=None,
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
-                      context=None)->GeneratorType, int:
+                      context=None)->(GeneratorType, int):
         """
         Execute inputs and update pytorch parameters for one minibatch at a time.
         Partition inputs dict into ones of length minibatch_size (or, for the last set, the remainder)
@@ -297,7 +297,7 @@ class CompositionRunner():
                                call_after_minibatch=None,
                                early_stopper=None,
                                execution_mode:ExecutionMode=ExecutionMode.Python,
-                               context=None)->GeneratorType, int:
+                               context=None)->(GeneratorType, int):
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
