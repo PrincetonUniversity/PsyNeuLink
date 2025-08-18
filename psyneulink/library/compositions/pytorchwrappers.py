@@ -1602,8 +1602,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
-            # BREADCRUMB PRINT
-            print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._stim_num})")
+            # # BREADCRUMB PRINT
+            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._stim_num})")
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
@@ -1722,24 +1722,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                    # BREADCRUMB PRINT
-                    print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
+                    # # BREADCRUMB PRINT
+                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
 
-            # BREADCRUMB PRINT
-            print(f"{self.composition.nodes['STATE'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['STATE']].output}")
-            print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
-            print(f"{self.composition.nodes['CONTEXT'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
-            print(f"{self.composition.nodes['PREDICTION'].name}:"
-                  f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
-            print(f"END FORWARD for optimization_num {optimization_num}\n")
+            # # BREADCRUMB PRINT
+            # print(f"{self.composition.nodes['STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['STATE']].output}")
+            # print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
+            # print(f"{self.composition.nodes['CONTEXT'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
+            # print(f"{self.composition.nodes['PREDICTION'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
+            # print(f"END FORWARD for optimization_num {optimization_num}\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -1971,13 +1971,9 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        # # MODIFIED 8/18/25 OLD: from custom_optimization
-        # self.exclude_from_gradient_calc = False # Used to execute node before or after, and/or on last optimization step
-        # MODIFIED 8/18/25 NEW: from torch_lr
         from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
         self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
             if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
-        # MODIFIED 8/18/25 END
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
@@ -2444,8 +2440,13 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_torch_params_full_with_specified
-        #           cf _update_optimizer_params():
+        # MODIFIED 8/18/25 OLD:
+        # BREADCRUMB: DELETE THIS IF DOING SO PASSES pytrests()
+        # Use Projection's name as key to align with name of torch Parameter
+        self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
+        # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
+        #           cf _parse_optimizer_params():
+        # MODIFIED 8/18/25 END
         if projection.learnable is False:
             self.matrix.requires_grad = False
 

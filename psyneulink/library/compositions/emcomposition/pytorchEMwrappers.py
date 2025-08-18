@@ -31,11 +31,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
         self.storage_node = self.nodes_map[self.composition.storage_node]
-        # MODIFIED 6/20/25 OLD:
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
         self.storage_node.exclude_from_gradient_calc = AFTER
-        # MODIFIED 6/20/25 END
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
@@ -100,11 +98,11 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 store = False
             if store:
                 self.store_memory(variable, context)
-                # BREADCRUMB PRINT:
-                print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
-                print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
-                print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
-                print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
+                # # BREADCRUMB PRINT:
+                # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
+                # print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
+                # print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                # print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
 
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
