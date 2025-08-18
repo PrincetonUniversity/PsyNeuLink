@@ -1,4 +1,4 @@
- # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -1342,7 +1342,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
-            # self.register_parameter(proj_wrapper.projection.name, proj_wrapper.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -1552,7 +1551,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         builder.call(optimizer_step_f, [optimizer_struct, state, params])
 
     def _get_compiled_optimizer(self):
-        # FIX: 7/1/25 - THIS BE MODIFIED TO USE CONTEXT-SPECIFIC LEARNING RATES
+        # BREADCRUMB: 7/1/25 - THIS NEEDS TO BE MODIFIED TO USE CONTEXT-SPECIFIC LEARNING RATES
         # setup optimizer
         optimizer_type = self.composition.optimizer_type
         if optimizer_type == 'adam':
@@ -1603,8 +1602,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
+            # # BREADCRUMB PRINT
+            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._stim_num})")
+
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
+
+                if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
+                    # If _nodes_to_execute_in_additional_optimizations is specified,
+                    #    only execute specified nodes for all optmization_num > 0
+                    current_exec_set = {node for node in current_exec_set
+                                        if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
                 for node in current_exec_set:
 
                     # If node is nested Composition (wrapped in PytorchCompositionWrapper),
@@ -1697,8 +1705,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
+                        # if node.exclude_from_gradient_calc in {AFTER, LAST}:
                         if node.exclude_from_gradient_calc == AFTER:
-                            # Cache variable for later execution
+                            # Store variable for execution after gradient calculations are complete
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
                         elif node.exclude_from_gradient_calc == BEFORE:
@@ -1713,11 +1722,24 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                    # # BREADCRUMB PRINT
+                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+
+            # # BREADCRUMB PRINT
+            # print(f"{self.composition.nodes['STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['STATE']].output}")
+            # print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
+            # print(f"{self.composition.nodes['CONTEXT'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
+            # print(f"{self.composition.nodes['PREDICTION'].name}:"
+            #       f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
+            # print(f"END FORWARD for optimization_num {optimization_num}\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -1896,11 +1918,17 @@ class PytorchMechanismWrapper(torch.nn.Module):
     efferents : List[PytorchProjectionWrapper]
         list of `PytorchProjectionWrapper` objects that project from the PytorchMechanismWrapper.
 
-    exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
-        used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
-        the forward() and backward(). If AFTER is specified, the node is executed after at the end of the
-        `update_learning_parameters` method;  it must be specified as an attribute of the Mechanism being wrapped.
-        BEFORE is not currently supported.
+    exclude_from_gradient_calc : bool or str[BEFORE | AFTER | LAST]: False
+        prevents a node from being included in the Pytorch gradient calculation by execluding it in calls to
+        Autodiff.autodiff_backward(); entered in PytorchCompositionWrapper._nodes_to_execute_after_gradient_calc
+        as a key, and the current variable that it uses for execution at the end of CompositionRuner._batch_input().
+
+        * *AFTER*: the node is executed on every optimization step, after all gradient updates have been done;
+
+        * *LAST*: if `Compositon.optimizations_per_minibatch` is greater than 1, the node is executed only
+          after the last optimization step
+
+        * *BEFORE*: not currently supported
 
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords (see
@@ -1943,11 +1971,13 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-
+        # # MODIFIED 8/18/25 OLD: from custom_optimization
+        # self.exclude_from_gradient_calc = False # Used to execute node before or after, and/or on last optimization step
+        # MODIFIED 8/18/25 NEW: from torch_lr
         from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
         self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
             if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
-
+        # MODIFIED 8/18/25 END
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
@@ -2025,7 +2055,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 proj_wrapper._curr_sender_value = val
 
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
-            assert True
 
         # Specific port is specified
         if port is not None:
@@ -2393,8 +2422,6 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        # if (projection.parameters.has_initializers._get(context, fallback_value=False)
-        #         and projection.parameters.value.initializer):
         if (projection.parameters.has_initializers.get(context)
                 and projection.parameters.value.initializer):
             self.default_value = projection.parameters.value.initializer.get(context)

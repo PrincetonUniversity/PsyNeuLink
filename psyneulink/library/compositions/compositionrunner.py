@@ -20,6 +20,7 @@ from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, 
                                               RUN, TRAINING_SET, TRIAL, NODE_VALUES, NODE_VARIABLES)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
+from psyneulink.core.globals.utilities import call_with_pruned_args
 from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
@@ -113,7 +114,7 @@ class CompositionRunner():
                       call_after_minibatch=None,
                       early_stopper=None,
                       execution_mode:ExecutionMode=ExecutionMode.Python,
-                      context=None)->GeneratorType:
+                      context=None)->GeneratorType, int:
         """
         Execute inputs and update pytorch parameters for one minibatch at a time.
         Partition inputs dict into ones of length minibatch_size (or, for the last set, the remainder)
@@ -129,7 +130,9 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        # MODIFIED 8/18/25: FROM torch_lr
         pytorch_rep = None
+        # MODIFIED 8/18/25 END
 
         if type(minibatch_size) == np.ndarray:
             minibatch_size = minibatch_size.item()
@@ -199,27 +202,61 @@ class CompositionRunner():
                     else: # list because ragged
                         inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
-                # Cycle over optimizations per trial (stimulus
+                self._composition._stim_num = i # For debugging
+
+                # Cycle over optimizations per trial (stimulus)
                 for optimization_num in range(optimizations_per_minibatch):
                     # Return current set of stimuli for minibatch
-                    yield copy_parameter_value(inputs_for_minibatch)
+                    yield copy_parameter_value(inputs_for_minibatch), optimization_num
 
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
+                        do_additional_optimizations = (optimization_num
+                                                       and self._composition.execute_in_additional_optimizations)
+                        before_additional_optimizations = do_additional_optimizations and optimization_num == 1
+                        end_extra_optimizations = (do_additional_optimizations
+                                                   and optimization_num + 1 == optimizations_per_minibatch)
+
+                        # MODIFIED 8/18/25 OLD: from custom_optimization
+                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # MODIFIED 8/18/25 END
+
+                        if before_additional_optimizations:
+                            # Modify any parameter values  specified for additional optimizations
+                            self._composition._call_before_additional_optimizations(context=context)
+
+                        # # BREADCRUMB PRINT
+                        # print(f"GRADIENT UPDATE FOR optimization_num {optimization_num}")
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                        # MODIFIED 8/18/25 NEW: from torch_lr
                         # Need to get pytorch_representation after yield above (which forces its construction)
                         if pytorch_rep is None:
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # MODIFIED 8/18/25 END
+                        from torch import no_grad
+                        with no_grad():
+                            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                if (do_additional_optimizations and node.mechanism not in
+                                        self._composition._nodes_to_execute_in_additional_optimizations):
+                                    continue
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
+
+                        if end_extra_optimizations:
+                            # Restore parameters back to their usual values
+                            self._composition._call_after_additional_optimizations(context=context)
+
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
                                                           [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
 
                 if execution_mode is ExecutionMode.PyTorch:
-                    from torch import no_grad
-                    with no_grad():
-                        for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                            node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                    # # MODIFIED 8/18/25 OLD: from torch_lr
+                    # from torch import no_grad
+                    # with no_grad():
+                    #     for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                    #         node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                    # # MODIFIED 8/18/25 END
                     # Synchronize specified outcomes after every stimulus (i.e., trial)
                     pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
                     # Synchronize specified outcomes after every minibatch
@@ -260,7 +297,7 @@ class CompositionRunner():
                                call_after_minibatch=None,
                                early_stopper=None,
                                execution_mode:ExecutionMode=ExecutionMode.Python,
-                               context=None)->GeneratorType:
+                               context=None)->GeneratorType, int:
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -284,6 +321,7 @@ class CompositionRunner():
 
                 for idx in range(i, i + minibatch_size):
                     try:
+                        self._composition._stim_num = i # For debugging
                         input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,
@@ -296,15 +334,13 @@ class CompositionRunner():
 
                     input_batch = self.convert_input_to_arrays(input_batch, execution_mode, add_sequence_dim=True)
 
-                    yield input_batch
+                    yield input_batch, None
 
                 if batch_ran:
                     if call_after_minibatch:
                         call_after_minibatch()
 
-                    # 7/10/24 - FIX: REVISE TO ACCOMODATE optimizations_per_minibatch
-                    #                AND ADD HANDLING OF synch_with_pnl_options AND retain_in_pnl_options
-                    # Update weights if in PyTorch execution_mode;
+                    # Update weights (optimization step) if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context)

@@ -19,7 +19,7 @@ from typing import Optional
 
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
-from psyneulink.core.globals.keywords import AFTER
+from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST
 
 __all__ = ['PytorchEMCompositionWrapper']
 
@@ -88,10 +88,24 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
-            # Only execute store after last optimization repetition for current mini-batch
-            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+            num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
+            store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
+            if optimization_num == 0 and store_on_optimization == FIRST:
+                store = True
+            elif ((optimization_num + 1) == num_optimizations) and store_on_optimization == LAST:
+                store = True
+            elif store_on_optimization == ALL:
+                store = True
+            else:
+                store = False
+            if store:
                 self.store_memory(variable, context)
+                # # BREADCRUMB PRINT:
+                # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
+                # print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
+                # print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                # print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
+
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)
 
@@ -103,7 +117,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
 
         For each node in query_input_nodes and value_input_nodes,
         assign its value to weights of corresponding afferents to corresponding match_node and/or retrieved_node.
-        - memory = matrix of entries made up vectors for each field in each entry (row)
+        - memory = matrix of entries made up of vectors for each field in each entry (row)
         - entry_to_store = query_input or value_input to store
         - field_projections = Projections the matrices of which comprise memory
 
@@ -154,7 +168,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
             field_idx = pytorch_rep.composition._field_index_map[field_projection._pnl_proj]
             if field_projection in pytorch_rep.match_projection_wrappers:
                 # For match projections:
-                # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
+                # - get entry to store from value of Projection's sender (to accommodate concatenation_node)
                 entry_to_store = field_projection.sender_wrapper.output
 
                 # Retrieve the correct field (for each batch, batch is first dimension)
@@ -164,7 +178,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 axis = 0
                 if concatenation_node is None:
                     # Double check that the memory passed in is the output of the projection for the correct field
-                    assert (entry_to_store == memory_to_store_indexed).all(), \
+                    assert (memory_to_store_indexed == entry_to_store).all(), \
                         (f"PROGRAM ERROR: misalignment between memory to be stored (input passed to store_memory) "
                          f"and value of projection to corresponding field.")
             else:
@@ -185,5 +199,5 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                                                     random_state=random_state)
             values.append(field_projection.matrix)
 
-        self.value = values
+            self.value = values
         return values

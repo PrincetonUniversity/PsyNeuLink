@@ -3496,7 +3496,7 @@ class SoftMax(TransferFunction):
                 # Apply threshold-based masking
                 if mask_threshold is not None:
                     if torch.any(_input < 0) and not self._negative_input_warning:
-                        warnings.warn(f"Softmax function: mask_threshold is set to {mask_threshold}, "
+                        warnings.warn(f"Softmax function: mask_threshold is set to {float(mask_threshold)}, "
                                       f"but input contains negative values. "
                                       f"Masking will be applied to the magnitude of the input.")
                         self._negative_input_warning = True

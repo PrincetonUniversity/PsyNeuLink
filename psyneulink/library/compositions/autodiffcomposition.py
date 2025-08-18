@@ -952,7 +952,7 @@ class AutodiffComposition(Composition):
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
-            # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
+            # Only allow odd number of components since there must be one fewer Projections than Mechanisms
             assert len(pathway) % 2, \
                 f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
             return pathway
@@ -1276,7 +1276,9 @@ class AutodiffComposition(Composition):
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
         return super(AutodiffComposition, self).get_target_nodes()
 
-    def autodiff_forward(self, inputs, targets,
+    def autodiff_forward(self,
+                         inputs, targets,
+                         optimization_num,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
         """
@@ -1301,7 +1303,8 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_inputs[component] = inputs[component]
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs, optimization_num=None,
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs,
+                                                       optimization_num=optimization_num,
                                                        synch_with_pnl_options=synch_with_pnl_options,
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
@@ -1352,6 +1355,9 @@ class AutodiffComposition(Composition):
                 trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
+
+        # # BREADCRUMB PRINT:
+        # print(f"LOSS for optimization_num {optimization_num}: {comp_loss} ")
 
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
