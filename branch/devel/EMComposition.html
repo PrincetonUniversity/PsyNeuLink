@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EMComposition &mdash; PsyNeuLink 0.17.0.0+142.g4ed706472 documentation</title>
+  <title>EMComposition &mdash; PsyNeuLink 0.17.0.0+144.g024b187f1 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+142
+                  0.17.0.0+144
                 </div>
               
             
@@ -408,7 +408,7 @@ how keys are weighted for retrieval, whether those weights are learned, and whic
 that is propagated through the EMComposition.</p>
 <ul id="emcomposition-field-specification-dict">
 <li><p><strong>fields</strong>: a dict that specifies the names of the fields and their attributes. There must be an entry for each
-field specified in the <strong>memory_template</strong>, and must have the following format:</p>
+field specified in the <strong>memory_template</strong>, and each must have the following format:</p>
 <ul class="simple">
 <li><p><em>key</em>:  a string that specifies the name of the field.</p></li>
 <li><p><em>value</em>: a dict or tuple with three entries; if a dict, the key to each entry must be the keyword specified below,
@@ -430,9 +430,11 @@ be learned if that is specfified in <a class="reference internal" href="#emcompo
 </li>
 </ul>
 <p>The specifications provided in the <strong>fields</strong> argument are assigned to the corresponding Parameters of
-the EMComposition which, alternatively, can  be specified individually using the <strong>field_names</strong>, <strong>field_weights</strong>,
+the EMComposition which, alternatively, can  be specified directly using the <strong>field_names</strong>, <strong>field_weights</strong>,
 <strong>learn_field_weights</strong> and <strong>target_fields</strong> arguments of the EMComposition’s constructor, as described below.
-However, these and the <strong>fields</strong> argument cannot both be used together; doing so raises an error.</p>
+However, these and the <strong>fields</strong> argument cannot both be used together; if both are specified, a warning is issued,
+the values specified in the <strong>fields</strong> dict are used, and any specifications made in the <strong>field_names</strong>,
+<strong>field_weights</strong>, <strong>learn_field_weights</strong> and <strong>target_fields</strong> arguments are ignored.</p>
 </li>
 </ul>
 <ul class="simple" id="emcomposition-field-names">
@@ -442,8 +444,8 @@ EMComposition; otherwise, the fields are labeled generically as “Key 0”, “
 </ul>
 <ul id="emcomposition-field-weights">
 <li><p><strong>field_weights</strong>: specifies which fields are used as keys, and how they are weighted during retrieval. Fields
-designated as keys used to match inputs (queries) against entries in memory for retrieval (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Match memories by
-field</span></a>); entries designated as <em>values</em> are ignored during the matching process, but
+designated as keys are used to match inputs (queries) against entries in memory for retrieval (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Match memories
+by field</span></a>); entries designated as <em>values</em> are ignored during the matching process, but
 their values in memory are retrieved and assigned as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding
 <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.retrieved_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.retrieved_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieved_node</span></code></a>. This distinction between keys and value corresponds
 to the format of a standard “dictionary,” though in that case only a single key and value are allowed, whereas
@@ -476,10 +478,15 @@ entries are normalized so that they sum to 1.0; if False, the raw values are use
 the corresponding fields. All entries of None are treated as value fields, are not assigned a <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weight_nodes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weight_node</span></code></a>, and are ignored during retrieval.  These <em>cannot be modified</em> after the
 EMComposition has been constructed (see note below).</p></li>
 </ul>
+<div class="admonition note" id="emcomposition-no-field-weights-for-single-key-note">
+<p class="admonition-title">Note</p>
+<p>If there is only a single key field, no field_weight is constructed, as in this case weighting would have
+no effect; this also means that <strong>learn_field_weights</strong> has no effect, and a warning is issued if specified.</p>
+</div>
 <div class="admonition note" id="emcomposition-field-weights-change-note">
 <p class="admonition-title">Note</p>
 <p>The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
-to its <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>.  However, only field_weights associated with
+to the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>.  However, only field_weights associated with
 key fields (i.e., that were initially assigned non-zero field_weights) can be modified; the weights for value
 fields (i.e., ones that were initially assigned a field_weight of None) cannot be modified, and doing so raises
 an error. If a field that will be used initially as a value may later need to be used as a key, it should be
@@ -493,18 +500,17 @@ on the retrieval process and therefore are uncecessary (and can be misleading).<
 </div></blockquote>
 </li>
 <li><p><strong>learn_field_weights</strong>:  if <strong>enable_learning</strong> is True, this specifies which field_weights are subject to learning,
-and optionally the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learning_rate" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for each (see <a class="reference internal" href="#emcomposition-field-weights-learning"><span class="std std-ref">learn_field_weights</span></a> below for details of specification).</p></li>
+and optionally the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learning_rate" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for each (see <a class="reference internal" href="#emcomposition-field-weights-learning"><span class="std std-ref">learn_field_weights</span></a> below for details of specification);  however, this has no effect if there
+is only a single key (see <a class="reference internal" href="#emcomposition-no-field-weights-for-single-key-note"><span class="std std-ref">note</span></a> above), and a warning is issued
+if it is specified.</p></li>
 </ul>
 <ul class="simple" id="emcomposition-normalize-field-weights">
-<li><dl class="simple">
-<dt><strong>normalize_field_weights</strong>: specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are normalized or</dt><dd><p>their raw values are used.  If True, the value of all non-None <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are
+<li><p><strong>normalize_field_weights</strong>: specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are normalized or
+their raw values are used.  If True, the value of all non-None <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are
 normalized so that they sum to 1.0, and the normalized values are used to weight (i.e., multiply) the corresponding
 fields during retrieval (see <a class="reference internal" href="#emcomposition-processing"><span class="std std-ref">Weight fields</span></a>). If False, the raw values of the
 <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are used to weight the retrieved value of each field. This setting
-is ignored if <strong>field_weights</strong> is None or <a class="reference internal" href="#emcomposition-concatenate-queries"><span class="std std-ref">concatenate_queries</span></a> is True.</p>
-</dd>
-</dl>
-</li>
+is ignored if <strong>field_weights</strong> is None or <a class="reference internal" href="#emcomposition-concatenate-queries"><span class="std std-ref">concatenate_queries</span></a> is True.</p></li>
 </ul>
 <ul id="emcomposition-concatenate-queries">
 <li><p><strong>concatenate_queries</strong>:  specifies whether keys are concatenated before a match is made to items in memory.
@@ -994,14 +1000,17 @@ differentiable form and in which it’s <a class="reference internal" href="#psy
 of specificaton format). The <strong>fields</strong> arg replaces the <strong>field_names</strong>, <strong>field_weights</strong>
 <strong>learn_field_weights</strong>, and <strong>target_fields</strong> arguments, and specifying any of these raises an error.</p></li>
 <li><p><strong>field_names</strong> (<em>list</em><em> or </em><em>tuple : default None</em>) – specifies the names assigned to each field in the memory_template (see <a class="reference internal" href="#emcomposition-field-names"><span class="std std-ref">field names</span></a>
-for details). If the <strong>fields</strong> argument is specified, this is not necessary and specifying raises an error.</p></li>
-<li><p><strong>field_weights</strong> (<em>list</em><em> or </em><em>tuple : default</em><em> (</em><em>1</em><em>,</em><em>0</em><em>)</em>) – specifies the relative weight assigned to each key when matching an item in memory (see <a class="reference internal" href="#emcomposition-field-weights"><span class="std std-ref">field weights</span></a> for additional details). If the <strong>fields</strong> argument is specified, this
-is not necessary and specifying raises an error.</p></li>
+for details). If the <strong>fields</strong> argument is specified, specifying <strong>field_names</strong> is not necessary and
+doing so raises a warning.</p></li>
+<li><p><strong>field_weights</strong> (<em>list</em><em> or </em><em>tuple : default</em><em> (</em><em>1</em><em>,</em><em>0</em><em>)</em>) – specifies the relative weight assigned to each key when matching an item in memory (see <a class="reference internal" href="#emcomposition-field-weights"><span class="std std-ref">field weights</span></a> for additional details). If the <strong>fields</strong> argument is specified, specifying
+<strong>field_weights</strong> is not necessary and doing so raises a warning.</p></li>
 <li><p><strong>learn_field_weights</strong> (<em>bool</em><em> or </em><em>list</em><em>[</em><em>bool</em><em>, </em><em>int</em><em>, </em><em>float</em><em>]</em><em>: default False</em>) – specifies whether the <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> are learnable and, if so, optionally what
 the learning_rate is for each field (see <a class="reference internal" href="#emcomposition-field-weights-learning"><span class="std std-ref">learn_field_weights</span></a> for
-specifications). If the <strong>fields</strong> argument is specified, this is not necessary and specifying raises an error.</p></li>
+specifications). If the <strong>fields</strong> argument is specified, specifying <strong>learn_field_weights</strong> is not necessary,
+and doing so raises a warning.</p></li>
 <li><p><strong>learning_rate</strong> (<em>float : default .01</em>) – specifies the default learning_rate for <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">field_weights</span></code></a> not
-specified in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn_field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn_field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learn_field_weights</span></code></a> (see <a class="reference internal" href="#emcomposition-field-weights-learning"><span class="std std-ref">learning_rate</span></a> for additional details).</p></li>
+specified in <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.fields" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.fields"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">fields</span></code></a> or <a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn_field_weights" title="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn_field_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learn_field_weights</span></code></a>
+(see <a class="reference internal" href="#emcomposition-field-weights-learning"><span class="std std-ref">learning_rate</span></a> for additional details).</p></li>
 <li><p><strong>normalize_field_weights</strong> (<em>bool : default True</em>) – specifies whether the <strong>fields_weights</strong> are normalized over the number of keys, or used as absolute
 weighting values when retrieving an item from memory (see <a class="reference internal" href="#emcomposition-normalize-field-weights"><span class="std std-ref">normalize_field weights</span></a> for additional details).</p></li>
 <li><p><strong>concatenate_queries</strong> (<em>bool : default False</em>) – specifies whether to concatenate the keys into a single field before matching them to items in
@@ -1028,7 +1037,7 @@ of the EMComposition.  If it is a list, each item must be <code class="docutils 
 must be equal to the number of <a href="#id2"><span class="problematic" id="id3">`</span></a>fields &lt;EMComposition_Fields&gt; specified (see <a href="#id4"><span class="problematic" id="id5">`</span></a>Target Fields</p>
 <blockquote>
 <div><p>&lt;EMComposition_Target_Fields&gt;` for additional details). If the <strong>fields</strong> argument is specified,
-this is not necessary and specifying raises an error.</p>
+specifying <strong>target_fields</strong> is not necessary and doing so raises a warning.</p>
 </div></blockquote>
 </p></li>
 <li><p><strong>FIX</strong> (<em># 7/10/24</em>)</p></li>
@@ -1594,7 +1603,8 @@ from concatenated_keys_node to that match_node.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_field_weight_nodes">
 <span class="sig-name descname"><span class="pre">_construct_field_weight_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">concatenate_queries</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gating_for_weighting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_field_weight_nodes" title="Link to this definition">¶</a></dt>
-<dd><p>Create ProcessingMechanisms that weight each key’s softmax contribution to the retrieved values.</p>
+<dd><p>Create ProcessingMechanisms that weight each key’s contribution to the retrieved values.
+Note: not constructed if only one key is specified, since in that case there is no point in weighting.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1659,9 +1669,46 @@ value fields;</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates">
+<span class="sig-name descname"><span class="pre">_assign_learning_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates" title="Link to this definition">¶</a></dt>
+<dd><p>Override to defer population of learning_rates_dict until call to _set_learning_attributes below.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes">
 <span class="sig-name descname"><span class="pre">_set_learning_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes" title="Link to this definition">¶</a></dt>
-<dd><p>Set learning-related attributes for Node and Projections</p>
+<dd><p>Set learning-related attributes for Node and Projections
+Make exclude_fron_gradient_calc assignments to relevant Nodes
+Convert any learning_rate specifications into standard AutodiffComposition learning_rate dict format</p>
+<p>BREADCRUMB:
+Relevant attributes:
+- self.enable_learning
+- self.learning_rate (single value or dict)
+- self.fields (dict, that may contain entries for field-specific learning_rates)
+- self.learn_field_weights (list of field-specific learning_rates)</p>
+<ol class="arabic">
+<li><p>Raise error if learning_rate = dict and self.learn_field_weights is a list</p></li>
+<li><p>if self.learning_rate is a dict:
+- if DEFAULT_LEARNING_RATE is not specified, assign self.learn_field_weights to it
+- otherwise, use whichever is numeric, and raise error if both are</p></li>
+<li><p>if self.learning_rate is NOT a dict:
+- create one from self.learn_field_weights:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>if both self.learning_rate and self.learn_field_weights are numeric, raise error</p></li>
+<li><p>otherwise, assign whichever is numeric to DEFAULT_LEARNING_RATE entry in self.learning_rate dict</p></li>
+<li><p>if self.learn_field_weights is a list, assign each value to entry in self.learning_rate dict</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<p>BREADCRUMB - STILL NEEDS TO BE DONE:
+4. if either self.learning_rate or self.learn_field_weights is False, but the other is not,</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>set self.learning_rate to False and issue warning (don’t bother if both are False)</p></li>
+</ul>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
@@ -1690,7 +1737,9 @@ assign its value to afferent weights of corresponding retrieved_node.
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn">
 <span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition.learn" title="Link to this definition">¶</a></dt>
-<dd><p>Override to check for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning</p>
+<dd><p>Override to check for various error and warning conditions
+- error for inappropriate use of ARG_MAX or PROBABILISTIC options for retrieval with learning
+- warning for enable_learning when concatenate_queries is True or when there is only one key</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
@@ -1890,6 +1939,7 @@ Reinitizalize minibatch_loss and minibatch_loss_count</p>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_softmax_node"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_softmax_node()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_retrieved_nodes"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_retrieved_nodes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._construct_storage_node"><code class="docutils literal notranslate"><span class="pre">EMComposition._construct_storage_node()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._assign_learning_rates"><code class="docutils literal notranslate"><span class="pre">EMComposition._assign_learning_rates()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._set_learning_attributes"><code class="docutils literal notranslate"><span class="pre">EMComposition._set_learning_attributes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._store_memory"><code class="docutils literal notranslate"><span class="pre">EMComposition._store_memory()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.emcomposition.emcomposition.EMComposition._encode_memory"><code class="docutils literal notranslate"><span class="pre">EMComposition._encode_memory()</span></code></a></li>
@@ -1923,7 +1973,7 @@ Reinitizalize minibatch_loss and minibatch_loss_count</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=340ec65a"></script>
+         <script src="_static/documentation_options.js?v=8da15e4e"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
