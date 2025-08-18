@@ -130,9 +130,10 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
-        # MODIFIED 8/18/25: FROM torch_lr
-        pytorch_rep = None
-        # MODIFIED 8/18/25 END
+        # BREADCRUMB
+        # # MODIFIED 8/18/25: FROM torch_lr
+        # pytorch_rep = None
+        # # MODIFIED 8/18/25 END
 
         if type(minibatch_size) == np.ndarray:
             minibatch_size = minibatch_size.item()
@@ -229,10 +230,10 @@ class CompositionRunner():
                         # # BREADCRUMB PRINT
                         # print(f"GRADIENT UPDATE FOR optimization_num {optimization_num}")
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        # MODIFIED 8/18/25 NEW: from torch_lr
-                        # Need to get pytorch_representation after yield above (which forces its construction)
-                        if pytorch_rep is None:
-                            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
+                        # # MODIFIED 8/18/25 NEW: from torch_lr
+                        # # Need to get pytorch_representation after yield above (which forces its construction)
+                        # if pytorch_rep is None:
+                        #     pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # MODIFIED 8/18/25 END
                         from torch import no_grad
                         with no_grad():
