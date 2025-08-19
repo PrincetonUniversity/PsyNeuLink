@@ -3,6 +3,16 @@ import pytest
 
 import psyneulink as pnl
 
+from psyneulink.library.compositions.grucomposition.grucomposition import (
+    INPUT_TO_HIDDEN,
+    HIDDEN_TO_HIDDEN,
+    BIAS_INPUT_TO_HIDDEN,
+    BIAS_HIDDEN_TO_HIDDEN,
+    W_IH_NAME,
+    W_HH_NAME,
+    B_IH_NAME,
+    B_HH_NAME,
+)
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 try:
@@ -480,15 +490,15 @@ class TestExecution:
     continued_learning_expected = [[0.44543197, 0.47387584, 0.25515581, 0.34837884, -0.07662127]]
     none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
     test_specs = [
-        ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
+        ('constructor', INPUT_TO_HIDDEN, constructor_expected),
         ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
-        ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+        ('learn_method', HIDDEN_TO_HIDDEN, learn_method_expected),
         ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
-        ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
-        ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
-        ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
-        ('specs_to_nested', pnl.INPUT_TO_HIDDEN, constructor_expected),
-        ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
+        ('constructor', BIAS_INPUT_TO_HIDDEN, None),
+        ('learn_method', BIAS_HIDDEN_TO_HIDDEN, None),
+        ('both', HIDDEN_TO_HIDDEN, learn_method_expected),
+        ('specs_to_nested', INPUT_TO_HIDDEN, constructor_expected),
+        ('none', HIDDEN_TO_HIDDEN, none_expected)]
     @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
                              ids=[f"{x[0]}_{x[1]}" for x in test_specs])
     def test_learning_rate_assignments(self, condition, gru_proj, expected):
@@ -506,7 +516,7 @@ class TestExecution:
         gru_proj_lr = .3 if lr_dict_spec == 'constructor' else .95 if lr_dict_spec == 'learn_method' else .001
         input_proj_lr = 2.9 if lr_dict_spec == 'constructor' else .66 if lr_dict_spec == 'learn_method' else .001
         output_proj_lr = .5 if lr_dict_spec == 'constructor' else 1.5 if lr_dict_spec == 'learn_method' else .001
-        if gru_proj == pnl.INPUT_TO_HIDDEN:
+        if gru_proj == INPUT_TO_HIDDEN:
             ih_lr = gru_proj_lr
             hh_lr = .001
         else:
@@ -532,8 +542,8 @@ class TestExecution:
             assert error_msg in str(error_text.value)
 
         # Test for error on attempt to set BIAS learning rate if bias option is False
-        elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
-            bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
+        elif gru_proj in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}:
+            bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
             error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
                          f"'learning_rate' arg of the learn() method for 'GRU Composition' when its bias option "
                          f"is set to False; the spec(s) must be removed or bias set to True.")
@@ -568,9 +578,8 @@ class TestExecution:
             pytorch_rep = outer._build_pytorch_representation()
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
-
+            assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
             # Test assignment of learning_Rate on learning
             results = outer.learn(
                 inputs={input_mech: [[.1, .2, .3]]}, targets={output_mech: [[1,1,1,1,1]]},
@@ -579,8 +588,8 @@ class TestExecution:
             pytorch_rep = outer.pytorch_representation
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == ih_lr
+            assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == hh_lr
             np.testing.assert_allclose(expected, results)
 
             # Check that values are returned to constructor defaults for new call to learn() w/o specs
@@ -589,9 +598,8 @@ class TestExecution:
                 learning_rate=None)
             assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
             assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
-            assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
-
+            assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
+            assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
 
     @pytest.mark.parametrize("bias", [False, True])
     def test_pytorch_identicality_of_learning_rates_unnested(self, bias):
@@ -615,13 +623,13 @@ class TestExecution:
         torch_gru = torch.nn.GRU(input_size=INPUT_SIZE, hidden_size=HIDDEN_SIZE, bias=bias)
         torch_optimizer = torch.optim.SGD(lr=LEARNING_RATE, params=torch_gru.parameters())
         del torch_optimizer.param_groups[0]
-        w_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_IH_NAME][0]
-        w_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.W_HH_NAME][0]
+        w_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0] == W_IH_NAME][0]
+        w_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0] == W_HH_NAME][0]
         torch_optimizer.add_param_group({'params': [w_ih_param], 'lr': W_IH_LEARNING_RATE})
         torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
         if bias:
-            b_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_IH_NAME][0]
-            b_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0]==pnl.B_HH_NAME][0]
+            b_ih_param = [p[1] for p in torch_gru.named_parameters() if p[0] == B_IH_NAME][0]
+            b_hh_param = [p[1] for p in torch_gru.named_parameters() if p[0] == B_HH_NAME][0]
             torch_optimizer.add_param_group({'params': [b_ih_param], 'lr': B_IH_LEARNING_RATE})
             torch_optimizer.add_param_group({'params': [b_hh_param], 'lr': B_HH_LEARNING_RATE})
         loss_fct = torch.nn.MSELoss(reduction='mean')
@@ -643,11 +651,18 @@ class TestExecution:
         # Set up and run PNL Autodiff model -------------------------------------
 
         # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
-        learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        learning_rate = {
+            INPUT_TO_HIDDEN: W_IH_LEARNING_RATE,
+            HIDDEN_TO_HIDDEN: W_HH_LEARNING_RATE,
+        }
         if bias:
-            learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
-                                  pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                  pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+            learning_rate.update(
+                {
+                    pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                    BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                    BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE,
+                }
+            )
         pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=learning_rate)
         pnl_gru.set_weights(*torch_gru_initial_weights)
         target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
@@ -711,9 +726,9 @@ class TestExecution:
         _torch_param_short_to_long_names_map = {k.split('.')[-1]:k
                                                for k in [p[0] for p in torch_model.named_parameters()]}
         w_ih_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== _torch_param_short_to_long_names_map[pnl.W_IH_NAME]][0]
+                      if p[0] == _torch_param_short_to_long_names_map[W_IH_NAME]][0]
         w_hh_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== _torch_param_short_to_long_names_map[pnl.W_HH_NAME]][0]
+                      if p[0] == _torch_param_short_to_long_names_map[W_HH_NAME]][0]
         param_group = torch_optimizer.param_groups[0]
         for i, p in enumerate(param_group['params'].copy()):
             if p is w_ih_param:
@@ -725,9 +740,9 @@ class TestExecution:
         torch_optimizer.add_param_group({'params': [w_hh_param], 'lr': W_HH_LEARNING_RATE})
         if bias:
             b_ih_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== _torch_param_short_to_long_names_map[pnl.B_IH_NAME]][0]
+                          if p[0] == _torch_param_short_to_long_names_map[B_IH_NAME]][0]
             b_hh_param = [p[1] for p in torch_model.named_parameters()
-                      if p[0]== _torch_param_short_to_long_names_map[pnl.B_HH_NAME]][0]
+                          if p[0] == _torch_param_short_to_long_names_map[B_HH_NAME]][0]
             for i, p in enumerate(param_group['params'].copy()):
                 if p is b_ih_param:
                     del param_group['params'][i]
@@ -759,11 +774,18 @@ class TestExecution:
 
         input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-        learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+        learning_rate = {
+            INPUT_TO_HIDDEN: W_IH_LEARNING_RATE,
+            HIDDEN_TO_HIDDEN: W_HH_LEARNING_RATE,
+        }
         if bias:
-            learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
-                                  pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                  pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+            learning_rate.update(
+                {
+                    pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
+                    BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                    BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE,
+                }
+            )
         gru = GRUComposition(name='GRU COMP',
                              input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
         autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',
