@@ -2113,25 +2113,6 @@ class EMComposition(AutodiffComposition):
             parsed_field_weights = np.repeat(parsed_field_weights, self.num_fields)
 
         # Make sure field_weight learning was not specified for any value fields (since they don't have field_weights)
-        # # MODIFIED 6/15/25 OLD:
-        # if isinstance(learn_field_weights, (list, tuple, np.ndarray)):
-        #     for i, lfw in enumerate(learn_field_weights):
-        #         if parsed_field_weights[i] is None and lfw is not False:
-        #             warnings.warn(f"Learning was specified for field '{field_names[i]}' in the 'learn_field_weights' "
-        #                           f"arg for '{name}', but it is not allowed for value fields; it will be ignored.")
-        # MODIFIED 6/15/25 END
-        # # MODIFIED 6/14/25 OLD:
-        # elif learn_field_weights in {None, True, False}:
-        #     learn_field_weights = [False] * len(parsed_field_weights)
-        # # MODIFIED 6/14/25 NEW:
-        # elif learn_field_weights in {None, True, False}:
-        #     learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
-        # MODIFIED 6/14/25 NEWER:
-        # elif isinstance(learn_field_weights, bool):
-        #     learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
-        # elif learn_field_weights is None:
-        #     learn_field_weights = [False] * len(parsed_field_weights)
-        # MODIFIED 6/15/25 NEWEST:
         lfw_values_specified_individually = True
         if not is_iterable(learn_field_weights) and learn_field_weights in {None, True, False}:
             learn_field_weights = [learn_field_weights] * len(parsed_field_weights)
@@ -2152,7 +2133,6 @@ class EMComposition(AutodiffComposition):
                     learn_field_weights[i] = learning_rate or lfw
                 else:
                     learn_field_weights[i] = lfw
-        # MODIFIED 6/14/25 END
         else:
             assert False, \
                 f"PROGRAM ERROR: learn_field_weights ({learn_field_weights}) is not a list, array, tuple, or bool."
