@@ -278,8 +278,8 @@ that is propagated through the EMComposition.
          `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to True (the default) to ensure that
          the `field_weights <EMComposition.field_weights>` are normalized to sum to 1.0.
 
-    * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**, and
-      all entries must be either 0, a positive scalar value, or None.  If all entries are identical, they are treated
+    * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**, and all
+      entries must be either 0, a positive scalar value, None, or False. If all entries are identical, they are treated
       as if a single value  was specified (see above); if the entries are non-identical, any entries that are not None
       are used to weight the corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`),
       including those that are 0 (though these will not be used in the retrieval process unless/until they are changed
@@ -1066,6 +1066,8 @@ def field_weights_setter(field_weights, owning_component=None, context=None):
     elif len(field_weights) != len(owning_component.field_weights):
         raise EMCompositionError(f"The number of field_weights ({len(field_weights)}) must match the number of fields "
                                  f"{len(owning_component.field_weights)}")
+    for i, fw in enumerate(field_weights.copy()):
+        field_weights[i] = None if fw is None else fw
     if owning_component.normalize_field_weights:
         denominator = np.sum(np.where(field_weights is not None, field_weights, 0)) or 1
         field_weights = [fw / denominator if fw is not None else None for fw in field_weights]
