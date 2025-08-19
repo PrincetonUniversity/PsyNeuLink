@@ -6,9 +6,9 @@ torch.set_printoptions(precision=8)
 
 def prep_EM(em, n, l, fill=.001):
     for _ in range(n):
-        em.prep(torch.tensor([[fill] * l], dtype=torch.float),
-                torch.tensor([[fill] * l], dtype=torch.float),
-                torch.tensor([[fill] * l], dtype=torch.float))
+        em.prep(torch.tensor([[fill] * l], dtype=torch.float64),
+                torch.tensor([[fill] * l], dtype=torch.float64),
+                torch.tensor([[fill] * l], dtype=torch.float64))
     return em
 
 
@@ -147,7 +147,7 @@ class RecurrentContextModule(nn.Module):
         self.hidden_to_hidden = nn.Linear(n_hidden, n_hidden)
         self.hidden_to_context = nn.Linear(n_hidden, n_outputs)
         self.n_hidden_units = n_hidden
-        self.hidden_state = torch.zeros((self.n_hidden_units,), dtype=torch.float)
+        self.hidden_state = torch.zeros((self.n_hidden_units,), dtype=torch.float64)
         self.update_hidden_state = True
 
     def forward(self, x: torch.tensor) -> torch.tensor:
@@ -162,12 +162,12 @@ class RecurrentContextModule(nn.Module):
 
 def prep_recurrent_network(rnet, state_d):
     with torch.no_grad():
-        rnet.state_to_hidden.weight.copy_(torch.eye(state_d, dtype=torch.float))
+        rnet.state_to_hidden.weight.copy_(torch.eye(state_d, dtype=torch.float64))
         rnet.state_to_hidden.bias.zero_()
 
-        rnet.hidden_to_hidden.weight.copy_(torch.eye(state_d, dtype=torch.float))
+        rnet.hidden_to_hidden.weight.copy_(torch.eye(state_d, dtype=torch.float64))
         rnet.hidden_to_hidden.bias.zero_()
-        rnet.hidden_to_context.weight.copy_(torch.eye(state_d, dtype=torch.float))
+        rnet.hidden_to_context.weight.copy_(torch.eye(state_d, dtype=torch.float64))
         rnet.hidden_to_context.bias.zero_()
 
     # Set requires_grad to True for hidden_to_context.weight before freezing other parameters

@@ -58,7 +58,8 @@ def construct_model(
                                       function=Tanh(gain=1),
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
-    context_layer.exclude_from_gradient_calc = AFTER
+    # context_layer.exclude_from_gradient_calc = AFTER
+    # previous_state_layer.exclude_from_gradient_calc = AFTER
 
     em = EMComposition(
         name=em_name,

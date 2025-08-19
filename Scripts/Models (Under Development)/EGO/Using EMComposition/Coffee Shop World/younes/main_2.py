@@ -9,6 +9,7 @@ from psyneulink_ego.ego_model import construct_model, run_model
 
 import pytorch_ego.utils as utils
 import numpy as np
+import torch
 
 import matplotlib.pyplot as plt
 
@@ -50,6 +51,7 @@ def main():
         if IS_VERBOSE:
             print('done running psyneulink ego', end='\n\n')
     if RUN_TORCH:
+        torch.set_default_dtype(torch.float64)
         if IS_VERBOSE:
             print('running pytorch ego')
         utils.set_random_seed(0)

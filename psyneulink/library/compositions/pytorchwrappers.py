@@ -1605,6 +1605,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # BREADCRUMB PRINT
             print(f"\nBEGIN FORWARD for STIM {self.composition._stim_num} optimization_num {optimization_num}\n")
 
+            # Execute nodes
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
 

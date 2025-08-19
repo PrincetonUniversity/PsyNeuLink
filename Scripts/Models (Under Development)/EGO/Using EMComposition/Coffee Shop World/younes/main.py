@@ -1,3 +1,5 @@
+import torch
+
 from pytorch_ego.run import run_participant
 from data.dataset import gen_data_loader
 
@@ -46,6 +48,7 @@ def main():
         if IS_VERBOSE:
             print('done running psyneulink ego', end='\n\n')
     if RUN_TORCH:
+        torch.set_default_dtype(torch.float64)
         if IS_VERBOSE:
             print('running pytorch ego')
         utils.set_random_seed(0)

@@ -215,4 +215,4 @@ def one_hot_encode(labels, num_classes):
     """
     One hot encode labels and convert to tensor.
     """
-    return torch.tensor((np.arange(num_classes) == labels[..., None]).astype(float), dtype=torch.float32)
+    return torch.tensor((np.arange(num_classes) == labels[..., None]).astype(float), dtype=torch.float64)

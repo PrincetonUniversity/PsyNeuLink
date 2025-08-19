@@ -226,7 +226,7 @@ class CompositionRunner():
 
                         # BREADCRUMB PRINT:
                         print(f"\n-------------------------------------------------------------------\n")
-                        print(f"EXECUTED AFTER GRADIENT UPDATE:\n")
+                        print(f"EXECUTED AFTER GRADIENT UPDATE:\n\n")
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
