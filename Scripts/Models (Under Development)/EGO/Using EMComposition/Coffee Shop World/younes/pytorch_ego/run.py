@@ -9,7 +9,8 @@ def run_participant(params, data_loader, len_memory=2):
     optimizer = torch.optim.SGD(lr=params['learning_rate'], params=context_module.parameters())
     em_preds = []
 
-
+    # BREADCRUMB PRINT
+    print(f"TORCH LOSSES: ")
     # Loop over each state of the CSW task.
     for trial, (x, _, y) in enumerate(data_loader):
         if trial == 0:
@@ -23,7 +24,7 @@ def run_participant(params, data_loader, len_memory=2):
         # For each state, optimize the context representation for predicting the next state over n_optimization_steps.
         if trial >= 0 and trial < 23:
             context = context_module(x)  # retrieve the context representation from the integrator.
-            for _ in range(params['n_optimization_steps']):
+            for i in range(params['n_optimization_steps']):
                 # Skip first state bc which sequence within the context is randomly assigned.
                 # i.e., we have not yet observed a full state transition.
 
@@ -32,6 +33,7 @@ def run_participant(params, data_loader, len_memory=2):
                 loss = loss_fn(pred_em, y)  # calculate the loss between the predicted and actual next state.
                 loss.backward(retain_graph=True)  # compute the gradients of the context module.
                 optimizer.step()  # backprop to update context module weights.
+                print(f"STIM {trial} optimization step {i}: {loss}")
             em_module.write(x, context, y)
             em_preds.append(pred_em.detach().cpu().numpy())
 
