@@ -1844,41 +1844,8 @@ class EMComposition(AutodiffComposition):
         self._set_learning_attributes()
 
         if self._use_storage_node:
-            # ---------------------------------------
-            #
-            # CONDITION:
-            self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates expected results, but execution_sets has a second set for INPUT nodes
-            #    and the match_nodes again with storage_node
-            #
-            # ---------------------------------------
-            #
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes,
-            #                                                               time_scale=TimeScale.PASS))
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition(self.storage_node, conditions.JustRan(self.retrieved_nodes[0]))
-            #
-            # Hangs (or takes inordinately long to run),
-            #     and evaluating list(execution_list) at LINE 11233 of composition.py hangs:
-            #
-            # ---------------------------------------
-            # CONDITION:
-            # self.scheduler.add_condition_set({n: conditions.BeforeNCalls(n, 1) for n in self.nodes})
-            # self.scheduler.add_condition(self.storage_node, conditions.AllHaveRun(*self.retrieved_nodes))
-            #
-            # Generates the desired execution set for a single pass, and runs with expected results,
-            #   but raises a warning messages for every node of the following sort:
-            # /Users/jdc/PycharmProjects/PsyNeuLink/psyneulink/core/scheduling/scheduler.py:120:
-            #   UserWarning: BeforeNCalls((EMStorageMechanism STORAGE MECHANISM), 1) is dependent on
-            #   (EMStorageMechanism STORAGE MECHANISM), but you are assigning (EMStorageMechanism STORAGE MECHANISM)
-            #   as its owner. This may result in infinite loops or unknown behavior.
-            # super().add_condition_set(conditions)
+            # Ensure that storage_node runs last
+            self.scheduler.add_condition(self.storage_node, conditions.AfterNodes(*self.retrieved_nodes))
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
