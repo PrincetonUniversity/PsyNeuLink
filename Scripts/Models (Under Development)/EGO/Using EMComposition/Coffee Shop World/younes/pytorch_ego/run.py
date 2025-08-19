@@ -33,7 +33,7 @@ def run_participant(params, data_loader, len_memory=2):
                 loss = loss_fn(pred_em, y)  # calculate the loss between the predicted and actual next state.
                 loss.backward(retain_graph=True)  # compute the gradients of the context module.
                 optimizer.step()  # backprop to update context module weights.
-                print(f"STIM {trial} optimization step {i}: {loss}")
+                print(f"STIM {trial} optimization step {i}: {loss:{5}f}")
             em_module.write(x, context, y)
             em_preds.append(pred_em.detach().cpu().numpy())
 
