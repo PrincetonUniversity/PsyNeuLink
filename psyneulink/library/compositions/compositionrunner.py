@@ -220,16 +220,27 @@ class CompositionRunner():
                             # Modify any parameter values  specified for additional optimizations
                             self._composition._call_before_additional_optimizations(context=context)
 
-                        # # BREADCRUMB PRINT
-                        # print(f"GRADIENT UPDATE FOR optimization_num {optimization_num}")
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
+                        # BREADCRUMB PRINT
+                        print(f"GRADIENTS UPDATED FOR optimization_num {optimization_num}")
+
+                        # BREADCRUMB PRINT:
+                        print(f"\n-------------------------------------------------------------------\n")
+                        print(f"EXECUTED AFTER GRADIENT UPDATE:\n")
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                                # BREADCRUMB PRINT:
+                                print(f"{node.mechanism.name}")
                                 if (do_additional_optimizations and node.mechanism not in
                                         self._composition._nodes_to_execute_in_additional_optimizations):
                                     continue
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                                if node.mechanism.name != 'STORE':
+                                    print(f"  {node.output}")
+
+                        # BREADCRUMB PRINT:
+                        print(f"\n===================================================================\n")
 
                         if end_extra_optimizations:
                             # Restore parameters back to their usual values

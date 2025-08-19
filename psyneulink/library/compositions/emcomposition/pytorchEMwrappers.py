@@ -87,6 +87,7 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
             num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
+            stim_num = self._context.composition._stim_num
             store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
             if optimization_num == 0 and store_on_optimization == FIRST:
                 store = True
@@ -98,11 +99,11 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
                 store = False
             if store:
                 self.store_memory(variable, context)
-                # # BREADCRUMB PRINT:
-                # print(f"\n'STORE MEMORY optimization_num': {optimization_num}\n")
-                # print(f"'STATE VALUE STORED': {variable[0][0][0]}\n")
-                # print(f"'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
-                # print(f"'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
+                # BREADCRUMB PRINT:
+                print(f"'STORE MEMORIES for STIM {stim_num} optimization_num': {optimization_num}\n")
+                print(f"  'STATE VALUE STORED': {variable[0][0][0]}\n")
+                print(f"  'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                print(f"  'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
 
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)

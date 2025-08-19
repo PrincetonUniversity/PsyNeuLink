@@ -19,7 +19,6 @@ def construct_model(
     context_name = config['context_layer_name']
     context_size = config['context_d']
     integration_rate = config['integration_rate']
-
     # EM:
     em_name = config['em_name']
     retrieval_softmax_threshold = config['softmax_threshold']
@@ -59,6 +58,7 @@ def construct_model(
                                       function=Tanh(gain=1),
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
+    context_layer.exclude_from_gradient_calc = AFTER
 
     em = EMComposition(
         name=em_name,
@@ -169,12 +169,6 @@ def run_model(model,
                 synch_results_with_torch=RUN,
                 execute_in_additional_optimizations={model.nodes['PREDICTION']: None,
                                                      model.nodes['EM']: None}
-                #             execute_in_additional_optimizations=
-                #             {model.nodes["EM"]:("storage_prob", 0),
-                # model.nodes["PREDICTION"]:None,
-                # model.nodes["EM"].nodes["PREVIOUS STATE [RETRIEVED]"]:None,
-                # model.nodes["EM"].nodes["CONTEXT [RETRIEVED]"]:None}
-                # call_before_minibatch=hi(model, context_layer, state_input_layer, em)
                 )
     # model.learn(inputs={params_ego['state_input_layer_name']: trials},
     #             learning_rate=params_ego['learning_rate'],

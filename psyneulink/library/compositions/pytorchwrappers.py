@@ -1602,8 +1602,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
-            # # BREADCRUMB PRINT
-            # print(f"\nBEGIN FORWARD for optimization_num {optimization_num} (STIM {self.composition._stim_num})")
+            # BREADCRUMB PRINT
+            print(f"\nBEGIN FORWARD for STIM {self.composition._stim_num} optimization_num {optimization_num}\n")
 
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
@@ -1722,24 +1722,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                    # # BREADCRUMB PRINT
-                    # print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
+                    # BREADCRUMB PRINT
+                    print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
 
-            # # BREADCRUMB PRINT
-            # print(f"{self.composition.nodes['STATE'].name}:"
-            #       f" {self.nodes_map[self.composition.nodes['STATE']].output}")
-            # print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
-            #       f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
-            # print(f"{self.composition.nodes['CONTEXT'].name}:"
-            #       f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
-            # print(f"{self.composition.nodes['PREDICTION'].name}:"
-            #       f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
-            # print(f"END FORWARD for optimization_num {optimization_num}\n")
+            # BREADCRUMB PRINT
+            print(f"\nValues after forward() execution:")
+            print(f"{self.composition.nodes['STATE'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['STATE']].output}")
+            print(f"{self.composition.nodes['PREVIOUS STATE'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['PREVIOUS STATE']].output}")
+            print(f"{self.composition.nodes['CONTEXT'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['CONTEXT']].output}")
+            print(f"{self.composition.nodes['PREDICTION'].name}:"
+                  f" {self.nodes_map[self.composition.nodes['PREDICTION']].output}")
+            print(f"\nEND FORWARD for STIM {self.composition._stim_num} optimization_num {optimization_num}\n")
+            print(f"------------------------------------------------------------------\n")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -1973,7 +1975,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
         from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
         self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
-            if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
+            if hasattr(mechanism, EXCLUDE_FROM_GRADIENT_CALC) else False
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."

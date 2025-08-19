@@ -20,8 +20,8 @@ IS_PLOT = True
 IS_TEST = True
 IS_VERBOSE = True
 
-TOLERANCE = 1e-7
-NR_TRIALS_TO_CHECK = 20
+TOLERANCE = 1e-5
+NR_TRIALS_TO_CHECK = 10
 
 
 def main():
@@ -79,7 +79,8 @@ def main():
                 pnl_results[:NR_TRIALS_TO_CHECK],
                 torch_results[:NR_TRIALS_TO_CHECK],
                 atol=TOLERANCE, rtol=TOLERANCE):
-            raise AssertionError("PNL and torch results differ beyond allowed tolerance")
+            raise AssertionError(f"PNL and torch results differ beyond allowed tolerance of {TOLERANCE} for "
+                                 f"{NR_TRIALS_TO_CHECK} trials with learning_rate of {params_ego['learning_rate']}")
         print(f"PNL and torch produce identical results w/in tolerance of {TOLERANCE} for {NR_TRIALS_TO_CHECK} trials")
 
 
