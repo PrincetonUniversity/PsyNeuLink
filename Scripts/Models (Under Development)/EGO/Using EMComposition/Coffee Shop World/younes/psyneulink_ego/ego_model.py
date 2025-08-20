@@ -136,7 +136,6 @@ def construct_model(
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=loss_spec,
-                                   exclude_from_gradient_calc=[context_layer, previous_state_layer],
                                    name=model_name,
                                    device=device)
 
