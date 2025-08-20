@@ -2673,8 +2673,11 @@ class EMComposition(AutodiffComposition):
         """
 
         # BREADCRUMB: SET self.storage_node = None IF NOT USE_STORAGE_NODE?
+        # BREADCRUMB: MOVE TO ASSIGNMENT IN AUTODIFF
         if hasattr(self, 'storage_node'):
-            setattr(self.storage_node, EXCLUDE_FROM_GRADIENT_CALC, AFTER)
+            # setattr(self.storage_node, EXCLUDE_FROM_GRADIENT_CALC, True)
+            self.storage_node.exclude_from_gradient_calc = True
+            self.exclude_from_gradient_calc = True
 
         # Get field_weight projections and set all others to be non-learnable
         field_weight_projections = []

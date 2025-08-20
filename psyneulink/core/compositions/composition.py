@@ -3178,6 +3178,7 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
+from psyneulink import EXCLUDE_FROM_GRADIENT_CALC
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
@@ -12068,6 +12069,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         runner = CompositionRunner(self)
 
+        # Check that execution mode, arguments, and/or attributes are compatible with Composition type
         if not isinstance(self, AutodiffComposition):
             if isinstance(learning_rate, dict):
                 # learning_rate dict specification is not (yet) allowed for learn() method of Composition
@@ -12075,18 +12077,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"is not currently supported for a Composition; use an AutodiffComposition, "
                                        f"or specify Projection-specific learning_rate(s) in the **learning_rate** "
                                        f"argument the constructor(s) for the corresponding MappingProjection(s).")
-
             # parse and then assign any learning_rate specs to learning_rates_dict for execution context
             self._parse_and_validate_learning_rate_arg(learning_rate, context)
             self._assign_learning_rates(context=context)
 
-        # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
         if execution_mode is not pnlvm.ExecutionMode.Python and not isinstance(self, AutodiffComposition):
+            # Non-Python (i.e. PyTorch and LLVM) learning modes only supported for AutodiffComposition
             raise CompositionError(f"ExecutionMode.{execution_mode.name} cannot be used in the learn() method of "
                                    f"'{self.name}' because it is not an {AutodiffComposition.componentCategory}")
         elif execution_mode is pnlvm.ExecutionMode.Python and not self.learning_components:
             warnings.warn(f"learn() method called on '{self.name}', but it has no learning components; "
                           f"it will be run but no learning will occur.")
+
+        if execution_mode is not pnlvm.ExecutionMode.PyTorch or not isinstance(self, AutodiffComposition):
+            # Can only use EXCLUDE_FROM_GRADIENT_CALC for AutodiffComposition learning in PyTorch mode
+            affected_nodes = [node for node in [self] + self.get_all_nodes()
+                              if (hasattr(node, EXCLUDE_FROM_GRADIENT_CALC) and node.exclude_from_gradient_calc)]
+            if affected_nodes:
+                if not isinstance(self, AutodiffComposition):
+                    reason_msg = "since that is only supported for AutodiffComposition"
+                else:
+                    reason_msg = "since that is only supported for execution in ExecutionMode.PyTorch"
+                warnings.warn(
+                    f"The following nodes in '{self.name}' have an '{EXCLUDE_FROM_GRADIENT_CALC} attribute assigned "
+                    f"that will be ignored " + reason_msg + ": {' ,'.join(affecdted_nodes)}.")
 
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
