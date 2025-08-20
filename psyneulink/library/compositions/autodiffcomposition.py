@@ -403,6 +403,7 @@ else:
 
 from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -480,6 +481,7 @@ class AutodiffComposition(Composition):
         weight_decay=0,
         enable_learning=True,
         learning_rate=0.001,
+        exclude_from_gradient_calc=None,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
         synch_node_values_with_torch=RUN,
@@ -515,6 +517,9 @@ class AutodiffComposition(Composition):
         <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
+
+    exclude_from_gradient_calc : list : default None
+        specifies nodes to be exclude from and executed after the gradient calculaton (backward pass in PyTorch).
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
@@ -591,6 +596,9 @@ class AutodiffComposition(Composition):
         that is applied to all `Projections <Projection>` in the AutodiffComposition that are `learnable
         <MappingProjection.learnable>`, and for which individual rates have not been specified (see
         `AutodiffComposition_Learning_Rates` for additional details).
+
+    exclude_from_gradient_calc : list
+        determines nodes to be excluded from and executed after the gradient calculaton (backward pass in PyTorch).
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
@@ -770,6 +778,7 @@ class AutodiffComposition(Composition):
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning: bool = True,
+                 exclude_from_gradient_calc: Optional[Union[list,str]] = None,
                  force_no_retain_graph: bool = False,
                  refresh_losses: bool = False,
                  synch_projection_matrices_with_torch: Optional[str] = RUN,
@@ -824,6 +833,9 @@ class AutodiffComposition(Composition):
         self.optimizer_type = optimizer_type
         self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
         self.loss_spec = loss_spec
+        self.losses = [] # keeps track of average loss per epoch
+        self.execution_sets = None # ordered execution sets for the pytorch model
+        self.exclude_from_gradient_calc = exclude_from_gradient_calc or [] # validated in _build_pytorch_representation
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
@@ -832,12 +844,6 @@ class AutodiffComposition(Composition):
         self.last_saved_weights = None
         self.last_loaded_weights = None
         self.full_sequence_mode = full_sequence_mode
-
-        # keeps track of average loss per epoch
-        self.losses = []
-
-        # ordered execution sets for the pytorch model
-        self.execution_sets = None
 
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
@@ -1148,6 +1154,8 @@ class AutodiffComposition(Composition):
 
         # Construct a new pytorch_representation if none exists or new is specified
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
+
+            self._parse_and_validate_exclude_from_gradient_calc(self.exclude_from_gradient_calc)
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
                                                   device=self.device,
@@ -1157,7 +1165,8 @@ class AutodiffComposition(Composition):
             warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
                           f"directly from the command line; this and any additional calls will be ignored. "
                           f"Make any desired modifications to parameters (e.g., learning_rates) either in the "
-                          f"constructor for the AutodiffComposition, or its learn() method.")
+                          f"constructor for the AutodiffComposition or its learn() method, or call "
+                          f"_build_pytorch_representation() with 'new=True'.")
 
         # Get pytorch_representation (assigned in constructor for PytorchCompositionWrapper)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
@@ -1240,6 +1249,64 @@ class AutodiffComposition(Composition):
             self.loss_function = self._get_loss(self.loss_spec)
 
         return pytorch_rep
+
+    # BREADCRUMB:
+    #  AND MAKE EVENTUAL ASSIGNMENTS TO PYTORCHMECHANISMWRAPPERS, WITH WARNING OR ERROR ABOUT ANY ON MECH ITSELF
+    def _parse_and_validate_exclude_from_gradient_calc(self, spec:Union[str,list]):
+        if isinstance(spec, str):
+            if spec != ALL:
+                raise AutodiffCompositionError(f"The '{EXCLUDE_FROM_GRADIENT_CALC}' arg for '{self.name}' "
+                                               f"must either be 'ALL' or a list of Mechanismsm and/or Compositions.")
+            # Don't include any nodes in nested Compositions, as doing so would result in no learning
+            self.exclude_from_gradient_calc = [node for node in self.nodes if isinstance(node, Mechanism)]
+            return
+
+        if not isinstance(spec, list):
+            raise AutodiffCompositionError(f"The '{EXCLUDE_FROM_GRADIENT_CALC}' arg for '{self.name}' "
+                                           f"must either be 'ALL' or a list of Mechanismsm and/or Compositions.")
+
+        # Check that every node specified is a Mechanism or Composition in the Composition or one nested with in it
+        bad_nodes = []
+        non_nodes = []
+        for node in spec:
+            if not isinstance(node, (Mechanism, Composition)):
+                # Items in list must be only Mechanisms or Compositions
+                non_nodes.append(node.name)
+                continue
+            # BREADCRUMB: MAKE SURE THIS INCLUDES NODES IN CURRENT COMP, AND THAT IT INCLUDES COMPS AS WELL AS MECHS:
+            if node not in self._get_all_nodes():
+                # Items in list must be a node within the Composition or one nested within it
+                bad_nodes.append(node.name)
+            if isinstance(node, Composition):
+                # BREADCRUMB: DEAL WITH NESTED COMP HERE:  CALL RECURSIVELY WITH ALL?  OR MANUALLY MAKE ASSIGNMENT
+                pass
+        if bad_nodes or non_nodes:
+            err_msg  = f"The following entries in the '{EXCLUDE_FROM_GRADIENT_CALC}' arg for '{self.name}' "
+            bad_nodes_msg = f"are not in the Composition: {', '.join(bad_nodes)}" if bad_nodes else None
+            non_nodes_msg = f"are not a Mechanism or Composition: {', '.join(bad_nodes)}" if non_nodes else None
+            if bad_nodes and non_nodes:
+                err_msg += (bad_nodes_msg + ' or ' + non_nodes_msg)
+            elif bad_nodes:
+                err_msg += bad_nodes_msg
+            else:
+                err_msg += non_nodes_msg
+            raise AutodiffCompositionError(err_msg)
+
+        # Check for and warn about any nodes that have exclude_from_gradient_calc as an attribute
+        bad_nodes = [node.name for node in self._get_all_nodes()
+                     if isinstance(node, Mechanism) and hasattr(node, EXCLUDE_FROM_GRADIENT_CALC)]
+        if bad_nodes:
+            # BREADCRUMB: REPLACE WITH THIS VERSION ONCE EXCLUDE_FROM_GRADIENT_CALC IS IMPLEMENTED AS A PARAMETER
+            #             WITH A setter() AND AS ARG IN learn() AND _build_pytorch_representation()
+            # warnings.warn(
+            #     f"The following node(s) in '{self.name} have an '{EXCLUDE_FROM_GRADIENT_CALC}' attribute. "
+            #     f"This should be specified only on the Composition (in its constructor, a call to its learn() method, "
+            #     f"or added directly to its '{EXCLUDE_FROM_GRADIENT_CALC}' Parameter; "
+            #     f"specifications made directly on Mechanisms are ignored: {', '.join(bad_nodes)}.")
+            warnings.warn(
+                f"The following node(s) in '{self.name} have an '{EXCLUDE_FROM_GRADIENT_CALC}' attribute. "
+                f"This should be specified only in the constructor for the Composition; "
+                f"specifications made directly on Mechanisms are ignored: {', '.join(bad_nodes)}.")
 
     def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
 
