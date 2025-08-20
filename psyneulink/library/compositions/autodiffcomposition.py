@@ -777,7 +777,7 @@ class AutodiffComposition(Composition):
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning: bool = True,
-                 exclude_from_gradient_calc: Optional[list] = None
+                 exclude_from_gradient_calc: Optional[Union[list,str]] = None,
                  force_no_retain_graph: bool = False,
                  refresh_losses: bool = False,
                  synch_projection_matrices_with_torch: Optional[str] = RUN,
@@ -880,15 +880,21 @@ class AutodiffComposition(Composition):
             self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     def _validate_and_parse_exclude_from_gradient_calc():
+
+        # BREADCRUMB:
+        #  VALIADTE THAT IT IS EITHER ALL OR THAT ALL ENTRIES ARE NODES
+        #  THEN MOVE REST TO _build_pytorch_representation TO VALIDATE THAT THEY BELONG TO COMP OR NESTED ONE
+
         bad_nodes = []
         non_nodes = []
         for node in self.exclude_from_gradient_calc:
             if not isinstance(node, (Mechanism, Composition)):
+                # Items in list must be only Mechanisms or Compositions
                 non_nodes.append(node)
                 continue
             if node not in self.get_all_nodes():
+                # Items in list must be a node within the Composition or one nested within it
                 bad_nodes.append(node)
-
         if bad_nodes:
             raise AutodiffCompositionError(
                 f"The following nodes specified for the '{EXCLUDE_FROM_GRADIENT_CALC}' arg "
