@@ -148,6 +148,7 @@ def construct_model(
                                               learnable=False))
 
     EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(prediction_layer, BeforeNodes(previous_state_layer, context_layer))
 
     return EGO_comp, context_layer, state_input_layer, em
 

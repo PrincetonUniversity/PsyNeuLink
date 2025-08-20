@@ -1,12 +1,15 @@
-import torch
+# Implements a torch version where the learnable projection is in the EM module rather than the context module.
+# This means that in the additional optimization steps, we are actually calling the learnable projection and
+# using the updated weights between the num optimization steps
 
 from pytorch_ego.run import run_participant
-from data.dataset import gen_data_loader
+from data.dataset import gen_data_loader_with_first
 
 from psyneulink_ego.ego_model import construct_model, run_model
 
 import pytorch_ego.utils as utils
 import numpy as np
+import torch
 
 import matplotlib.pyplot as plt
 
@@ -22,17 +25,17 @@ IS_PLOT = True
 IS_TEST = True
 IS_VERBOSE = True
 
-TOLERANCE = 1e-5
-NR_TRIALS_TO_CHECK = 10
+TOLERANCE = 1e-7
+NR_TRIALS_TO_CHECK = 20
 
 
 def main():
     utils.set_random_seed(0)
-    data_loader = gen_data_loader(TRAINING_PARADIGM, PROBS, 1)
+    data_loader = gen_data_loader_with_first(TRAINING_PARADIGM, PROBS, 1)
     fig, axes = plt.subplots(2, 1, figsize=(5, 12))
 
-    pnl_inputs = data_loader.dataset.xs.numpy().copy()
-    pnl_targets = data_loader.dataset.ys.numpy().copy()
+    pnl_inputs = data_loader.dataset.xs.numpy().copy()[1:]  # Exclude first input for PNL
+    pnl_targets = data_loader.dataset.ys.numpy().copy()[1:]  # Exclude first target for PNL
     if RUN_PSY_EGO:
         if IS_VERBOSE:
             print('running psyneulink ego')
@@ -82,8 +85,7 @@ def main():
                 pnl_results[:NR_TRIALS_TO_CHECK],
                 torch_results[:NR_TRIALS_TO_CHECK],
                 atol=TOLERANCE, rtol=TOLERANCE):
-            raise AssertionError(f"PNL and torch results differ beyond allowed tolerance of {TOLERANCE} for "
-                                 f"{NR_TRIALS_TO_CHECK} trials with learning_rate of {params_ego['learning_rate']}")
+            raise AssertionError("PNL and torch results differ beyond allowed tolerance")
         print(f"PNL and torch produce identical results w/in tolerance of {TOLERANCE} for {NR_TRIALS_TO_CHECK} trials")
 
 
