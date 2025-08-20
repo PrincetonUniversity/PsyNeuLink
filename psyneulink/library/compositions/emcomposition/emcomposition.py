@@ -220,20 +220,21 @@ that is propagated through the EMComposition.
   * *value*: a dict or tuple with three entries; if a dict, the key to each entry must be the keyword specified below,
     and if a tuple, the entries must appear in the following order:
 
-    - *FIELD_WEIGHT* `specification <EMComposition_Field_Weights>` - value must be a scalar or None. If it is a scalar,
-      the field is treated as a `retrieval key <EMComposition_Field_Weights>` in `memory <EMComposition.memory>` that
-      is weighted by that value during retrieval; if None, it is treated as a value in `memory  <EMComposition.memory>`
-      and the field cannot be reconfigured later.
+    - *FIELD_WEIGHT* `specification <EMComposition_Field_Weights>` - value must be a scalar or ``None``.
+      If it is a scalar, the field is treated as a `retrieval key <EMComposition_Field_Weights>` in `memory
+      <EMComposition.memory>` that is weighted by that value during retrieval; if ``None``, it is treated as a
+      value in `memory <EMComposition.memory>` and the field cannot be reconfigured later.
 
     - *LEARN_FIELD_WEIGHT* `specification <EMComposition_Field_Weights_Learning>` - value must be a boolean or a float;
-      if False, the field_weight for that field is not learned; if True, the field weight is learned using the
+      if ``False``, the field_weight for that field is not learned; if ``True``, the field weight is learned using the
       EMComposition's `learning_rate <EMComposition.learning_rate>`; if a float, that is used as its learning_rate.
 
-    - *TARGET_FIELD* `specification <EMComposition_Target_Fields>` - value must be a boolean; if True, the value of the
-      `retrieved_node <EMComposition.retrieved_nodes>` for that field conrtributes to the error computed during learning
-      and backpropagated through the EMComposition (see `Backpropagation of <EMComposition_Error_BackPropagation>`);
-      if False, the retrieved value for that field does not contribute to the error; however, its field_weight can still
-      be learned if that is specfified in `learn_field_weight <EMComposition_Field_Weights_Learning>`.
+    - *TARGET_FIELD* `specification <EMComposition_Target_Fields>` - value must be a boolean; if ``True``,
+      the value of the `retrieved_node <EMComposition.retrieved_nodes>` for that field conrtributes to the
+      error computed during learning and backpropagated through the EMComposition (see `Backpropagation of
+      <EMComposition_Error_BackPropagation>`); if ``False``, the retrieved value for that field does not
+      contribute to the error; however, its field_weight can still be learned if that is specfified in
+      `learn_field_weight <EMComposition_Field_Weights_Learning>`.
 
   .. _note:
      The **fields** argument is provided as a convenient and reliable way of specifying field attributes;
@@ -264,30 +265,31 @@ that is propagated through the EMComposition.
   full form of content-addressable memory. The following options can be used to specify **field_weights**:
 
     * *None* (the default): all fields except the last are treated as keys, and are assigned a weight of 1,
-      while the last field is treated as a value field (same as assiging it None in a list or tuple (see below).
+      while the last field is treated as a value field (same as assiging it ``None`` in a list or tuple (see below).
 
     * *scalar*: all fields are treated as keys (i.e., used for retrieval) and weighted equally for retrieval.  If
-      `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is True, the value is divided by the number
-      of keys, whereas if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is False, then the value
+      `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``True``, the value is divided by the number
+      of keys, whereas if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``False``, then the value
       specified is used to weight the retrieval of all keys with that value.
 
       .. note::
          At present these have the same result, since the `SoftMax` function is used to normalize the match between
          queries and keys.  However, other retrieval functions could be used in the future that would be affected by
          the value of the `field_weights <EMComposition.field_weights>`.  Therefore, it is recommended to leave
-         `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to True (the default) to ensure that
+         `normalize_field_weights <EMComposition_Normalize_Field_Weights>` set to ``True`` (the default) to ensure that
          the `field_weights <EMComposition.field_weights>` are normalized to sum to 1.0.
 
     * *list or tuple*: the number of entries must match the number of fields specified in **memory_template**, and all
-      entries must be either 0, a positive scalar value, None, or False. If all entries are identical, they are treated
-      as if a single value  was specified (see above); if the entries are non-identical, any entries that are not None
-      are used to weight the corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`),
-      including those that are 0 (though these will not be used in the retrieval process unless/until they are changed
-      to a positive value). If `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is True, all non-None
-      entries are normalized so that they sum to 1.0; if False, the raw values are used to weight the retrieval of
-      the corresponding fields. All entries of None are treated as value fields, are not assigned a `field_weight_node
-      <EMComposition.field_weight_nodes>`, and are ignored during retrieval.  These *cannot be modified* after the
-      EMComposition has been constructed (see note below).
+      entries must be either 0, a positive scalar value, ``None``, or ``False``. If all entries are identical, they
+      are treated as if a single value was specified (see above); if the entries are non-identical, any entries that
+      are not ``None`` or ``False`` are used to weight the corresponding fields during retrieval (see `Weight fields
+      <EMComposition_Processing>`), including those that are 0 (though these will not be used in the retrieval
+      process unless/until they are changed to a positive value). If `normalize_field_weights
+      <EMComposition_Normalize_Field_Weights>` is ``True``, all non-None/non-False field_weight entries are normalized
+      so that they sum to 1.0; if `normalize_field_weights <EMComposition_Normalize_Field_Weights>` is ``False``, the
+      raw values are used to weight the retrieval of the corresponding fields. All entries of ``None`` or ``False`` are
+      treated as value fields, are not assigned a `field_weight_node <EMComposition.field_weight_nodes>`, and are
+      ignored during retrieval. These *cannot be modified after the EMComposition has been constructed (see note below).
 
     .. _EMComposition_No_Field_Weights_For_Single_Key_Note:
 
@@ -300,19 +302,19 @@ that is propagated through the EMComposition.
     .. note::
        The field_weights can be modified after the EMComposition has been constructed, by assigning a new set of weights
        to the `field_weights <EMComposition.field_weights>` `Parameter`.  However, only field_weights associated with
-       key fields (i.e., that were initially assigned non-zero field_weights) can be modified; the weights for value
-       fields (i.e., ones that were initially assigned a field_weight of None) cannot be modified, and doing so raises
-       an error. If a field that will be used initially as a value may later need to be used as a key, it should be
-       assigned a `field_weight <EMComposition.field_weights>` of 0 at construction (rather than None), which can then
-       later be changed as needed.
+       key fields (i.e., that were initially assigned non-None or non-False field_weights) can be modified; the weights
+       for value fields (i.e., ones that were initially assigned a field_weight of ``None`` or ``False``) cannot be
+       modified, and doing so raises an error. If a field that will be used initially as a value but may later need
+       to be used as a key, it should be assigned a `field_weight <EMComposition.field_weights>` of ``0`` at
+       construction (rather than ``None`` or ``False``), which can then later be changed as needed.
 
     .. technical_note::
        The reason that field_weights can be modified only for keys is that `field_weight_nodes
        <EMComposition.field_weight_nodes>` are constructed only for keys, since ones for values would have no effect
        on the retrieval process and therefore are uncecessary (and can be misleading).
 
-* **learn_field_weights**:  if **enable_learning** is True, this specifies which field_weights are subject to learning,
-  and optionally the `learning_rate <EMComposition.learning_rate>` for each (see `learn_field_weights
+* **learn_field_weights**:  if **enable_learning** is ``True``, this specifies which field_weights are subject to
+  learning and optionally the `learning_rate <EMComposition.learning_rate>` for each (see `learn_field_weights
   <EMComposition_Field_Weights_Learning>` below for details of specification);  however, this has no effect if there
   is only a single key (see `note <EMComposition_No_Field_Weights_For_Single_Key_Note>` above), and a warning is issued
   if it is specified.
@@ -320,23 +322,25 @@ that is propagated through the EMComposition.
 .. _EMComposition_Normalize_Field_Weights:
 
 * **normalize_field_weights**: specifies whether the `field_weights <EMComposition.field_weights>` are normalized or
-  their raw values are used.  If True, the value of all non-None `field_weights <EMComposition.field_weights>` are
-  normalized so that they sum to 1.0, and the normalized values are used to weight (i.e., multiply) the corresponding
-  fields during retrieval (see `Weight fields <EMComposition_Processing>`). If False, the raw values of the
+  their raw values are used.  If ``True``, the value of all non-None and non-False `field_weights
+  <EMComposition.field_weights>` are normalized so that they sum to 1.0, and the normalized values are used to weight
+  (i.e., multiply) the corresponding fields during retrieval (see `Weight fields <EMComposition_Processing>`). If
+  `normalize_field_weights <EMComposition_Processing.normalize_field_weights>` is ``False``, the raw values of the
   `field_weights <EMComposition.field_weights>` are used to weight the retrieved value of each field. This setting
-  is ignored if **field_weights** is None or `concatenate_queries <EMComposition_Concatenate_Queries>` is True.
+  is ignored if **field_weights** is ``None`` or `concatenate_queries <EMComposition_Concatenate_Queries>` is ``True``.
 
 .. _EMComposition_Concatenate_Queries:
 
-* **concatenate_queries**:  specifies whether keys are concatenated before a match is made to items in memory.
-  This is False by default. It is also ignored if the `field_weights <EMComposition.field_weights>` for all keys are
-  not all equal (i.e., all non-zero weights are not equal -- see `field_weights <EMComposition_Field_Weights>`) and/or
-  `normalize_memories <EMComposition.normalize_memories>` is set to False. Setting concatenate_queries to True in either
-  of those cases issues a warning, and the setting is ignored. If the key `field_weights <EMComposition.field_weights>`
-  (i.e., all non-zero values) are all equal *and* **normalize_memories** is set to True, then setting
-  **concatenate_queries** causes a `concatenate_queries_node <EMComposition.concatenate_queries_node>` to be created
-  that receives input from all of the `query_input_nodes <EMComposition.query_input_nodes>` and passes them as a single
-  vector to the `mactch_node <EMComposition.match_nodes>`.
+* **concatenate_queries**: specifies whether keys are concatenated before a match is made to items in memory.
+  This is ``False`` by default. It is also ignored if the `field_weights <EMComposition.field_weights>` for
+  all keys are not all equal (i.e., all non-zero weights are not equal -- see `field_weights
+  <EMComposition_Field_Weights>`) and/or `normalize_memories <EMComposition.normalize_memories>` is set to ``False``.
+  Setting concatenate_queries to ``True`` in either of those cases issues a warning, and the setting is ignored.
+  If the key `field_weights <EMComposition.field_weights>` (i.e., all non-None and non-False values) are all equal
+  *and* **normalize_memories** is set to ``True``, then setting **concatenate_queries** causes a
+  `concatenate_queries_node <EMComposition.concatenate_queries_node>` to be created that receives input from all of
+  the `query_input_nodes <EMComposition.query_input_nodes>` and passes them as a single vector to the `mactch_node
+  <EMComposition.match_nodes>`.
 
       .. note::
          While this is computationally more efficient, it can affect the outcome of the `matching process
@@ -345,7 +349,7 @@ that is propagated through the EMComposition.
 
       .. note::
          All `query_input_nodes <EMComposition.query_input_nodes>` and `retrieved_nodes <EMComposition.retrieved_nodes>`
-         are always preserved, even when `concatenate_queries <EMComposition.concatenate_queries>` is True, so that
+         are always preserved, even when `concatenate_queries <EMComposition.concatenate_queries>` is ``True``, so that
          separate inputs can be provided for each key, and the value of each key can be retrieved separately.
 
 .. _EMComposition_Retrieval_Storage:
@@ -376,7 +380,7 @@ that is propagated through the EMComposition.
     <EMComposition.softmax_gain>` parameter of the `SoftMax` function of the EMComposition's `softmax_node
     <EMComposition.softmax_node>`.
 
-  If *None* is specified, the default value for the `SoftMax` function is used.
+  If ``None`` is specified, the default value for the `SoftMax` function is used.
 
 .. _EMComposition_Softmax_Threshold:
 
@@ -400,9 +404,9 @@ that is propagated through the EMComposition.
   .. warning::
      Use of the *ARG_MAX* and *PROBABILISTIC* options is not compatible with learning, as these implement a discrete
      choice and thus are not differentiable. Constructing an EMComposition with **softmax_choice** set to either of
-     these options and **learn_field_weights** set to True (or a list with any True entries) will generate a warning, and
-     calling the EMComposition's `learn <Composition.learn>` method will generate an error; it must be changed to
-     *WEIGHTED_AVG* to execute learning.
+     these options and **learn_field_weights** set to ``True` (or a list with any ``True`` entries) will generate a
+     warning calling the EMComposition's `learn <Composition.learn>` method will generate an error; it must be
+     changed to *WEIGHTED_AVG* to execute learning.
 
   .. technical_note::
      The *WEIGHTED_AVG* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
@@ -414,13 +418,13 @@ that is propagated through the EMComposition.
 * **memory_decay_rate**: specifies the rate at which items in the EMComposition's memory decay;  the default rate
   is *AUTO*, which sets it to  1 / `memory_capacity <EMComposition.memory_capacity>`, such that the oldest memories
   are the most likely to be replaced when `memory_capacity <EMComposition.memory_capacity>` is reached.  If
-  **memory_decay_rate** is set to 0 None or False, then memories do not decay and, when `memory_capacity
+  **memory_decay_rate** is set to 0 ``None`` or ``False``, then memories do not decay and, when `memory_capacity
   <EMComposition.memory_capacity>` is reached, the weakest memories are replaced, irrespective of order of entry.
 
 .. _EMComposition_Purge_by_Weight:
 
 * **purge_by_field_weight**: specifies whether `field_weights <EMComposition.field_weights>` are used in determining
-  which memory entry is replaced when a new memory is `stored <EMComposition_Storage>`.  If True, the norm of each
+  which memory entry is replaced when a new memory is `stored <EMComposition_Storage>`.  If ``True``, the norm of each
   entry is multiplied by its `field_weight <EMComposition_Field_Weighting>` to determine which entry is the weakest and
   will be replaced.
 
@@ -431,13 +435,13 @@ that is propagated through the EMComposition.
 
 EMComposition supports two forms of learning: error backpropagation through the entire Composition, and the learning
 of `field_weights <EMComposition.field_weights>` within it. Learning is enabled by setting the **enable_learning**
-argument of the EMComposition's constructor to True, and optionally specifying the **learn_field_weights** argument
-(as detailed below). If **enable_learning** is False, no learning of any kind occurs; if it is True, then both forms
-of learning are enable.
+argument of the EMComposition's constructor to ``True``, and optionally specifying the **learn_field_weights** argument
+(as detailed below). If **enable_learning** is ``False``, no learning of any kind occurs; if it is ``True``, then both
+forms of learning are enable.
 
 .. _EMComposition_Error_BackPropagation
 
-*Backpropagation of error*.  If **enable_learning** is True, then the values retrieved from `memory
+*Backpropagation of error*.  If **enable_learning** is ``True``, then the values retrieved from `memory
 <EMComposition.memory>` when the EMComposition is executed during learning can be used for error computation
 and backpropagation through the EMComposition to its inputs.  By default, the values of all of its `retrieved_nodes
 <EMComposition.retrieved_nodes>` are included. For those that do not project to an outer Composition (i.e., one in
@@ -449,26 +453,28 @@ Retrieved_nodes that *do* project to an outer Composition receive their errors f
 backpropagated through the EMComposition. Fields can be selecdtively specified for learning in the **fields** argument
 or the **target_fields** argument of the EMComposition's constructor, as detailed below.
 
-*Field Weight Learning*.  If **enable_learning** is True, then the `field_weights <EMComposition.field_weights>` can
-be learned, by specifing these either in the **fields** argument or the **learn_field_weights** argument of the
-EMComposition's constructor, as detailed below. Learning field_weights implements a function comparable to the learning
-in an attention head of the `Transformer <https://arxiv.org/abs/1706.03762>`_ architecture, although at present the
-field can only be scalar values rather than vectors or matrices, and it cannot receive input. These capabilities will
-be added in the future.
+*Field Weight Learning*.  If **enable_learning** is ``True``, then the `field_weights <EMComposition.field_weights>`
+can be learned, by specifing these either in the **fields** argument or the **learn_field_weights** argument of
+the EMComposition's constructor, as detailed below.
+
+.. note::
+   Learning field_weights implements a function comparable to the learning in an attention head of the `Transformer
+   <https://arxiv.org/abs/1706.03762>`_ architecture, although at present the field can only be scalar values rather
+   than vectors or matrices, and it cannot receive input. These capabilities will be added in the future.
 
 The following arguments of the EMComposition's constructor can be used to configure learning:
 
-* **enable_learning**: specifies whether any learning is enabled for the EMComposition.  If False,
-  no learning occurs; ` if True, then both error backpropagation and learning of `field_weights
-  <EMComposition.field_weights>` can occur. If **enable_learning** is True, **use_gating_for_weighting**
-  must be False (see `note <EMComposition_Gating_For_Weighting>`).
+* **enable_learning**: specifies whether any learning is enabled for the EMComposition.  If ``False``,
+  no learning occurs; if ``True``, then both error backpropagation and learning of `field_weights
+  <EMComposition.field_weights>` can occur. If **enable_learning** is ``True``, **use_gating_for_weighting**
+  must be ``False`` (see `note <EMComposition_Gating_For_Weighting>`).
 
 .. _EMComposition_Target_Fields:
 
 * **target_fields**: specifies which `retrieved_nodes <EMComposition.retrieved_nodes>` are used to compute
   errors, and propagate these back through the EMComposition to its `query <EMComposition.query_input_nodes>` and
-  `value_input_nodes <EMComposition.value_input_nodes>`. If this is None (the default), all `retrieved_nodes
-  <EMComposition.retrieved_nodes>` are used;  if it is a list or tuple, then it must have the same number of entries
+  `value_input_nodes <EMComposition.value_input_nodes>`. If this is ``None`` (the default), all `retrieved_nodes
+  <EMComposition.retrieved_nodes>` are used; if it is a list or tuple, then it must have the same number of entries
   as there are fields, and each entry must be a boolean specifying whether the corresponding `retrieved_nodes
   <EMComposition.retrieved_nodes>` participate in learning, and errors are computed only for those nodes. This can
   also be specified in a dict for the **fields** argument (see `fields <EMComposition_Field_Specification_Dict>`).
@@ -482,14 +488,15 @@ The following arguments of the EMComposition's constructor can be used to config
   * *None*: all field_weights are subject to learning, and the `learning_rate <EMComposition.learning_rate>` for the
     EMComposition is used as the learning_rate for all field_weights.
 
-  * *bool*: If True, all field_weights are subject to learning, and the `learning_rate <EMComposition.learning_rate>`
-    for the EMComposition is used as the learning rate for all field_weights; if False, no field_weights are
-    subject to learning, regardless of `enable_learning <EMComposition.enable_learning>`.
+  * *bool*: If ``True``, all field_weights are subject to learning, and the `learning_rate
+    <EMComposition.learning_rate>` for the EMComposition is used as the learning rate for all
+    field_weights; if ``False``, no field_weights are subject to learning, regardless of `enable_learning
+    <EMComposition.enable_learning>`.
 
   * *list* or *tuple*: must be the same length as the number of fields specified in the memory_template, and each entry
-    must be either True, False or a positive scalar value.  If True, the corresponding field_weight is subject to
-    learning and the `learning_rate <EMComposition.learning_rate>` for the EMComposition is used to specify the
-    learning_ rate for that field; if False, the corresponding field_weight is not subject to learning; if a scalar
+    must be either ``True``, ``False`` or a positive scalar value.  If ``True``, the corresponding field_weight is subject
+    to learning and the `learning_rate <EMComposition.learning_rate>` for the EMComposition is used to specify the
+    learning_ rate for that field; if ``False``, the corresponding field_weight is not subject to learning; if a scalar
     value is specified, it is used as the `learning_rate` for that field.
 
 * **learning_rate**: specifies the learning_rate for any `field_weights <EMComposition.field_weights>` for which a
@@ -597,7 +604,7 @@ When the EMComposition is executed, the following sequence of operations occur
   the result of which is possed to the corresponding `match_node <EMComposition.match_nodes>`. By default, the distance
   is computed as the normalized dot product (i.e., between the normalized query vector and the normalized key for the
   corresponding `field <EMComposition_Entries_and_Fields>`, that is comparable to using cosine similarity). However,
-  if `normalize_memories <EMComposition.normalize_memories>` is set to False, just the raw dot product is computed.
+  if `normalize_memories <EMComposition.normalize_memories>` is set to ``False``, just the raw dot product is computed.
   The distance can also be customized by specifying a different `function <MappingProjection.function>` for the
   `MappingProjection` to the `match_node <EMComposition.match_nodes>`. The result is assigned as the `value
   <Mechanism_Base.value>` of the corresponding `match_node <EMComposition.match_nodes>`.
@@ -607,25 +614,25 @@ When the EMComposition is executed, the following sequence of operations occur
 * **Weight distances**. If `field weights <EMComposition_Field_Weights>` are specified, then the distance computed
   by the `MappingProjection` to each `match_node <EMComposition.match_nodes>` is multiplied by the corresponding
   `field_weight <EMComposition.field_weights>` using the `field_weight_node <EMComposition.field_weight_nodes>`.
-  By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is False), this is done using
+  By default (if `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``False``), this is done using
   the `weighted_match_nodes <EMComposition.weighted_match_nodes>`, each of which receives a Projection from a
   `match_node <EMComposition.match_nodes>` and the corresponding `field_weight_node <EMComposition.field_weight_nodes>`
   and multiplies them to produce the weighted distance for that field as its output.  However, if
-  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is True, the `field_weight_nodes` are implemented
-  as `GatingMechanisms <GatingMechanism>`, each of which uses its `field weight <EMComposition.field_weights>` as a
-  `GatingSignal <GatingSignal>` to output gate (i.e., multiplicatively modulate the output of) the corresponding
-  `match_node <EMComposition.match_nodes>`. In this case, the `weighted_match_nodes` are not implemented,
-  and the output of the `match_node <EMComposition.match_nodes>` is passed directly to the `combined_matches_node
-  <EMComposition.combined_matches_node>`.
+  `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` is ``True``, the `field_weight_nodes` are
+  implemented as `GatingMechanisms <GatingMechanism>`, each of which uses its `field weight
+  <EMComposition.field_weights>` as a `GatingSignal <GatingSignal>` to output gate (i.e., multiplicatively modulate
+  the output of) the corresponding `match_node <EMComposition.match_nodes>`. In this case, the `weighted_match_nodes
+  are not implemented, and the output of the `match_node <EMComposition.match_nodes>` is passed directly to the
+  `combined_matches_node <EMComposition.combined_matches_node>`.
 
 
   .. _EMComposition_Gating_For_Weighting:
   .. note::
-     Setting `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` to True reduces the size and
+     Setting `use_gating_for_weighting <EMComposition.use_gating_for_weighting>` to ``True`` reduces the size and
      complexity of the EMComposition, by eliminating the `weighted_match_nodes <EMComposition.weighted_match_nodes>`.
      However, doing to precludes the ability to learn the `field_weights <EMComposition.field_weights>`,
      since `GatingSignals <GatingSignal>` are  `ModulatorySignal>` that cannot be learned.  If learning is required,
-     then `use_gating_for_weighting` should be set to False.
+     then `use_gating_for_weighting` should be set to ``False``.
 
 * **Combine distances**.  If `field weights <EMComposition_Field_Weights>` are used to specify more than one `key field
   <EMComposition_Fields>`, then the (weighted) distances computed for each field (see above) are summed across fields
@@ -642,8 +649,8 @@ When the EMComposition is executed, the following sequence of operations occur
   to adaptively set the gain based on the summed distance (i.e., the output of the `combined_matches_node
   <EMComposition.combined_matches_node>`;  if *CONTROL* is specified, then the summed distance is monitored by a
   `ControlMechanism` that uses the `adapt_gain <Softmax.adapt_gain>` method of the `SoftMax` Function to modulate its
-  `gain <Softmax.gain>` parameter; if None is specified, the default value of the `Softmax` Function is used as the
-  `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
+  `gain <Softmax.gain>` parameter; if ``None`` is specified, the default value of the `Softmax` Function is used as
+  the `gain <Softmax.gain>` parameter (see `Softmax_Gain <EMComposition_Softmax_Gain>` for additional  details).
 
 .. _EMComposition_Retreived_Values:
 
@@ -652,8 +659,8 @@ When the EMComposition is executed, the following sequence of operations occur
   <EMComposition.retrieved_nodes>` to compute the retrieved value for each field, which is assigned as the value
   of the corresponding `retrieved_node <EMComposition.retrieved_nodes>`.
 
-* **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is True, then each of the memories is decayed
-  by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
+* **Decay memories**.  If `memory_decay <EMComposition.memory_decay>` is ``True``, then each of the memories is
+  decayed by the amount specified in `memory_decay_rate <EMComposition.memory_decay_rate>`.
 
     .. technical_note::
        This is done by multiplying the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection` from
@@ -669,7 +676,7 @@ When the EMComposition is executed, the following sequence of operations occur
   adds the inputs to each field (i.e., values in the `query_input_nodes <EMComposition.query_input_nodes>` and
   `value_input_nodes <EMComposition.value_input_nodes>`) as a new entry in `memory <EMComposition.memory>`,
   replacing the weakest one. The weakest memory is the one with the lowest norm, multipled  by its `field_weight
-  <EMComposition.field_weights>` if `purge_by_field_weight <EMComposition.purge_by_field_weight>` is True.
+  <EMComposition.field_weights>` if `purge_by_field_weight <EMComposition.purge_by_field_weight>` is ``True``.
 
     .. technical_note::
        The norm of each entry is calculated by adding the input vectors to the the corresponding rows of
@@ -699,7 +706,7 @@ COMMENT
 *Learning*
 ~~~~~~~~~~
 
-If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is True, then errors
+If `learn <Composition.learn>` is called, `enable_learning <EMComposition.enable_learning>` is ``True``, then errors
 will be computed for each of the `retrieved_nodes <EMComposition.retrieved_nodes>` that is specified for learning
 (see `Learning <EMComposition_Learning_Creation>` for details about specification). These errors are derived either
 from any errors backprpated to the EMComposition from an outer Composition in which it is `nested <Composition_Nested>`,
@@ -713,7 +720,7 @@ If `learn_field_weights` is also specified, then the corresponding `field_weight
 modified to minimize the error passed to the EMComposition retrieved nodes that have been specified for learning,
 using the `learning_rate <EMComposition.learning_rate>` for them in `learn_field_weights
 <EMComposition.learn_field_weights>` or the default `learning rate <EMComposition.learning_rate>` for the EMComposition.
-If `enable_learning <EMComposition.enable_learning>` is False (or `run <Composition.run>` is called rather than
+If `enable_learning <EMComposition.enable_learning>` is ``False`` (or `run <Composition.run>` is called rather than
 `learn <Composition.learn>`, then the `field_weights <EMComposition.field_weights>` are not modified, and no error
 signals are passed to the nodes that project to  its `query_input_nodes <EMComposition.query_input_nodes>` and
 `value_input_nodes <EMComposition.value_input_nodes>`.
@@ -862,7 +869,7 @@ the following specifies one field of length 3 and another of length 1::
 
 Note that the examples above generate a warning about the use of zeros to initialize the memory. This is
 because the default value for **memory_fill** is ``0``, and the default value for `normalize_memories
-<EMComposition.normalize_memories>` is True, which will cause a divide by zero warning when memories are
+<EMComposition.normalize_memories>` is ``True``, which will cause a divide by zero warning when memories are
 normalized. While this doesn't crash, it will result in nan's that are likely to cauase problems elsewhere.
 This can be avoided by specifying a non-zero  value for **memory_fill**, such as small number::
 
@@ -956,8 +963,8 @@ COMMENT:
 Note that in this case, the `concatenate_queries_node <EMComposition.concatenate_queries_node>` has been replaced by
 a pair of `weighted_match_node <EMComposition.weighted_match_node>`, one for each key field.  This is because
 the keys were assigned different weights;  when they are assigned equal weights, or if no weights are specified,
-and `normalize_memories <EMComposition.normalize_memories>` is `True`, then the keys are concatenated and are
-concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as `False`
+and `normalize_memories <EMComposition.normalize_memories>` is ``True``, then the keys are concatenated and are
+concatenated for efficiency of processing.  This can be suppressed by specifying `concatenate_queries` as ``False``
 (see `concatenate_queries <EMComposition_Concatenate_Queries>` for additional details).
 COMMENT
 
@@ -1308,7 +1315,7 @@ class EMComposition(AutodiffComposition):
 
     enable_learning : bool : default True
         specifies whether learning is enabled for the EMCComposition (see `Learning <EMComposition_Learning_Creation>`
-        for additional details); **use_gating_for_weighting** must be False.
+        for additional details); **use_gating_for_weighting** must be ``False``.
 
     target_fields : list[bool]: default None
         specifies whether a learning pathway is constructed for each `field <EMComposition_Entries_and_Fields>`
@@ -1323,7 +1330,7 @@ class EMComposition(AutodiffComposition):
             specifies whether to use a `LearningMechanism` to store entries in `memory <EMComposition.memory>`.
             If False, a method on EMComposition is used rather than a LearningMechanism. This is meant for
             debugging, and precludes use of `import_composition <Composition.import_composition>` to integrate
-            the EMComposition into another Composition;  to do so, use_storage_node must be True (default).
+            the EMComposition into another Composition;  to do so, use_storage_node must be ``True`` (default).
 
     use_gating_for_weighting : bool : default False
         specifies whether to use output gating to weight the `match_nodes <EMComposition.match_node>` instead of
@@ -1448,9 +1455,9 @@ class EMComposition(AutodiffComposition):
     concatenate_queries_node : ProcessingMechanism
         `ProcessingMechanism` that concatenates the inputs to `query_input_nodes <EMComposition.query_input_nodes>`
         into a single vector used for the matching processing if `concatenate keys <EMComposition.concatenate_queries>`
-        is True. This is not created if the **concatenate_queries** argument to the EMComposition's constructor is
-        False or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only one
-        query_input_node. This node is named *CONCATENATE_QUERIES*
+        is ``True``. This is not created if the **concatenate_queries** argument to the EMComposition's constructor is
+        ``False`` or is overridden (see `concatenate_queries <EMComposition_Concatenate_Queries>`), or there is only
+        one query_input_node. This node is named *CONCATENATE_QUERIES*
 
     match_nodes : list[ProcessingMechanism]
         `ProcessingMechanisms <ProcessingMechanism>` that compute the dot product of each query and the key stored in
@@ -1468,7 +1475,7 @@ class EMComposition(AutodiffComposition):
         `ProcessingMechanisms <ProcessingMechanism>` that combine the `field weight <EMComposition.field_weights>`
         for each `key field <EMComposition_Fields>` with the dot product computed by the corresponding the
         `match_node <EMComposition.match_nodes>`. These are only implemented if `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is False (see `Weight distances <EMComposition_Field_Weighting>`
+        <EMComposition.use_gating_for_weighting>` is ``False`` (see `Weight distances <EMComposition_Field_Weighting>`
         for details), and are named the same as the corresponding `query_input_nodes <EMComposition.query_input_nodes>`
         appended with the suffix *[WEIGHTED MATCH]*.
 
@@ -1476,7 +1483,7 @@ class EMComposition(AutodiffComposition):
         `ProcessingMechanism` that receives the weighted distances from the `weighted_match_nodes
         <EMComposition.weighted_match_nodes>` if more than one `key field <EMComposition_Fields>` is specified
         (or directly from `match_nodes <EMComposition.match_nodes>` if `use_gating_for_weighting
-        <EMComposition.use_gating_for_weighting>` is True), and combines them into a single vector that is passed
+        <EMComposition.use_gating_for_weighting>` is ``True``), and combines them into a single vector that is passed
         to the `softmax_node <EMComposition.softmax_node>` for retrieval. This node is named *COMBINE MATCHES*.
 
     softmax_node : list[ProcessingMechanism]
