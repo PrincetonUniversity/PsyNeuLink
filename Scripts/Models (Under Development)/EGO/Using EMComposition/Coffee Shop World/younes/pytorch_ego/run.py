@@ -28,7 +28,7 @@ def run_participant(params, data_loader, len_memory=2):
             pred_em = em_module(prev_state, context)
             if i == 0:
                 pred_init = pred_em.detach().cpu().numpy().copy()
-                context_to_store = em_module.context_query.detach().cpu()
+
 
             optimizer.zero_grad()  # Zero the gradients before each optimization step.
               # retrieve the next state prediction from the EM module.
@@ -44,7 +44,7 @@ def run_participant(params, data_loader, len_memory=2):
         #     context_to_store = em_module.context_in(context)
 
         # with torch.no_grad():# After optimization, write the current state to the EM module and update the context.
-
+        context_to_store = em_module.context_query.detach().cpu()
         em_module.write(prev_state, context_to_store, x)
         context = context_module(x)
         prev_state = x.detach().cpu()

@@ -85,10 +85,10 @@ def construct_model(
         concatenate_queries=concatenate_queries,
         enable_learning=enable_learning,
         learning_rate=learning_rate,
-        device=device)
+        device=device,
+        store_on_optimization='last')
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
-    # prediction_layer.exclude_from_gradient_calc = AFTER
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
@@ -171,7 +171,10 @@ def run_model(model,
                 synch_node_values_with_torch=RUN,
                 synch_results_with_torch=RUN,
                 execute_in_additional_optimizations={model.nodes['PREDICTION']: None,
-                                                     model.nodes['EM']: None}
+                                                     model.nodes['EM']: None,
+                                                     model.nodes['CONTEXT']: None,
+                                                     model.nodes['PREVIOUS STATE']: None},
+
                 )
     # model.learn(inputs={params_ego['state_input_layer_name']: trials},
     #             learning_rate=params_ego['learning_rate'],

@@ -235,9 +235,14 @@ class CompositionRunner():
                                 if (do_additional_optimizations and node.mechanism not in
                                         self._composition._nodes_to_execute_in_additional_optimizations):
                                     continue
-                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                                if node.mechanism.name != 'STORE':
-                                    print(f"  {node.output}")
+                                # ATTENTION: This is a hack to force execution of CONTEXT and PREVIOUS STATE on
+                                # the last optimization step. Needs to be removed and API changed to allow
+                                # this for arbitrary nodes
+                                if (node.mechanism.name != 'CONTEXT' and node.mechanism.name != 'PREVIOUS STATE') or \
+                                    optimization_num == optimizations_per_minibatch-1:
+                                    node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                                    if node.mechanism.name != 'STORE':
+                                        print(f"  {node.output}")
 
                         # BREADCRUMB PRINT:
                         print(f"\n===================================================================\n")
