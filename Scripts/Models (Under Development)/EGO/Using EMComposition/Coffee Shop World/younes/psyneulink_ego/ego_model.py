@@ -58,8 +58,6 @@ def construct_model(
                                       function=Tanh(gain=1),
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
-    context_layer.exclude_from_gradient_calc = AFTER
-    previous_state_layer.exclude_from_gradient_calc = AFTER
 
     em = EMComposition(
         name=em_name,
@@ -85,10 +83,11 @@ def construct_model(
         concatenate_queries=concatenate_queries,
         enable_learning=enable_learning,
         learning_rate=learning_rate,
+        # BREADCRUMB: 8/20/25 THIS SHOULD CAUSE AN ERROR:
+        exclude_from_gradient_calc=[context_layer, previous_state_layer],
         device=device)
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
-    # prediction_layer.exclude_from_gradient_calc = AFTER
 
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
@@ -139,6 +138,7 @@ def construct_model(
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=loss_spec,
+                                   exclude_from_gradient_calc=[context_layer, previous_state_layer],
                                    name=model_name,
                                    device=device)
 

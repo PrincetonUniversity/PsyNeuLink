@@ -3178,7 +3178,6 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink import EXCLUDE_FROM_GRADIENT_CALC
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
@@ -12091,6 +12090,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if execution_mode is not pnlvm.ExecutionMode.PyTorch or not isinstance(self, AutodiffComposition):
             # Can only use EXCLUDE_FROM_GRADIENT_CALC for AutodiffComposition learning in PyTorch mode
+            from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
             affected_nodes = [node for node in [self] + self.get_all_nodes()
                               if (hasattr(node, EXCLUDE_FROM_GRADIENT_CALC) and node.exclude_from_gradient_calc)]
             if affected_nodes:
