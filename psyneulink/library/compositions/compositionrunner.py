@@ -235,6 +235,7 @@ class CompositionRunner():
                                 if (do_additional_optimizations and node.mechanism not in
                                         self._composition._nodes_to_execute_in_additional_optimizations):
                                     continue
+                                # BREADCRUMB HACK:
                                 # ATTENTION: This is a hack to force execution of CONTEXT and PREVIOUS STATE on
                                 # the last optimization step. Needs to be removed and API changed to allow
                                 # this for arbitrary nodes
