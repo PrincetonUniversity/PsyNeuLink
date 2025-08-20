@@ -1296,10 +1296,16 @@ class AutodiffComposition(Composition):
         bad_nodes = [node.name for node in self._get_all_nodes()
                      if isinstance(node, Mechanism) and hasattr(node, EXCLUDE_FROM_GRADIENT_CALC)]
         if bad_nodes:
+            # BREADCRUMB: REPLACE WITH THIS VERSION ONCE EXCLUDE_FROM_GRADIENT_CALC IS IMPLEMENTED AS A PARAMETER
+            #             WITH A setter() AND AS ARG IN learn() AND _build_pytorch_representation()
+            # warnings.warn(
+            #     f"The following node(s) in '{self.name} have an '{EXCLUDE_FROM_GRADIENT_CALC}' attribute. "
+            #     f"This should be specified only on the Composition (in its constructor, a call to its learn() method, "
+            #     f"or added directly to its '{EXCLUDE_FROM_GRADIENT_CALC}' Parameter; "
+            #     f"specifications made directly on Mechanisms are ignored: {', '.join(bad_nodes)}.")
             warnings.warn(
                 f"The following node(s) in '{self.name} have an '{EXCLUDE_FROM_GRADIENT_CALC}' attribute. "
-                f"This should be specified only on the Composition (in its constructor, a call to its learn() method, "
-                f"or added directly to its '{EXCLUDE_FROM_GRADIENT_CALC}' Parameter; "
+                f"This should be specified only in the constructor for the Composition; "
                 f"specifications made directly on Mechanisms are ignored: {', '.join(bad_nodes)}.")
 
     def _instantiate_optimizer(self, learning_rate, optimizer_params, context):

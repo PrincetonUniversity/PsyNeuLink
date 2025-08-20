@@ -1761,8 +1761,8 @@ class EMComposition(AutodiffComposition):
         if kwargs:
             bad_args = [arg for arg in kwargs if arg not in {'device'}]
             if bad_args:
-                raise EMCompositionError(f"The following arguments cannot be used in the constructor to '{name}', "
-                                         f"since it is an EMComposition which cannot be modified: "
+                raise EMCompositionError(f"The following arguments cannot be used in the constructor to "
+                                         f"'{name}', since it is an EMComposition which cannot be modified: "
                                          f"{', '.join(bad_args)}.")
 
         # Construct memory --------------------------------------------------------------------------------

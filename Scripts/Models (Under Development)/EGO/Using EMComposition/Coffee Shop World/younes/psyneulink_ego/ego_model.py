@@ -83,8 +83,6 @@ def construct_model(
         concatenate_queries=concatenate_queries,
         enable_learning=enable_learning,
         learning_rate=learning_rate,
-        # BREADCRUMB: 8/20/25 THIS SHOULD CAUSE AN ERROR:
-        exclude_from_gradient_calc=[context_layer, previous_state_layer],
         device=device)
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
