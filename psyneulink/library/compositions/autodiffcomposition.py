@@ -825,7 +825,6 @@ class AutodiffComposition(Composition):
         self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
-        self.execute_in_additional_optimizations = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
@@ -1163,6 +1162,7 @@ class AutodiffComposition(Composition):
         # Get pytorch_representation (assigned in constructor for PytorchCompositionWrapper)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
+        # BREADCRUMB: MOVE THIS TO PytorchCompositionWrapper __init__(), since it belongs to that
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),

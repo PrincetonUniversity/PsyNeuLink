@@ -303,6 +303,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
+        self._validate_and_parse_additional_optimizations(
+            self.composition.execute_in_additional_optimizations,
+            self.composition.optimizations_per_minibatch)
+
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
 
@@ -1345,19 +1349,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
-    # BREADCRUMB: MOVE THIS TO _build_pytorch_representation (ALONG WITH exclude_from_gradient_calc)
     def _validate_and_parse_additional_optimizations(self, user_specs:dict, num_optimizations):
-        """Validate entries of dict specified for execute_in_additional_optimizations argument of learn()
+        """Validate entries of dict specified for execute_in_additional_optimizations in Composition or learn()
         Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
         values to use during multiple optimizations, or None if no Parameters should be modified for that node.
         """
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
         if not isinstance(user_specs, dict):
-            raise CompositionError(f"Specification for 'execute_in_additional_optimizations' arg in learn() method of "
-                                   f"of '{self.name}' must be a dict: {user_specs}.")
-        execute_in_additional_optimizations = {NUM_OPTIMIZATIONS: num_optimizations}
+            raise AutodiffCompositionError(f"Specification for 'execute_in_additional_optimizations' arg in learn() method of "
+                                           f"of '{self.name}' must be a dict: {user_specs}.")
+        execute_in_additional_optimizations = {}
         nodes_to_exclude = set()
         bad_nodes = []
-        bad_param = []
+        bad_opt_specs = []
 
         for node, opt_spec in user_specs.items():
             if node not in self._get_all_nodes() + self._get_nested_compositions():
@@ -1417,7 +1422,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Remove any nodes specified for exclusion
         # Note: do this after the for loop above since
         #       some nodes might have been added from a nested Composition before being identified for exclusion
-        (execute_in_additional_optimizations.pop(node) for node in node in nodes_to_exclude)
+        (execute_in_additional_optimizations.pop(node) for node in nodes_to_exclude)
+        if execute_in_additional_optimizations:
+            # If any valid nodes have been specified,
+            #   add num_optimizations to dict for reference in learn() in case optimizations_for_minibatch is changed
+            execute_in_additional_optimizations[NUM_OPTIMIZATIONS] = num_optimizations
         self._execute_in_additional_optimizations = execute_in_additional_optimizations
 
     # # MODIFIED 8/20/25 OLD:
@@ -1678,6 +1687,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Return a dictionary {output_node:value} of output values for the model
         """
 
+        def get_nodes_to_execute_for_optimization(opt_num:int, exec_set:set)->set:
+            # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
+            addition_opts_dict = self._execute_in_additional_optimizations
+            nodes_to_execute = {node for node in addition_opts_dict
+                                if opt_num in addition_opts_dict[node]}
+            for torch_node in exec_set:
+                node = torch_node.mechanism if isinstance(torch_node, Mechanism) else torch_node.composition
+                if (node in nodes_to_execute):
+                    exec_set -= {torch_node}
+            return exec_set
+
         # Store the batch_size we are currently using
         inp = inputs[list(inputs.keys())[0]]
         if type(inp) is torch.Tensor:
@@ -1726,16 +1746,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #     current_exec_set = {node for node in current_exec_set
                 #                         if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
                 # MODIFIED 8/20/25 NEW:
-                if self.composition._execute_in_additional_optimizations:
+                if self._execute_in_additional_optimizations:
                     # If _execute_in_additional_optimizations is specified,
                     #   only execute nodes specified for curent optmization_num
-                    addition_opts_dict = self.composition._execute_in_additional_optimizations
-                    nodes_to_execute = {node for node in addition_opts_dict
-                                        if optimization_num in addition_opts_dict[node]}
-                    for torch_node in current_exec_set.copy():
-                        node = torch_node.mechanism if isinstance(torch_node, Mechanism) else torch_node.composition
-                        if (node in nodes_to_execute):
-                            current_exec_set -= {torch_node}
+                    current_exec_set = get_nodes_to_execute_for_optimization(optimization_num, current_exec_set.copy())
                 # MODIFIED 8/20/25 END
 
                 for node in current_exec_set:
