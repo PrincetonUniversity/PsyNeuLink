@@ -61,6 +61,8 @@ LEARN_OVERRIDE = 'learn_override'
 LEARN_METHOD = 'learn() method'
 CONSTRUCTOR = 'constructor'
 
+NUM_OPTIMIZATIONS = 'num_optimizations'
+
 TorchParam = namedtuple("TorchParam", "name slice")
 TorchParamTuple = namedtuple('ParamTuple', "orig_spec, value")
 ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
@@ -1343,6 +1345,113 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
+    # BREADCRUMB: MOVE THIS TO _build_pytorch_representation (ALONG WITH exclude_from_gradient_calc)
+    def _validate_and_parse_additional_optimizations(self, user_specs:dict, num_optimizations):
+        """Validate entries of dict specified for execute_in_additional_optimizations argument of learn()
+        Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
+        values to use during multiple optimizations, or None if no Parameters should be modified for that node.
+        """
+        if not isinstance(user_specs, dict):
+            raise CompositionError(f"Specification for 'execute_in_additional_optimizations' arg in learn() method of "
+                                   f"of '{self.name}' must be a dict: {user_specs}.")
+        execute_in_additional_optimizations = {NUM_OPTIMIZATIONS: num_optimizations}
+        nodes_to_exclude = set()
+        bad_nodes = []
+        bad_param = []
+
+        for node, opt_spec in user_specs.items():
+            if node not in self._get_all_nodes() + self._get_nested_compositions():
+                # Node is not in the Composition or any nested within it
+                bad_nodes.append(node)
+                continue
+            if opt_spec in {False, EXCLUDE, None}:
+                # Deal with exclusion outside for loop (see comment below)
+                nodes_to_exclude.add(node)
+                continue
+            if isinstance(node, Composition):
+                # Add Composition (needed for forward() method
+                execute_in_additional_optimizations[node] = opt_spec
+                # Add all nodes within that Composition and any nested within in
+                execute_in_additional_optimizations.update({nested_node: opt_spec
+                                                            for nested_node in node._get_all_nodes()})
+            else:
+                execute_in_additional_optimizations[node] = opt_spc
+                if node not in self.nodes:
+                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
+                    try:
+                        comp = next(item[1] for item in self._get_nested_nodes() if node is item[0])
+                    except StopIteration:
+                        assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
+                    execute_in_additional_optimizations[comp] = opt_spec
+
+            # Validate opt_spec
+            if not (opt_spec in {FIRST, LAST, ALL, True}
+                    or isinstance(opt_spec, (int, range) and opt_spec.stop < num_optimizations)
+                    or (isinstance(opt_spec, list)
+                        and all(isinstance(spec, int) for spec in opt_spec)
+                        and (max < num_optimizations))):
+                bad_opt_specs.append(opt_spec)
+                continue
+
+            # parse opt_spec
+            if opt_spec == FIRST:
+                opt_spec = [0]
+            if opt_spec == LAST:
+                opt_spec = [num_optimizations-1]
+            elif opt_spec in {True, ALL}:
+                opt_spec = range(0, num_optimizations)
+
+            execute_in_additional_optimizations[node] = opt_spec
+
+        if bad_nodes:
+            raise CompositionError(
+                f"The following nodes were specified in the 'execute_in_additional_optimizations' arg of learn() method"
+                f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
+                f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
+        if bad_opt_specs:
+            raise CompositionError(
+                f"The following entries in 'execute_in_additional_optimizations' for '{self.name}' have a bad "
+                f"value, which must be an appropriate keyword ('FIRST', 'LAST', 'EXCLUDE', or 'ALL'), a bool, "
+                f"or a numeric value: {', '.join(bad_opt_specs)}.")
+
+        # Remove any nodes specified for exclusion
+        # Note: do this after the for loop above since
+        #       some nodes might have been added from a nested Composition before being identified for exclusion
+        (execute_in_additional_optimizations.pop(node) for node in node in nodes_to_exclude)
+        self._execute_in_additional_optimizations = execute_in_additional_optimizations
+
+    # # MODIFIED 8/20/25 OLD:
+    # def _call_before_additional_optimizations(self, context):
+    #     """Assign specified Parameters values used for additional optimizations
+    #     Get values to assigne from self._params_to_modify_in_additional_optimizations,
+    #     and then use that to cache old values until _call_after_additional_optimizations is called.
+    #     """
+    #     # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+    #     for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+    #         for i, item in enumerate(params_list.copy()):
+    #             param, mod_value = item
+    #             orig_value = param.get(context)
+    #             param._set(mod_value, context)
+    #             # Cache old value in place of new one in params list
+    #             params_list[i] = (param, orig_value)
+    #
+    # def _call_after_additional_optimizations(self, context):
+    #     """Restore Parameter values that were modified during additional optimizations to their original values
+    #     Get values to restore from ones cached in self._params_to_modify_in_additional_optimizations
+    #     """
+    #     # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+    #     for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+    #         for i, item in enumerate(params_list.copy()):
+    #             param, orig_value = item
+    #             mod_value = param.get(context)
+    #             # Resore original value of Parameter
+    #             param._set(orig_value, context)
+    #             # Restore values used for additional optimizations in self._params_to_modify_in_additional_optimizations
+    #             #   for use in subsequent trials
+    #             params_list[i] = (param, mod_value)
+    # # MODIFIED 8/20/25 END
+
+
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         args = [ctx.get_state_struct_type(self.composition).as_pointer(),
@@ -1609,11 +1718,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
 
-                if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
-                    # If _nodes_to_execute_in_additional_optimizations is specified,
-                    #    only execute specified nodes for all optmization_num > 0
-                    current_exec_set = {node for node in current_exec_set
-                                        if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
+                # BREADCRUMB: 8/21/25 USE self.composition._execute_in_additional_optimizations dict here
+                # # MODIFIED 8/20/25 OLD:
+                # if optimization_num and self.composition._nodes_to_execute_in_additional_optimizations:
+                #     # If _nodes_to_execute_in_additional_optimizations is specified,
+                #     #    only execute specified nodes for all optmization_num > 0
+                #     current_exec_set = {node for node in current_exec_set
+                #                         if node.mechanism in self.composition._nodes_to_execute_in_additional_optimizations}
+                # MODIFIED 8/20/25 NEW:
+                if self.composition._execute_in_additional_optimizations:
+                    # If _execute_in_additional_optimizations is specified,
+                    #   only execute nodes specified for curent optmization_num
+                    addition_opts_dict = self.composition._execute_in_additional_optimizations
+                    nodes_to_execute = {node for node in addition_opts_dict
+                                        if optimization_num in addition_opts_dict[node]}
+                    for torch_node in current_exec_set.copy():
+                        node = torch_node.mechanism if isinstance(torch_node, Mechanism) else torch_node.composition
+                        if (node in nodes_to_execute):
+                            current_exec_set -= {torch_node}
+                # MODIFIED 8/20/25 END
+
                 for node in current_exec_set:
 
                     # If node is nested Composition (wrapped in PytorchCompositionWrapper),

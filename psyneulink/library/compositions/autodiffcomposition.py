@@ -825,6 +825,7 @@ class AutodiffComposition(Composition):
         self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
+        self.execute_in_additional_optimizations = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
@@ -1600,13 +1601,14 @@ class AutodiffComposition(Composition):
     @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
-              synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+              execute_in_additional_optimizations: Optional[dict] = None,
+              synch_projection_matrices_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              synch_node_variables_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              synch_node_values_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              synch_results_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              retain_torch_trained_outputs: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              retain_torch_targets: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
+              retain_torch_losses: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
               context: Context = None,
               base_context: Context = Context(execution_id=None),
               skip_initialization: bool = False,

@@ -3976,6 +3976,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
+            execute_in_additional_optimizations = None,  # BREADCRUMB: MOVE TO AUTODIFF
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4041,7 +4042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
-        self.execute_in_additional_optimizations = {} # Assign in call to learn()
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}# BREADCRUMB: MOVE TO AUTODIFF
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -11899,7 +11900,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
-            execute_in_additional_optimizations:Optional[dict]=None,
+            execute_in_additional_optimizations:Optional[dict]=None, # BREADCRUMB MOVE TO AUTODIFF
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
@@ -11980,6 +11981,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    for a pattern of activation in response to a given input (or set of inputs) that is useful for
                    some downstream purpose (see EGO Model for an example).
 
+            # BREADCRUMB: 8/21/25 MOVE THIS (AND REFERENCE ABOVE TO IT) TO AutodiffComposition
             execute_in_additional_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
                 specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
                 for any additional optimization steps after the first (see **optimizations_per_minibatch** for
@@ -12102,10 +12104,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
 
-        else:
-            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
-            if execute_in_additional_optimizations:
-                self._validate_and_parse_additional_optimizations(execute_in_additional_optimizations)
+        # BREADCRUMB: REPLACE WITH CHECK FOR SPECIFICATION OF execute_in_additional_optimizaations
+        # # MODIFIED 8/21/25 OLD:
+        # else:
+        #     self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
+        #     if execute_in_additional_optimizations:
+        #         self._validate_and_parse_additional_optimizations(execute_in_additional_optimizations)
+        # MODIFIED 8/21/25 END
 
         result = runner.run_learning(
             inputs=inputs,
@@ -13329,112 +13334,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
-
-    # BREADCRUMB: MOVE THIS TO _build_pytorch_representation (ALONG WITH exclude_from_gradient_calc)
-    def _validate_and_parse_additional_optimizations(self, user_specs:dict, num_optimizations):
-        """Validate entries of dict specified for execute_in_additional_optimizations argument of learn()
-        Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
-        values to use during multiple optimizations, or None if no Parameters should be modified for that node.
-        """
-        if not isinstance(user_specs, dict):
-            raise CompositionError(f"Specification for 'execute_in_additional_optimizations' arg in learn() method of "
-                                   f"of '{self.name}' must be a dict: {user_specs}.")
-        nodes_to_include = set()
-        nodes_to_exclude = set()
-        execute_in_additional_optimizations = {}
-        bad_nodes = []
-        bad_param = []
-
-        for node, opt_spec in user_specs.items():
-            if node not in self._get_all_nodes() + self._get_nested_compositions():
-                # Node is not in the Composition or any nested within it
-                bad_nodes.append(node)
-                continue
-            if opt_spec in {False, EXCLUDE, None}:
-                # Deal with exclusion outside for loop (see comment below)
-                nodes_to_exclude.add(node)
-                continue
-            if isinstance(node, Composition):
-                # Add Composition (needed for forward() method
-                execute_in_additional_optimizations[node] = opt_spec
-                # Add all nodes within that Composition and any nested within in
-                execute_in_additional_optimizations.update({nested_node: opt_spec
-                                                            for nested_node in node._get_all_nodes()})
-            else:
-                execute_in_additional_optimizations[node] = opt_spc
-                if node not in self.nodes:
-                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
-                    try:
-                        comp = next(item[1] for item in self._get_nested_nodes() if node is item[0])
-                    except StopIteration:
-                        assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
-                    execute_in_additional_optimizations[comp] = opt_spec
-
-            # Validate opt_spec
-            if not (opt_spec in {FIRST, LAST, ALL, True}
-                    or isinstance(opt_spec, (int, range) and opt_spec.stop < num_optimizations)
-                    or (isinstance(opt_spec, list)
-                        and all(isinstance(spec, int) for spec in opt_spec)
-                        and (max < num_optimizations))):
-                bad_opt_specs.append(opt_spec)
-                continue
-
-            # parse opt_spec
-            if opt_spec == FIRST:
-                opt_spec = [0]
-            if opt_spec == LAST:
-                opt_spec = [num_optimizations-1]
-            elif opt_spec in {True, ALL}:
-                opt_spec = range(0, num_optimizations)
-
-            execute_in_additional_optimizations[node] = opt_spec
-
-        if bad_nodes:
-            raise CompositionError(
-                f"The following nodes were specified in the 'execute_in_additional_optimizations' arg of learn() method"
-                f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
-                f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
-        if bad_opt_specs:
-            raise CompositionError(
-                f"The following entries in 'execute_in_additional_optimizations' for '{self.name}' have a bad "
-                f"value, which must be an appropriate keyword ('FIRST', 'LAST', 'EXCLUDE', or 'ALL'), a bool, "
-                f"or a numeric value: {', '.join(bad_opt_specs)}.")
-
-        # Remove any nodes specified for exclusion
-        # Note: do this after the for loop above since
-        #       some nodes might have been added from a nested Composition before being identified for exclusion
-        (execute_in_additional_optimizations.pop(node) for node in node in nodes_to_exclude)
-        self.execute_in_additional_optimizations = execute_in_additional_optimizations
-
-    def _call_before_additional_optimizations(self, context):
-        """Assign specified Parameters values used for additional optimizations
-        Get values to assigne from self._params_to_modify_in_additional_optimizations,
-        and then use that to cache old values until _call_after_additional_optimizations is called.
-        """
-        # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
-        for node, params_list in self._params_to_modify_in_additional_optimizations.items():
-            for i, item in enumerate(params_list.copy()):
-                param, mod_value = item
-                orig_value = param.get(context)
-                param._set(mod_value, context)
-                # Cache old value in place of new one in params list
-                params_list[i] = (param, orig_value)
-
-    def _call_after_additional_optimizations(self, context):
-        """Restore Parameter values that were modified during additional optimizations to their original values
-        Get values to restore from ones cached in self._params_to_modify_in_additional_optimizations
-        """
-        # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
-        for node, params_list in self._params_to_modify_in_additional_optimizations.items():
-            for i, item in enumerate(params_list.copy()):
-                param, orig_value = item
-                mod_value = param.get(context)
-                # Resore original value of Parameter
-                param._set(orig_value, context)
-                # Restore values used for additional optimizations in self._params_to_modify_in_additional_optimizations
-                #   for use in subsequent trials
-                params_list[i] = (param, mod_value)
-
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, clear_results=False, context=NotImplemented):

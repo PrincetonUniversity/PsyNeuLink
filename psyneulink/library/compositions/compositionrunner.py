@@ -208,17 +208,18 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        do_additional_optimizations = (optimization_num
-                                                       and self._composition.execute_in_additional_optimizations)
-                        before_additional_optimizations = do_additional_optimizations and optimization_num == 1
-                        end_extra_optimizations = (do_additional_optimizations
-                                                   and optimization_num + 1 == optimizations_per_minibatch)
+                        # MODIFIED 8/20/25 OLD:
+                        # do_additional_optimizations = (optimization_num
+                        #                                and self._composition.execute_in_additional_optimizations)
+                        # before_additional_optimizations = do_additional_optimizations and optimization_num == 1
+                        # end_extra_optimizations = (do_additional_optimizations
+                        #                            and optimization_num + 1 == optimizations_per_minibatch)
+                        # if before_additional_optimizations:
+                        #     # Modify any parameter values  specified for additional optimizations
+                        #     self._composition._call_before_additional_optimizations(context=context)
+                        # MODIFIED 8/20/25 END
 
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-
-                        if before_additional_optimizations:
-                            # Modify any parameter values  specified for additional optimizations
-                            self._composition._call_before_additional_optimizations(context=context)
 
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
                         # BREADCRUMB PRINT
