@@ -12091,16 +12091,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if execution_mode is not pnlvm.ExecutionMode.PyTorch or not isinstance(self, AutodiffComposition):
             # Can only use EXCLUDE_FROM_GRADIENT_CALC for AutodiffComposition learning in PyTorch mode
             from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
-            affected_nodes = [node for node in [self] + self.get_all_nodes()
-                              if (hasattr(node, EXCLUDE_FROM_GRADIENT_CALC) and node.exclude_from_gradient_calc)]
-            if affected_nodes:
+            nodes_with_exclude_from_gradient_calc = [node for node in [self] + self.get_all_nodes()
+                                                     if (hasattr(node, EXCLUDE_FROM_GRADIENT_CALC)
+                                                         and node.exclude_from_gradient_calc)]
+            if nodes_with_exclude_from_gradient_calc:
                 if not isinstance(self, AutodiffComposition):
                     reason_msg = "since that is only supported for AutodiffComposition"
                 else:
                     reason_msg = "since that is only supported for execution in ExecutionMode.PyTorch"
                 warnings.warn(
                     f"The following nodes in '{self.name}' have an '{EXCLUDE_FROM_GRADIENT_CALC} attribute assigned "
-                    f"that will be ignored " + reason_msg + ": {' ,'.join(affecdted_nodes)}.")
+                    f"that will be ignored " + reason_msg + f": {' ,'.join(nodes_with_exclude_from_gradient_calc)}.")
 
         # Prepare graph and context for learning
         context.add_flag(ContextFlags.LEARNING_MODE)
