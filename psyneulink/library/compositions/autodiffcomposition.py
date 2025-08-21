@@ -27,6 +27,7 @@ Contents
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
           - `AutodiffComposition_PyTorch`
+            - `AutodiffComposition_Exclude_From_Gradient_Calc`
           - `AutodiffComposition_LLVM`
           - `AutodiffComposition_Python`
           - `AutodiffComposition_Nested_Modulation`
@@ -231,7 +232,7 @@ COMMENT:
             methods of the Pytorch model
 COMMENT
 
-This is the default for an AutodiffComposition, but, can be specified explicitly by setting **execution_mode** =
+This is the default for an AutodiffComposition, but can be specified explicitly by setting **execution_mode** =
 `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method (see `example <BasicsAndPrimer_Rumelhart_Model>`
 in `BasicsAndPrimer`).  In this mode, the AutodiffComposition is automatically translated to a `PyTorch
 <https://pytorch.org>`_ model for learning.  This is comparable in speed to `LLVM compilation
@@ -245,13 +246,47 @@ AutoDiffCompositions in learning. Although it is best suited for use with `super
 
     .. note::
        While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
-       causes it to use PyTorch for training, specifying this in the `run <Composition.run>` method causes it to be
+       causes it to use PyTorch for learning, specifying this in the `run <Composition.run>` method causes it to be
        executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
 
     .. warning::
       * Specifying `ExecutionMode.LLVMRun` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` causes an error.
+
+.. _AutodiffComposition_Exclude_From_Gradient_Calc:
+
+Exclude node execution from gradient calculation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`Nodes <Composition_Nodes>` can be excluded from execution until after the loss and gradients have been calculated,
+and the weights updated, by specifying them in the **exclude_from_gradient_calc** argument of the AutodiffComposition's
+constructor
+COMMENT:
+BREADCRUMB: ADD WHEN IMPLEMENTED
+, its `learn <AutodiffComposition.learn>` method, or by assigning Nodes directly to its `exclude_from_gradient_calc
+<AutodiffComposition.exclude_from_gradient_calc> attribute
+COMMENT
+. Nodes can be within the AutoDiffComposition or any nested within it.  Specifying a Composition causes all Nodes
+within that Composition to be excluded, but not any nested within it or the outer AutodiffComposition itself;
+conversely, specifying *ALL* (in place of a list) causes all Nodes within the AutoDiffComposition itself to be excluded,
+but not any nested within it.  If a specification causes all Nodes to be excluded, an error is generated when the
+learn() method is called, as there will be nothing to learn.
+
+??NOTE THAT SPECIFICATIONS MADE AFTER CONSTRUCTION WON"T TAKE EFFECT??
+
+COMMENT:
+BREADCRUMB: ADD WHEN IMPLEMENTED
+.. technical_note::
+   The specifications for the **exclude_from_gradient_calc** argument that can be made to the AutodiffComposition's
+   `learn <AutodiffComposition.learn>` method can also be made to its `_build_pytorch_representation
+   <AutodiffComposition._build_pytorch_representation>` method.
+
+
+
+
+COMMENT
+..
 
 COMMENT:
 FIX: ADD MENTION OF TARGET NODES AND PYTORCH WRAPPERS
@@ -518,8 +553,11 @@ class AutodiffComposition(Composition):
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
-    exclude_from_gradient_calc : list : default None
-        specifies nodes to be exclude from and executed after the gradient calculaton (backward pass in PyTorch).
+    exclude_from_gradient_calc : list or *ALL* : default None
+        specifies nodes to be excluded from and executed after the gradient calculaton (backward pass in PyTorch);
+        must be a list of Mechanisms and/or nested Compositions, or the keyword *ALL* which specifies that all
+        nodes within the Composition should be excluded (see `exclude_from_gradient_calc
+        <AutodiffComposition.exclude_from_gradient_calc>` for additional details).
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
@@ -598,7 +636,9 @@ class AutodiffComposition(Composition):
         `AutodiffComposition_Learning_Rates` for additional details).
 
     exclude_from_gradient_calc : list
-        determines nodes to be excluded from and executed after the gradient calculaton (backward pass in PyTorch).
+        determines nodes to be excluded from and executed after the gradient calculaton (backward pass in PyTorch);
+        see XXX
+
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
