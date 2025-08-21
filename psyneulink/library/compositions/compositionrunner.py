@@ -248,11 +248,12 @@ class CompositionRunner():
                                 # MODIFIED 8/21/25 NEW:
                                 # BREADCRUMB: THIS NEEDS TO ALSO CAPTURE node.composition if node is a pytorchcompwrapper
                                 if (pytorch_rep._execute_in_additional_optimizations
-                                        and not (node.mechanism in pytorch_rep._execute_in_additional_optimizations
+                                        and not (node in pytorch_rep._execute_in_additional_optimizations
                                                  and optimization_num
-                                                 in pytorch_rep._execute_in_additional_optimizations[node.mechanism])):
+                                                 in pytorch_rep._execute_in_additional_optimizations[node])):
                                 #     # MODIFIED 8/21/25 END
                                     continue
+                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
                                 print(f"{node.mechanism.name}")
                                 print(f"  {node.output}")
 

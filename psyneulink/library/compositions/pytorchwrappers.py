@@ -1383,20 +1383,28 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 nodes_to_exclude.add(node)
                 continue
             if isinstance(node, Composition):
-                # Add Composition (needed for forward() method
-                execute_in_additional_optimizations[node] = opt_spec
+                # MODIFIED 8/21/25 OLD:
+                # BREADCRUMB: TEST SPECIFICATION OF NESTED COMP HERE AND BELOW
+                # # BREADCRUMB: ??IS THIS STILL NEEDED (SINCE NESTED NODES ARE FLATTENED INTO self.nodes[map]
+                # # Add Composition (needed for forward() method
+                # execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
+                # MODIFIED 8/21/25 END
                 # Add all nodes within that Composition and any nested within in
-                execute_in_additional_optimizations.update({nested_node: opt_spec
+                execute_in_additional_optimizations.update({self.nodes_map[nested_node]: opt_spec
                                                             for nested_node in node._get_all_nodes()})
             else:
-                execute_in_additional_optimizations[node] = opt_spec
-                if node not in self.composition.nodes:
-                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
-                    try:
-                        comp = next(item[1] for item in self.composition._get_nested_nodes() if node is item[0])
-                    except StopIteration:
-                        assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
-                    execute_in_additional_optimizations[comp] = opt_spec
+                execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
+
+                # # MODIFIED 8/21/25 OLD:
+                # # BREADCRUMB: ??IS THIS TRUE / STILL NEEDED (SINCE NESTED NODES ARE FLATTENED INTO self.nodes[map]
+                # if node not in self.composition.nodes:
+                #     # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
+                #     try:
+                #         comp = next(item[1] for item in self.composition._get_nested_nodes() if node is item[0])
+                #     except StopIteration:
+                #         assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
+                #     execute_in_additional_optimizations[self.nodes_map[comp]] = opt_spec
+                # # MODIFIED 8/21/25 END
 
             # Validate opt_spec
             if not (opt_spec in {FIRST, LAST, ALL, True}
@@ -1415,7 +1423,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             elif opt_spec in {True, ALL}:
                 opt_spec = range(0, num_optimizations)
 
-            execute_in_additional_optimizations[node] = opt_spec
+            execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
 
         if bad_nodes:
             raise CompositionError(
@@ -1431,7 +1439,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Remove any nodes specified for exclusion
         # Note: do this after the for loop above since
         #       some nodes might have been added from a nested Composition before being identified for exclusion
-        (execute_in_additional_optimizations.pop(node) for node in nodes_to_exclude)
+        (execute_in_additional_optimizations.pop(self.nodes_map[node]) for node in nodes_to_exclude)
         if execute_in_additional_optimizations:
             # If any valid nodes have been specified,
             #   add num_optimizations to dict for reference in learn() in case optimizations_for_minibatch is changed
@@ -1699,14 +1707,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
         def get_nodes_to_execute_for_optimization(opt_num:int, exec_set:set)->set:
             # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
             addition_opts_dict = self._execute_in_additional_optimizations
-            nodes_to_execute = {node for node in addition_opts_dict
-                                # BREADCRUMB:
-                                # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}
-                                if (isinstance(addition_opts_dict[node],list) and opt_num in addition_opts_dict[node])}
-            for torch_node in exec_set:
-                node = torch_node.mechanism if isinstance(torch_node, Mechanism) else torch_node.composition
-                if (node in nodes_to_execute):
-                    exec_set -= {torch_node}
+            # nodes_to_execute = {node for node in addition_opts_dict
+            #                     # BREADCRUMB:
+            #                     # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}
+            #                     if (isinstance(addition_opts_dict[node],list) and opt_num in addition_opts_dict[node])}
+            # for node in exec_set:
+            #     if (node in nodes_to_execute):
+            #         exec_set -= {torch_node}
+            nodes_to_exclude = {node for node in addition_opts_dict
+                                if (isinstance(addition_opts_dict[node],list)
+                                    and opt_num not in addition_opts_dict[node])}
+            orig_exec_set = exec_set.copy()
+            exec_set -= nodes_to_exclude
+
             return exec_set
 
         # Store the batch_size we are currently using
