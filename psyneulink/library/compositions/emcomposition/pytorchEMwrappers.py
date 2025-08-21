@@ -33,6 +33,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.storage_node = self.nodes_map[self.composition.storage_node]
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
+        # BREADCRUMB: 8/21/25: REFACTOR ONCE HANDLED BY DICT ON COMP
         self.storage_node.exclude_from_gradient_calc = AFTER
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;

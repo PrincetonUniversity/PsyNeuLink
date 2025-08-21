@@ -58,16 +58,11 @@ def construct_model(
                                       function=Tanh(gain=1),
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
-    # # MODIFIED 8/21/25 OLD:
-    # context_layer.exclude_from_gradient_calc = AFTER
-    # previous_state_layer.exclude_from_gradient_calc = AFTER
-    # MODIFIED 8/21/25 END
 
     em = EMComposition(
         name=em_name,
-        # MODIFIED 8/21/25 NEW:
+        # BREADCRUMB: 8/21/25- REMOVE ONCE HANDLING OF execute_in_additional_optimizations IS IMPLEMENTED ON learn()
         optimizations_per_minibatch=config['num_optimization_steps'],
-        # MODIFIED 8/21/25 END
         memory_template=[[0] * state_size,  # state
                          [0] * state_size,  # previous state
                          [0] * state_size],  # context
@@ -144,11 +139,9 @@ def construct_model(
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=loss_spec,
-                                   # MODIFIED 8/21/25 NEW:
                                    execute_in_additional_optimizations={context_layer: LAST,
                                                                         previous_state_layer: LAST},
                                    optimizations_per_minibatch=config['num_optimization_steps'],
-                                   # MODIFIED 8/21/25 END
                                    name=model_name,
                                    device=device)
 
