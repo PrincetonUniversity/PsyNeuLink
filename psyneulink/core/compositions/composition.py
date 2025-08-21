@@ -13330,7 +13330,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         pass
 
-    def _validate_and_parse_additional_optimizations(self, user_specs:dict):
+    # BREADCRUMB: MOVE THIS TO _build_pytorch_representation (ALONG WITH exclude_from_gradient_calc)
+    def _validate_and_parse_additional_optimizations(self, user_specs:dict, num_optimizations):
         """Validate entries of dict specified for execute_in_additional_optimizations argument of learn()
         Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
         values to use during multiple optimizations, or None if no Parameters should be modified for that node.
@@ -13340,75 +13341,70 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"of '{self.name}' must be a dict: {user_specs}.")
         nodes_to_include = set()
         nodes_to_exclude = set()
-        params_to_modify = {}
+        execute_in_additional_optimizations = {}
         bad_nodes = []
+        bad_param = []
 
-        for node, param_specs in user_specs.items():
+        for node, opt_spec in user_specs.items():
             if node not in self._get_all_nodes() + self._get_nested_compositions():
-                # Node is not in the COmposition or any nested within it
+                # Node is not in the Composition or any nested within it
                 bad_nodes.append(node)
                 continue
-            if param_specs is False or param_specs == EXCLUDE:
+            if opt_spec in {False, EXCLUDE, None}:
+                # Deal with exclusion outside for loop (see comment below)
                 nodes_to_exclude.add(node)
                 continue
             if isinstance(node, Composition):
-                # Add Composition
-                nodes_to_include.add(node)
+                # Add Composition (needed for forward() method
+                execute_in_additional_optimizations[node] = opt_spec
                 # Add all nodes within that Composition and any nested within in
-                nodes_to_include.update(node._get_all_nodes())
+                execute_in_additional_optimizations.update({nested_node: opt_spec
+                                                            for nested_node in node._get_all_nodes()})
             else:
-                nodes_to_include.add(node)
+                execute_in_additional_optimizations[node] = opt_spc
                 if node not in self.nodes:
-                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward
+                    # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
                     try:
                         comp = next(item[1] for item in self._get_nested_nodes() if node is item[0])
                     except StopIteration:
-                        assert False, f"PROGRAM ERROR: Can't find nested Composition to which {node.name} belongs."
-                    nodes_to_include.add(comp)
+                        assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
+                    execute_in_additional_optimizations[comp] = opt_spec
 
-            # Validate any Parameters specified and their values
-            if param_specs:
-                if param_specs is True:
-                    continue
-                if isinstance(param_specs, tuple):
-                    # "Listify" to standardize treatment below
-                    param_specs = convert_to_list(param_specs)
-                if (not isinstance(param_specs, list) or
-                    not all(isinstance(param,tuple) and len(param)==2 for param in param_specs)):
-                    # Designate as bad any specifications that are not a 2-item tuple or a list of such
-                    bad_nodes.append(node)
-                    continue
-                params = []
-                for param_name, param_val in param_specs:
-                    # Assign values to corresponding Parameters
-                    try:
-                        param = getattr(node.parameters, param_name)
-                    except AttributeError:
-                        try:
-                            param = getattr(node.function.parameters, param_name)
-                        except AttributeError:
-                            raise CompositionError(f"Value specified for '{param_name}' Parameter of '{node.name}' "
-                                                   f"in 'execute_in_additional_optimizations' arg of learn() method "
-                                                   f"for '{self.name}' is not a Parameter of that node.")
-                    param._validate(param_val)
-                    params.append((param, param_val))
-                params_to_modify.update({node: params})
+            # Validate opt_spec
+            if not (opt_spec in {FIRST, LAST, ALL, True}
+                    or isinstance(opt_spec, (int, range) and opt_spec.stop < num_optimizations)
+                    or (isinstance(opt_spec, list)
+                        and all(isinstance(spec, int) for spec in opt_spec)
+                        and (max < num_optimizations))):
+                bad_opt_specs.append(opt_spec)
+                continue
 
+            # parse opt_spec
+            if opt_spec == FIRST:
+                opt_spec = [0]
+            if opt_spec == LAST:
+                opt_spec = [num_optimizations-1]
+            elif opt_spec in {True, ALL}:
+                opt_spec = range(0, num_optimizations)
+
+            execute_in_additional_optimizations[node] = opt_spec
 
         if bad_nodes:
             raise CompositionError(
                 f"The following nodes were specified in the 'execute_in_additional_optimizations' arg of learn() method"
                 f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
                 f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
+        if bad_opt_specs:
+            raise CompositionError(
+                f"The following entries in 'execute_in_additional_optimizations' for '{self.name}' have a bad "
+                f"value, which must be an appropriate keyword ('FIRST', 'LAST', 'EXCLUDE', or 'ALL'), a bool, "
+                f"or a numeric value: {', '.join(bad_opt_specs)}.")
 
-        # Remove any specified for exclusion
-        # Note: do this after the for loop since
-        #       some might have been added from a nested Composition before being indentified for exclusion
-        nodes_to_include -= nodes_to_exclude
-
-        self._nodes_to_execute_in_additional_optimizations = nodes_to_include
-        self._params_to_modify_in_additional_optimizations = params_to_modify
-        self.execute_in_additional_optimizations = user_specs
+        # Remove any nodes specified for exclusion
+        # Note: do this after the for loop above since
+        #       some nodes might have been added from a nested Composition before being identified for exclusion
+        (execute_in_additional_optimizations.pop(node) for node in node in nodes_to_exclude)
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations
 
     def _call_before_additional_optimizations(self, context):
         """Assign specified Parameters values used for additional optimizations
