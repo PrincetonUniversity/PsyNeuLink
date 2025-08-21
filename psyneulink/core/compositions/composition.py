@@ -12103,14 +12103,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
-
-        # BREADCRUMB: REPLACE WITH CHECK FOR SPECIFICATION OF execute_in_additional_optimizaations
-        # # MODIFIED 8/21/25 OLD:
-        # else:
-        #     self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
-        #     if execute_in_additional_optimizations:
-        #         self._validate_and_parse_additional_optimizations(execute_in_additional_optimizations)
-        # MODIFIED 8/21/25 END
+        else:
+            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
 
         result = runner.run_learning(
             inputs=inputs,

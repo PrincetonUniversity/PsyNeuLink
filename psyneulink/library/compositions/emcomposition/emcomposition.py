@@ -2673,8 +2673,13 @@ class EMComposition(AutodiffComposition):
         """
 
         # BREADCRUMB: SET self.storage_node = None IF NOT USE_STORAGE_NODE?
+        # MODIFIED 8/21/25 OLD:
         if hasattr(self, 'storage_node'):
             setattr(self.storage_node, EXCLUDE_FROM_GRADIENT_CALC, AFTER)
+        # MODIFIED 8/21/25 NEW:
+        # BREADCRUMB: MOVE THIS TO SOMEWHERE ELSE?
+        self.execute_in_additional_optimizations = {self.storage_node: LAST}
+        # MODIFIED 8/21/25 END
 
         # Get field_weight projections and set all others to be non-learnable
         field_weight_projections = []
