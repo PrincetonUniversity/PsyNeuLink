@@ -208,16 +208,6 @@ class CompositionRunner():
                     # Update weights if in PyTorch execution_mode;
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
-                        # # MODIFIED 8/20/25 OLD:
-                        # do_additional_optimizations = (optimization_num
-                        #                                and self._composition.execute_in_additional_optimizations)
-                        # before_additional_optimizations = do_additional_optimizations and optimization_num == 1
-                        # end_extra_optimizations = (do_additional_optimizations
-                        #                            and optimization_num + 1 == optimizations_per_minibatch)
-                        # if before_additional_optimizations:
-                        #     # Modify any parameter values  specified for additional optimizations
-                        #     self._composition._call_before_additional_optimizations(context=context)
-                        # MODIFIED 8/20/25 END
 
                         pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
 
@@ -231,27 +221,10 @@ class CompositionRunner():
                         from torch import no_grad
                         with no_grad():
                             for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                # # BREADCRUMB PRINT:
-                                # # # # MODIFIED 8/21/25 OLD:
-                                # # # if (do_additional_optimizations and node.mechanism not in
-                                # # #         self._composition._nodes_to_execute_in_additional_optimizations):
-                                # # # BREADCRUMB HACK:
-                                # # ATTENTION: This is a hack to force execution of CONTEXT and PREVIOUS STATE on
-                                # # the last optimization step. Needs to be removed and API changed to allow
-                                # # this for arbitrary nodes
-                                # if (node.mechanism.name != 'CONTEXT' and node.mechanism.name != 'PREVIOUS STATE') or \
-                                #     optimization_num == optimizations_per_minibatch-1:
-                                #     node.execute(variable, optimization_num, synch_with_pnl_options, context)
-                                #     if node.mechanism.name != 'STORE':
-                                #         print(f"{node.mechanism.name}")
-                                #         print(f"  {node.output}")
-                                # MODIFIED 8/21/25 NEW:
-                                # BREADCRUMB: THIS NEEDS TO ALSO CAPTURE node.composition if node is a pytorchcompwrapper
                                 if (pytorch_rep._execute_in_additional_optimizations
                                         and not (node in pytorch_rep._execute_in_additional_optimizations
                                                  and optimization_num
                                                  in pytorch_rep._execute_in_additional_optimizations[node])):
-                                #     # MODIFIED 8/21/25 END
                                     continue
                                 node.execute(variable, optimization_num, synch_with_pnl_options, context)
                                 print(f"{node.mechanism.name}")
@@ -259,12 +232,6 @@ class CompositionRunner():
 
                         # BREADCRUMB PRINT:
                         print(f"\n===================================================================\n")
-
-                        # MODIFIED 8/20/25 OLD:
-                        # if end_extra_optimizations:
-                        #     # Restore parameters back to their usual values
-                        #     self._composition._call_after_additional_optimizations(context=context)
-                        # MODIFIED 8/20/25 END
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
