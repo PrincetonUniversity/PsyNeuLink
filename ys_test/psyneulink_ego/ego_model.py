@@ -147,9 +147,6 @@ def construct_model(
                                               receiver=learning_components[0],
                                               learnable=False))
 
-    context_layer.exclude_from_gradient_calc = 'after'
-    previous_state_layer.exclude_from_gradient_calc = 'after'
-
     return EGO_comp, context_layer, state_input_layer, em
 
 
