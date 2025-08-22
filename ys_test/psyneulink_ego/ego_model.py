@@ -157,7 +157,6 @@ def run_model(model, inputs):
                     execution_mode=params_ego['execution_mode'],
                     optimizations_per_minibatch=params_ego['num_optimization_steps'],
                     minibatch_size=1,
-                    # call_before_minibatch=hi(model, context_layer, state_input_layer, em)
                     )
     return model.results[:, 2]
 
