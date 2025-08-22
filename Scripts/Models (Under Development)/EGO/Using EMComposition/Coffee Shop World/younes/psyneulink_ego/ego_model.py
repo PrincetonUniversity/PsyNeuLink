@@ -61,8 +61,6 @@ def construct_model(
 
     em = EMComposition(
         name=em_name,
-        # BREADCRUMB: 8/21/25- REMOVE ONCE HANDLING OF execute_in_additional_optimizations IS IMPLEMENTED ON learn()
-        optimizations_per_minibatch=config['num_optimization_steps'],
         memory_template=[[0] * state_size,  # state
                          [0] * state_size,  # previous state
                          [0] * state_size],  # context
@@ -141,6 +139,7 @@ def construct_model(
                                    loss_spec=loss_spec,
                                    execute_in_additional_optimizations={context_layer: LAST,
                                                                         previous_state_layer: LAST},
+                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
                                    optimizations_per_minibatch=config['num_optimization_steps'],
                                    name=model_name,
                                    device=device)
@@ -169,15 +168,9 @@ def run_model(model,
                 execution_mode=config['execution_mode'],
                 optimizations_per_minibatch=config['num_optimization_steps'],
                 minibatch_size=1,
-
                 synch_projection_matrices_with_torch=RUN,
                 synch_node_values_with_torch=RUN,
                 synch_results_with_torch=RUN,
-                execute_in_additional_optimizations={model.nodes['PREDICTION']: None,
-                                                     model.nodes['EM']: None,
-                                                     model.nodes['CONTEXT']: None,
-                                                     model.nodes['PREVIOUS STATE']: None},
-
                 )
     # model.learn(inputs={params_ego['state_input_layer_name']: trials},
     #             learning_rate=params_ego['learning_rate'],
