@@ -170,9 +170,9 @@ def run_model(model,
                 # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
                 optimizations_per_minibatch=config['num_optimization_steps'],
                 # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
-                # execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
-                #                                      model.nodes[config['previous_state_layer_name']]: LAST},
-                # exclude_from_gradient_calc=None,
+                execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
+                                                     model.nodes[config['previous_state_layer_name']]: LAST},
+                exclude_from_gradient_calc=None,
                 minibatch_size=1,
                 synch_projection_matrices_with_torch=RUN,
                 synch_node_values_with_torch=RUN,

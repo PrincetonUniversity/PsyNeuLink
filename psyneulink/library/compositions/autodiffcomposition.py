@@ -1247,6 +1247,14 @@ class AutodiffComposition(Composition):
             # If _runtime_learning_rate has been specified in call to learn(), make sure that is used
             optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
 
+        # BREADCRUMB: HANDLE THESE IN _XXX_optimizer_params METHODS TO DEAL WITH THEM IN SIMILAR WAY as learning_rate:
+        #             SPECS HERE SHOULD OVERRIDE CORRESPONDING ONES IN CONSTRUCTOR FOR THIS PYTORCH_REP:
+        #             IF CALLED FROM COMMAND_LINE OR CONSTRUCTOR: SHOULD ENDURE
+        #             IF CALLED FROM LEARN, SHOULD ONLY OBTAIN FOR THIS EXECUTION
+        #             SHOULD REPLACE _instantiate_optimizer and _update_optimizer_params WITH A GENERALIZED ONE
+        execute_in_additional_optimizations = kwargs.pop('execute_in_additional_optimizations', 3)
+        exclude_from_gradient_calc = kwargs.pop('exclude_from_gradient_calc', None)
+
         if (old_opt is None or new) and new is not False:
             # Instantiate a new optimizer if there isn't one yet or new has been called and is not blocked)
             if context.runmode == ContextFlags.LEARNING_MODE:
@@ -1256,11 +1264,15 @@ class AutodiffComposition(Composition):
                 #   - the ones in the call to learn() will be applied in call to _update_optimizer_params() below
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     self._optimizer_constructor_params,
+                                                                    exclude_from_gradient_calc,
+                                                                    execute_in_additional_optimizations,
                                                                     context)
                 # Then update optimizer params with any specified in the call to learn()
                 if optimizer_params:
                     pytorch_rep._update_optimizer_params(pytorch_rep.optimizer,
                                                          optimizer_params,
+                                                         exclude_from_gradient_calc,
+                                                         execute_in_additional_optimizations,
                                                          Context(source=ContextFlags.METHOD,
                                                                  runmode=context.runmode,
                                                                  execution_id=context.execution_id))
@@ -1269,6 +1281,8 @@ class AutodiffComposition(Composition):
                 opt_params = optimizer_params or self._optimizer_constructor_params
                 pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
                                                                     opt_params,
+                                                                    exclude_from_gradient_calc,
+                                                                    execute_in_additional_optimizations,
                                                                     context)
 
         elif context.source is ContextFlags.SHOW_GRAPH:
@@ -1278,6 +1292,8 @@ class AutodiffComposition(Composition):
             # Otherwise, just update it
             pytorch_rep._update_optimizer_params(old_opt,
                                                  optimizer_params,
+                                                 exclude_from_gradient_calc,
+                                                 execute_in_additional_optimizations,
                                                  Context(source=ContextFlags.METHOD,
                                                          runmode=context.runmode,
                                                          execution_id=context.execution_id))
@@ -1350,7 +1366,16 @@ class AutodiffComposition(Composition):
                 f"This should be specified only in the constructor for the Composition; "
                 f"specifications made directly on Mechanisms are ignored: {', '.join(bad_nodes)}.")
 
-    def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
+    def _instantiate_optimizer(self,
+                               learning_rate,
+                               optimizer_params,
+                               exclude_from_gradient_calc,
+                               execute_in_additional_optimizations,
+                               context):
+
+        # BREADCRUMB: SHOULD HANDLE execute_in_additional_optimizations AND execute_in_additional_optimizations HERE
+        #             NEEDS TO FIRST PICK UP ANY VALUES ALREADY ASSIGNED IN CONSTRUCTOR, AND THEN ADD TO / OVERRIDE
+        #             THOSE WITH CURRENT SPECS
 
         if isinstance(learning_rate, dict):
             # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value
@@ -1377,7 +1402,11 @@ class AutodiffComposition(Composition):
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        pytorch_rep._update_optimizer_params(optimizer,
+                                             optimizer_params,
+                                             exclude_from_gradient_calc,
+                                             execute_in_additional_optimizations,
+                                             context)
         return optimizer
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
@@ -1939,6 +1968,8 @@ class AutodiffComposition(Composition):
                 minibatch_size=1,
                 optimizations_per_minibatch=1,
                 optimization_num=None,
+                execute_in_additional_optimizations=None,
+                exclude_from_gradient_calc=None,
                 do_logging=False,
                 scheduler=None,
                 termination_processing=None,
@@ -2005,18 +2036,23 @@ class AutodiffComposition(Composition):
                            content='trial_start',
                            context=context)
 
-                    self._build_pytorch_representation(optimizer_params=optimizer_params,
-                                                       learning_rate=self.parameters.learning_rate.get(context),
-                                                       context=context, base_context=base_context)
+                    self._build_pytorch_representation(
+                        optimizer_params=optimizer_params,
+                        learning_rate=self.parameters.learning_rate.get(context),
+                        execute_in_additional_optimizations=execute_in_additional_optimizations,
+                        exclude_from_gradient_calc=exclude_from_gradient_calc,
+                        context=context, base_context=base_context)
+
                     trained_output_values, all_output_values = \
-                                                    self.autodiff_forward(inputs=autodiff_inputs,
-                                                                          targets=autodiff_targets,
-                                                                          optimization_num=optimization_num,
-                                                                          synch_with_pnl_options=synch_with_pnl_options,
-                                                                          retain_in_pnl_options=retain_in_pnl_options,
-                                                                          execution_mode=execution_mode,
-                                                                          scheduler=scheduler,
-                                                                          context=context)
+                        self.autodiff_forward(inputs=autodiff_inputs,
+                                              targets=autodiff_targets,
+                                              optimization_num=optimization_num,
+                                              synch_with_pnl_options=synch_with_pnl_options,
+                                              retain_in_pnl_options=retain_in_pnl_options,
+                                              execution_mode=execution_mode,
+                                              scheduler=scheduler,
+                                              context=context)
+
                     execution_phase = context.execution_phase
                     context.execution_phase = ContextFlags.PROCESSING
                     context.execution_phase = execution_phase

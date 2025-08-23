@@ -786,7 +786,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 comp_wrappers.extend(nested_wrappers)
         return comp_wrappers
 
-    def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
+    def _update_optimizer_params(self,
+                                 optimizer,
+                                 optimizer_params_user_specs:dict,
+                                 exclude_from_gradient_calc,
+                                 execute_in_additional_optimizations,
+                                 context):
         """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
         Relevant data structures:
             self.composition._optimizer_params: {Projection or Projection.name: lr}
@@ -799,6 +804,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.state_dict(): (local name of torch param, Tensor)
         """
         # These are used both for error messages (hence strings) as we well determining how to update param_groups
+
+        # BREADCRUMB: SHOULD HANDLE execute_in_additional_optimizations AND execute_in_additional_optimizations HERE
+        #             NEEDS TO FIRST PICK UP ANY VALUES ALREADY ASSIGNED IN CONSTRUCTOR, AND THEN ADD TO / OVERRIDE
+        #             THOSE WITH CURRENT SPECS
 
         if context.runmode == ContextFlags.LEARNING_MODE:
             if context.source == ContextFlags.COMPOSITION:
