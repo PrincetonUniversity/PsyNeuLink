@@ -1851,22 +1851,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
-                        # if node.exclude_from_gradient_calc in {AFTER, LAST}:
-                        if node.exclude_from_gradient_calc == AFTER:
-                            # Store variable for execution after gradient calculations are complete
-                            self._nodes_to_execute_after_gradient_calc[node] = variable
-                            continue
-                        elif node.exclude_from_gradient_calc == BEFORE:
-                            assert False, 'PROGRAM ERROR: node.exclude_from_gradient_calc == BEFORE not yet implemented'
-                        else:
-                            assert False, \
-                                (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
-                                 f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
+                        # Cache variable for execution after gradient calculations are complete
+                        self._nodes_to_execute_after_gradient_calc[node] = variable
+                        continue
 
                     # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
                     # BREADCRUMB PRINT
                     print(f"{node.name}: {optimization_num} (STIM {self.composition._stim_num})")
@@ -2110,8 +2101,13 @@ class PytorchMechanismWrapper(torch.nn.Module):
         # super().__init__()
         # MODIFIED 7/10/24 END
         super().__init__()
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        assert isinstance(composition, AutodiffComposition), \
+            f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
+        self.composition = composition
         self.name = f"PytorchMechanismWrapper[{mechanism.name}]"
         self.mechanism = mechanism
+        self.exclude_from_gradient_calc = True if mechanism in self.composition.exclude_from_gradient_calc else False
         self._idx = component_idx
         self._context = context
         self._is_input = False
@@ -2119,13 +2115,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
-        self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
-            if hasattr(mechanism, EXCLUDE_FROM_GRADIENT_CALC) else False
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        assert isinstance(composition, AutodiffComposition), \
-            f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
-        self.composition = composition
         self.torch_dtype = dtype
 
         self.input = None

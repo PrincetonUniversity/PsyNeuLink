@@ -33,8 +33,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.storage_node = self.nodes_map[self.composition.storage_node]
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
-        # BREADCRUMB: 8/21/25: REFACTOR ONCE HANDLED BY DICT ON COMP
-        self.storage_node.exclude_from_gradient_calc = AFTER
+        self.storage_node.exclude_from_gradient_calc = True
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
@@ -87,7 +86,6 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
-            # 8/20/25 BREADCRUMB: REFACTOR TO USE execution_in_additional_optimizations
             num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
             stim_num = self._context.composition._stim_num
             store_on_optimization = self.composition.parameters.store_on_optimization._get(context)

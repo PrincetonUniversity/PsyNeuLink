@@ -1758,6 +1758,13 @@ class EMComposition(AutodiffComposition):
                  name="EM_Composition",
                  **kwargs):
 
+        if kwargs:
+            bad_args = [arg for arg in kwargs if arg not in {'device'}]
+            if bad_args:
+                raise EMCompositionError(f"The following arguments cannot be used in the constructor to "
+                                         f"'{name}', since it is an EMComposition which cannot be modified: "
+                                         f"{', '.join(bad_args)}.")
+
         # Construct memory --------------------------------------------------------------------------------
 
         memory_fill = memory_fill or 0 # FIX: GET RID OF THIS ONCE IMPLEMENTED AS A Parameter
@@ -1853,8 +1860,9 @@ class EMComposition(AutodiffComposition):
         self._set_learning_attributes()
 
         if self._use_storage_node:
-            # Ensure that storage_node runs last
+            # Ensure that storage_node is not runs last and is not included in the gradient_calc
             self.scheduler.add_condition(self.storage_node, conditions.AfterNodes(*self.retrieved_nodes))
+            self.exclude_from_gradient_calc.append(self.storage_node)
 
         # Suppress warnings for no efferent Projections
         for node in self.value_input_nodes:
