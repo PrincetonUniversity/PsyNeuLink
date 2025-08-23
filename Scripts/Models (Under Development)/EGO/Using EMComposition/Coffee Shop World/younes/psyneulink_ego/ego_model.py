@@ -137,9 +137,10 @@ def construct_model(
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=loss_spec,
-                                   # execute_in_additional_optimizations={context_layer: LAST,
-                                   #                                      previous_state_layer: LAST},
-                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
+                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
+                                   execute_in_additional_optimizations={context_layer: LAST,
+                                                                        previous_state_layer: LAST},
+                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
                                    optimizations_per_minibatch=config['num_optimization_steps'],
                                    name=model_name,
                                    device=device)
@@ -167,6 +168,7 @@ def run_model(model,
                 # learning_rate=config['learning_rate'],
                 execution_mode=config['execution_mode'],
                 optimizations_per_minibatch=config['num_optimization_steps'],
+                # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
                 execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
                                                      model.nodes[config['previous_state_layer_name']]: LAST},
                 minibatch_size=1,
