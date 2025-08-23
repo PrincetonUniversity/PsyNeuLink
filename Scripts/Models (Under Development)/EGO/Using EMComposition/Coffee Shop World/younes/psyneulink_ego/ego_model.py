@@ -167,6 +167,7 @@ def run_model(model,
     model.learn(inputs={config['state_input_layer_name']: trials},
                 # learning_rate=config['learning_rate'],
                 execution_mode=config['execution_mode'],
+                # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
                 optimizations_per_minibatch=config['num_optimization_steps'],
                 # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
                 execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
