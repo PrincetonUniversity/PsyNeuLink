@@ -1194,7 +1194,6 @@ class AutodiffComposition(Composition):
 
         # Construct a new pytorch_representation if none exists or new is specified
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
-
             self._parse_and_validate_exclude_from_gradient_calc(self.exclude_from_gradient_calc)
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
