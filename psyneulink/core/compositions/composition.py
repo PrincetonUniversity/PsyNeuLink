@@ -3976,7 +3976,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
-            execute_in_additional_optimizations = None,  # BREADCRUMB: MOVE TO AUTODIFF
+            execute_in_additional_optimizations:Optional[dict]= None,  # BREADCRUMB: MOVE TO AUTODIFF
+            exclude_from_gradient_calc:Optional[Union[list,str]] = None,  # BREADCRUMB: MOVE TO AUTODIFF
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -11899,15 +11900,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             epochs: int = 1,
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
+            # BREADCRUMB: THE FOLLOWING SHOULD BE MOVED TO AUTODIFF, AS THEY ARE NOT SUPPORTED FOR PNL-PYTHON LEARNING:
             optimizations_per_minibatch:Optional[int]=None,
-            execute_in_additional_optimizations:Optional[dict]=None, # BREADCRUMB MOVE TO AUTODIFF
+            # execute_in_additional_optimizations:Optional[dict]=None, # BREADCRUMB MOVE TO AUTODIFF
+            # exclude_from_gradient_calc:Optional[Union[list,str]]=None,
             patience: Optional[int] = None,
             min_delta: int = 0,
+            # BREADCRUMB: END
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch=None,
             call_after_minibatch=None,
             context: Optional[Context] = None,
+            # BREADCRUMB: ?SHOULD THIS BE HERE:
             *args,
             base_context: Context = Context(execution_id=None),
             skip_initialization: bool = False,
@@ -12116,6 +12121,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if minibatch_size is None:
             minibatch_size = self.parameters.minibatch_size._get(context)
 
+        # BREADCRUMB: THIS SHOULD BE REVISED TO PRESERVE CONSTRUCTOR VALUE, AND OVERRIDE FOR EXECUTION OF LEARN
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
         else:
@@ -12129,6 +12135,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate=learning_rate,
             minibatch_size=minibatch_size,
             optimizations_per_minibatch=optimizations_per_minibatch,
+            # execute_in_additional_optimizations=None,
+            # execlude_from_gradient_calc=None,
             patience=patience,
             min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,

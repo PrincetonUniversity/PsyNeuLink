@@ -1147,7 +1147,8 @@ class AutodiffComposition(Composition):
                                       optimizer_params=None,
                                       context=None,
                                       new=None,
-                                      base_context=Context(execution_id=None)):
+                                      base_context=Context(execution_id=None),
+                                      **kwargs):
         """Build a Pytorch representation of the AutodiffComposition
         Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
         self.pytorch_representation.
@@ -1199,7 +1200,8 @@ class AutodiffComposition(Composition):
             self.pytorch_composition_wrapper_type(composition=self,
                                                   device=self.device,
                                                   context=context,
-                                                  base_context=base_context)
+                                                  base_context=base_context,
+                                                  **kwargs)
         elif context.flags & ContextFlags.COMMAND_LINE:
             warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
                           f"directly from the command line; this and any additional calls will be ignored. "
@@ -1707,7 +1709,6 @@ class AutodiffComposition(Composition):
     @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
-              execute_in_additional_optimizations: Optional[dict] = None,
               synch_projection_matrices_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
               synch_node_variables_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,
               synch_node_values_with_torch: Optional[LEARNING_SCALE_LITERALS] = NotImplemented,

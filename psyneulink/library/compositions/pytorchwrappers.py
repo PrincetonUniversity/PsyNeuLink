@@ -245,6 +245,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  subclass_components=None,
                  context=None,
                  base_context=Context(execution_id=None),
+                 **kwargs
                  ):
 
         super(PytorchCompositionWrapper, self).__init__()

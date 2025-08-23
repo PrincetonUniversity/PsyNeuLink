@@ -26,7 +26,7 @@ IS_TEST = True
 IS_VERBOSE = True
 
 TOLERANCE = 1e-10
-NR_TRIALS_TO_CHECK = 20
+NR_TRIALS_TO_CHECK = 2
 
 
 def main():

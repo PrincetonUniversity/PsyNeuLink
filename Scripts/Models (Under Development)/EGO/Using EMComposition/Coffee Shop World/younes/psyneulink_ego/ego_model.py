@@ -137,11 +137,11 @@ def construct_model(
                                     context_learning_pathway],
                                    learning_rate=learning_rate,
                                    loss_spec=loss_spec,
-                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
-                                   execute_in_additional_optimizations={context_layer: LAST,
-                                                                        previous_state_layer: LAST},
-                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
-                                   optimizations_per_minibatch=config['num_optimization_steps'],
+                                   # # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
+                                   # execute_in_additional_optimizations={context_layer: LAST,
+                                   #                                      previous_state_layer: LAST},
+                                   # # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn():
+                                   # optimizations_per_minibatch=config['num_optimization_steps'],
                                    name=model_name,
                                    device=device)
 
@@ -170,8 +170,9 @@ def run_model(model,
                 # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
                 optimizations_per_minibatch=config['num_optimization_steps'],
                 # BREADCRUMB: SHOULD BE ABLE TO JUST USE THIS (INSTEAD OF CONSTRUCTOR), BUT DOESN'T CURRENTLY WORK
-                execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
-                                                     model.nodes[config['previous_state_layer_name']]: LAST},
+                # execute_in_additional_optimizations={model.nodes[config['context_layer_name']]: LAST,
+                #                                      model.nodes[config['previous_state_layer_name']]: LAST},
+                # exclude_from_gradient_calc=None,
                 minibatch_size=1,
                 synch_projection_matrices_with_torch=RUN,
                 synch_node_values_with_torch=RUN,
