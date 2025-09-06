@@ -146,11 +146,15 @@ jobs:
       shell: bash
       run: |
         pip install flake8 flake8-unused-arguments
+
+        # stop build if there are unused arguments in tests (these might be fixtures)
+        flake8 tests/ --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py
+
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --exit-zero --select=E9,F63,F7,F82 --show-source --statistics
+
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        flake8 --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py tests/
 
     - name: Print numpy info
       shell: bash
