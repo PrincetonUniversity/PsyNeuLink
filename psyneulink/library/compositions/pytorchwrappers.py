@@ -10,7 +10,7 @@
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
 from h5py.h5f import namedtuple
 
-from psyneulink._typing import Optional, Literal, Union
+from psyneulink._typing import Iterable, Literal, Optional, Union
 
 import graph_scheduler
 import numpy as np
@@ -1738,7 +1738,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
-                              current_condition: 'SynchRetainArg',
+                              current_condition: Union['SynchRetainArg', Iterable['SynchRetainArg']],
                               context:Context,
                               params:Optional[list]=None):
         """Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
@@ -1753,18 +1753,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assert not illegal_params, \
             f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
 
-        if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
+        if current_condition is None:
+            current_condition = set()
+        elif isinstance(current_condition, str):
+            # allow ValueError to raise if current_condition is not valid
+            current_condition = {LearningScale(current_condition)}
+        else:
+            try:
+                current_condition = {current_condition}
+            except TypeError:
+                current_condition = set(current_condition)
+
+        if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] in current_condition:
             self._copy_weights_to_psyneulink(context)
 
         # If either NODE_VARIABLES or NODE_VALUES is specified, and current condition is met, do relevant copies
-        if ((NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition)
-                or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition)):
+        if (
+            (NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] in current_condition)
+            or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] in current_condition)
+        ):
             self.copy_node_variables_and_values_to_psyneulink({k:v for k,v in synch_with_pnl_options.items()
                                                                if (k in {NODE_VARIABLES, NODE_VALUES} and
-                                                                   v == current_condition)},
+                                                                   v in current_condition)},
                                                               context)
 
-        if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
+        if RESULTS in params and synch_with_pnl_options[RESULTS] in current_condition:
             self.copy_results_to_psyneulink(current_condition, context)
 
     def _copy_weights_to_psyneulink(self, context=None):
@@ -1799,7 +1812,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Append outputs of Pytorch forward() to AutodiffComposition.results attribute."""
         # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
-        if current_condition in {LearningScale.EPOCH, LearningScale.RUN}:
+        if current_condition.intersection({LearningScale.EPOCH, LearningScale.RUN}):
             results_param = self.composition.parameters.results
             prev_results = results_param._get(context)
             curr_results = convert_to_np_array(self.retained_results)
