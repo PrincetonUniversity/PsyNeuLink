@@ -23,9 +23,12 @@ concurrency:
 jobs:
   # The main test job
   build:
+    # Use macos-14 instead of macos-latest for python 3.13.
+    # Newer image includes newer clang/llvm which fails to compile
+    # onnx-1.17.0, which doesn't provide python 3.13 wheels.
     runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
                 && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
-                || format('{0}-latest', matrix.os) }}
+                || ((matrix.os == 'macos' && matrix.python-version == '3.13') && 'macos-14' || format('{0}-latest', matrix.os)) }}
     env:
       # Keep DESCRIPTION in sync with the above
       DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args) }}
