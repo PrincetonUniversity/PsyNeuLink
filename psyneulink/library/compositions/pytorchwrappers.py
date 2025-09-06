@@ -27,6 +27,7 @@ else:
 
 import warnings
 from enum import Enum, auto
+from typing import TYPE_CHECKING
 
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -35,20 +36,25 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
-from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, NodeRole
+from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, LearningScale, NodeRole
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
 from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE,
                                               DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE,
-                                              EPOCH, INPUTS, LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
+                                              INPUTS, LEARNING, Loss, MATRIX_WEIGHTS,
                                               NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS,
-                                              RESULTS, RUN, SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
+                                              RESULTS, SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
+
+
+if TYPE_CHECKING:
+    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg
+
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
            'ENTER_NESTED', 'EXIT_NESTED', 'ParamNameCompositionTuple']
@@ -1732,7 +1738,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
-                              current_condition:LEARNING_SCALE_LITERALS,
+                              current_condition: 'SynchRetainArg',
                               context:Context,
                               params:Optional[list]=None):
         """Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
@@ -1793,7 +1799,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Append outputs of Pytorch forward() to AutodiffComposition.results attribute."""
         # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
-        if current_condition in {EPOCH, RUN}:
+        if current_condition in {LearningScale.EPOCH, LearningScale.RUN}:
             results_param = self.composition.parameters.results
             prev_results = results_param._get(context)
             curr_results = convert_to_np_array(self.retained_results)
