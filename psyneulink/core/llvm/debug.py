@@ -53,7 +53,7 @@ debug_env: Dict[str, Any] = dict()
 
 def _update() -> None:
     """Update debug_env variable with the latest state of PNL_LLVM_DEBUG env var."""
-    global debug_env
+    global debug_env # noqa: F824
     debug_env.clear()
     debug_env.update({x.partition('=')[0:3:2] for x in str(os.environ.get("PNL_LLVM_DEBUG")).split(';')})
 
