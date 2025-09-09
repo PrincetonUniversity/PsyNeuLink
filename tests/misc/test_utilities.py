@@ -1,9 +1,12 @@
+import sys
 from collections.abc import Iterable
+from contextlib import nullcontext
+
 import numpy as np
 import pytest
 
 from psyneulink.core.globals.utilities import (
-    convert_all_elements_to_np_array, extended_array_equal, prune_unused_args, update_array_in_place
+    PNLStrEnum, convert_all_elements_to_np_array, extended_array_equal, prune_unused_args, update_array_in_place
 )
 
 
@@ -166,3 +169,54 @@ def test_update_array_in_place_failures(target, source):
         assert not np.array_equal(target[i], source[i])
         assert not np.array_equal(old_target[i], source[i])
         np.testing.assert_array_equal(target[i], old_target[i])
+
+
+class TestPNLStrEnum:
+    class NewPNLStrEnum(PNLStrEnum):
+        A = 'A'
+        B = 'b'
+        C = 'cC'
+        A2 = 'a'
+
+    equals_parametrizations = [
+        (NewPNLStrEnum.A, NewPNLStrEnum.A2),
+        (NewPNLStrEnum.A, 'A'),
+        (NewPNLStrEnum.A, 'a'),
+        (NewPNLStrEnum.B, 'B'),
+        (NewPNLStrEnum.B, 'b'),
+        (NewPNLStrEnum.C, 'Cc'),
+    ]
+    equals_values_parametrizations = list(zip(*equals_parametrizations))[1]
+
+    @pytest.mark.parametrize('enum_val, value', equals_parametrizations)
+    def test_equals(self, enum_val, value):
+        assert enum_val == value
+
+    @pytest.mark.parametrize('enum_val, value', equals_parametrizations)
+    def test_create_from(self, enum_val, value):
+        assert self.NewPNLStrEnum(value) == enum_val
+
+    @pytest.mark.parametrize('value', equals_values_parametrizations)
+    def test_enum_contains(self, value):
+        assert value in self.NewPNLStrEnum
+
+    not_contains_invalid_type_err = TypeError if sys.version_info < (3, 12) else None
+
+    @pytest.mark.parametrize(
+        'value, err',
+        [
+            ('', None),
+            ('A2', None),
+            ('a2', None),
+            (NewPNLStrEnum, not_contains_invalid_type_err),
+            (0, not_contains_invalid_type_err),
+        ],
+    )
+    def test_not_contains(self, value, err):
+        try:
+            raises_context = pytest.raises(err)
+        except ValueError:
+            raises_context = nullcontext()
+
+        with raises_context:
+            assert value not in self.NewPNLStrEnum

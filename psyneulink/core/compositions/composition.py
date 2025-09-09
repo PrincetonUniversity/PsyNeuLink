@@ -3235,7 +3235,9 @@ from psyneulink.core.globals.keywords import \
      PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
      RECEIVER, RETAIN_IN_PNL_OPTIONS,
      SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS,
-     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
+     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH,
+     OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN,
+     )
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import (
     Parameter,
@@ -3246,8 +3248,10 @@ from psyneulink.core.globals.parameters import (
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list,
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal,
+)
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3261,7 +3265,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole', 'LearningScale',
     ]
 
 logger = logging.getLogger(__name__)
@@ -14136,3 +14140,43 @@ def get_composition_for_node(node):
         for efferent in receiver.efferents:
             receiver = efferent.receiver.owner
     return receiver.composition
+
+
+class LearningScale(PNLStrEnum):
+    """Scales at which `learning <Composition_Learning>` occurs
+
+    Used to specify the scales over which learning-related events occur when `learning <Composition_Learning>` is
+    executed in a `Composition`.
+
+    Attributes
+    ----------
+
+    OPTIMIZATION_STEP
+        a single step of gradient calculation, of which there can be one or more in a `minibatch
+        <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
+        Parameter.
+
+    TRIAL
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
+        and unanticipated results can occur.
+
+    MINIBATCH
+        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
+        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
+        `matrix <MappingProjection.matrix>` Parameter.
+
+    EPOCH
+        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
+        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
+        <Composition.optimizations_per_minibatch>` Parameters of the Composition.
+
+    RUN
+        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
+        `num_epochs <Composition.num_epochs>` epochs.
+
+    """
+    OPTIMIZATION_STEP = OPTIMIZATION_STEP
+    TRIAL = TRIAL
+    MINIBATCH = MINIBATCH
+    EPOCH = EPOCH
+    RUN = RUN
