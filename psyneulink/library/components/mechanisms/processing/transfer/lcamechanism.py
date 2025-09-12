@@ -193,7 +193,6 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
-from psyneulink import NUM_EXECUTIONS_BEFORE_FINISHED
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
