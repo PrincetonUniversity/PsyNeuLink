@@ -16,7 +16,7 @@ pandas<2.3.3
 pillow<11.4.0
 pint<0.26.0
 protobuf>=3.20.2, <6.32.1
-rich>=10.2, <10.13
+rich>=10.2, <14.2
 scipy>=1.7.3, <1.17
 toposort<1.11
 torch>=1.13.0, <2.9.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64' or platform_machine == 'arm64' or platform_machine == 'aarch64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
