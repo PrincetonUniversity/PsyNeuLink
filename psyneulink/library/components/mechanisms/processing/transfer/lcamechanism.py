@@ -211,9 +211,10 @@ from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
-__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE', 'DECISION_INDEX', 'DECISION_TIME']
+__all__ = ['LCAMechanism', 'LCAError', 'DECISION_INDEX', 'DECISION_STEPS', 'DECISION_TIME']
 
 DECISION_INDEX = 'DECISION_INDEX'
+DECISION_STEPS = 'DECISION_STEPS'
 DECISION_TIME = 'DECISION_TIME'
 
 logger = logging.getLogger(__name__)
@@ -324,6 +325,19 @@ class LCAMechanism(RecurrentTransferMechanism):
             the index of the element of the LCAMechanism's `value <Mechanism_Base.value>` that has the maximum value,
             and has reached `threshold <LCAMechanism.threshold>` when the `is_finished` attribute  is `True`.
 
+        .. _DECISION_STEPS:
+
+        *DECISION_STEPS* : int
+            the number of executions completed before the `threshold <LCAMechanism.threshold>` was reached;
+            note that this only applies when `execute_until_finished <Mechanism.execute_until_finished>` is `True`;
+            otherwise it will always be 1.
+
+        .. _DECISION_TIME:
+
+        *DECISION_TIME* : float
+            the time (in seconds) required to reach the `threshold <LCAMechanism.threshold>`, computed as
+            `DECISION_STEPS` / `time_step_size <LCAMechanism.time_step_size>`; note that this only applies when
+            `execute_until_finished <Mechanism.execute_until_finished>` is `True`;  otherwise it will always be 1.
 
     Returns
     -------
@@ -450,12 +464,15 @@ class LCAMechanism(RecurrentTransferMechanism):
                                   # MODIFIED 9/12/25 NEW:
                                   {NAME:DECISION_INDEX,
                                    FUNCTION: lambda x: np.array([np.argmax(x)])},
-                                  {NAME: DECISION_TIME,
+                                  {NAME: DECISION_STEPS,
                                    VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED}
+                                  # {NAME: DECISION_TIME,
+                                  #  VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED,
+                                  #  FUNCTION: lambda x: x / self.time_step_size}
                                   # MODIFIED 9/12/25 END
                                   ])
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
-    standard_output_port_names.extend([DECISION_INDEX, DECISION_TIME])
+    standard_output_port_names.extend([DECISION_INDEX, DECISION_STEPS, DECISION_TIME])
 
     @check_user_specified
     @beartype
