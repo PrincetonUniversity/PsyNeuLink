@@ -193,6 +193,7 @@ from collections.abc import Iterable
 import numpy as np
 from beartype import beartype
 
+from psyneulink import NUM_EXECUTIONS_BEFORE_FINISHED
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
@@ -202,9 +203,9 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    (CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
-     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE,
-     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO, VARIABLE)
+    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
+     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED,
+     RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, VARIABLE)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -450,7 +451,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                                   {NAME:DECISION_INDEX,
                                    FUNCTION: lambda x: np.array([np.argmax(x)])},
                                   {NAME: DECISION_TIME,
-                                   VARIABLE: 'num_executions_before_finished'}
+                                   VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED}
                                   # MODIFIED 9/12/25 END
                                   ])
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
