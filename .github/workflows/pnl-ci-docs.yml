@@ -19,28 +19,32 @@ concurrency:
 
 jobs:
   docs-build:
+
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        pnl-version: ${{ (github.event_name == 'push') && fromJSON('["head"]') || fromJSON('["head", "base"]') }}
-        exclude:
-          - os: macos-latest
-            pnl-version: 'base'
-          - os: windows-latest
-            pnl-version: 'base'
-          - python-version: '3.8'
-            pnl-version: 'base'
-          - python-version: '3.9'
-            pnl-version: 'base'
-          - python-version: '3.10'
-            pnl-version: 'base'
-          - python-version: '3.12'
-            pnl-version: 'base'
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        pnl-version: ['head']
+        include:
+          # include base version for push events. In other events it includes
+          # an already matrix configuration which is ignored.
+          # DOCS_PYTHON_VERSION and DOCS_OS
+          - python-version: '3.11'
+            os: 'ubuntu-latest'
+            pnl-version: ${{ (github.event_name == 'push') && 'head' || 'base' }}
+
+          # Use macos-14 instead of macos-latest for python 3.13.
+          # Newer image includes newer clang/llvm which fails to compile
+          # onnx-1.17.0, which doesn't provide python 3.13 wheels.
           - python-version: '3.13'
-            pnl-version: 'base'
+            os: macos-14
+            pnl-version: 'head'
+
+        exclude:
+          - python-version: '3.13'
+            os: macos-latest
 
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
@@ -72,7 +76,7 @@ jobs:
         branch: master
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -141,8 +145,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.11]
-        os: [ubuntu-latest]
+        # DOCS_PYTHON_VERSION and DOCS_OS
+        python-version: ['3.11']
+        os: ['ubuntu-latest']
 
     runs-on: ${{ matrix.os }}
     permissions:

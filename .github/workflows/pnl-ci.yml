@@ -23,9 +23,16 @@ concurrency:
 jobs:
   # The main test job
   build:
+    # Use macos-14 instead of macos-latest for python 3.13.
+    # Newer image includes newer clang/llvm which fails to compile
+    # onnx-1.17.0, which doesn't provide python 3.13 wheels.
+    # Explanation of the expression below:
+    # line 1: Check if the job environment is listed in repository-scale "SELF_HOSTED" variable
+    # line 2: "true" branch. Construct tag array to match one of the self hosted runners. All tags need to match.
+    # line 3: "else" branch. Construct GA image description. Generally the {windows,macos,ubuntu}-latest.
     runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
                 && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
-                || format('{0}-latest', matrix.os) }}
+                || ((matrix.os == 'macos' && matrix.python-version == '3.13') && 'macos-14' || format('{0}-latest', matrix.os)) }}
     env:
       # Keep DESCRIPTION in sync with the above
       DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args) }}
@@ -99,7 +106,7 @@ jobs:
       run: git fetch --tags origin master
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -139,11 +146,16 @@ jobs:
       shell: bash
       run: |
         pip install flake8 flake8-unused-arguments
+
+        # stop build if there are unused arguments in tests (these might be fixtures)
+        flake8 tests/ --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py
+
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --exit-zero --select=E9,F63,F7,F82 --show-source --statistics
+        # exclude F821 "unknown names" as there are quite a few of them around PNL
+        flake8 . --count --select=E9,F63,F7,F82 --extend-ignore=F821 --show-source  --extend-exclude Scripts/
+
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        flake8 --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py tests/
 
     - name: Print numpy info
       shell: bash
