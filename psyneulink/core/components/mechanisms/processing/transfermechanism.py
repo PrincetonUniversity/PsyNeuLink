@@ -288,7 +288,7 @@ described below (also see `examples <TransferMechanism_Examples_Termination>`).
 
 *Single step execution* -- If either `execute_until_finished <Component.execute_until_finished>` is set to False,
 or no `termination_threshold <TransferMechanism.termination_threshold>` is specified (i.e., it is None, the default),
-then only a signle step of integration is carried out each time the TransferMechanism is executed.  In this case,
+then only a single step of integration is carried out each time the TransferMechanism is executed.  In this case,
 the `num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
 since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
 `execute method <Component_Execution>` (and the termination condition does not apply or has not been specified).

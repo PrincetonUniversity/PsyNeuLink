@@ -204,14 +204,16 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import _
 from psyneulink.core.globals.keywords import \
     (CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
      MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE,
-     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO)
+     TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO, VARIABLE)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
-__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
+__all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE', 'DECISION_INDEX', 'DECISION_TIME']
 
+DECISION_INDEX = 'DECISION_INDEX'
+DECISION_TIME = 'DECISION_TIME'
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +315,13 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         *MAX_VS_AVG* : float
             the difference between the element of the LCAMechanism's `value <Mechanism_Base.value>`
-            and the average of all of the other elements.
+            with the highest value and the average of all of the other elements.
+
+        .. _DECISION_INDEX:
+
+        *DECISION_INDEX* : int
+            the index of the element of the LCAMechanism's `value <Mechanism_Base.value>` that has the maximum value,
+            and has reached `threshold <LCAMechanism.threshold>` when the `is_finished` attribute  is `True`.
 
 
     Returns
@@ -437,7 +445,16 @@ class LCAMechanism(RecurrentTransferMechanism):
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
                                     FUNCTION:max_vs_next},
                                    {NAME:MAX_VS_AVG,
-                                    FUNCTION:max_vs_avg}])
+                                    FUNCTION:max_vs_avg},
+                                  # MODIFIED 9/12/25 NEW:
+                                  {NAME:DECISION_INDEX,
+                                   FUNCTION: lambda x: np.array([np.argmax(x)])},
+                                  {NAME: DECISION_TIME,
+                                   VARIABLE: 'num_executions_before_finished'}
+                                  # MODIFIED 9/12/25 END
+                                  ])
+    standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([DECISION_INDEX, DECISION_TIME])
 
     @check_user_specified
     @beartype
@@ -508,39 +525,6 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize
-
-        # MODIFIED 9/12/25 NEW:
-        self.standard_output_ports.add_port_dicts([
-            # Provides a 1d 2-item array with:
-            #    decision variable in position corresponding to threshold crossed, and 0 in the other position
-            {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-             VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD],
-                       # per VARIABLE assignment above, items of v of lambda function below are:
-                       #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
-                       #    v[1]=self.parameter_ports[THRESHOLD]
-             FUNCTION: lambda v: [float(v[0]), 0] if (v[1] - v[0]) < (v[1] + v[0]) else [0, float(v[0])]},
-            # Provides a 1d 2-item array with:
-            #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
-            {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-             VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_PORT_VARIABLES, 0)],
-             # per VARIABLE assignment above, items of v of lambda function below are:
-             #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
-             #    v[1]=self.parameter_ports[THRESHOLD]
-             #    v[2]=self.input_ports[0].variable
-             FUNCTION: lambda v: [float(v[2][0][0]), 0]
-                                  if (v[1] - v[0]) < (v[1] + v[0])
-                                  else [0, float(v[2][0][1])]
-             }])
-        self.standard_output_ports.add_port_dicts([
-            {
-                NAME: DECISION_OUTCOME,
-                VARIABLE: (OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
-                FUNCTION: UserDefinedFunction(custom_function=lambda x: (x > 0.0).astype(float))
-            }
-        ])
-        # MODIFIED 9/12/25 END
-
-
 
         super().__init__(
             default_variable=default_variable,
