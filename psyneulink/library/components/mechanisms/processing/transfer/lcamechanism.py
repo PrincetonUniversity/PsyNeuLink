@@ -463,7 +463,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                  **kwargs):
         """Instantiate LCAMechanism
         """
-        # MODIFIED 1/22/20 NEW: [JDC]
         if MATRIX in kwargs:
             matrix = kwargs[MATRIX]
             if matrix is not None:
@@ -471,7 +470,6 @@ class LCAMechanism(RecurrentTransferMechanism):
                 competition = None
         else:
             matrix = None
-        # MODIFIED 1/22/20 END
 
         try:
             if self_excitation is not None and kwargs[AUTO] is not None:
@@ -505,13 +503,44 @@ class LCAMechanism(RecurrentTransferMechanism):
         elif hetero is not None:
             competition = -hetero
 
-        # MODIFIED 10/26/19 NEW: [JDC]
         # Implemented for backward compatibility or, if kept, ease of use
         termination_threshold, termination_measure, termination_comparison_op = self._parse_threshold_args(kwargs)
-        # MODIFIED 10/26/19 END
 
         # Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize
+
+        # MODIFIED 9/12/25 NEW:
+        self.standard_output_ports.add_port_dicts([
+            # Provides a 1d 2-item array with:
+            #    decision variable in position corresponding to threshold crossed, and 0 in the other position
+            {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+             VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD],
+                       # per VARIABLE assignment above, items of v of lambda function below are:
+                       #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+                       #    v[1]=self.parameter_ports[THRESHOLD]
+             FUNCTION: lambda v: [float(v[0]), 0] if (v[1] - v[0]) < (v[1] + v[0]) else [0, float(v[0])]},
+            # Provides a 1d 2-item array with:
+            #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
+            {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+             VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_PORT_VARIABLES, 0)],
+             # per VARIABLE assignment above, items of v of lambda function below are:
+             #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+             #    v[1]=self.parameter_ports[THRESHOLD]
+             #    v[2]=self.input_ports[0].variable
+             FUNCTION: lambda v: [float(v[2][0][0]), 0]
+                                  if (v[1] - v[0]) < (v[1] + v[0])
+                                  else [0, float(v[2][0][1])]
+             }])
+        self.standard_output_ports.add_port_dicts([
+            {
+                NAME: DECISION_OUTCOME,
+                VARIABLE: (OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
+                FUNCTION: UserDefinedFunction(custom_function=lambda x: (x > 0.0).astype(float))
+            }
+        ])
+        # MODIFIED 9/12/25 END
+
+
 
         super().__init__(
             default_variable=default_variable,
@@ -542,14 +571,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # Do these here so that name of the object (assigned by super) can be used in the warning messages
         if matrix is not None:
-            # # MODIFIED 1/22/20 OLD:
-            # warnings.warn(f"The 'matrix' arg was specified for {self.name} but will not be used; "
-            #               f"the matrix for an {self.__class__.__name__} is specified using "
-            #               f"the 'self_excitation' and 'competition' args.")
-            # MODIFIED 1/22/20 NEW: [JDC]
             warnings.warn(f"The 'matrix' arg was specified for {self.name}, "
                           f"so its 'self_excitation' and 'competition' arguments will be ignored.")
-            # MODIFIED 1/22/20 END
 
     def _parse_threshold_args(self, kwargs):
         """Implements convenience arguments threshold and threshold_criterion

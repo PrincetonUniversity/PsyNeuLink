@@ -375,7 +375,6 @@ below, starting with constraints that are given the highest precedence:
 Standard OutputPorts
 ^^^^^^^^^^^^^^^^^^^^^
 
-# FIX: 11/9/19: REPLACE RECURRENTTRANSFERMECHNISM EXAMPLE WITH TRANSFERMECHANISM
 Mechanisms have a `standard_output_ports <Mechanism_Base.standard_output_ports>` attribute, that contains a list of
 `StandardOutputPorts`: `OutputPort specification dictionaries <OutputPort_Specification_Dictionary>` that can be
 assigned as `output_ports <Mechanism_Base.output_ports>`. There is a base set of StandardOutputPorts for all
