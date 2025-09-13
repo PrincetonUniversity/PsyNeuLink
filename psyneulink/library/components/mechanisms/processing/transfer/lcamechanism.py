@@ -203,8 +203,8 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
-     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED,
-     RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, VARIABLE)
+     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED, RESULT,
+     TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, VARIABLE)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -218,17 +218,9 @@ DECISION_TIME = 'DECISION_TIME'
 
 logger = logging.getLogger(__name__)
 
-def _time_step_size_setter(value, owning_component, context):
-    """Update time_step_size used by lambda function in DECISION_TIME OutputPort if it exists"""
-    if DECISION_TIME in owning_component.output_ports:
-        decision_time_idx = owning_component.standard_output_port_names.index(DECISION_TIME)
-        owning_component.standard_output_ports[decision_time_idx][FUNCTION] = lambda x: x * value
-    return value
-
 
 class LCAError(MechanismError):
     pass
-
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -438,7 +430,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         auto = Parameter(0.0, modulable=False, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=False)
         competition = Parameter(1.0, modulable=False)
-        time_step_size = FunctionParameter(0.1, function_name='integrator_function', _setter=_time_step_size_setter)
+        time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
         integrator_mode = Parameter(True, setter=_integrator_mode_setter, valid_types=bool)
         integrator_function = Parameter(LeakyCompetingIntegrator, stateful=False, loggable=False)
@@ -475,11 +467,10 @@ class LCAMechanism(RecurrentTransferMechanism):
                                   {NAME: DECISION_STEPS,
                                    VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED},
                                   {NAME: DECISION_TIME,
-                                   # Note: function is assigned in constructor since it depends on time_step_size
-                                   VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED}
+                                   VARIABLE: [NUM_EXECUTIONS_BEFORE_FINISHED, TIME_STEP_SIZE],
+                                   FUNCTION: lambda x: x[0] * x[1]}
                                   ])
     standard_output_port_names = RecurrentTransferMechanism.standard_output_port_names.copy()
-    # Note: DECISION_TIME is constructed in __init__ if called for since its function depends on time_step_size
     standard_output_port_names.extend([MAX_VS_NEXT, MAX_VS_AVG, DECISION_INDEX, DECISION_STEPS, DECISION_TIME])
 
     @check_user_specified
@@ -630,12 +621,3 @@ class LCAMechanism(RecurrentTransferMechanism):
             termination_comparison_op = termination_comparison_op or GREATER_THAN_OR_EQUAL
 
         return termination_threshold, termination_measure, termination_comparison_op
-
-    def _instantiate_attributes_after_function(self, function=None, context=None):
-        """Instantiate function for the DECISION_TIME OutputPort based on time_step_size"""
-        time_step_size = self.parameters.time_step_size._get(context)
-        if DECISION_TIME in self.output_ports:
-            decision_time_idx = self.standard_output_port_names.index(DECISION_TIME)
-            self.standard_output_ports[decision_time_idx][FUNCTION] = lambda x : x * time_step_size
-        super()._instantiate_attributes_after_function(context=context)
-
