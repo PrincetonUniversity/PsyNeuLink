@@ -280,10 +280,36 @@ class TestLCA:
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
     def test_LCAMechanism_termination_threshold(self):
-        lca = LCAMechanism(input_shapes=2, leak=0.5, threshold=0.7)
-        comp = Composition()
-        comp.add_node(lca)
-        XXX
+        lca = pnl.LCAMechanism(
+            input_shapes=2,
+            function=pnl.Logistic(gain=1, bias=0),
+            threshold=0.55,
+            leak=0,
+            competition=1,
+            self_excitation=0,
+            noise=0.1,
+            time_step_size=0.01,
+            execute_until_finished=True,
+            reset_stateful_function_when=pnl.AtTrialStart(),
+            output_ports = [pnl.RESULT, pnl.DECISION_INDEX, pnl.DECISION_STEPS, pnl.DECISION_TIME]
+        )
+        comp = pnl.Composition(lca)
+        comp.run([[1, 0]])
+        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 13
+        assert lca.output_ports[pnl.DECISION_TIME].value == .13
+        lca.parameters.time_step_size.set(.001, comp.name)
+        comp.run([[0, 1]])
+        assert lca.output_ports[pnl.DECISION_INDEX].value == 1
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 55
+        assert lca.output_ports[pnl.DECISION_TIME].value == .055
+        lca.execute_until_finished = False
+        comp.run([[1, 0]])
+        comp.run([[1, 0]])
+        comp.run([[1, 0]])
+        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 2
+        assert lca.output_ports[pnl.DECISION_TIME].value == .002
 
 
 class TestLCAReset:
