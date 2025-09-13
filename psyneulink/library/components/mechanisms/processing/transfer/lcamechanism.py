@@ -202,9 +202,10 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX, LCA_MECHANISM, LESS_THAN_OR_EQUAL,
-     MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED, RESULT,
-     TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, VARIABLE)
+    (AUTO, CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INVERSE_HOLLOW_MATRIX, IS_FINISHED_FLAG,
+     LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, MAX_VS_NEXT, MAX_VS_AVG, NAME, NUM_EXECUTIONS_BEFORE_FINISHED,
+     OWNER_VALUE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE,
+     VALUE, VARIABLE)
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -463,7 +464,13 @@ class LCAMechanism(RecurrentTransferMechanism):
                                    {NAME:MAX_VS_AVG,
                                     FUNCTION:max_vs_avg},
                                   {NAME:DECISION_INDEX,
+                                   # MODIFIED 9/13/25 OLD:
+                                   VARIABLE: OWNER_VALUE,
                                    FUNCTION: lambda x: np.array([np.argmax(x)])},
+                                   # MODIFIED 9/13/25 NEW: RETURNS NONE UNLESS IS_FINISHED_FLAG IS TRUE
+                                   # VARIABLE: [OWNER_VALUE, IS_FINISHED_FLAG],
+                                   # FUNCTION: lambda x: np.array([np.argmax(x[0])]) if x[1] else None},
+                                   # MODIFIED 9/13/25 END
                                   {NAME: DECISION_STEPS,
                                    VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED},
                                   {NAME: DECISION_TIME,
