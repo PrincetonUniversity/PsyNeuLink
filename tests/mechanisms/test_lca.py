@@ -277,6 +277,14 @@ class TestLCA:
         assert lca.defaults.termination_threshold == 0
         assert lca.parameters.termination_threshold in lca.parameter_ports
 
+    @pytest.mark.composition
+    @pytest.mark.lca_mechanism
+    def test_LCAMechanism_termination_threshold(self):
+        lca = LCAMechanism(input_shapes=2, leak=0.5, threshold=0.7)
+        comp = Composition()
+        comp.add_node(lca)
+        XXX
+
 
 class TestLCAReset:
 
