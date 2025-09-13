@@ -213,6 +213,8 @@ specified using the **initializer** argument of a TransferMechanism's constructo
     <TransferMechanism.integrator_function>`, the value specified for the latter takes precedence, and that value is
     assigned as the one for the `initial_value <TransferMechanism.initial_value>` of the TransferMechanism.
 
+.. _TransferMechanism__Resetting:
+
 *Resetting integration* -- in some cases, it may be useful to reset the integration to the original starting point,
 or to a new one. This can be done using the Mechanism's `reset <TransferMechanism.reset>` method. This first sets the
 `integrator_function <TransferMechanism.integrator_function>`'s `previous_value <IntegratorFunction.previous_value>`

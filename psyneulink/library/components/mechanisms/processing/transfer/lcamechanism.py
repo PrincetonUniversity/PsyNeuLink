@@ -328,22 +328,25 @@ class LCAMechanism(RecurrentTransferMechanism):
         .. _DECISION_INDEX:
 
         *DECISION_INDEX* : int
-            the index of the element of the LCAMechanism's `value <Mechanism_Base.value>` that has the maximum value,
-            and has reached `threshold <LCAMechanism.threshold>` when the `is_finished` attribute  is `True`.
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the
+            index of the element of the LCAMechanism's `value <Mechanism_Base.value>` that had when `threshold
+            <LCAMechanism.threshold>` was reached;  otherwise, it is the index of the element with the highest
+            value when the LCAMechanism was last executed.
 
         .. _DECISION_STEPS:
 
         *DECISION_STEPS* : int
-            the number of executions completed before the `threshold <LCAMechanism.threshold>` was reached;
-            note that this only applies when `execute_until_finished <Mechanism.execute_until_finished>` is `True`;
-            otherwise it will always be 1.
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the number of
+            executions taken to reach the `threshold <LCAMechanism.threshold>`; otherwise, it is the number of
+            times the LCAMechanism has executed since being `reset <TransferMechanism__Resetting>`.
 
         .. _DECISION_TIME:
 
         *DECISION_TIME* : float
-            the time (in seconds) required to reach the `threshold <LCAMechanism.threshold>`, computed as
-            `DECISION_STEPS` / `time_step_size <LCAMechanism.time_step_size>`; note that this only applies when
-            `execute_until_finished <Mechanism.execute_until_finished>` is `True`;  otherwise it will always be 1.
+            if `execute_until_finished <Mechanism.execute_until_finished>` is `True`, this indicates the time
+            (computed as `DECISION_STEPS` * `time_step_size <LCAMechanism.time_step_size>`) taken to reach the
+            `threshold  <LCAMechanism.threshold>`; otherwise, it is the number of times the LCAMechanism has executed
+            since being `reset <TransferMechanism__Resetting>` * `time_step_size <LCAMechanism.time_step_size>`.
 
     Returns
     -------
