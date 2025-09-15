@@ -987,7 +987,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False` (see `noise <TransferMechanism.noise>` for details).
         If **noise** is specified as a single function, it can be a reference to a Function class or an instance of one;
-        if a function is used in a list, it *must* be an instance.
+        if a function is used in a list, it *must* be an instance. See `noise <TransferMechanism.noise>` for
+        additional details.
 
     clip : tuple(float, float) or list [float, float] : default None
         specifies the allowable range for the result of `function <Mechanism_Base.function>` (see
@@ -1049,20 +1050,24 @@ class TransferMechanism(ProcessingMechanism_Base):
         value is applied to the result of `integrator_function <TransferMechanism.integrator_function>` if
         `integrator_mode <TransferMechanism.integrator_mode>` is False; otherwise it is passed as the `noise
         <IntegratorFunction.noise>` Parameter to `integrator_function <TransferMechanism.integrator_function>`. If
-        noise is a float or function, it is added to all elements of the array being transformed; if it is a function,
-        it is executed independently for each element each time the TransferMechanism is executed.  If noise is an
-        array, it is applied Hadamard (elementwise) to the array being transformed;  again, each function is executed
+        noise is a float or function, it is added to all elements of the array being transformed; if it is an
+        array, it is applied Hadamard (elementwise) to the array being transformed; again, each function is executed
         independently for each corresponding element of the array each time the Mechanism is executed.
+
+        .. note::
+           If **noise** is specified as a float, a list or array of floats, of a function that returns a fixed value,
+           then noise acts as a constant across executions, until it is changed explicitly; for it to implement
+           stochasiticity in such cases, it must be varied programmitically (e.g., before each call to the
+           `run <Composition.run>` or `learn <Composition.learn>` method of a `Composition <Composition>` to which
+           the Mechanism belongs. To ensure that the value varies automatically on each *execution* of the Mechanism,
+           and for every element of an array for which it is specified, a `DistributionFunction` should be used; this
+           will generate a new value on each execution of the Mechanisms, and separately for every value of a list in
+           which it is specified, generating a new value of the function for that execution (and each of the
+           corresponding elements of the array).
 
         .. note::
             If **noise** is specified as a float or function in the constructor for the TransferMechanism, the noise
             Parameter cannot later be specified as a list or array, and vice versa.
-
-        .. hint::
-            To generate random noise that varies for every execution and across all elements of an array, a
-            `DistributionFunction` should be used, that generates a new value on each execution. If noise is
-            specified as a float, a function with a fixed output, or an array of either of these, then noise
-            is simply an offset that is the same across all elements and executions.
 
     clip : tuple(float, float)
         determines the allowable range for all elements of the result of `function <Mechanism_Base.function>`.
