@@ -1057,7 +1057,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         .. note::
            If **noise** is specified as a float, a list or array of floats, of a function that returns a fixed value,
            then noise acts as a constant across executions, until it is changed explicitly; for it to implement
-           stochasiticity in such cases, it must be varied programmitically (e.g., before each call to the
+           stochasticity in such cases, it must be varied programmitically (e.g., before each call to the
            `run <Composition.run>` or `learn <Composition.learn>` method of a `Composition <Composition>` to which
            the Mechanism belongs. To ensure that the value varies automatically on each *execution* of the Mechanism,
            and for every element of an array for which it is specified, a `DistributionFunction` should be used; this
