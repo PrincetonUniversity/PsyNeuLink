@@ -1066,8 +1066,8 @@ class TransferMechanism(ProcessingMechanism_Base):
            corresponding elements of the array).
 
         .. note::
-            If **noise** is specified as a float or function in the constructor for the TransferMechanism, the noise
-            Parameter cannot later be specified as a list or array, and vice versa.
+           If **noise** is specified as a float or function in the constructor for the TransferMechanism,
+           the noise Parameter cannot later be specified as a list or array, and vice versa.
 
     clip : tuple(float, float)
         determines the allowable range for all elements of the result of `function <Mechanism_Base.function>`.
