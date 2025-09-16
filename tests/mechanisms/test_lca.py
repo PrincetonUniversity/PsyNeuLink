@@ -279,7 +279,7 @@ class TestLCA:
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
-    def test_LCAMechanism_termination_threshold(self):
+    def test_LCAMechanism_standard_output_ports(self):
         lca = pnl.LCAMechanism(
             input_shapes=2,
             function=pnl.Logistic(gain=1, bias=0),
