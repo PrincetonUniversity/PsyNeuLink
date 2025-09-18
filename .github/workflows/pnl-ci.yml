@@ -168,7 +168,10 @@ jobs:
         case "$RUNNER_OS" in
           Linux*) lscpu; lsmem;;
           macOS*) sysctl -a | grep '^hw' ;;
-          Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
+          Windows*)
+            powershell -c "Get-CimInstance -ClassName Win32_Processor | Select-Object Description,CurrentClockSpeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors"
+            powershell -c "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Capacity,Speed,Status,Manufacturer"
+            ;;
         esac
 
     # Windows runners use MS Edge as the default pdf viewer.
