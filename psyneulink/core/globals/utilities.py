@@ -2122,6 +2122,19 @@ def contains_type(
     except TypeError:
         return False
 
+    try:
+        dtype_kind = arr.dtype.kind
+    except AttributeError:
+        # non-array, so no addl info on contents
+        pass
+    else:
+        # only check object or void dtype further because their elements can vary in type
+        if dtype_kind not in {'O', 'V'}:
+            try:
+                return isinstance(next(arr_items), typ)
+            except StopIteration:
+                return False
+
     recurse = not isinstance(arr, np.matrix)
     for a in arr_items:
         if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
