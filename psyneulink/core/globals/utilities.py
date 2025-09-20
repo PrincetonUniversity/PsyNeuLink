@@ -167,6 +167,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
+_signature_strong_cache = {}
 
 
 class UtilitiesError(Exception):
@@ -1871,6 +1872,24 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
+def _get_cached_function_signature(func):
+    try:
+        sig = _signature_cache[func]
+    except KeyError:
+        sig = inspect.signature(func)
+        _signature_cache[func] = sig
+    except TypeError:
+        # should be minimally used, primarily for object.__init__ slot
+        # wrapper type
+        try:
+            sig = _signature_strong_cache[func]
+        except KeyError:
+            sig = inspect.signature(func)
+            _signature_strong_cache[func] = sig
+
+    return sig
+
+
 def prune_unused_args(func, args=None, kwargs=None):
     """
         Arguments
@@ -1890,11 +1909,7 @@ def prune_unused_args(func, args=None, kwargs=None):
 
     """
     # use the func signature to filter out arguments that aren't compatible
-    try:
-        sig = _signature_cache[func]
-    except KeyError:
-        sig = inspect.signature(func)
-        _signature_cache[func] = sig
+    sig = _get_cached_function_signature(func)
 
     has_args_param = False
     has_kwargs_param = False
@@ -2030,11 +2045,13 @@ def get_all_explicit_arguments(cls_, func_str):
     """
     all_arguments = set()
 
-    for cls_ in cls_.__mro__:
-        func = getattr(cls_, func_str)
+    for c in cls_.__mro__:
+        func = getattr(c, func_str)
         has_args_or_kwargs = False
 
-        for arg_name, arg in inspect.signature(func).parameters.items():
+        sig = _get_cached_function_signature(func)
+
+        for arg_name, arg in sig.parameters.items():
             if (
                 arg.kind is inspect.Parameter.VAR_POSITIONAL
                 or arg.kind is inspect.Parameter.VAR_KEYWORD
@@ -2166,11 +2183,7 @@ def get_function_sig_default_value(
             the default value of the **parameter** argument of
             **function** if it exists, or inspect._empty
     """
-    try:
-        sig = _signature_cache[function]
-    except KeyError:
-        sig = inspect.signature(function)
-        _signature_cache[function] = sig
+    sig = _get_cached_function_signature(function)
 
     try:
         return sig.parameters[parameter].default
