@@ -1498,8 +1498,41 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         except AttributeError:
             return None
 
+    @functools.cached_property
+    def _validate_method(self):
+        return self._owner._get_validate_method(self.name)
+
     def _validate(self, value):
-        return self._owner._validate(self.name, value)
+        err_msg = None
+
+        valid_types = self.valid_types
+        if valid_types is not None:
+            if not isinstance(value, valid_types):
+                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
+                    type(value),
+                    valid_types
+                )
+
+        validation_method = self._validate_method
+        if validation_method is not None:
+            err_msg = validation_method(value)
+            # specifically check for False because None indicates a valid assignment
+            if err_msg is False:
+                err_msg = '{0} returned False'.format(validation_method)
+
+        if err_msg is not None:
+            raise ParameterError(
+                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
+                    value,
+                    self.name,
+                    self._owner._owner,
+                    err_msg
+                )
+            )
+
+    @functools.cached_property
+    def _parse_method(self):
+        return self._owner._get_parse_method(self.name)
 
     def _parse(self, value, check_scalar=False):
         if is_numeric(value):
@@ -1511,7 +1544,10 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if check_scalar:
                 self._scalar_converted = orig_value is not value and value.ndim == 0
 
-        return self._owner._parse(self.name, value)
+        parse_method = self._parse_method
+        if parse_method is not None:
+            value = parse_method(value)
+        return value
 
     @property
     def _default_getter_kwargs(self):
@@ -2733,35 +2769,7 @@ class ParametersBase(ParametersTemplate):
         return _get_prefixed_method(self, self._validation_method_prefix, parameter)
 
     def _validate(self, attr, value):
-        err_msg = None
-
-        valid_types = getattr(self, attr).valid_types
-        if valid_types is not None:
-            if not isinstance(value, valid_types):
-                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
-                    type(value),
-                    valid_types
-                )
-
-        validation_method = self._get_validate_method(attr)
-        if validation_method is not None:
-            err_msg = validation_method(value)
-            # specifically check for False because None indicates a valid assignment
-            if err_msg is False:
-                err_msg = '{0} returned False'.format(validation_method)
-
-        if err_msg is not None:
-            raise ParameterError(
-                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
-                    value,
-                    attr,
-                    self._owner,
-                    err_msg
-                )
-            )
+        getattr(self, attr)._validate(value)
 
     def _parse(self, attr, value):
-        parse_method = self._get_parse_method(attr)
-        if parse_method is not None:
-            value = parse_method(value)
-        return value
+        return getattr(self, attr)._parse(value)
