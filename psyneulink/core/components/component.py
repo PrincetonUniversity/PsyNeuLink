@@ -4469,7 +4469,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-            if isinstance(param_value, Component) and param_value is not self:
+            if isinstance(type(param_value), ComponentsMeta) and param_value is not self:
                 self._parameter_components.add(param_value)
 
     @property

@@ -1753,7 +1753,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
-        from psyneulink.core.components.component import Component
+        from psyneulink.core.components.component import ComponentsMeta
 
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
@@ -1762,13 +1762,14 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         value = self._set(value, context, skip_history, skip_log, **kwargs)
         value_result = value
 
-        try:
-            if isinstance(value.__self__, Component):
-                value = value.__self__
-        except AttributeError:
-            pass
+        value_self = getattr(value, '__self__', None)
+        if value_self is not None and isinstance(type(value_self), ComponentsMeta):
+            value = value_self
+            value_is_on_component = True
+        else:
+            value_is_on_component = isinstance(type(value), ComponentsMeta)
 
-        if isinstance(value, Component):
+        if value_is_on_component:
             owner = self._owner._owner
             if value not in owner._parameter_components:
                 if owner.initialization_status == ContextFlags.INITIALIZED:
