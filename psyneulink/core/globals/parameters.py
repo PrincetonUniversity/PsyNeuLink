@@ -1664,6 +1664,7 @@ class Parameter(ParameterBase):
 
         value = self._parse(value, check_scalar=True)
         value = self._set(value, context, skip_history, skip_log, **kwargs)
+        value_result = value
 
         try:
             if isinstance(value.__self__, Component):
@@ -1687,7 +1688,7 @@ class Parameter(ParameterBase):
                         ):
                             raise
 
-        return value
+        return value_result
 
     def _set(
         self,
