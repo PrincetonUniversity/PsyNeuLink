@@ -5452,7 +5452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # different than the composition graph.
         comp_graph_dependencies = self.graph_processing.prune_feedback_edges()[0]
 
-        # INPUT
+        #region INPUT
 
         # Start with all nodes from processing graph with no incoming edges
         input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
@@ -5511,8 +5511,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not node.get_nodes_by_role(NodeRole.INPUT):
                     # If a nested Composition has not INUTS, remove it as an INPUT of the outer Composition
                     self._remove_node_role(node, NodeRole.INPUT)
+        #endregion INPUT
 
-        # BIAS
+        #region BIAS
         for node in self.nodes:
             if (isinstance(node, Mechanism)
                     and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
@@ -5525,13 +5526,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # #   *unless* they are in a nested Composition and project to a Node in an outer one
                 # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
                 #     self._remove_node_role(node, NodeRole.OUTPUT)
+        #endregion BIAS
 
-        # CYCLE
+        #region CYCLE
         for cycle in self.graph_processing.cycle_vertices:
             for node in cycle:
                 self._add_node_role(node, NodeRole.CYCLE)
+        #endregion CYCLE
 
-        # FEEDBACK_SENDER and FEEDBACK_RECEIVER
+        #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
             for sender, typ in receiver.source_types.items():
                 if typ is EdgeType.FEEDBACK:
@@ -5543,12 +5546,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver.component,
                         NodeRole.FEEDBACK_RECEIVER
                     )
+        #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
 
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
         #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
 
-        # OUTPUT
+
+        #region OUTPUT
         # Note: "TERMINAL" referenced below is in respect to the
         # the composition graph, not the scheduler graph, because OUTPUT
         # is determined by composition structure, not scheduling order.
@@ -5572,6 +5577,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign OUTPUT to any non-TERMINAL Nodes
             else:
+
+                # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
+                #     and is not already so designated (needed for user-specified ObjectiveMechanisms
+                if (isinstance(node, ObjectiveMechanism)
+                        and not NodeRole.CONTROL_OBJECTIVE in self.get_roles_by_node(node)):
+                    ctl_mech = next((p.receiver.owner for p in node.efferents
+                                     if isinstance(p.receiver.owner, ControlMechanism)), None)
+                    if ctl_mech:
+                        node.control_mechanism = ctl_mech
+                        self._add_node_role(node, NodeRole.CONTROL_OBJECTIVE)
 
                 # IMPLEMENTATION NOTE:
                 #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
@@ -5605,6 +5620,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for role in {NodeRole.CONTROL_OBJECTIVE,
                                                  NodeRole.CONTROLLER_OBJECTIVE,
                                                  NodeRole.LEARNING_OBJECTIVE})
+                                # or p.receiver.owner is node
                                 or p.receiver.owner is self.output_CIM
                                 or (isinstance(p.receiver.owner, ControlMechanism)
                                     and not isinstance(node, ObjectiveMechanism))
@@ -5661,13 +5677,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
                            for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
+        #endregion OUTPUT
 
-        # Assign SINGLETON and INTERNAL nodes
+        #region Assign SINGLETON and INTERNAL nodes
         for node in self.nodes:
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
             if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
+        #endregion Assign SINGLETON and INTERNAL nodes
 
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
         for node in self.nodes:
