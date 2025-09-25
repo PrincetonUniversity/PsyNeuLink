@@ -1772,7 +1772,8 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             owner = self._owner._owner
             if value not in owner._parameter_components:
                 if owner.initialization_status == ContextFlags.INITIALIZED:
-                    value._initialize_from_context(context)
+                    if context.execution_id is not None:
+                        value._initialize_from_context(context)
                     owner._parameter_components.add(value)
 
                     try:
