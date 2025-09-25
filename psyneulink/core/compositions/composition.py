@@ -5581,7 +5581,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
                 #     and is not already so designated (needed for user-specified ObjectiveMechanisms
                 if (isinstance(node, ObjectiveMechanism)
-                        and not NodeRole.CONTROL_OBJECTIVE in self.get_roles_by_node(node)):
+                        and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node)):
                     ctl_mech = next((p.receiver.owner for p in node.efferents
                                      if isinstance(p.receiver.owner, ControlMechanism)), None)
                     if ctl_mech:
