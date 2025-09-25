@@ -5586,7 +5586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      if isinstance(p.receiver.owner, ControlMechanism)), None)
                     if ctl_mech:
                         node.control_mechanism = ctl_mech
-                        self._add_node_role(node, NodeRole.CONTROL_OBJECTIVE)
+                        self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
 
                 # IMPLEMENTATION NOTE:
                 #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
