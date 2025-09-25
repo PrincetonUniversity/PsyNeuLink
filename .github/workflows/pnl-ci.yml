@@ -168,7 +168,23 @@ jobs:
         case "$RUNNER_OS" in
           Linux*) lscpu; lsmem;;
           macOS*) sysctl -a | grep '^hw' ;;
-          Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
+    #     Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore, NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
+          Windows*)
+              pwsh -NoProfile -Command "
+                Write-Host '=== CPU ==='
+                Get-CimInstance Win32_Processor |
+                  Select-Object Name, Description, CurrentClockSpeed, NumberOfCores, NumberOfLogicalProcessors |
+                  Format-Table -AutoSize
+      
+                Write-Host '`n=== Memory Modules ==='
+                Get-CimInstance Win32_PhysicalMemory |
+                  Select-Object Capacity, Speed, Status, Manufacturer |
+                  Format-Table -AutoSize
+      
+                Write-Host '`n=== Total Physical Memory ==='
+                '{0:N0} MB' -f ((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1MB)
+              "
+              ;;      
         esac
 
     # Windows runners use MS Edge as the default pdf viewer.
