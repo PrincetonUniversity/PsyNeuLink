@@ -215,7 +215,6 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
     pytest.param(pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)], id="double"),
     pytest.param(pnlvm.ir.FloatType(), "%lf", [x *.5 for x in range(0, 5)], id="float"),
     ])
-
 @pytest.mark.skipif(sys.platform == "win32", reason="LLVM printf output is not properly captured on Windows, see https://github.com/pytest-dev/pytest/issues/10843")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
 
