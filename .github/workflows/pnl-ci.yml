@@ -168,8 +168,11 @@ jobs:
         case "$RUNNER_OS" in
           Linux*) lscpu; lsmem;;
           macOS*) sysctl -a | grep '^hw' ;;
+          Windows*)
+            powershell -c "Get-CimInstance -ClassName Win32_Processor | Select-Object Description,CurrentClockSpeed,NumberOfCores,NumberOfEnabledCore,NumberOfLogicalProcessors"
+            powershell -c "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object Capacity,Speed,Status,Manufacturer"
+            ;;
         esac
-    #     Windows*) wmic cpu get description,currentclockspeed,NumberOfCores,NumberOfEnabledCore, NumberOfLogicalProcessors; wmic memorychip get capacity,speed,status,manufacturer ;;
 
     # Windows runners use MS Edge as the default pdf viewer.
     # This causes issues if any of the tests calls show_graph()
