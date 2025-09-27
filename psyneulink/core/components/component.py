@@ -2426,7 +2426,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
-            p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
+            if p.spec is not None:
+                p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
 
             # set default to None context to ensure it exists
             if (
@@ -4468,7 +4469,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-            if isinstance(param_value, Component) and param_value is not self:
+            if isinstance(type(param_value), ComponentsMeta) and param_value is not self:
                 self._parameter_components.add(param_value)
 
     @property
