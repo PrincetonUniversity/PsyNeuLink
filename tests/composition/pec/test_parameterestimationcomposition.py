@@ -13,28 +13,10 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
 
-# Fixture: ensure tests in this module run with a single thread and restore afterwards
-@pytest.fixture(scope="module", autouse=True)
-def _module_set_threads_to_one():
-    """Module-scoped autouse fixture that sets PsyNeuLink's global thread count to 1
-    for all tests in this module, and restores the original value afterwards.
 
-    This keeps parameter-estimation tests deterministic and avoids oversubscription
-    when running many tests in parallel. Failures during restore are caught and logged
-    so they don't mask test failures.
-    """
-    from psyneulink.core.globals import get_num_threads, set_num_threads
-    import logging
-
-    original = get_num_threads()
-    try:
-        set_num_threads(1)
-        yield
-    finally:
-        try:
-            set_num_threads(original)
-        except Exception:
-            logging.getLogger(__name__).exception("Failed to restore original thread setting")
+# Set the number of threads to 1 for all tests in this module, tests are often run in parallel
+# and having multiple threads per test can lead to oversubscription of CPU resources.
+pytestmark = pytest.mark.usefixtures("set_threads_to_one")
 
 
 def _run_ddm_with_params(

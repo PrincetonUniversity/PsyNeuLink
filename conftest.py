@@ -364,3 +364,22 @@ def restore_num_threads():
             except Exception:
                 pass
 
+
+# Fixture: ensure tests in this module run with a single thread and restore afterward
+@pytest.fixture
+def set_threads_to_one():
+    """
+    Fixture that sets PsyNeuLink's global thread count to 1 and restores the original value afterward.
+    """
+    from psyneulink.core.globals import get_num_threads, set_num_threads
+    import logging
+
+    original = get_num_threads()
+    try:
+        set_num_threads(1)
+        yield
+    finally:
+        try:
+            set_num_threads(original)
+        except Exception:
+            logging.getLogger(__name__).exception("Failed to restore original thread setting")
