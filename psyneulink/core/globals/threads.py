@@ -43,7 +43,11 @@ except Exception:
     threadpoolctl = None
 
 # Default number of threads: use psutil to get the number of CPUs available to the process (respects SLURM/CPU affinity)
-_DEFAULT_NUM_THREADS: int = len(psutil.Process().cpu_affinity())
+# On MacOS, we need to use os.cpu_count() because psutil.Process().cpu_affinity() is not implemented
+if os.name == "posix" and os.uname().sysname == "Darwin":
+    _DEFAULT_NUM_THREADS: int = os.cpu_count() or 1
+else:
+    _DEFAULT_NUM_THREADS: int = len(psutil.Process().cpu_affinity())
 
 # Current global setting (mutable)
 _num_threads: int = _DEFAULT_NUM_THREADS
