@@ -362,6 +362,7 @@ def restore_num_threads():
                 import logging
                 logging.getLogger(__name__).exception("Failed to restore original thread setting")
             except Exception:
+                # Logging failed, suppress exception to avoid masking test error during teardown.
                 pass
 
 
