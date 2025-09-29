@@ -18,7 +18,6 @@ import sys
 import time
 from typing import Callable, Optional
 import weakref
-import psutil
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
