@@ -463,8 +463,8 @@ class PECOptimizationFunction(OptimizationFunction):
         # Change randomization for next sample if specified (relies on randomization being last dimension)
         if (self.owner and not self.owner.parameters.same_seed_for_all_allocations._get(context) and
                 self.parameters.randomization_dimension._get(context) is not None):
-            self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
-            self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
+            rand_idx = self.parameters.randomization_dimension._get(context)
+            self.search_space[rand_idx] = SampleIterator(specification=self.owner.gen_new_seed_sequence(context))
 
         # We need to swap the simulation (randomization dimension) with the output dimension so things
         # are in the right order passing to the objective_function call signature.

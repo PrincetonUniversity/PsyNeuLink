@@ -1839,6 +1839,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         function = function or GridSearch
 
+        # A numpy random number generator for generating seeds for simulations.
+        self._seed_rng = None
+
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -2962,13 +2965,11 @@ class OptimizationControlMechanism(ControlMechanism):
         if num_estimates:
             # must be SampleSpec in allocation_samples arg
 
-            if self.initial_seed is None:
-                rng = np.random.default_rng()
-                seed = int(rng.integers(2**32 - 1)) # Max size for mt19937 seed
-            else:
-                seed = self.initial_seed
+            self._seed_rng = np.random.default_rng(self.initial_seed)
 
-            randomization_seed_mod_values = SampleSpec(start=seed, stop=seed + num_estimates - 1, step=1)
+            # Now we need a sequence of random numbers (less than 2*32), each simulation gets a random 32 bit seed for
+            # mersenne twister.
+            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -3783,3 +3784,14 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
+
+
+    def gen_new_seed_sequence(self, context=None):
+        """
+        Generate a new sequence of seeds for use in randomization control signal control allocations
+        """
+
+        num_estimates = self.parameters.num_estimates._get(context)
+        num_estimates = try_extract_0d_array_item(num_estimates)
+
+        return self._seed_rng.integers(0, 2**31 - 1, size=num_estimates).tolist()

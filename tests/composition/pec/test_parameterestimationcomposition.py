@@ -182,7 +182,7 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
 # [2] https://docs.scipy.org/doc/scipy/release/1.14.0-notes.html#scipy-optimize-improvements
 # [3] https://github.com/scipy/scipy/pull/20677
 if pversion.parse(scipy.version.version) >= pversion.parse('1.14.0'):
-    expected_differential_evolution = [0.010113000942356953]
+    expected_differential_evolution = [0.020908]
 elif pversion.parse(scipy.version.version) >= pversion.parse('1.12.0'):
     expected_differential_evolution = [0.010074123395259815]
 else:
