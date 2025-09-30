@@ -1077,7 +1077,6 @@ Class Reference
 ---------------
 
 """
-import sys
 import ast
 import copy
 import warnings
