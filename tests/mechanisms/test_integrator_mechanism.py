@@ -20,10 +20,10 @@ from psyneulink.core.scheduling.condition import Never
 
 class TestReset:
     #                        reset_default_value     modulation
-    test_args = [('default',       1,                   None),
-                 ('OVERRIDE',     None,             pnl.OVERRIDE)]
-    @pytest.mark.parametrize('test_name, reset_default, modulation', test_args, ids=[x[0] for x in test_args])
-    def test_reset_integrator_mechanism(self, test_name, reset_default, modulation):
+    test_args = [pytest.param(1,                None,           id='default'),
+                 pytest.param(None,             pnl.OVERRIDE,   id='OVERRRIDE')]
+    @pytest.mark.parametrize('reset_default, modulation', test_args)
+    def test_reset_integrator_mechanism(self, reset_default, modulation):
         input = pnl.ProcessingMechanism(name='INPUT')
         counter = IntegratorMechanism(function=SimpleIntegrator,
                                       default_variable=1,

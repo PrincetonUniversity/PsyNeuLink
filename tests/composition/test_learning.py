@@ -5,11 +5,12 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
+from psyneulink import DEFAULT_LEARNING_RATE
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.globals.keywords import Loss
-# from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import SSE, MSE, L0
+
 
 def xor_network(comp_type, comp_learning_rate, pathway_learning_rate):
     """Create simple sample network for testing learning specifications
@@ -57,473 +58,955 @@ def xor_network(comp_type, comp_learning_rate, pathway_learning_rate):
     return xor, input_layer, hidden_layer, output_layer, target_mechanism, inputs, targets,
 
 
-class TestInputAndTargetSpecs:
+class TestStructural:
 
-    @pytest.mark.composition
-    @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'])
-    @pytest.mark.parametrize('exec_mode', [pytest.param(pnl.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
-                                           pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-                                           pnl.ExecutionMode.Python])
-    @pytest.mark.parametrize('comp_type', ['composition',
-                                           pytest.param('autodiff', marks=pytest.mark.pytorch)])
-    def test_node_spec_types(self, comp_type, input_type, exec_mode):
+    def validate_learning_mechs(self, comp):
 
-        if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
-            pytest.skip(f"Execution mode {exec_mode} not relevant for Composition learn")
+        def get_learning_mech(name):
+            return next(lm for lm in comp.get_nodes_by_role(pnl.NodeRole.LEARNING) if lm.name == name)
 
-        comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets =\
-            xor_network(comp_type, 0.001, None)
+        REP_IN_to_REP_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_IN to REP_HIDDEN')
+        REP_HIDDEN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_HIDDEN to REL_HIDDEN')
+        REL_IN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_IN to REL_HIDDEN')
+        REL_HIDDEN_to_REP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to REP_OUT')
+        REL_HIDDEN_to_PROP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to PROP_OUT')
+        REL_HIDDEN_to_QUAL_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to QUAL_OUT')
+        REL_HIDDEN_to_ACT_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to ACT_OUT')
 
-        if comp_type == 'composition':
-            target_node = target_mechanism
-        else:
-            target_node = output_layer
+        # Validate error_signal Projections for REP_IN to REP_HIDDEN
+        assert len(REP_IN_to_REP_HIDDEN_LM.input_ports) == 3
+        assert REP_IN_to_REP_HIDDEN_LM.input_ports[pnl.ERROR_SIGNAL].path_afferents[0].sender.owner == \
+               REP_HIDDEN_to_REL_HIDDEN_LM
 
-        # inputs as dictionary
-        if input_type == 'dict':
-            inputs = {"inputs": {input_layer: stims},
-                      "targets": {target_node: targets}}
+        # Validate error_signal Projections to LearningMechanisms for REP_HIDDEN_to REL_HIDDEN Projections
+        assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
+                          REP_HIDDEN_to_REL_HIDDEN_LM.input_ports]
+                   for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
+                              REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
-        # inputs as function
-        elif input_type == 'func':
-            def get_inputs(idx):
-                return {"inputs": {input_layer: stims[idx]},
-                        "targets": {target_node: targets[idx]}}
-            inputs = get_inputs
+        # Validate error_signal Projections to LearningMechanisms for REL_IN to REL_HIDDEN Projections
+        assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
+                          REL_IN_to_REL_HIDDEN_LM.input_ports]
+                   for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
+                              REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
-        elif input_type in {'gen', 'gen_func'}:
-            def get_inputs_gen():
-                yield {"inputs": {input_layer: stims},
-                       "targets": {target_node: targets}}
-            # inputs as generator
-            if input_type == 'gen':
-                g = get_inputs_gen()
-                inputs = g
-            # inputs as generator function
-            else:
-                inputs = get_inputs_gen
+    # Expected results for test_projection_specific_learning_rates()
+    # NOTE: these should be kept the same as used in test_autodiffcomposition/test_projection_specific_learning_rates()
+    #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
+    baseline = [[4.06551247, 4.06551247, 4.06551247, 4.06551247, 4.06551247]]
+    learn_method = [[0.03072, 0.03072, 0.03072, 0.03072, 0.03072]]
+    input_proj = [[1.0479138, 1.0479138, 1.0479138, 1.0479138, 1.0479138]]
+    hidden_proj = [[5.55952143, 5.55952143, 5.55952143, 5.55952143, 5.55952143]]
+    inpt_learn_ovrd = [[0.00768, 0.00768, 0.00768, 0.00768, 0.00768]]
+    hid_learn_ovrd = [[-0.49108492, -0.49108492, -0.49108492, -0.49108492, -0.49108492]]
+    default_lr = .01
 
-        else:
-            assert False, f"Unrecognized input_type: {input_type}"
+    test_args = [
+        # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
 
-        results = comp.learn(inputs=inputs, execution_mode=exec_mode)
-        np.testing.assert_allclose(results, [[0.6341436044849351]])
-
-    @pytest.mark.composition
+        #    condition       composition_lr    learn_lr   proj_constr_lr   post_constr   expected
+        ("baseline",           default_lr,       None,        None,           False,     baseline),
+        # learn()
+        ("learn_method",        None,             .1,         None,           False,     learn_method),
+        # learn() lr overrides constructor lr
+        ("learn_override",     default_lr,        .1,         None,           False,     learn_method),
+        # Projection constructor lr
+        ("input_proj",         default_lr,       None,      "input",          False,     input_proj),
+        ("hidden_proj",        default_lr,       None,      "hidden",         False,     hidden_proj),
+        # Projection lr overrides learn()
+        ("inpt_override_lr",   default_lr,        .1,       "input",          False,     inpt_learn_ovrd),
+        ("hidn_override_lr",   default_lr,        .1,       "hidden",         False,     hid_learn_ovrd),
+        ("inpt_override_lr",   default_lr,        .1,       "input",          True,      inpt_learn_ovrd),
+        ("hidn_override_lr",   default_lr,        .1,       "hidden",         True,      hid_learn_ovrd),
+    ]
+    # NOTE: this should be kept consistent with test_autodiffcomposition/test_projection_specific_learning_rates()
+    #       to additionally test for identicality of effects with PyTorch learning in AutodiffComposition.
     @pytest.mark.pytorch
-    def test_target_spec_default_assignment(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        comp1 = Composition()
-        p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B])
-        # Call learn with default_variable specified for target (for comparison with missing target)
-        comp1.learn(inputs={A: 1.0,
-                            p1.target: 0.0},
-                 num_trials=2)
-        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
+    @pytest.mark.parametrize("comp_constructor_lr_dict", [False, True], ids=["comp_lr", "comp_dict"])
+    @pytest.mark.parametrize("_condition, comp_lr, learn_method_lr, proj_constr, post_constr, expected",
+                             test_args, ids=[f"{x[0]}" for x in test_args])
+    def test_projection_specific_learning_rates(self, _condition,
+                                                comp_lr, learn_method_lr,
+                                                proj_constr, comp_constructor_lr_dict, post_constr, expected):
 
-        # Repeat with no target assignment (should use default_variable)
-        C = TransferMechanism(name="learning-process-mech-C")
-        D = TransferMechanism(name="learning-process-mech-D")
-        comp2 = Composition()
-        comp2.add_backpropagation_learning_pathway(pathway=[C,D])
-        # Call learn with no target specification
-        comp2.learn(inputs={C: 1.0},
-                   num_trials=2)
-        # Should be same with default target specification
-        np.testing.assert_allclose(comp2.results, comp1.results)
+        in_shape = 4
+        hidden_1_shape = 3
+        hidden_2_shape = 2
+        out_shape = 5
+        input_stims = [[.1,.2,.3,.4]]
+        target_vals = [[1,1,1,1,1]]
+        num_trials = 3
 
-    def test_target_dict_spec_single_trial_scalar_and_lists_rl(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        comp = Composition()
-        p = comp.add_reinforcement_learning_pathway(pathway=[A,B])
-        # Confirm that targets are ignored in run (vs learn)
-        comp.run(inputs={A: 1.0,
-                         p.target:2.0})
-        np.testing.assert_allclose(comp.results, [[[1.]]])
-        comp.learn(inputs={A: 1.0,
-                           p.target:2.0})
-        comp.learn(inputs={A: 1.0,
-                           p.target:[2.0]})
-        comp.learn(inputs={A: 1.0,
-                           p.target:[[2.0]]})
+        input_lr = .2 if proj_constr == 'input' else None
+        hidden_lr = .2 if proj_constr == 'hidden' else None
 
-        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
+        mech_1 = pnl.ProcessingMechanism(name='Mech 1', input_shapes=in_shape)
+        mech_2 = pnl.ProcessingMechanism(name='Mech 2', input_shapes=hidden_1_shape)
+        mech_3 = pnl.ProcessingMechanism(name='Mech 3', input_shapes=hidden_2_shape)
+        mech_4 = pnl.ProcessingMechanism(name='Mech 4', input_shapes=out_shape)
+        input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=input_lr, name="INPUT PROJECTION")
+        hidden_proj = pnl.MappingProjection(mech_2, mech_3, learning_rate=hidden_lr, name="HIDDEN PROJECTION")
 
-    def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        C = TransferMechanism(name="learning-process-mech-C")
-        comp = Composition()
-        p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        # Confirm that targets are ignored in run (vs learn)
-        comp.run(inputs={A: 1.0,
-                         p.target:2.0})
-        np.testing.assert_allclose(comp.results, [[[1.]]])
-        comp.learn(inputs={A: 1.0,
-                           p.target:2.0})
-        comp.learn(inputs={A: 1.0,
-                           p.target:[2.0]})
-        comp.learn(inputs={A: 1.0,
-                           p.target:[[2.0]]})
+        comp_lr_dict = {DEFAULT_LEARNING_RATE: comp_lr,
+                        input_proj: input_lr,
+                        hidden_proj: hidden_lr}
 
-        np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
+        comp = pnl.Composition(name='Comp',
+                               synch_node_variables_with_torch=pnl.RUN,
+                               learning_rate=comp_lr_dict if comp_constructor_lr_dict else comp_lr)
+        learning_components = comp.add_backpropagation_learning_pathway([mech_1, input_proj, mech_2,
+                                                      hidden_proj, mech_3, mech_4])
+        if post_constr:
+            input_proj.learning_rate = .9
+            hidden_proj.learning_rate = .7
 
-    def test_target_dict_spec_multi_trial_lists_rl(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        comp = Composition()
-        p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                           p.target: [[4.0], [5.0], [6.0]]})
-        comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                           p.target: [[[4.0]], [[5.0]], [[6.0]]]})
-        np.testing.assert_allclose(comp.results,
-                           [[[1.]], [[2.6]], [[5.34]],
-                            [[1.978]], [[4.3604]], [[6.92436]]])
+        comp_result = comp.learn(inputs={mech_1:input_stims, learning_components.target: target_vals},
+                                 num_trials=num_trials,
+                                 learning_rate=learn_method_lr)
+        np.testing.assert_allclose(comp_result, expected)
 
-    def test_target_dict_spec_multi_trial_lists_bp(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        C = TransferMechanism(name="learning-process-mech-C",
-                              default_variable=[[0.0, 0.0]])
-        comp = Composition()
-        p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        comp.learn(inputs={A: 1.0,
-                           p.target:[2.0, 3.0]})
-        comp.learn(inputs={A: 1.0,
-                           p.target:[[2.0, 3.0]]})
-        comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                           p.target: [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]})
-        comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                           p.target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
-        np.testing.assert_allclose(comp.results,
-                           [[[1., 1.]],
-                            [[1.2075, 1.265]],
-                            [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
-                            [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("comp_lr", [.3, None, True, False],
+                             ids=["comp_0.3", "comp_None", "comp_True", "comp_False"])
+    @pytest.mark.parametrize("pway_lr", [.2, None, True, False],
+                             ids=["pway_0.2", "pway_lr_None", "pway_True", "pway_False"])
+    @pytest.mark.parametrize("proj_lr", [.1, None, True, False],
+                             ids=["proj_0.1", "proj_None", "proj_True", "proj_False"])
+    def test_single_level_proj_pathway_comp_learning_rates(self, proj_lr, pway_lr, comp_lr):
+        comp_exp_lr = .001 if comp_lr in {None, True} else comp_lr
+        if proj_lr not in {None, True}:
+            proj_exp_lr = proj_lr
+        elif pway_lr not in {None, True}:
+            proj_exp_lr = pway_lr
+        elif comp_lr not in {None, True}:
+            proj_exp_lr = comp_lr
+        elif comp_lr is False:
+            proj_exp_lr = False
+        else:
+            proj_exp_lr = .001
 
-    # DS: The following test fails the assert. The same value is returned whether a dict or function is used as input,
-    # which is not the same as the expected values. Are the expected values incorrect? If not, there is a problem
-    # at a deeper level than just the input handling. 5/18/2020
-    #
-    # def test_function_target_spec(self):
-    #
-    #     from psyneulink.core.compositions.composition import Composition
-    #     A = pnl.TransferMechanism(name="learning-process-mech-A")
-    #     B = pnl.TransferMechanism(name="learning-process-mech-B",
-    #                           default_variable=np.array([[0.0, 0.0]]))
-    #     comp = Composition()
-    #     learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B], learning_rate=0.05)
-    #     target = learning_pathway.target
-    #     # global x
-    #     # x = 1
-    #
-    #     # def input_function(a,b):
-    #     #     global x
-    #     #     x = x + 1
-    #     #     y = 2 * x
-    #     #     z = 3 * x
-    #     #     target_value = {A:[x], target:[y,z]}
-    #     #     print('trial')
-    #     #     return target_value
-    #     def input_function(trial):
-    #         x = trial + 1
-    #         y = 2 * x
-    #         z = y + 2
-    #         target_value = {A:[x], target:[y,z]}
-    #         print(target_value)
-    #         return target_value
-    #
-    #     target.log.set_log_conditions('variable')
-    #
-    #     comp.learn(inputs=input_function, num_trials=3)
-    #     np.testing.assert_allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
+        mech_1 = pnl.ProcessingMechanism()
+        mech_2 = pnl.ProcessingMechanism()
+        proj = pnl.MappingProjection(mech_1, mech_2,
+                                     learning_rate=proj_lr,
+                                     name='PROJECTION')
+        autodiff = pnl.AutodiffComposition(learning_rate = comp_lr)
+        autodiff.add_backpropagation_learning_pathway(pathway=[mech_1, proj, mech_2],
+                                                      learning_rate=pway_lr)
+        if proj_exp_lr is False:
+            with pytest.raises(CompositionError) as error_text:
+                autodiff._build_pytorch_representation()
+            assert (f"There are no learnable Projections in 'autodiff_composition' nor any nested under it; this may "
+                    f"be because the learning_rates for all of the Projections and/or 'enable_learning' Parameters for "
+                    f"the Composition(s) are all set to 'False'. The learning_rate for at least one Projection must be "
+                    f"a non-False value within a Composition with 'enable_learning' set to 'True' in order to execute "
+                    f"the learn() method for autodiff_composition.") in str(error_text.value)
+            return
+        pytorch_rep = autodiff._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
+        assert autodiff.learning_rate == comp_exp_lr
 
-    def test_dict_target_spec_converging_pathways(self):
-        A = TransferMechanism(name="converging-learning-pathways-mech-A")
-        B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
-        D = TransferMechanism(name="converging-learning-pathways-mech-D")
-        E = TransferMechanism(name="converging-learning-pathways-mech-E")
-        comp = Composition()
-        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
-        assert p1.target == p2.target
-        comp.learn(inputs={A: 1.0,
-                           D: 2.0,
-                           p1.target: [3.0, 4.0]
-                           })
-        comp.learn(inputs={A: 5.0,
-                           D: 6.0,
-                           p1.target: [7.0, 8.0]
-                           })
-        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        # Test learning_rate specs assinged in learn()
+        autodiff.learn(inputs=autodiff.get_input_format(),
+                       learning_rate={DEFAULT_LEARNING_RATE:99,
+                                      proj:None},
+                       execution_mode=pnl.ExecutionMode.PyTorch)
+        pytorch_rep = autodiff.parameters.pytorch_representation.get(autodiff.name)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == 99
+        assert proj.parameters.learning_rate.get(autodiff.name) is None
+        assert autodiff.learning_rate == 99
 
-    def test_function_target_spec_converging_pathways(self):
-        A = TransferMechanism(name="converging-learning-pathways-mech-A")
-        B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
-        D = TransferMechanism(name="converging-learning-pathways-mech-D")
-        E = TransferMechanism(name="converging-learning-pathways-mech-E")
-        comp = Composition()
-        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
-        assert p1.target == p2.target
-        inputs = {
-            A: [1.0, 5.0],
-            D: [2.0, 6.0],
-            p1.target: [[3.0, 4.0], [7.0, 8.0]]
-        }
-        def input_function(trial_num):
-            return {
-                A: inputs[A][trial_num],
-                D: inputs[D][trial_num],
-                p1.target: inputs[p1.target][trial_num]
-            }
-        comp.learn(inputs=input_function,
-                   num_trials=2)
-        np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+        # Test that learning_rate specs are restored to their original values at construction
+        autodiff.learn(inputs=autodiff.get_input_format(),
+                       execution_mode=pnl.ExecutionMode.PyTorch)
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
+        assert autodiff.learning_rate == comp_exp_lr
 
-    def test_dict_target_spec_diverging_pathways(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-        comp = Composition()
-        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
-        inputs = {
-            A: [1.0, 2.0],
-            p1.target: [2.0, 2.0],
-            p2.target: [4.0, 4.0]
-        }
-        def input_function(trial_num):
-            return {
-                A: inputs[A][trial_num],
-                p1.target: inputs[p1.target][trial_num],
-                p2.target: inputs[p2.target][trial_num]
-            }
-        comp.learn(inputs=input_function,
-                   num_trials=2)
-        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+    test_nested_args = [
+        # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
+        #      since default learning_rates are different for Composition (.05) and  AutodiffComposition (.001)
+        #    condition       composition_lr    learn_lr   proj_constr_lr   post_constr   expected
+        # Note: only test middle_proj_1 (not middle_proj_2) and output_proj (not input_proj) for simplicity
+        #       while covering an input_proj (middle_proj_1) and an output_proj (op)
+        # ip = inner_proj learning rate
+        # ic = inner_comp learning rate
+        # m1 = middle_proj_1 learning rate
+        # mc = middle_comp learning rate
+        # o2 = output_proj learning rate
+        # oc = outer_comp learning rate
+        # **c = expected learning_rate after construction
+        # **l = expected lr's after 1st execution of learn() method with lr specifications
+        # **r = expected lr's after 2nd execution of learn() method w/o lr specs (expect reset to constructor values)
+        # condition       ip    ic   m1    mc    op    oc   learn()  ipc   m1c   o2c   ipl  m1l  o2l  ipr   m1r   o2r
+        # NUMERIC ASSIGNMENTS
+        ("None",         None, None, None, None, None, None,  .9,   .001, .001, .001,  .9,  .9,  .9, .001, .001, .001),
+        # Test assignment of numeric learning_rates to constructor at various levels in the hierarchy
+        ("inner_n",      None,  .1,  None, None, None, None,  .9,    .1,  .001, .001,  .9,  .9,  .9,  .1,  .001 ,.001),
+        ("middle_n",     None, None, None,  .2,  None, None,  .9,    .2,   .2,  .001,  .9,  .9,  .9,  .2,   .2,  .001),
+        ("outer_n",      None, None, None, None, None,  .3,   .9,    .3,   .3,   .3,   .9,  .9,  .9,  .3,   .3,   .3),
+        ("all_n",        None,  .1,  None,  .2,  None,  .3,   .9,    .1,   .2,   .3,   .9,  .9,  .9,  .1,   .2,   .3),
+        # Test assignment of False to constructor at various levels in the hierarchy
+        ("inner_false",  None, False, None, None, None, None, .9, False,  .001, .001,  .9,  .9,  .9, False, .001, .001),
+        ("middle_false" ,None, None, None, False, None, None, .9, False, False, .001,  .9,  .9,  .9, False, False,.001),
+        ("outer_false",  None, None, None, None, None, False, .9, False, False, False, .9,  .9,  .9, False,False,False),
+        # Test assignment of True to Projection to "protect" against False (gets default for next Comp in hierarchy)
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("inner_True_m", True, False, None, .4,   None, None,   .9,  .4,   .4,  .001,  .9,  .9,  .9,  .4,   .4,  .001),
+        # inner_proj=True, inner_comp & middle_comp =False, should get Outer Comp
+        ("inner_True_o", True, False, None, False, None, .5,    .9,  .5,  False,  .5,  .9,  .9,  .9,  .5,  False, .5),
+        # inner_proj=True, inner_comp & middle_comp=False, outer=None; should get Outer Comp default
+        ("inner_True_d", True, False, None, False, None, None,  .9, .001, False, .001, .9,  .9, .9,  .001, False,.001),
+        # inner_proj=True, all comps=False, should be forced to be False
+        ("i_True_all_f", True, False, None, False, None, False, .9, False,False,False, .9,  .9, .9, False,False,False),
+        # inner_proj=True, inner_comp=False, should get Middle Comp default
+        ("middle_True",  None, False, True, False, None, None,  .9, False, .001, .001, .9,  .9, .9, False, .001, .001),
+        # Test assignment of False in learn()
+        ("learn_False",  None, None, None, None, None, None, False, .001,.001,.001, False,False,False, .001,.001,.001),
+        # DICT ASSIGNMENTS
+        ("d_ic",       .1,  "d_ic", None,  .3,   None, None,  None,   .2,    .3, .001, .2,  .3,  .001,  .2,   .3, .001),
+        ("d_mc",      None,  None,   .1, "d_mc", None, None,  None,   .5,    .4, .001, .5,  .4,  .001,  .5,   .4, .001),
+        # Test that inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
+        ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None,  .001,   .4,  .1, .001, .4,    .1, .001,  .4,   .1),
+        # Test that inner_proj=False even though it is assigned True in dict since outer_comp default=False
+        ("d_oc",      None,  None,  None, None, None, "d_oc", None,  False,False, .4, False,False, .4, False,False, .4),
+        ("d_lc",       .1,   None,   .2,  None, .3,   None,  "d_lc",  .1,    .2,  .3, False, .4,   .3,  .1,   .2,   .3),
+        # Test that runtime assignment of True to inner_proj supersedes assignment of inner_comp=False
+        ("d_icf_lct", None, "d_icf", .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
+        ("d_icf_lct", None,  False,  .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
+        # Test that runtime specification of default=.6 supersedes inner_proj=None with inner_comp=False
+        ("d_icf_lc",  None, "d_icf", .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
+        ("d_icf_lc",  None,  False,  .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
+        # Test that assignment of inner_proj=False is not overridden by runtime assignment of default_learning_rate=.6
+        ("if_lcn",    False, None,   .2, None,  .3,   None,   .6,    False,  .2,  .3, False, .2,   .3, False, .2,   .3),
+        ("d_if_lcn",  False, None,   .2, None,  .3,   None, "d_lcn", False,  .2,  .3, False, .4,   .5, False, .2,   .3)
+    ]
+    @pytest.fixture
+    def test_nested_dicts(self):
+        # Need to make these a fixture so that popping DEFAULT_LEARNING_RATE doesn't interfere with other tests
+        def _get_learning_rate_dicts(dict):
+            test_nested_dicts = \
+                {"d_ic": {"INNER PROJECTION": .2},
+                 "d_icf": {DEFAULT_LEARNING_RATE: False},
+                 "d_mc": {"MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: .5},
+                 "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                 "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
+                 "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
+                 "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5},
+                 "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6}}
+            return test_nested_dicts[dict]
+        return _get_learning_rate_dicts
 
-    def test_function_target_spec_divergin_pathways(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-        comp = Composition()
-        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
-        comp.learn(inputs={A: 1.0,
-                         p1.target: 2.0,
-                         p2.target: 4.0
-                         })
-        comp.learn(inputs={A: 2.0,
-                         p1.target: 2.0,
-                         p2.target: 4.0
-                         })
-        np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+    @pytest.mark.pytorch
+    @pytest.mark.parametrize("_condition, "
+                             "ip, ic, m1, mc, o2, oc, lr, ipc, m1c, o2c, ipl, m1l, o2l, ipr, m1r, o2r",
+                             test_nested_args, ids=[f"{x[0]}" for x in test_nested_args])
+    def test_3_level_nested_learning_rates(self, _condition,
+                                           ip, ic, m1, mc, o2, oc, lr,
+                                           ipc, m1c, o2c,
+                                           ipl, m1l,o2l,
+                                           ipr, m1r, o2r,
+                                           test_nested_dicts):
 
-    def test_dict_target_spec_divering_pathways_with_only_one_target(self):
-        # First test with both targets (but use default_variale for second for comparison with missing target)
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-        comp1 = Composition()
-        p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp1.add_backpropagation_learning_pathway(pathway=[A,D,E])
-        comp1.learn(inputs={A: 1.0,
-                            p1.target: 0.0,
-                            p2.target: 2.0
-                            },
-                    num_trials=2)
-        np.testing.assert_allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
+        # These are not parameterized, and since they are assigned in Projection constructors, should always be the same
+        m2 = m2c = m2l = m2r = .98
+        o1 = o1c = o1l = o1r = .99
 
-        F = TransferMechanism(name="diverging-learning-pathways-mech-F")
-        G = TransferMechanism(name="diverging-learning-pathways-mech-G")
-        H = TransferMechanism(name="diverging-learning-pathways-mech-H")
-        I = TransferMechanism(name="diverging-learning-pathways-mech-I")
-        J = TransferMechanism(name="diverging-learning-pathways-mech-J")
-        comp2 = Composition()
-        p3 = comp2.add_backpropagation_learning_pathway(pathway=[F,G,H])
-        p4 = comp2.add_backpropagation_learning_pathway(pathway=[F,I,J])
-        # Call learn with missing spec for p3.target;  should use default_variable
-        comp2.learn(inputs={F: 1.0,
-                            p4.target: 2.0
-                            },
-                    num_trials=2)
-        np.testing.assert_allclose(comp2.results, comp1.results)
+        if isinstance(ic, str):
+            ic = test_nested_dicts(ic)
+        if isinstance(mc, str):
+            mc = test_nested_dicts(mc)
+        if isinstance(oc, str):
+            oc = test_nested_dicts(oc)
+        if isinstance(lr, str):
+            lr = test_nested_dicts(lr)
 
-    def test_target_spec_over_nesting_of_items_in_target_value_error(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        C = TransferMechanism(name="learning-process-mech-C",
-                              default_variable=[[0.0, 0.0]])
-        comp = Composition()
-        p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        # Elicit error with run
-        with pytest.raises(RunError) as error_text:
-            comp.run(inputs={A: [1.0, 2.0, 3.0],
-                             p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
+        inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
+        inner_mech_2 = pnl.ProcessingMechanism(name='INNER NODE 2')
+        inner_proj = pnl.MappingProjection(inner_mech_1, inner_mech_2,
+                                           learning_rate=ip,
+                                           name="INNER PROJECTION")
+        inner_comp = pnl.AutodiffComposition(name='INNER Comp', pathways=[inner_mech_1, inner_proj, inner_mech_2],
+                                             learning_rate=ic)
+
+        # Middle Composition
+        middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
+        middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
+        middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech_1,
+                                              learning_rate=m1,
+                                              name="MIDDLE PROJECTION 1")
+        middle_proj_2 = pnl.MappingProjection(inner_mech_2, middle_mech_2,
+                                              learning_rate=m2,
+                                              name="MIDDLE PROJECTION 2")
+        middle_comp = pnl.AutodiffComposition(name='MIDDLE Comp',
+                                              pathways=[middle_mech_1, middle_proj_1,
+                                                        inner_comp, middle_proj_2, middle_mech_2],
+                                              learning_rate=mc)
+
+        # Outer Composition
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+        outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
+                                           learning_rate=o1,
+                                           name="OUTER PROJECTION 1")
+        outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
+                                            learning_rate=o2,
+                                            name="OUTER PROJECTION 2")
+        outer_comp = pnl.AutodiffComposition([outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
+                                             name='Outer Comp',
+                                             learning_rate=oc)
+        pytorch_rep = outer_comp._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipc
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1c
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2c
+
+        # First run of learning
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2,
+                         execution_mode=pnl.ExecutionMode.PyTorch,
+                         learning_rate=lr)
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipl
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1l
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2l
+
+        # Second run of learning to test rest to constructor learning_rates
+        outer_comp.learn(inputs={outer_mech_in: [[1]],
+                                 outer_comp.get_target_nodes()[0]: [[1]]},
+                         num_trials=2,
+                         execution_mode=pnl.ExecutionMode.PyTorch)
+        pytorch_rep = outer_comp.parameters.pytorch_representation.get('Outer Comp')
+        assert pytorch_rep.get_torch_learning_rate_for_projection(inner_proj) == ipr
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_1) == m1r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(middle_proj_2) == m2r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1r
+        assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2r
+
+
+    error_test_args = [
+        ("comp_lr_spec_str", True,
+         "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
+        ("comp_lr_spec_proj", True,
+         "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
+         "must be a float, int, bool, None, or a dict."),
+        ("dict_lr_val_str", False,
+        "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
+        "must each be a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): 'goodbye'}]'."),
+        ("dict_lr_val_proj", False,
+         "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
+         "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
+        ("dict_illegal_key_str", True,
+         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
+         "a Projection or the name of one in that Composition: 'woa a woa'."),
+        ("dict_illegal_key_int", False,
+         "The following keys in the dict specified for the 'learning_rate' arg of Comp are not MappingProjections "
+         "(or names of ones) in that Composition: '23'."),
+        ("dict_key_bad_proj", True,
+         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
+         "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),
+        ("dict_proj_not_learnable", True,
+         "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
+         "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
+    ]
+    @pytest.mark.parametrize("condition, check_learn, error_msg", error_test_args,
+                             ids=[f"{x[0]}" for x in error_test_args])
+    def test_learning_rate_specification_errors(self, condition, check_learn, error_msg):
+        # Test for errors with learning_rates specified in Composition constructor
+        mech_1 = pnl.ProcessingMechanism(name='Mech 1')
+        mech_2 = pnl.ProcessingMechanism(name='Mech 2')
+        mech_3 = pnl.ProcessingMechanism(name='Mech 3')
+        mech_4 = pnl.ProcessingMechanism(name='Mech 4')
+        input_proj = pnl.MappingProjection(mech_1, mech_2, learning_rate=.2, name="INPUT PROJECTION")
+
+        comp_lr = None
+        default_lr = .1
+        key_spec = input_proj
+        val_spec = .2
+
+        if condition == 'comp_lr_spec_str':
+            comp_lr = 'hello'
+        elif condition == 'comp_lr_spec_proj':
+            comp_lr = input_proj
+        elif condition == "dict_lr_val_str":
+            val_spec = "goodbye"
+        elif condition == "dict_lr_val_proj":
+            val_spec = input_proj
+        elif condition == "dict_illegal_key_str":
+            key_spec = "woa a woa"
+        elif condition == "dict_illegal_key_int":
+            key_spec = 23
+        elif condition == "dict_key_bad_proj":
+            key_spec = pnl.MappingProjection(mech_3, mech_4, learning_rate=.4, name="BAD PROJECTION")
+        elif condition == "dict_proj_not_learnable":
+            input_proj.learnable = False
+
+        comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
+
+        if not check_learn:
+            with pytest.raises(CompositionError) as error_text:
+                pnl.Composition(learning_rate=comp_lr, name='Comp')
+            assert error_msg in str(error_text.value)
+            return
+
+        with pytest.raises(CompositionError) as error_text:
+            comp = pnl.Composition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
+            comp.learn(inputs={mech_1: [[1.0]]},)
         assert error_msg in str(error_text.value)
 
-        # Elicit error with learn
-        with pytest.raises(RunError) as error_text:
-            comp.learn(inputs={A: [1.0, 2.0, 3.0],
-                             p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'Target' "
-                     f"is incompatible with the shape of its external input ([array([0., 0.])]).")
-        assert error_msg in str(error_text.value)
 
-    # The input sizes were picked because the lengths conflict in set:
-    # >>> print({10, 2}, {2, 10})
-    #     {10, 2} {2, 10}
-    # whereas:
-    # >>> print({4, 2}, {2, 4})
-    #     {2, 4} {2, 4}
-    @pytest.mark.parametrize("input_A, target_B", [
-        ([[[1.0]], [[2.0]]], [[1.0], [2.0], [3.0], [4.0], [5.0], [6.0], [7.0], [8.0], [9.0], [10.0]]),
-        ([[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]], [[6.0]], [[7.0]], [[8.0]], [[9.0]], [[10.0]]], [[1.0], [2.0]])],
-        ids=["2,10", "10,2"])
-    def test_different_number_of_stimuli_for_targets_and_other_input_mech_error(self, input_A, target_B):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        comp = Composition()
-        p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        with pytest.raises(CompositionError) as error:
-            comp.run(inputs={A: input_A, p.target: target_B})
-        error_text = str(error.value)
-        assert 'The input dictionary' in error_text
-        assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
-               'contains input specifications of different lengths ({2, 10})' in error_text
-        assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
+    class TestInputAndTargetSpecs:
 
+        @pytest.mark.composition
+        @pytest.mark.parametrize('input_type', ['dict', 'func', 'gen', 'gen_func'])
+        @pytest.mark.parametrize('exec_mode', [
+            # pytest.param(pnl.ExecutionMode.PyTorch, marks=pytest.mark.pytorch),
+            # pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+            pnl.ExecutionMode.Python
+        ])
+        @pytest.mark.parametrize('comp_type', [
+            # 'composition',
+            pytest.param('autodiff', marks=pytest.mark.pytorch)
+        ])
+        def test_node_spec_types(self, comp_type, input_type, exec_mode):
 
-class TestLearningPathwayMethods:
-    def test_multiple_of_same_learning_pathway(self):
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
+            if comp_type == 'composition' and exec_mode != pnl.ExecutionMode.Python:
+                pytest.skip(f"Execution mode {exec_mode} not relevant for Composition learn")
 
-        input_comp = pnl.TransferMechanism(name='input_comp',
-                                       default_variable=np.zeros(2))
+            comp, input_layer, hidden_layer, output_layer, target_mechanism, stims, targets =\
+                xor_network(comp_type, 0.001, None)
 
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
-                                    default_variable=np.zeros(10),
-                                    function=pnl.Logistic())
+            if comp_type == 'composition':
+                target_node = target_mechanism
+            else:
+                target_node = output_layer
 
-        output_comp = pnl.TransferMechanism(name='output_comp',
-                                    default_variable=np.zeros(1),
-                                    function=pnl.Logistic())
+            # inputs as dictionary
+            if input_type == 'dict':
+                inputs = {"inputs": {input_layer: stims},
+                          "targets": {target_node: targets}}
 
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
-                                    sender=input_comp,
-                                    receiver=hidden_comp)
+            # inputs as function
+            elif input_type == 'func':
+                def get_inputs(idx):
+                    return {"inputs": {input_layer: stims[idx]},
+                            "targets": {target_node: targets[idx]}}
+                inputs = get_inputs
 
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
-                                    matrix=hidden_to_out_matrix.copy(),
-                                    sender=hidden_comp,
-                                    receiver=output_comp)
+            elif input_type in {'gen', 'gen_func'}:
+                def get_inputs_gen():
+                    yield {"inputs": {input_layer: stims},
+                           "targets": {target_node: targets}}
+                # inputs as generator
+                if input_type == 'gen':
+                    g = get_inputs_gen()
+                    inputs = g
+                # inputs as generator function
+                else:
+                    inputs = get_inputs_gen
 
-        xor_comp = pnl.Composition()
+            else:
+                assert False, f"Unrecognized input_type: {input_type}"
 
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
-        # Try read the same learning pathway (shouldn't error)
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
+            results = comp.learn(inputs=inputs, execution_mode=exec_mode)
+            np.testing.assert_allclose(results, [[0.6341436044849351]])
 
-    def test_run_no_targets(self):
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
+        @pytest.mark.composition
+        @pytest.mark.pytorch
+        def test_target_spec_default_assignment(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            comp1 = Composition()
+            p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B])
+            # Call learn with default_variable specified for target (for comparison with missing target)
+            comp1.learn(inputs={A: 1.0,
+                                p1.target: 0.0},
+                     num_trials=2)
+            np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
-        input_comp = pnl.TransferMechanism(name='input_comp',
-                                       default_variable=np.zeros(2))
+            # Repeat with no target assignment (should use default_variable)
+            C = TransferMechanism(name="learning-process-mech-C")
+            D = TransferMechanism(name="learning-process-mech-D")
+            comp2 = Composition()
+            comp2.add_backpropagation_learning_pathway(pathway=[C,D])
+            # Call learn with no target specification
+            comp2.learn(inputs={C: 1.0},
+                       num_trials=2)
+            # Should be same with default target specification
+            np.testing.assert_allclose(comp2.results, comp1.results)
 
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
-                                    default_variable=np.zeros(10),
-                                    function=pnl.Logistic())
-
-        output_comp = pnl.TransferMechanism(name='output_comp',
-                                    default_variable=np.zeros(1),
-                                    function=pnl.Logistic())
-
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
-                                    sender=input_comp,
-                                    receiver=hidden_comp)
-
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
-                                    matrix=hidden_to_out_matrix.copy(),
-                                    sender=hidden_comp,
-                                    receiver=output_comp)
-
-        xor_comp = pnl.Composition()
-
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
-        # Try to run without any targets (non-learning
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-            [0, 1],
-            [1, 0],
-            [1, 1]])
-        xor_comp.run(inputs={input_comp:xor_inputs})
-
-    def test_indepedence_of_learning_pathways_using_same_mechs_in_different_comps(self):
-        A = TransferMechanism(name="Mech A")
-        B = TransferMechanism(name="Mech B")
-
-        comp1 = Composition(pathways=([A,B], BackPropagation))
-        comp1.learn(inputs={A: 1.0,
-                    comp1.pathways[0].target: 0.0},
-                    num_trials=2)
-        np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
-
-        comp2 = Composition()
-        comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
-        comp2.learn(inputs={A: 1.0},
-                    targets={B: 0.0},
-                    num_trials=2)
-        np.testing.assert_allclose(comp2.results, comp1.results)
-
-    # Use explicit parametrize instead of the autodiff_mode fixture to avoid
-    # applying marks. This test doesn't execute pytorch or compiled mode
-    @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVMRun, pnl.ExecutionMode.PyTorch])
-    def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-        comp = Composition()
-        pway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        # Call learn with default_variable specified for target (for comparison with missing target)
-        with pytest.raises(CompositionError) as error:
+        def test_target_dict_spec_single_trial_scalar_and_lists_rl(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            comp = Composition()
+            p = comp.add_reinforcement_learning_pathway(pathway=[A,B])
+            # Confirm that targets are ignored in run (vs learn)
+            comp.run(inputs={A: 1.0,
+                             p.target:2.0})
+            np.testing.assert_allclose(comp.results, [[[1.]]])
             comp.learn(inputs={A: 1.0,
-                              pway.target: 0.0},
-                      execution_mode=execution_mode,
-                      num_trials=2)
-        assert str(error.value) == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
-                                   f"method of \'Composition-0\' because it is not an AutodiffComposition"
+                               p.target:2.0})
+            comp.learn(inputs={A: 1.0,
+                               p.target:[2.0]})
+            comp.learn(inputs={A: 1.0,
+                               p.target:[[2.0]]})
+
+            np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
+
+        def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            C = TransferMechanism(name="learning-process-mech-C")
+            comp = Composition()
+            p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            # Confirm that targets are ignored in run (vs learn)
+            comp.run(inputs={A: 1.0,
+                             p.target:2.0})
+            np.testing.assert_allclose(comp.results, [[[1.]]])
+            comp.learn(inputs={A: 1.0,
+                               p.target:2.0})
+            comp.learn(inputs={A: 1.0,
+                               p.target:[2.0]})
+            comp.learn(inputs={A: 1.0,
+                               p.target:[[2.0]]})
+
+            np.testing.assert_allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
+
+        def test_target_dict_spec_multi_trial_lists_rl(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            comp = Composition()
+            p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                               p.target: [[4.0], [5.0], [6.0]]})
+            comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                               p.target: [[[4.0]], [[5.0]], [[6.0]]]})
+            np.testing.assert_allclose(comp.results,
+                                       [[[1.]], [[2.6]], [[5.34]],
+                                        [[1.978]], [[4.3604]], [[6.92436]]])
+
+        def test_target_dict_spec_multi_trial_lists_bp(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            C = TransferMechanism(name="learning-process-mech-C",
+                                  default_variable=[[0.0, 0.0]])
+            comp = Composition()
+            p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            comp.learn(inputs={A: 1.0,
+                               p.target:[2.0, 3.0]})
+            comp.learn(inputs={A: 1.0,
+                               p.target:[[2.0, 3.0]]})
+            comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                               p.target: [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]})
+            comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                               p.target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
+            np.testing.assert_allclose(comp.results,
+                                       [[[1., 1.]],
+                                        [[1.2075, 1.265]],
+                                        [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
+                                        [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
+
+        # DS: The following test fails the assert. The same value is returned whether a dict or function is used as input,
+        # which is not the same as the expected values. Are the expected values incorrect? If not, there is a problem
+        # at a deeper level than just the input handling. 5/18/2020
+        #
+        # def test_function_target_spec(self):
+        #
+        #     from psyneulink.core.compositions.composition import Composition
+        #     A = pnl.TransferMechanism(name="learning-process-mech-A")
+        #     B = pnl.TransferMechanism(name="learning-process-mech-B",
+        #                           default_variable=np.array([[0.0, 0.0]]))
+        #     comp = Composition()
+        #     learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B], learning_rate=0.05)
+        #     target = learning_pathway.target
+        #     # global x
+        #     # x = 1
+        #
+        #     # def input_function(a,b):
+        #     #     global x
+        #     #     x = x + 1
+        #     #     y = 2 * x
+        #     #     z = 3 * x
+        #     #     target_value = {A:[x], target:[y,z]}
+        #     #     print('trial')
+        #     #     return target_value
+        #     def input_function(trial):
+        #         x = trial + 1
+        #         y = 2 * x
+        #         z = y + 2
+        #         target_value = {A:[x], target:[y,z]}
+        #         print(target_value)
+        #         return target_value
+        #
+        #     target.log.set_log_conditions('variable')
+        #
+        #     comp.learn(inputs=input_function, num_trials=3)
+        #     np.testing.assert_allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
+
+        def test_dict_target_spec_converging_pathways(self):
+            A = TransferMechanism(name="converging-learning-pathways-mech-A")
+            B = TransferMechanism(name="converging-learning-pathways-mech-B")
+            C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
+            D = TransferMechanism(name="converging-learning-pathways-mech-D")
+            E = TransferMechanism(name="converging-learning-pathways-mech-E")
+            comp = Composition()
+            p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+            assert p1.target == p2.target
+            comp.learn(inputs={A: 1.0,
+                               D: 2.0,
+                               p1.target: [3.0, 4.0]
+                               })
+            comp.learn(inputs={A: 5.0,
+                               D: 6.0,
+                               p1.target: [7.0, 8.0]
+                               })
+            np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+
+        def test_function_target_spec_converging_pathways(self):
+            A = TransferMechanism(name="converging-learning-pathways-mech-A")
+            B = TransferMechanism(name="converging-learning-pathways-mech-B")
+            C = TransferMechanism(name="converging-learning-pathways-mech-C", input_shapes=2)
+            D = TransferMechanism(name="converging-learning-pathways-mech-D")
+            E = TransferMechanism(name="converging-learning-pathways-mech-E")
+            comp = Composition()
+            p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+            assert p1.target == p2.target
+            inputs = {
+                A: [1.0, 5.0],
+                D: [2.0, 6.0],
+                p1.target: [[3.0, 4.0], [7.0, 8.0]]
+            }
+            def input_function(trial_num):
+                return {
+                    A: inputs[A][trial_num],
+                    D: inputs[D][trial_num],
+                    p1.target: inputs[p1.target][trial_num]
+                }
+            comp.learn(inputs=input_function,
+                       num_trials=2)
+            np.testing.assert_allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+
+        def test_dict_target_spec_diverging_pathways(self):
+            A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+            B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+            C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+            D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+            E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+            comp = Composition()
+            p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+            inputs = {
+                A: [1.0, 2.0],
+                p1.target: [2.0, 2.0],
+                p2.target: [4.0, 4.0]
+            }
+            def input_function(trial_num):
+                return {
+                    A: inputs[A][trial_num],
+                    p1.target: inputs[p1.target][trial_num],
+                    p2.target: inputs[p2.target][trial_num]
+                }
+            comp.learn(inputs=input_function,
+                       num_trials=2)
+            np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+
+        def test_function_target_spec_divergin_pathways(self):
+            A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+            B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+            C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+            D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+            E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+            comp = Composition()
+            p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+            comp.learn(inputs={A: 1.0,
+                             p1.target: 2.0,
+                             p2.target: 4.0
+                             })
+            comp.learn(inputs={A: 2.0,
+                             p1.target: 2.0,
+                             p2.target: 4.0
+                             })
+            np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+
+        def test_dict_target_spec_divering_pathways_with_only_one_target(self):
+            # First test with both targets (but use default_variale for second for comparison with missing target)
+            A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+            B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+            C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+            D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+            E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+            comp1 = Composition()
+            p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            p2 = comp1.add_backpropagation_learning_pathway(pathway=[A,D,E])
+            comp1.learn(inputs={A: 1.0,
+                                p1.target: 0.0,
+                                p2.target: 2.0
+                                },
+                        num_trials=2)
+            np.testing.assert_allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
+
+            F = TransferMechanism(name="diverging-learning-pathways-mech-F")
+            G = TransferMechanism(name="diverging-learning-pathways-mech-G")
+            H = TransferMechanism(name="diverging-learning-pathways-mech-H")
+            I = TransferMechanism(name="diverging-learning-pathways-mech-I")
+            J = TransferMechanism(name="diverging-learning-pathways-mech-J")
+            comp2 = Composition()
+            p3 = comp2.add_backpropagation_learning_pathway(pathway=[F,G,H])
+            p4 = comp2.add_backpropagation_learning_pathway(pathway=[F,I,J])
+            # Call learn with missing spec for p3.target;  should use default_variable
+            comp2.learn(inputs={F: 1.0,
+                                p4.target: 2.0
+                                },
+                        num_trials=2)
+            np.testing.assert_allclose(comp2.results, comp1.results)
+
+        def test_target_spec_over_nesting_of_items_in_target_value_error(self):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            C = TransferMechanism(name="learning-process-mech-C",
+                                  default_variable=[[0.0, 0.0]])
+            comp = Composition()
+            p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            # Elicit error with run
+            with pytest.raises(RunError) as error_text:
+                comp.run(inputs={A: [1.0, 2.0, 3.0],
+                                 p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
+            error_msg = ("Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) for 'TARGET for learning-process-mech-C' is incompatible with the shape of its external input ([array([0., 0.])]).")
+            assert error_msg in str(error_text.value)
+
+            # Elicit error with learn
+            with pytest.raises(RunError) as error_text:
+                comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                                 p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
+            error_msg = (f"Input stimulus shape ([[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]) "
+                         f"for 'TARGET for learning-process-mech-C' is incompatible with the "
+                         f"shape of its external input ([array([0., 0.])]).")
+            assert error_msg in str(error_text.value)
+
+        # The input sizes were picked because the lengths conflict in set:
+        # >>> print({10, 2}, {2, 10})
+        #     {10, 2} {2, 10}
+        # whereas:
+        # >>> print({4, 2}, {2, 4})
+        #     {2, 4} {2, 4}
+        @pytest.mark.parametrize("input_A, target_B", [
+            ([[[1.0]], [[2.0]]], [[1.0], [2.0], [3.0], [4.0], [5.0], [6.0], [7.0], [8.0], [9.0], [10.0]]),
+            ([[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]], [[6.0]], [[7.0]], [[8.0]], [[9.0]], [[10.0]]], [[1.0], [2.0]])],
+            ids=["2,10", "10,2"])
+        def test_different_number_of_stimuli_for_targets_and_other_input_mech_error(self, input_A, target_B):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            comp = Composition()
+            p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            with pytest.raises(CompositionError) as error:
+                comp.run(inputs={A: input_A, p.target: target_B})
+            error_text = str(error.value)
+            assert 'The input dictionary' in error_text
+            assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
+                   'contains input specifications of different lengths ({2, 10})' in error_text
+            assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
+
+
+        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                                 ids=["Composition", "Autodiff"])
+        @pytest.mark.parametrize("target_specs", [
+            'target_mechs_in_inputs',
+            'output_mechs_in_targets',
+            'target_mechs_in_targets',
+            'target_mechs_in_inputs_and_targets',
+            'too_many_targets',
+        ])
+        @pytest.mark.pytorch
+        def test_infer_target_nodes(self, target_specs, comp_type):
+            """Test for checks on the validity of the inputs and targets args of the learn() method"""
+            input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
+            output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')
+            output_mech_B = pnl.ProcessingMechanism(name='OUTPUT MECH B')
+            if comp_type == Composition:
+                comp = comp_type(name='TEST COMP')
+                comp.add_backpropagation_learning_pathway([input_mech, output_mech_A])
+                comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
+                execution_mode = pnl.ExecutionMode.Python
+            else:
+                comp = comp_type([input_mech,{output_mech_A, output_mech_B}], name='TEST COMP')
+                execution_mode = pnl.ExecutionMode.PyTorch
+            targets = comp.get_target_nodes()
+            inputs_arg = {'INPUT MECH': [[1]]}
+            target_mechs = {targets[0]: [[1]],
+                            targets[1]: [[2]]}
+
+            if target_specs == 'target_mechs_in_inputs':
+                inputs_arg.update(target_mechs)
+                comp.learn(inputs = inputs_arg, execution_mode=execution_mode)
+
+            elif target_specs == 'output_mechs_in_targets':
+                comp.learn(inputs=inputs_arg,
+                           targets={comp.nodes['OUTPUT MECH A']: [[1]],
+                                    comp.nodes['OUTPUT MECH B']: [[2]]},
+                           execution_mode=execution_mode)
+
+            elif target_specs == 'target_mechs_in_targets':
+                # Test for warning about TARGET_MECHANISMS in targets arg
+                with pytest.warns(UserWarning) as warning:
+                    comp.learn(inputs=inputs_arg,
+                               targets=target_mechs,
+                               execution_mode=execution_mode)
+                assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "
+                        f"are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "
+                        f"it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "
+                        f"of the dict, obviating the need to determine the TARGET_MECHANISM(s). Alternatively, "
+                        f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                        f"obviating the need to specify the 'targets' arg."
+                        in warning[0].message.args[0])
+
+            elif target_specs == 'target_mechs_in_inputs_and_targets':
+                # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
+                with pytest.warns(UserWarning) as warning:
+                    inputs_arg.update(target_mechs)
+                    comp.learn(inputs=inputs_arg,
+                               targets=target_mechs,
+                               execution_mode=execution_mode)
+                assert (f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' args "
+                        f"of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
+                        f"This isn't technically a problem, but it is redundant so thought you should know ;^)."
+                        in warning[1].message.args[0])
+
+            elif target_specs == 'too_many_targets':
+                # Test error for too many entries in targets arg
+                with pytest.raises(CompositionError) as error_text:
+                    comp.learn(inputs=inputs_arg,
+                               targets={comp.nodes[0]: [[1]],
+                                        comp.nodes[1]: [[1]],
+                                        comp.nodes[2]: [[2]]},
+                               execution_mode=execution_mode)
+                assert (f"The number of targets (3) specified in `targets` arg of the learn method "
+                        f"for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
+                        in str(error_text.value))
+
+
+    class TestLearningPathwayMethods:
+        def test_multiple_of_same_learning_pathway(self):
+            in_to_hidden_matrix = np.random.rand(2,10)
+            hidden_to_out_matrix = np.random.rand(10,1)
+
+            input_comp = pnl.TransferMechanism(name='input_comp',
+                                           default_variable=np.zeros(2))
+
+            hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.Logistic())
+
+            output_comp = pnl.TransferMechanism(name='output_comp',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.Logistic())
+
+            in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                        matrix=in_to_hidden_matrix.copy(),
+                                        sender=input_comp,
+                                        receiver=hidden_comp)
+
+            hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                        matrix=hidden_to_out_matrix.copy(),
+                                        sender=hidden_comp,
+                                        receiver=output_comp)
+
+            xor_comp = pnl.Composition()
+
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
+            # Try read the same learning pathway (shouldn't error)
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
+
+        def test_run_no_targets(self):
+            in_to_hidden_matrix = np.random.rand(2,10)
+            hidden_to_out_matrix = np.random.rand(10,1)
+
+            input_comp = pnl.TransferMechanism(name='input_comp',
+                                           default_variable=np.zeros(2))
+
+            hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                        default_variable=np.zeros(10),
+                                        function=pnl.Logistic())
+
+            output_comp = pnl.TransferMechanism(name='output_comp',
+                                        default_variable=np.zeros(1),
+                                        function=pnl.Logistic())
+
+            in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                        matrix=in_to_hidden_matrix.copy(),
+                                        sender=input_comp,
+                                        receiver=hidden_comp)
+
+            hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                        matrix=hidden_to_out_matrix.copy(),
+                                        sender=hidden_comp,
+                                        receiver=output_comp)
+
+            xor_comp = pnl.Composition()
+
+            xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                           in_to_hidden_comp,
+                                                           hidden_comp,
+                                                           hidden_to_out_comp,
+                                                           output_comp],
+                                                          learning_rate=10)
+            # Try to run without any targets (non-learning
+            xor_inputs = np.array(  # the inputs we will provide to the model
+                [[0, 0],
+                [0, 1],
+                [1, 0],
+                [1, 1]])
+            xor_comp.run(inputs={input_comp:xor_inputs})
+
+        def test_indepedence_of_learning_pathways_using_same_mechs_in_different_comps(self):
+            A = TransferMechanism(name="Mech A")
+            B = TransferMechanism(name="Mech B")
+
+            comp1 = Composition(pathways=([A,B], BackPropagation))
+            comp1.learn(inputs={A: 1.0,
+                        comp1.pathways[0].target: 0.0},
+                        num_trials=2)
+            np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
+
+            comp2 = Composition()
+            comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
+            comp2.learn(inputs={A: 1.0},
+                        targets={B: 0.0},
+                        num_trials=2)
+            np.testing.assert_allclose(comp2.results, comp1.results)
+
+        # Use explicit parametrize instead of the autodiff_mode fixture to avoid
+        # applying marks. This test doesn't execute pytorch or compiled mode
+        @pytest.mark.parametrize('execution_mode', [pnl.ExecutionMode.LLVMRun, pnl.ExecutionMode.PyTorch])
+        def test_execution_mode_pytorch_and_LLVM_errors(self, execution_mode):
+            A = TransferMechanism(name="learning-process-mech-A")
+            B = TransferMechanism(name="learning-process-mech-B")
+            comp = Composition()
+            pway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+            # Call learn with default_variable specified for target (for comparison with missing target)
+            with pytest.raises(CompositionError) as error:
+                comp.learn(inputs={A: 1.0,
+                                  pway.target: 0.0},
+                          execution_mode=execution_mode,
+                          num_trials=2)
+            assert str(error.value) == f"ExecutionMode.{execution_mode.name} cannot be used in the learn() " \
+                                       f"method of \'Composition-0\' because it is not an AutodiffComposition"
 
 
 class TestNoLearning:
@@ -627,8 +1110,8 @@ class TestReinforcement:
         comp = pnl.Composition(name='comp')
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                       learning_rate=0.05)
-        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS][0]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS][0]
         target_mechanism = learning_pathway.target
         comparator_mechanism = learning_pathway.learning_objective
 
@@ -1469,8 +1952,8 @@ class TestReinforcement:
         comp = pnl.Composition(name='comp')
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                       learning_rate=0.05)
-        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS][0]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS][0]
         target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
         comparator_mechanism = learning_pathway.learning_components[pnl.OBJECTIVE_MECHANISM]
 
@@ -3050,37 +3533,6 @@ class TestBackPropLearning:
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
         np.testing.assert_allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225), rtol=1e-5, atol=1e-8)
-
-
-def validate_learning_mechs(comp):
-
-    def get_learning_mech(name):
-        return next(lm for lm in comp.get_nodes_by_role(pnl.NodeRole.LEARNING) if lm.name == name)
-
-    REP_IN_to_REP_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_IN to REP_HIDDEN')
-    REP_HIDDEN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_HIDDEN to REL_HIDDEN')
-    REL_IN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_IN to REL_HIDDEN')
-    REL_HIDDEN_to_REP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to REP_OUT')
-    REL_HIDDEN_to_PROP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to PROP_OUT')
-    REL_HIDDEN_to_QUAL_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to QUAL_OUT')
-    REL_HIDDEN_to_ACT_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to ACT_OUT')
-
-    # Validate error_signal Projections for REP_IN to REP_HIDDEN
-    assert len(REP_IN_to_REP_HIDDEN_LM.input_ports) == 3
-    assert REP_IN_to_REP_HIDDEN_LM.input_ports[pnl.ERROR_SIGNAL].path_afferents[0].sender.owner == \
-           REP_HIDDEN_to_REL_HIDDEN_LM
-
-    # Validate error_signal Projections to LearningMechanisms for REP_HIDDEN_to REL_HIDDEN Projections
-    assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
-                      REP_HIDDEN_to_REL_HIDDEN_LM.input_ports]
-               for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
-                          REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
-
-    # Validate error_signal Projections to LearningMechanisms for REL_IN to REL_HIDDEN Projections
-    assert all(lm in [input_port.path_afferents[0].sender.owner for input_port in
-                      REL_IN_to_REL_HIDDEN_LM.input_ports]
-               for lm in {REL_HIDDEN_to_REP_OUT_LM, REL_HIDDEN_to_PROP_OUT_LM,
-                          REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
 
 class TestRumelhartSemanticNetwork:

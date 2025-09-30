@@ -9,11 +9,12 @@
 
 """PyTorch wrapper for EMComposition"""
 
-import torch
-# try:
-#     import torch
-# except (ImportError, ModuleNotFoundError):
-#     torch = None
+# import torch
+try:
+    import torch
+except (ImportError, ModuleNotFoundError):
+    torch = None
+
 from typing import Optional
 
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
@@ -29,15 +30,16 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         super().__init__(*args, **kwargs)
 
         # Assign storage_node (EMComposition's EMStorageMechanism) (assumes there is only one)
-        self.storage_node = [node for node in self.nodes_map.values()
-                             if isinstance(node._mechanism, EMStorageMechanism)][0]
+        self.storage_node = self.nodes_map[self.composition.storage_node]
+        # MODIFIED 6/20/25 OLD:
         # Execute storage_node after gradient calculation,
         #     since it assigns weights manually which messes up PyTorch gradient tracking in forward() and backward()
         self.storage_node.exclude_from_gradient_calc = AFTER
+        # MODIFIED 6/20/25 END
 
         # Get PytorchProjectionWrappers for Projections to match and retrieve nodes;
         #   used by get_memory() to construct memory_matrix and store_memory() to store entry in it
-        pnl_storage_mech = self.storage_node._mechanism
+        pnl_storage_mech = self.storage_node.mechanism
 
         num_fields = len(pnl_storage_mech.input_ports)
         num_learning_signals = len(pnl_storage_mech.learning_signals)
@@ -57,15 +59,14 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         self.retrieve_projection_wrappers = [self.projections_map[pnl_retrieve_proj]
                                              for pnl_retrieve_proj in pnl_retrieve_projs]
 
-    def execute_node(self, node, variable, optimization_num, context):
-        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
-        if node is self.storage_node:
-            # Only execute store after last optimization repetition for current mini-batch
-            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
-            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
-                self.store_memory(variable, context)
-        else:
-            super().execute_node(node, variable, optimization_num, context)
+        # IMPLEMENTATION NOTE:
+        #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition is nested,
+        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itelf;
+        #    access must be provided via EMComposition's pytorch_representation, rather than directly assigning
+        #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
+        #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.
+        if self.composition.pytorch_representation is None:
+            self.composition.pytorch_representation = self
 
     @property
     def memory(self)->Optional[torch.Tensor]:
@@ -79,6 +80,20 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
                 else torch.stack([torch.stack([memory_matrices[j][i]
                                                for j in range(num_fields)])
                                   for i in range(memory_capacity)]))
+
+
+class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
+    """Wrapper for EMStorageMechanism as a Pytorch Module"""
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
+        """Override to handle storage of entry to memory_matrix by EMStorage Function"""
+        if self.mechanism is self.composition.storage_node:
+            # Only execute store after last optimization repetition for current mini-batch
+            # 7/10/24:  FIX: MOVE PASSING OF THESE PARAMETERS TO context
+            if not (optimization_num + 1) % context.composition.parameters.optimizations_per_minibatch.get(context):
+                self.store_memory(variable, context)
+        else:
+            super().execute(variable, optimization_num, synch_with_pnl_options, context)
 
     # # MODIFIED 7/29/24 NEW: NEEDED FOR torch MPS SUPPORT
     # @torch.jit.script_method
@@ -103,12 +118,13 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         :return: List[2d tensor] updated memories
         """
+        pytorch_rep = self.composition.pytorch_representation
 
-        memory = self.memory
-        assert memory is not None, f"PROGRAM ERROR: '{self.name}'.memory is None"
+        memory = pytorch_rep.memory
+        assert memory is not None, f"PROGRAM ERROR: '{pytorch_rep.name}'.memory is None"
 
         # Get current parameter values from EMComposition's EMStorageMechanism
-        mech = self.storage_node._mechanism
+        mech = self.mechanism
         random_state = mech.function.parameters.random_state._get(context)
         decay_rate = mech.parameters.decay_rate._get(context)      # modulable, so use getter
         storage_prob = mech.parameters.storage_prob._get(context)  # modulable, so use getter
@@ -134,15 +150,15 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
         idx_of_weakest_memory = torch.argmin(row_norms)
 
         values = []
-        for field_projection in self.match_projection_wrappers + self.retrieve_projection_wrappers:
-            field_idx = self._composition._field_index_map[field_projection._pnl_proj]
-            if field_projection in self.match_projection_wrappers:
+        for field_projection in pytorch_rep.match_projection_wrappers + pytorch_rep.retrieve_projection_wrappers:
+            field_idx = pytorch_rep.composition._field_index_map[field_projection._pnl_proj]
+            if field_projection in pytorch_rep.match_projection_wrappers:
                 # For match projections:
                 # - get entry to store from value of sender of Projection matrix (to accommodate concatenation_node)
-                entry_to_store = field_projection.sender.output
+                entry_to_store = field_projection.sender_wrapper.output
 
                 # Retrieve the correct field (for each batch, batch is first dimension)
-                memory_to_store_indexed = memory_to_store[:, field_idx, :]
+                memory_to_store_indexed = memory_to_store[:, :, field_idx, :]
 
                 # - store in row
                 axis = 0
@@ -154,20 +170,20 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
             else:
                 # For retrieve projections:
                 # - get entry to store from memory_to_store (which has inputs to all fields)
-                entry_to_store = memory_to_store[:, field_idx, :]
+                entry_to_store = memory_to_store[:, :, field_idx, :]
                 # - store in column
                 axis = 1
             # Get matrix containing memories for the field from the Projection
             field_memory_matrix = field_projection.matrix
 
-            field_projection.matrix = self.storage_node.function(entry_to_store,
-                                                                 memory_matrix=field_memory_matrix,
-                                                                 axis=axis,
-                                                                 storage_location=idx_of_weakest_memory,
-                                                                 storage_prob=storage_prob,
-                                                                 decay_rate=decay_rate,
-                                                                 random_state=random_state)
+            field_projection.matrix = self.function(entry_to_store,
+                                                    memory_matrix=field_memory_matrix,
+                                                    axis=axis,
+                                                    storage_location=idx_of_weakest_memory,
+                                                    storage_prob=storage_prob,
+                                                    decay_rate=decay_rate,
+                                                    random_state=random_state)
             values.append(field_projection.matrix)
 
-        self.storage_node.value = values
+        self.value = values
         return values

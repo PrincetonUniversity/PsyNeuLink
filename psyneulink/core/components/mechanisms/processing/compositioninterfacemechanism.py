@@ -207,24 +207,15 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     @handle_external_context()
     def add_ports(self, ports, context=None):
-        ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context=context)
         if context.source == ContextFlags.COMMAND_LINE:
-            # warnings.warn(
-            #     'You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
-            #     'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
-            #     'that project to or are projected to from the CIM.')
-            # if ports[INPUT_PORTS]:
-            #     self.user_added_ports[INPUT_PORTS].update([port for port in ports[INPUT_PORTS].data])
-            # if ports[OUTPUT_PORTS]:
-            #     self.user_added_ports[OUTPUT_PORTS].update([port for port in ports[OUTPUT_PORTS].data])
             from psyneulink.core.compositions.composition import CompositionError
-            raise CompositionError(f"Adding ports to a {self.__class__.__name__} is not supported at this time; "
-                                   f"these are handled automatically when a Composition is created.")
+            raise CompositionError(f"Adding ports to a {self.__class__.__name__} is not supported; these "
+                                   f"are managed automatically when a Composition is created or modified.")
+        ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context=context)
         return ports
 
-    @handle_external_context()
-    def remove_ports(self, ports, context=None):
-        super(CompositionInterfaceMechanism, self).remove_ports(ports, context)
+    def remove_ports(self, ports):
+        super(CompositionInterfaceMechanism, self).remove_ports(ports)
         input_ports_marked_for_deletion = set()
         for port in self.user_added_ports[INPUT_PORTS]:
             if port not in self.input_ports:
@@ -239,7 +230,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
     def _get_source_node_for_input_CIM(self, port, start_comp=None)->tuple or None:
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-        Return None if there is no source Node (i.e., port receives input direcdtly from input to outermost Composition)
+        Return None if there is no source Node (i.e., port receives input directly from input to outermost Composition)
         **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
         **comp** Composition at which to begin the search (or continue it when called recursively;
                  assumes the current CompositionInterfaceMechanism's Composition by default
@@ -352,8 +343,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         input_ports = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
         assert len(input_ports)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(input_ports)}."
-        assert len(input_ports[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_ports[0].name}) expected to have " \
-                                                     f"just one path_afferent; has {len(input_ports.path_afferents)}."
+        num_proj = len([proj for proj in input_ports[0].path_afferents if proj in comp.projections])
+        assert num_proj==1, (f"PROGRAM ERROR: Port ({input_ports[0].name}) expected to have just one path_afferent "
+                             f"in '{comp.name}'; has {num_proj}: {input_ports[0].path_afferents}.")
         sender = input_ports[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp

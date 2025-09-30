@@ -509,8 +509,8 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 .. _LearningMechanism_Targets:
 
-`TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is
-implemented using one of a Composition's `learning methods <Composition_Learning_Methods>`, it automatically creates a
+`TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is implemented
+using one of a Composition's `learning pathway methods <Composition_Learning_Methods>`, it automatically creates a
 number of  `learning-related Components <Composition_Learning_Components>`.  This includes a `TARGET_MECHANISM`, that
 receives the target stimulus specifed in the **inputs** argument of the Composition's `learn <Composition.learn>`
 method; and a `OBJECTIVE_MECHANISM`, that computes the error_signal for the sequence.  The output of the
@@ -589,7 +589,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, \
     MODULATION, NAME, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, REFERENCE_VALUE, SAMPLE, PORT_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, ParameterNoValueError, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, is_numeric, ValidParamSpecType, \
@@ -699,13 +699,13 @@ class LearningMechanismError(MechanismError):
 def _learning_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.value._get(context)[0]
-    except (TypeError, IndexError):
+    except (TypeError, IndexError, ParameterNoValueError):
         return None
 
 def _error_signal_getter(owning_component=None, context=None):
     try:
         return owning_component.parameters.value._get(context)[1]
-    except (TypeError, IndexError):
+    except (TypeError, IndexError, ParameterNoValueError):
         return None
 
 
@@ -1135,7 +1135,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             prefs=prefs,
             **kwargs
         )
-        # If default to value assigned to its function, so any later assignments can be detected
+        # Set default value, so any later assignments can be detected
         #    (e.g., in CompositionRunner.run_learning)
         self.defaults.learning_rate = self.parameters.learning_rate.get()
 

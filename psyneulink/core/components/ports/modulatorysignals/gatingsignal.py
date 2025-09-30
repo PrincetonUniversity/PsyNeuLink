@@ -482,6 +482,13 @@ class GatingSignal(ControlSignal):
     def _get_primary_state(self, mechanism):
         return mechanism.input_port
 
+    def compute_costs(self, intensity, context=None):
+        """Overrided to always return 0
+        Costs not used by Gating Mechanism, and method on ControlSignal doesn't support vectors which GatingSignal does.
+        """
+        return 0
+
+
     @property
     def gating_signal(self):
         return self.value

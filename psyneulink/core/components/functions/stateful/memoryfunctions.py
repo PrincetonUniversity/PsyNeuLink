@@ -43,10 +43,26 @@ from psyneulink.core.components.functions.nonstateful.selectionfunctions import 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
-from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
-    ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MIN_VAL, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, SINGLE, WEIGHTED
+from psyneulink.core.globals.keywords import (
+    ADDITIVE_PARAM,
+    BUFFER_FUNCTION,
+    MEMORY_FUNCTION,
+    COSINE,
+    ContentAddressableMemory_FUNCTION,
+    DictionaryMemory_FUNCTION,
+    MIN_INDICATOR,
+    MIN_VAL,
+    MULTIPLICATIVE_PARAM,
+    NEWEST,
+    NOISE,
+    OLDEST,
+    OVERWRITE,
+    RATE,
+    RANDOM,
+    SINGLE,
+    WEIGHTED,
+    DEFAULT,
+)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
@@ -386,14 +402,14 @@ def _distance_field_weights_setter(value, owning_component=None, context=None):
         variable = owning_component.variable
     distance_function = owning_component.parameters.distance_function._get(context)
     current_field_weights = (owning_component.parameters.distance_field_weights._get(context)
-                             if owning_component.parameters.distance_field_weights._get(context) is not None
+                             if owning_component.parameters.distance_field_weights._get(context, fallback_value=None) is not None
                              else owning_component.defaults.distance_field_weights)
 
     # If assignment is same as current distance_field_weights, skip
     # NOTE: need the following to accommodate various forms of specification (single value, None's, etc)
     #       that are resolved elsewhere
     # FIX: STANDARDIZE FORMAT FOR FIELDWEIGHTS HERE (AS LIST OF INTS) AND GET RID OF THE FOLLOWING
-    test_val = np.array([int(np.array(val).item()) if val else 0 for val in value])
+    test_val = np.array([int(np.array(val).item()) if (arr := np.array(val)).size and arr.item() else 0 for val in value])
     test_val = np.full(len(variable), test_val) if len(test_val) == 1 else test_val
     test_curr_field_weights = np.array([int(np.array(val).item()) if val else 0 for val in current_field_weights])
     test_curr_field_weights = (np.full(len(variable), test_curr_field_weights) if len(variable) == 1
@@ -1188,7 +1204,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False, dependencies='distance_function')
         distance = Parameter(0, stateful=True, read_only=True)
@@ -2249,7 +2265,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)

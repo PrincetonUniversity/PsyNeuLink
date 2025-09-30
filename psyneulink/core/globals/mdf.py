@@ -108,8 +108,16 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comma_str, get_all_explicit_arguments, \
-    parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
+from psyneulink.core.globals.utilities import (
+    _get_cached_function_signature,
+    convert_to_list,
+    convert_to_np_array,
+    gen_friendly_comma_str,
+    get_all_explicit_arguments,
+    parse_string_to_psyneulink_object_string,
+    parse_valid_identifier,
+    safe_equals,
+)
 
 __all__ = [
     'MDFError', 'MDFSerializable', 'PNLJSONEncoder',
@@ -928,7 +936,7 @@ def _generate_condition_string(condition_model, component_identifiers):
 
     args_str = ''
     cond_type = _parse_graph_scheduler_type(condition_model.type)
-    sig = inspect.signature(getattr(psyneulink, cond_type).__init__)
+    sig = _get_cached_function_signature(getattr(psyneulink, cond_type).__init__)
 
     var_positional_arg_name = None
 
@@ -1474,7 +1482,9 @@ def generate_script_from_mdf(model_input, outfile=None):
             for module in module_names.copy():
                 try:
                     friendly_name = module_friendly_name_mapping[module]
-                    comp_strs[i][j] = re.sub(f'{module}\\.', f'{friendly_name}.', comp_strs[i][j])
+                    # Use '\b' "beginning of word" to avoid mangling references
+                    # to psyneulink in dill pickled strings.
+                    comp_strs[i][j] = re.sub(f'\\b{module}\\.', f'{friendly_name}.', comp_strs[i][j])
                 except KeyError:
                     pass
 

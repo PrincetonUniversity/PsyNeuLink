@@ -129,7 +129,7 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = True                       # True => run the model
+RUN_MODEL = False                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch

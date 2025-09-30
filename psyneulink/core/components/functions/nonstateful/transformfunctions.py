@@ -53,7 +53,7 @@ from psyneulink.core.components.functions.function import (
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
-     CROSS_ENTROPY, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
+     CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
      HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
@@ -1596,14 +1596,14 @@ class LinearCombination(
         # Note: the first dimension of x is batch, aggregate over the second dimension
         if self.operation == SUM:
             if weights is not None:
-                return lambda x: torch.sum(x * weights, 1)
+                return lambda x: torch.sum(x * weights, 2)
             else:
-                return lambda x: torch.sum(x, 1)
+                return lambda x: torch.sum(x, 2)
         elif self.operation == PRODUCT:
             if weights is not None:
-                return lambda x: torch.prod(x * weights, 1)
+                return lambda x: torch.prod(x * weights, 2)
             else:
-                return lambda x: torch.prod(x, 1)
+                return lambda x: torch.prod(x, 2)
         else:
             from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
             raise AutodiffCompositionError(f"The 'operation' parameter of {function.componentName} is not supported "
@@ -1821,7 +1821,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
-        normalize = Parameter(False)
+        normalize = Parameter(False, fallback_value=DEFAULT)
 
     @check_user_specified
     @beartype
@@ -2155,13 +2155,17 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
 
         def diff_with_normalization(vector, matrix):
             normalize = torch.sum(torch.abs(vector - matrix))
-            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0)
+            # Note: PyTorch requires keepdim to prevent [[1]] x 2d from being squeezed and returning 1d Tensor
+            return torch.sum((1 - torch.abs(vector - matrix) / normalize), axis=0, keepdim=True)
 
         if operation is DOT_PRODUCT:
             if normalize:
                 return dot_product_with_normalization
             else:
-                return lambda x, y : torch.matmul(x, y)
+                def matmul(x, y):
+                    return torch.matmul(x, y)
+
+                return matmul
 
         elif operation is L0:
             if normalize:
@@ -2208,10 +2212,10 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
                     vector = vector / np.linalg.norm(vector)
                 if np.any(matrix):
                     # FIX: the axis along which norming is carried out should probably be a parameter
-                    #      Also need to deal with column- (or row-) wise zeros which cause div by zero
+                    #      Also need to deal with column (or row) -wise zeros which cause div by zero
                     #      Replace columns (if norming axis 0) or rows (if norming axis 1) of zeros with 1's
                     # matrix = matrix / np.linalg.norm(matrix,axis=-1,keepdims=True)
-                    matrix = matrix / np.linalg.norm(matrix,axis=0,keepdims=True)
+                    matrix = matrix / np.linalg.norm(matrix, axis=0, keepdims=True)
             result = np.dot(vector, matrix)
 
         elif operation == L0:

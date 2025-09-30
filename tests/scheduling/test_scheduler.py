@@ -1629,13 +1629,13 @@ class TestFeedback:
                                       pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
-                             [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
+                             [(pnl.AtTrial, pnl.TimeScale.RUN, [[[1.0]], [[2.0]]]),
                              ])
     def test_run_term_conditions(self, mode, condition, scale, expected_result):
         incrementing_mechanism = pnl.ProcessingMechanism(function=pnl.SimpleIntegrator)
         comp = pnl.Composition(pathways=[incrementing_mechanism])
 
-        comp.scheduler.termination_conds = {pnl.TimeScale.RUN: condition(2)}
+        comp.scheduler.termination_conds = {scale: condition(2)}
         r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
 
         np.testing.assert_allclose(r, expected_result[-1])

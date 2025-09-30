@@ -133,9 +133,16 @@ Learning can be disabled for a MappingProjection by specifying its **learnable**
 constructor.  This can be useful for disabling specific MappingProjections in the `learning pathway
 `learning pathway <Composition_Learning_Pathway>` of a `Composition`.
 
+By default, the `learning_rate <MappingProjection.learning_rate>` for a MappingProjection is `None`, which causes
+it to inherit the value of the `learning_rate <Composition.learning_rate>` Parameter of the `Composition` to which
+it belongs. However, a Projection-specific value can be assigned in the **learning_rate** argument of the
+MappingProjection's constructor, or in either the constructor for a Composition or its `learn method
+<Composition.learn>`.  See `learning_rate <MappingProjection.learning_rate>` and `Composition_Learning_Rate` for
+additional details.
+
 See `LearningMechanism` for an overview of `learning components <LearningMechanism_Overview>` and a detailed
 description of `LearningMechanism_Learning_Configurations`; `Composition_Learning` for a description of how learning
-is implemented within a `Composition`;  `MappingProjection_Learning` below for a description of how learning
+is implemented within a `Composition`; `MappingProjection_Learning` below for a description of how learning
 modifies a MappingProjection.
 
 .. _MappingProjection_Learning_Tuple_Specification:
@@ -172,8 +179,8 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 <MappingProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
-is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway` or
-`learning methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
+is specified in the **pathway** argument of a Composition's `add_linear_processing_pathway`, one of the `add learning
+`pathway methods <Composition_Learning_Methods>`, or anywhere else that its `sender <MappingProjection.sender>` and
 `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _MappingProjection_Structure:
@@ -252,12 +259,13 @@ execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
 ~~~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`.
-This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterPort`, governed
+by its `learnable <MappingProjection.learnable>`  and `learning_rate <MappingProjection.learning_rate>` Parameters.
+Learning conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
 A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterPort.function>` of the
 *MATRIX* ParameterPort, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `MatrixTransform`).  By
-default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
+default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`. A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
 <AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
@@ -297,17 +305,21 @@ from psyneulink.core.components.projections.pathway.pathwayprojection import Pat
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, \
-    MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_PORT, VALUE
+    (AUTO_ASSIGN_MATRIX, DEFAULT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX,
+     IDENTITY_MATRIX, INPUT_PORT, MAPPING_PROJECTION, MATRIX, OUTPUT_PORT, VALUE)
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
-    'MappingError', 'MappingProjection'
+    'MappingError', 'MappingProjection',
+    'PROXY_FOR', 'PROXY_FOR_ATTRIB'
 ]
+
+PROXY_FOR = 'proxy_for'
+PROXY_FOR_ATTRIB = '_' + PROXY_FOR
 
 parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
@@ -365,8 +377,11 @@ class MappingProjection(PathwayProjection_Base):
 
     learnable : bool : default True
         specifies whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
-        `learning <LearningMechanism>` (see `MappingProjection_Learning` for additional details).
+        `learning <LearningMechanism>` (see `learnable <MappingProjection.learnable>` for additional details).
 
+    learning_rate : float, int or bool : default None
+         specifies Projection-specific learning_rate; assigning this if `learnable <MappingProjection.learnable>`
+         is ``False`` raises an error  (see `learning_rate <MappingProjection.learning_rate>` for additional details).
 
     Attributes
     ----------
@@ -389,6 +404,32 @@ class MappingProjection(PathwayProjection_Base):
         source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
         <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
 
+    learnable : bool
+        determines whether the MappingProjection's `matrix <MappingProjection.matrix>` parameter can be modified by
+        `learning <LearningMechanism>`.  If it is ``False``, learning is precluded from ever occuring for the
+        MappingProjection, irrespective of value of its `learning_rate <MappingProjection.learning_rate>` Parameter
+        or of any for the Composition to which the MappingProjection belongs, and any attempts to assign a
+        `learning_rate <MappingProjection.learning_rate>' (other than False) raises an error.
+
+    learning_rate : float, int, bool or None
+        determines Projection-specific learning_rate, that takes effect only if the MappingProjection's `learnable
+        <MappingProjection.learnable>` attribute is True. If it is a numeric value, that value is used, unless it
+        is overridden by a value specified for the MappingProjection in the `learn method
+        <Composition_Learning_Methods>` of the Composition to which it belongs (see `Composition_Learning_Rate` for
+        additional details); if it is ``False`` no learning occurs, even if `learnable <MappingProjection.learnable>`
+        attribute is ``True``; however, this can later be changed, and also overridden by a specification of the
+        learning_rate for the MappingProjection in the `learn method <Composition_Learning_Methods>` of the
+        Composition.  If learning_rate is ``True`` or ``None``, the Projection is assigned the value of the
+        `learning_rate <Composition.learning_rate>` Parameter of the Composition to which the MappingProjection belongs.
+        The value assigned to *learning_rate* in the MappingProjection at construction is saved in
+        <MappingProjection>.learning_rate (also accessible as ``<MappingProjection.parameters.learning_rate.get(None)``,
+        and remains the same even if the Projection has been assigned a different learning rate in a Composition. If
+        the latter is the case, the value assigned in the constructor to that Composition can be accessed as
+        ``<MappingProjection>.parameters.learning_rate.get(<Composition.name>_default)``, and a value assigned in the
+        Composition's `learn <Composition.learn>` method can be accessed as
+        ``<MappingProjection>.parameters.learning_rate.get(<context>) (see `Composition_Learning_Rate` for additional
+        details.
+
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
@@ -407,6 +448,7 @@ class MappingProjection(PathwayProjection_Base):
     componentType = MAPPING_PROJECTION
     className = componentType
     suffix = " " + className
+    classPreferenceLevel = PreferenceLevel.TYPE
 
     class Parameters(PathwayProjection_Base.Parameters):
         """
@@ -419,19 +461,26 @@ class MappingProjection(PathwayProjection_Base):
                     :default value: `MatrixTransform`
                     :type: `Function`
 
+                learning_rate
+                    see `learning_rate <MappingProjection.learning_rate>`
+
+                    :default value: None
+                    :type: ``float``
+
                 matrix
                     see `matrix <MappingProjection.matrix>`
 
                     :default value: `AUTO_ASSIGN_MATRIX`
                     :type: ``str``
-        """
-        function = Parameter(MatrixTransform, stateful=False, loggable=False)
-        matrix = FunctionParameter(
-            DEFAULT_MATRIX,
-            setter=_mapping_projection_matrix_setter
-        )
 
-    classPreferenceLevel = PreferenceLevel.TYPE
+        """
+        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
+        function = Parameter(MatrixTransform, stateful=False, loggable=False)
+        matrix = FunctionParameter(DEFAULT_MATRIX,
+                                   setter=_mapping_projection_matrix_setter)
+        def _validate_learning_rate(self, val):
+            if val is not None and not is_numeric_scalar(val):
+                return 'must be a float, int or a bool'
 
     @property
     def _loggable_items(self):
@@ -459,6 +508,7 @@ class MappingProjection(PathwayProjection_Base):
                  matrix=None,
                  function=None,
                  learnable=True,
+                 learning_rate=None,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
@@ -474,6 +524,13 @@ class MappingProjection(PathwayProjection_Base):
         self.learning_mechanism = None
         self.has_learning_projection = None
         self.learnable = bool(learnable)
+        if not self.learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
+            raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
+                               f"float or int when 'learnable' is False.")
+        if PROXY_FOR in kwargs:
+            # Identifies Projection into or out of a nested Composition for which this is the proxy
+            #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
+            self._proxy_for = kwargs.pop(PROXY_FOR)
 
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
@@ -485,6 +542,7 @@ class MappingProjection(PathwayProjection_Base):
                          weight=weight,
                          exponent=exponent,
                          matrix=matrix,
+                         learning_rate=learning_rate,
                          function=function,
                          params=params,
                          name=name,
@@ -574,45 +632,29 @@ class MappingProjection(PathwayProjection_Base):
             if all(string in self.name for string in {'from', 'to'}):
                 states_string = ''
             else:
-                states_string = "from \'{}\' OuputState of \'{}\' to \'{}\'".format(self.sender.name,
-                                                                                    self.sender.owner.name,
-                                                                                    self.receiver.owner.name)
+                states_string = (f" from '{self.sender.name}' OuputPort of '{self.sender.owner.name}' "
+                                 f"to '{self.receiver.owner.name}'")
+
             if not isinstance(matrix_spec, str):
                 # if all(string in self.name for string in {'from', 'to'}):
 
-                raise ProjectionError("Width ({}) of the {} of \'{}{}\'{} "
-                                      "does not match the length of its \'{}\' InputPort ({})".
-                                      format(mapping_output_len,
-                                             VALUE,
-                                             self.name,
-                                             projection_string,
-                                             states_string,
-                                             self.receiver.name,
-                                             receiver_len))
+                raise ProjectionError(f"Width ({mapping_output_len}) of the {VALUE} of '{self.name}' "
+                                      f"{projection_string}{states_string} does not match the length of its "
+                                      f"'{self.receiver.name}' InputPort ({receiver_len}).")
 
             elif matrix_spec == IDENTITY_MATRIX or matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
-                                      " must equal length of it InputPort ({}) to use {}".
-                                      format(mapping_output_len,
-                                             self.name,
-                                             projection_string,
-                                             self.sender.name,
-                                             self.receiver.owner.name,
-                                             receiver_len,
-                                             matrix_spec))
+                raise ProjectionError(f"Output length ({mapping_output_len}) of '{self.name}' {projection_string} "
+                                      f"from {self.sender.name} to Mechanism '{self.receiver.owner.name}' "
+                                      f"must equal length of it InputPort ({receiver_len}) to use {matrix_spec}.")
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
                 if self.prefs.verbosePref:
-                    print("Length ({}) of the output of {}{} does not match the length ({}) "
-                          "of the InputPort for the receiver {}; the width of the matrix (number of columns); "
-                          "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
-                          format(mapping_output_len,
-                                 self.name,
-                                 projection_string,
-                                 receiver_len,
-                                 self.receiver.owner.name))
+                    print(f"Length ({mapping_output_len}) of the output of '{self.name}' {projection_string} "
+                          f"does not match the length ({receiver_len}) of the InputPort for the receiver "
+                          f"'{self.receiver.owner.name}'; the width of the matrix (number of columns) will be "
+                          f"adjusted to accomodate the receiver.")
 
                 self.parameters.matrix._set(
                     get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context),

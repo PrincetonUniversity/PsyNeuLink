@@ -19,14 +19,14 @@ from psyneulink import *
 #   Representation_Input (REP_IN)
 
 # Construct Mechanisms
-rep_in = TransferMechanism(input_shapes=10, name='REP_IN')
-rel_in = TransferMechanism(input_shapes=11, name='REL_IN')
-rep_hidden = TransferMechanism(input_shapes=4, function=Logistic, name='REP_HIDDEN')
-rel_hidden = TransferMechanism(input_shapes=5, function=Logistic, name='REL_HIDDEN')
-rep_out = TransferMechanism(input_shapes=10, function=Logistic, name='REP_OUT')
-prop_out = TransferMechanism(input_shapes=12, function=Logistic, name='PROP_OUT')
-qual_out = TransferMechanism(input_shapes=13, function=Logistic, name='QUAL_OUT')
-act_out = TransferMechanism(input_shapes=14, function=Logistic, name='ACT_OUT')
+rep_in = ProcessingMechanism(input_shapes=10, name='REP_IN')
+rel_in = ProcessingMechanism(input_shapes=11, name='REL_IN')
+rep_hidden = ProcessingMechanism(input_shapes=4, function=Logistic, name='REP_HIDDEN')
+rel_hidden = ProcessingMechanism(input_shapes=5, function=Logistic, name='REL_HIDDEN')
+rep_out = ProcessingMechanism(input_shapes=10, function=Logistic, name='REP_OUT')
+prop_out = ProcessingMechanism(input_shapes=12, function=Logistic, name='PROP_OUT')
+qual_out = ProcessingMechanism(input_shapes=13, function=Logistic, name='QUAL_OUT')
+act_out = ProcessingMechanism(input_shapes=14, function=Logistic, name='ACT_OUT')
 
 # Construct Composition
 comp = Composition(name='Rumelhart Semantic Network')

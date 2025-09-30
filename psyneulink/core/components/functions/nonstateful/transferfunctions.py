@@ -94,16 +94,17 @@ from psyneulink.core.components.functions.stateful.integratorfunctions import Si
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import is_numeric_scalar
-from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION,
-     DETERMINISTIC_TRANSFER_FUNCTION_TYPE, DROPOUT_FUNCTION,
-     EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
-     IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
-     MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
-     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, PROBABILISTIC_TRANSFER_FUNCTION_TYPE,
-     RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
-     TANH_FUNCTION, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION,
-     VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME)
+from psyneulink.core.globals.keywords import (
+    ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION,
+    DETERMINISTIC_TRANSFER_FUNCTION_TYPE, DROPOUT_FUNCTION,
+    EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
+    IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
+    MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
+    PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, PROBABILISTIC_TRANSFER_FUNCTION_TYPE,
+    RATE, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,
+    TANH_FUNCTION, TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION,
+    VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME, DEFAULT,
+)
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -131,8 +132,12 @@ def _range_getter_using_scale_and_offset(owning_component=None, context=None):
     output_for_fct_upper_bound = scale * upper_bound + offset
 
     # Need to do this since scale could be negative, reversing upper and lower range:
-    lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
-    upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    if np.isscalar(scale) or np.isscalar(offset):
+        lower_bound = min(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = max(output_for_fct_lower_bound, output_for_fct_upper_bound)
+    else:
+        lower_bound = np.minimum(output_for_fct_lower_bound, output_for_fct_upper_bound)
+        upper_bound = np.maximum(output_for_fct_lower_bound, output_for_fct_upper_bound)
 
     return (lower_bound, upper_bound)
 
@@ -1544,8 +1549,8 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
         # return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-        return lambda x: ((torch.exp(-gain * (x + bias) + offset) - torch.exp(-gain * (-x + bias) + offset))
-                          / (torch.exp(-gain * (x + bias) + offset) + torch.exp(-gain * (-x + bias) + offset)))
+        return lambda x: ((torch.exp(gain * (x + bias) + offset) - torch.exp(gain * (-x + bias) + offset))
+                          / (torch.exp(gain * (x + bias) + offset) + torch.exp(gain * (-x + bias) + offset)))
 
 # **********************************************************************************************************************
 #                                                    ReLU
@@ -2231,7 +2236,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         range = (None, None)
 
     @check_user_specified
@@ -2455,7 +2460,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
         range = (None, None)
 
     @check_user_specified
@@ -2676,7 +2681,7 @@ class Dropout(TransferFunction):  #
         """
         p = Parameter(0.5, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_default=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
 
     @check_user_specified
     @beartype
@@ -2829,7 +2834,7 @@ class SoftMax(TransferFunction):
 
     - *mask_threshold* -- setting the **mask_threshold** argument to a scalar value causes the `variable
       <SoftMax.variable>` to be thresholded by that value before applying the SoftMax function; Each element in
-      variable <SoftMax.variable> is first scaled by gain <SoftMax.gain>. Then, any elements with an absolute
+      `variable <SoftMax.variable>` is first scaled by `gain <SoftMax.gain>`. Then, any elements with an absolute
       value below *mask_threshold* are set to negative infinity (``-inf``), effectively masking them since
       ``exp(-inf) = 0``. The remaining values are then passed through the SoftMax function. This only applies if the
       **gain** argument is specified as a scalar; if it is specified as *ADAPTIVE*, then the **mask_threshold**
@@ -2920,9 +2925,9 @@ class SoftMax(TransferFunction):
         (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for additional details).
 
     mask_threshold : scalar or None
-        determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function;
-        if it is a scalar, each elements of `variable <SoftMax.variable>` is first scaled by `<SoftMax.gain>`. Then,
-        only elements with an absolute value greater than *mask_threshold* are considered when applying the SoftMax
+        determines whether the `variable <SoftMax.variable>` is thresholded before applying the SoftMax function; if
+        it is a scalar, each element of `variable <SoftMax.variable>` is first scaled by ` gain <SoftMax.gain>`. Then
+        only elements with an absolute value greater than **mask_threshold** are considered when applying the SoftMax
         function, while all other elements are set to ``-inf`` effectively masking them since ``exp(-inf) = 0``.
         This only applies if `gain <SoftMax.gain>` is specified as a scalar;  otherwise it is ignored
         (see `Thresholding and Adaptive Gain <SoftMax_AdaptGain>` for details).
@@ -3128,6 +3133,8 @@ class SoftMax(TransferFunction):
             prefs=prefs,
         )
 
+        self._negative_input_warning = False
+
     def _parse_one_hot_function_variable(self, variable):
         if self.defaults.per_item and len(np.shape(variable)) > 1:
             variable = variable[0]
@@ -3245,7 +3252,6 @@ class SoftMax(TransferFunction):
                          np.log(
                              -1 * np.sum((1 / (1 + np.exp(-1 * v))) * np.log(1 / (1 + np.exp(-1 * v)))))))
         return gain
-
 
     @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
@@ -3489,10 +3495,11 @@ class SoftMax(TransferFunction):
 
                 # Apply threshold-based masking
                 if mask_threshold is not None:
-                    if torch.any(_input < 0):
+                    if torch.any(_input < 0) and not self._negative_input_warning:
                         warnings.warn(f"Softmax function: mask_threshold is set to {mask_threshold}, "
                                       f"but input contains negative values. "
                                       f"Masking will be applied to the magnitude of the input.")
+                        self._negative_input_warning = True
 
                     # Create a mask where values below threshold are set to -inf
                     mask = torch.abs(v) > mask_threshold

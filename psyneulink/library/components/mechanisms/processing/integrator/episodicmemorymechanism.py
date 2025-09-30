@@ -422,7 +422,12 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM,MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, VARIABLE
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
+from psyneulink.core.globals.parameters import (
+    FunctionParameter,
+    Parameter,
+    ParameterInvalidSourceError,
+    check_user_specified,
+)
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import deprecation_warning, convert_all_elements_to_np_array
 
@@ -619,7 +624,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _instantiate_function(self, function, function_params, context):
         """Assign memory to function if specified in Mechanism's constructor"""
-        memory = self.parameters.memory._get(context)
+        try:
+            memory = self.parameters.memory._get(context)
+        except ParameterInvalidSourceError:
+            memory = None
         if memory is not None:
             function.reset(memory)
         super()._instantiate_function(function, function_params, context)

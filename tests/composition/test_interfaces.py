@@ -478,12 +478,9 @@ class TestConnectCompositionsViaCIMS:
         mech = ProcessingMechanism()
         comp.add_node(mech)
 
-        # NOTE: Adding ports to CIM from command line is currenlty disallowed
-        # warning_msg = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
-        #                 'and is therefore recommended against. If suitable, you should instead add ports to the '
-        #                r'mechanism\(s\) that project to or are projected to from the CIM.')
-        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
-                     'these are handled automatically when a Composition is created.')
+        # NOTE: Adding ports to CIM from command line is disallowed
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported; '
+                     'these are managed automatically when a Composition is created or modified.')
         with pytest.raises(CompositionError) as error_text:
             comp.input_CIM.add_ports(InputPort())
         assert error_msg in str(error_text.value)
@@ -517,8 +514,8 @@ class TestConnectCompositionsViaCIMS:
         # assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         # assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
-        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported at this time; '
-                     'these are handled automatically when a Composition is created.')
+        error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported; '
+                     'these are managed automatically when a Composition is created or modified.')
         with pytest.raises(CompositionError) as error_text:
             comp.input_CIM.add_ports([inp, out])
         assert error_msg in str(error_text.value)

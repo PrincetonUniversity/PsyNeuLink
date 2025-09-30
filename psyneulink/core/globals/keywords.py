@@ -45,8 +45,8 @@ __all__ = [
     'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'CPU', 'COSINE', 'COSINE_SIMILARITY',
     'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CUDA', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DECELERATING_TIMER_FUNCTION',
-    'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_MATRIX',
-    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
+    'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_INPUT', 'DEFAULT_LEARNING_RATE', 'DEFAULT_MATRIX',
+    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SUFFIX', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
     'DETERMINISTIC', 'DETERMINISTIC_TRANSFER_FUNCTION_TYPE',
     'DICT', 'DictionaryMemory_FUNCTION', 'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIRECT', 'DISABLE', 'DISABLE_PARAM',
@@ -67,21 +67,22 @@ __all__ = [
     'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING_MECHANISM', 'GATING_ALLOCATION', 'GATING_PROJECTION',
     'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS', 'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS',
     'GAUSSIAN', 'GAUSSIAN_FUNCTION', 'GILZENRAT_INTEGRATOR_FUNCTION',
-    'GREATER_THAN', 'GREATER_THAN_OR_EQUAL', 'GRADIENT_OPTIMIZATION_FUNCTION', 'GRID_SEARCH_FUNCTION',
+    'GREATER_THAN', 'GREATER_THAN_OR_EQUAL',
+    'GRADIENT_OPTIMIZATION_FUNCTION', 'GRID_SEARCH_FUNCTION', 'GRU_COMPOSITION',
     'HARD_CLAMP', 'HAS_INITIALIZERS', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX',
     'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT_EXECUTE_METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY',
     'INITIAL', 'INITIALIZE', 'INITIALIZED', 'INITIALIZER', 'INITIALIZE_CYCLE', 'INITIALIZE_CYCLE_VALUES',
     'INITIALIZING', 'INITIALIZATION', 'INITIALIZATION_STATUS',
     'INPUT', 'INPUTS', 'INPUT_CIM_NAME', 'INPUT_LABELS_DICT', 'INPUT_PORT', 'INPUT_PORTS', 'INPUT_PORT_PARAMS',
-    'INPUT_PORT_VARIABLES', 'INPUTS_DIM', 'INSET', 'CURRENT_VALUE', 'INTEGRATION_TYPE',
+    'INPUT_PORT_VARIABLES', 'INPUT_SHAPES', 'INPUTS_DIM', 'INSET', 'CURRENT_VALUE', 'INTEGRATION_TYPE',
     'INTEGRATOR_FUNCTION','INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM',
     'LAST_INTEGRATED_VALUE', 'INTERCEPT', 'INTERNAL', 'INTERNAL_ONLY',
     'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM', 'L0',
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNABLE', 'LEARNED_PROJECTIONS',
     'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM',
     'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
-    'LEARNING_SCALE', 'LEARNING_SCALE_LITERALS', 'LEARNING_SCALE_NAMES', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
+    'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
     'LEARNING_SIGNALS', 'LESS_THAN', 'LESS_THAN_OR_EQUAL',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_TIMER_FUNCTION',
     'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'Loss', 'LOSSES', 'LOW', 'LVOC_CONTROL_MECHANISM',
@@ -127,11 +128,14 @@ __all__ = [
     'PNL',
     'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
     'RECEIVER_ARG', 'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESET',
-    'RESET_STATEFUL_FUNCTION_WHEN', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'RESET_STATEFUL_FUNCTION_WHEN', 'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT',
+    'RETAIN_IN_PNL_OPTIONS', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER', 'SEPARATE',
-    'SEPARATOR_BAR', 'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SIMULATIONS',
-    'SINGLE', 'SINGLETON', 'INPUT_SHAPES', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
+    'SEPARATOR_BAR', 'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SHOW_GRAPH', 'SHOW_PYTORCH',
+    'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SIMULATIONS',
+    'SINGLE', 'SINGLETON', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
     'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS', 'START', 'STORE', 'SUBTRACTION', 'SUM',
+    'SYNCH', 'SYNCH_WITH_PNL_OPTIONS',
     'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TARGETS',
     'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD', 'TERMINATION_COMPARISION_OP', 'TERSE', 'TEXT', 'THRESHOLD',
     'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TIMER_FUNCTION', 'TIMER_FUNCTION_TYPE', 'TOLERANCE',
@@ -150,7 +154,7 @@ from enum import Enum, auto
 
 from psyneulink._typing import Literal
 
-#region ----------------------------------------- MATRICES   -----------------------------------------------------------
+#region ---------------------------------------------  MATRICES  -------------------------------------------------------
 
 class MatrixKeywords:
     """
@@ -331,74 +335,18 @@ CONVERGENCE = 'CONVERGENCE'
 #region -------------------------------------------    LEARNING    -----------------------------------------------------
 
 
-class LearningScale:
-    """Scales at which `learning <Composition_Learning>` occurs
-
-    Used to specify the scales over which learning-related events occur when `learning <Composition_Learning>` is
-    executed in a `Composition`.
-
-    Attributes
-    ----------
-
-    OPTIMIZATION_STEP
-        a single step of gradient calculation, of which there can be one or more in a `minibatch
-        <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
-        Parameter.
-
-    TRIAL
-        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
-        and unanticipated results can occur.
-
-    MINIBATCH
-        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
-        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
-        `matrix <MappingProjection.matrix>` Parameter.
-
-    EPOCH
-        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
-        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
-        <Composition.optimizations_per_minibatch>` Parameters of the Composition.
-
-    RUN
-        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
-        `num_epochs <Composition.num_epochs>` epochs.
-
-    """
-    def __init__(self):
-        self.OPTIMIZATION_STEP = OPTIMIZATION_STEP
-        self.TRIAL = MINIBATCH
-        self.MINIBATCH = MINIBATCH
-        self.EPOCH = EPOCH
-        self.RUN = RUN
-
-    def _values(self):
-        return list(self.__dict__.values())
-
-    def _set(self):
-        return set(self.__dict__.values())
-
-    def _names(self):
-        return list(self.__dict__)
-
-
 OPTIMIZATION_STEP = 'optimization_step'
 # TRIAL = 'trial'  # defined below in section on Composition
 MINIBATCH = 'minibatch'
 EPOCH = 'epoch'
 RUN = 'run'
 
-LEARNING_SCALE = LearningScale()
-LEARNING_SCALE_SET = LEARNING_SCALE._set()
-LEARNING_SCALE_VALUES = LEARNING_SCALE._values()
-LEARNING_SCALE_NAMES = LEARNING_SCALE._names()
-LEARNING_SCALE_LITERALS = Literal[tuple(LEARNING_SCALE_VALUES)] # Used for type hinting
-
 
 class Loss(Enum):
     """Loss function used for `learning <Composition_Learning>`.
 
     Used to specify the **loss_spec** argument of the constructor for an `AutodiffComposition`,
-    or in the `learning methods <Composition_Learning_Methods>` used to construct `learning pathways
+    or in the `learning pathway methods <Composition_Learning_Methods>` used to construct `learning pathways
     <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
     for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
     used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
@@ -472,8 +420,8 @@ PNL = 'psyneulink'
 
 ON = True
 OFF = False
-DEFAULT = False
-# AUTO = True  # MODIFIED 7/14/17 CW
+DEFAULT = 'default'
+DEFAULT_SUFFIX = '_'+ DEFAULT
 ASSERT = True
 
 # Used by initDirective
@@ -506,6 +454,7 @@ EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 ASSIGN_VALUE = ': Assign value'
 UPDATE = 'update'
 STORE = 'store'
+SYNCH = 'SYNCH'
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
 CHANGED = 'CHANGED'
@@ -597,6 +546,7 @@ AUTODIFF_COMPOSITION = 'AutodiffComposition'
 AUTODIFF_RESULTS = 'AutodiffResults'
 COMPOSITION_FUNCTION_APPROXIMATOR = 'CompositionFunctionApproximator'
 EM_COMPOSITION = 'EMComposition'
+GRU_COMPOSITION = 'GRUComposition'
 
 INPUT_CIM_NAME = 'INPUT_CIM'
 OUTPUT_CIM_NAME = 'OUTPUT_CIM'
@@ -614,6 +564,9 @@ NODE_VALUES = 'node_values'
 INPUTS = 'inputs'
 TARGETS = 'targets'
 EPOCHS = 'epochs'
+SYNCH_WITH_PNL_OPTIONS = 'synch_with_pnl_options'
+RETAIN_IN_PNL_OPTIONS = 'retain_in_pnl_options'
+DEFAULT_LEARNING_RATE = 'default_learning_rate'
 
 # Used in show_graph for show_nested
 NESTED = 'nested'
@@ -633,6 +586,7 @@ PREVIOUS_VALUE = 'previous_value'
 LABELS = 'labels'
 PARAMS = "params"
 PARAMETERS = 'params'
+PARAM_NAME = 'param_name'
 NAME = "name"
 PREFS_ARG = "prefs"
 CONTEXT = "context"
@@ -873,9 +827,10 @@ FUNCTIONS = 'functions'
 
 #region ------------------------------------------  AUTODIFF COMPOSITION  ----------------------------------------------
 
-LEARNING_RATE = "learning_rate"
 TRAINING_SET = 'training set'
 TRAINED_OUTPUTS = 'trained_outputs'
+SHOW_GRAPH = 'SHOW_GRAPH'
+SHOW_PYTORCH = 'SHOW_PYTORCH'
 
 #endregion
 
@@ -1092,6 +1047,7 @@ RECEIVER_ARG = 'receiver'
 FEEDBACK = 'feedback'
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 LEARNABLE = 'learnable'
+LEARNING_RATE = "learning_rate"
 MATRIX_WEIGHTS = 'matrix_weights'
 AUTO = 'auto'
 HETERO = 'hetero'

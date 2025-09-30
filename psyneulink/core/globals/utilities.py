@@ -162,10 +162,12 @@ __all__ = [
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
     'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
+    'PNLStrEnum',
 ]
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
+_signature_strong_cache = {}
 
 
 class UtilitiesError(Exception):
@@ -176,13 +178,15 @@ class UtilitiesError(Exception):
         return repr(self.error_value)
 
 
-
-def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
+def deprecation_warning(component, kwargs:dict, deprecated_args:dict,
+                        method:str= None, additional_msg:str=None) -> (dict):
     """Identify and warn about any deprecated args, and return their values for reassignment
     Format of deprecated_args dict:  {'deprecated_arg_name':'real_arg"name')}
     Format of returned dict:  {'real_arg_name':<value assigned to deprecated arg>)}
     """
     value_assignments = dict()
+    method = method or "constructor"
+    additional_msg = additional_msg or ''
     for deprecated_arg in deprecated_args:
         if deprecated_arg in kwargs:
             real_arg = deprecated_args[deprecated_arg]
@@ -190,15 +194,16 @@ def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
             if arg_value:
                 # Value for real arg was also specified:
                 warnings.warn(f"Both '{deprecated_arg}' and '{real_arg}' "
-                              f"were specified in the constructor for a(n) {component.__class__.__name__}; "
+                              f"were specified in the {method} for a(n) {component.__class__.__name__}; "
                               f"{deprecated_arg} ({arg_value}) will be used,"
-                              f"but note that it is deprecated  and may be removed in the future.")
+                              f"but note that it is deprecated  and may be removed in the future."
+                              f"{additional_msg}")
             else:
                 # Only deprecated arg was specified:
                 warnings.warn(f"'{deprecated_arg}' was specified in the constructor for a(n)"
                               f" {component.__class__.__name__}; note that this has been deprecated "
                               f"and may be removed in the future; '{real_arg}' "
-                              f"should be used instead.")
+                              f"should be used instead.{additional_msg}")
             value_assignments.update({real_arg:arg_value})
         continue
     return value_assignments
@@ -265,6 +270,53 @@ class AutoNumber(IntEnum):
         obj = int.__new__(component_type)
         obj._value_ = value
         return obj
+
+
+class PNLStrEnumMeta(EnumMeta):
+    def __contains__(cls, member):
+        try:
+            member = cls(member)
+        except ValueError:
+            # allow standard failure to occur in super if wrong value type (not str)
+            if isinstance(member, str):
+                return False
+        return super().__contains__(member)
+
+
+# builtin StrEnum supported in python 3.11+
+class PNLStrEnum(str, Enum, metaclass=PNLStrEnumMeta):
+    def __new__(cls, value: str):
+        value = cls._normalize_value(value)
+        member = str.__new__(cls, value)
+        member._value_ = value
+        return member
+
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == self._normalize_value(other)
+
+    def _generate_next_value_(name, start, count, last_values):  # noqa: U100
+        return PNLStrEnum._normalize_value(name)
+
+    @classmethod
+    def _missing_(cls, value):
+        value = cls._normalize_value(value)
+        for member in cls:
+            if member.value == value:
+                return member
+        return None
+
+    @staticmethod
+    def _normalize_value(x):
+        try:
+            return x.lower()
+        except (AttributeError, TypeError):
+            return x
 
 
 #region ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *************************************
@@ -1267,7 +1319,7 @@ class ContentAddressableList(UserList):
 
     key : str : default `name`
         specifies the attribute of **component_type** used to key items in the list by content;
-        **component_type** must have this attribute or, if it is not provided, an attribute with the name 'name'.
+        **component_type** must have this attribute or, if it is not provided, a 'name' attribute.
 
     list : List : default None
         specifies a list used to initialize the list;
@@ -1614,7 +1666,7 @@ def get_class_attributes(cls):
             if item[0] not in boring]
 
 
-def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
+def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None, dtype=None):
     """
         Recursively converts all items in **arr** to numpy arrays, optionally casting
         items of type/dtype **cast_from** to type/dtype **cast_to**
@@ -1623,6 +1675,8 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         ---------
             cast_from - type, numpy.dtype - type when encountered to cast to **cast_to**
             cast_to - type, numpy.dtype - type to cast **cast_from** to
+            dtype - type, numpy.dtype - if not using **cast_from** and
+            **cast_to**, dtype for result array
 
         Returns
         -------
@@ -1636,7 +1690,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
                 return arr
 
         if isinstance(arr, np.number):
-            return np.asarray(arr)
+            return np.asarray(arr, dtype=dtype)
 
         if cast_from is not None and isinstance(arr, cast_from):
             return cast_to(arr)
@@ -1646,7 +1700,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
         if isinstance(arr, np.matrix):
             if arr.dtype == object:
-                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)])
+                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)], dtype=dtype)
             else:
                 return arr
 
@@ -1656,7 +1710,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             warnings.filterwarnings('error', message='.*ragged.*', category=np_exceptions.VisibleDeprecationWarning)
             try:
                 # the elements are all uniform in shape, so we can use numpy's standard behavior
-                return np.asarray(subarr)
+                return np.asarray(subarr, dtype=dtype)
             except np_exceptions.VisibleDeprecationWarning:
                 pass
             except ValueError as e:
@@ -1677,7 +1731,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
 
     if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
         # only wrap a noniterable if it's the outermost value
-        return np.asarray(arr)
+        return np.asarray(arr, dtype=dtype)
     else:
         return recurse(arr)
 
@@ -1719,6 +1773,7 @@ class _SeededPhilox(np.random.Generator):
 
 
 _seed = np.uint32((time.time() * 1000) % 2**31)
+
 def _get_global_seed(offset=1):
     global _seed
     old_seed = _seed
@@ -1727,8 +1782,17 @@ def _get_global_seed(offset=1):
 
 
 def set_global_seed(new_seed):
+    """Set global randomization seed for all Components for which a local seed has not been specified.
+
+    Arguments
+    ---------
+    new_seed : int
+        new seed to use for randomization
+    """
     global _seed
-    _seed = new_seed
+
+    # Keep the same dtype as the original seed
+    _seed = _seed.dtype.type(new_seed)
 
 
 def safe_len(arr, fallback=1):
@@ -1808,6 +1872,24 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
+def _get_cached_function_signature(func):
+    try:
+        sig = _signature_cache[func]
+    except KeyError:
+        sig = inspect.signature(func)
+        _signature_cache[func] = sig
+    except TypeError:
+        # should be minimally used, primarily for object.__init__ slot
+        # wrapper type
+        try:
+            sig = _signature_strong_cache[func]
+        except KeyError:
+            sig = inspect.signature(func)
+            _signature_strong_cache[func] = sig
+
+    return sig
+
+
 def prune_unused_args(func, args=None, kwargs=None):
     """
         Arguments
@@ -1827,11 +1909,7 @@ def prune_unused_args(func, args=None, kwargs=None):
 
     """
     # use the func signature to filter out arguments that aren't compatible
-    try:
-        sig = _signature_cache[func]
-    except KeyError:
-        sig = inspect.signature(func)
-        _signature_cache[func] = sig
+    sig = _get_cached_function_signature(func)
 
     has_args_param = False
     has_kwargs_param = False
@@ -1928,7 +2006,7 @@ def parse_string_to_psyneulink_object_string(string):
     def is_pnl_obj(string):
         try:
             # remove parens to get rid of class instantiations
-            string = re.sub(r'\(.*?\)', '', string)
+            string = re.sub(r'\(.*\)', '', string)
             attr_sequence = string.split('.')
             obj = getattr(psyneulink, attr_sequence[0])
 
@@ -1967,11 +2045,13 @@ def get_all_explicit_arguments(cls_, func_str):
     """
     all_arguments = set()
 
-    for cls_ in cls_.__mro__:
-        func = getattr(cls_, func_str)
+    for c in cls_.__mro__:
+        func = getattr(c, func_str)
         has_args_or_kwargs = False
 
-        for arg_name, arg in inspect.signature(func).parameters.items():
+        sig = _get_cached_function_signature(func)
+
+        for arg_name, arg in sig.parameters.items():
             if (
                 arg.kind is inspect.Parameter.VAR_POSITIONAL
                 or arg.kind is inspect.Parameter.VAR_KEYWORD
@@ -2059,6 +2139,19 @@ def contains_type(
     except TypeError:
         return False
 
+    try:
+        dtype_kind = arr.dtype.kind
+    except AttributeError:
+        # non-array, so no addl info on contents
+        pass
+    else:
+        # only check object or void dtype further because their elements can vary in type
+        if dtype_kind not in {'O', 'V'}:
+            try:
+                return isinstance(next(arr_items), typ)
+            except StopIteration:
+                return False
+
     recurse = not isinstance(arr, np.matrix)
     for a in arr_items:
         if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
@@ -2090,11 +2183,7 @@ def get_function_sig_default_value(
             the default value of the **parameter** argument of
             **function** if it exists, or inspect._empty
     """
-    try:
-        sig = _signature_cache[function]
-    except KeyError:
-        sig = inspect.signature(function)
-        _signature_cache[function] = sig
+    sig = _get_cached_function_signature(function)
 
     try:
         return sig.parameters[parameter].default

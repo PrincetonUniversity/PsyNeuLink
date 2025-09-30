@@ -887,12 +887,11 @@ class ParameterEstimationComposition(Composition):
         return ocm
 
     @handle_external_context()
-    def run(self, *args, **kwargs):
+    def run(self, *args, context=None, **kwargs):
         # Clear any old results from the composition
-        if self.results is not None:
-            self.results = []
+        if self.parameters.results._get(context, fallback_value=None) is not None:
+            self.parameters.results._set([], context)
 
-        context = kwargs.get("context", None)
         self._assign_execution_ids(context)
 
         # Before we do anything, clear any compilation structures that have been generated. This is a workaround to
@@ -962,7 +961,7 @@ class ParameterEstimationComposition(Composition):
         )
 
         # Run the composition as normal
-        results = super(ParameterEstimationComposition, self).run(*args, **kwargs)
+        results = super(ParameterEstimationComposition, self).run(*args, context=context, **kwargs)
 
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, "optimal_control_allocation"):

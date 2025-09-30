@@ -1,12 +1,13 @@
 import numpy as np
-
 import pytest
+from types import MappingProxyType
 
 import psyneulink as pnl
 
 from psyneulink.core.globals.keywords import AUTO, CONTROL
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.library.compositions.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.emcomposition.emcomposition import EMComposition, EMCompositionError
+from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
 
 # All tests are set to run. If you need to skip certain tests,
 # see http://doc.pytest.org/en/latest/skipping.html
@@ -224,6 +225,15 @@ class TestConstruction:
         elif repeat and repeat < memory_capacity:  # Multi-entry specification and repeat = number entries; remainder
             test_memory_fill(start=repeat, memory_fill=memory_fill)
 
+    def test_disallow_modification(self):
+        em = EMComposition()
+        with pytest.raises(EMCompositionError) as error_text:
+            em.add_node(pnl.ProcessingMechanism())
+        assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+        with pytest.raises(EMCompositionError) as error_text:
+            em.add_projection(pnl.MappingProjection())
+        assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
+
     @pytest.mark.parametrize("softmax_choice, expected",
                              [(pnl.WEIGHTED_AVG, [[0.8479525858370621, 0.1, 0.25204741416293786]]),
                               (pnl.ARG_MAX, [[1, .1, .1]]),
@@ -258,7 +268,7 @@ class TestConstruction:
                                f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
             assert warning_msg in str(warning[0].message)
 
-    def test_fields_arg(self):
+    def test_fields_arg_and_associated_errors(self):
 
         em = EMComposition(memory_template=(5,1),
                            memory_capacity=1,
@@ -274,27 +284,48 @@ class TestConstruction:
         assert (em.learn_field_weights == [3.4, False, True, False, True]).all()
         np.testing.assert_allclose(em.target_fields, [True, True, True, True, True])
 
-        # # Test wrong number of entries
+        # # Test error for wrong number of entries
         with pytest.raises(EMCompositionError) as error_text:
             EMComposition(memory_template=(3,1), memory_capacity=1, fields={'A': (1.2, 3.4)})
         assert error_text.value.error_value == (f"The number of entries (1) in the dict specified in the 'fields' arg "
                                                 f"of 'EM_Composition' does not match the number of fields in its "
                                                 f"memory (3).")
-        # Test dual specification of fields and corresponding args and learning specified for value field
+
+        # Test error for dual specification of fields and corresponding args
+        field_names = [['A', 'B'], None, None, None]
+        field_weights = [None, [10, 11.0], None, None]
+        learn_field_weights = [None, None, [True, False], None]
+        target_fields = [None, None, None, [True, False]]
+        comp_name = ["COMP_FN", "COMP_FW", "COMP_LFW", "COMP_TF"]
+        for fn, fw, lfw, tf, cn in zip(field_names, field_weights, learn_field_weights, target_fields, comp_name):
+            with pytest.warns(UserWarning) as warning:
+                EMComposition(name=cn,
+                              memory_template=(2,1),
+                              memory_capacity=1,
+                              fields={'A': (1.2, 3.4, True),
+                                      'B': (None, True, True)},
+                              field_names=fn,
+                              field_weights=fw,
+                              learn_field_weights=lfw,
+                              target_fields=tf)
+            assert (f"The 'fields' arg for '{cn}' was specified, so any of the "
+                    f"'field_names', 'field_weights',  'learn_field_weights' or "
+                    f"'target_fields' args will be ignored." in str(warning[0].message))
+
+        # Test error on specification of learning for value field
         with pytest.warns(UserWarning) as warning:
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4, True),
-                                  'B': (None, True, True)},
-                          field_weights=[10, 11.0])
-        warning_msg_1 = (f"The 'fields' arg for 'EM_Composition' was specified, so any of the 'field_names', "
-                         f"'field_weights',  'learn_field_weights' or 'target_fields' args will be ignored.")
-        warning_msg_2 = (f"Learning was specified for field 'B' in the 'learn_field_weights' arg for "
-                         f"'EM_Composition', but it is not allowed for value fields; it will be ignored.")
-        assert warning_msg_1 in str(warning[0].message)
-        assert warning_msg_2 in str(warning[1].message)
-
-
+                                  'B': (None, True, True)})
+        assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
+                "but it is not allowed for value fields; it will be ignored."
+                 in str(warning[0].message))
+        # MODIFIED 6/19/25 OLD:  WARNING NO LONGER OCCURS ON CONSTRUCTION, BUT IT SHOULD BE RAISED ON LEARN
+        # assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
+        #         "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
+        #         "'enable_learning' is being set to 'False'." in str(warning[1].message))
+        # MODIFIED 6/19/25 END
 
     field_names = ['KEY A','VALUE A', 'KEY B','KEY VALUE','VALUE LEARN']
     field_weights = [1, None, 2, 0, None]
@@ -310,15 +341,14 @@ class TestConstruction:
                                                          learn_field_weights,
                                                          target_fields)}
     test_field_map_and_args_assignment_data = [
-        ('args', None, field_names, field_weights, learn_field_weights, target_fields),
-        ('dict-subdict', dict_subdict, None, None, None, None),
-        ('dict-tuple', dict_tuple, None, None, None, None)]
-    field_arg_names = "format, fields, field_names, field_weights, learn_field_weights, target_fields"
+        pytest.param(None, field_names, field_weights, learn_field_weights, target_fields, id='args'),
+        pytest.param(dict_subdict, None, None, None, None, id='dict-subdict'),
+        pytest.param(dict_tuple, None, None, None, None, id='dict-tuple'),
+    ]
 
-    @pytest.mark.parametrize(field_arg_names, test_field_map_and_args_assignment_data,
-                             ids=[x[0] for x in test_field_map_and_args_assignment_data])
+    @pytest.mark.parametrize("fields, field_names, field_weights, learn_field_weights, target_fields",
+                             test_field_map_and_args_assignment_data)
     def test_field_args_and_map_assignments(self,
-                                            format,
                                             fields,
                                             field_names,
                                             field_weights,
@@ -333,6 +363,7 @@ class TestConstruction:
                            learn_field_weights=learn_field_weights,
                            target_fields=target_fields,
                            learning_rate=0.5)
+
         assert em.num_fields == 5
         assert em.num_keys == 3
         for actual, expected in zip(em.field_weights, [0.33333333, None, 0.66666667, 0, None]):
@@ -359,13 +390,29 @@ class TestConstruction:
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE A' in proj.name for proj in em.projections)
         assert not any('WEIGHT to WEIGHTED MATCH for VALUE LEARN' in proj.name for proj in em.projections)
         # Learnability and learning rate for field weights
-        # FIX: ONCE LEARNING IS FULLY IMPLEMENTED FOR FIELD WEIGHTS, VALIDATE THAT:
-        #      KEY A USES COMPOSITION DEFAULT LEARNING RATE OF .5
-        #      KEY B USES INDIVIDUALLY ASSIGNED LEARNING RATE OF .01
-        assert em.learn_field_weights == [True, False, .01, False, False]
-        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY A'].learnable
-        assert em.projections['WEIGHT to WEIGHTED MATCH for KEY B'].learnable
-        assert not em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE'].learnable
+        assert em.parameters.learn_field_weights.spec == [.5, False, .01, False, False]
+
+        proj_KEY_A = em.projections['WEIGHT to WEIGHTED MATCH for KEY A']
+        proj_KEY_B = em.projections['WEIGHT to WEIGHTED MATCH for KEY B']
+        proj_KEY_VAL = em.projections['WEIGHT to WEIGHTED MATCH for KEY VALUE']
+
+        assert proj_KEY_A.learnable
+        assert proj_KEY_B.learnable
+        assert not proj_KEY_VAL.learnable
+
+        pytorch_rep = em._build_pytorch_representation()
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
+        assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
+        assert proj_KEY_A.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .5
+        assert proj_KEY_B.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .01
+        assert proj_KEY_VAL.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) is False
+        # Assert that all non-field_weight Projections are not learnable
+        for proj in [p for p in em.pytorch_representation.wrapped_projections
+                     if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:
+            assert pytorch_rep.get_torch_learning_rate_for_projection(proj) is False
+        assert len(pytorch_rep.torch_params_to_projections()) == 23
+        assert len(pytorch_rep.projections_to_torch_params()) == 23
 
         # Validate _field_index_map
         assert em._field_index_map[[k for k in em._field_index_map.keys()
@@ -462,10 +509,10 @@ class TestConstruction:
         elif not any(field_weights):
             with pytest.warns(UserWarning) as warning:
                 em = construct_em(field_weights)
-            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
-                           "are either None or set to 0; this will result in no retrievals "
-                           "unless/until one or more of them are changed to a positive value.")
-            assert warning_msg in str(warning[0].message)
+            assert ("All of the entries in the 'field_weights' arg for EM_Composition "
+                    "are either None or set to 0; this will result in no retrievals "
+                    "unless/until one or more of them are changed to a positive value."
+                    in str(warning[0].message))
 
         elif any([fw == 0 for fw in field_weights]):
             with pytest.warns(UserWarning) as warning:
@@ -487,7 +534,27 @@ class TestConstruction:
                 # Validate alignment of field with memory
                 assert len(field.memories[0]) == [2,1,3][field.index]
 
-
+    test_args_for_learning_rate_errors = [
+        ("learning_rate_dict",
+         {'WEIGHT to WEIGHTED MATCH for A': 3.4},
+         {'A': (1.2, 3.4, True), 'B': (None, False, True), 'C': (0, True, True),
+          'D': (7.8, False, True), 'E': (5.6, True, True)
+          },
+         "The 'learning_rate' arg for 'EM COMP' is specified as a dict, which is not supported for an EMComposition;  "
+         "use either its 'fields' arg or its 'learn_field_weights' arg instead."),
+    ]
+    @pytest.mark.parametrize('_condition, learning_rate, fields, error_message', test_args_for_learning_rate_errors,
+                             ids=[x[0] for x in test_args_for_learning_rate_errors])
+    def test_learning_rate_specification_errors(self, _condition, learning_rate, fields, error_message):
+        learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
+        fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
+        with pytest.raises(EMCompositionError) as error_text:
+            em = EMComposition(name= "EM COMP",
+                               memory_template=(5,1),
+                               memory_capacity=1,
+                               learning_rate=learning_rate,
+                               fields=fields)
+        assert error_message in error_text.value.error_value
 
 @pytest.mark.pytorch
 class TestExecution:
@@ -829,6 +896,46 @@ class TestExecution:
                 expected = memory_template[1]
             np.testing.assert_allclose(result, expected)
 
+    def test_normalization_with_scalar_fields(self, ):
+        # Test that field.shape(1,1) x memory(5,1) is handled properly when normalized using Torch (PyTorch) (for EM)
+        external_input = pnl.ProcessingMechanism(name='EXTERNAL INPUT',
+                                                 default_variable=[[0], [0]])
+
+        em = pnl.EMComposition(name="em",
+                               memory_template=[[0], [0]],
+                               memory_capacity=5,
+                               fields={"FIELD 1": {pnl.FIELD_WEIGHT: 1,
+                                                   pnl.LEARN_FIELD_WEIGHT: True,
+                                                   pnl.TARGET_FIELD: True},
+                                       "FIELD 2": {pnl.FIELD_WEIGHT: 1,
+                                                   pnl.LEARN_FIELD_WEIGHT: True,
+                                                   pnl.TARGET_FIELD: True}},
+                               softmax_choice=pnl.WEIGHTED_AVG,
+                               normalize_memories=True,
+                               enable_learning=True,
+                               softmax_gain=1.0)
+        input_to_em_field_1 = [external_input,
+                               pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
+                                                     sender=external_input.output_ports[0],
+                                                     receiver=em.nodes["FIELD 1 [QUERY]"],
+                                                     learnable=True),
+                               em]
+        input_to_em_field_2 = [external_input,
+                               pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
+                                                     sender=external_input.output_ports[1],
+                                                     receiver=em.nodes["FIELD 2 [QUERY]"],
+                                                     learnable=True),
+                               em]
+        # Create Composition
+        outer_comp = pnl.AutodiffComposition([input_to_em_field_1, input_to_em_field_2],
+                                             name='OUTER COMP')
+
+        input_array = [[0], [0]]
+        targets = outer_comp.get_target_nodes()
+        inputs = {external_input: input_array,
+                  targets[0]: [1],
+                  targets[1]: [1]}
+        outer_comp.learn(inputs=inputs, epochs=1)
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [pnl.ExecutionMode.Python, pnl.ExecutionMode.PyTorch])
@@ -838,17 +945,13 @@ class TestExecution:
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
         """Test with and without learning (learning is tested only for using_storage_node and no concatenation)"""
 
-        # if comp_mode != pnl.ExecutionMode.Python:
-        #     pytest.skip('Execution of EMComposition not yet supported for LLVM Mode.')
-
         em = EMComposition(memory_template=(2,3),
                            field_weights=[1,1],
                            memory_capacity=4,
                            softmax_gain=100,
                            memory_fill=(0,.001),
                            concatenate_queries=concatenate,
-                           # learn_field_weights=learning,
-                           learn_field_weights=False,
+                           learn_field_weights=learning,
                            enable_learning=True,
                            use_storage_node=use_storage_node)
 
@@ -871,10 +974,17 @@ class TestExecution:
             if concatenate:
                 with pytest.raises(EMCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert "EMComposition does not support learning with 'concatenate_queries'=True." in str(error.value)
+                assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
+            elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
+                with pytest.raises(AutodiffCompositionError) as error:
+                    em.learn(inputs=inputs, execution_mode=exec_mode)
+                assert (f"There are no learnable Projections in 'EM_Composition' nor any nested under it; "
+                        f"this is because the learning_rates for all of the Projections are set to 'False'. "
+                        f"The learning_rate for at least one Projection must be a non-False value within "
+                        f"a Composition with 'enable_learning' set to 'True' in order to execute "
+                        f"the learn() method for EM_Composition.") in str(error.value)
 
             else:
-                # if exec_mode == pnl.ExecutionMode.Python:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
                 expected_memory = [[[0.15625, 0.3125,  0.46875], [0.171875, 0.328125, 0.484375]],
                                    [[400., 500., 600.], [444., 555., 666.]],
@@ -884,18 +994,19 @@ class TestExecution:
                 np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
-    def test_backpropagation_of_error_in_learning(self):
+    @pytest.mark.parametrize('field_weight_learning', [False, True], ids=['fw_learning_false', 'fw_learning_true'])
+    def test_backpropagation_of_error_in_learning(self, field_weight_learning):
         """This test is based on the EGO CSW Model"""
-
         import torch
         torch.manual_seed(0)
         state_input_layer = pnl.ProcessingMechanism(name='STATE', input_shapes=11)
         previous_state_layer = pnl.ProcessingMechanism(name='PREVIOUS STATE', input_shapes=11)
         context_layer = pnl.TransferMechanism(name='CONTEXT',
-                                          input_shapes=11,
-                                          function=pnl.Tanh,
-                                          integrator_mode=True,
-                                          integration_rate=.69)
+                                              input_shapes=11,
+                                              function=pnl.Tanh,
+                                              integrator_mode=True,
+                                              integration_rate=.69)
+
         em = EMComposition(name='EM',
                            memory_template=[[0] * 11, [0] * 11, [0] * 11],  # context
                            memory_fill=(0,.0001),
@@ -904,13 +1015,13 @@ class TestExecution:
                            softmax_gain=10,
                            softmax_threshold=0.001,
                            fields = {'STATE': {pnl.FIELD_WEIGHT: None,
-                                               pnl.LEARN_FIELD_WEIGHT: False,
+                                               pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                pnl.TARGET_FIELD: True},
                                      'PREVIOUS_STATE': {pnl.FIELD_WEIGHT:.5,
-                                                        pnl.LEARN_FIELD_WEIGHT: False,
+                                                        pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                         pnl.TARGET_FIELD: False},
                                      'CONTEXT': {pnl.FIELD_WEIGHT:.5,
-                                                 pnl.LEARN_FIELD_WEIGHT: False,
+                                                 pnl.LEARN_FIELD_WEIGHT: field_weight_learning,
                                                  pnl.TARGET_FIELD: False}},
                            normalize_field_weights=True,
                            normalize_memories=False,
@@ -919,7 +1030,9 @@ class TestExecution:
                            learning_rate=.5,
                            device=pnl.CPU
                            )
-        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION', input_shapes=11)
+        prediction_layer = pnl.ProcessingMechanism(name='PREDICTION',
+                                                   function=pnl.Logistic,
+                                                   input_shapes=11)
 
         QUERY = ' [QUERY]'
         VALUE = ' [VALUE]'
@@ -928,52 +1041,53 @@ class TestExecution:
         # Pathways
         state_to_previous_state_pathway = [state_input_layer,
                                            pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
-                                                             learnable=False),
+                                                                 learnable=False),
                                            previous_state_layer]
         state_to_context_pathway = [state_input_layer,
                                     pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
-                                                      learnable=False),
+                                                          learnable=False),
                                     context_layer]
         state_to_em_pathway = [state_input_layer,
                                pnl.MappingProjection(sender=state_input_layer,
-                                                 receiver=em.nodes['STATE' + VALUE],
-                                                 matrix=pnl.IDENTITY_MATRIX,
-                                                 learnable=False),
+                                                     receiver=em.nodes['STATE' + VALUE],
+                                                     matrix=pnl.IDENTITY_MATRIX,
+                                                     learnable=False),
                                em]
         previous_state_to_em_pathway = [previous_state_layer,
                                         pnl.MappingProjection(sender=previous_state_layer,
-                                                          receiver=em.nodes['PREVIOUS_STATE' + QUERY],
-                                                          matrix=pnl.IDENTITY_MATRIX,
-                                                          learnable=False),
+                                                              receiver=em.nodes['PREVIOUS_STATE' + QUERY],
+                                                              matrix=pnl.IDENTITY_MATRIX,
+                                                              learnable=False),
                                         em]
         context_learning_pathway = [context_layer,
                                     pnl.MappingProjection(sender=context_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      receiver=em.nodes['CONTEXT' + QUERY],
-                                                      learnable=True),
+                                                          matrix=pnl.IDENTITY_MATRIX,
+                                                          receiver=em.nodes['CONTEXT' + QUERY],
+                                                          learnable=True),
                                     em,
                                     pnl.MappingProjection(sender=em.nodes['STATE' + RETRIEVED],
-                                                      receiver=prediction_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      learnable=False),
+                                                          receiver=prediction_layer,
+                                                          matrix=pnl.IDENTITY_MATRIX,
+                                                          learnable=False),
                                     prediction_layer]
 
         # Composition
         EGO = pnl.AutodiffComposition([state_to_previous_state_pathway,
-                                        state_to_context_pathway,
-                                        state_to_em_pathway,
-                                        previous_state_to_em_pathway,
-                                        context_learning_pathway],
-                                       learning_rate=.5,
-                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
-                                       device=pnl.CPU)
+                                       state_to_context_pathway,
+                                       state_to_em_pathway,
+                                       previous_state_to_em_pathway,
+                                       context_learning_pathway],
+                                      name='EGO',
+                                      learning_rate=.5,
+                                      loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
+                                      device=pnl.CPU)
 
         learning_components = EGO.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
         assert len(learning_components) == 1
         assert learning_components[0].name == 'TARGET for PREDICTION'
         EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                  receiver=learning_components[0],
-                                                  learnable=False))
+                                                 receiver=learning_components[0],
+                                                 learnable=False))
 
         EGO.scheduler.add_condition(em, pnl.BeforeNodes(previous_state_layer, context_layer))
 
@@ -1029,77 +1143,28 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
         result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
-        expected = [
-            [0.00000000e+00, 1.35933540e-03, 1.13114366e-03, 2.20590015e-03,
-             1.09314885e-03, 9.87722281e-01, 1.10371450e-03, 1.72925210e-03,
-             1.17352360e-03, 2.48170027e-03, 0.00000000e+00],
-            [0.00000000e+00, -6.54396065e-02,  1.41905061e-03, -2.08500295e-01,
-             -5.03985394e-05, -5.90196484e-01, -5.33017075e-03, -2.33024404e-03,
-             -2.02730870e-02, -1.58091223e-02,  0.00000000e+00],
-            [0.00000000e+00, 1.19576382e-03, 1.28593645e-03, 1.35933540e-03,
-             1.13114366e-03, 2.20590015e-03, 1.09314885e-03, 9.87722281e-01,
-             1.10371450e-03, 2.90277570e-03, 0.00000000e+00]]
-        np.testing.assert_allclose(result, expected)
 
-        # Plot (for during debugging):
-        # TARGETS = [[0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-        #            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]]
-        #
-        # fig, axes = plt.subplots(3, 1, figsize=(5, 12))
-        # axes[0].imshow(EGO.projections[7].parameters.matrix.get(EGO.name), interpolation=None)
-        # axes[1].plot((1 - np.abs(EGO.results[1:50,2]-TARGETS[:49])).sum(-1))
-        # axes[1].set_xlabel('Stimuli')
-        # axes[1].set_ylabel('loss_spec')
-        # axes[2].plot( (EGO.results[1:50,2]*TARGETS[:49]).sum(-1) )
-        # axes[2].set_xlabel('Stimuli')
-        # axes[2].set_ylabel('Correct Logit')
-        # plt.suptitle(f"Blocked Training")
-        # plt.show()
+        if not field_weight_learning:
+            expected = [
+                [0.0, 0.001366271313877869, 0.001147847945717284, 0.002207070049616234, 0.001100846606161859,
+                 0.9876953667737305, 0.0010932867842972601, 0.001753821301438189, 0.0011115174850729016,
+                 0.002523971740087905, 0.0],
+                [0.0, 0.06670970230997446, 0.0006816726314803673, 0.2098260296259325, 0.0011282980379539878,
+                 0.5915579768378687, 0.0026644146790852983, 0.0028109201873801966, 0.007396410130717765,
+                 0.02184316579587203, 0.0],
+                [0.5, 0.5003020970719211, 0.500328895778904, 0.5003415677753359, 0.500286961954922,
+                 0.5005517672884252, 0.5002752116237472, 0.7286324738769034, 0.5002733216688497,
+                 0.500716334206526, 0.5]]
+        else:
+            # Result for default learning_rate used for field_weights
+            expected = [
+                [0.0, 0.0013514379676933632, 0.0011353262390153942, 0.002184021461515236,
+                 0.0010887974094190536, 0.9878291327098383, 0.0010812051512562313, 0.001736165469769927,
+                 0.0010988657829665088, 0.0024950478085260137, 0.0],
+                [0.0, 0.06670548585083992, 0.000673461035369896, 0.20983941516767257, 0.001117094593961008,
+                 0.5916390382504024, 0.0026427036294261997, 0.0028259798555031164, 0.007342697026598307,
+                 0.02179801854024144, 0.0],
+                [0.5, 0.5002986756576393, 0.5003250862131596, 0.5003378594405016, 0.5002838315292665,
+                 0.500546005148344, 0.5002721993254642, 0.7286589222309047, 0.5002703012614821,
+                 0.5007087573384702, 0.5]]
+        np.testing.assert_allclose(result, expected)

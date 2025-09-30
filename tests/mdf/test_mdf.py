@@ -369,11 +369,17 @@ ddi_termination_conds = [
 # construct test data manually instead of with multiple @pytest.mark.parametrize
 # so that other functions can use more appropriate termination conds
 individual_functions_ddi_test_data = [
-    (
-        pnl.IntegratorMechanism,
-        pnl.DriftDiffusionIntegrator(rate=0.5, offset=1, non_decision_time=1, seed=0),
-        "{{A: {{'random_draw': {0} }} }}".format(get_onnx_fixed_noise_str('randomnormal', mean=0, scale=1, seed=0, shape=(1,)))
-    ) + (x,)
+    pytest.param(
+        *(
+            (
+                pnl.IntegratorMechanism,
+                pnl.DriftDiffusionIntegrator(rate=0.5, offset=1, non_decision_time=1, seed=0),
+                "{{A: {{'random_draw': {0} }} }}".format(get_onnx_fixed_noise_str('randomnormal', mean=0, scale=1, seed=0, shape=(1,)))
+            )
+            + (x,)
+        ),
+        id=f'IntegratorMechanism-DriftDiffusionIntegrator-randomnormal-{x}'
+    )
     for x in ddi_termination_conds
 ]
 individual_functions_fhn_test_data = [
@@ -431,8 +437,12 @@ def test_mdf_pnl_results_equivalence_individual_functions(mech_type, function, r
 @pytest.mark.parametrize('fmt', ['json', 'yml'])
 def test_generate_script_from_mdf(filename, composition_name, fmt, tmp_path):
     orig_file = read_defined_model_script(filename)
-    exec(orig_file)
-    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")')
+
+    _locals = {}
+    _globals = {}
+    exec(orig_file, _globals, _locals)
+    serialized = eval(f'pnl.get_mdf_serialized({composition_name}, fmt="{fmt}")', _globals, _locals)
+
 
     mdf_file, mdf_fname, _ = get_mdf_output_file(filename, tmp_path, fmt)
     mdf_file.write_text(serialized)
@@ -456,6 +466,13 @@ _test_as_mdf_model_defaults_excluded_classes = {
     pnl.Rearrange: _reason_no_default,
     pnl.UserDefinedFunction: _reason_no_default,
 }
+
+try:
+    import torch
+    _test_as_mdf_model_defaults_excluded_classes.update(
+        {pnl.GRUComposition: 'needs GraphStructureCondition by default (not implemented for MDF)'})
+except ImportError:
+    pass
 
 
 # test for simple crashes by Components unused in sample models

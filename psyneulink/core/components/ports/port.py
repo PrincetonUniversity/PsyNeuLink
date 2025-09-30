@@ -837,7 +837,7 @@ PROJECTION_SPECIFIC_PARAMS = 'PROJECTION_SPECIFIC_PARAMS'
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
-REMOVE_PORTS = 'REMOVE_PORTS'
+
 
 def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
@@ -1272,6 +1272,7 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.projection import _parse_connection_specs
 
+
         default_projection_type = self.projection_type
 
         # If specification is not a list, wrap it in one for consistency of treatment below
@@ -1306,6 +1307,7 @@ class Port_Base(Port):
                 projection = projection_spec
                 projection_type = projection.__class__
 
+
             # Projection specification dictionary:
             elif isinstance(projection_spec, dict):
                 # Instantiate Projection
@@ -1315,10 +1317,11 @@ class Port_Base(Port):
                 projection_type = projection_spec.pop(PROJECTION_TYPE, None) or default_projection_type
                 projection = projection_type(**projection_spec)
 
+
             else:
-                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
-                                 "from _parse_connection_specs for connection from {} to {} of {}".
-                                 format(Projection.__name__,projection_spec,sender.__name__,self.name,self.owner.name))
+                raise PortError(
+                    f"PROGRAM ERROR: Unrecognized {Projection.__name__} specification ({projection_spec}) "
+                    f"returned from _parse_connection_specs for connection to {self.name} of {self.owner.name}.")
 
             # ASSIGN PARAMS
 
@@ -1526,7 +1529,6 @@ class Port_Base(Port):
         # projection_type = None   # stores type of projection to instantiate
         # projection_params = {}
 
-
         # IMPLEMENTATION NOTE:  THE FOLLOWING IS WRITTEN AS A LOOP IN PREP FOR GENERALINZING METHOD
         #                       TO HANDLE PROJECTION LIST (AS PER _instantiate_projections_to_port())
 
@@ -1565,25 +1567,30 @@ class Port_Base(Port):
                                                    connections=receiver)
                     return _get_receiver_port(spec[0].port)
                 elif isinstance(spec, Projection):
-                    return spec.receiver
+                    try:
+                        return spec.receiver
+                    except AttributeError:
+                        return spec._init_args[RECEIVER]
+                    except Exception:
+                        raise PortError(f"Unrecognized specification of receiver for Projection "
+                                        f"from '{self.name}' of '{self.owner.name}'.")
                 # FIX: 11/25/17 -- NEEDS TO CHECK WHETHER PRIMARY SHOULD BE INPUT_PORT OR PARAMETER_PORT
                 elif isinstance(spec, Mechanism):
                     return spec.input_port
                 return spec
             receiver_port = _get_receiver_port(receiver)
             connection_receiver_port = _get_receiver_port(connection)
-            if receiver_port != connection_receiver_port:
-                raise PortError("PROGRAM ERROR: Port specified as receiver ({}) should "
-                                 "be the same as the one specified in the connection {}.".
-                                 format(receiver_port, connection_receiver_port))
+            assert receiver_port == connection_receiver_port, \
+                (f"PROGRAM ERROR: Port specified as receiver ({receiver_port}) should be the same "
+                 f"as the one specified in the connection {connection_receiver_port}.")
 
             if (not isinstance(connection, ProjectionTuple)
-                and receiver
-                and not isinstance(receiver, (Port, Mechanism))
-                and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
-                raise PortError("Receiver ({}) of {} from {} must be a {}, {}, a class of one, or a {}".
-                                 format(receiver, projection_spec, self.name,
-                                        Port.__name__, Mechanism.__name__, ProjectionTuple.__name__))
+                    and receiver
+                    and not isinstance(receiver, (Port, Mechanism))
+                    and not (inspect.isclass(receiver) and issubclass(receiver, (Port, Mechanism)))):
+                raise PortError(
+                    f"Receiver ({receiver}) of {projection_spec} from {self.name} must be a {Port.__name__}, "
+                    f"{Mechanism.__name__}, a class of one, or a {ProjectionTuple.__name__}.")
 
             if isinstance(receiver, Mechanism):
                 from psyneulink.core.components.ports.inputport import InputPort
@@ -1593,19 +1600,16 @@ class Port_Base(Port):
                 #    use primary InputPort (and warn if verbose is set)
                 if isinstance(default_projection_type, (MappingProjection, GatingProjection)):
                     if self.owner.verbosePref:
-                        warnings.warn("Receiver {} of {} from {} is a {} and {} is a {}, "
-                                      "so its primary {} will be used".
-                                      format(receiver, projection_spec, self.name, Mechanism.__name__,
-                                             Projection.__name__, default_projection_type.__name__,
-                                             InputPort.__name__))
+                        warnings.warn(
+                            f"Receiver {receiver} of {projection_spec} from {self.name} is a {Mechanism.__name__} "
+                            f"and {Projection.__name__} is a {default_projection_type.__name__}, "
+                            f"so its primary {InputPort.__name__} will be used.")
                     receiver = receiver.input_port
 
-                    raise PortError("Receiver {} of {} from {} is a {}, but the specified {} is a {} so "
-                                     "target {} can't be determined".
-                                     format(receiver, projection_spec, self.name, Mechanism.__name__,
-                                            Projection.__name__, default_projection_type.__name__,
-                                            ParameterPort.__name__))
-
+                    raise PortError(
+                        f"Receiver {receiver} of {projection_spec} from {self.name} is a {Mechanism.__name__}, "
+                        f"but the specified {Projection.__name__} is a {default_projection_type.__name__} "
+                        f"so target {ParameterPort.__name__} can't be determined.")
 
             # GET Projection --------------------------------------------------------
 
@@ -1652,20 +1656,19 @@ class Port_Base(Port):
                 rcvr_str = ""
                 if receiver:
                     if isinstance(receiver, Port):
-                        rcvr_str = " to {}".format(receiver.name)
+                        rcvr_str = f" to {receiver.name}"
                     else:
-                        rcvr_str = " to {}".format(receiver.__name__)
-                raise PortError("PROGRAM ERROR: Unrecognized {} specification ({}) returned "
-                                 "from _parse_connection_specs for connection from {} of {}{}".
-                                 format(Projection.__name__,projection_spec,self.name,self.owner.name,rcvr_str))
+                        rcvr_str = f" to {receiver.__name__}"
+                raise PortError(f"PROGRAM ERROR: Unrecognized {Projection.__name__} specification ({projection_spec}) "
+                                f"returned from _parse_connection_specs for connection from {self.name} of "
+                                f"{self.owner.name}{rcvr_str}.")
 
             # Validate that receiver and projection_spec receiver are now the same
             receiver = proj_recvr or receiver  # If receiver was not specified, assign it receiver from projection_spec
             if proj_recvr and receiver and proj_recvr is not receiver:
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
-                raise PortError("Receiver ({}) specified for Projection ({}) "
-                                 "is not the same as the one specified in {} ({})".
-                                 format(proj_recvr, projection.name, ProjectionTuple.__name__, receiver))
+                raise PortError(f"Receiver ({proj_recvr}) specified for Projection ({projection.name}) "
+                                f"is not the same as the one specified in {ProjectionTuple.__name__} ({receiver}).")
 
             # ASSIGN REMAINING PARAMS
 
@@ -1728,15 +1731,14 @@ class Port_Base(Port):
                         # should be defaults.value?
                         try:
                             mod_proj_spec_value = match_modulation_to_value(projection.value, mod_param_value)
-                        except TypeError as error:
+                        except TypeError:
                             raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
                                             f"not match the format ({mod_param_value}) of the Parameter it modulates "
                                             f"({receiver.owner.name}[{mod_param_name}]).")
                         if (mod_param_value is not None
-                            and not iscompatible(mod_param_value, mod_proj_spec_value)):
+                                and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
                                             f"with the value of {receiver.name} ({mod_param_value}).")
-
 
             # ASSIGN TO PORT
 
@@ -1759,20 +1761,20 @@ class Port_Base(Port):
             self.projections.remove(projection)
         try:
             if projection in self.mod_afferents or projection in self.path_afferents:
-                self._remove_projection_to_port(projection, context=context)
+                self._remove_projection_to_port(projection)
         except PortError:
             pass
         try:
             if projection in self.efferents:
-                self._remove_projection_from_port(projection, context=context)
+                self._remove_projection_from_port(projection)
         except PortError:
             pass
 
-    def _remove_projection_from_port(self, projection, context=None):
+    def _remove_projection_from_port(self, projection):
         """Remove Projection entry from Port.efferents."""
         del self.efferents[self.efferents.index(projection)]
 
-    def _remove_projection_to_port(self, projection, context=None):
+    def _remove_projection_to_port(self, projection):
         """
         If projection is in mod_afferents, remove that projection from self.mod_afferents.
         Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly.
@@ -2423,15 +2425,12 @@ class Port_Base(Port):
 
     @property
     def _dependent_components(self):
+        res = super()._dependent_components
         try:
-            return list(itertools.chain(
-                super()._dependent_components,
-                self.efferents,
-            ))
-        except PortError:
-            return list(itertools.chain(
-                super()._dependent_components,
-            ))
+            res.extend(self.all_afferents)
+        except AttributeError:
+            pass
+        return res
 
 
 def _instantiate_port_list(owner,

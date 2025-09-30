@@ -4,6 +4,7 @@ import pytest
 import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transformfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
+from psyneulink import CompositionError
 
 
 class TestInputPorts:
@@ -184,6 +185,12 @@ class TestDefaultInput:
         a.input_ports[0].defaults.variable = [3]
         np.testing.assert_array_equal(a.execute(), [[3]])
 
+    def test_default_input_errorneous_assignment(self):
+        with pytest.raises(pnl.ParameterError) as error_text:
+            b = pnl.ProcessingMechanism(input_ports=pnl.InputPort(default_input = [4]))
+        assert ("Value ([4]) assigned to parameter 'default_input' of (InputPort InputPort-0).parameters "
+                "is not valid: must be None or the keyword 'DEFAULT_VARIABLE'.") in str(error_text.value)
+
     def test_default_input_standalone_two_ports(self):
         a = pnl.ProcessingMechanism(default_variable=[[1], [1]])
         a.input_ports[0].defaults.variable = [2]
@@ -195,9 +202,7 @@ class TestDefaultInput:
         # port has default_input set, so get variable from input ports.
         # second port has no afferents, so it doesn't have a value
         a.input_ports[0].parameters.default_input.set(pnl.DEFAULT_VARIABLE, override=True)
-        with pytest.raises(
-            pnl.FunctionError, match="may be due to missing afferent projection"
-        ):
+        with pytest.raises(pnl.FunctionError, match="may be due to missing afferent projection"):
             a.execute()
 
         # both ports have default_input set, so use it
@@ -207,9 +212,7 @@ class TestDefaultInput:
         # as second check above. one port has default_input, other does
         # not and has no afferents
         a.input_ports[0].parameters.default_input.set(None, override=True)
-        with pytest.raises(
-            pnl.FunctionError, match="may be due to missing afferent projection"
-        ):
+        with pytest.raises(pnl.FunctionError, match="may be due to missing afferent projection"):
             a.execute()
 
         # as first check above. no port default_input set, use
@@ -217,36 +220,51 @@ class TestDefaultInput:
         a.input_ports[1].parameters.default_input.set(None, override=True)
         np.testing.assert_array_equal(a.execute(), [[1], [1]])
 
-    def test_default_input_with_projection(self):
+    def test_default_input_error_on_assignment_of_projection_and_reassignment(self):
         a = pnl.ProcessingMechanism(default_variable=[[1]])
         b = pnl.ProcessingMechanism(
-            input_ports=[
-                {pnl.VARIABLE: [2], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}}
-            ]
-        )
-        comp = pnl.Composition(pathways=[a, b])
-
-        inputs = {a: [[10]]}
-
-        np.testing.assert_array_equal(comp.execute(), [[2]])
-        np.testing.assert_array_equal(comp.run(inputs), [[2]])
-
-        b.input_ports[0].defaults.variable = [3]
-        np.testing.assert_array_equal(comp.execute(), [[3]])
-        np.testing.assert_array_equal(comp.run(inputs), [[3]])
+            input_ports=[{pnl.VARIABLE: [2],
+                          pnl.PARAMS: {pnl.DEFAULT_INPUT:
+                                           pnl.DEFAULT_VARIABLE}}])
+        with pytest.raises(CompositionError) as error_text:
+            pnl.Composition(pathways=[[a, b]])
+        assert (f"ProcessingMechanism-1' has only one InputPort for which 'default_input'=DEFAULT_VARIABLE', "
+                f"and therefore will be configured as a BIAS Node, so it cannot receive a MappingProjection from "
+                f"'ProcessingMechanism-0' as specified for a pathway in 'Composition-0'." in str(error_text.value))
 
         b.input_ports[0].parameters.default_input.set(None, override=True)
+        inputs = {a: [[10]]}
+        comp = pnl.Composition(pathways=[a, b])
         np.testing.assert_array_equal(comp.execute(), [[1]])
         np.testing.assert_array_equal(comp.run(inputs), [[10]])
+
+    def test_change_default_input_value(self):
+        a = pnl.ProcessingMechanism(
+            input_ports=[{pnl.VARIABLE: [2],
+                          pnl.PARAMS: {pnl.DEFAULT_INPUT:
+                                           pnl.DEFAULT_VARIABLE}}])
+        b = pnl.ProcessingMechanism(default_variable=[[1]])
+
+        comp = pnl.Composition(pathways=[a, b])
+
+        np.testing.assert_array_equal(comp.execute(), [[2]])
+        np.testing.assert_array_equal(comp.run(), [[2]])
+
+        a.input_ports[0].defaults.variable = [3]
+        np.testing.assert_array_equal(comp.execute(), [[3]])
+        np.testing.assert_array_equal(comp.run(), [[3]])
+
+        # FIX: remove if resetting default_input is allowed, which requires adding a Projection from input_CIM
+        # a.input_ports[0].parameters.default_input.set(None, override=True)
+        # np.testing.assert_array_equal(comp.execute(), [[2]])
+        # comp._analyze_graph()
+        # np.testing.assert_array_equal(comp.run(inputs={a:[[]]}), [[4]])
 
     def test_default_input_with_projections_two_ports(self):
         a = pnl.ProcessingMechanism(default_variable=[[1]])
         b = pnl.ProcessingMechanism(
-            input_ports=[
-                {pnl.VARIABLE: [2]},
-                {pnl.VARIABLE: [3], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}},
-            ]
-        )
+            input_ports=[{pnl.VARIABLE: [2]},
+                         {pnl.VARIABLE: [3], pnl.PARAMS: {pnl.DEFAULT_INPUT: pnl.DEFAULT_VARIABLE}}])
         comp = pnl.Composition()
         comp.add_nodes([a, b])
         comp.add_projection(sender=a, receiver=b.input_ports[0])

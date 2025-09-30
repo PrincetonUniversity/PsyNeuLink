@@ -394,7 +394,7 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core.globals.context import ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import ALL, CONTEXT, EID_SIMULATION, FUNCTION_PARAMETER_PREFIX, MODULATED_PARAMETER_PREFIX, TIME, VALUE
-from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList
+from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, convert_to_np_array
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -1536,14 +1536,14 @@ class Log:
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             log_dict[eid] = OrderedDict()
 
-            # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
+            # If all time values are recorded: log_dict = {"Run": array, "Trial": array, "Time_step": array}
             if time_values:
                 for i in range(NUM_TIME_SCALES):
                     row = [[t[i]] for t in time_values]
                     time_header = TIME_SCALE_NAMES[i].capitalize()
                     log_dict[eid][time_header] = row
 
-            # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
+            # If ANY time values are empty (components were run outside of a Composition): log_dict = {"Index": array}
             else:
                 # find number of values logged by zeroth component
                 num_indicies = len(self.logged_entries[entries[0]])
@@ -1555,10 +1555,14 @@ class Log:
                 log_dict[eid]["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
 
             for entry in entries:
-                log_dict[eid][entry] = np.array(self._assemble_entry_data(entry,
-                                                                          time_values,
-                                                                          report_all_executions,
-                                                                          eid))
+                log_dict[eid][entry] = convert_to_np_array(
+                    self._assemble_entry_data(
+                        entry,
+                        time_values,
+                        report_all_executions,
+                        eid,
+                    )
+                )
 
         return log_dict
 
@@ -1786,64 +1790,42 @@ class Log:
 
         # entry = self._dealias_owner_name(entry)
         row = []
-        time_col = iter(time_values)
         try:
-            data = self.logged_entries[entry][execution_id]
+            logged_entries = self.logged_entries[entry][execution_id]
         except KeyError:
             return [None]
 
-        time = next(time_col, None)
-        for i in range(len(self.logged_entries[entry][execution_id])):
-            # iterate through log entry tuples:
-            # check whether the next tuple's time value matches the time for which data is currently being recorded
-            # if not, check whether the current tuple's time value matches the time for which data is being recorded
-            # if so, enter tuple's Component value in the entry's list
-            # if not, enter `None` in the entry's list
-            datum = data[i]
-            if time_values:
-                # # MODIFIED 11/14/23 OLD:
-                # if i == len(data) - 1 or data[i + 1].time != time:
-                #     if datum.time != time:
-                #         row.append(None)
-                #     else:
-                #         value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
-                #         # append value
-                #         row.append(value)
-                #     time = next(time_col, None)  # increment time value
-                #     if time is None:  # if no more times, break
-                #         break
-                # MODIFIED 11/14/23 NEW:
-                if report_all_executions:
-                    # Report values for all executions within a given time
-                    if i == 0 or time != data[i - 1].time:
-                        # Start new execution set on first datum or if time of entry has changed
-                        execution_set = []
-                    # If the entry's time value doesn't match one of the times specified in the call, enter None
-                    if datum.time != time:
-                        execution_set.append(None)
-                    else:
-                        execution_set.append(None if datum.value is None else np.array(datum.value).tolist())
-                    if i == len(data) - 1 or data[i + 1].time != time:
-                        time = next(time_col, None)  # increment time value
-                        row.append(execution_set)
-                    if time is None:  # if no more times, break
-                        break
+        entries_by_time = {}
+        if time_values:
+            for entry_item in logged_entries:
+                tm = entry_item.time
+                if tm in entries_by_time:
+                    entries_by_time[tm].append(entry_item)
                 else:
-                    # Only report one value (execution) for each unique time
-                    if i == len(data) - 1 or data[i + 1].time != time:
-                        # Only record value if time of entry is about to change and/or for last entry
-                        if datum.time != time:
-                            # If entry's time value doesn't match one of the times specified in the call, report None
-                            row.append(None)
-                        else:
-                            # Report value of entry
-                            value = None if datum.value is None else np.array(datum.value).tolist()
-                            row.append(value)
-                        time = next(time_col, None)  # increment time value
-                        if time is None:  # if no more times, break
-                            break
-                # MODIFIED 11/14/23 END
-            else:
+                    entries_by_time[tm] = [entry_item]
+
+            for time_val in time_values:
+                # iterate through log entry tuples:
+                # check whether the next tuple's time value is requested by time_values arg
+                # if so, enter tuple's Component value in the entry's list
+                # if not, enter `None` in the entry's list
+                matching_entry = entries_by_time.get(time_val, None)
+
+                if not report_all_executions:
+                    try:
+                        matching_entry = matching_entry[-1]
+                    except TypeError:
+                        # entry is None
+                        pass
+                    except IndexError as e:
+                        # unexpected empty list
+                        raise AssertionError() from e
+
+                matching_entry = getattr(matching_entry, 'value', None)
+                matching_entry = np.asarray(matching_entry).tolist()
+                row.append(matching_entry)
+        else:
+            for datum in logged_entries:
                 if datum.value is None:
                     value = None
                 elif isinstance(datum.value, list):
