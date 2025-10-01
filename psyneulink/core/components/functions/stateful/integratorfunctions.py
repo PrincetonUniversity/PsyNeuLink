@@ -715,7 +715,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. math::
 
-        previous_value + rate * variable + noise + offset
+        previous\\_value + rate * variable + noise + offset
 
     *Modulatory Parameters:*
 
@@ -947,7 +947,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
 
     .. math::
-        ((1-rate) * previous_value) + (rate * variable)  + noise + offset
+        ((1-rate) * previous\\_value) + (rate * variable)  + noise + offset
 
     *Modulatory Parameters:*
 
@@ -3925,6 +3925,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             d_v + e_v * w + f_v * I_{ext}
 
     where
+
     .. math::
             time\\_constant_w * \\frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\\_activity
 

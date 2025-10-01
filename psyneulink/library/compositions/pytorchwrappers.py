@@ -1,4 +1,4 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+ # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -8,10 +8,14 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
-from psyneulink._typing import Optional, Literal, Union
+from h5py.h5f import namedtuple
+
+from psyneulink._typing import Iterable, Literal, Optional, Union
 
 import graph_scheduler
 import numpy as np
+
+from psyneulink.core.globals.parameters import ParameterNoValueError
 
 # import torch
 try:
@@ -21,7 +25,9 @@ except (ImportError, ModuleNotFoundError):
 else:
     import torch.nn as nn
 
+import warnings
 from enum import Enum, auto
+from typing import TYPE_CHECKING
 
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -29,26 +35,42 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, NodeRole
+from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
+from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, LearningScale, NodeRole
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE, DEFAULT_VARIABLE, EPOCH, INPUTS,
-                                              LEARNING, LEARNING_SCALE_LITERALS, Loss, MATRIX_WEIGHTS,
-                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS, RESULTS, RUN,
-                                              SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
+from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE,
+                                              DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE,
+                                              INPUTS, LEARNING, Loss, MATRIX_WEIGHTS,
+                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS,
+                                              RESULTS, SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import (
+    convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
-__all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
-           'ENTER_NESTED', 'EXIT_NESTED', 'SUBCLASS_WRAPPERS']
 
-SUBCLASS_WRAPPERS = 'subclass_wrappers'
+if TYPE_CHECKING:
+    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg
+
+
+__all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
+           'ENTER_NESTED', 'EXIT_NESTED', 'ParamNameCompositionTuple']
+
 ENTER_NESTED = 0
 EXIT_NESTED = 1
+
+LEARN_CONSTRUCTION = 'learn_construction'
+LEARN_OVERRIDE = 'learn_override'
+LEARN_METHOD = 'learn() method'
+CONSTRUCTOR = 'constructor'
+
+TorchParam = namedtuple("TorchParam", "name slice")
+TorchParamTuple = namedtuple('ParamTuple', "orig_spec, value")
+ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
+                                       "projection, param_name composition")
 
 class DataTypeEnum(Enum):
 
@@ -68,10 +90,9 @@ def _get_pytorch_function(obj, device, context):
         return pytorch_fct(device, context)
 
 
-class PytorchCompositionWrapper(torch.nn.Module):
 # NEEDED FOR torch MPS SUPPORT
-# class PytorchCompositionWrapper(torch.jit.ScriptModule):
-# END
+# class PytorchCompositionWrapper(torch.jit.ScriptModule)
+class PytorchCompositionWrapper(torch.nn.Module):
     """Wrapper for a Composition as a Pytorch Module.
 
     Wraps an `AutodiffComposition` as a `PyTorch module
@@ -268,6 +289,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 self.projections_map.update(node_wrapper.projections_map)
                 for k, v in node_wrapper.nodes_map.items():
                     self._add_node_to_nodes_map(k, v)
+                self._pnl_refs_to_torch_param_names.update(node_wrapper._pnl_refs_to_torch_param_names)
+                # Get any optimizer_constructor_params from nested Composition, but give precedence to any in outer comp
+                for k, v in node_wrapper.composition._optimizer_constructor_params.items():
+                    if k not in self.composition._optimizer_constructor_params:
+                        self.composition._optimizer_constructor_params[k] = v
+
         # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
         nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
         for node in nodes_to_remove:
@@ -276,10 +303,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
-
-        # Get projections from flattened set, so that they are all in the outer Composition
-        #   and visible by _regenerate_torch_parameter_list;
-        #   needed for call to backward() in AutodiffComposition.do_gradient_optimization
         self.projection_wrappers = list(self.projections_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
@@ -289,21 +312,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _early_init(self, composition, device):
         """Early initialization of PytorchCompositionWrapper"""
-                # Assign attributes
+        # Assign attributes
         self.name = f"PytorchCompositionWrapper[{composition.name}]"
         self.device = device
         self.optimizer = None # This gets assigned by self.composition after the wrapper is created,
-                                # as the latter is needed to pass the parameters to the optimizer
-        self._optimizer_param_groups = []
-
+        # as the latter is needed to pass the parameters to the optimizer
         self.composition = composition
         self.node_wrappers = []  # can be PytorchMechanismWrapper or PytorchCompositionWrapper
         self._nodes_to_execute_after_gradient_calc = {} # Nodes requiring execution after Pytorch forward/backward pass
         self._batch_size = 1 # Store the currently used batch size
 
         self.projection_wrappers = [] # PytorchProjectionWrappers
-        self.projections_map = {}  # maps Projections -> PytorchProjectionWrappers
-        self._pnl_refs_to_torch_params_map = {} # API for PNL refs to PyTorch params (used by _parse_optimizer_params)
+        self.projections_map = {}  # {Projection: PytorchProjectionWrappers}
+        self._pnl_refs_to_torch_param_names = {} # {Projection.name: ParamNameCompositionTuple}
 
         self.minibatch_loss = torch.zeros(1, device=self.device).double() # Accumulated losses within a batch
         self.minibatch_loss_count = 0  # Count of losses within batch
@@ -321,6 +342,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
+        self._store_learn_params = None
 
     def _validate_subclass_components(self, _node_wrapper_pairs, _projection_wrapper_pairs, execution_sets):
         """Sublcass instantiated nodes_map, projections_map and execution_sets, so validate these."""
@@ -353,7 +375,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _construct_projection_wrapper_maps(self, _projection_wrapper_pairs):
         self.projections_map = {k:v for k,v in _projection_wrapper_pairs}
-        self.projection_wrappers = list(self.projections_map.values())
 
     def _add_node_to_nodes_map(self, node, node_wrapper):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""
@@ -361,7 +382,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if node not in self.node_wrappers:
             self.node_wrappers.append(node_wrapper)
         self._modules_dict[node.name] = node_wrapper
-        self.state_dict()
 
     def _remove_node_from_nodes_map(self, node):
         """Keep nodes_map, node_wrappers and modules_dict in synch"""
@@ -440,7 +460,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Handle projection to or from a nested Composition
             elif (isinstance(sndr_mech, CompositionInterfaceMechanism) or
                   isinstance(rcvr_mech, CompositionInterfaceMechanism)):
-                pnl_proj, proj_sndr, proj_rcvr, use = self._handle_nested_comp(projection, context, base_context)
+                pnl_proj, pnl_proj_name, proj_sndr, proj_rcvr, use = (
+                    self._handle_nested_comp(projection, context, base_context))
                 # # use = [LEARNING, SYNCH, SHOW_PYTORCH]
                 # use = [LEARNING, SYNCH]
 
@@ -449,6 +470,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 proj_sndr = self.nodes_map[sndr_mech]
                 proj_rcvr = self.nodes_map[rcvr_mech]
                 pnl_proj = projection
+                pnl_proj_name = pnl_proj.name
                 use = [LEARNING, SYNCH, SHOW_PYTORCH]
 
             else:
@@ -470,6 +492,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
             proj_rcvr.add_afferent(pytorch_proj_wrapper)
 
             proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
+            # Use PsyNeuLink Projection's name as key to align with name of torch Parameter
+            # Add entries for both pnl_proj (user-specifie one) and projection (to input_CIM / from output_CIM)
+            #   so both can be used to reference PytorchProjectionWrapper name (e.g., in _update_optimizer_params())
+            pnl_proj_param_name_comp_tuple = ParamNameCompositionTuple(projection,
+                                                                       pytorch_proj_wrapper.name,
+                                                                       composition)
+            projection_param_name_comp_tuple = ParamNameCompositionTuple(projection,
+                                                                         pytorch_proj_wrapper.name,
+                                                                         composition)
+            self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
+                                                        projection.name: projection_param_name_comp_tuple})
 
         return proj_wrappers_pairs
 
@@ -514,6 +547,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
 
+            # Get name of the direct afferent to the nested INPUT Node,
+            # to use as key in _pnl_refs_to_torch_param_names, as that is the name the User will use
+            source_port = projection.sender
+            destination_port = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[0]
+            direct_proj = [proj for proj in destination_port.path_afferents if proj in source_port.efferents]
+            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {source_port.owner.name} has more than one efferent"
+                                           f" that projects to {destination_port.owner.name}")
+            proj_name = direct_proj[0].name if direct_proj else projection.name
+
         # EXIT_NESTED
         # output_cim of nested Composition:
         #    - projection is from output_CIM that is not in current Composition so must be from a nested one;
@@ -536,7 +578,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                  context))
             if proj_rcvr_wrapper is None:
                 proj_rcvr_wrapper = self.nodes_map[rcvr_mech]
-        return proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
+
+            # Get name of the direct efferent from the nested OUTPUT Node
+            # to use as key in _pnl_refs_to_torch_param_names, as that is the name the User will use
+            destination_port = projection.receiver
+            source_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
+            direct_proj = [proj for proj in source_port.efferents if proj in destination_port.path_afferents]
+            assert len(direct_proj) <= 1, (f"PROGRAM ERROR: {destination_port.owner.name} has more than one afferent"
+                                           f" that projects to it from {source_port.owner.name}")
+            proj_name = direct_proj[0].name if direct_proj else projection.name
+
+        return proj, proj_name, proj_sndr_wrapper, proj_rcvr_wrapper, use
 
     def _flatten_for_pytorch(self,
                              projection,
@@ -583,10 +635,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                      f"to {destination_rcvr_mech.name}",
                                                 sender=projection.sender,
                                                 receiver=destination_rcvr_port,
-                                                learnable=projection.learnable)
+                                                learnable=projection.learnable,
+                                                learning_rate=projection.parameters.learning_rate.get(context))
             except DuplicateProjectionError:
                 direct_proj = [proj for proj in projection.sender.efferents
                                if proj.receiver is destination_rcvr_port][0]
+                pnl_proj.learnable = direct_proj.learnable
+                pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
 
@@ -626,10 +681,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                      f"to {rcvr_mech.name}",
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
-                                                learnable=projection.learnable)
+                                                learnable=projection.learnable,
+                                                learning_rate=projection.parameters.learning_rate.get(context))
+
             except DuplicateProjectionError:
                 direct_proj = [proj for proj in projection.receiver.path_afferents
                                if proj.sender is source_sndr_port][0]
+                pnl_proj.learnable = direct_proj.learnable
+                pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
 
@@ -652,32 +711,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
-
-    def _parse_optimizer_params(self, context):
-        """Assign parameter-specific optimizer param groups for PyTorch GRU module"""
-        composition = self.composition
-
-        # Replace pnl names with actual torch params as keys in optimizer_params
-        optimizer_params = self.composition._optimizer_params
-        for param_name in optimizer_params.copy():
-            param = self._pnl_refs_to_torch_params_map.get(param_name, None)
-            if param:
-                optimizer_params[param] = optimizer_params.pop(param_name)
-
-        # FIX: NOT ALL PROJECTIONS FOR WHICH learning_rate COULD BE SET ARE IN
-        #      _pnl_refs_to_torch_params_map (SEE ABOVE) AND THEREFORE FINDABLE BELOW (INCLUDING IN state_dict())
-        # Parse learning rate specs in optimizer_params
-        for param, learning_rate in optimizer_params.items():
-            assert any(param is state_param for state_param in self.state_dict().values()), \
-                f"PROGRAM ERROR: {param} not in state_dict for '{self.name}'"
-            if composition.enable_learning is False:
-                param.requires_grad = False
-            else:
-                if learning_rate is not False:
-                    # If learning_rate is True, use composition.learning_rate, else specified value
-                    lr = composition.learning_rate if isinstance(learning_rate, bool) else learning_rate
-                    param.requires_grad = True
-                    self._optimizer_param_groups.append({'params': param, 'lr': lr})
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""
@@ -716,6 +749,597 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return execution_sets, execution_context
 
+    def get_all_projection_wrappers(self, start_wrapper=None)->dict:
+        """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
+        comp_wrapper = start_wrapper or self
+        proj_wrappers = {proj_wrapper: comp_wrapper for proj_wrapper in comp_wrapper.projection_wrappers}
+        for wrapper in [w for w in comp_wrapper.node_wrappers if isinstance(w, PytorchCompositionWrapper)]:
+            proj_wrappers.update(wrapper.get_all_projection_wrappers())
+        return proj_wrappers
+
+    def get_all_learnable_projection_wrappers(self, start_wrapper=None, context=None)->list:
+        """Return list of all learnable Projections in the Composition and any nested with it"""
+        # Get ProjectionWrappers for all learnable Projections this Composition and any nested within it
+        start_wrapper = start_wrapper or self
+        return [proj_wrapper for proj_wrapper, comp_wrapper in self.get_all_projection_wrappers(start_wrapper).items()
+                if (proj_wrapper.projection.learnable
+                    and proj_wrapper.projection.parameters.learning_rate.get(context) is not False)]
+
+    @property
+    def wrapped_projections(self):
+        return [wrapper.projection for wrapper in self.projection_wrappers]
+
+    @property
+    def projection_wrappers_map(self):
+        return {wrapper: wrapper.projection for wrapper in self.projection_wrappers}
+
+    def get_all_nested_composition_wrappers(self, start_wrapper=None)->dict:
+        """Return list of all PytorchCompositionWrappers nested in start_wrapprer and within those."""
+        comp_wrapper = start_wrapper or self
+        comp_wrappers = [w for w in comp_wrapper.node_wrappers if isinstance(w, PytorchCompositionWrapper)]
+        for wrapper in comp_wrappers:
+            nested_wrappers = wrapper.get_all_nested_composition_wrappers()
+            if nested_wrappers:
+                comp_wrappers.extend(nested_wrappers)
+        return comp_wrappers
+
+    def _update_optimizer_params(self, optimizer, optimizer_params_user_specs:dict, context):
+        """Assign or update parameter-specific optimizer param groups for PyTorch GRU module
+        Relevant data structures:
+            self.composition._optimizer_params: {Projection or Projection.name: lr}
+            optimizer_params_user_specs: {Projection or Projection.name: lr}
+            optimizer_params_user_parsed: {Projection.name: TorchParamTuple(Projection or Projection.name, lr)}
+            optimizer_torch_params_full_with_specified:  {torch param: lr}
+            self._pnl_refs_to_torch_param_names: {Projection.name: ParamNameCompositionTuple(proj, wrapper name, comp)}
+            self._torch_param_short_to_long_names_map: {local name of torch param: full hierarchical name}
+            self.named_parameters(): (full hierarchical name of torch param, torch param)
+            self.state_dict(): (local name of torch param, Tensor)
+        """
+        # These are used both for error messages (hence strings) as we well determining how to update param_groups
+
+        if context.runmode == ContextFlags.LEARNING_MODE:
+            if context.source == ContextFlags.COMPOSITION:
+                source = LEARN_CONSTRUCTION
+                assert not self.optimizer, (f"PROGRAM ERROR: '{self.name}' is being constructed in learning mode "
+                                            f"but optimizer is already specified ")
+                self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
+
+            elif context.source == ContextFlags.METHOD:
+                source = LEARN_OVERRIDE
+                assert self.optimizer, (f"PROGRAM ERROR: 'no optimizer in call to learn() for '{self.name}' ")
+                # revert to learning_rate assignments made in constructor before assigning any new values
+                self._restore_constructor_proj_learning_rates_and_torch_params(self.optimizer, context)
+
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} called in learning mode with an unexpected context.source"
+
+        else:
+            source = CONSTRUCTOR
+            if self.optimizer and not optimizer_params_user_specs:
+                # No need to construct (optimizer exists) or to update_optimizer (no new params)
+                return
+
+            if not optimizer_params_user_specs and not self.get_all_learnable_projection_wrappers(context=context):
+                # If user didn't provide any specs, and there are no learnable Projections, not much to do;
+                # just assign default optimizer.param_groups and store learning_rates for Projections
+                return
+
+        # Proceed to either construct new optimizer.param_groups (if called from constructor)
+        #   or update existing ones (if called from learn() method)
+
+        run_time_default_learning_rate = optimizer_params_user_specs.pop(DEFAULT_LEARNING_RATE, None)
+
+        optimizer_params_user_parsed, optimizer_torch_params_full_with_specified = (
+            self._parse_learning_rate_specs(optimizer,
+                                            optimizer_params_user_specs,
+                                            run_time_default_learning_rate,
+                                            source,
+                                            context))
+
+        if source == CONSTRUCTOR and self.optimizer:
+            # If user has specified dict with learning_rates in call to _build_pytorch_representation,
+            #    need to update the construct_param_groups with specififed values
+            self._update_constructor_param_groups(self.composition, optimizer_params_user_specs)
+
+        self._assign_learning_rates(optimizer,
+                                    optimizer_params_user_parsed,
+                                    optimizer_torch_params_full_with_specified,
+                                    run_time_default_learning_rate,
+                                    source,
+                                    context)
+
+    def _parse_learning_rate_specs(self,
+                                   optimizer:torch.optim.Optimizer,
+                                   optimizer_params_user_specs:dict,
+                                   run_time_default_learning_rate: Union[float, bool, None],
+                                   source:str,
+                                   context:Context)-> (dict, dict):
+        """Parse user-specified learning_rates.
+        User specifications can be in:
+        - constructor for of outermost and/or nested AutodiffComposition;
+        - learn() method of outermost AutodiffComposition.
+        """
+
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
+        # Replace any Projections in optimizer_params_user_specs with their names -> optimizer_params_user_parsed
+        optimizer_params_user_parsed = {}
+        if optimizer_params_user_specs:
+            optimizer_params_user_parsed = {(k.name if isinstance(k, Projection) else k): TorchParamTuple(k, v)
+                                       for k, v in optimizer_params_user_specs.items()}
+
+        if optimizer_params_user_parsed:
+            self._validate_optimizer_param_specs(set(optimizer_params_user_parsed.keys()), source, context)
+
+        # Assign any user-specified Projection-specific learning_rates to the corresponding Projection.learning_rate
+        #    in prep for construction optimer_params_full_with_specs
+        #    (these will be overridden below if numerically specified)
+        for proj_name in optimizer_params_user_parsed:
+            if proj_name == DEFAULT_LEARNING_RATE:
+                continue
+            if proj_name in self._pnl_refs_to_torch_param_names:
+                proj = self._pnl_refs_to_torch_param_names[proj_name].projection
+                proj_lr = optimizer_params_user_parsed[proj_name].value
+                if proj.learnable is False and proj_lr is None:
+                    proj_lr = False
+                if source == CONSTRUCTOR:
+                    # comp_name = self.composition.name
+                    comp_name = self._pnl_refs_to_torch_param_names[proj.name].composition.name
+                    proj.parameters.learning_rate.set(proj_lr, comp_name + DEFAULT_SUFFIX)
+                else:
+                    proj.parameters.learning_rate.set(proj_lr, context)
+            else:
+                assert False, (f"PROGRAM ERROR: Projection '{proj_name}', for which a learning_rate has been specified "
+                               f"in '{self.composition.name}, was not found in self._pnl_refs_to_torch_param_names.")
+
+        # Gather all numerically-specified Projection.learning_rates in same format as optimizer_params_user_parsed:
+        #     {Projection.name: (Projection or Projection.name, learning_rate)}
+        projection_lr_specs = {proj.name:TorchParamTuple(proj, proj.parameters.learning_rate.get(context))
+                               for proj in [p.projection for p in self.projection_wrappers
+                                            if LEARNING in p._use and p.projection.learnable
+                                            and is_numeric_scalar(p.projection.parameters.learning_rate.get(context))]}
+        # Integrate optimizer_params_user_parsed, giving precedence to any learning_rates specified in learn() method()
+        projection_lr_specs.update(optimizer_params_user_parsed)
+
+        if not projection_lr_specs and not run_time_default_learning_rate:
+            if source == CONSTRUCTOR:
+                self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
+            return {}, {}
+
+        # Replace Projection names (in projection_lr_specs) for torch params (used in state_dict())
+        # with their actual torch parameter objects to genernate optimizer_torch_params_full_with_specified:
+        #     {torch param: learning_rate}
+        optimizer_torch_params_full_with_specified = {}
+        for pnl_param_name, param_tuple in projection_lr_specs.items():
+            param_val = param_tuple.value
+            param_orig_spec = param_tuple.orig_spec
+            # Get torch parameter specification for Projection names specified in projection_lr_specs
+            try:
+                param = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
+            except KeyError:
+                raise AutodiffCompositionError(
+                    f"Projection specified in 'learning_rate' arg of the {self.get_source_str(source)} for "
+                    f"'{self.composition.name}' ('{pnl_param_name}') is not associated with "
+                    f"a learnable Pytorch parameter.")
+
+            # IMPLEMENTATION NOTE:
+            #    The following allows torch Parameters to be specified using tuples of their name and a slice
+            #    (currently this is not supported by Pytorch, as learning_rates can only be specified
+            #     for torch.nn.Parameter objects and not Tensors)
+            # # If param spec is tuple, param name from first item (second is slice)
+            # torch_param_name = param.name if isinstance(param, TorchParam) else param
+            # torch_param_slice = param.slice if isinstance(param, TorchParam) else None
+            # if torch_param_name not in _torch_param_short_to_long_names_map:
+            #     raise AutodiffCompositionError(
+            #         f"Projection specified in 'learning_rate' arg of constructor for '{self.composition.name}' "
+            #         f"('{pnl_param_name}') is not associated with the name of one of its learnable Projections.")
+            # # Get torch parameter for specified param_ref in named_parameters()
+            # param = next((p[1] for p in self.named_parameters()
+            #               if p[0] == _torch_param_short_to_long_names_map[torch_param_name]), None)
+
+            # # Get torch parameter for specified param_ref in named_parameters()
+            torch_param_name = param
+            param = next((p[1] for p in self.named_parameters()
+                          if p[0] == self._torch_param_short_to_long_names_map[torch_param_name]), None)
+            assert param is not None, (f"PROGRAM ERROR: '{torch_param_name}' not found in "
+                                       f"{self.name}.named_parameters() even though it was found in its state_dict().")
+
+            if not param.requires_grad and param_val is not False:
+                # If param was set to False in previous call to learn() but was not False at construction
+                if (source == LEARN_OVERRIDE
+                        and param_orig_spec in self.composition._optimizer_constructor_params
+                        and self.composition._optimizer_constructor_params[param_orig_spec] is not False):
+                    # Turn gradient back on
+                    param.requires_grad = True
+                proj_wrapper_name = self._pnl_refs_to_torch_param_names[pnl_param_name].param_name
+                proj_wrapper = [wrapper for wrapper in self.projection_wrappers if wrapper.name is proj_wrapper_name][0]
+                proj_lr = proj_wrapper.projection.parameters.learning_rate.get(context)
+                if not proj_wrapper.projection.learnable and proj_lr is not False:
+                    raise AutodiffCompositionError(
+                        f"Projection ('{pnl_param_name}') specified in the dict for the 'learning_rate' arg of "
+                        f"the {self.get_source_str(source)} for '{self.composition.name}' is not learnable; check that "
+                        f"its 'learnable' attribute is set to 'True' and its learning_rate is not 'False', "
+                        f"or remove it from the dict.")
+
+            # IMPLEMENTATION NOTE: see above
+            # if torch_param_slice:
+            #     # If param spec is tuple, use param name (from above) to get param from state_dict() & apply slice
+            #     param = torch.nn.Parameter(param[torch_param_slice])
+
+            optimizer_torch_params_full_with_specified[param] = projection_lr_specs[pnl_param_name].value
+
+        return optimizer_params_user_parsed, optimizer_torch_params_full_with_specified
+
+    def _validate_optimizer_param_specs(self, specs_to_validate:set, source:str, context, nested=False):
+        """Allow override by subclasses for custom handling of optimizer_params_user_specs (e.g., pytorchGRUWrappers)"""
+
+        for proj_spec in specs_to_validate.copy():
+            if proj_spec in self._pnl_refs_to_torch_param_names:
+                specs_to_validate.remove(proj_spec)
+
+        if specs_to_validate:
+            # Give subclasses a chance to identify specs by calling _validate_optimizer_param_specs()
+            #   recursively on any nested PytorchCompositionWrappers
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            for nested_composition_wrapper in [node_wrapper for node_wrapper in self.node_wrappers
+                                               if (isinstance(node_wrapper, PytorchCompositionWrapper))]:
+                specs_to_validate = nested_composition_wrapper._validate_optimizer_param_specs(specs_to_validate,
+                                                                                               source,
+                                                                                               context,
+                                                                                               nested=True)
+        if nested:
+            return specs_to_validate
+        if specs_to_validate:
+            if len(specs_to_validate) == 1:
+                err_msg = (f"The following Projection specified in the 'learning_rate' arg of the "
+                           f"{self.get_source_str(source)} for '{self.composition.name}' is not in that Composition "
+                           f"or any nested within it: '{list(specs_to_validate)[0]}'.")
+            else:
+                err_msg = (f"The following Projections specified in the 'learning_rate' arg of the "
+                           f"{self.get_source_str(source)} for '{self.composition.name}' are not in that Composition "
+                           f"or any nested within it: '{', '.join(list(specs_to_validate))}'.")
+            raise AutodiffCompositionError(err_msg)
+
+    def _assign_learning_rates(self,
+                               optimizer:torch.optim.Optimizer,
+                               optimizer_params_user_parsed:dict,
+                               optimizer_torch_params_full_with_specified:dict,
+                               run_time_default_learning_rate:Union[float, bool, None],
+                               source:str,
+                               context:Context):
+        """Assign parsed learning_rate specifications."""
+
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
+        # BREADCRUMB: ?IS THIS STILL NEEDED:
+        # Set Composition default learning rate for the current context
+        comp_lr = run_time_default_learning_rate or self.composition.parameters.learning_rate.get(context)
+        self.composition.parameters.learning_rate.set(comp_lr, context)
+
+        # Process *every* parameter in the optimizer's param_groups
+        # Get fresh copy of param_groups and assign to optimizer_params
+        old_param_groups = optimizer.param_groups
+        new_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        optimizer.param_groups = new_param_groups
+        all_requires_grads_false = True
+
+        # Use old_param_groups for reference, and modify new_param_groups (now assigned to optimizer)
+        for old_param_group, new_param_group in zip(old_param_groups, new_param_groups):
+            # Get each param in the param_groups
+            default_learning_rate = old_param_group['lr']
+            for param in old_param_group['params']:
+                projection = self._torch_params_to_projections(old_param_groups)[param]
+                specified_learning_rate = (
+                    self._get_specified_learning_rate_for_param(param, projection,
+                                                                optimizer_params_user_parsed,
+                                                                run_time_default_learning_rate,
+                                                                source, context))
+                if specified_learning_rate is not False:
+                    all_requires_grads_false = False
+                self._update_torch_param_group(specified_learning_rate, param,
+                                               old_param_group, new_param_group, new_param_groups, optimizer)
+
+        if all_requires_grads_false:
+            err_msg_start = f"There are no learnable Projections in '{self.composition.name}' nor any nested under it; "
+            if (self.composition._is_learning(context) is False
+                    or any(comp._is_learning(context) is False
+                           for comp in self.composition._get_nested_compositions())):
+                # enable_learning might be False at construction
+                insert = (f"this may be because the learning_rates for all of the Projections and/or "
+                          f"'enable_learning' Parameters for the Composition(s) are all set to 'False'. ")
+            else:
+                # must be that enable_learning is True but no Projections are learnable
+                insert = f"this is because the learning_rates for all of the Projections are set to 'False'. "
+            err_msg_end = (f"The learning_rate for at least one Projection must be a non-False value within a "
+                           f"Composition with 'enable_learning' set to 'True' in order to execute the learn() "
+                           f"method for {self.composition.name}.")
+            raise AutodiffCompositionError(err_msg_start + insert + err_msg_end)
+
+        # Remove any remaining empty param_groups
+        for param_group in new_param_groups.copy():
+            if not param_group['params']:
+                optimizer.param_groups.remove(param_group)
+
+        if source in {CONSTRUCTOR, LEARN_CONSTRUCTION}:
+            # Store constructor-specified learning_rates (for reversion after learn())
+            self._store_constructor_proj_learning_rates_and_torch_params(optimizer, context)
+
+    def _get_specified_learning_rate_for_param(self,
+                                               param,
+                                               projection,
+                                               optimizer_params_user_parsed,
+                                               run_time_default_learning_rate,
+                                               source,
+                                               context):
+        """Get learning_rate specified for Projection by the user or appropriate default
+        learning_rate assignment is made with the following precedence, highest first
+        (also see _Composition_Learning_Rate_Precedence_Hierarchy):
+            Projection-specific in call to learn() [optimizer_params_user_specs]
+            Projection-specific in composition.learning_rates_dict(context) [_optimizer_constructor_params]
+            run_time_default_learning_rate
+            Composition.learning_rate(context) for the Composition to which the Projection belongs
+        """
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
+        proj_composition = self._pnl_refs_to_torch_param_names[projection.name].composition
+        proj_comp_lr = self._get_default_composition_learning_rate(proj_composition, self.composition, context)
+
+        # Get default learning_rate for Projection for current Composition
+        specified_learning_rate = \
+            projection.parameters.learning_rate.get(proj_composition.name + DEFAULT_SUFFIX)
+
+        if optimizer_params_user_parsed:
+            # Get Projection-specific learning_rate if specified in call to constructor or in learn()
+            if projection.name in optimizer_params_user_parsed:
+                specified_learning_rate = optimizer_params_user_parsed[projection.name].value
+            elif hasattr(projection, PROXY_FOR_ATTRIB) and projection._proxy_for.name in optimizer_params_user_parsed:
+                specified_learning_rate = optimizer_params_user_parsed[projection._proxy_for.name].value
+
+        if specified_learning_rate in {None, True}:
+            # No Projection-specific learning_rate specified, so get default one from a Composition in the hierarchy
+            if (specified_learning_rate is None and proj_comp_lr is False):
+                # If Projection's learning_rate is None, then assign runtime value if specified, otherwise False
+                specified_learning_rate = run_time_default_learning_rate or False
+            else:
+                # If Projection's learning_rate is:
+                #   - None and the Composition's is *not* False or
+                #   - True, irrespective of whether Composition's *is* False,
+                # Then assign, in order of precedence:
+                #   - run_time_default_learning_rate if that is specified,
+                #   - default learning_rate for Composition to which Projection belongs if that is explicitly specified,
+                #   - search up the nesting hierarchy for the first default learning_rate that is explicity specified
+                #   - default learning_rate for outermost Composition
+                # MODIFIED 8/10/25 NEW:
+                specified_learning_rate = (run_time_default_learning_rate if run_time_default_learning_rate is not None
+                                           else proj_comp_lr if proj_comp_lr
+                                           else self._get_default_composition_learning_rate(proj_composition,
+                                                                                            self.composition,
+                                                                                            context,
+                                                                                            ignore_false=True))
+
+        if not isinstance(specified_learning_rate, (int, float, bool)):
+            # Check for bad value
+            raise AutodiffCompositionError(
+                f"A value ('{specified_learning_rate}') specified in the 'learning_rate' arg of the "
+                f"{self.get_source_str(source)} for '{self.composition.name}' is not valid; "
+                f"it must be an int, float, bool or None.")
+
+        if proj_composition.enable_learning is False or projection.learnable is False:
+            # If learning is not enabled for the Projection or Composition, set learning_rate to False
+            specified_learning_rate = False
+            projection.parameters.learning_rate._set(False, context)
+            param.requires_grad = False
+        else:
+            # Learning is enabled for the Projection
+            # If learning_rate = True or None, use composition.learning_rate, else use specified value
+            # Otherwise, use learning_rate specified at run time or in constructor for Composition
+            param.requires_grad = False if specified_learning_rate is False else True
+
+            assert specified_learning_rate is not None, \
+                (f"PROGRAM ERROR: Unable to determine learning_rate ({specified_learning_rate}) "
+                 f"for '{projection.name}'")
+
+        return specified_learning_rate
+
+    def _update_torch_param_group(self,
+                                  specified_learning_rate,
+                                  param,
+                                  old_param_group,
+                                  new_param_group,
+                                  new_param_groups,
+                                  optimizer):
+        """Update torch param_group for specified learning_rate
+        Create new group if one does not already exist for the specified learning_rate,
+        """
+        # Move param from existing param_group to one for the specified learning_rate
+        if specified_learning_rate != old_param_group['lr']:
+            # NOTE: removal of param from param_group must be done by identity using del, since
+            #       param_group.remove() is content-based and some parameters may have identical values
+            del new_param_group['params'][next(i for i, p in enumerate(new_param_group['params'])
+                                               if p is param)]
+            # Check if a param_group already exists for the specified learning_rate
+            exisiting_param_group_with_specified_lr = next((param_group for param_group in new_param_groups
+                                                            if param_group['lr'] == specified_learning_rate),
+                                                           None)
+            if exisiting_param_group_with_specified_lr:
+                # Move to exisiting param_group with specified learning_rate
+                exisiting_param_group_with_specified_lr['params'].append(param)
+            else:
+                # Create new param_group for the specified learning_rate
+                optimizer.add_param_group({'params': [param], 'lr': specified_learning_rate})
+
+    def _update_constructor_param_groups(cls, composition, optimizer_params_user_specs:dict):
+        for pytorch_rep in composition.parameters.pytorch_representation.values.values():
+            for proj, lr in optimizer_params_user_specs.items():
+                torch_param = pytorch_rep.get_torch_param_for_projection(proj)
+                param_groups = pytorch_rep._constructor_param_groups
+                for i, param_group in enumerate(param_groups.copy()):
+                    # if id(torch_param) in [id(p) for p in param_group['params']]:
+                    # id's for all params in param_groups: [id(p) for pg in param_groups for p in pg['params']]
+                    param_idx = next((j for j, p_id in enumerate([id(p) for p in param_group['params']])
+                                      if p_id == id(torch_param)),None)
+                    if not param_idx:
+                        continue
+                    # Found torch_param in param_group i
+                    if lr == param_group['lr']:
+                        # Already has specified value
+                        warnings.warn(f"'{proj.name}' already has learning_rate of {lr} being assigned"
+                                      f"in constructor for '{self.composition.name}'.")
+                        return
+                    del param_group['params'][param_idx]
+
+                    # Check if a param_group already exists for the specified learning_rate
+                    exisiting_param_group_with_specified_lr = next((param_group for param_group in param_groups
+                                                                   if param_group['lr'] == lr),None)
+                    if exisiting_param_group_with_specified_lr:
+                        # Move to exisiting param_group with specified learning_rate
+                        exisiting_param_group_with_specified_lr['params'].append(torch_param)
+                    else:
+                        # Create new param_group for the specified learning_rate
+                        new_param_group = param_group.copy()
+                        new_param_group['params'] = [torch_param]
+                        new_param_group['lr'] = lr
+                        param_groups.append(new_param_group)
+
+    def _store_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
+        """Store Composition constructor-specified learning_rates and torch parameters for Projections"""
+        self._constructor_param_groups = self._copy_torch_param_groups(optimizer.param_groups)
+        self._constructor_proj_learning_rates = {proj: proj.parameters.learning_rate.get(context)
+                                                 for proj in self.wrapped_projections}
+
+    def _restore_constructor_proj_learning_rates_and_torch_params(self, optimizer:torch.optim.Optimizer, context):
+        """Restore Composition constructor-specified learning_rates and torch parameters for Projections"""
+        try:
+            self.optimizer.param_groups = self._copy_torch_param_groups(self._constructor_param_groups)
+            for proj in self.wrapped_projections:
+                proj.parameters.learning_rate.set(self._constructor_proj_learning_rates[proj], context)
+            comp_constructor_learning_rate = self.composition.parameters.learning_rate.get(None)
+            self.composition.parameters.learning_rate.set(comp_constructor_learning_rate, context)
+        except AttributeError:
+            assert self.optimizer, (
+                f"PROGRAM ERROR: _restore_constructor_proj_learning_rates_and_torch_params() called for "
+                f"'{self.composition.name}' but it does not (yet) have an optimizer."
+                f"for its pytorch_representation have not been constructed.")
+            assert self._constructor_param_groups, (
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_param_groups "
+                f"for its pytorch_representation have not been constructed.")
+            assert self._constructor_param_groups, (
+                f"PROGRAM ERROR: learn() called for '{self.composition.name} but the _constructor_proj_learning_rates "
+                f"for its pytorch_representation have not been constructed.")
+
+    def _copy_torch_param_groups(self, param_groups:list)->list:
+        """Return copy of param_groups with copies of the lists of parameters in the 'params' entry
+        NOTE: can't use deepcopy, as want to isolate the actual torch parameters in the 'params' lists;
+              assertion checks that 'params" is the only interable attribute in each param_group
+        """
+        new_params_group = []
+        for param_group in param_groups:
+            # Future proof by ensuring that there are no other iterable attributes in param_group other than 'params'
+            iterables = [param for param in param_group if (param != 'params' and not is_iterable(param))]
+            assert not iterables, (f"PyTorch seems to have introduced one or moreIterable params ('{iterables}') "
+                                   f"to its param_groups attribute (other than 'params'), found in optmizer for "
+                                   f"pytorch_representation of '{composition.name}'")
+            new_params_group.append(param_group.copy())
+            new_params_group[-1]['params'] = param_group['params'].copy()
+        return new_params_group
+
+    def get_torch_param_for_projection(self, projection:Union[str, MappingProjection])->(int, torch.nn.Parameter):
+        """Return torch Parameter for specified Projection"""
+        projection_name = projection.name if isinstance(projection, Projection) else projection
+        param_name = self._pnl_refs_to_torch_param_names[projection_name].param_name
+        torch_long_param_name = self._torch_param_short_to_long_names_map[param_name]
+        for param_tuple in self.named_parameters():
+            # param_tuple is a tuple of (name, torch.nn.Parameter)
+            if torch_long_param_name == param_tuple[0]:
+                return param_tuple[1]
+
+    def get_learning_rate_for_torch_param(self, param:torch.nn.Parameter, param_groups:list)->float:
+        """Get learning_rate for torch parameter"""
+        # First get parameter's python id
+        for param_group in param_groups:
+            for p in param_group['params']:
+                if param is p:
+                    return param_group['lr']
+
+    def get_torch_learning_rate_for_projection(self,
+                                               projection:Union[str, MappingProjection],
+                                               optimizer:torch.optim=None)->float:
+        """Get torch learning_rate for a Projection"""
+        optimizer = optimizer or self.optimizer or self._optimizer_error('get_torch_learning_rate_for_projection')
+        param = self.get_torch_param_for_projection(projection)
+        return self.get_learning_rate_for_torch_param(param, optimizer.param_groups)
+
+    def torch_params_to_projections(self, optimizer:torch.optim=None)->dict:
+        """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
+        # Get optimizer if not provided
+        optimizer = optimizer or self.optimizer or self._optimizer_error('torch_params_to_projections')
+        param_groups = optimizer.param_groups
+        # Return dict of {torch parameter: Projection}
+        return self._torch_params_to_projections(param_groups)
+
+    def projections_to_torch_params(self)->dict:
+        """Return dict of {Projection: torch parameter} for all wrapped Projections, including nested ones"""
+        projections_to_torch_params = {}
+        for projection in self.wrapped_projections:
+            projections_to_torch_params.update({projection: self.get_torch_param_for_projection(projection)})
+        # Call recursively on any nested PytorchCompositionWrappers,
+        #    also giving subclasses a chance for custom handling of torch_param -> projection mapping
+        for comp_wrapper in self.get_all_nested_composition_wrappers():
+            projections_to_torch_params.update(comp_wrapper.projections_to_torch_params())
+        return projections_to_torch_params
+
+    @property
+    def projections_with_learnable_torch_params(self)->list:
+        """Return list of Projections for which torch parameters are learnable"""
+        return [pw.projection for pw in self.projection_wrappers if pw.matrix.requires_grad]
+
+    def _torch_params_to_projections(self, param_groups:list)->dict:
+        """Return dict of {torch parameter: Projection} for all wrapped Projections, including nested ones"""
+        torch_params_to_projections = {}
+        for proj in self.wrapped_projections:
+            if proj.name in self._pnl_refs_to_torch_param_names:
+                torch_params_to_projections.update({self.get_torch_param_for_projection(proj): proj})
+        # Give subclasses a chance for custom handling of param->projection mapping
+        for comp_wrapper in self.get_all_nested_composition_wrappers():
+            torch_params_to_projections.update(comp_wrapper._torch_params_to_projections(param_groups))
+        return torch_params_to_projections
+
+    @property
+    def _torch_param_short_to_long_names_map(self)->dict:
+        """Return map of short torch Parameter names to their full (hierarchical) names in named_parameters()
+        The "full" names should include prefixes for parameters in nested PytorchCompositionWrappers.
+        """
+        return {k.split('.')[-1]:k for k in [p[0] for p in self.named_parameters()]}
+
+    @property
+    # Return execution-specific learning_rates
+    def _torch_params_for_execution(self)->dict:
+        return {proj: self.get_torch_learning_rate_for_projection(proj) for proj in self.wrapped_projections}
+
+    def _get_default_composition_learning_rate(self, nested_comp, outer_comp, context, ignore_false=False):
+        """Get learning_rate for first Composition for which a learning_rate has been explicitly specified
+        Search recursively through Composition hierarchy, from nested_comp to outer_comp, for first Composition
+        that has a learning_rate that is explicitly specified with a numeric value, returning default_learning_rate
+        for outer_comp if not is found;
+        If **ignore_false** is True, then search continues if the learning_rate for a Composition is False;
+        this is to accomodate assigning  a Projection's learning_rate as``True``, which "protects" if from False
+        and uses the first learning_rate found above its Composition in the hierarchy.
+         """
+        comp_nesting_hierarchy = nested_comp._get_outer_compositions(outer_comp)
+        for comp in comp_nesting_hierarchy:
+            if comp.parameters.learning_rate._user_specified:
+                comp_lr = comp.parameters.learning_rate.get(context)
+                if comp_lr is False and ignore_false:
+                    continue
+                return comp_lr
+        return comp.parameters.learning_rate.get(context)
+
+    def _optimizer_error(self, method:str):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+        raise AutodiffCompositionError(
+            f"{self.composition.name} has not yet been assigned an optimizer; try calling"
+            f"_build_pytorch_representation() before {method}.")
+
     __deepcopy__ = get_deepcopy_with_shared()
 
     def _regenerate_torch_parameter_list(self, base=None):
@@ -724,6 +1348,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
+            # self.register_parameter(proj_wrapper.projection.name, proj_wrapper.matrix)
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -933,6 +1558,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         builder.call(optimizer_step_f, [optimizer_struct, state, params])
 
     def _get_compiled_optimizer(self):
+        # FIX: 7/1/25 - THIS BE MODIFIED TO USE CONTEXT-SPECIFIC LEARNING RATES
         # setup optimizer
         optimizer_type = self.composition.optimizer_type
         if optimizer_type == 'adam':
@@ -944,7 +1570,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, context=None)->dict:
     # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
@@ -960,112 +1586,144 @@ class PytorchCompositionWrapper(torch.nn.Module):
             raise ValueError("Inputs to PytorchCompositionWrapper.forward must be either torch.Tensors or lists of "
                              "torch.Tensors")
 
-        outputs = {}  # dict for storing values of terminal (output) nodes
-        for current_exec_set in self.execution_sets:
-            for node in current_exec_set:
+        self._sequence_lens = [len(i) for i in inp]
 
-                # If node is nested Composition (wrapped in PytorchCompositionWrapper),
-                #    call its forward method recursively; no need to manage outputs, as the Composition has been
-                #    "flattened" (i.e., its nodes have been moved up into the outer Composition of the PyTorch
-                #    representation) in _build_pytorch_representation), so its outputs will be "consumed" by the
-                #    MechanismWrappers' `aggregate_afferents()` method to which it projects in the outer Composition.
-                if isinstance(node, PytorchCompositionWrapper):
-                    node.forward(inputs=None, optimization_num=optimization_num, context=context)
-                    continue
+        # If we are in sequence mode, individual sequence elements are processed by the model one-by-one.
+        if full_sequence_mode:
+            seq_indices = range(max(self._sequence_lens))
+        else:
+            seq_indices = [0]
 
-                # Get input(s) to node
-                elif node._is_input or node._is_bias:
-                    # node is an INPUT to Composition
-                    if node.mechanism in inputs:
-                        # external input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict)
-                        if not node._is_bias:
-                            # all input_ports receive external input, so use that
-                            variable = inputs[node.mechanism]
+        # Process each sequence element, if not in sequence mode, we will process everythin at once and this loop will
+        # only run once.
+        for seq_index in seq_indices:
+
+            # If we are in sequence mode, individual sequence elements are processed by the model one-by-one, so get
+            # the correct one.
+            if full_sequence_mode:
+                # Get inputs for the current sequence index, maintain the sequence dimension even though its singleton.
+                if type(inp) is torch.Tensor:
+                    inputs_to_run = {k: v[:, seq_index:seq_index + 1, ...] for k, v in inputs.items()}
+                elif type(inp) is list:
+                    inputs_to_run = {k: [v[seq_index:seq_index + 1] for v in b_v] for k, b_v in inputs.items()}
+            else:
+                inputs_to_run = inputs
+
+            outputs = {}  # dict for storing values of terminal (output) nodes
+            for current_exec_set in self.execution_sets:
+                for node in current_exec_set:
+
+                    # If node is nested Composition (wrapped in PytorchCompositionWrapper),
+                    #    call its forward method recursively; no need to manage outputs, as the Composition has been
+                    #    "flattened" (i.e., its nodes have been moved up into the outer Composition of the PyTorch
+                    #    representation) in _build_pytorch_representation), so its outputs will be "consumed" by the
+                    #    MechanismWrappers' `aggregate_afferents()` method to which it projects in the outer Composition.
+                    if isinstance(node, PytorchCompositionWrapper):
+                        node.forward(inputs=None, optimization_num=optimization_num, context=context)
+                        continue
+
+                    # Get input(s) to node
+                    elif node._is_input or node._is_bias:
+                        # node is an INPUT to Composition
+                        if node.mechanism in inputs_to_run:
+                            # external input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict)
+                            if not node._is_bias:
+                                # all input_ports receive external input, so use that
+                                variable = inputs_to_run[node.mechanism]
+                            else:
+                                # node is also a BIAS node, so get input for each input_port individually
+                                variable = []
+                                for i, input_port in enumerate(node.mechanism.input_ports):
+                                    input = inputs_to_run[node.mechanism]
+                                    if not input_port.internal_only:
+                                        # input_port receives external input, so get from inputs
+                                        variable.append(input[i])
+                                    elif input_port.default_input == DEFAULT_VARIABLE:
+                                        # input_port uses a bias, so get that
+                                        val = input_port.defaults.variable
+
+                                        # We need to add the batch dimension to default values.
+                                        val = val[None, ...].expand(self._batch_size, *val.shape)
+
+                                        # We also need to add a sequence dimension if it doesn't exist
+                                        if val.ndim == 2:
+                                            val = val[:, None, ...]
+
+                                        variable.append(val)
+
+                                # We now need to stack these so the batch dimension is first
+                                try:
+                                    variable = torch.stack(variable, dim=2)
+                                except (RuntimeError, TypeError):
+                                    # ragged, we need to reshape so batch dimension is first
+                                    # is ragged, need to reshape things so batch size is first dimension.
+                                    batch_size = variable[0].shape[0]
+                                    variable = [[inp[:, b, ...] for inp in variable] for b in range(batch_size)]
+
+                        # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
                         else:
-                            # node is also a BIAS node, so get input for each input_port individually
+                            # Get input for each input_port of the node
                             variable = []
                             for i, input_port in enumerate(node.mechanism.input_ports):
-                                input = inputs[node.mechanism]
-                                if not input_port.internal_only:
-                                    # input_port receives external input, so get from inputs
-                                    variable.append(input[i])
+                                if input_port in inputs_to_run:
+                                    # input to input_port is specified in the inputs dict, so use that
+                                    variable.append(inputs_to_run[input_port])
                                 elif input_port.default_input == DEFAULT_VARIABLE:
                                     # input_port uses a bias, so get that
-                                    val = input_port.defaults.variable
+                                    val = torch.from_numpy(input_port.defaults.variable)
+
+                                    val = torch.atleast_2d(val)
 
                                     # We need to add the batch dimension to default values.
                                     val = val[None, ...].expand(self._batch_size, *val.shape)
 
+                                    # We also need to add a sequence dimension if it doesn't exist
+                                    if val.ndim == 3:
+                                        val = val[:, None, ...]
+
                                     variable.append(val)
+                                elif not input_port.internal_only:
+                                    # otherwise, use the node's input_port's afferents
+                                    variable.append(node.collect_afferents(batch_size=self._batch_size,
+                                                                           port=i,
+                                                                           inputs=inputs_to_run))
 
                             # We now need to stack these so the batch dimension is first
                             try:
-                                variable = torch.stack(variable, dim=1)
+                                variable = torch.stack(variable, dim=2)
                             except (RuntimeError, TypeError):
                                 # ragged, we need to reshape so batch dimension is first
                                 # is ragged, need to reshape things so batch size is first dimension.
                                 batch_size = variable[0].shape[0]
-                                variable = [[inp[b] for inp in variable] for b in range(batch_size)]
-
-                    # Input for the Mechanism is *not* explicitly specified, but its input_port(s) may have been
+                                variable = [[inp[:, b, ...] for inp in variable] for b in range(batch_size)]
                     else:
-                        # Get input for each input_port of the node
-                        variable = []
-                        for i, input_port in enumerate(node.mechanism.input_ports):
-                            if input_port in inputs:
-                                # input to input_port is specified in the inputs dict, so use that
-                                variable.append(inputs[input_port])
-                            elif input_port.default_input == DEFAULT_VARIABLE:
-                                # input_port uses a bias, so get that
-                                val = torch.from_numpy(input_port.defaults.variable)
+                        # Node is not INPUT to Composition or BIAS, so get all input from its afferents
+                        variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
+                    variable = node.execute_input_ports(variable)
 
-                                # We need to add the batch dimension to default values.
-                                val = val[None, ...].expand(self._batch_size, *val.shape)
+                    # Node is excluded from gradient calculations, so cache for later execution
+                    if node.exclude_from_gradient_calc:
+                        if node.exclude_from_gradient_calc == AFTER:
+                            # Cache variable for later execution
+                            self._nodes_to_execute_after_gradient_calc[node] = variable
+                            continue
+                        elif node.exclude_from_gradient_calc == BEFORE:
+                            assert False, 'PROGRAM ERROR: node.exclude_from_gradient_calc == BEFORE not yet implemented'
+                        else:
+                            assert False, \
+                                (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
+                                 f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
 
-                                variable.append(val)
-                            elif not input_port.internal_only:
-                                # otherwise, use the node's input_port's afferents
-                                variable.append(node.collect_afferents(batch_size=self._batch_size,
-                                                                       port=i,
-                                                                       inputs=inputs))
+                    # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
+                    # to which it belongs; this is to support override of the execute_node method by subclasses of
+                    # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
-                        # We now need to stack these so the batch dimension is first
-                        try:
-                            variable = torch.stack(variable, dim=1)
-                        except (RuntimeError, TypeError):
-                            # ragged, we need to reshape so batch dimension is first
-                            # is ragged, need to reshape things so batch size is first dimension.
-                            batch_size = variable[0].shape[0]
-                            variable = [[inp[b] for inp in variable] for b in range(batch_size)]
-                else:
-                    # Node is not INPUT to Composition or BIAS, so get all input from its afferents
-                    variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs)
-                variable = node.execute_input_ports(variable)
+                    node.execute(variable, optimization_num, synch_with_pnl_options, context)
 
-                # Node is excluded from gradient calculations, so cache for later execution
-                if node.exclude_from_gradient_calc:
-                    if node.exclude_from_gradient_calc == AFTER:
-                        # Cache variable for later exce execution
-                        self._nodes_to_execute_after_gradient_calc[node] = variable
-                        continue
-                    elif node.exclude_from_gradient_calc == BEFORE:
-                        assert False, 'PROGRAM ERROR: node.exclude_from_gradient_calc == BEFORE not yet implemented'
-                    else:
-                        assert False, \
-                            (f'PROGRAM ERROR: Bad assignment to {node.name}.exclude_from_gradient_calc: '
-                             f'{node.exclude_from_gradient_calc}; only {AFTER} is currently supported')
-
-                # Execute the node (i.e., call its forward method) using composition_wrapper for Composition
-                # to which it belongs; this is to support override of the execute_node method by subclasses of
-                # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
-                node.execute(variable, optimization_num, synch_with_pnl_options, context)
-
-                assert 'DEBUGGING BREAK POINT'
-
-                # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
-                #  note: these may be different than for actual Composition, as they are flattened
-                if node._is_output or node.mechanism in self.output_nodes:
-                    outputs[node.mechanism] = node.output
+                    # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
+                    #  note: these may be different than for actual Composition, as they are flattened
+                    if node._is_output or node.mechanism in self.output_nodes:
+                        outputs[node.mechanism] = node.output
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -1080,7 +1738,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
-                              current_condition:LEARNING_SCALE_LITERALS,
+                              current_condition: Union['SynchRetainArg', Iterable['SynchRetainArg']],
                               context:Context,
                               params:Optional[list]=None):
         """Copy weights, variables, values, and/or results from Pytorch to PsyNeuLink at specified junctures
@@ -1095,18 +1753,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
         assert not illegal_params, \
             f"PROGRAM ERROR: Illegal attributes ({' ,'.join(illegal_params)}) specified in call to synch_with_psyneulink"
 
-        if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] == current_condition:
+        if current_condition is None:
+            current_condition = set()
+        elif isinstance(current_condition, str):
+            # allow ValueError to raise if current_condition is not valid
+            current_condition = {LearningScale(current_condition)}
+        else:
+            try:
+                current_condition = {current_condition}
+            except TypeError:
+                current_condition = set(current_condition)
+
+        if MATRIX_WEIGHTS in params and synch_with_pnl_options[MATRIX_WEIGHTS] in current_condition:
             self._copy_weights_to_psyneulink(context)
 
         # If either NODE_VARIABLES or NODE_VALUES is specified, and current condition is met, do relevant copies
-        if ((NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] == current_condition)
-                or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] == current_condition)):
+        if (
+            (NODE_VARIABLES in params and synch_with_pnl_options[NODE_VARIABLES] in current_condition)
+            or (NODE_VALUES in params and synch_with_pnl_options[NODE_VALUES] in current_condition)
+        ):
             self.copy_node_variables_and_values_to_psyneulink({k:v for k,v in synch_with_pnl_options.items()
                                                                if (k in {NODE_VARIABLES, NODE_VALUES} and
-                                                                   v == current_condition)},
+                                                                   v in current_condition)},
                                                               context)
 
-        if RESULTS in params and synch_with_pnl_options[RESULTS] == current_condition:
+        if RESULTS in params and synch_with_pnl_options[RESULTS] in current_condition:
             self.copy_results_to_psyneulink(current_condition, context)
 
     def _copy_weights_to_psyneulink(self, context=None):
@@ -1116,7 +1787,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def log_weights(self):
         for proj_wrapper in self.projection_wrappers:
-            proj_wrapper.log_matrix()
+            if isinstance(proj_wrapper.projection, MappingProjection):
+                proj_wrapper.log_matrix()
 
     def copy_node_variables_and_values_to_psyneulink(self, options:dict, context=None):
         for pytorch_node in self.nodes_map.values():
@@ -1140,7 +1812,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Append outputs of Pytorch forward() to AutodiffComposition.results attribute."""
         # IMPLEMENTATION NOTE: no need to do anything for TRIAL or MINIBATCH,
         #  as Composition's _update_results() method is getting called to do that locally
-        if current_condition in {EPOCH, RUN}:
+        if current_condition.intersection({LearningScale.EPOCH, LearningScale.RUN}):
             results_param = self.composition.parameters.results
             prev_results = results_param._get(context)
             curr_results = convert_to_np_array(self.retained_results)
@@ -1203,6 +1875,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for projection in self.projections_map.values():
             projection.matrix.detach()
 
+    def get_source_str(self, source):
+        return LEARN_METHOD if 'learn' in source else CONSTRUCTOR
+
 
 class PytorchMechanismWrapper(torch.nn.Module):
     """Wrapper for a Mechanism in a PytorchCompositionWrapper
@@ -1242,8 +1917,9 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
         used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
-        the forward() and backward().  If AFTER is specified, the node is executed after at the end of the
-        `update_learning_parameters` method.  BEFORE is not currently supported
+        the forward() and backward(). If AFTER is specified, the node is executed after at the end of the
+        `update_learning_parameters` method;  it must be specified as an attribute of the Mechanism being wrapped.
+        BEFORE is not currently supported.
 
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords (see
@@ -1286,7 +1962,10 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-        self.exclude_from_gradient_calc = False # Used to execute node before or after forward/backward pass methods
+
+        from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
+        self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
+            if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
 
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \
@@ -1331,53 +2010,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
         assert efferent not in self.efferents
         self.efferents.append(efferent)
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
-        """Execute Mechanism's _gen_pytorch version of function on variable.
-        Enforce result to be 2d, and assign to self.output
-        """
-        def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
-            If fct_has_mult_args is True, treat each item in variable as an arg to the function
-            If False, compute function for each item in variable and return results in a list
-            """
-            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
-            if fct_has_mult_args:
-                res = function(*variable)
-            # variable is ragged
-            elif isinstance(variable, list):
-                # res = [function(variable[i]) for i in range(len(variable))]
-                res = [function(torch.stack([batch_elem[i] for batch_elem in variable])) for i in range(len(variable[0]))]
-
-                # Reshape to batch dimension first
-                batch_size = res[0].shape[0]
-                res = [[inp[b] for inp in res] for b in range(batch_size)]
-
-            else:
-                # Functions handle batch dimensions, just run the
-                # function with the variable and get back a tensor.
-                res = function(variable)
-            # TransformFunction can reduce output to single item from
-            # multi-item input
-            if isinstance(function._pnl_function, TransformFunction):
-                res = res.unsqueeze(1)
-            return res
-
-        # If mechanism has an integrator_function and integrator_mode is True,
-        #   execute it first and use result as input to the main function;
-        #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
-        if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
-            variable = execute_function(self.integrator_function,
-                                        [self.integrator_previous_value, variable],
-                                        fct_has_mult_args=True)
-            # Keep track of previous value in Pytorch node for use in next forward pass
-            self.integrator_previous_value = variable
-
-        self.input = variable
-
-        # Compute main function of mechanism and return result
-        self.output = execute_function(self.function, variable)
-        return self.output
-
     def collect_afferents(self, batch_size:int, port:Optional[Port]=None, inputs:Optional[dict]=None):
         """
         Return afferent projections for input_port(s) of the Mechanism
@@ -1397,14 +2029,14 @@ class PytorchMechanismWrapper(torch.nn.Module):
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
-                    proj_wrapper._curr_sender_value = curr_val[:, proj_wrapper._value_idx, ...]
+                    proj_wrapper._curr_sender_value = curr_val[:, :, proj_wrapper._value_idx, ...]
                 else:
-                    val = [batch_elem[proj_wrapper._value_idx] for batch_elem in curr_val]
-                    val = torch.stack(val)
-                    proj_wrapper._curr_sender_value = val
+                    proj_wrapper._curr_sender_value = torch.stack([torch.stack([s[proj_wrapper._value_idx] for s in b]) for b in curr_val])
 
             else:
                 val = torch.tensor(proj_wrapper.default_value)
+
+                val = torch.atleast_2d(val)
 
                 # We need to add the batch dimension to default values.
                 val = val[None, ...].expand(batch_size, *val.shape)
@@ -1412,6 +2044,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 proj_wrapper._curr_sender_value = val
 
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
+            assert True
 
         # Specific port is specified
         if port is not None:
@@ -1428,19 +2061,21 @@ class PytorchMechanismWrapper(torch.nn.Module):
                     if proj_wrapper._pnl_proj in input_port.path_afferents:
                         ip_res.append(proj_wrapper.execute(proj_wrapper._curr_sender_value))
 
-                # Stack the results for this input port on the second dimension, we want to preserve
-                # the first dimension as the batch
-                ip_res = torch.stack(ip_res, dim=1)
+                # Stack the results for this input port on the third dimension, we want to preserve
+                # the first dimension as the batch, the second dimension as the sequence
+                ip_res = torch.stack(ip_res, dim=2)
                 res.append(ip_res)
         try:
             # Now stack the results for all input ports on the second dimension again, this keeps batch
-            # first again. We should now have a 4D tensor; (batch, input_port, projection, values)
-            res = torch.stack(res, dim=1)
+            # first again. We should now have a 5D tensor; (batch, sequence, input_port, projection, values)
+            res = torch.stack(res, dim=2)
         except (RuntimeError, TypeError):
-            # is ragged, will handle ports individually during execute
-            # We still need to reshape things so batch size is first dimension.
+            # res has a ragged structure, a list where each element corresponds to and input port. Each tensor
+            # for an input port is 4D (batch, seq, projection, values). We need to reshape this so that list of lists
+            # of lists where the dimensions are (batch, seq, input port, projection, values)
             batch_size = res[0].shape[0]
-            res = [[inp[b] for inp in res] for b in range(batch_size)]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
         return res
 
@@ -1461,31 +2096,87 @@ class PytorchMechanismWrapper(torch.nn.Module):
         res = []
         for i in range(len(self.input_ports)):
             if type(variable) == torch.Tensor:
-                v = variable[:, i, ...] # Get the input for the port for all items in the batch
+                v = variable[:, :, i, ...] # Get the input for the port for all sequences in the batch
             else:
-                v = [batch_elem[i] for batch_elem in variable]
+                v = [[s[i] for s in b] for b in variable]
 
                 # We should be able to stack now, since the ragged structure is only on input ports
-                v = torch.stack(v)
+                v = torch.stack([torch.stack(b) for b in v])
 
             if isinstance(self.input_ports[i]._pnl_function, TransformFunction):
                 # Add input port dimension back to account for input port dimension reduction, we should have shape
-                # (batch, input_port, ... variable dimensions ) or
-                # (batch, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
+                # (batch, sequence, input_port, ... variable dimensions ) or
+                # (batch, sequence, input_port, projection, ... variable dimensions ...) if execute_input_ports is invoked
                 # after collect_afferents.
-                if len(v.shape) == 2:
-                    v = v[:, None, ...]
+                if len(v.shape) == 3:
+                    v = v[:, :, None, ...]
 
             res.append(self.input_ports[i].function(v))
 
         try:
-            res = torch.stack(res, dim=1) # Stack along the input port dimension, first dimension is batch
+            res = torch.stack(res, dim=2) # Stack along the input port dimension, first dimension is batch. second is sequence
         except (RuntimeError, TypeError):
-            # is ragged, need to reshape things so batch size is first dimension.
+            # res has a ragged structure, a list where each element corresponds to and input port. Each tensor
+            # for an input port is 4D (batch, seq, projection, values). We need to reshape this so that list of lists
+            # of lists where the dimensions are (batch, seq, input port, projection, values)
             batch_size = res[0].shape[0]
-            res = [[inp[b] for inp in res] for b in range(batch_size)]
+            seq_size = res[0].shape[1]
+            res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
         return res
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+        """Execute Mechanism's _gen_pytorch version of function on variable.
+        Enforce result to be 2d, and assign to self.output
+        """
+        def execute_function(function, variable, fct_has_mult_args=False):
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            If fct_has_mult_args is True, treat each item in variable as an arg to the function
+            If False, compute function for each item in variable and return results in a list
+            """
+            from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+            if fct_has_mult_args:
+                res = function(*variable)
+            # variable is ragged
+            elif isinstance(variable, list):
+                res = []
+                for inp_i in range(len(variable[0][0])):
+                    inp_t = torch.stack([torch.stack([s[inp_i] for s in b]) for b in variable])
+                    inp_res = function(inp_t)
+                    res.append(inp_res)
+
+                # Reshape to batch dimension first
+                batch_size = res[0].shape[0]
+                seq_size = res[0].shape[1]
+                res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
+
+            else:
+                # Functions handle batch dimensions, just run the
+                # function with the variable and get back a tensor.
+                res = function(variable)
+
+            # TransformFunction can reduce output to single item from
+            # multi-item input
+            if isinstance(function._pnl_function, TransformFunction):
+                res = res.unsqueeze(2)
+
+            return res
+
+        # If mechanism has an integrator_function and integrator_mode is True,
+        #   execute it first and use result as input to the main function;
+        #   assumes that if PyTorch node has been assigned an integrator_function then mechanism has an integrator_mode
+        if hasattr(self, 'integrator_function') and self.mechanism.parameters.integrator_mode._get(context):
+            variable = execute_function(self.integrator_function,
+                                        [self.integrator_previous_value, variable],
+                                        fct_has_mult_args=True)
+            # Keep track of previous value in Pytorch node for use in next forward pass
+            self.integrator_previous_value = variable
+
+        self.input = variable
+
+        # Compute main function of mechanism and return result
+        self.output = execute_function(self.function, variable)
+        return self.output
 
     def set_pnl_variable_and_values(self,
                                     set_variable:bool=False,
@@ -1522,11 +2213,17 @@ class PytorchMechanismWrapper(torch.nn.Module):
             # First get value in numpy format
             if isinstance(self.output, list):
                 batch_size = len(self.output)
-                num_outputs = len(self.output[0])
-                value = np.empty((batch_size, num_outputs), dtype=object)
+                seq_size = len(self.output[0])
+                num_outputs = len(self.output[0][0])
+                value = np.empty((batch_size, seq_size, num_outputs), dtype=object)
                 for bi in range(batch_size):
-                    for i in range(num_outputs):
-                        value[bi, i] = self.output[bi][i].detach().cpu().numpy()
+                    for si in range(seq_size):
+                        for i in range(num_outputs):
+                            value[bi, si, i] = self.output[bi][si][i].detach().cpu().numpy()
+
+                # If the sequence size is 1, squeeze it off
+                if seq_size == 1:
+                    value = np.squeeze(value, axis=1)
 
             else:
                 value = self.output.detach().cpu().numpy()
@@ -1540,8 +2237,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 pnl_mech.function.parameters.previous_value._set(value, context)
             # Do same for integrator_function of TransferMechanism if it is in integrator_mode
             if isinstance(pnl_mech, TransferMechanism) and pnl_mech.integrator_mode:
-                pnl_mech.integrator_function.parameters.previous_value._set(self.integrator_previous_value,
-                                                                            context)
+                integrator_prev_val = self.integrator_previous_value.detach().cpu().numpy()
+                pnl_mech.integrator_function.parameters.previous_value._set(integrator_prev_val, context)
 
         # FIX: 3/15/25 - ADD SUPPORT FOR THESE
         # if output_values:
@@ -1715,10 +2412,10 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        if (
-            projection.parameters.has_initializers._get(context)
-            and projection.parameters.value.initializer
-        ):
+        # if (projection.parameters.has_initializers._get(context, fallback_value=False)
+        #         and projection.parameters.value.initializer):
+        if (projection.parameters.has_initializers.get(context)
+                and projection.parameters.value.initializer):
             self.default_value = projection.parameters.value.initializer.get(context)
         else:
             self.default_value = projection.defaults.value
@@ -1734,17 +2431,13 @@ class PytorchProjectionWrapper():
                         break
                     i += 1
 
-        matrix = projection.parameters.matrix.get(context=context)
-        if matrix is None:
-            matrix = projection.parameters.matrix.get(context=None)
         # Create a Pytorch Parameter for the matrix
+        matrix = projection.parameters.matrix.get(context=context)
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # Use Projection's name as key to align with name of torch Parameter
-        self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
-        # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
-        #           cf _parse_optimizer_params():
+        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_torch_params_full_with_specified
+        #           cf _update_optimizer_params():
         if projection.learnable is False:
             self.matrix.requires_grad = False
 
@@ -1826,12 +2519,13 @@ class PytorchProjectionWrapper():
 
 
 class PytorchFunctionWrapper(torch.nn.Module):
-    def __init__(self, function, device, context=None):
+    def __init__(self, pnl_function, device, context=None):
         super().__init__()
-        self.name = f"PytorchFunctionWrapper[{function.name}]"
+        self.name = f"PytorchFunctionWrapper[{pnl_function.name}]"
         self._context = context
-        self._pnl_function = function
-        self.function = _get_pytorch_function(function, device, context)
+        self.function = _get_pytorch_function(pnl_function, device, context)
+        if pnl_function is not self.function:
+            self._pnl_function = pnl_function
 
     def __repr__(self):
         return "PytorchWrapper for: " + self._pnl_function.__repr__()

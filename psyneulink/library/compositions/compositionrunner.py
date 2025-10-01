@@ -13,11 +13,16 @@ from types import GeneratorType
 
 from psyneulink._typing import Mapping, Optional
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, LearningScale
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM, OPTIMIZATION_STEP,
-                                              RUN, TRAINING_SET, TRIAL, NODE_VALUES, NODE_VARIABLES)
+from psyneulink.core.globals.keywords import (
+    MATRIX_WEIGHTS,
+    NODE_VALUES,
+    NODE_VARIABLES,
+    OBJECTIVE_MECHANISM,
+    TRAINING_SET,
+)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
@@ -48,7 +53,7 @@ class CompositionRunner():
             total_loss += comparator.value[0][0]
         return total_loss
 
-    def convert_to_torch(self, v):
+    def convert_to_torch(self, v, add_sequence_dim):
         """Convert a list of numpy arrays to a list of PyTorch tensors"""
 
         import torch
@@ -74,16 +79,25 @@ class CompositionRunner():
         if type(t) is not list and t.dtype in [torch.int64, torch.int32, torch.int16, torch.int8]:
             t = t.double()
 
+        # Even though this is not an input of sequences, we need to add a singleton dimension for sequence. This
+        # will be the second dimension, after the batch dimension.
+        if add_sequence_dim:
+            try:
+                t = t[:, None, ...]
+            except TypeError:
+                # We are dealing with a list.
+                t = [[[x for x in y]] for y in t]
+
         return t
 
-    def convert_input_to_arrays(self, inputs, execution_mode):
+    def convert_input_to_arrays(self, inputs, execution_mode, add_sequence_dim: bool = False):
         """If the inputs are not numpy arrays or torch tensors, convert them"""
 
         array_inputs = {}
         for k, v in inputs.items():
             if type(v) is list:
                 if execution_mode is ExecutionMode.PyTorch:
-                    array_inputs[k] = self.convert_to_torch(v)
+                    array_inputs[k] = self.convert_to_torch(v, add_sequence_dim)
                 else:
                     array_inputs[k] = np.array(v)
             else:
@@ -120,6 +134,8 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        pytorch_rep = None
+
         if type(minibatch_size) == np.ndarray:
             minibatch_size = minibatch_size.item()
 
@@ -129,7 +145,40 @@ class CompositionRunner():
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
             raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
 
-        inputs = self.convert_input_to_arrays(inputs, execution_mode)
+        if isinstance(inputs, dict):
+            inputs = self.convert_input_to_arrays(inputs, execution_mode, add_sequence_dim=True)
+
+        elif isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs):
+            inputs = [self.convert_input_to_arrays(i, execution_mode, add_sequence_dim=False) for i in inputs]
+
+            import torch
+            from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+
+            # Now, we need to pad the sequences to the same length
+            packed_inputs = {}
+            for k in inputs[0].keys():
+
+                # Get the length of each sequence for each trial for this input
+                lengths = torch.tensor([trial_inp[k].shape[0] for trial_inp in inputs])
+
+                dims = [trial_inp[k].ndim for trial_inp in inputs]
+
+                # For any input that isn't 3D (seq_len, input_port, variable), we need to add the input port dimension.
+                # We know that this messing dimension is the input port because this is a sequence input (a list of dicts)
+                for i, dim in enumerate(dims):
+                    inputs[i][k] = inputs[i][k][:, None, :]
+
+                # If all the lengths are the same, just stack them into one tensor, no need to pad
+                if all(length == lengths[0] for length in lengths):
+                    packed_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
+
+                # Otherwise, we will make a packed padded sequence
+                else:
+                    padded_input = pad_sequence([trial_inp[k] for trial_inp in inputs], batch_first=True)
+                    packed_inputs[k] = padded_input
+                    # packed_inputs[k] = pack_padded_sequence(padded_input, lengths, batch_first=True, enforce_sorted=False)
+
+            inputs = packed_inputs
 
         # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -164,23 +213,22 @@ class CompositionRunner():
                     #  handled by Composition.execute in Python mode and in compiled version in LLVM mode
                     if execution_mode is ExecutionMode.PyTorch:
                         self._composition.do_gradient_optimization(retain_in_pnl_options, context, optimization_num)
-                        from torch import no_grad
-                        pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
-                        with no_grad():
-                            for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
-                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
-
+                        # Need to get pytorch_representation after yield above (which forces its construction)
+                        if pytorch_rep is None:
+                            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.OPTIMIZATION_STEP, context,
                                                           [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
 
                 if execution_mode is ExecutionMode.PyTorch:
+                    from torch import no_grad
+                    with no_grad():
+                        for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
+                            node.execute(variable, optimization_num, synch_with_pnl_options, context)
                     # Synchronize specified outcomes after every stimulus (i.e., trial)
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
-
-                if execution_mode is ExecutionMode.PyTorch:
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.TRIAL, context)
                     # Synchronize specified outcomes after every minibatch
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, MINIBATCH, context)
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.MINIBATCH, context)
 
                 if call_after_minibatch:
                     try:
@@ -194,7 +242,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
             if execution_mode is ExecutionMode.PyTorch:
-                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, EPOCH, context)
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.EPOCH, context)
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set
@@ -251,7 +299,7 @@ class CompositionRunner():
                         break
                     batch_ran = True
 
-                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode)
+                    input_batch = self.convert_input_to_arrays(input_batch, execution_mode, add_sequence_dim=True)
 
                     yield input_batch
 
@@ -328,7 +376,8 @@ class CompositionRunner():
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
-        if isinstance(inputs, dict) or callable(inputs):
+        if (isinstance(inputs, dict) or callable(inputs) or
+                (isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs))):
             inputs = [inputs]
 
         if isgeneratorfunction(targets):
@@ -353,10 +402,15 @@ class CompositionRunner():
             if not callable(stim_input) and 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
-                                                                                  targets=stim_target,
-                                                                                  execution_mode=execution_mode,
-                                                                                  context=context)
+            # By-pass parse learning spec if we are dealing with sequences for now
+            if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
+                stim_input, num_input_trials = self._composition._parse_learning_spec(inputs=stim_input,
+                                                                                      targets=stim_target,
+                                                                                      execution_mode=execution_mode,
+                                                                                      context=context)
+            else:
+                num_trials = len(stim_input)
+
             if num_trials is None:
                 num_trials = num_input_trials
 
@@ -422,7 +476,7 @@ class CompositionRunner():
 
             if execution_mode is ExecutionMode.PyTorch:
                 pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
-                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
+                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == LearningScale.MINIBATCH:
                     pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
@@ -431,7 +485,7 @@ class CompositionRunner():
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
 
-        if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
+        if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == LearningScale.EPOCH:
             # Copy weights at end of learning run
             pytorch_rep._copy_weights_to_psyneulink(context)
 

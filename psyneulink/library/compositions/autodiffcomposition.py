@@ -20,6 +20,9 @@ Contents
           - `AutodiffComposition_Bias_Parameters`
           - `AutodiffComposition_Nesting`
           - `AutodiffComposition_Learning_Rates`
+          COMMENT:
+          - `AutodiffComposition_Optimizer`
+          COMMENT
           - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
       * `AutodiffComposition_Execution`
@@ -114,15 +117,15 @@ However, biases can be implemented using `Composition_Bias_Nodes`.
 ~~~~~~~~~
 
 An AutodiffComposition can be `nested <Composition_Nested>` inside another Composition for learning, and there can
-be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. Furthermore, all
-nested Compositions use the `learning_rate <AutodiffComposition.learning_rate>` specified for the outermost Composition,
-whether this is specified in the call to its `learn <AutodiffComposition.learn>` method, its constructor, or its
-default value is being used (see `learning_rate <AutodiffComposition.learning_rate>` below for additional details).
+be any level of such nestings.  However, all of the nested Compositions must be AutodiffCompositions. The learning_rate
+for nested Compositions is inherited from the enclosing Composition unless it is set individually (see
+`Composition_Learning_Rate` for a full discussion of how learning rates and precedence of assignment;  see
+`Composition_Enable_Learning` for enabling and disabling learning in nested Compositions.
 
 .. technical_note::
    Projections from `Nodes <Composition_Nodes>` in an immediately enclosing outer Composition to the `input_CIM
    <Composition.input_CIM>` of a nested Composition, and from its `output_CIM <Composition.output_CIM>` to Nodes
-   in the outer Composition are subject to learning;  however those within the nested Composition itself (i.e.,
+   in the outer Composition are subject to learning; however those within the nested Composition itself (i.e.,
    from its input_CIM to its INPUT Nodes and from its OUTPUT Nodes to its output_CIM) are *not* subject to learning,
    as they serve simply as conduits of information between the outer Composition and the nested one.
 
@@ -133,19 +136,49 @@ default value is being used (see `learning_rate <AutodiffComposition.learning_ra
 
 .. _AutodiffComposition_Learning_Rates:
 
-*Learning Rates and Optimizer Params*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Learning Rates*
+~~~~~~~~~~~~~~~~
 
-The **optimizer_params** argument of the constructor can be used to specify parameters for the optimizer used for
-learning by the AutodiffComposition. At present, this is restricted to overriding the `learning_rate
-<AutodiffComposition.learning_rate>` Parameter of the Composition (used as the default by the `optimizer
-<AutodiffComposition.optimizer>`) to assign individual learning rates to specific Projections. This is done by
-specifying **optimizer_params** as a dict, in which each key is a reference to a learnable `MappingProjection`
-in the AutodiffComposition, and the value of which specifies its learning_rate. Sublcasses of AutodiffComposition may
-involve different forms of specification and/or support other parameters for the optimizer. Projections that are not
-sepcified in **optimizer_params** use, in order of precedence: the `learning_rate <AutodiffComposition.learning_rate>`
-specified in the call to the AutodiffComposition's `learn <AutodiffComposition.learn>` method, the **learning_rate**
-argument of its constructor, or the default value for the AutodiffComposition.
+The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used to
+specify both a `learning_rate <AutodiffComposition.learning_rate>` for the entire AutodiffComposition and/or
+individual MappingProjections within it (see `Composition_Learning_rate` for details of specification). Learning_rates
+specified for individual MappingProjections are passed to the corresponding parameters of the AutodiffComposition's
+`pytorch_representation <AutodiffComposition.pytorch_representation>` when it is executed. Specifications made in the
+constructor for the AutodiffComposition are used as the default learning_rates for all executions of the `learn
+<AutodiffComposition.learn>`; specifications made in the call to the `learn() <AutodiffComposition.learn>` method
+override any made in the constructor, but are used only for that execution. A warning is issued if a learning_rate is
+specified for a Projection with a `learnable <MappingProjection.learnable>` attribute set to ``False``, and an error
+is generated if the Projection is associated with a PyTorch Parameter that is not learnable.
+See `Composition_Learning_rate` for additional information about specifying learning_rates, including how the
+`learning_rate <MappingProjection.learning_rate>` is determined for Projections that are not expliclity specified.
+
+COMMENT:
+.. note::
+   An outermost AutodiffComposition's learning rate is applied to any `nested AutodiffCompositions
+   <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
+   <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
+COMMENT
+
+.. hint::
+   To disable learning for a particular `MappingProjection` in an AutodiffComposition, specify either the
+   **learnable** parameter of its constructor or its learning_rate specification in the **learning_rate**
+   argument of the AutodiffComposition's constructor to False; this applies to MappingProjections at any level of
+   `nesting <AutodiffComposition_Nesting>`.
+
+COMMENT:
+.. _AutodiffComposition_Optimizer:
+
+*Optimizer*
+~~~~~~~~~~~
+
+In addition to `learning_rate <Projection.learning_rate>`, other parameters can be customized by constructing
+a `torch.nn.optimizer <https://pytorch.org/docs/main/optim.html>`_ and assigining it to the **optimizer** argument
+of either the AutodiffComposition's constructor or `learn <AutodiffComposition.learn>` method.  This requires creating
+and adding ``param_groups`` for the `torch.nn.Parameters
+<https://pytorch.org/docs/stable/generated/torch.nn.parameter.Parameter.html>`_ corresponding to the Projections to be
+specified, which are listed in the AutodiffComposition's `torch_parameters <AutodiffComposition.torch_parameters>`
+attribute.
+COMMENT
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
@@ -190,11 +223,11 @@ which provides a comparison of the different modes of execution for an AutodiffC
 ~~~~~~~~~~~~~~
 
 COMMENT:
-# 7/10/24 - FIX:
+# 7/10/24 - BREADCRUMB:
 .. _AutodiffComposition_PyTorch_LearningScale:
    ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTION OF pytorch_rep:
       OPTIMIZATION STEP:
-      for AutodiffCompositions, this corresponds to a single call to `foward()` and `backward()`
+      for AutodiffCompositions, this corresponds to a single call to `forward()` and `backward()`
             methods of the Pytorch model
 COMMENT
 
@@ -212,7 +245,7 @@ AutoDiffCompositions in learning. Although it is best suited for use with `super
 
     .. note::
        While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>`  method of an AutodiffComposition
-       causes it to use PyTorch for training, specifying this in the `run <Compositon.run>` method causes it to be
+       causes it to use PyTorch for training, specifying this in the `run <Composition.run>` method causes it to be
        executed using the *Python* interpreter (and not PyTorch);  this is so that any modulation can take effect
        during execution (see `AutodiffComposition_Nested_Modulation` below), which is not supported by PyTorch.
 
@@ -355,7 +388,7 @@ import numpy as np
 from packaging import version
 from pathlib import Path, PosixPath
 from collections import deque
-from typing import Union
+from typing import Any, Dict, Set, Tuple, Union
 
 try:
     import torch
@@ -365,7 +398,6 @@ try:
 except ImportError:
     torch_available = False
 else:
-    from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
 from psyneulink._typing import Iterable, Mapping, Optional
@@ -376,18 +408,35 @@ from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
+from psyneulink.core.compositions.composition import (
+    Composition,
+    CompositionError,
+    LearningScale,
+    NodeRole,
+)
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
-    AUTODIFF_COMPOSITION, EXECUTION_MODE,
-    LEARNING_SCALE_LITERALS, LEARNING_SCALE_NAMES, LEARNING_SCALE_VALUES,
-    Loss, LOSSES, MATRIX_WEIGHTS, MINIBATCH, NODE_VALUES, NODE_VARIABLES,
-    OPTIMIZATION_STEP, RESULTS, RUN, SOFT_CLAMP, SYNCH_WITH_PNL_OPTIONS,
-    RETAIN_IN_PNL_OPTIONS, TARGETS, TRAINED_OUTPUTS, TRIAL, DEFAULT,
+    AUTODIFF_COMPOSITION,
+    DEFAULT,
+    DEFAULT_LEARNING_RATE,
+    EXECUTION_MODE,
+    LEARNING_RATE,
+    LOSSES,
+    MATRIX_WEIGHTS,
+    NODE_VALUES,
+    NODE_VARIABLES,
+    RESULTS,
+    RETAIN_IN_PNL_OPTIONS,
+    SOFT_CLAMP,
+    SYNCH_WITH_PNL_OPTIONS,
+    TARGETS,
+    TRAINED_OUTPUTS,
+    Loss,
 )
-from psyneulink.core.globals.utilities import is_matrix_keyword, is_numeric_scalar, convert_to_np_array
+from psyneulink.core.globals.utilities import (
+    is_matrix_keyword, is_numeric_scalar, convert_to_np_array, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -398,8 +447,14 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition'
+    'AutodiffComposition', 'OPTIMIZER_PARAMS', 'EXCLUDE_FROM_GRADIENT_CALC',
 ]
+
+OPTIMIZER_PARAMS = 'optimizer_params'
+EXCLUDE_FROM_GRADIENT_CALC = 'exclude_from_gradient_calc'
+
+SynchRetainArg = Optional[Union[LearningScale, str]]
+
 
 def _get_torch_trained_outputs(owning_component=None, context=None):
     if not context.execution_id:
@@ -440,9 +495,8 @@ class AutodiffComposition(Composition):
         optimizer_type='sgd',
         loss_spec=Loss.MSE,
         weight_decay=0,
+        enable_learning=True,
         learning_rate=0.001,
-        optimizer_params=None,
-        disable_learning=False,
         synch_projection_matrices_with_torch=RUN,
         synch_node_variables_with_torch=None,
         synch_node_values_with_torch=RUN,
@@ -469,39 +523,36 @@ class AutodiffComposition(Composition):
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
 
-    learning_rate : float : default 0.001
-        specifies the learning rate passed to the optimizer if none is specified in the `learn
-        <AutdodiffComposition.learn>` method of the AutodiffComposition;
-        see `learning_rate <AutodiffComposition.learning_rate>` for additional details.
+    enable_learning : bool: default True
+        specifies whether the AutodiffComposition should enable learning when run in `learning mode
+        <Composition.learn>` (see `Composition_Enable_Learning` for additional details).
 
-    optimizer_params : Dict[str: value]
-        specifies parameters for the optimizer used for learning by the GRUComposition
-        (see `AutodiffComposition_Learning_Rates` for details of specification.
-
-    disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning when run in `learning mode
-        <Composition.learn>`.
+    learning_rate : float, int, bool or dict : default 0.001
+        specifies the learning rate(s) passed to the optimizer; overridden by any specified in the `learn
+        <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
+        not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
+        (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
         `Projection matrices <MappingProjection.matrix>` (connection weights), which can be overridden by specifying
-        the **synch_projection_matrices_with_torch** argument in the `learn <Composition.learn>` method;
-        see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
-        for additional details.
+        the **synch_projection_matrices_with_torch** argument in the `learn <Composition.learn>` method
+        (see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
+        for additional details).
 
     synch_node_variables_with_torch : `LearningScale` : default None
         specifies the default for the AutodiffComposition for when to copy the current input to Pytorch nodes
         to the PsyNeuLink `variable <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes
         <Composition_Node>`, which can be overridden by specifying the **synch_node_variables_with_torch** argument
-        in the `learn <Composition.learn>` method; see `synch_node_variables_with_torch
-        <AutodiffComposition.synch_node_variables_with_torch>` for additional details.
+        in the `learn <Composition.learn>` method (see `synch_node_variables_with_torch
+        <AutodiffComposition.synch_node_variables_with_torch>` for additional details).
 
     synch_node_values_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the current output of Pytorch nodes to the
         PsyNeuLink `value <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
         which can be overridden by specifying the **synch_node_values_with_torch** argument in the `learn
-        <Composition.learn>` method; see `synch_node_values_with_torch
-        <AutodiffComposition.synch_node_values_with_torch>` for additional details.
+        <Composition.learn>` method (see `synch_node_values_with_torch
+        <AutodiffComposition.synch_node_values_with_torch>` for additional details).
 
     synch_results_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model
@@ -509,9 +560,9 @@ class AutodiffComposition(Composition):
         specifying the **synch_results_with_torch** argument in the `learn <Composition.learn>` method.
         Note that this differs from **retain_torch_trained_outputs**, which specifies the frequency at which
         the outputs of the PyTorch model are tracked, all of which are stored in the AutodiffComposition's
-        `torch_trained_outputs <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run;
-        see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
-        additional details.
+        `torch_trained_outputs <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run
+        (see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
+        additional details).
 
     retain_torch_trained_outputs : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for scale at which the outputs of the Pytorch
@@ -519,20 +570,20 @@ class AutodiffComposition(Composition):
         <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run; this can be overridden
         by specifying the **retain_torch_trained_outputs** argument in the `learn <Composition.learn>` method.
         Note that this differs from **synch_results_with_torch**, which specifies the frequency with
-        which values are called to the AutodiffComposition's `results` attribute; see `retain_torch_trained_outputs
-        <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+        which values are called to the AutodiffComposition's `results` attribute (see `retain_torch_trained_outputs
+        <AutodiffComposition.retain_torch_trained_outputs>` for additional details).
 
     retain_torch_targets : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for when to copy the targets used for training the
         Pytorch model to the AutodiffComposition's `torch_targets <Composition.torch_targets>` attribute, which can be
-        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>` method;
-        see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details.
+        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>` method
+        (see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details).
 
     retain_torch_losses : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for the scale at which the losses of the Pytorch model
         are tracked, all of which are stored in the AutodiffComposition's `torch_losses <Composition.torch_losses>`
-        attribute at the end of the run; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for
-        additional details.
+        attribute at the end of the run (see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for
+        additional details).
 
     device : torch.device : default device-dependent
         specifies the device on which the model is run. If None, the device is set to 'cuda' if available,
@@ -553,20 +604,10 @@ class AutodiffComposition(Composition):
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
     learning_rate : float or bool
-        determines the default learning_rate passed the optimizer, that is applied to all `Projections <Projection>`
-        in the AutodiffComposition that are `learnable <MappingProjection.learnable>`, and for which individual rates
-        have not been specified (for how to do the latter, see `AutodiffComposition_Learning_Rates`).
-
-        .. note::
-           At present, an outermost Compositon's learning rate is applied to any `nested Compositions
-           <AutodiffComposition_Nesting>`, whether this is specified in the call to its `learn
-           <AutodiffComposition.learn>` method, its constructor, or its default value is being used.
-
-        .. hint::
-           To disable updating of a particular `MappingProjection` in an AutodiffComposition, specify either the
-           **learnable** parameter of its constructor or its learning_rate specification in the **optimizer_params**
-           argument of the AutodiffComposition's constructor to False  (see `AutodiffComposition_Learning_Rates`);
-           this applies to MappingProjections at any level of `nesting <AutodiffComposition_Nesting>`
+        determines the default learning_rate passed the `optimizer <PytorchCompositionWrappe.optimizer>`,
+        that is applied to all `Projections <Projection>` in the AutodiffComposition that are `learnable
+        <MappingProjection.learnable>`, and for which individual rates have not been specified (see
+        `AutodiffComposition_Learning_Rates` for additional details).
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
@@ -622,6 +663,10 @@ class AutodiffComposition(Composition):
         if this is nota specified in the call to `learn <AutodiffComposition.learn>`
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
+    torch_parameters : List[Tuple[str, torch.nn.parameter]]
+        list of PyTorch named_parameters() for `pytorch_representation <AutodiffComposition.pytorch_representation>`
+        of AutodiffComposition.
+
     torch_trained_outputs : List[ndarray]
         stores the outputs (converted to np arrays) of the Pytorch model trained during learning, at the frequency
         specified by `retain_torch_trained_outputs <AutodiffComposition.retain_torch_trained_outputs>` if it is set
@@ -650,6 +695,14 @@ class AutodiffComposition(Composition):
 
     device : torch.device
         the device on which the model is run.
+
+    full_sequence_mode: bool : default False
+        Whether to run the underlying Composition in full sequence mode or not. In full sequence mode, each element of
+    an input sequence for a trial is processed in a separate time step. This is needed only if there are sequential
+    dependencies between the mechanisms of the compositions. Note, if the composition contains GRU compositions wrappers
+    full sequence mode is not needed (and should be avoided to improve efficiency) because the composition wrapper
+    itself handles the  sequential dependencies between the mechanisms of the GRU composition.
+
     """
 
     componentCategory = AUTODIFF_COMPOSITION
@@ -660,15 +713,14 @@ class AutodiffComposition(Composition):
 
     class Parameters(Composition.Parameters):
         pytorch_representation = None
-        optimizer = None
-        learning_rate = Parameter(.001, fallback_value=DEFAULT)
-        synch_projection_matrices_with_torch = Parameter(RUN, fallback_value=DEFAULT)
+        # optimizer = None
+        synch_projection_matrices_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
         synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
-        synch_node_values_with_torch = Parameter(RUN, fallback_value=DEFAULT)
-        synch_results_with_torch = Parameter(RUN, fallback_value=DEFAULT)
-        retain_torch_trained_outputs = Parameter(MINIBATCH, fallback_value=DEFAULT)
-        retain_torch_targets = Parameter(MINIBATCH, fallback_value=DEFAULT)
-        retain_torch_losses = Parameter(MINIBATCH, fallback_value=DEFAULT)
+        synch_node_values_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
+        synch_results_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
+        retain_torch_trained_outputs = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
+        retain_torch_targets = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
+        retain_torch_losses = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
         torch_trained_outputs = Parameter([], getter=_get_torch_trained_outputs)
         torch_targets = Parameter([], getter=_get_torch_targets)
         torch_losses = Parameter([], getter=_get_torch_losses)
@@ -679,85 +731,111 @@ class AutodiffComposition(Composition):
         #     if isinstance(device, str) and device not in [CPU, CUDA, MPS]:
         #         raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
         #
+
+        def _parse_LearningScale_param(self, value):
+            try:
+                return LearningScale(value)
+            except ValueError:
+                return value
+
+        # TODO: consider implementing a type/enum parser as attr on Parameter
+        _parse_synch_projection_matrices_with_torch = _parse_LearningScale_param
+        _parse_synch_node_variables_with_torch = _parse_LearningScale_param
+        _parse_synch_node_values_with_torch = _parse_LearningScale_param
+        _parse_synch_results_with_torch = _parse_LearningScale_param
+        _parse_retain_torch_trained_outputs = _parse_LearningScale_param
+        _parse_retain_torch_targets = _parse_LearningScale_param
+        _parse_retain_torch_losses = _parse_LearningScale_param
+
+        def _validate_LearningScale_param(
+            self, value: Any, invalid_members: Optional[Set] = None
+        ):
+            # NOTE: this occurs after parse, so it will already be a
+            # LearningScale if possible
+            if value is None:
+                return None
+
+            try:
+                is_learningscale = value in LearningScale
+            except TypeError:
+                is_learningscale = False
+
+            try:
+                is_invalid_member = value in invalid_members
+            except TypeError:
+                is_invalid_member = False
+
+            if not is_learningscale:
+                return (
+                    f"must be a {LearningScale.__name__} or corresponding"
+                    f" string: {', '.join(map(str, LearningScale))}"
+                )
+
+            if is_invalid_member:
+                valid = set(LearningScale).difference(invalid_members)
+                return f"can't be used; use another value of: {', '.join(valid)}"
+
+            return None
+
         def _validate_synch_projection_matrices_with_torch(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of 'synch_projection_matrices_with_torch' arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
+            return self._validate_LearningScale_param(spec)
 
         def _validate_synch_node_variables_with_torch(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of 'synch_node_variables_with_torch' arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
+            return self._validate_LearningScale_param(spec)
 
         def _validate_synch_node_values_with_torch(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of 'synch_node_values_with_torch' arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
+            return self._validate_LearningScale_param(spec)
 
         def _validate_synch_results_with_torch(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of 'synch_results_with_torch' arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
-            if spec is OPTIMIZATION_STEP:
-                arg_vals = LEARNING_SCALE_NAMES.copy()
-                arg_vals.remove('OPTIMIZATION_STEP')
-                raise AutodiffCompositionError(f"'OPTIMIZATION_STEP can't be used with 'synch_results_with_torch';"
-                                               f"use another value of {', '.arg_vals}")
-
+            return self._validate_LearningScale_param(
+                spec, {LearningScale.OPTIMIZATION_STEP}
+            )
 
         def _validate_retain_torch_trained_outputs(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `retain_torch_trained_outputs` arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
+            return self._validate_LearningScale_param(spec)
 
         def _validate_retain_torch_targets(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `retain_torch_targets` arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
+            return self._validate_LearningScale_param(spec)
 
         def _validate_retain_torch_losses(self, spec):
-            if spec is not None and spec not in LEARNING_SCALE_VALUES:
-                raise AutodiffCompositionError(f"Value of `retain_torch_losses` arg "
-                                               f"must be one of the following keywords: "
-                                               f"{', '.join(LEARNING_SCALE_NAMES)}")
-
+            return self._validate_LearningScale_param(spec)
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     @check_user_specified
     def __init__(self,
                  pathways=None,
-                 optimizer_type='sgd',
-                 loss_spec=Loss.MSE,
-                 weight_decay=0,
-                 learning_rate=None,
-                 optimizer_params:dict=None,
-                 disable_learning=False,
-                 force_no_retain_graph=False,
-                 refresh_losses=False,
-                 synch_projection_matrices_with_torch:Optional[str]=RUN,
-                 synch_node_variables_with_torch:Optional[str]=None,
-                 synch_node_values_with_torch:Optional[str]=RUN,
-                 synch_results_with_torch:Optional[str]=RUN,
-                 retain_torch_trained_outputs:Optional[str]=MINIBATCH,
-                 retain_torch_targets:Optional[str]=MINIBATCH,
-                 retain_torch_losses:Optional[str]=MINIBATCH,
+                 optimizer_type: str = 'sgd',
+                 loss_spec: Loss = Loss.MSE,
+                 weight_decay: float = 0.0,
+                 learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
+                 enable_learning: bool = True,
+                 force_no_retain_graph: bool = False,
+                 refresh_losses: bool = False,
+                 synch_projection_matrices_with_torch: SynchRetainArg = LearningScale.RUN,
+                 synch_node_variables_with_torch: SynchRetainArg = None,
+                 synch_node_values_with_torch: SynchRetainArg = LearningScale.RUN,
+                 synch_results_with_torch: SynchRetainArg = LearningScale.RUN,
+                 retain_torch_trained_outputs: SynchRetainArg = LearningScale.MINIBATCH,
+                 retain_torch_targets: SynchRetainArg = LearningScale.MINIBATCH,
+                 retain_torch_losses: SynchRetainArg = LearningScale.MINIBATCH,
                  device=None,
                  disable_cuda=True,
                  cuda_index=None,
+                 full_sequence_mode: bool = False,
                  name="autodiff_composition",
                  **kwargs):
 
-        # if not torch_available:
-        #     raise AutodiffCompositionError('Pytorch python module (torch) is not installed. Please install it with '
-        #                                    '`pip install torch` or `pip3 install torch`')
-        #
         show_graph_attributes = kwargs.pop('show_graph_attributes', {})
+
+        # Deal with deprecated arg
+        if OPTIMIZER_PARAMS in kwargs:
+            opt_params_arg = deprecation_warning(self, kwargs,
+                                                 deprecated_args={OPTIMIZER_PARAMS:LEARNING_RATE},
+                                                 additional_msg=" Other torch.nn.optimizer parameters are not "
+                                                                "currently supported, but will be in a future version.")
+            if learning_rate is not None:
+                opt_params_arg[DEFAULT_LEARNING_RATE] = learning_rate
+            learning_rate = opt_params_arg.pop(LEARNING_RATE)
 
         super(AutodiffComposition, self).__init__(
             name = name,
@@ -765,6 +843,7 @@ class AutodiffComposition(Composition):
             optimizer_type = optimizer_type,
             loss_spec = loss_spec,
             weight_decay = weight_decay,
+            enable_learning = enable_learning,
             learning_rate = learning_rate,
             synch_projection_matrices_with_torch = synch_projection_matrices_with_torch,
             synch_node_variables_with_torch = synch_node_variables_with_torch,
@@ -782,16 +861,16 @@ class AutodiffComposition(Composition):
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
-        self._optimizer_params = optimizer_params or {}
+        self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
         self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
-        self.disable_learning = disable_learning
         self.loss_function = None
         self.last_saved_weights = None
         self.last_loaded_weights = None
+        self.full_sequence_mode = full_sequence_mode
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -799,7 +878,6 @@ class AutodiffComposition(Composition):
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
-        # # MODIFIED 7/10/24 OLD:
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
                 self.device = torch.device('cuda')
@@ -811,37 +889,15 @@ class AutodiffComposition(Composition):
         else:
             self.device = device
             self.torch_dtype = None
-        # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
-        #  FIX: ADD AFTER USE OF utilities.get_torch_tensor() AND COMPATIBLITY WITH MPS IS VALIDATED
-        # if device is None:
-        #     # Try setting device by default
-        #     if not disable_cuda and torch.cuda.is_available():
-        #         if cuda_index is None:
-        #             self.device = torch.device(CUDA)
-        #         else:
-        #             self.device = torch.device('cuda:' + str(cuda_index))
-        #     elif torch_available:
-        #         if torch.backends.mps.is_available():
-        #             from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
-        #             try:
-        #                 self.device = torch.device(MPS)
-        #                 test_pytorch_fct_with_mps = Linear()._gen_pytorch_fct(self.device, Context())
-        #             except AssertionError:
-        #                 self.device = torch.device(CPU)
-        #         else:
-        #             self.device = torch.device(CPU)
-        # else:
-        #     self.device = device
-        # # MODIFIED 7/10/24 END
 
         # Set to True after first warning about failure to specify execution mode so warning is issued only once
         self.execution_mode_warned_about_default = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
-        # return self.infer_backpropagation_learning_pathways(pnlvm.ExecutionMode.PyTorch)
 
         # ShowGraph
         self.assign_ShowGraph(show_graph_attributes)
+
     def assign_ShowGraph(self, show_graph_attributes):
         """Override to replace assignment of ShowGraph class with PytorchShowGraph if torch is available"""
         show_graph_attributes = show_graph_attributes or {}
@@ -935,13 +991,10 @@ class AutodiffComposition(Composition):
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
-            # Only consider pathways with 3 or more components (input -> projection -> ... -> output)
-            #    since can't learn on only one mechanism (len==1)
-            #    and a pathway can't have just one mechanism and one projection (len==2)
-            if len(pathway) >= 3:
-                return pathway
-            else:
-                return []
+            # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
+            assert len(pathway) % 2, \
+                f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
+            return pathway
 
         # breadth-first search starting with input node
         while len(queue) > 0:
@@ -1014,7 +1067,6 @@ class AutodiffComposition(Composition):
                         if efferent_proj in current_comp.projections:
                             output_CIM_output_port = output_CIM.port_map[efferent_proj.sender][1]
                         elif efferent_proj in current_comp._pytorch_projections:
-                            # FIX: 3/8/25 - THERE MUST BE AN EASIER WAY TO GET THIS MORE DIRECTLY
                             output_CIM_output_port = \
                                 (output_CIM.port_map)[efferent_proj.receiver.path_afferents[0].sender][1]
 
@@ -1053,6 +1105,7 @@ class AutodiffComposition(Composition):
                     if rcvr in current_comp.nodes:
                         # rcvr is still in nested Composition, so keep traversing that
                         current_comp._add_dependency(node, efferent_proj, rcvr, dependency_dict, queue, current_comp)
+                        current_comp._pytorch_projections.append(efferent_proj)
                         continue
                     elif rcvr in self.nodes:
                         # rcvr is in outer Composition (presumably a direct Pytorch Projection out of nested comp)
@@ -1080,24 +1133,142 @@ class AutodiffComposition(Composition):
         dependency_dict[projection] = sender
         queue.append((receiver, comp))
 
-    # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
+    # BREADCRUMB: move some of what's done in the methods below to a "_validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None, refresh=None, base_context=Context(execution_id=None)):
-        """Builds a Pytorch representation of the AutodiffComposition"""
+    def _build_pytorch_representation(self,
+                                      learning_rate=None,
+                                      optimizer_params=None,
+                                      context=None,
+                                      new=None,
+                                      base_context=Context(execution_id=None)):
+        """Build a Pytorch representation of the AutodiffComposition
+        Construct PytorchCompositionWrapper that is used for learning in PyTorch, which is assigned to
+        self.pytorch_representation.
+
+        A new pytorch_representation is constructed if:
+            self.pytorch_representation == None
+            **new** is specified as True
+        If _build_pytorch_representation() is called with **new**==None and a pytorch_representation already exists,
+            a warning issued and the call is ignored.
+
+        By default (learning_rate=None), the learning_rates specified in the **learning_rate**
+        argument of the constructor for the Composition (and stored in self._learning_rates_dict) are
+        used to construct the pytorch_representation. However:
+        - if **learning_rate** is specified (in a call from the COMMANDLINE),
+           that can be used to override the default values, as described under the learning_rate argument below;
+        - if **optimizer_params** is specified (in a call from learn(), that is used to specify the learning_rates;
+        - if **optimizer_params** is specified in a call from COMMAND_LINE, an error is returned.
+
+        Arguments
+        ---------
+
+        new : bool or None : default None
+            specifies creation of a new pytorch_representation, using self._optimizer_constructor_params
+            as the base values, and updated with any specified in the **learning_rates** arg.  If the method is called
+            from the command_line more than once without **new** specified as `True`, warns and ignores.
+
+        learning_rate : float, int, dict : default None
+            if None, then the values in self.learning_rates_dict (and stored in self._optimizer_constructor_params)
+            are used to assign learning_rates to all Projections in the Composition (and any nested within it)
+            (see `Composition_Learning_Rate` for details of specification); if a numeric values is specified,
+            that is used as the default learning_rate for the pytorch_representation (replacing
+            composition.learning_rate); if a dict is specified, entries are moved to optmizer_params and replace
+            values for the specified Projections as well as the Composition's learning_rate (if DEFAULT_LEARNING_RATE
+            is specified in the dict).
+
+            .. note::
+               Projection-specific learning_rates specified in a dict assigned to **learning_rate** here, like
+               any specified in the constructor for the Composition, are stored in the corresponding Projections'
+               `learning_rate <MappingProjection.learning_rate>` Parameter under the context <self.name>.DEFAULT_SUFFIX.
+        """
+        optimizer_params = optimizer_params or {}
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or refresh:
-            model = self.pytorch_composition_wrapper_type(composition=self,
-                                                          device=self.device,
-                                                          context=context,
-                                                          base_context=base_context,
-                                                          )
 
-        # Set up optimizer function
-        learning_rate = self._runtime_learning_rate or self.learning_rate
-        old_opt = self.parameters.optimizer._get(context)
-        if (old_opt is None or refresh) and refresh is not False:
-            self._instantiate_optimizer(refresh, learning_rate, context)
+        # Construct a new pytorch_representation if none exists or new is specified
+        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
+            # Instantiate pytorch_representation
+            self.pytorch_composition_wrapper_type(composition=self,
+                                                  device=self.device,
+                                                  context=context,
+                                                  base_context=base_context)
+        elif context.flags & ContextFlags.COMMAND_LINE:
+            warnings.warn(f"The '_build_pytorch_representation() method for '{self.name}' has already been called "
+                          f"directly from the command line; this and any additional calls will be ignored. "
+                          f"Make any desired modifications to parameters (e.g., learning_rates) either in the "
+                          f"constructor for the AutodiffComposition, or its learn() method.")
+
+        # Get pytorch_representation (assigned in constructor for PytorchCompositionWrapper)
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+
+        # Set up optimizer
+        old_opt = pytorch_rep.optimizer
+        # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),
+        #    giving precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
+        #    over learning_rate specified in constructor (passed in above as learning_rate)
+        default_learning_rate = \
+            (self._runtime_learning_rate if self._runtime_learning_rate is not None else learning_rate)
+        if isinstance(learning_rate, dict):
+            if optimizer_params:
+                # if learning_rate is a dict, optimizer_params should not have been passed in call
+                assert context.flags & ContextFlags.COMMAND_LINE, \
+                    ("PROGRAM ERROR: 'optmizer_params' assigned when learning_rate assigned as a dict "
+                     "in internal call to _build_pytorch_representation() for '{self.name}'.")
+                assert False, \
+                    ("PROGRAM ERROR:  Assignment of 'optimizer_params' in a direct call to "
+                     "_build_pytorch_representation() from the command line is not currently supported.")
+            lr_dict = default_learning_rate
+            default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
+            optimizer_params = lr_dict
+            for proj, lr in lr_dict.items():
+                if isinstance(proj, str):
+                    proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
+                proj.parameters.learning_rate.set(lr, context)
+            assert self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
+
+        if default_learning_rate is None:
+            default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
+        else:
+            self.parameters.learning_rate.set(default_learning_rate, context)
+
+        if self._runtime_learning_rate is not None:
+            # If _runtime_learning_rate has been specified in call to learn(), make sure that is used
+            optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
+
+        if (old_opt is None or new) and new is not False:
+            # Instantiate a new optimizer if there isn't one yet or new has been called and is not blocked)
+            if context.runmode == ContextFlags.LEARNING_MODE:
+                # If optimizer is being constructed de novo in call to learn(),
+                #    instantiate it using params specified in constructor (if any) since:
+                #   - need those implemented in a params_group to revert back to after execution of learn()
+                #   - the ones in the call to learn() will be applied in call to _update_optimizer_params() below
+                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
+                                                                    self._optimizer_constructor_params,
+                                                                    context)
+                # Then update optimizer params with any specified in the call to learn()
+                if optimizer_params:
+                    pytorch_rep._update_optimizer_params(pytorch_rep.optimizer,
+                                                         optimizer_params,
+                                                         Context(source=ContextFlags.METHOD,
+                                                                 runmode=context.runmode,
+                                                                 execution_id=context.execution_id))
+            else:
+                # Otherwise, if call is from Composition constructor, use params specified by user in that call
+                opt_params = optimizer_params or self._optimizer_constructor_params
+                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
+                                                                    opt_params,
+                                                                    context)
+
+        elif context.source is ContextFlags.SHOW_GRAPH:
+            # Don't bother updating for call to show_graph()
+            pass
+        else:
+            # Otherwise, just update it
+            pytorch_rep._update_optimizer_params(old_opt,
+                                                 optimizer_params,
+                                                 Context(source=ContextFlags.METHOD,
+                                                         runmode=context.runmode,
+                                                         execution_id=context.execution_id))
         # Set up loss function
         if self.loss_function is not None:
             logger.warning("Overwriting 'loss_function' for AutodiffComposition {}! Old loss function: {}".format(
@@ -1107,62 +1278,37 @@ class AutodiffComposition(Composition):
         else:
             self.loss_function = self._get_loss(self.loss_spec)
 
-        return self.parameters.pytorch_representation._get(context)
+        return pytorch_rep
 
-    def _instantiate_optimizer(self, refresh, learning_rate, context):
+    def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
+
+        if isinstance(learning_rate, dict):
+            # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value
+            optimizer_params = learning_rate
+            learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE,
+                                                 self.parameters.learning_rate.default_value)
+            self.parameters.learning_rate.set(learning_rate, context)
         if not is_numeric_scalar(learning_rate):
-            raise AutodiffCompositionError("Learning rate must be an integer or float value.")
+            raise AutodiffCompositionError(
+                f"A value ('{learning_rate}') specified in the 'learning_rate' arg of the learn() method "
+                f"for '{self.name}' is not valid; it must be an int, float, bool or None.")
         if self.optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
                                            "optimizers (specified as 'sgd' or 'adam').")
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
+        if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator
+            assert len(list(params)) == 0, (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
+                                            f"but no entries in its state_dict()")
+            warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
+            return
         if self.optimizer_type == 'sgd':
-            opt = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
+            optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
-            opt = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-
-        pytorch_rep._parse_optimizer_params(context)
-        for param_group in pytorch_rep._optimizer_param_groups:
-            opt.add_param_group(param_group)
-
-        # Assign optimizer to AutodiffComposition and PytorchCompositionWrapper
-        self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
-        pytorch_rep.optimizer = opt
-
-    def _get_loss(self, loss_spec):
-        if not isinstance(self.loss_spec, (str, Loss)):
-            return self.loss_spec
-        elif loss_spec == Loss.MSE:
-            return nn.MSELoss(reduction='mean')
-        elif loss_spec == Loss.SSE:
-            return nn.MSELoss(reduction='sum')
-        elif loss_spec == Loss.CROSS_ENTROPY:
-            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
-                return nn.CrossEntropyLoss()
-            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
-            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
-            # and where target is a 1d vector of type long specifying the index to the target category. This
-            # formatting is different from most other loss functions available to autodiff compositions,
-            # and therefore requires a wrapper function to properly package inputs.
-            return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
-        elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
-            return nn.BCELoss()
-        elif loss_spec == Loss.L1:
-            return nn.L1Loss(reduction='sum')
-        elif loss_spec == Loss.NLL:
-            return nn.NLLLoss(reduction='sum')
-        elif loss_spec == Loss.POISSON_NLL:
-            return nn.PoissonNLLLoss(reduction='sum')
-        elif loss_spec == Loss.KL_DIV:
-            return nn.KLDivLoss(reduction='sum')
-        else:
-            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. 'loss_function' argument must be a "
-                                           f"Loss enum or function. Currently, the recognized loss types are: "
-                                           f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
-                                           f"likelihood), POISSONNLL (Poisson negative log likelihood, "
-                                           f"and KL_DIV (KL divergence.")
+            optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
+        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        return optimizer
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
         """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
@@ -1194,7 +1340,9 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_inputs[component] = inputs[component]
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(curr_tensors_for_inputs, None, synch_with_pnl_options, context)
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs, optimization_num=None,
+                                                       synch_with_pnl_options=synch_with_pnl_options,
+                                                       full_sequence_mode=self.full_sequence_mode, context=context)
 
         # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
@@ -1204,13 +1352,11 @@ class AutodiffComposition(Composition):
         curr_tensors_for_targets = {}
         for component, target in targets.items():
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-                curr_tensors_for_targets[component] = [target[:, i, :] for i in range(target.shape[1])]
+                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
             else:
                 # It's  a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(targets[component][0])
-                curr_tensors_for_targets[component] = [torch.stack([batch_elem[i]
-                                                                    for batch_elem in target])
-                                                       for i in range(num_outputs)]
+                num_outputs = len(target[0][0])
+                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 
         # Map value of TARGET nodes to trained OUTPUT nodes
         curr_target_tensors_for_trained_outputs = {}
@@ -1224,17 +1370,22 @@ class AutodiffComposition(Composition):
         for component, outputs in curr_tensors_for_trained_outputs.items():
             trial_loss = 0
             targets = curr_target_tensors_for_trained_outputs[component]
-            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0])
+            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
             for i in range(num_outputs):
                 # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
 
                 # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
                 # need to index
-                output = outputs[:, i, :] if type(outputs) is torch.Tensor else torch.stack([batch_elem[i] for batch_elem in outputs])
+                output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
+
+                # If the sequence dimension is singleton, it can be dropped
+                if len(output.shape) > 1 and output.shape[1] == 1:
+                    output = output.squeeze(1)
+                    target = torch.atleast_1d(targets[i].squeeze(1))
 
                 comp_loss = self.loss_function(
                     output,
-                    torch.atleast_1d(targets[i])
+                    target
                 )
                 comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
                 trial_loss += comp_loss
@@ -1262,9 +1413,14 @@ class AutodiffComposition(Composition):
                 node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
             outputs = curr_tensors_for_outputs[node]
             if type(outputs) is torch.Tensor:
-                output = outputs[:, idx, ...]
+                output = outputs[:, :, idx, ...]
             else:
-                output = torch.stack([batch_elem[idx] for batch_elem in outputs])
+                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+
+            # If the sequence dimension is singleton, squeeze it away
+            if output.shape[1] == 1:
+                output = output.squeeze(1)
+
             output = output.detach().cpu().numpy().copy().tolist()
             if self.targets_from_outputs_map.values():
                 trained_output_values += [output]
@@ -1286,7 +1442,7 @@ class AutodiffComposition(Composition):
         # Synchronize outcomes after every trial if specified
         # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in call to autodiff._update_results()
         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
-                                          [OPTIMIZATION_STEP, TRIAL],
+                                          [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
                                           context,
                                           [NODE_VARIABLES, NODE_VALUES])
         pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: trained_output_values,
@@ -1320,6 +1476,10 @@ class AutodiffComposition(Composition):
 
     def autodiff_backward(self, minibatch_loss, context):
         """Calculate gradients and apply to PyTorch model parameters (weights)"""
+
+        if not self.enable_learning:
+            return
+
         pytorch_rep = self.parameters.pytorch_representation._get(context=context)
         optimizer = pytorch_rep.optimizer
 
@@ -1329,13 +1489,45 @@ class AutodiffComposition(Composition):
         minibatch_loss.backward(retain_graph=not self.force_no_retain_graph)
         # Update weights and copy to PNL
         optimizer.step()
-        assert True
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
+
+    def _get_loss(self, loss_spec):
+        if not isinstance(self.loss_spec, (str, Loss)):
+            return self.loss_spec
+        elif loss_spec == Loss.MSE:
+            return nn.MSELoss(reduction='mean')
+        elif loss_spec == Loss.SSE:
+            return nn.MSELoss(reduction='sum')
+        elif loss_spec == Loss.CROSS_ENTROPY:
+            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
+                return nn.CrossEntropyLoss()
+            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
+            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
+            # and where target is a 1d vector of type long specifying the index to the target category. This
+            # formatting is different from most other loss functions available to autodiff compositions,
+            # and therefore requires a wrapper function to properly package inputs.
+            return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
+        elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
+            return nn.BCELoss()
+        elif loss_spec == Loss.L1:
+            return nn.L1Loss(reduction='sum')
+        elif loss_spec == Loss.NLL:
+            return nn.NLLLoss(reduction='sum')
+        elif loss_spec == Loss.POISSON_NLL:
+            return nn.PoissonNLLLoss(reduction='sum')
+        elif loss_spec == Loss.KL_DIV:
+            return nn.KLDivLoss(reduction='sum')
+        else:
+            raise AutodiffCompositionError(f"Loss type {loss_spec} not recognized. 'loss_function' argument must be a "
+                                           f"Loss enum or function. Currently, the recognized loss types are: "
+                                           f"L1 (Mean), SSE (sum squared error), CROSS_ENTROPY, NLL (negative log "
+                                           f"likelihood), POISSONNLL (Poisson negative log likelihood, "
+                                           f"and KL_DIV (KL divergence.")
 
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
@@ -1441,13 +1633,13 @@ class AutodiffComposition(Composition):
     @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
-              synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-              retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+              synch_projection_matrices_with_torch: SynchRetainArg = NotImplemented,
+              synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
+              synch_node_values_with_torch: SynchRetainArg = NotImplemented,
+              synch_results_with_torch: SynchRetainArg = NotImplemented,
+              retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+              retain_torch_targets: SynchRetainArg = NotImplemented,
+              retain_torch_losses: SynchRetainArg = NotImplemented,
               context: Context = None,
               base_context: Context = Context(execution_id=None),
               skip_initialization: bool = False,
@@ -1456,13 +1648,79 @@ class AutodiffComposition(Composition):
         """Override to handle synch and retain args
         Note: defaults for synch and retain args are set to NotImplemented, so that the user can specify None if
               they want to locally override the default values for the AutodiffComposition (see docstrings for run()
-              and _parse_synch_and_retain_args() for additonal details).
+              and parse_synch_and_retain_args() for additonal details).
+
+        Arguments
+        ---------
+
+        learning_rate : float, int, bool or dict : default 0.001
+            specifies the learning rate(s) passed to the optimizer, that overrides any learning_rate specifications
+            made in AutodiffComposition constructor and/or individual MappingProjections. If a value is specified,
+            it overrides the default learning rate for the Composition, and is used as the default learning rate for
+            all MappingProjections in the Composition (and any nested within it) that do not have a specific
+            learning_rate specified in their constructor.  A dict can be used to specify
+            `MappingProjection`\\-specific learning_rate(s); if it contains a *DEFAULT_LEARNING_RATE* entry,
+            that is used in the same was as specifing numeric value; if the dict does not contain a
+            *DEFAULT_LEARNING_RATE* entry, then the default indicated above is used for all MappingProjections
+            in the Composition, and MappingProjections in any nested Compositions use their default learning_rate
+            (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
+
+        synch_projection_matrices_with_torch : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `synch_projection_matrices_with_torch
+            <AutodiffComposition.synch_projection_matrices_with_torch>` for additional details.
+
+        synch_node_variables_with_torch : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `synch_node_variables_with_torch
+            <AutodiffComposition.synch_node_variables_with_torch>` for additional details.
+
+        synch_node_values_with_torch : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `synch_node_values_with_torch
+            <AutodiffComposition.synch_node_values_with_torch>` for additional details.
+
+        synch_results_with_torch : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `synch_results_with_torch
+            <AutodiffComposition.synch_results_with_torch>` for additional details.
+
+        retain_torch_trained_outputs : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_trained_outputs
+            <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+
+        retain_torch_targets : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_targets
+            <AutodiffComposition.retain_torch_targets>` for additional details.
+
+        retain_torch_losses : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_losses
+            <AutodiffComposition.retain_torch_losses>` for additional details.
         """
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         context.execution_phase = execution_phase_at_entry
+
+        # Deal with deprecated arg (can't use deprecation_warning() since that is for constructors)
+        if OPTIMIZER_PARAMS in kwargs:
+            default_learning_rate = kwargs.pop(LEARNING_RATE, None)
+            learning_rate = deprecation_warning(self, kwargs,
+                                                deprecated_args={OPTIMIZER_PARAMS:LEARNING_RATE},
+                                                method="learn() method",
+                                                additional_msg=" Other torch.nn.optimizer parameters are not "
+                                                               "currently supported, but will be in a future version.")
+            kwargs.update(learning_rate)
+            # Move learning_rate spec into optimizer_params dict
+            if default_learning_rate is not None:
+                if kwargs[LEARNING_RATE]:
+                    kwargs[LEARNING_RATE].update({DEFAULT_LEARNING_RATE: default_learning_rate})
+                else:
+                    kwargs[LEARNING_RATE] = {DEFAULT_LEARNING_RATE: default_learning_rate}
+
+        if LEARNING_RATE in kwargs and isinstance(kwargs[LEARNING_RATE], dict):
+            # If learning_rate is a dict:
+            # - move it to optimizer_params;
+            # - if it contains DEFAULT_LEARNING_RATE entry, assign that as learning_rate
+            kwargs[OPTIMIZER_PARAMS] = kwargs[LEARNING_RATE]
+            kwargs[LEARNING_RATE] = kwargs[OPTIMIZER_PARAMS].pop(DEFAULT_LEARNING_RATE, None)
 
         any_nested_comps = [node for node in self.nodes if isinstance(node, Composition)]
         if any_nested_comps:
@@ -1484,16 +1742,16 @@ class AutodiffComposition(Composition):
             self.infer_backpropagation_learning_pathways(execution_mode, context=context)
             self._built_pathways = True
 
-        synch_with_pnl_options, retain_in_pnl_options = (
-            self._parse_synch_and_retain_args(synch_projection_matrices_with_torch,
-                                              synch_node_variables_with_torch,
-                                              synch_node_values_with_torch,
-                                              synch_results_with_torch,
-                                              retain_torch_trained_outputs,
-                                              retain_torch_targets,
-                                              retain_torch_losses,
-                                              context=context,
-                                              **kwargs))
+        synch_with_pnl_options, retain_in_pnl_options = self.parse_synch_and_retain_args(
+            context,
+            synch_projection_matrices_with_torch=synch_projection_matrices_with_torch,
+            synch_node_variables_with_torch=synch_node_variables_with_torch,
+            synch_node_values_with_torch=synch_node_values_with_torch,
+            synch_results_with_torch=synch_results_with_torch,
+            retain_torch_trained_outputs=retain_torch_trained_outputs,
+            retain_torch_targets=retain_torch_targets,
+            retain_torch_losses=retain_torch_losses,
+        )
 
         if execution_mode == pnlvm.ExecutionMode.PyTorch and not torch_available:
             raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
@@ -1509,54 +1767,70 @@ class AutodiffComposition(Composition):
                              skip_initialization=skip_initialization,
                              **kwargs)
 
-    def _parse_synch_and_retain_args(self,
-                                     synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS],
-                                     synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS],
-                                     synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS],
-                                     synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS],
-                                     retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS],
-                                     retain_torch_targets:Optional[LEARNING_SCALE_LITERALS],
-                                     retain_torch_losses:Optional[LEARNING_SCALE_LITERALS],
-                                     context: Context = None,
-                                     **kwargs
-                                     )->tuple:
-        # Remove args from kwargs in case called from run() (won't be there if called from learn()
-        if synch_projection_matrices_with_torch == NotImplemented:
-            synch_projection_matrices_with_torch = kwargs.pop('synch_projection_matrices_with_torch', NotImplemented)
-            if synch_projection_matrices_with_torch == NotImplemented:
-                synch_projection_matrices_with_torch = self.parameters.synch_projection_matrices_with_torch.default_value
-        if synch_node_variables_with_torch == NotImplemented:
-            synch_node_variables_with_torch = kwargs.pop('synch_node_variables_with_torch', NotImplemented)
-            if synch_node_variables_with_torch == NotImplemented:
-                synch_node_variables_with_torch = self.parameters.synch_node_variables_with_torch.default_value
-        if synch_node_values_with_torch == NotImplemented:
-            synch_node_values_with_torch = kwargs.pop('synch_node_values_with_torch', NotImplemented)
-            if synch_node_values_with_torch == NotImplemented:
-                synch_node_values_with_torch = self.parameters.synch_node_values_with_torch.default_value
-        if synch_results_with_torch == NotImplemented:
-            synch_results_with_torch = kwargs.pop('synch_results_with_torch', NotImplemented)
-            if synch_results_with_torch == NotImplemented:
-                synch_results_with_torch = self.parameters.synch_results_with_torch.default_value
-        if retain_torch_trained_outputs == NotImplemented:
-            retain_torch_trained_outputs = kwargs.pop('retain_torch_trained_outputs', NotImplemented)
-            if retain_torch_trained_outputs == NotImplemented:
-                retain_torch_trained_outputs = self.parameters.retain_torch_trained_outputs.default_value
-        if retain_torch_targets == NotImplemented:
-            retain_torch_targets = kwargs.pop('retain_torch_targets', NotImplemented)
-            if retain_torch_targets == NotImplemented:
-                retain_torch_targets = self.parameters.retain_torch_targets.default_value
-        if retain_torch_losses == NotImplemented:
-            retain_torch_losses = kwargs.pop('retain_torch_losses', NotImplemented)
-            if retain_torch_losses == NotImplemented:
-                retain_torch_losses = self.parameters.retain_torch_losses.default_value
+    def parse_synch_and_retain_args(
+        self,
+        context: Context,
+        synch_projection_matrices_with_torch: SynchRetainArg = NotImplemented,
+        synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
+        synch_node_values_with_torch: SynchRetainArg = NotImplemented,
+        synch_results_with_torch: SynchRetainArg = NotImplemented,
+        retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+        retain_torch_targets: SynchRetainArg = NotImplemented,
+        retain_torch_losses: SynchRetainArg = NotImplemented,
+    ) -> Tuple[Dict, Dict]:
+        return self._parse_synch_and_retain_args(
+            context,
+            synch_projection_matrices_with_torch=synch_projection_matrices_with_torch,
+            synch_node_variables_with_torch=synch_node_variables_with_torch,
+            synch_node_values_with_torch=synch_node_values_with_torch,
+            synch_results_with_torch=synch_results_with_torch,
+            retain_torch_trained_outputs=retain_torch_trained_outputs,
+            retain_torch_targets=retain_torch_targets,
+            retain_torch_losses=retain_torch_losses,
+        )
+
+    def _parse_synch_and_retain_args(
+        self, context: Context, **kwargs
+    ) -> Tuple[Dict, Dict]:
+        # Package options for synching and tracking into dictionaries as arguments to learning and exec methods
+        def _get_option_val(arg):
+            arg_param = getattr(self.parameters, arg)
+            val = kwargs.get(arg, NotImplemented)
+            try:
+                val = LearningScale(val)
+            except ValueError:
+                # val could be None, which is an acceptable SynchRetainArg
+                pass
+            if val is NotImplemented:
+                val = arg_param._get(context, fallback_value=NotImplemented)
+            if val is NotImplemented:
+                val = arg_param.default_value
+            return val
+
+        # consider making these Parameter aliases
+        synch_with_pnl_options = {
+            MATRIX_WEIGHTS: "synch_projection_matrices_with_torch",
+            NODE_VARIABLES: "synch_node_variables_with_torch",
+            NODE_VALUES: "synch_node_values_with_torch",
+            RESULTS: "synch_results_with_torch",
+        }
+        retain_in_pnl_options = {
+            TRAINED_OUTPUTS: "retain_torch_trained_outputs",
+            TARGETS: "retain_torch_targets",
+            LOSSES: "retain_torch_losses",
+        }
+        for result_name, arg in synch_with_pnl_options.items():
+            synch_with_pnl_options[result_name] = _get_option_val(arg)
+        for result_name, arg in retain_in_pnl_options.items():
+            retain_in_pnl_options[result_name] = _get_option_val(arg)
 
         if self.minibatch_size > 1:
             args_str = []
-            if retain_torch_trained_outputs in {OPTIMIZATION_STEP, TRIAL}:
+            if retain_in_pnl_options[TRAINED_OUTPUTS] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
                 args_str.append('retain_torch_trained_outputs')
-            if retain_torch_losses in {OPTIMIZATION_STEP,TRIAL}:
+            if retain_in_pnl_options[LOSSES] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
                 args_str.append('retain_torch_losses')
-            if retain_torch_targets in {OPTIMIZATION_STEP,TRIAL}:
+            if retain_in_pnl_options[TARGETS] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
                 args_str.append('retain_torch_targets')
             if args_str:
                 arg_args = 'args' if len(args_str) == 1 else 'arg'
@@ -1567,21 +1841,6 @@ class AutodiffComposition(Composition):
                                                f"{', '.join([arg.split('_')[-1] for arg in args_str])} "
                                                f"will be updated only at the end of a minibatch; "
                                                f"use 'MINIBATCH' for the {arg_args} to avoid this warning.")
-
-        # Package options for synching and tracking into dictionaries as arguments to learning and exec methods
-        synch_with_pnl_options = {MATRIX_WEIGHTS: synch_projection_matrices_with_torch
-                                                  or self.parameters.synch_projection_matrices_with_torch._get(context),
-                                  NODE_VARIABLES: synch_node_variables_with_torch
-                                               or self.parameters.synch_node_variables_with_torch._get(context),
-                                  NODE_VALUES: synch_node_values_with_torch
-                                               or self.parameters.synch_node_values_with_torch._get(context),
-                                  RESULTS: synch_results_with_torch
-                                                    or self.parameters.synch_results_with_torch._get(context)}
-
-        retain_in_pnl_options = {TRAINED_OUTPUTS: retain_torch_trained_outputs
-                                                   or self.parameters.retain_torch_trained_outputs._get(context),
-                                 TARGETS: retain_torch_targets or self.parameters.retain_torch_targets._get(context),
-                                 LOSSES: retain_torch_losses or self.parameters.retain_torch_losses._get(context)}
 
         return synch_with_pnl_options, retain_in_pnl_options
 
@@ -1618,6 +1877,7 @@ class AutodiffComposition(Composition):
                 base_context=Context(execution_id=None),
                 clamp_input=SOFT_CLAMP,
                 targets=None,
+                optimizer_params:dict=None,
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.PyTorch,
                 skip_initialization=False,
@@ -1651,49 +1911,57 @@ class AutodiffComposition(Composition):
             if scheduler is None:
                 scheduler = self.scheduler
 
-            if self._is_learning(context):
-                # TBI: How are we supposed to use base_context and statefulness here?
-                # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
-                # model may be modified between runs?
+            if ContextFlags.LEARNING_MODE in context.runmode:
+                # In LEARNING_MODE, so check that at least one enable_learning is True (potentially in nested Comp)
+                if self._is_learning(context) or any(comp._is_learning(context)
+                                                     for comp in self._get_nested_compositions()):
+                    # TBI: How are we supposed to use base_context and statefulness here?
 
-                autodiff_inputs = self._get_autodiff_inputs_values(inputs)
-                autodiff_targets = self._get_autodiff_targets_values(inputs)
+                    autodiff_inputs = self._get_autodiff_inputs_values(inputs)
+                    autodiff_targets = self._get_autodiff_targets_values(inputs)
 
-                # Begin reporting of learning TRIAL:
-                report(self,
-                       LEARN_REPORT,
-                       # EXECUTE_REPORT,
-                       report_num=report_num,
-                       scheduler=scheduler,
-                       content='trial_start',
-                       context=context)
+                    # Begin reporting of learning TRIAL:
+                    report(self,
+                           LEARN_REPORT,
+                           # EXECUTE_REPORT,
+                           report_num=report_num,
+                           scheduler=scheduler,
+                           content='trial_start',
+                           context=context)
 
-                self._build_pytorch_representation(context, base_context=base_context)
-                trained_output_values, all_output_values = \
-                                                self.autodiff_forward(inputs=autodiff_inputs,
-                                                                      targets=autodiff_targets,
-                                                                      synch_with_pnl_options=synch_with_pnl_options,
-                                                                      retain_in_pnl_options=retain_in_pnl_options,
-                                                                      execution_mode=execution_mode,
-                                                                      scheduler=scheduler,
-                                                                      context=context)
-                execution_phase = context.execution_phase
-                context.execution_phase = ContextFlags.PROCESSING
-                context.execution_phase = execution_phase
+                    self._build_pytorch_representation(optimizer_params=optimizer_params,
+                                                       learning_rate=self.parameters.learning_rate.get(context),
+                                                       context=context, base_context=base_context)
+                    trained_output_values, all_output_values = \
+                                                    self.autodiff_forward(inputs=autodiff_inputs,
+                                                                          targets=autodiff_targets,
+                                                                          synch_with_pnl_options=synch_with_pnl_options,
+                                                                          retain_in_pnl_options=retain_in_pnl_options,
+                                                                          execution_mode=execution_mode,
+                                                                          scheduler=scheduler,
+                                                                          context=context)
+                    execution_phase = context.execution_phase
+                    context.execution_phase = ContextFlags.PROCESSING
+                    context.execution_phase = execution_phase
 
-                # Complete TRIAL Panel for output report, and report progress
-                report(self,
-                       # [LEARN_REPORT],
-                       [EXECUTE_REPORT, PROGRESS_REPORT],
-                       report_num=report_num,
-                       scheduler=scheduler,
-                       content='trial_end',
-                       context=context)
+                    # Complete TRIAL Panel for output report, and report progress
+                    report(self,
+                           # [LEARN_REPORT],
+                           [EXECUTE_REPORT, PROGRESS_REPORT],
+                           report_num=report_num,
+                           scheduler=scheduler,
+                           content='trial_end',
+                           context=context)
 
-                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+                    scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-                self.most_recent_context = context
-                return all_output_values
+                    self.most_recent_context = context
+                    return all_output_values
+                else:
+                    raise AutodiffCompositionError(f"The learn() method of '{self.name}' was called, but its "
+                                                   f"'enable_learning' Parameter (and the ones for any Compositions "
+                                                   f"nested within) it are set to 'False'. Either set at least one to "
+                                                   f"'True', or use {self.name}.run().")
 
         # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,
@@ -1707,6 +1975,7 @@ class AutodiffComposition(Composition):
                                                         context=context,
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,
+                                                        optimizer_params=optimizer_params,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
                                                         report=report,
@@ -1715,19 +1984,19 @@ class AutodiffComposition(Composition):
 
     @handle_external_context(fallback_default=True)
     def run(self, *args,
-            synch_projection_matrices_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            synch_node_variables_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            synch_node_values_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            synch_results_with_torch:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            retain_torch_trained_outputs:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            retain_torch_targets:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
-            retain_torch_losses:Optional[LEARNING_SCALE_LITERALS]=NotImplemented,
+            synch_projection_matrices_with_torch: SynchRetainArg = NotImplemented,
+            synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
+            synch_node_values_with_torch: SynchRetainArg = NotImplemented,
+            synch_results_with_torch: SynchRetainArg = NotImplemented,
+            retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+            retain_torch_targets: SynchRetainArg = NotImplemented,
+            retain_torch_losses: SynchRetainArg = NotImplemented,
             batched_results:bool=False,
             context: Context = None,
             **kwargs):
         """Override to handle synch and retain args if run called directly from run() rather than learn()
         Note: defaults for synch and retain args are NotImplemented, so that the user can specify None if they want
-              to locally override the default values for the AutodiffComposition (see _parse_synch_and_retain_args()
+              to locally override the default values for the AutodiffComposition (see parse_synch_and_retain_args()
               for details). This is distinct from the user assigning the Parameter default_values(s), which is done
               in the AutodiffComposition constructor and handled by the Parameter._specify_none attribute.
         """
@@ -1746,26 +2015,28 @@ class AutodiffComposition(Composition):
                 #     this is required for calling _update_results() from Composition.run(), which does not itself
                 #     know about synch and retain options, and the expected default behavior of which is to update
                 #     results on every try in a call to run().
-                synch_results_with_torch = MINIBATCH
-            synch_with_pnl_options, retain_in_pnl_options = (
-                self._parse_synch_and_retain_args(synch_projection_matrices_with_torch,
-                                                   synch_node_variables_with_torch,
-                                                   synch_node_values_with_torch,
-                                                   synch_results_with_torch,
-                                                   retain_torch_trained_outputs,
-                                                   retain_torch_targets,
-                                                   retain_torch_losses,
-                                                  context=context,
-                                                   **kwargs))
+                synch_results_with_torch = LearningScale.MINIBATCH
+            synch_with_pnl_options, retain_in_pnl_options = self.parse_synch_and_retain_args(
+                context,
+                synch_projection_matrices_with_torch=synch_projection_matrices_with_torch,
+                synch_node_variables_with_torch=synch_node_variables_with_torch,
+                synch_node_values_with_torch=synch_node_values_with_torch,
+                synch_results_with_torch=synch_results_with_torch,
+                retain_torch_trained_outputs=retain_torch_trained_outputs,
+                retain_torch_targets=retain_torch_targets,
+                retain_torch_losses=retain_torch_losses,
+            )
             kwargs[SYNCH_WITH_PNL_OPTIONS] = synch_with_pnl_options
             kwargs[RETAIN_IN_PNL_OPTIONS] = retain_in_pnl_options
 
+        # Run AutodiffComposition
         results = super(AutodiffComposition, self).run(*args, context=context, **kwargs)
+
         if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
             # Synchronize specified outcomes at end of run
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
-                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], RUN, context)
+                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
 
         return results
 
@@ -1773,12 +2044,16 @@ class AutodiffComposition(Composition):
         """Track results at specified frequency during learning"""
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
 
+            # Drop the sequence dimension if its singleton
+
+
+
             # Check if the trial_output is atleast 3D
             is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
                                                       isinstance(trial_output[0, 0], (np.ndarray, list)))
 
             if (RESULTS in synch_with_pnl_options
-                    and synch_with_pnl_options[RESULTS] in {TRIAL, MINIBATCH}):
+                    and synch_with_pnl_options[RESULTS] in {LearningScale.TRIAL, LearningScale.MINIBATCH}):
                 # Use Composition's own _update_results method since no savings when done trial-by-trial
                 if not self.batched_results and is_output_3d:
                     for out in trial_output:
@@ -1787,7 +2062,7 @@ class AutodiffComposition(Composition):
                     super()._update_results(results, trial_output, execution_mode, synch_with_pnl_options, context)
 
             elif (RESULTS in synch_with_pnl_options
-                  and synch_with_pnl_options[RESULTS] == RUN):
+                  and synch_with_pnl_options[RESULTS] == LearningScale.RUN):
                 # Use pytorch_reps method to keep a local list of results that are copied to autodiff.results after run
                 pytorch_rep = self.parameters.pytorch_representation._get(context)
                 if not self.batched_results and is_output_3d:
@@ -1918,7 +2193,7 @@ class AutodiffComposition(Composition):
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
 
-        self._build_pytorch_representation(context=context, refresh=True)
+        self._build_pytorch_representation(context=context, new=True)
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
@@ -2178,6 +2453,16 @@ class AutodiffComposition(Composition):
         return self._show_graph.show_graph(*args, **kwargs)
 
     @property
+    def torch_parameters(self):
+        """Return Pytorch Parameters for pytorch_representation of AutodiffComposition"""
+        try:
+            if self.pytorch_representation is None:
+                self._build_pytorch_representation()
+            return list(self.pytorch_representation.named_parameters())
+        except:
+            raise AutodiffCompositionError(
+                f"PROGRAM ERROR:  problem accessing torch.named_parameters() for '{self.name}'.")
+    @property
     def _dependent_components(self) -> Iterable[Component]:
         res = super()._dependent_components
 
@@ -2188,3 +2473,6 @@ class AutodiffComposition(Composition):
                 res.extend([w.projection for w in pytorch_repr.projection_wrappers])
 
         return res
+
+    def _get_default_comp_learning_rate(self):
+        self._get_nested_compositions()

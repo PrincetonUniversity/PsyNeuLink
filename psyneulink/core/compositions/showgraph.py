@@ -215,7 +215,6 @@ Class Reference
 
 """
 
-import inspect
 import pathlib
 import site
 import warnings
@@ -243,7 +242,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, LEARNABLE, \
     MECHANISM, MECHANISMS, NESTED, PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.utilities import _get_cached_function_signature, convert_to_list
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME', 'MECH_FUNCTION_PARAMS',
            'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS', 'SAVE_IMAGES',
@@ -818,7 +817,10 @@ class ShowGraph():
         nested_args = show_nested_args or {}
         if nested_args == ALL:
             # Use show_graph args (passed in from main call to show_graph, updated as above)
-            nested_args = dict({k:show_graph_args[k] for k in list(inspect.signature(self.show_graph).parameters)})
+            nested_args = {
+                k: show_graph_args[k]
+                for k in list(_get_cached_function_signature(self.show_graph).parameters)
+            }
         nested_args[ACTIVE_ITEMS] = active_items
         nested_args[NODE_STRUCT_ARGS] = node_struct_args
         nested_args[SHOW_NESTED] = show_nested
@@ -954,12 +956,7 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
         Sorts graph by node name for consistency in display
         """
-        # MODIFIED 3/16/25 OLD:
         return composition.graph_processing.dependency_dict
-        # MODIFIED 3/16/25 NEW:
-        # return {k: composition.graph_processing.dependency_dict[k]
-        #         for k in sorted(composition.graph_processing.dependency_dict.keys())}
-        # MODIFIED 3/16/25 END
 
     def _get_nodes(self, composition ,context):
         """Helper method that allows override by subclass to filter nodes used for graph"""

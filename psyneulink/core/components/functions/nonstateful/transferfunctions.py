@@ -1549,8 +1549,8 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         offset = self._get_pytorch_fct_param_value('offset', device, context)
         # return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
-        return lambda x: ((torch.exp(-gain * (x + bias) + offset) - torch.exp(-gain * (-x + bias) + offset))
-                          / (torch.exp(-gain * (x + bias) + offset) + torch.exp(-gain * (-x + bias) + offset)))
+        return lambda x: ((torch.exp(gain * (x + bias) + offset) - torch.exp(gain * (-x + bias) + offset))
+                          / (torch.exp(gain * (x + bias) + offset) + torch.exp(gain * (-x + bias) + offset)))
 
 # **********************************************************************************************************************
 #                                                    ReLU

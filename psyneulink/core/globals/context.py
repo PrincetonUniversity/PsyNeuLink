@@ -84,7 +84,6 @@ Class Reference
 
 import enum
 import functools
-import inspect
 import warnings
 
 from collections import defaultdict, namedtuple
@@ -96,7 +95,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union, Literal, Set, List
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
-from psyneulink.core.globals.utilities import get_deepcopy_with_shared
+from psyneulink.core.globals.utilities import _get_cached_function_signature, get_deepcopy_with_shared
 
 
 __all__ = [
@@ -170,6 +169,8 @@ class ContextFlags(enum.IntFlag):
     """Call by method of the Component other than its constructor."""
     COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
+    SHOW_GRAPH = enum.auto()
+    """Call by show_graph method of Composition."""
 
     NONE = enum.auto()
 
@@ -677,18 +678,19 @@ def handle_external_context(
         try:
             context_arg_index = _handle_external_context_arg_cache[func][CONTEXT]
         except KeyError:
+            sig = _get_cached_function_signature(func)
             # this is true when there is a variable positional argument
             # (like *args). don't try to infer context position in this case,
             # because it can vary. I don't see a good way to get around this
             # restriction in general
             if len([
-                sig_param for name, sig_param in inspect.signature(func).parameters.items()
+                sig_param for name, sig_param in sig.parameters.items()
                 if sig_param.kind is sig_param.VAR_POSITIONAL
             ]):
                 context_arg_index = None
             else:
                 try:
-                    context_arg_index = list(inspect.signature(func).parameters.keys()).index(CONTEXT)
+                    context_arg_index = list(sig.parameters.keys()).index(CONTEXT)
                 except ValueError:
                     context_arg_index = None
 

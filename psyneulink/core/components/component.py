@@ -578,10 +578,26 @@ from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
-    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, \
-    get_all_explicit_arguments, is_numeric, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier, try_extract_0d_array_item, contains_type, is_iterable
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList,
+    _get_cached_function_signature,
+    call_with_pruned_args,
+    contains_type,
+    convert_all_elements_to_np_array,
+    convert_to_np_array,
+    get_all_explicit_arguments,
+    get_deepcopy_with_shared,
+    is_instance_or_subclass,
+    is_iterable,
+    is_matrix,
+    is_numeric,
+    iscompatible,
+    kwCompatibilityLength,
+    parse_valid_identifier,
+    safe_equals,
+    safe_len,
+    try_extract_0d_array_item,
+)
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -1510,7 +1526,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "variable", "value", "saved_values", "saved_samples",
                      "integrator_function_value", "termination_measure_value",
                      "execution_count", "intensity", "combined_costs",
-                     "adjustment_cost", "intensity_cost", "duration_cost",
+                     "adjustment_cost", "intensity_cost", "duration_cost", "learning_rate", "learning_rates_dict",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
@@ -1885,7 +1901,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # add unspecified kwargs
         kwargs_names = [
             k
-            for k, v in inspect.signature(self.__init__).parameters.items()
+            for k, v in _get_cached_function_signature(self.__init__).parameters.items()
             if v.kind is inspect.Parameter.VAR_KEYWORD
         ]
 
@@ -2410,7 +2426,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
-            p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
+            if p.spec is not None:
+                p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
 
             # set default to None context to ensure it exists
             if (
@@ -4452,7 +4469,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-            if isinstance(param_value, Component) and param_value is not self:
+            if isinstance(type(param_value), ComponentsMeta) and param_value is not self:
                 self._parameter_components.add(param_value)
 
     @property

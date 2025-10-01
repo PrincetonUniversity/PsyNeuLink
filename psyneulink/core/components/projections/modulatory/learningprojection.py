@@ -254,9 +254,6 @@ class LearningProjection(ModulatoryProjection_Base):
                  receiver=None,        \
                  error_function,       \
                  learning_function,    \
-                 COMMENT:
-                 learning_rate=None,   \
-                 COMMENT
                  learning_enabled=None \
                  weight=None,          \
                  exponent=None,        \
