@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>StatefulFunctions &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>Thread configuration &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
   
 
   
@@ -174,7 +174,7 @@
       </li>
 
         
-      <li>StatefulFunctions</li>
+      <li>Thread configuration</li>
     
   </ul>
 
@@ -197,20 +197,69 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <section id="statefulfunctions">
-<h1>StatefulFunctions<a class="headerlink" href="#statefulfunctions" title="Link to this heading">¶</a></h1>
-<p>Functions that depend for their computation on a <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> attribute.</p>
-<p><strong>Core class</strong>:</p>
+  <section id="thread-configuration">
+<h1>Thread configuration<a class="headerlink" href="#thread-configuration" title="Link to this heading">¶</a></h1>
+<p>Control the global number of threads used by PsyNeuLink and common native/back-end
+libraries at runtime.</p>
+<section id="public-api">
+<h2>Public API<a class="headerlink" href="#public-api" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="StatefulFunction.html"><span class="doc">StatefulFunction</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">psyneulink.core.globals.set_num_threads(n)</span></code> — set the number of threads to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">psyneulink.core.globals.get_num_threads()</span></code> — return the current global thread setting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">psyneulink.core.globals.reset_num_threads()</span></code> — reset to the platform default (<code class="docutils literal notranslate"><span class="pre">os.cpu_count()</span></code> or 1).</p></li>
 </ul>
-<p><strong>Subtypes</strong>:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="IntegratorFunctions.html">IntegratorFunctions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MemoryFunctions.html">MemoryFunctions</a></li>
-</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">psyneulink.core.globals</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_num_threads</span><span class="p">,</span> <span class="n">get_num_threads</span><span class="p">,</span> <span class="n">reset_num_threads</span>
+
+<span class="c1"># Query current value (platform default on first import)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">get_num_threads</span><span class="p">())</span>  <span class="c1"># e.g. 8</span>
+
+<span class="c1"># Request 2 threads for current process and supported libraries</span>
+<span class="n">set_num_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">get_num_threads</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span>
+
+<span class="c1"># Reset to platform default</span>
+<span class="n">reset_num_threads</span><span class="p">()</span>
+</pre></div>
 </div>
+</section>
+<section id="semantics-and-behavior">
+<h2>Semantics and behavior<a class="headerlink" href="#semantics-and-behavior" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>The API provides a small, PyTorch-style control surface to set and query a global
+thread count for the current process.</p></li>
+<li><p>Calling <code class="docutils literal notranslate"><span class="pre">set_num_threads(n)</span></code>:
+- Validates input: <code class="docutils literal notranslate"><span class="pre">n</span></code> must be an <code class="docutils literal notranslate"><span class="pre">int</span></code> &gt;= 1; otherwise <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> or <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.
+- Updates an internal global value returned by <code class="docutils literal notranslate"><span class="pre">get_num_threads()</span></code>.
+- Attempts to set common environment variables used by native thread pools:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, <code class="docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code>, <code class="docutils literal notranslate"><span class="pre">OPENBLAS_NUM_THREADS</span></code>, <code class="docutils literal notranslate"><span class="pre">VECLIB_MAXIMUM_THREADS</span></code>, <code class="docutils literal notranslate"><span class="pre">NUMEXPR_NUM_THREADS</span></code>.</p></li>
+<li><p>These environment changes affect the current Python process and any child processes spawned afterwards.</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>If optional libraries are available at runtime, PsyNeuLink will try to configure them:
+- If <code class="docutils literal notranslate"><span class="pre">torch</span></code> is importable, it calls <code class="docutils literal notranslate"><span class="pre">torch.set_num_threads(n)</span></code>.
+- If <code class="docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is importable, it attempts <code class="docutils literal notranslate"><span class="pre">threadpoolctl.threadpool_limits(n)</span></code>.</p></li>
+<li><p>All such library-specific calls are best-effort and failures are caught and logged; they will not raise to the caller.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="limitations-and-recommendations">
+<h2>Limitations and recommendations<a class="headerlink" href="#limitations-and-recommendations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Best-effort only: some libraries create thread pools at import/initialization time and may not honor changes made later in the process.</p></li>
+<li><p>If you rely on deterministic performance or want to avoid oversubscription (CI, multithreaded runners), set a fixed number of threads (for example 1 or the number of physical cores) early in test setup or before heavy computation.</p></li>
+<li><p>Use the API rather than mutating environment variables directly to keep a consistent internal record via <code class="docutils literal notranslate"><span class="pre">get_num_threads()</span></code>.</p></li>
+<li><p>Invalid inputs raise:
+- <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> if <code class="docutils literal notranslate"><span class="pre">n</span></code> is not an <code class="docutils literal notranslate"><span class="pre">int</span></code>.
+- <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>.</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -247,7 +296,13 @@
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">StatefulFunctions</a></li>
+<li><a class="reference internal" href="#">Thread configuration</a><ul>
+<li><a class="reference internal" href="#public-api">Public API</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#semantics-and-behavior">Semantics and behavior</a></li>
+<li><a class="reference internal" href="#limitations-and-recommendations">Limitations and recommendations</a></li>
+</ul>
+</li>
 </ul>
 
             </div>

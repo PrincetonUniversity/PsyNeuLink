@@ -87,10 +87,10 @@ Simple Configurations
 
 Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
 applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
-Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list --
+Mechanisms for execution can be as simple as creating them and then assigning them to a Composition in a list --
 PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
-assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 neural network
-encoder network, the first layer of which takes an an array of length 5 as its input, and uses a `Linear` function
+assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 feedforward neural network,
+the first layer of which takes an array of length 5 as its input, and uses a `Linear` function
 (the default for a `ProcessingMechanism`), and the other two of which take 1d arrays of the specified sizes and use a
 `Logistic` function::
 
@@ -100,7 +100,7 @@ encoder network, the first layer of which takes an an array of length 5 as its i
     output_layer = ProcessingMechanism(input_shapes=5, function=Logistic, name='output')
 
     # Construct the Composition:
-    my_encoder = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
+    my_network = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an appropriately-sized input array, for example::
@@ -131,7 +131,7 @@ of computational models in neuroscience and psychology (see `json`)
 The Composition can be run by calling its `run <Composition.run>` method, with an input array appropriately sized for
 the first Mechanism in the pathway (in this case, the input_layer)::
 
-    my_encoder.run([1, 4.7, 3.2, 6, 2])
+    my_network.run([1, 4.7, 3.2, 6, 2])
     [array([0.88079707, 0.88079707, 0.88079707, 0.88079707, 0.88079707])]
 
 The order in which Mechanisms appear in the list of the **pathways** argument of the Composition's constructor
@@ -151,30 +151,30 @@ the receiver's array with a weight of 1. However, it is easy to specify a Projec
 matrix, simply by inserting them in between the Mechanisms in the pathway::
 
     my_projection = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) - .1))
-    my_encoder = Composition()
-    my_encoder.add_linear_processing_pathway([input_layer, my_projection, hidden_layer, output_layer])
+    my_network = Composition()
+    my_network.add_linear_processing_pathway([input_layer, my_projection, hidden_layer, output_layer])
 
 The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  Note that here, one of the
+which is then inserted in the pathway between the ``input_layer`` and ``hidden_layer``.  Note that here, one of the
 Composition's `pathway addition methods <Composition_Pathway_Addition_Methods>` is used to create the pathway, as an
 alternative to specifying it in the **pathways** argument of the constructor (as shown in the initial example). The
 Projection's matrix itself could also have been inserted directly, as follows::
 
-    my_encoder.add_linear_processing_pathway([input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
+    my_network.add_linear_processing_pathway([input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
 
 PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
 a recurrent Projection from the ``output_layer`` back to the ``hidden_layer`` can be added simply by adding another
 entry to the pathway::
 
-    my_encoder.add_linear_processing_pathway([input_layer, hidden_layer, output_layer, hidden_layer])
+    my_network.add_linear_processing_pathway([input_layer, hidden_layer, output_layer, hidden_layer])
 
 This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
 been accomplished by explicitly creating the recurrent connection::
 
-    my_encoder.add_linear_processing_pathway([input_layer, hidden_layer, output_layer])
-    recurent_projection = MappingProjection(sender=output_layer,
+    my_network.add_linear_processing_pathway([input_layer, hidden_layer, output_layer])
+    recurrent_projection = MappingProjection(sender=output_layer,
                       receiver=hidden_layer)
-    my_encoder.add_projection(recurent_projection)
+    my_network.add_projection(recurrent_projection)
 
 
 .. _BasicsAndPrimer_Elaborate_Configurations:

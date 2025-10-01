@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SelectionFunctions &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
+  <title>SelectionFunctions &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+5
+                  0.17.0.0+9
                 </div>
               
             
@@ -322,7 +322,7 @@ if there is a tie, which elements are returned is determined by <code class="xre
 <div><p>(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
 </div></blockquote>
 <p>:type : default ARG_MAX
-:type direction: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘max’, ‘min’]]
+:type direction: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'max'</span></code>, <code class="docutils literal notranslate"><span class="pre">'min'</span></code>]]</span>
 :param direction: specifies whether the maximum or minimum value(s) in the array are selected.</p>
 <blockquote>
 <div><p>(see <a class="reference internal" href="#onehot"><span class="std std-ref">above</span></a> for details).</p>
@@ -499,11 +499,12 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>array with selected elements having non-zero values and all others having zeroes</strong> – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">abs_val</span></code></a>,
-<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">indicator</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tie</span></code></a>.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>array with selected elements having non-zero values and all others having zeroes</strong> (<em>np.array</em>) – specified by <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.mode" title="psyneulink.core.components.functions.selectionfunctions.OneHot.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.direction" title="psyneulink.core.components.functions.selectionfunctions.OneHot.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val" title="psyneulink.core.components.functions.selectionfunctions.OneHot.abs_val"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">abs_val</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.indicator" title="psyneulink.core.components.functions.selectionfunctions.OneHot.indicator"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">indicator</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.selectionfunctions.OneHot.tie" title="psyneulink.core.components.functions.selectionfunctions.OneHot.tie"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">tie</span></code></a>.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -616,7 +617,7 @@ It is called only if the parameter_validation attribute is <code class="xref any
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/documentation_options.js?v=5d8abaae"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

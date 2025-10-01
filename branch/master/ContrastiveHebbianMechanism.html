@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
+  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+5
+                  0.17.0.0+9
                 </div>
               
             
@@ -500,7 +500,7 @@ of execution and the <a class="reference external" href="https://www.sciencedire
 <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a> of <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">current_activity</span></code></a>,
 and of the <a class="reference internal" href="#output-activity"><span class="std std-ref">OUTPUT_ACTIVITY</span></a> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p></li>
 <li><p><strong>separated</strong> (<em>bool : default True</em>) – specifies whether <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">target_field</span></a> should be different from the <a class="reference internal" href="#contrastivehebbian-fields"><span class="std std-ref">input_field</span></a>.</p></li>
-<li><p><strong>mode</strong> (<em>SIMPLE_HEBBIAN</em><em> or </em><em>None : default None</em>) – specifies configuratoin that emulates standard <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> using <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a> learning
+<li><p><strong>mode</strong> (<em>SIMPLE_HEBBIAN</em><em> or </em><em>None : default None</em>) – specifies configuration that emulates standard <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> using <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a> learning
 (see <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN mode</span></a> for details).</p></li>
 <li><p><strong>combination_function</strong> (<em>function : default None</em>) – specifies function used to combine the <em>INPUT</em>, <em>RECURRENT</em> and <em>TARGET</em> (if specified) <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPorts</span></a>; must accept a 2d array with two or three items of the same length, and generate a
 result that is the same size as <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_size</span></code></a>;  if <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>,
@@ -958,6 +958,7 @@ differences in activity between the plus and minus phases at the end of an <a cl
 <dd><p>using the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> argument the user passed in (which is now stored in function_params), instantiate
 ParameterPorts for auto and hetero if they haven’t already been instantiated. This is useful if auto and
 hetero were None in the initialization call.
+:type function: 
 :param function:</p>
 </dd></dl>
 
@@ -1108,7 +1109,7 @@ hetero were None in the initialization call.
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/documentation_options.js?v=5d8abaae"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

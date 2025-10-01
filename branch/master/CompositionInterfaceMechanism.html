@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.16.1.0+5.g60f9add8b documentation</title>
+  <title>CompositionInterfaceMechanism &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.16.1.0+5
+                  0.17.0.0+9
                 </div>
               
             
@@ -258,7 +258,7 @@ Composition’s <a class="reference internal" href="Visualization.html#psyneulin
 <p><span class="caption-text"><strong>Examples of Projections to nested Compositions routed through CompositionInterfaceMechanisms.</strong>  <em>Panel A:</em>
 Simple example showing a basic configuration.  <em>Panel B:</em>  More complex configuration, generated from script below,
 showing Projections automatically created from the Node of an outer Composition (<em>X</em>) to two <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>, a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
-from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in the outer Composition to a Node it modulates in the nested one, and from a <a class="reference internal" href="Composition.html#id17" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Node (<em>B</em>) in the nested Composition to the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that monitors it.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in the outer Composition to a Node it modulates in the nested one, and from a <a class="reference internal" href="Composition.html#id18" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Node (<em>B</em>) in the nested Composition to the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that monitors it.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 <div class="legend">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span>
 <span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">)</span>
@@ -393,7 +393,7 @@ Port specification(s) can be an Port object or the name of one.</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM">
 <span class="sig-name descname"><span class="pre">_get_source_node_for_input_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_node_for_input_CIM" title="Link to this definition">¶</a></dt>
 <dd><p>Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-Return None if there is no source Node (i.e., port receives input direcdtly from input to outermost Composition)
+Return None if there is no source Node (i.e., port receives input directly from input to outermost Composition)
 <strong>port</strong> InputPort or OutputPort of the input_CIM from which the local projection projects;
 <strong>comp</strong> Composition at which to begin the search (or continue it when called recursively;</p>
 <blockquote>
@@ -401,7 +401,7 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -451,7 +451,12 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM">
 <span class="sig-name descname"><span class="pre">_get_source_info_from_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_source_info_from_output_CIM" title="Link to this definition">¶</a></dt>
-<dd><p>Return Port, Node and Composition for “original” source of projection from <strong>port</strong>.
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></span></p>
+</dd>
+</dl>
+<p>Return Port, Node and Composition for “original” source of projection from <strong>port</strong>.
 <strong>port</strong> InputPort or OutputPort of the output_CIM from which the projection of interest projects;</p>
 <blockquote>
 <div><p>used to find source (key) in output_CIM’s port_map.</p>
@@ -460,17 +465,17 @@ Return None if there is no source Node (i.e., port receives input direcdtly from
 <dt><strong>comp</strong> Composition at which to begin the search (or continue it when called recursively);</dt><dd><p>assumes the current CompositionInterfaceMechanism’s Composition by default.</p>
 </dd>
 </dl>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM">
 <span class="sig-name descname"><span class="pre">_get_destination_info_for_output_CIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._get_destination_info_for_output_CIM" title="Link to this definition">¶</a></dt>
-<dd><p>Return Port, Node and Composition for “ultimate” destination(s) of projection to <strong>port</strong>.
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+<p>Return Port, Node and Composition for “ultimate” destination(s) of projection to <strong>port</strong>.
 <strong>port</strong>: InputPort or OutputPort of the output_CIM to which the projection of interest projects;</p>
 <blockquote>
 <div><p>used to find source (key=SENDER PORT) of the projection to the output_CIM.</p>
@@ -483,11 +488,6 @@ that is specified to project to more than one Node in the outer Composition</p>
 </dd>
 </dl>
 <p>Return None if there are no destination Nodes (i.e., source is output of outermost Composition</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -578,7 +578,7 @@ that is specified to project to more than one Node in the outer Composition</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=df5b99a2"></script>
+         <script src="_static/documentation_options.js?v=5d8abaae"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
