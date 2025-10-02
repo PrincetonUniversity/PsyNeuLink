@@ -24,7 +24,7 @@ args = parser.parse_args()
 RATE = 0.01  # Integration rate (called time constant in paper)
 INHIBITION = -2.0  # lateral inhibition
 BIAS = 4.0  # In contrast to the paper this is negative, since the logistic function's x_0 already includes a negation
-THRESHOLD = args.threshold  # default is .5
+THRESHOLD = args.threshold  # default is .6
 SETTLE_TRIALS = args.settle_trials  # Not specified in paper; 500 is a reasonable value to allow settling
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
@@ -485,7 +485,9 @@ if args.enable_plot:
     plt.plot(response_all3[2])
     plt.show(block=not pnl._called_from_pytest)
 
-    # -- Regression --
+    # -- Regression -- #
+    # Note: Here, we fit the mode to human reaction time data by linear regression.
+    # The regression coefficients used in the Cohen & Huston (1994) paper were: slope=.98, intercept=298
 
     # Human data, From Dunbar & MacLeod, 1984:
     # "A Horse Race of a Different Color: Stroop Interference Patterns with Transformed Words"
