@@ -3639,7 +3639,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    num_estimates=num_estimates,
-                                                   control_signals=[control_signal])
+                                                   control_signals=[control_signal],
+                                                   initial_seed=1)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}

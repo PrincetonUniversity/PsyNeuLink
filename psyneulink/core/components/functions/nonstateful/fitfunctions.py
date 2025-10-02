@@ -237,7 +237,7 @@ def simulation_likelihood(
             else:
                 kdes_eval[trial] = ZERO_PROB
 
-        # Check to see if any of the trials have non-zero likelihood, if not, something is probably wrong
+        # Check to see if all of the trials have non-zero likelihood, if so, something is probably wrong
         # and we should warn the user.
         if all(kdes_eval == ZERO_PROB):
             warnings.warn(
@@ -460,6 +460,12 @@ class PECOptimizationFunction(OptimizationFunction):
             fit_evaluate=True,
         )
 
+        # Change randomization for next sample if specified (relies on randomization being last dimension)
+        if (self.owner and not self.owner.parameters.same_seed_for_all_allocations._get(context) and
+                self.parameters.randomization_dimension._get(context) is not None):
+            rand_idx = self.parameters.randomization_dimension._get(context)
+            self.search_space[rand_idx] = SampleIterator(specification=self.owner.gen_new_seed_sequence(context))
+
         # We need to swap the simulation (randomization dimension) with the output dimension so things
         # are in the right order passing to the objective_function call signature.
         all_values = np.transpose(all_values, (0, 2, 1))
@@ -597,13 +603,13 @@ class PECOptimizationFunction(OptimizationFunction):
             self.num_evals = self.num_evals + 1
 
             # Keep a log of warnings and the parameters that caused them
-            if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
+            if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
                 warns_with_params.append((warns[-1], params))
 
             # Are we displaying each iteration
             if display_iter:
                 # If we got a warning generating the objective function value, report it
-                if len(warns) > 0 and warns[-1].category == PECObjectiveFuncWarning:
+                if len(warns) > 0 and issubclass(warns[-1].category, PECObjectiveFuncWarning):
                     progress.console.print(f"Warning: ", style="bold red")
                     progress.console.print(f"{warns[-1].message}", style="bold red")
                     progress.console.print(
@@ -693,6 +699,9 @@ class PECOptimizationFunction(OptimizationFunction):
 
             warns_with_params = []
             with warnings.catch_warnings(record=True) as warns:
+                warnings.simplefilter("always", PECObjectiveFuncWarning)
+                warnings.simplefilter("always", BadLikelihoodWarning)
+
                 objfunc_wrapper = self._make_obj_func_wrapper(
                     progress,
                     display_iter,
