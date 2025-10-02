@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningMechanism &mdash; PsyNeuLink 0.17.0.0 documentation</title>
+  <title>LearningMechanism &mdash; PsyNeuLink 0.18.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0
+                  0.18.0.0
                 </div>
               
             
@@ -600,8 +600,8 @@ and functions diagrammed.</span><a class="headerlink" href="#id2" title="Link to
 </figcaption>
 </figure>
 </div></blockquote>
-<p id="learningmechanism-targets"><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is
-implemented using one of a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>, it automatically creates a
+<p id="learningmechanism-targets"><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is implemented
+using one of a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning pathway methods</span></a>, it automatically creates a
 number of  <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning-related Components</span></a>.  This includes a <code class="xref any docutils literal notranslate"><span class="pre">TARGET_MECHANISM</span></code>, that
 receives the target stimulus specifed in the <strong>inputs</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
 method; and a <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE_MECHANISM</span></code>, that computes the error_signal for the sequence.  The output of the
@@ -1001,9 +1001,10 @@ ERROR_SIGNAL InputPorts.</p>
 <span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism._instantiate_attributes_before_function" title="Link to this definition">¶</a></dt>
 <dd><p>Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism</p>
 <dl class="simple">
-<dt>Also determines and assigns <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_matrices" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_matrices"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_matrices</span></code></a> from the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_sources</span></code></a>, identified as the matrix for the</dt><dd><p>Projection with which each error_source is associated.
-:param function:</p>
+<dt>Also determines and assigns <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_matrices" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_matrices"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_matrices</span></code></a> from the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_sources</span></code></a>, identified as the matrix for the</dt><dd><p>Projection with which each error_source is associated.</p>
 </dd>
+</dl>
+<dl class="field-list simple">
 </dl>
 </dd></dl>
 
@@ -1038,11 +1039,15 @@ Assign them, and the corresponding error_matrices to a pair of arrays
 Execute function for each error_signal, error_matrix pair
 Sum the learning_signal and error_signal values received from each execution</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>List[ndarray, ndarray]</strong></p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>summed learning_signal, summed error_signal</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>List[ndarray, ndarray]</strong> (<em>summed learning_signal, summed error_signal</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1170,7 +1175,7 @@ Sum the learning_signal and error_signal values received from each execution</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/documentation_options.js?v=938f80f1"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

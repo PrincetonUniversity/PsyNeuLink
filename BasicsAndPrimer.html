@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.17.0.0 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.18.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.17.0.0
+                  0.18.0.0
                 </div>
               
             
@@ -273,10 +273,10 @@ as well as a more detailed and comprehensive introduction to the use of PsyNeuLi
 <span id="basicsandprimer-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Link to this heading">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
 applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
-Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list –
+Mechanisms for execution can be as simple as creating them and then assigning them to a Composition in a list –
 PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
-assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 neural network
-encoder network, the first layer of which takes an an array of length 5 as its input, and uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function
+assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 feedforward neural network,
+the first layer of which takes an array of length 5 as its input, and uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Linear" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function
 (the default for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>), and the other two of which take 1d arrays of the specified sizes and use a
 <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
@@ -285,7 +285,7 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">)</span>
 
 <span class="c1"># Construct the Composition:</span>
-<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">]])</span>
+<span class="n">my_network</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>Each of the Mechanisms can be executed individually, by simply calling its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method
@@ -310,7 +310,7 @@ display and/or analysis (such as <a class="reference external" href="https://net
 of computational models in neuroscience and psychology (see <code class="xref any docutils literal notranslate"><span class="pre">json</span></code>)</p>
 <p>The Composition can be run by calling its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, with an input array appropriately sized for
 the first Mechanism in the pathway (in this case, the input_layer):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_network</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
 <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">])]</span>
 </pre></div>
 </div>
@@ -328,30 +328,30 @@ default is to use a <a class="reference internal" href="Keywords.html#psyneulink
 the receiver’s array with a weight of 1. However, it is easy to specify a Projection explicitly, including its
 matrix, simply by inserting them in between the Mechanisms in the pathway:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="mf">.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="mf">.1</span><span class="p">))</span>
-<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
-<span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">my_projection</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">my_network</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
+<span class="n">my_network</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">my_projection</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the <code class="docutils literal notranslate"><span class="pre">input_layer</span></code> and <code class="docutils literal notranslate"><span class="pre">hiddeen_layer</span></code>.  Note that here, one of the
+which is then inserted in the pathway between the <code class="docutils literal notranslate"><span class="pre">input_layer</span></code> and <code class="docutils literal notranslate"><span class="pre">hidden_layer</span></code>.  Note that here, one of the
 Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> is used to create the pathway, as an
 alternative to specifying it in the <strong>pathways</strong> argument of the constructor (as shown in the initial example). The
 Projection’s matrix itself could also have been inserted directly, as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="p">(</span><span class="mf">.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="mf">.1</span><span class="p">)),</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_network</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="p">(</span><span class="mf">.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="mf">.1</span><span class="p">)),</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
 a recurrent Projection from the <code class="docutils literal notranslate"><span class="pre">output_layer</span></code> back to the <code class="docutils literal notranslate"><span class="pre">hidden_layer</span></code> can be added simply by adding another
 entry to the pathway:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_network</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
 been accomplished by explicitly creating the recurrent connection:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
-<span class="n">recurent_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_network</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">recurrent_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
                   <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_layer</span><span class="p">)</span>
-<span class="n">my_encoder</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">recurent_projection</span><span class="p">)</span>
+<span class="n">my_network</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">recurrent_projection</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1228,7 +1228,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/documentation_options.js?v=938f80f1"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

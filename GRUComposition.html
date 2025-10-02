@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GRUComposition &mdash; PsyNeuLink 0.17.0.0 documentation</title>
+  <title>GRUComposition &mdash; PsyNeuLink 0.18.0.0 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.17.0.0
+                  0.18.0.0
                 </div>
               
             
@@ -217,7 +217,14 @@
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#grucomposition-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#grucomposition-creation"><span class="std std-ref">Creation</span></a></p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#grucomposition-creation"><span class="std std-ref">Creation</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#grucomposition-configuration"><span class="std std-ref">Configuration</span></a></p></li>
+<li><p><a class="reference internal" href="#grucomposition-learning-arguments"><span class="std std-ref">Learning Arguments</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><p><a class="reference internal" href="#grucomposition-structure"><span class="std std-ref">Structure</span></a></p></li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#grucomposition-execution"><span class="std std-ref">Execution</span></a></dt><dd><ul>
@@ -251,6 +258,7 @@ method is called, it automatically creates a PytorchGRUCompositionWrapper that i
 using the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, that is trained
 using PyTorch. Its constructor takes the following arguments that are in addition to or handled differently
 than <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>:</p>
+<p id="grucomposition-configuration"><em>Configuration</em></p>
 <p><strong>input_size</strong> (int) specifies the length of the input array to the GRUComposition, and the size
 of the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_node</span></code></a>, which can be different than <strong>hidden_size</strong>.</p>
 <p><strong>hidden_size</strong> (int) specifies the length of the internal (“hidden”) state of the GRUComposition,
@@ -259,57 +267,75 @@ than the <a class="reference internal" href="#psyneulink.library.compositions.gr
 <p><strong>bias</strong> (bool) specifies whether the GRUComposition includes <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.BIAS" title="psyneulink.core.compositions.composition.NodeRole.BIAS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">BIAS</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
 and, correspondingly, the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module uses
 bias vectors in its computations.</p>
-<p id="grucomposition-learning-arguments"><strong>enable_learning</strong> (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
-no learning will occur, even when its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method is called.</p>
-<p><strong>learning_rate</strong> (bool or float): specifies the default learning_rate for the parameters of the Pytorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that are not specified for individual
-parameters in the <strong>optimizer_params</strong> argument of the AutodiffComposition’s constructor in the call to its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method. If it is an int or a float, that is used as the default learning rate for the
-GRUComposition; if it is None or True, the GRUComposition’s default <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>
-(.001) is used; if it is False, then learning will occur only for parameters for which an explicit learning_rate
-has been specified in the <strong>optimizer_params</strong> argument of the GRUComposition’s constructor</p>
-<p id="grucomposition-individual-learning-rates"><strong>optimizer_params</strong> (dict): used to specify parameter-specific learning rates, which supercede the value of the
-GRUCompositon’s <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>. Keys of the dict must reference parameters of the
-<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, and values their learning_rates,
-as described below.</p>
-<blockquote>
-<div><p><strong>Keys</strong> for specifying individual parameters in the <strong>optimizer_params</strong> dict:</p>
-<blockquote>
+<p id="grucomposition-learning-arguments"><em>Learning Arguments</em></p>
+<p><strong>enable_learning</strong> (bool) specifies whether learning is enabled for the GRUComposition;  if it is false,
+no learning will occur, even when its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method is called, and learn_rates
+are specified.</p>
+<p><strong>learning_rate</strong> (float, bool, dict or None): specifies the learning_rate for the parameters of the Pytorch
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that are not specified in the
+<strong>learning_rate</strong> argument of a call to the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the GRUComposition or the
+AutodiffComposition within which the GRUComposition is nested (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates</span></a> for details
+of specification).  It can be assigned any of the following values (see <code class="xref any docutils literal notranslate"><span class="pre">eeComposition_Learning_Rate_Specification</span></code>
+for additonal details of specification):</p>
+<blockquote id="grucomposition-learning-rate-specification">
 <div><ul class="simple">
-<li><p><em>`w_ih`</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">weight_ih_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the weights of the
+<li><p><em>int or float</em>: the value is used as the default learning_rate for the GRUComposition, which is assigned to any
+parameters that have not been otherwise specified in the <strong>learning_rate</strong> argument of a call to the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the GRUComposition or the AutodiffComposition within which it is nested.</p></li>
+<li><p><em>True or None</em>: the GRUComposition’s default <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> (.001) is used as
+the learning_rate for amy parameters that have not been otherwise specified in the <strong>learning_rate</strong> argument
+of a call to the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the GRUComposition or the AutodiffComposition
+within which it is nested.</p></li>
+<li><p><em>False</em>: learning occurs only for parameters for which an explicit learning_rate has been specified in the
+<strong>learning_rate</strong> argument of a call to the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the GRUComposition
+or the AutodiffComposition within which it is nested.</p></li>
+</ul>
+<ul id="grucomposition-individual-learning-rates">
+<li><p><em>dict</em>: {Projection or Projection name: learning_rate}; used to specify parameter-specific learning rates,
+which supercede the value of the GRUCompositon’s <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>. Keys of the
+dict must be one of the keys below that reference parameters of the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module; values specify their learning_rates
+(see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-learning-rates"><span class="std std-ref">Learning Rates</span></a> for additional information):</p>
+<ul class="simple">
+<li><p><em>INPUT_TO_HIDDEN</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">weight_ih_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the weights of the
 efferent projections from the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_node</span></code></a> of the GRUComposition: <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_in" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_in"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_in</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_iu" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_iu"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_iu</span></code></a>, and <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_ir" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_ir"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_ir</span></code></a>; its value
 is stored in the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.w_ih_learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.w_ih_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">w_ih_learning_rate</span></code></a> attribute of the GRUComposition;</p></li>
-<li><p><em>`w_hh`</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">weight_hh_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the weights of the
+<li><p><em>HIDDEN_TO_HIDDEN</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">weight_hh_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the weights of the
 efferent projections from the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">hidden_layer_node</span></code></a> of the GRUComposition:
 <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hn" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hn"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_hn</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hu" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hu"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_hu</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hr" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.wts_hr"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">wts_hr</span></code></a>; its
 value is stored in the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.w_hh_learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.w_hh_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">w_hh_learning_rate</span></code></a> attribute of the GRUComposition;</p></li>
-<li><p><em>`b_ih`</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">bias_ih_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the biases of the
+<li><p><em>BIAS_INPUT_TO_HIDDEN</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">bias_ih_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the biases of the
 efferent projections from the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_node</span></code></a> of the GRUComposition: <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_ir" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_ir"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_ir</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_iu" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_iu"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_iu</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_in" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_in"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_in</span></code></a>; its value
 is stored in the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.b_ih_learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.b_ih_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">b_ih_learning_rate</span></code></a> attribute of the GRUComposition;</p></li>
-<li><p><em>`b_hh`</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">bias_hh_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the biases of the
+<li><p><em>BIAS_HIDDEN_TO_HIDDEN</em>: learning rate for the <code class="docutils literal notranslate"><span class="pre">bias_hh_l0</span></code> parameter of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module that corresponds to the biases of the
 efferent projections from the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.hidden_layer_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">hidden_layer_node</span></code></a> of the GRUComposition:
 <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hr" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hr"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_hr</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hu" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hu"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_hu</span></code></a>, <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hn" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.bias_hn"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias_hn</span></code></a>; its
 value is stored in the <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.b_hh_learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.b_hh_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">b_hh_learning_rate</span></code></a> attribute of theGRUComposition.</p></li>
 </ul>
-</div></blockquote>
-<p><strong>Values</strong> for specifying an individual parameter’s learning_rate in the <strong>optimizer_params</strong> dict</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><em>int or float</em>: the value is used as the learning_rate;</p></li>
-<li><p><em>True or None</em>: the value of the GRUComposition’s <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> is used;</p></li>
-<li><p><em>False</em>: the parameter is not learned.</p></li>
+<li><p><em>DEFAULT_LEARNING_RATE</em>: specifies the default learning rate for the GRUComposition, that is used as the
+the learning_rate for any parameters for which there are not other entries in the dict.</p></li>
 </ul>
 </div></blockquote>
+</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Only the keywords above can be used to specify the learning_rate for parameters in a <strong>learning_rate</strong> dict.
+The learning_rates for individual Projections in the GRUComposition cannot be specified, as they do not have
+corresponding torch.nn.Parameters in the <code class="xref any docutils literal notranslate"><span class="pre">named_parameters()</span></code> list of the  PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module; specifying them will raise an error.</p>
+</div>
 </div></blockquote>
 </section>
 <section id="structure">
 <span id="grucomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Link to this heading">¶</a></h2>
 <p>The GRUComposition assigns a node to each of the computations of the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module, and a Projetion to each of
 its weight and bias parameters, as shown in the figure below:</p>
-<figure class="align-center" id="id40">
+<figure class="align-center" id="id41">
 <a class="reference internal image-reference" href="_images/GRUComposition_fig.svg"><img alt="GRU Composition" src="_images/GRUComposition_fig.svg" style="width: 400px;" />
 </a>
 <figcaption>
 <p><span class="caption-text"><strong>Structure of a GRUComposition</strong> – can be seen in more detail using the Composition’s s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method with its <strong>show_node_structure</strong> argument set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">ALL</span></code>;
-can also be seen with biases added by setting the <strong>show_bias</strong> argument to <code class="docutils literal notranslate"><span class="pre">True</span></code> in the constructor.</span><a class="headerlink" href="#id40" title="Link to this image">¶</a></p>
+can also be seen with biases added by setting the <strong>show_bias</strong> argument to <code class="docutils literal notranslate"><span class="pre">True</span></code> in the constructor.</span><a class="headerlink" href="#id41" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The <a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node" title="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.input_node"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_node</span></code></a> receives the input to the GRUComposition, and passes it to the
@@ -375,8 +401,8 @@ occur the following conditions must obtain:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Because a GRUComposition uses the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module to implement its computations during
-learning, its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method can only be called with the <strong>execution_mode</strong>
-argument set to <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> (the default).</p>
+learning, its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method requires execution <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a>; this is
+therefore used by default; an error occurs if any other <strong>execution_mode</strong> is specified in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
 </div>
 </div></blockquote>
 <p>The GRUComposition uses the PyTorch <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.GRU.html">GRU</a> module
@@ -390,7 +416,7 @@ and results of computations are copied to the <a class="reference internal" href
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.grucomposition.grucomposition.</span></span><span class="sig-name descname"><span class="pre">GRUComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GRU</span> <span class="pre">Composition'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.compositions.grucomposition.grucomposition.</span></span><span class="sig-name descname"><span class="pre">GRUComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name=&quot;GRU_Composition&quot;</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">input_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias=False</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">enable_learning=True</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">learning_rate=.001</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">optimizer_params=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition" title="Link to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> that implements a single-layered gated recurrent network.</p>
 <p>See <a class="reference internal" href="#grucomposition-structure"><span class="std std-ref">Structure</span></a> and technical_note under under <a class="reference internal" href="#grucomposition-execution"><span class="std std-ref">Execution</span></a>
 for a description of when the full Composition is constructed and used for execution
@@ -469,7 +495,7 @@ for individual parameters in the <strong>optimizer_params</strong> argument of t
 constructor in the call to its <code class="xref any docutils literal notranslate"><span class="pre">learn</span></code> method (see <a class="reference internal" href="#grucomposition-learning-arguments"><span class="std std-ref">Learning Arguments</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dd class="field-odd"><p>float, int, bool or None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -978,7 +1004,7 @@ and the Pytorch GRU Module’s parameters, and return its output value.</p>
 Replace GRUComposition’s nodes with gru_mech and projections to and from it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -998,8 +1024,25 @@ to the corresponding part of the tensor in the parameter of the Pytorch GRU modu
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections">
+<span class="sig-name descname"><span class="pre">_torch_params_to_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_groups</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections" title="Link to this definition">¶</a></dt>
+<dd><p>Return dict of {torch parameter: Projection} for all wrapped Projections</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._validate_optimizer_param_specs">
+<span class="sig-name descname"><span class="pre">_validate_optimizer_param_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer_param_specs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._validate_optimizer_param_specs" title="Link to this definition">¶</a></dt>
+<dd><p>Override to filter and raise error for individual Projections (i.e., specifications of slices)</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synch_with_pnl_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_sequence_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Forward method of the model for PyTorch modes</p>
 <p>This is called only when GRUComposition is run as a standalone Composition.
 Otherwise, the node.execute() method is called directly (i.e., it is treated as a single node).
@@ -1007,7 +1050,7 @@ Returns a dictionary {output_node:value} with the output value for the torch GRU
 by the collect_afferents method(s) of the other node(s) that receive Projections from the GRUComposition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1015,7 +1058,12 @@ by the collect_afferents method(s) of the other node(s) that receive Projections
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru">
 <span class="sig-name descname"><span class="pre">get_parameters_from_torch_gru</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru" title="Link to this definition">¶</a></dt>
-<dd><p>Get parameters from PyTorch GRU module corresponding to GRUComposition’s Projections.
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span></p>
+</dd>
+</dl>
+<p>Get parameters from PyTorch GRU module corresponding to GRUComposition’s Projections.
 Format tensors:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1028,11 +1076,6 @@ Format tensors:</p>
 <li><p>in set_weights_from_torch_gru(), where they are converted to numpy arrays</p></li>
 <li><p>for forward computation in pytorchGRUwrappers._copy_pytorch_node_outputs_to_pnl_values()</p></li>
 </ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1054,7 +1097,7 @@ These are needed for assigning to the corresponding nodes in the GRUComposition.
 Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1069,7 +1112,7 @@ If there are multiple input_ports, return a tensor (or list of tensors if input 
 <p>Where the ellipsis represent 1 or more dimensions for the values of the projected afferent.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1102,12 +1145,6 @@ Note: if execute_mech=True requires that variable=True</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._set_learning_attributes">
-<span class="sig-name descname"><span class="pre">_set_learning_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._set_learning_attributes" title="Link to this definition">¶</a></dt>
-<dd><p>Set learning-related attributes for Node and Projections</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights">
 <span class="sig-name descname"><span class="pre">set_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights" title="Link to this definition">¶</a></dt>
 <dd><p>Set weights for Projections to input_node and hidden_layer_node.</p>
@@ -1116,7 +1153,12 @@ Note: if execute_mech=True requires that variable=True</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways">
 <span class="sig-name descname"><span class="pre">infer_backpropagation_learning_pathways</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways" title="Link to this definition">¶</a></dt>
-<dd><p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+</dl>
+<p>Create backpropagation learning pathways for every Input Node –&gt; Output Node pathway
 Flattens nested compositions:</p>
 <blockquote>
 <div><ul class="simple">
@@ -1128,11 +1170,6 @@ Flattens nested compositions:</p>
 <p>see <code class="xref any docutils literal notranslate"><span class="pre">PytorchCompositionWrapper</span></code> for table of how Projections are handled and further details.</p>
 </div></blockquote>
 <p>Returns list of target nodes for each pathway</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1144,7 +1181,7 @@ IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nes
 Return a list of all pathways from input_node -&gt; output node</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1158,7 +1195,9 @@ Return a list of all pathways from input_node -&gt; output node</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency">
 <span class="sig-name descname"><span class="pre">_add_dependency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependency_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._add_dependency" title="Link to this definition">¶</a></dt>
-<dd><p>Override to implement direct pathway through gru_mech for pytorch backprop pathway.</p>
+<dd><p>Override to implement direct pathway through gru_mech for pytorch backprop pathway.
+Add direct_proj_in and direct_proj_out to self._pytorch_projections
+Other projections (including ‘INPUT TO UPDATE WEIGHTS’) are added in super()._get_pytorch_backprop_pathway()</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1288,6 +1327,8 @@ Return a list of all pathways from input_node -&gt; output node</p>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._flatten_for_pytorch()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_mechanism_wrappers()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_projection_wrappers"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._instantiate_GRU_pytorch_projection_wrappers()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._torch_params_to_projections()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper._validate_optimizer_param_specs"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper._validate_optimizer_param_specs()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.forward"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper.forward()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru"><code class="docutils literal notranslate"><span class="pre">GRUComposition.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru()</span></code></a></li>
 </ul>
@@ -1301,7 +1342,6 @@ Return a list of all pathways from input_node -&gt; output node</p>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_composition_wrapper_type"><code class="docutils literal notranslate"><span class="pre">GRUComposition.pytorch_composition_wrapper_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.pytorch_mechanism_wrapper_type"><code class="docutils literal notranslate"><span class="pre">GRUComposition.pytorch_mechanism_wrapper_type</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._construct_pnl_composition"><code class="docutils literal notranslate"><span class="pre">GRUComposition._construct_pnl_composition()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._set_learning_attributes"><code class="docutils literal notranslate"><span class="pre">GRUComposition._set_learning_attributes()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.set_weights"><code class="docutils literal notranslate"><span class="pre">GRUComposition.set_weights()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition.infer_backpropagation_learning_pathways"><code class="docutils literal notranslate"><span class="pre">GRUComposition.infer_backpropagation_learning_pathways()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.library.compositions.grucomposition.grucomposition.GRUComposition._get_pytorch_backprop_pathway"><code class="docutils literal notranslate"><span class="pre">GRUComposition._get_pytorch_backprop_pathway()</span></code></a></li>
@@ -1332,7 +1372,7 @@ Return a list of all pathways from input_node -&gt; output node</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/documentation_options.js?v=938f80f1"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

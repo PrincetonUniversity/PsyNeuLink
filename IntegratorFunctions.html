@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.17.0.0 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.18.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0
+                  0.18.0.0
                 </div>
               
             
@@ -221,7 +221,7 @@
 <dd><p id="simpleintegrator">Acculuates at a rate determined by its <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a>;
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns:</p>
 <div class="math notranslate nohighlight">
-\[previous_value + rate * variable + noise + offset\]</div>
+\[previous\_value + rate * variable + noise + offset\]</div>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
 <div class="line"><em>MULTIPLICATIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a></div>
@@ -374,10 +374,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -389,7 +390,7 @@ arguments of the constructor.</p></li>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.stateful.integratorfunctions.</span></span><span class="sig-name descname"><span class="pre">AdaptiveIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator" title="Link to this definition">¶</a></dt>
 <dd><p id="adaptiveintegrator"><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns <a class="reference external" href="https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average">exponentially weighted moving average (EWMA)</a> of input:</p>
 <div class="math notranslate nohighlight">
-\[((1-rate) * previous_value) + (rate * variable)  + noise + offset\]</div>
+\[((1-rate) * previous\_value) + (rate * variable)  + noise + offset\]</div>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
 <div class="line"><em>MULTIPLICATIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a></div>
@@ -567,10 +568,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ndarray (dimension equal to variable)</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>ndarray (dimension equal to variable)</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -831,10 +833,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1165,10 +1168,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated coordinates</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated coordinates</strong> (<em>1d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1421,10 +1425,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1456,11 +1461,9 @@ reinitialization steps.</p>
 <div class="math notranslate nohighlight">
 \[time\_constant_v \frac{dv}{dt} = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 +
 d_v + e_v * w + f_v * I_{ext}\]</div>
-<p>where
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>time\_constant_w * \frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\_activity
-</pre></div>
-</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[time\_constant_w * \frac{dw}{dt} =` mode * a_w * v + b_w * w +c_w + (1 - mode) * uncorrelated\_activity\]</div>
 <p>Either <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler</a> or <a class="reference external" href="https://en.wikipedia.org/wiki/Dormand–Prince_method">Dormand–Prince (4th Order Runge-Kutta)</a> methods of numerical integration can be used.</p>
 <p>The FitzHughNagumoIntegrator implements all of the parameters of the FitzHughNagumo model; however, not all combinations of
 these are sensible. Typically, they are combined into two sets.  These are described below, followed by
@@ -1658,12 +1661,16 @@ correspond as follows:</p>
 </li>
 </ol>
 <dl class="field-list simple">
-<dt class="field-odd">param default_variable<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies a template for the external stimulus</p>
+<dt class="field-odd">type default_variable<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param default_variable<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies a template for the external stimulus</p>
 </dd>
-<dt class="field-even">type default_variable<span class="colon">:</span></dt>
-<dd class="field-even"><p>number, list or array : default class_defaults.variable</p>
+<dt class="field-odd">type default_variable<span class="colon">:</span></dt>
+<dd class="field-odd"><p>number, list or array : default class_defaults.variable</p>
 </dd>
+<dt class="field-even">type initial_w<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param initial_w<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
@@ -1671,111 +1678,147 @@ correspond as follows:</p>
 <dt class="field-even">type initial_w<span class="colon">:</span></dt>
 <dd class="field-even"><p>float, list or 1d array : default 0.0</p>
 </dd>
-<dt class="field-odd">param initial_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+<dt class="field-odd">type initial_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param initial_v<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
 </dd>
-<dt class="field-even">type initial_v<span class="colon">:</span></dt>
-<dd class="field-even"><p>float, list or 1d array : default 0.0</p>
+<dt class="field-odd">type initial_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, list or 1d array : default 0.0</p>
 </dd>
+<dt class="field-even">type time_step_size<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param time_step_size<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies the time step size of numerical integration</p>
 </dd>
 <dt class="field-even">type time_step_size<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default 0.1</p>
 </dd>
-<dt class="field-odd">param t_0<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies starting value for time</p>
+<dt class="field-odd">type t_0<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param t_0<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies starting value for time</p>
 </dd>
-<dt class="field-even">type t_0<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 0.0</p>
+<dt class="field-odd">type t_0<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 0.0</p>
 </dd>
+<dt class="field-even">type a_v<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param a_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the v^3 term of the dv/dt equation</p>
 </dd>
 <dt class="field-even">type a_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default -1/3</p>
 </dd>
-<dt class="field-odd">param b_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p>coefficient on the v^2 term of the dv/dt equation</p>
+<dt class="field-odd">type b_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param b_v<span class="colon">:</span></dt>
+<dd class="field-even"><p>coefficient on the v^2 term of the dv/dt equation</p>
 </dd>
-<dt class="field-even">type b_v<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 0.0</p>
+<dt class="field-odd">type b_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 0.0</p>
 </dd>
+<dt class="field-even">type c_v<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param c_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the v term of the dv/dt equation</p>
 </dd>
 <dt class="field-even">type c_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default 1.0</p>
 </dd>
-<dt class="field-odd">param d_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p>constant term in the dv/dt equation</p>
+<dt class="field-odd">type d_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param d_v<span class="colon">:</span></dt>
+<dd class="field-even"><p>constant term in the dv/dt equation</p>
 </dd>
-<dt class="field-even">type d_v<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 0.0</p>
+<dt class="field-odd">type d_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 0.0</p>
 </dd>
+<dt class="field-even">type e_v<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param e_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the w term in the dv/dt equation</p>
 </dd>
 <dt class="field-even">type e_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default -1.0</p>
 </dd>
-<dt class="field-odd">param f_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p>coefficient on the external stimulus (<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) term in the dv/dt equation</p>
+<dt class="field-odd">type f_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param f_v<span class="colon">:</span></dt>
+<dd class="field-even"><p>coefficient on the external stimulus (<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) term in the dv/dt equation</p>
 </dd>
-<dt class="field-even">type f_v<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default  1.0</p>
+<dt class="field-odd">type f_v<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default  1.0</p>
 </dd>
+<dt class="field-even">type time_constant_v<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param time_constant_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>scaling factor on the dv/dt equation</p>
 </dd>
 <dt class="field-even">type time_constant_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default 1.0</p>
 </dd>
-<dt class="field-odd">param a_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p>coefficient on the v term of the dw/dt equation</p>
+<dt class="field-odd">type a_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param a_w<span class="colon">:</span></dt>
+<dd class="field-even"><p>coefficient on the v term of the dw/dt equation</p>
 </dd>
-<dt class="field-even">type a_w<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 1.0,</p>
+<dt class="field-odd">type a_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 1.0,</p>
 </dd>
+<dt class="field-even">type b_w<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param b_w<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the w term of the dv/dt equation</p>
 </dd>
 <dt class="field-even">type b_w<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default -0.8,</p>
 </dd>
-<dt class="field-odd">param c_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p>constant term in the dw/dt equation</p>
+<dt class="field-odd">type c_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param c_w<span class="colon">:</span></dt>
+<dd class="field-even"><p>constant term in the dw/dt equation</p>
 </dd>
-<dt class="field-even">type c_w<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 0.7,</p>
+<dt class="field-odd">type c_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 0.7,</p>
 </dd>
+<dt class="field-even">type threshold<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param threshold<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies a value of the input below which the LC will tend not to respond and above which it will</p>
 </dd>
 <dt class="field-even">type threshold<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default -1.0</p>
 </dd>
-<dt class="field-odd">param mode<span class="colon">:</span></dt>
-<dd class="field-odd"><p>coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
+<dt class="field-odd">type mode<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param mode<span class="colon">:</span></dt>
+<dd class="field-even"><p>coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
 (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
 activity) decreases</p>
 </dd>
-<dt class="field-even">type mode<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 1.0</p>
+<dt class="field-odd">type mode<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 1.0</p>
 </dd>
+<dt class="field-even">type uncorrelated_activity<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param uncorrelated_activity<span class="colon">:</span></dt>
 <dd class="field-odd"><p>constant term in the dw/dt equation</p>
 </dd>
 <dt class="field-even">type uncorrelated_activity<span class="colon">:</span></dt>
 <dd class="field-even"><p>float : default 0.0</p>
 </dd>
-<dt class="field-odd">param time_constant_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p>scaling factor on the dv/dt equation</p>
+<dt class="field-odd">type time_constant_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param time_constant_w<span class="colon">:</span></dt>
+<dd class="field-even"><p>scaling factor on the dv/dt equation</p>
 </dd>
-<dt class="field-even">type time_constant_w<span class="colon">:</span></dt>
-<dd class="field-even"><p>float : default 12.5</p>
+<dt class="field-odd">type time_constant_w<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float : default 12.5</p>
 </dd>
+<dt class="field-even">type integration_method<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 <dt class="field-odd">param integration_method<span class="colon">:</span></dt>
 <dd class="field-odd"><p>selects the numerical integration method. Currently, the choices are: “RK4” (4th Order Runge-Kutta) or “EULER”
 (Forward Euler)</p>
@@ -1784,7 +1827,7 @@ activity) decreases</p>
 <dd class="field-even"><p>str : default “RK4”</p>
 </dd>
 <dt class="field-odd">type params<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>]</span></p>
 </dd>
 <dt class="field-even">param params<span class="colon">:</span></dt>
 <dd class="field-even"><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1794,26 +1837,28 @@ arguments of the constructor.</p>
 <dt class="field-odd">type params<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[param keyword: param value] : default None</p>
 </dd>
-<dt class="field-even">param owner<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
+<dt class="field-even">type owner<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">param owner<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 </dd>
-<dt class="field-odd">type owner<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Component</p>
+<dt class="field-even">type owner<span class="colon">:</span></dt>
+<dd class="field-even"><p>Component</p>
 </dd>
-<dt class="field-even">param name<span class="colon">:</span></dt>
-<dd class="field-even"><p>specifies the name of the Function.</p>
+<dt class="field-odd">param name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>specifies the name of the Function.</p>
 </dd>
-<dt class="field-odd">type name<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code></p>
+<dt class="field-even">type name<span class="colon">:</span></dt>
+<dd class="field-even"><p>str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code></p>
 </dd>
-<dt class="field-even">type prefs<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BasePreferenceSet</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[‘_report_output_pref’, ‘_log_pref’, ‘_delivery_pref’, ‘_param_validation_pref’, ‘_verbose_pref’, ‘_runtime_param_modulation_pref’], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</p>
+<dt class="field-odd">type prefs<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BasePreferenceSet</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'_report_output_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_log_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_delivery_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_param_validation_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_verbose_pref'</span></code>, <code class="docutils literal notranslate"><span class="pre">'_runtime_param_modulation_pref'</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
 </dd>
-<dt class="field-odd">param prefs<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
+<dt class="field-even">param prefs<span class="colon">:</span></dt>
+<dd class="field-even"><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 </dd>
-<dt class="field-even">type prefs<span class="colon">:</span></dt>
-<dd class="field-even"><p>PreferenceSet or specification dict : default Function.classPreferences</p>
+<dt class="field-odd">type prefs<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict : default Function.classPreferences</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -2126,11 +2171,15 @@ _instantiate_attributes_before_function below</p></li>
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>current value of v , current value of w, current time_step of integration</strong></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">(<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>)</span></p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ndarray</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li></li>
+<li><p><strong>current value of v , current value of w, current time_step of integration</strong> (<em>ndarray</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2362,10 +2411,11 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2582,10 +2632,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2876,10 +2927,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3127,10 +3179,11 @@ arguments of the constructor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>updated value of integral</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2d array</p>
+<dd class="field-even"><p><ul class="simple">
+<li></li>
+<li><p><strong>updated value of integral</strong> (<em>2d array</em>)</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3582,7 +3635,7 @@ _instantiate_attributes_before_function below</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=8a09d5d4"></script>
+         <script src="_static/documentation_options.js?v=938f80f1"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
