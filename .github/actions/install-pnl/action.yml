@@ -44,9 +44,11 @@ runs:
         echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
         echo "$PYTHON_LOC" >> $GITHUB_PATH
 
-    - name: Update pip and wheel
+    - name: Update pip and build tooling
       shell: bash
-      run: python -m pip install --upgrade pip wheel
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade hatch build
 
     - name: Drop pytorch on x86
       shell: bash
@@ -98,12 +100,13 @@ runs:
           echo "new_package=''" >> $GITHUB_OUTPUT
         fi
 
-    - name: Build dist
+    - name: Build dist (hatch)
       id: dist
       shell: bash
       run: |
-        pip install setuptools wheel
-        python setup.py sdist bdist_wheel
+        hatch --version
+        # Ensure tags are available for hatch-vcs versioning (checkout step in workflow already fetches tags)
+        hatch build
         echo "wheel=$(ls dist/*.whl)" | tee -a "$GITHUB_OUTPUT"
         echo "sdist=$(ls dist/*.tar.gz)" | tee -a "$GITHUB_OUTPUT"
 

@@ -1,0 +1,226 @@
+[build-system]
+requires = [
+  "hatchling>=1.18",
+  "hatch-vcs>=0.4",
+  "hatch-requirements-txt>=0.4"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "psyneulink"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+description = "A block modeling system for cognitive neuroscience"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+requires-python = ">=3.8"
+license = { file = "LICENSE.txt" }
+authors = [
+  { name = "Jonathan Cohen, Princeton University", email = "jdc@princeton.edu" }
+]
+keywords = ["cognitive modeling"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13"
+]
+
+[project.urls]
+Homepage = "https://github.com/PrincetonUniversity/PsyNeuLink"
+
+## Dependencies are loaded dynamically via hatch-requirements-txt
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = [
+  "requirements.txt"
+]
+
+[tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
+cuda = ["cuda_requirements.txt"]
+dev = ["dev_requirements.txt"]
+doc = ["doc_requirements.txt"]
+tutorial = ["tutorial_requirements.txt"]
+
+[tool.pytest.ini_options]
+addopts = [
+  "-s",
+  "-vv",
+  "-n", "auto",
+  "--dist", "worksteal",
+  "--benchmark-disable",
+  "--benchmark-disable-gc",
+  "--benchmark-warmup=on",
+  "--benchmark-warmup-iterations=2",
+  "--cov-config=pyproject.toml",
+  "--pydocstyle",
+  "--pycodestyle",
+  "--strict-markers",
+  "--strict-config",
+  "--ignore=Scripts"
+]
+markers = [
+  "stress: Long running tests, skipped by defaults",
+  "autodiff_constructor",
+  "acmisc",
+  "accorrectness",
+  "actime",
+  "acidenticalness",
+  "aclogging",
+  "acnested",
+  "composition: PsyNeuLink Composition tests",
+  "llvm: Tests using LLVM runtime compiler",
+  "llvm_not_implemented: Tests that should use LLVM runtime compiler but the functionality is not yet implemented",
+  "cuda: Tests using LLVM runtime compiler and CUDA GPGPU backend",
+  "control: Tests including control mechanism and/or control projection",
+  "state_features: Tests for OptimizationControlMechanism state_features specifications",
+  "pathways: Tests for pathway arg of Composition constructor and node Roles",
+  "projection",
+  "nested: Tests including nested compositions",
+  "function: Tests of Function classes",
+  "combination_function",
+  "distance_function",
+  "fitzHughNagumo_integrator_function",
+  "identity_function",
+  "integrator_function",
+  "memory_function",
+  "optimization_function",
+  "stability_function",
+  "transfer_function",
+  "multirun: Tests running multiple execution IDs",
+  "mechanism: Tests of Mechanism classes",
+  "control_mechanism",
+  "ddm_mechanism",
+  "integrator_mechanism",
+  "lca_mechanism",
+  "objective_mechanism",
+  "recurrent_transfer_mechanism",
+  "transfer_mechanism",
+  "mimo: Tests using multiple inputs and outputs",
+  "model: Tests based on existing models",
+  "pytorch: Tests using Torch"
+]
+required_plugins = [
+  "pytest-benchmark",
+  "pytest-cov",
+  "pytest-helpers-namespace",
+  "pytest-pycodestyle",
+  "pytest-pydocstyle",
+  "pytest-xdist"
+]
+xfail_strict = true
+filterwarnings = [
+  "error::SyntaxWarning",
+  "error:Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated.*",
+  "error:Invalid escape sequence",
+  "error:the matrix subclass is not the recommended way to represent matrices or deal with linear algebra",
+  "error:Passing (type, 1) or '1type' as a synonym of type is deprecated",
+  "error:A builtin ctypes object gave a PEP3118:RuntimeWarning",
+  "error:Pickle, copy, and deepcopy support will be removed from itertools:DeprecationWarning",
+  "error:Benchmark fixture was not used at all in this test!",
+  "ignore:.*is not an MDF standard function, this is likely to produce an incompatible model.:UserWarning"
+]
+
+# Hatch versioning from VCS tags
+[tool.hatch]
+version.source = "vcs"
+# version.tag-pattern = "v*"
+
+
+# Ensure sdists include non-package resources formerly covered by MANIFEST.in
+[tool.hatch.build]
+hooks.vcs.version-file = "psyneulink/_version.py"
+include = [
+  "README.rst",
+  "LICENSE.txt",
+  "requirements.txt",
+  "dev_requirements.txt",
+  "doc_requirements.txt",
+  "cuda_requirements.txt",
+  "tutorial_requirements.txt",
+  "docs/**",
+  "tests/**",
+  "tutorial/**",
+  "psyneulink/library/models/results/*.json"
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "LICENSE.txt",
+  "psyneulink/library/models/results/*.json"
+]
+
+[tool.pycodestyle]
+ignore = [
+  "E114","E115","E116","E121","E122","E123","E124","E125","E126","E127","E128","E129","E131",
+  "E201","E202","E203","E221","E225","E231","E241","E251","E252","E261","E262","E265","E301","E302","E303","E306","E501","E721","E722","E731","E741","W503","W504","W605"
+]
+exclude = [
+  ".git/*","Scripts/*","__pytest__/*","docs/*","bin/*","psyneulink/core/rpc/graph_pb2.py"
+]
+
+[tool.pydocstyle]
+# for code explanation see https://pep8.readthedocs.io/en/latest/intro.html#error-codes
+add-ignore = [
+  "D100","D101","D102","D103","D104","D105","D106","D107","D200","D202","D204","D205","D207","D208","D301","D400","D401","D402","D403","D412","D413","D414"
+]
+# Ignore non-PNL python files
+# psyneulink/core/rpc/graph_pb2.py -- generated by protobuf compiler
+match-dir = "(?!Script)(?!bin)(?!docs).*"
+
+[tool.coverage.run]
+branch = true
+concurrency = ["multiprocessing"]
+source = ["psyneulink"]
+
+[tool.coverage.report]
+fail_under = 75
+exclude_lines = [
+  # Have to re-enable the standard pragma
+  'pragma: no cover',
+
+  # Don't complain about missing debug-only code:
+  'def __repr__',
+  'if self\\.debug',
+  'if .*dump.* in .*debug_env:',
+  'if .*compile.* in .*debug_env:',
+
+  # Don't complain if tests don't hit defensive assertion code:
+  'raise .*Error',
+  'assert False.*',
+
+   # Don't complain if non-runnable code isn't run:
+  'if 0:',
+  'if __name__ == .__main__.'
+]
+
+[tool.ruff.lint]
+extend-select = [
+  "B",           # flake8-bugbear
+  "I",           # isort
+  "ARG",         # flake8-unused-arguments
+  "C4",          # flake8-comprehensions
+  "EM",          # flake8-errmsg
+  "ICN",         # flake8-import-conventions
+  "PGH",         # pygrep-hooks
+  "PIE",         # flake8-pie
+  "PL",          # pylint
+  "PT",          # flake8-pytest-style
+  "PTH",         # flake8-use-pathlib
+  "RET",         # flake8-return
+  "RUF",         # Ruff-specific
+  "SIM",         # flake8-simplify
+  "TID251",      # flake8-tidy-imports.banned-api
+  "T20",         # flake8-print
+  "UP",          # pyupgrade
+  "YTT",         # flake8-2020
+]
+ignore = [
+  "PLR",    # Design related pylint codes
+  "RUF012", # Would require a lot of ClassVar's
+]

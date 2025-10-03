@@ -35,9 +35,9 @@ _unit_registry.precision = 8  # TODO: remove when floating point issues resolved
 from . import core  # noqa: E402
 from . import library  # noqa: E402
 
-from . import _version # noqa: E402
 from .core import *  # noqa: E402
 from .library import *  # noqa: E402
+from ._version import version as __version__  # noqa: E402
 
 
 _pnl_global_names = [
@@ -49,9 +49,6 @@ _called_from_pytest = False
 __all__ = list(_pnl_global_names)
 __all__.extend(core.__all__)
 __all__.extend(library.__all__)
-
-# set __version__ based on versioneer
-__version__ = _version.get_versions()['version']
 
 # suppress numpy overflow and underflow errors
 _numpy.seterr(over='ignore', under='ignore')

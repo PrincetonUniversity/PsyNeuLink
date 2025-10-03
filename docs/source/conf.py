@@ -77,7 +77,7 @@ author = u'Jonathan D. Cohen'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = psyneulink._version.get_versions()['version']
+release = getattr(psyneulink._version, "version", "0+unknown")
 # The short X.Y version.
 version = '.'.join(release.split('.')[:4])
 
