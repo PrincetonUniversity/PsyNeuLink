@@ -199,3 +199,6 @@ tests/*.pdf
 /tests/mdf/*.json
 /tests/mdf/*.yml
 /Scripts/ScratchPad FIGURES/
+
+# Dynamically generated version file
+psyneulink/_version.py
