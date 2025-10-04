@@ -300,7 +300,7 @@ class PNLStrEnum(str, Enum, metaclass=PNLStrEnumMeta):
     def __eq__(self, other):
         return self.value == self._normalize_value(other)
 
-    def _generate_next_value_(name, start, count, last_values):  # noqa: U100
+    def _generate_next_value_(name, start, count, last_values):
         return PNLStrEnum._normalize_value(name)
 
     @classmethod
