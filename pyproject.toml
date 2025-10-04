@@ -285,4 +285,4 @@ ignore = [
 ]
 
 # Treat names beginning with "_" as intentionally unused; also ignore common throwaways.
-dummy-variable-rgx = "^(_.*|args|kwargs|unused_.*|params|context)$"
+dummy-variable-rgx = "^(_.*|args|kwargs|unused_.*|params|context|variable)$"
