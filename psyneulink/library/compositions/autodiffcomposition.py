@@ -2226,7 +2226,7 @@ class AutodiffComposition(Composition):
 
     def _get_state_struct_type(self, ctx):
         comp_state_type_list = ctx.get_state_struct_type(super())
-        pytorch_representation = self._build_pytorch_representation()
+        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
         return pnlvm.ir.LiteralStructType((
