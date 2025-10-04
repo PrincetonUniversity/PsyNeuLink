@@ -65,7 +65,8 @@ runs:
           sed -i /torch/d requirements.txt
           sed -i /modeci_mdf/d requirements.txt
           # pywinpty is a transitive dependency and v1.0+ removed support for x86 wheels
-          echo "pywinpty<1" >> env_constraints.txt
+          # Prefer a wheel-bearing version to avoid source builds on win32
+          echo "pywinpty>=0.5.10,<1" >> env_constraints.txt
           # jupyter_server >= 2 pulls jupyter_server_terminals which depends on in pywinpty >= 2.0.3
           echo "jupyter_server<2" >> env_constraints.txt
           # scipy >=1.9.2 doesn't provide win32 wheel and GA doesn't have working fortran on windows
