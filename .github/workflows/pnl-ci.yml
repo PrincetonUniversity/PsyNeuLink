@@ -118,14 +118,7 @@ jobs:
         git config user.email "none"
         git commit -a -m "Restrict version of direct dependencies to min"
 
-    - name: uv cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/uv
-          ~\AppData\Local\uv\cache
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-uv-${{ hashFiles('pyproject.toml', 'requirements.txt', 'dev_requirements.txt', 'tutorial_requirements.txt', 'uv.lock') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-uv-${{ hashFiles('pyproject.toml', 'requirements.txt', 'dev_requirements.txt', 'tutorial_requirements.txt', 'uv.lock') }}
+    # uv is installed and cached by the composite action
 
     - name: Install PNL package
       uses: ./.github/actions/install-pnl

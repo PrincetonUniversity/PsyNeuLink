@@ -54,7 +54,8 @@ runs:
         python -m pip install --upgrade pip
         # Install build tools into the venv using uv
         uv --version
-        uv pip install --python "$(command -v python)" --upgrade hatch build
+        PY_BIN="$(python -c 'import sys; print(sys.executable)')"
+        uv pip install --python "$PY_BIN" --upgrade hatch build
 
     - name: Drop pytorch on x86
       shell: bash
@@ -119,7 +120,8 @@ runs:
     - name: Python dependencies (uv)
       shell: bash
       run: |
-        uv pip install --python "$(command -v python)" "${{ steps.dist.outputs.wheel }}[${{ inputs.features }}]" -c env_constraints.txt -c broken_trans_deps.txt
+        PY_BIN="$(python -c 'import sys; print(sys.executable)')"
+        uv pip install --python "$PY_BIN" "${{ steps.dist.outputs.wheel }}[${{ inputs.features }}]" -c env_constraints.txt -c broken_trans_deps.txt
       env:
         # Setting CXXFLAGS works around a missing include that breaks the build
         # of onnx-1/17.0 on recent gcc/clang compilers.
