@@ -30,6 +30,9 @@ runs:
           *) echo "Unsupported OS"; exit 1 ;;
         esac
 
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v6
+
     - name: Setup Python venv
       shell: bash
       run: |
@@ -44,11 +47,14 @@ runs:
         echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
         echo "$PYTHON_LOC" >> $GITHUB_PATH
 
-    - name: Update pip and build tooling
+    - name: Install build tooling (uv)
       shell: bash
       run: |
+        # Ensure pip is present for dependabot verification steps
         python -m pip install --upgrade pip
-        python -m pip install --upgrade hatch build
+        # Install build tools into the venv using uv
+        uv --version
+        uv pip install --python "$(command -v python)" --upgrade hatch build
 
     - name: Drop pytorch on x86
       shell: bash
@@ -110,10 +116,10 @@ runs:
         echo "wheel=$(ls dist/*.whl)" | tee -a "$GITHUB_OUTPUT"
         echo "sdist=$(ls dist/*.tar.gz)" | tee -a "$GITHUB_OUTPUT"
 
-    - name: Python dependencies
+    - name: Python dependencies (uv)
       shell: bash
       run: |
-        pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
+        uv pip install --python "$(command -v python)" "${{ steps.dist.outputs.wheel }}[${{ inputs.features }}]" -c env_constraints.txt -c broken_trans_deps.txt
       env:
         # Setting CXXFLAGS works around a missing include that breaks the build
         # of onnx-1/17.0 on recent gcc/clang compilers.
@@ -127,18 +133,11 @@ runs:
         # Note that $TEMP is only used to set pip's build location on Windows.
         TEMP: ${{ runner.temp }}
 
-    - name: Cleanup old wheels
+    - name: Cleanup uv cache
       shell: bash
       run: |
-        pip cache info
-        INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
-        CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
-        for P in $CACHED; do
-          # Remove cached and not installed
-          if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
-            pip cache remove -v $P || true
-          fi
-        done
+        # Best-effort prune of uv cache to keep artifacts small
+        uv cache prune -y || true
 
     - name: Check updated package
       if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' && steps.new_package.outputs.new_package != '' }}
