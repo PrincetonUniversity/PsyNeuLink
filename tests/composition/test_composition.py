@@ -6663,7 +6663,7 @@ class TestProperties:
 
         # FIXME: using num_executions is a hack. The name collides with
         #        a stateful param of every component and thus it's not supported
-        def myFunc(variable, params, context, num_executions):
+        def myFunc(variable, params, context, _num_executions):
             return variable * 2
 
         U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]], num_executions=0)

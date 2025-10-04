@@ -2488,7 +2488,7 @@ class TestControlMechanisms:
 
         if prng == 'Default':
             prngs = {s:np.random.RandomState([s]) for s in seeds}
-            def get_val(s, dty):
+            def get_val(s, _dty):
                 return prngs[s].uniform()
         elif prng == 'Philox':
             prngs = {s:_SeededPhilox([s]) for s in seeds}

@@ -1343,7 +1343,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=None,
                  termination_measure=None,
                  termination_threshold: Optional[Union[int, float]] = None,
-                 termination_comparison_op: Optional[Union[str, Literal['<', '<=', '>', '>=', '==', '!=']]] = None,
+                 termination_comparison_op: Optional[Union[str, Literal["<", "<=", ">", ">=", "==", "!="]]] = None,  # noqa: F722
                  output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,

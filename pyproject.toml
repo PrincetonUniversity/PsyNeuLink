@@ -190,6 +190,7 @@ exclude = [
 select = [
   "E", # pycodestyle errors
   "D", # pydocstyle errors
+  # "F", # pyflakes
 ]
 extend-select = [
   # "B",           # flake8-bugbear
@@ -282,3 +283,6 @@ ignore = [
   "D213", # multi-line-summary-second-line
   "D203", # incorrect-blank-line-before-class
 ]
+
+# Treat names beginning with "_" as intentionally unused; also ignore common throwaways.
+dummy-variable-rgx = "^(_.*|args|kwargs|unused_.*|params|context)$"

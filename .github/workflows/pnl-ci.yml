@@ -139,20 +139,26 @@ jobs:
       with:
         features: 'dev'
 
-    - name: Lint with flake8
+    - name: Lint with Ruff
       shell: bash
       run: |
-        pip install flake8 flake8-unused-arguments
+        # Stop build if there are unused arguments in tests (these might be fixtures, similar to old flake8 U100)
+        # - Select only ARG rules, but ignore lambda-argument warnings (ARG005)
+        # - Exclude a known test file to match prior flake8 behavior
+        ruff check tests \
+          --select ARG \
+          --ignore ARG005 \
+          --exclude tests/functions/test_user_defined_func.py
 
-        # stop build if there are unused arguments in tests (these might be fixtures)
-        flake8 tests/ --select=U100 --unused-arguments-ignore-stub-functions --unused-arguments-ignore-lambdas --unused-arguments-ignore-nested-functions --unused-arguments-ignore-variadic-names --extend-exclude tests/functions/test_user_defined_func.py
+        # Stop build on syntax errors and specific pyflakes issues.
+        # Mirror previous flake8 selection and ignore F821 (undefined names) due to existing patterns.
+        ruff check . \
+          --select E9,F63,F7,F82 \
+          --ignore F821 \
+          --exclude Scripts
 
-        # stop the build if there are Python syntax errors or undefined names
-        # exclude F821 "unknown names" as there are quite a few of them around PNL
-        flake8 . --count --select=E9,F63,F7,F82 --extend-ignore=F821 --show-source  --extend-exclude Scripts/
-
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        # Non-blocking statistics for visibility (similar to flake8 --exit-zero --statistics)
+        ruff check . --select F --exit-zero --statistics
 
     - name: Print numpy info
       shell: bash

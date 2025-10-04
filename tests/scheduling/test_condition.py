@@ -76,7 +76,7 @@ class TestCondition:
 
     def test_additional_kwargs(self):
         class OneSatisfied(Condition):
-            def __init__(self, a, c=True):
+            def __init__(self, a, _c=True):
                 def func(a, b, c=True):
                     return a or b or c
                 super().__init__(func, a, c=True)
