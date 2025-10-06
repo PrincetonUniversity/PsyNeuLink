@@ -15,7 +15,7 @@ Scope: This file applies to the entire repository. It provides practical guidanc
 - `docs/`: Sphinx documentation sources; reStructuredText and project config.
 - `tutorial/`: Jupyter tutorial notebook and extras.
 - `Scripts/`, `Matlab/`, `ys_test/`: Prototypes, historical scripts, or external assets; tests ignore `Scripts/`.
-- Top-level: `CONVENTIONS.md` (style rules), `CONTRIBUTING.md`, `setup.cfg` (pytest, coverage, lint), requirements files.
+- Top-level: `CONVENTIONS.md` (style rules), `CONTRIBUTING.md`, `pyproject.toml` (metadata, pytest, coverage, lint), requirements files.
 - Do not make commits without first checking!
 
 **Environment & Installation**
@@ -30,7 +30,7 @@ Scope: This file applies to the entire repository. It provides practical guidanc
 - Respect pinned dependency ranges in `requirements.txt` (e.g., `llvmlite`, `torch`, `numpy`, `matplotlib`). Avoid bumping pins as part of unrelated changes.
 
 **Running Tests**
-- Default suite (parallel by xdist is configured in `setup.cfg`): `pytest`.
+- Default suite (parallel by xdist is configured in `pyproject.toml`): `pytest`.
 - By area: `pytest tests/components -q`, `pytest tests/ports -q`, etc.
 - Single test: `pytest path/to/test_file.py::test_name -n 0 -q`.
 - Markers (selected via `-m`):
@@ -38,8 +38,8 @@ Scope: This file applies to the entire repository. It provides practical guidanc
   - `cuda`: Requires CUDA; always combined with `llvm`.
   - `pytorch`: Requires PyTorch availability.
   - `stress`: Long-running; skipped by default unless `--stress` is passed.
-- Lint and docstyle run inside pytest (pycodestyle, pydocstyle). Fix failures before committing.
-- Coverage is configured in `setup.cfg` with fail-under threshold; run with `pytest --cov psyneulink -q` when needed.
+- Linting runs with Ruff via `pytest-ruff` and CI `ruff check`. Flake8/pycodestyle/pydocstyle are no longer used. Fix Ruff failures before committing.
+- Coverage is configured in `pyproject.toml` with fail-under threshold; run with `pytest --cov psyneulink -q` when needed.
 - If debugging nondeterminism, tests can be run single-threaded with `-n 0`. Seeds are set in `conftest.py` for determinism.
 
 **Coding Conventions**
@@ -111,8 +111,7 @@ Scope: This file applies to the entire repository. It provides practical guidanc
 **References**
 - Coding & docs conventions: `CONVENTIONS.md`
 - Contribution workflow: `CONTRIBUTING.md`
-- Test configuration and markers: `setup.cfg`, `conftest.py`
-- Package metadata and extras: `setup.py`
+- Test configuration and markers: `pyproject.toml`, `conftest.py`
+- Package metadata and extras: `pyproject.toml`
 
 If anything here conflicts with direct maintainer instructions or issue-specific guidance, follow the maintainer guidance and update this file as needed.
-
