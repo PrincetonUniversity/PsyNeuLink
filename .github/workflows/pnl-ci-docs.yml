@@ -85,7 +85,7 @@ jobs:
       run: git tag --force 'v0.0.0.0'
 
     - name: Build Documentation
-      run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
+      run: uv run make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
     - name: Remove git tag
       # The generated docs include PNL version,
