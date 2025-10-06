@@ -140,7 +140,7 @@ runs:
       shell: bash
       run: |
         # Best-effort prune of uv cache to keep artifacts small
-        uv cache prune -y || true
+        uv cache prune || true
 
     - name: Check updated package
       if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' && steps.new_package.outputs.new_package != '' }}
