@@ -10,6 +10,12 @@ pytest.importorskip(
     'modeci_mdf',
     reason='MDF methods require modeci_mdf package'
 )
+
+# Skip if Python 3.10 or less, onnxruntime triggers a SyntaxWarning (treated as error)
+# from an invalid escape sequence in onnxruntime/capi/_pybind_state.py
+if sys.version_info < (3, 10):
+    pytest.skip('onnxruntime triggers a SyntaxWarning (treated as error) from an invalid escape sequence in onnxruntime/capi/_pybind_state.py', allow_module_level=True)
+
 from modeci_mdf.execution_engine import evaluate_onnx_expr  # noqa: E402
 
 
