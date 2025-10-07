@@ -16,12 +16,6 @@ onnx != 1.14.0
 # but modeci_mdf that's available for python 3.11 doesn't do that.
 onnxruntime != 1.16; python_version == '3.11'
 
-# onnxruntime <= 1.17.0 causes pytest to fail to collect tests
-# when it is imported in mdf/test_mdf because
-# onnxruntime/capi/_pybind_state.py contains an unescaped backslash
-# in a warning. 
-onnxruntime >= 1.17
-
 # torch wheels for win32 python3.10 are built against numpy>=1.23
 # and it's not reported in their dependency lists
 # https://github.com/pytorch/pytorch/issues/100690
