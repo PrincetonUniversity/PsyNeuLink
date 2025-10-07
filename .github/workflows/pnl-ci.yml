@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.11', '3.12', '3.13']
         python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
@@ -74,19 +74,13 @@ jobs:
             # https://github.com/ionelmc/pytest-benchmark/issues/243
             extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
 
-          # add python 3.8 with deps restricted to min supported version
+          # add python 3.9 with deps restricted to min supported version
           # use default python architecture
           # https://github.com/actions/setup-python/issues/960
-          - python-version: '3.8'
+          - python-version: '3.9'
             os: macos
             version-restrict: 'min'
 
-        exclude:
-          # 3.8/x64 python is broken on aarch64 macos runners
-          # https://github.com/actions/setup-python/issues/960
-          - python-version: '3.8'
-            python-architecture: 'x64'
-            os: macos
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
