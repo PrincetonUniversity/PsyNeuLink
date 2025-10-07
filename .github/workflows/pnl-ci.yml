@@ -80,7 +80,13 @@ jobs:
           - python-version: '3.9'
             os: macos
             version-restrict: 'min'
-
+        
+        exclude:
+          # 3.9/x64 python is broken on aarch64 macos runners
+          # https://github.com/actions/setup-python/issues/825
+          - python-version: '3.9'
+            python-architecture: 'x64'
+            os: macos
 
     steps:
     # increased fetch-depth and tag checkout needed to get correct
