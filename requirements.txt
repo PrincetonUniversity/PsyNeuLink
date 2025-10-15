@@ -13,7 +13,7 @@ numpy>=1.21.0, <2.3.4
 optuna<4.6.0
 packaging<26.0
 pandas<2.3.4
-pillow<11.4.0
+pillow<12.1.0
 pint<0.26.0
 protobuf>=3.20.2, <6.32.2
 rich>=10.2, <10.13
