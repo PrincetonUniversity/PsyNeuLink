@@ -618,6 +618,9 @@ class Pathway(object, metaclass=UsesParametersMeta):
                     self.default_projection_matrix = item
         assert True
 
+    def __iter__(self):
+        return iter(self.pathway)
+
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
         <Composition_Nodes>` by the **composition** to which it belongs.
