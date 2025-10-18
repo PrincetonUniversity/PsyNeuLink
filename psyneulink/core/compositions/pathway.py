@@ -351,11 +351,13 @@ from enum import Enum
 
 from psyneulink._typing import Literal
 
+from psyneulink.core.components.component import UsesParametersMeta
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.utilities import is_matrix
 from psyneulink.core.globals.registry import register_category
 
@@ -450,7 +452,7 @@ class PathwayRole(Enum):
     LEARNING = 8
 
 
-class Pathway(object):
+class Pathway(object, metaclass=UsesParametersMeta):
     """
     Pathway(                       \
         pathway,                   \
@@ -553,6 +555,9 @@ class Pathway(object):
     componentName = componentType
     name = componentName
 
+    class Parameters(ParametersBase):
+        learning_rate = Parameter(None, stateful=False)
+
     def __init__(
             self,
             pathway:list,
@@ -572,6 +577,8 @@ class Pathway(object):
                 raise CompositionError(
                     f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
                 )
+
+        self._initialize_parameters()
 
         # There should be no other arguments in constructor
         if kwargs:
@@ -638,6 +645,14 @@ class Pathway(object):
             self.roles.add(PathwayRole.INTERNAL)
         if self.learning_components:
             self.roles.add(PathwayRole.LEARNING)
+
+    # TODO: consider if appropriate to make Pathway a Component type or
+    # both of some shared superclass in the same vein as
+    # UsesParametersMeta
+    def _initialize_parameters(self):
+        self.parameters = self.Parameters(owner=self, parent=type(self).parameters)
+        for param in self.parameters:
+            param.set(param.default_value)
 
     @property
     def input(self):
