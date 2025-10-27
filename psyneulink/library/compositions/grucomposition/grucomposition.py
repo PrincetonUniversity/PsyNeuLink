@@ -331,7 +331,9 @@ __all__ = ['GRUComposition', 'GRUCompositionError', 'INPUT_NODE', 'HIDDEN_LAYER'
            'HIDDEN_TO_OUTPUT',
            'BIAS_NODE_INPUT_TO_NEW', 'BIAS_NODE_INPUT_TO_UPDATE', 'BIAS_NODE_INPUT_TO_RESET', 'BIAS_NODE_HIDDEN_TO_NEW',
            'BIAS_NODE_HIDDEN_TO_RESET', 'BIAS_NODE_HIDDEN_TO_UPDATE', 'BIAS_INPUT_TO_RESET', 'BIAS_INPUT_TO_UPDATE',
-           'BIAS_INPUT_TO_NEW', 'BIAS_HIDDEN_TO_RESET', 'BIAS_HIDDEN_TO_UPDATE', 'BIAS_HIDDEN_TO_NEW'
+           'BIAS_INPUT_TO_NEW', 'BIAS_HIDDEN_TO_RESET', 'BIAS_HIDDEN_TO_UPDATE', 'BIAS_HIDDEN_TO_NEW',
+           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN', 'B_IH_NAME', 'B_HH_NAME',
+           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN', 'W_IH_NAME', 'W_HH_NAME',
            ]
 
 # Node names
@@ -384,6 +386,19 @@ TO_HIDDEN_LAYER_INPUT = 'TO HIDDEN LAYER INPUT'
 RESET_GATING_SIGNAL = 'RESET GATING SIGNAL'
 RECURRENT_GATING_SIGNAL = 'RECURRENT GATING SIGNAL'
 NEW_GATING_SIGNAL = 'NEW GATING SIGNAL'
+
+
+# pytorch wrapper names
+INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
+HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
+BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
+BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
+HIDDEN_PROJECTION_SETS = [INPUT_TO_HIDDEN, HIDDEN_TO_HIDDEN]
+HIDDEN_BIAS_SETS = [BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN]
+W_IH_NAME = 'weight_ih_l0'
+W_HH_NAME = 'weight_hh_l0'
+B_IH_NAME = 'bias_ih_l0'
+B_HH_NAME = 'bias_hh_l0'
 
 
 class GRUCompositionError(CompositionError):
@@ -1255,20 +1270,17 @@ class GRUComposition(AutodiffComposition):
 
     @property
     def w_ih_learning_rate(self):
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import INPUT_TO_HIDDEN
         pytorch_rep = self._build_pytorch_representation()
         return pytorch_rep._pnl_refs_to_torch_param_names[INPUT_TO_HIDDEN].projection.learning_rate
 
     @property
     def w_hh_learning_rate(self):
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import HIDDEN_TO_HIDDEN
         pytorch_rep = self._build_pytorch_representation()
         return pytorch_rep._pnl_refs_to_torch_param_names[HIDDEN_TO_HIDDEN].projection.learning_rate
 
     @property
     def b_ih_learning_rate(self):
         if self.bias:
-            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_INPUT_TO_HIDDEN
             pytorch_rep = self._build_pytorch_representation()
             return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_INPUT_TO_HIDDEN].projection.learning_rate
         warnings.warn(f"{self.name} does not have any bias parameters; "
@@ -1277,7 +1289,6 @@ class GRUComposition(AutodiffComposition):
     @property
     def b_hh_learning_rate(self):
         if self.bias:
-            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_HIDDEN_TO_HIDDEN
             pytorch_rep = self._build_pytorch_representation()
             return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_HIDDEN_TO_HIDDEN].projection.learning_rate
         warnings.warn(f"{self.name} does not have any bias parameters; "
