@@ -247,6 +247,11 @@ class SampleSpec(metaclass=SampleMeta):
 
     def __repr__(self):
         params_list = ['start', 'stop', 'step', 'num', 'function', 'custom_spec']
+
+        # If there is a custom_spec, only show that
+        if self.custom_spec:
+            params_list = ['custom_spec']
+
         params_str = ", ".join([f"{k}={repr(getattr(self, k))}" for k in params_list if getattr(self, k) is not None])
         return f"SampleSpec({params_str})"
 

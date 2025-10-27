@@ -17,14 +17,9 @@ onnx != 1.14.0
 onnxruntime != 1.16; python_version == '3.11'
 
 # torch wheels for win32 python3.10 are built against numpy>=1.23
+# and it's not reported in their dependency lists
 # https://github.com/pytorch/pytorch/issues/100690
 torch !=2.0.1, !=2.0.0, !=1.13.*, !=1.12.*; python_version == '3.10' and platform_system == 'Windows'
-
-# cattrs==23.1.1 requires typing_extensions>=4, but doesn't reflect this in
-# dependencies. Only affects python 3.7
-# https://github.com/python-attrs/cattrs/issues/372
-# PNL is restricted to typing_extension <4 because of dependence on old rich<10.13
-cattrs != 23.1.1; python_version < '3.8'
 
 # cattrs==23.2.{1,2} breaks json serialization
 # https://github.com/python-attrs/cattrs/issues/453
@@ -40,5 +35,5 @@ coverage != 7.6.5
 
 # pytorch doesn't provide wheels for macos x64 for torch-2.3.0+
 # https://pypi.org/project/torch/2.3.0/#files
-# the last avaialble version (2.2.2) doesn't work with Numpy2.0
+# the last available version (2.2.2) doesn't work with Numpy2.0
 numpy < 2; platform_system == 'Darwin' and platform_machine == 'x86_64'

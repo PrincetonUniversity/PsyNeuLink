@@ -13,11 +13,16 @@ from types import GeneratorType
 
 from psyneulink._typing import Mapping, Optional
 from psyneulink.core.llvm import ExecutionMode
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, LearningScale
 from psyneulink.core.compositions.report import Report, ReportProgress, ReportDevices, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.globals.keywords import (EPOCH, MATRIX_WEIGHTS, MINIBATCH, OBJECTIVE_MECHANISM, OPTIMIZATION_STEP,
-                                              RUN, TRAINING_SET, TRIAL, NODE_VALUES, NODE_VARIABLES)
+from psyneulink.core.globals.keywords import (
+    MATRIX_WEIGHTS,
+    NODE_VALUES,
+    NODE_VARIABLES,
+    OBJECTIVE_MECHANISM,
+    TRAINING_SET,
+)
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
 from inspect import isgeneratorfunction
@@ -212,7 +217,7 @@ class CompositionRunner():
                         if pytorch_rep is None:
                             pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
-                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, OPTIMIZATION_STEP, context,
+                        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.OPTIMIZATION_STEP, context,
                                                           [MATRIX_WEIGHTS, NODE_VARIABLES, NODE_VALUES])
 
                 if execution_mode is ExecutionMode.PyTorch:
@@ -221,9 +226,9 @@ class CompositionRunner():
                         for node, variable in pytorch_rep._nodes_to_execute_after_gradient_calc.items():
                             node.execute(variable, optimization_num, synch_with_pnl_options, context)
                     # Synchronize specified outcomes after every stimulus (i.e., trial)
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, TRIAL, context)
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.TRIAL, context)
                     # Synchronize specified outcomes after every minibatch
-                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, MINIBATCH, context)
+                    pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.MINIBATCH, context)
 
                 if call_after_minibatch:
                     try:
@@ -237,7 +242,7 @@ class CompositionRunner():
                         call_after_minibatch()
 
             if execution_mode is ExecutionMode.PyTorch:
-                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, EPOCH, context)
+                pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.EPOCH, context)
 
             # Compiled mode does not need more identical inputs.
             # number_of_runs will be set appropriately to cycle over the set
@@ -471,7 +476,7 @@ class CompositionRunner():
 
             if execution_mode is ExecutionMode.PyTorch:
                 pytorch_rep = self._composition.parameters.pytorch_representation._get(context)
-                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == MINIBATCH:
+                if pytorch_rep and synch_with_pnl_options[MATRIX_WEIGHTS] == LearningScale.MINIBATCH:
                     pytorch_rep._copy_weights_to_psyneulink(context)
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
@@ -480,7 +485,7 @@ class CompositionRunner():
         self._composition.parameters.learning_results._set(
             self._composition.parameters.results.get(context)[-1 * num_epoch_results:], context)
 
-        if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == EPOCH:
+        if execution_mode is ExecutionMode.PyTorch and synch_with_pnl_options[MATRIX_WEIGHTS] == LearningScale.EPOCH:
             # Copy weights at end of learning run
             pytorch_rep._copy_weights_to_psyneulink(context)
 
