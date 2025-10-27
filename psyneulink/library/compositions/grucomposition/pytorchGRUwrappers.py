@@ -14,32 +14,34 @@ import graph_scheduler
 import torch
 from typing import Union, Optional, Literal, Tuple
 
-from psyneulink.core.compositions.composition import NodeRole
+from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-from psyneulink.library.compositions.grucomposition.grucomposition import (
-    BIAS_INPUT_TO_HIDDEN,
-    BIAS_HIDDEN_TO_HIDDEN,
-    W_IH_NAME,
-    W_HH_NAME,
-    INPUT_TO_HIDDEN,
-    HIDDEN_TO_HIDDEN,
-    B_IH_NAME,
-    B_HH_NAME,
-    HIDDEN_PROJECTION_SETS,
-    HIDDEN_BIAS_SETS,
-)
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
-    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS,
+)
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper']
+__all__ = ['PytorchGRUCompositionWrapper',
+           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN', 'B_IH_NAME', 'B_HH_NAME',
+           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN', 'W_IH_NAME', 'W_HH_NAME']
+
+INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
+HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
+BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
+BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
+HIDDEN_PROJECTION_SETS = [INPUT_TO_HIDDEN, HIDDEN_TO_HIDDEN]
+HIDDEN_BIAS_SETS = [BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN]
+W_IH_NAME = 'weight_ih_l0'
+W_HH_NAME = 'weight_hh_l0'
+B_IH_NAME = 'bias_ih_l0'
+B_HH_NAME = 'bias_hh_l0'
 
 
 class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
@@ -348,7 +350,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return {self.composition.gru_mech: output}
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
-        if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
+        if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
             mech_wrapper.synch_with_pnl = True
         else:
             mech_wrapper.synch_with_pnl = False

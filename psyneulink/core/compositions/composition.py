@@ -1196,7 +1196,7 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
-   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                                |
+   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                   |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
@@ -1211,51 +1211,51 @@ determining the learning_rate for a Projection used at execution:
    | **No effect**: |    ``my_projection.learning_rate=val`` (see `note <Composition_Learning_Rate_Assignment_After_Construction>` above) |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
 
-   .. hint::
-      If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
-      assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
-      specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
-      of the first Composition within which it is nested that has an explicitly specified `learning_rate
-      <Composition.learning_rate>`, or the default learning_rate for the outermost Composition if no Composition
-      learning_rates are explicitly specified.
+.. hint::
+    If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
+    assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
+    specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
+    of the first Composition within which it is nested that has an explicitly specified `learning_rate
+    <Composition.learning_rate>`, or the default learning_rate for the outermost Composition if no Composition
+    learning_rates are explicitly specified.
 
-   .. note::
-      Specifying a numeric value for the **learning_rate** argument of a Composition's `learn <Composition.learn>`
-      method overrides all other specifications, except assignment of ``False`` to the `learning_rate
-      <MappingProjection.learning_rate>` Parameter or `learnable <MappingProjection.learnable>` attribute of a
-      Projection, or the `enable_learning <Composition.enable_learning>` attribute of a Composition (see next note);
-      however, it applies only for that execution.
+.. note::
+    Specifying a numeric value for the **learning_rate** argument of a Composition's `learn <Composition.learn>`
+    method overrides all other specifications, except assignment of ``False`` to the `learning_rate
+    <MappingProjection.learning_rate>` Parameter or `learnable <MappingProjection.learnable>` attribute of a
+    Projection, or the `enable_learning <Composition.enable_learning>` attribute of a Composition (see next note);
+    however, it applies only for that execution.
 
-   .. note::
-      Setting `enable_learning <Composition.enable_learning>` (for a Composition) and/or `learnable
-      <MappingProjection.learnable>` (for Projections) to ``False`` take precedence over any other assignments;
-      in either case, no learning takes place for that object (though, for a Composition, learning may occur for
-      Compositions nested within it), irrespective of any specifications in the **learning_rate** argument of
-      the Composition's constructor and/or its `learn <Composition.learn>` method.
+.. note::
+    Setting `enable_learning <Composition.enable_learning>` (for a Composition) and/or `learnable
+    <MappingProjection.learnable>` (for Projections) to ``False`` take precedence over any other assignments;
+    in either case, no learning takes place for that object (though, for a Composition, learning may occur for
+    Compositions nested within it), irrespective of any specifications in the **learning_rate** argument of
+    the Composition's constructor and/or its `learn <Composition.learn>` method.
 
-   .. _Composition_Learning_Rate_False:
+.. _Composition_Learning_Rate_False:
 
-   .. note::
+.. note::
 
-      Specifying **learning_rate** as ``False`` in Composition's constructor or `learn() <Composition.learn>` method
-      applies only to Projections within its scope assigned 'None' (i.e., it functions as the default `learning_rate
-      <MappingProjection.learning_rate>` for those Projections); Projecions assigned a numeric value use that value,
-      and any assigned `True` use the first explicitly specified Composition `learning_rate <Composition.learning_rate>`
-      that is not ``False`` found in the nesting hierarchy, or the default learning_rate for the outermost
-      Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection's
-      `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against assigning 'False' to the
-      `learning_rate <Composition.learning_rate>` of the Composition to which it belongs or any within which that is
-      nested, and forces use of a default value procured from a Composition within which it is nested; however, if
-      there is no such Composition, or the outermost one is set to ``False``, then it will be assigned ``False``.
-      Nevertheless, as suggested in the warning below, the safest way to fully disable learning for a Composition is
-      to set its `enable_learning <Composition.enable_learning>` attribute to ``False``.
+    Specifying **learning_rate** as ``False`` in Composition's constructor or `learn() <Composition.learn>` method
+    applies only to Projections within its scope assigned 'None' (i.e., it functions as the default `learning_rate
+    <MappingProjection.learning_rate>` for those Projections); Projecions assigned a numeric value use that value,
+    and any assigned `True` use the first explicitly specified Composition `learning_rate <Composition.learning_rate>`
+    that is not ``False`` found in the nesting hierarchy, or the default learning_rate for the outermost
+    Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection's
+    `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against assigning 'False' to the
+    `learning_rate <Composition.learning_rate>` of the Composition to which it belongs or any within which that is
+    nested, and forces use of a default value procured from a Composition within which it is nested; however, if
+    there is no such Composition, or the outermost one is set to ``False``, then it will be assigned ``False``.
+    Nevertheless, as suggested in the warning below, the safest way to fully disable learning for a Composition is
+    to set its `enable_learning <Composition.enable_learning>` attribute to ``False``.
 
-   .. warning::
-      Setting the `learning_rate <Composition.learning_rate>` to ``False`` does not necessarily disable learning
-      for the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
-      overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
-      <Composition.learn>` method. To fully disable learning for a Composition, its `enable_learning
-      <Composition.enable_learning>` attribute should be set to ``False``.
+.. warning::
+    Setting the `learning_rate <Composition.learning_rate>` to ``False`` does not necessarily disable learning
+    for the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
+    overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
+    <Composition.learn>` method. To fully disable learning for a Composition, its `enable_learning
+    <Composition.enable_learning>` attribute should be set to ``False``.
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -3235,7 +3235,9 @@ from psyneulink.core.globals.keywords import \
      PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
      RECEIVER, RETAIN_IN_PNL_OPTIONS,
      SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS,
-     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH)
+     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH,
+     OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN,
+     )
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import (
     Parameter,
@@ -3246,8 +3248,10 @@ from psyneulink.core.globals.parameters import (
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal
+from psyneulink.core.globals.utilities import (
+    ContentAddressableList, PNLStrEnum, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list,
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier, extended_array_equal,
+)
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3261,7 +3265,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole', 'LearningScale',
     ]
 
 logger = logging.getLogger(__name__)
@@ -5448,7 +5452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # different than the composition graph.
         comp_graph_dependencies = self.graph_processing.prune_feedback_edges()[0]
 
-        # INPUT
+        #region INPUT
 
         # Start with all nodes from processing graph with no incoming edges
         input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
@@ -5507,8 +5511,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not node.get_nodes_by_role(NodeRole.INPUT):
                     # If a nested Composition has not INUTS, remove it as an INPUT of the outer Composition
                     self._remove_node_role(node, NodeRole.INPUT)
+        #endregion INPUT
 
-        # BIAS
+        #region BIAS
         for node in self.nodes:
             if (isinstance(node, Mechanism)
                     and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
@@ -5521,13 +5526,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # #   *unless* they are in a nested Composition and project to a Node in an outer one
                 # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
                 #     self._remove_node_role(node, NodeRole.OUTPUT)
+        #endregion BIAS
 
-        # CYCLE
+        #region CYCLE
         for cycle in self.graph_processing.cycle_vertices:
             for node in cycle:
                 self._add_node_role(node, NodeRole.CYCLE)
+        #endregion CYCLE
 
-        # FEEDBACK_SENDER and FEEDBACK_RECEIVER
+        #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
             for sender, typ in receiver.source_types.items():
                 if typ is EdgeType.FEEDBACK:
@@ -5539,12 +5546,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver.component,
                         NodeRole.FEEDBACK_RECEIVER
                     )
+        #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
 
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
         #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
 
-        # OUTPUT
+
+        #region OUTPUT
         # Note: "TERMINAL" referenced below is in respect to the
         # the composition graph, not the scheduler graph, because OUTPUT
         # is determined by composition structure, not scheduling order.
@@ -5568,6 +5577,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Assign OUTPUT to any non-TERMINAL Nodes
             else:
+
+                # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
+                #     and is not already so designated (needed for user-specified ObjectiveMechanisms
+                if (isinstance(node, ObjectiveMechanism)
+                        and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node)):
+                    ctl_mech = next((p.receiver.owner for p in node.efferents
+                                     if isinstance(p.receiver.owner, ControlMechanism)), None)
+                    if ctl_mech:
+                        node.control_mechanism = ctl_mech
+                        self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
 
                 # IMPLEMENTATION NOTE:
                 #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
@@ -5601,6 +5620,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for role in {NodeRole.CONTROL_OBJECTIVE,
                                                  NodeRole.CONTROLLER_OBJECTIVE,
                                                  NodeRole.LEARNING_OBJECTIVE})
+                                # or p.receiver.owner is node
                                 or p.receiver.owner is self.output_CIM
                                 or (isinstance(p.receiver.owner, ControlMechanism)
                                     and not isinstance(node, ObjectiveMechanism))
@@ -5657,13 +5677,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
                            for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
+        #endregion OUTPUT
 
-        # Assign SINGLETON and INTERNAL nodes
+        #region Assign SINGLETON and INTERNAL nodes
         for node in self.nodes:
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
             if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
+        #endregion Assign SINGLETON and INTERNAL nodes
 
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
         for node in self.nodes:
@@ -14136,3 +14158,43 @@ def get_composition_for_node(node):
         for efferent in receiver.efferents:
             receiver = efferent.receiver.owner
     return receiver.composition
+
+
+class LearningScale(PNLStrEnum):
+    """Scales at which `learning <Composition_Learning>` occurs
+
+    Used to specify the scales over which learning-related events occur when `learning <Composition_Learning>` is
+    executed in a `Composition`.
+
+    Attributes
+    ----------
+
+    OPTIMIZATION_STEP
+        a single step of gradient calculation, of which there can be one or more in a `minibatch
+        <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
+        Parameter.
+
+    TRIAL
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
+        and unanticipated results can occur.
+
+    MINIBATCH
+        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
+        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
+        `matrix <MappingProjection.matrix>` Parameter.
+
+    EPOCH
+        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
+        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
+        <Composition.optimizations_per_minibatch>` Parameters of the Composition.
+
+    RUN
+        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
+        `num_epochs <Composition.num_epochs>` epochs.
+
+    """
+    OPTIMIZATION_STEP = OPTIMIZATION_STEP
+    TRIAL = TRIAL
+    MINIBATCH = MINIBATCH
+    EPOCH = EPOCH
+    RUN = RUN
