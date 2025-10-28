@@ -3639,7 +3639,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    num_estimates=num_estimates,
-                                                   control_signals=[control_signal])
+                                                   control_signals=[control_signal],
+                                                   initial_seed=1)
 
         comp.add_controller(ocm)
         inputs = {A: [[[1.0]]]}
@@ -3668,7 +3669,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                                     [np.array([1.]), np.array([1.52673967])],
                                                                     [np.array([1.]), np.array([1.52673967])],
                                                                     [np.array([1.]), np.array([3.24637662])],
-                                                                    [np.array([1.]), np.array([3.24637662])],
+                                                                    [np.array([-1.]), np.array([3.24637662])],
                                                                     [np.array([1.]), np.array([2.12805516])],
                                                                     [np.array([1.]), np.array([2.12805516])],
                                                                     [np.array([1.]), np.array([1.52673967])],

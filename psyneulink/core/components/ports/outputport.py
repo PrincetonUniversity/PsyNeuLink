@@ -662,8 +662,50 @@ SEQUENTIAL = 'SEQUENTIAL'
 
 DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
 
+def _canonicalize_port_variable_specification(variable_spec):
+    """
+    Convert variable spec to canonical form of [(spec1, indices1), (spec2, indices2), ...]
 
-def _parse_output_port_variable(variable, owner, context=None, output_port_name=None):
+    Returns None if the spec could not be parsed.
+    """
+    from psyneulink.core.components.mechanisms.mechanism import MechParamsDict
+
+    # There are several specification formats;
+    # 1.) List of specifications
+    if isinstance(variable_spec, list):
+        specs = []
+        for vs in variable_spec:
+            canonical_spec = _canonicalize_port_variable_specification(vs)
+            if canonical_spec is None:
+                return None
+
+            specs.extend(_canonicalize_port_variable_specification(vs))
+
+        return specs
+
+    # 2.) Special. passed through without change
+    if variable_spec is None or is_numeric(variable_spec) or isinstance(variable_spec, MechParamsDict):
+        return [(variable_spec, [])]
+
+    # 3.) Parameter name or a KEYWORD that translates to a Parameter name
+    if isinstance(variable_spec, str):
+        translated_spec = output_port_spec_to_parameter_name.get(variable_spec, variable_spec)
+        return [(translated_spec, [])]
+
+    # 4.) A tuple of parameter name with indices.
+    #     The indices might be callable (e.g. to make the index match a corresponding input port),
+    #     or Numpy numerals
+    translated_name = output_port_spec_to_parameter_name.get(variable_spec[0], variable_spec[0])
+    ids = [x() if callable(x) else getattr(x, 'value', x) for x in variable_spec[1:]]
+    if all(is_numeric(x) for x in ids):
+        # The caller is responsible for checking if the translated name is
+        # a valid parameter name
+        return [(translated_name, ids)]
+
+    return None
+
+
+def _parse_output_port_variable(variable_spec, owner, context=None, output_port_name=None):
     """Return variable for OutputPort based on VARIABLE entry of owner's params dict
 
     The format of the VARIABLE entry determines the format returned:
@@ -672,33 +714,18 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
     :return:
     """
 
-    def parse_variable_spec(spec):
+    def evaluate_variable_spec(canonicalized_spec):
         from psyneulink.core.components.mechanisms.mechanism import MechParamsDict
-        if spec is None or is_numeric(spec) or isinstance(spec, MechParamsDict):
-            return spec
-        elif isinstance(spec, tuple):
-            # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            owner_param_name = output_port_spec_to_parameter_name.get(spec[0], spec[0])
 
-            try:
-                index = spec[1]() if callable(spec[1]) else spec[1]
+        attribute_name, indices = canonicalized_spec
 
-                # context is None during initialization, and we don't want to
-                # incur the cost of .get during execution
-                if context is None:
-                    val = getattr(owner.parameters, owner_param_name).get(context)
-                else:
-                    val = getattr(owner.parameters, owner_param_name)._get(context)
+        if attribute_name is None or is_numeric(attribute_name) or isinstance(attribute_name, MechParamsDict):
+            assert len(indices) == 0
+            return attribute_name
 
-                if hasattr(val, '_get_by_time_scale'):
-                    return val._get_by_time_scale(index)
+        if attribute_name == PARAMS_DICT:
+            assert len(indices) == 0
 
-                return val if val is None else val[index]
-            except:
-                raise OutputPortError(f"Can't parse variable ({spec}) for "
-                                       f"{output_port_name or OutputPort.__name__} of {owner.name}.")
-
-        elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
             return {
                 **{p.name: p._get(context) for p in owner.parameters},
@@ -711,43 +738,30 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                     ]
                 }
             }
-        elif isinstance(spec, str):
-            # Owner's full value or attribute other than its value
-            try:
-                owner_param_name = output_port_spec_to_parameter_name[spec]
-            except KeyError:
-                owner_param_name = spec
 
-            try:
-                # context is None during initialization, and we don't want to
-                # incur the cost of .get during execution
-                if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)
-                else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)
-            except AttributeError:
-                try:
-                    if context is None:
-                        return getattr(owner.function.parameters, owner_param_name).get(context)
-                    else:
-                        return getattr(owner.function.parameters, owner_param_name)._get(context)
-                except AttributeError:
-                    raise OutputPortError(f"Can't parse variable ({spec}) for "
-                                           f"{output_port_name or OutputPort.__name__} of {owner.name}.")
-        else:
-            raise OutputPortError(f"'{VARIABLE.upper()}' entry for {output_port_name or OutputPort.__name__} "
-                                   f"specification dictionary of {owner.name} ({spec}) must be "
-                                   "numeric or a list of {owner.__class__.__name__} attribute names.")
+        parameter = getattr(owner.parameters, attribute_name, None) or getattr(owner.function.parameters, attribute_name, None)
+        if parameter is None:
+            raise OutputPortError(f"Unknown Parameter ({attribute_name}) in variable spec ({variable_spec}) for "
+                                  f"{output_port_name or OutputPort.__name__} of {owner.name}.")
 
-    if not isinstance(variable, list):
-        variable = [variable]
+        # context is None during initialization, and we don't want to
+        # incur the cost of .get() during execution
+        value = parameter.get(context) if context is None else parameter._get(context)
 
-    if len(variable)== 1:
-        fct_variable = parse_variable_spec(variable[0])
-    else:
-        fct_variable = []
-        for spec in variable:
-            fct_variable.append(parse_variable_spec(spec))
+        for i in indices:
+            value = value[i]
+
+        return value
+
+    canonical_spec = _canonicalize_port_variable_specification(variable_spec)
+    if canonical_spec is None:
+        raise OutputPortError(f"Can not canonicalize variable spec ({variable_spec}) for "
+                              f"{output_port_name or OutputPort.__name__} of {owner.name}.")
+
+    fct_variable = [evaluate_variable_spec(spec) for spec in canonical_spec]
+
+    if len(fct_variable) == 1:
+        fct_variable = fct_variable[0]
 
     if fct_variable is not None:
         fct_variable = convert_all_elements_to_np_array(fct_variable)

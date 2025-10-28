@@ -14,7 +14,7 @@ import numpy as np
 from beartype import beartype
 
 from psyneulink._typing import Optional
-from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
+from inspect import _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
@@ -23,7 +23,11 @@ from psyneulink.core.globals.keywords import \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences import ValidPrefSet
-from psyneulink.core.globals.utilities import _is_module_class, iscompatible
+from psyneulink.core.globals.utilities import (
+    _get_cached_function_signature,
+    _is_module_class,
+    iscompatible,
+)
 
 from psyneulink.core import llvm as pnlvm
 
@@ -472,7 +476,9 @@ class UserDefinedFunction(Function_Base):
                 - dict with default values (from function definition, else set to None)
             """
             try:
-                custom_function_signature = signature(custom_function)
+                custom_function_signature = _get_cached_function_signature(
+                    custom_function
+                )
             except ValueError:
                 raise FunctionError(
                     "Assignment of a function or method ({}) without an "

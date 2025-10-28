@@ -323,24 +323,22 @@ import weakref
 
 import toposort
 
-from psyneulink._typing import Iterable, Optional, Union
+from psyneulink._typing import Iterable, Optional, Set, Union
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.keywords import DEFAULT, SHARED_COMPONENT_TYPES
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import (
+    _get_cached_function_signature,
     call_with_pruned_args,
     contains_type,
     convert_all_elements_to_np_array,
     create_union_set,
-    get_alias_property_getter,
-    get_alias_property_setter,
     get_deepcopy_with_shared,
     get_function_sig_default_value,
     is_numeric,
     safe_equals,
     try_extract_0d_array_item,
-    unproxy_weakproxy,
     update_array_in_place,
 )
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
@@ -621,7 +619,10 @@ def _owner_string(param_obj):
     if isinstance(param_owner, type):
         owner_string = f' of {param_owner}'
     else:
-        owner_string = f' of {param_owner.name}'
+        try:
+            owner_string = f' of {param_owner.name}'
+        except AttributeError:
+            return ''
 
         if hasattr(param_owner, 'owner') and param_owner.owner:
             owner_string += f' for {param_owner.owner.name}'
@@ -637,7 +638,30 @@ def _owner_string(param_obj):
 addl_unsynced_parameter_names = {'value'}
 
 
-class ParametersTemplate:
+class _ParamOwner:
+    @property
+    def _owner(self):
+        try:
+            return self._owner_ref()
+        except TypeError:
+            return None
+
+    @_owner.setter
+    def _owner(self, value):
+        try:
+            self._owner_ref = weakref.ref(value)
+        except TypeError:
+            self._owner_ref = value
+        self.__owner_string = None
+
+    @property
+    def _owner_string(self):
+        if self.__owner_string is None:
+            self.__owner_string = _owner_string(self)
+        return self.__owner_string
+
+
+class ParametersTemplate(_ParamOwner):
     _deepcopy_shared_keys = ['_parent', '_params', '_owner_ref', '_children']
     _values_default_excluded_attrs = {'user': False}
 
@@ -755,21 +779,6 @@ class ParametersTemplate:
     def names(self, show_all=False):
         return sorted([p for p in self.values(show_all)])
 
-    @property
-    def _owner(self):
-        return unproxy_weakproxy(self._owner_ref)
-
-    @_owner.setter
-    def _owner(self, value):
-        try:
-            self._owner_ref = weakref.proxy(value)
-        except TypeError:
-            self._owner_ref = value
-
-    @property
-    def _owner_string(self):
-        return _owner_string(self)
-
     def _dependency_order_key(self, names=False):
         """
         Args:
@@ -863,7 +872,7 @@ class Defaults(ParametersTemplate):
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
-class ParameterBase(types.SimpleNamespace):
+class ParameterBase(types.SimpleNamespace, _ParamOwner):
     def __lt__(self, other):
         return self.name < other.name
 
@@ -876,12 +885,38 @@ class ParameterBase(types.SimpleNamespace):
     def __hash__(self):
         return object.__hash__(self)
 
-    @property
-    def _owner_string(self):
-        return _owner_string(self)
+
+class _ParameterMeta(type):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        _param_attrs = set()
+        for cls_ in reversed(self.__mro__):
+            if isinstance(cls_, _ParameterMeta):
+                _param_attrs.update(cls_._get_param_attrs())
+        self._param_attrs = _param_attrs
+
+        try:
+            self._sourced_attrs = _param_attrs.difference(self._unsourced_attrs)
+        except AttributeError:
+            # only set _sourced_attrs on SharedParameter classes
+            pass
+
+    def _get_param_attrs(cls) -> Set[str]:
+        return {
+            name for name, param in _get_cached_function_signature(cls.__init__).parameters.items()
+            if (
+                name[0] != '_'
+                and name != 'self'
+                and param.kind not in {
+                    inspect.Parameter.VAR_POSITIONAL,
+                    inspect.Parameter.VAR_KEYWORD
+                }
+            )
+        }
 
 
-class Parameter(ParameterBase):
+class Parameter(ParameterBase, metaclass=_ParameterMeta):
     """
     COMMENT:
         KDM 11/30/18: using nonstandard formatting below to ensure developer notes is below type in html
@@ -1098,7 +1133,7 @@ class Parameter(ParameterBase):
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
-    _uninherited_attrs = {'name', 'values', 'history', 'log'}
+    _uninherited_attrs = {'name', 'values', 'history', 'log', 'spec'}
 
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
@@ -1162,7 +1197,7 @@ class Parameter(ParameterBase):
         specify_none=False,
         bool_as_number=True,
         _owner=None,
-        _inherited=False,
+        _inherited=None,
         # this stores a reference to the Parameter object that is the
         # closest non-inherited parent. This parent is where the
         # attributes will be taken from
@@ -1193,58 +1228,80 @@ class Parameter(ParameterBase):
         if dependencies is not None:
             dependencies = create_union_set(dependencies)
 
-        super().__init__(
-            default_value=default_value,
-            name=name,
-            stateful=stateful,
-            modulable=modulable,
-            structural=structural,
-            modulation_combination_function=modulation_combination_function,
-            read_only=read_only,
-            function_arg=function_arg,
-            pnl_internal=pnl_internal,
-            aliases=aliases,
-            user=user,
-            values=values,
-            getter=getter,
-            setter=setter,
-            loggable=loggable,
-            log=log,
-            log_condition=log_condition,
-            delivery_condition=delivery_condition,
-            history=history,
-            history_max_length=history_max_length,
-            history_min_length=history_min_length,
-            fallback_value=fallback_value,
-            retain_old_simulation_data=retain_old_simulation_data,
-            constructor_argument=constructor_argument,
-            spec=spec,
-            parse_spec=parse_spec,
-            valid_types=valid_types,
-            reference=reference,
-            dependencies=dependencies,
-            initializer=initializer,
-            port=port,
-            mdf_name=mdf_name,
-            specify_none=specify_none,
-            bool_as_number=bool_as_number,
-            _inherited=_inherited,
-            _inherited_source=_inherited_source,
-            _user_specified=_user_specified,
-            _temp_uninherited=set(),
-            _scalar_converted=_scalar_converted,
-            _tracking_compiled_struct=_tracking_compiled_struct,
-            **kwargs
-        )
+        _inherited_specified = _inherited is not None
+
+        if (
+            self._is_sparse(_owner)
+            and (
+                _inherited
+                or not _inherited_specified
+            )
+        ):
+            self.__inherited = True
+            super().__init__(
+                name=name,
+                values=values,
+                history=history,
+                log=log,
+                spec=spec,
+                _inherited=_inherited,
+                _inherited_source=_inherited_source,
+                _user_specified=_user_specified,
+                _scalar_converted=_scalar_converted,
+                _tracking_compiled_struct=_tracking_compiled_struct,
+                **{k: v for k, v in kwargs.items() if k in self._uninherited_attrs},
+            )
+        else:
+            if not _inherited_specified:
+                _inherited = False
+
+            self.__inherited = _inherited
+            super().__init__(
+                default_value=default_value,
+                name=name,
+                stateful=stateful,
+                modulable=modulable,
+                structural=structural,
+                modulation_combination_function=modulation_combination_function,
+                read_only=read_only,
+                function_arg=function_arg,
+                pnl_internal=pnl_internal,
+                aliases=aliases,
+                user=user,
+                values=values,
+                getter=getter,
+                setter=setter,
+                loggable=loggable,
+                log=log,
+                log_condition=log_condition,
+                delivery_condition=delivery_condition,
+                history=history,
+                history_max_length=history_max_length,
+                history_min_length=history_min_length,
+                fallback_value=fallback_value,
+                retain_old_simulation_data=retain_old_simulation_data,
+                constructor_argument=constructor_argument,
+                spec=spec,
+                parse_spec=parse_spec,
+                valid_types=valid_types,
+                reference=reference,
+                dependencies=dependencies,
+                initializer=initializer,
+                port=port,
+                mdf_name=mdf_name,
+                specify_none=specify_none,
+                bool_as_number=bool_as_number,
+                _inherited=_inherited,
+                _inherited_source=_inherited_source,
+                _user_specified=_user_specified,
+                _scalar_converted=_scalar_converted,
+                _tracking_compiled_struct=_tracking_compiled_struct,
+                **kwargs
+            )
 
         self._owner = _owner
-        self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
-            + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
-
-        self._is_invalid_source = False
+        self._is_invalid_source = _inherited
         self._inherited_attrs_cache = {}
-        self.__inherited = False
-        self._inherited = _inherited
 
     def __repr__(self):
         return '{0} :\n{1}'.format(super(types.SimpleNamespace, self).__repr__(), str(self))
@@ -1281,7 +1338,7 @@ class Parameter(ParameterBase):
         ):
             del memo[id(self.default_value)]
             result._set_default_value(
-                copy_parameter_value(self.default_value, memo), directly=True
+                copy_parameter_value(self.default_value, memo=memo), directly=True
             )
 
         memo[id(self)] = result
@@ -1324,15 +1381,11 @@ class Parameter(ParameterBase):
 
     def __setattr__(self, attr, value):
         if attr in self._additional_param_attr_properties:
-            self._temp_uninherited.add(attr)
-            self._inherited = False
-
             try:
                 getattr(self, '_set_{0}'.format(attr))(value)
             except AttributeError:
                 super().__setattr__(attr, value)
-
-            self._temp_uninherited.remove(attr)
+            self._inherited = False
         else:
             super().__setattr__(attr, value)
 
@@ -1409,27 +1462,34 @@ class Parameter(ParameterBase):
 
     def _cache_inherited_attrs(self, exclusions=None):
         if exclusions is None:
-            exclusions = set()
-
-        exclusions = self._uninherited_attrs.union(self._temp_uninherited).union(exclusions)
+            exclusions = self._uninherited_attrs
+        else:
+            exclusions = exclusions.union(self._uninherited_attrs)
 
         for attr in self._param_attrs:
             if attr not in exclusions:
                 self._inherited_attrs_cache[attr] = getattr(self, attr)
-                delattr(self, attr)
+                try:
+                    delattr(self, attr)
+                except AttributeError:
+                    pass
 
     def _restore_inherited_attrs(self, exclusions=None):
         if exclusions is None:
-            exclusions = set()
-
-        exclusions = self._uninherited_attrs.union(self._temp_uninherited).union(exclusions)
+            exclusions = self._uninherited_attrs
+        else:
+            exclusions = exclusions.union(self._uninherited_attrs)
 
         for attr in self._param_attrs:
             if (
                 attr not in exclusions
-                and getattr(self, attr) is getattr(self._parent, attr)
+                and attr not in self.__dict__
             ):
-                super().__setattr__(attr, self._inherited_attrs_cache[attr])
+                try:
+                    val = self._inherited_attrs_cache[attr]
+                except KeyError:
+                    val = getattr(self, attr)
+                super().__setattr__(attr, val)
 
     @property
     def _parent(self):
@@ -1438,8 +1498,41 @@ class Parameter(ParameterBase):
         except AttributeError:
             return None
 
+    @functools.cached_property
+    def _validate_method(self):
+        return self._owner._get_validate_method(self.name)
+
     def _validate(self, value):
-        return self._owner._validate(self.name, value)
+        err_msg = None
+
+        valid_types = self.valid_types
+        if valid_types is not None:
+            if not isinstance(value, valid_types):
+                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
+                    type(value),
+                    valid_types
+                )
+
+        validation_method = self._validate_method
+        if validation_method is not None:
+            err_msg = validation_method(value)
+            # specifically check for False because None indicates a valid assignment
+            if err_msg is False:
+                err_msg = '{0} returned False'.format(validation_method)
+
+        if err_msg is not None:
+            raise ParameterError(
+                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
+                    value,
+                    self.name,
+                    self._owner._owner,
+                    err_msg
+                )
+            )
+
+    @functools.cached_property
+    def _parse_method(self):
+        return self._owner._get_parse_method(self.name)
 
     def _parse(self, value, check_scalar=False):
         if is_numeric(value):
@@ -1451,7 +1544,10 @@ class Parameter(ParameterBase):
             if check_scalar:
                 self._scalar_converted = orig_value is not value and value.ndim == 0
 
-        return self._owner._parse(self.name, value)
+        parse_method = self._parse_method
+        if parse_method is not None:
+            value = parse_method(value)
+        return value
 
     @property
     def _default_getter_kwargs(self):
@@ -1657,25 +1753,28 @@ class Parameter(ParameterBase):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
-        from psyneulink.core.components.component import Component
+        from psyneulink.core.components.component import ComponentsMeta
 
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
         value = self._parse(value, check_scalar=True)
         value = self._set(value, context, skip_history, skip_log, **kwargs)
+        value_result = value
 
-        try:
-            if isinstance(value.__self__, Component):
-                value = value.__self__
-        except AttributeError:
-            pass
+        value_self = getattr(value, '__self__', None)
+        if value_self is not None and isinstance(type(value_self), ComponentsMeta):
+            value = value_self
+            value_is_on_component = True
+        else:
+            value_is_on_component = isinstance(type(value), ComponentsMeta)
 
-        if isinstance(value, Component):
+        if value_is_on_component:
             owner = self._owner._owner
             if value not in owner._parameter_components:
                 if owner.initialization_status == ContextFlags.INITIALIZED:
-                    value._initialize_from_context(context)
+                    if context.execution_id is not None:
+                        value._initialize_from_context(context)
                     owner._parameter_components.add(value)
 
                     try:
@@ -1687,7 +1786,7 @@ class Parameter(ParameterBase):
                         ):
                             raise
 
-        return value
+        return value_result
 
     def _set(
         self,
@@ -1755,15 +1854,12 @@ class Parameter(ParameterBase):
                     )
 
         if self.loggable:
-            value_for_log = value
-            if value_is_array_like:
-                value_for_log = copy_parameter_value(value)
             # log value
             if not skip_log:
-                self._log_value(value_for_log, context)
+                self._log_value(value, context)
             # Deliver value to external application
             if not skip_delivery:
-                self._deliver_value(value_for_log, context)
+                self._deliver_value(value, context)
 
         value_updated = False
         if not compilation_sync:
@@ -1858,6 +1954,9 @@ class Parameter(ParameterBase):
 
             if execution_id not in self.log:
                 self.log[execution_id] = collections.deque([])
+
+            if is_array_like(value):
+                value = copy_parameter_value(value)
 
             self.log[execution_id].append(
                 LogEntry(time, context_str, value)
@@ -2021,6 +2120,7 @@ class Parameter(ParameterBase):
             value = self._parse(value, check_scalar=check_scalar)
             self._validate(value)
 
+        self._inherited = False
         super().__setattr__('default_value', value)
 
     def _set_history_max_length(self, value):
@@ -2059,35 +2159,33 @@ class Parameter(ParameterBase):
     def final_source(self):
         return self
 
+    def _is_sparse(self, owner):
+        return owner is not None
 
-class _ParameterAliasMeta(type):
-    # these will not be taken from the source
-    _unshared_attrs = ['name', 'aliases']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for k in Parameter().__dict__:
-            if k not in self._unshared_attrs:
-                setattr(
-                    self,
-                    k,
-                    property(
-                        fget=get_alias_property_getter(k, attr='source'),
-                        fset=get_alias_property_setter(k, attr='source')
-                    )
-                )
+    @property
+    def inherited_attributes(self):
+        if not self._inherited:
+            return None
+        return {
+            attr: getattr(self, attr)
+            for attr in self._param_attrs.difference(self._uninherited_attrs)
+        }
 
 
 # TODO: may not completely work with history/history_max_length
-class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
+class ParameterAlias(ParameterBase):
     """
         A counterpart to `Parameter` that represents a pseudo-Parameter alias that
         refers to another `Parameter`, but has a different name
     """
+    # these will not be taken from the source
+    _unshared_attrs = {'name', 'aliases', 'source', '_source', 'constructor_argument'}
+
     def __init__(self, source=None, name=None):
-        super().__init__(name=name)
+        super().__init__(name=name, aliases=None)
 
         self.source = source
+        self.constructor_argument = None
 
         try:
             source._register_alias(name)
@@ -2095,7 +2193,16 @@ class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
             pass
 
     def __getattr__(self, attr):
-        return getattr(self.source, attr)
+        if attr in self._unshared_attrs:
+            return super().__getattribute__(attr)
+        else:
+            return getattr(self.source, attr)
+
+    def __setattr__(self, attr, value):
+        if attr in self._unshared_attrs:
+            return super().__setattr__(attr, value)
+        else:
+            return setattr(self.source, attr, value)
 
     # must override deepcopy despite it being essentially shallow
     # because otherwise it will default to Parameter.__deepcopy__ and
@@ -2108,12 +2215,15 @@ class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
 
     @property
     def source(self):
-        return unproxy_weakproxy(self._source)
+        try:
+            return self._source()
+        except TypeError:
+            return self._source
 
     @source.setter
     def source(self, value):
         try:
-            self._source = weakref.proxy(value)
+            self._source = weakref.ref(value)
         except TypeError:
             self._source = value
 
@@ -2178,9 +2288,8 @@ class SharedParameter(Parameter):
                 Parameter's owning Component and returns the set value
     """
     _additional_param_attr_properties = Parameter._additional_param_attr_properties.union({'name'})
-    _uninherited_attrs = Parameter._uninherited_attrs.union({'attribute_name', 'shared_parameter_name'})
     # attributes that should not be inherited from source attr
-    _unsourced_attrs = {'default_value', 'primary', 'getter', 'setter', 'aliases'}
+    _unsourced_attrs = {'aliases', 'default_value', 'attribute_name', 'shared_parameter_name', 'primary', 'getter', 'setter', '_source_exists'}
 
     def __init__(
         self,
@@ -2213,7 +2322,7 @@ class SharedParameter(Parameter):
             return super().__getattr__(attr)
 
     def __setattr__(self, attr, value):
-        if self._source_exists and attr in self._sourced_attrs:
+        if attr in self._sourced_attrs and self._source_exists:
             setattr(self.source, attr, value)
         else:
             super().__setattr__(attr, value)
@@ -2333,10 +2442,6 @@ class SharedParameter(Parameter):
 
         return base_param
 
-    @property
-    def _sourced_attrs(self):
-        return set([a for a in self._param_attrs if a not in self._unsourced_attrs])
-
 
 class FunctionParameter(SharedParameter):
     """
@@ -2360,7 +2465,7 @@ class FunctionParameter(SharedParameter):
                 :type: str
                 :default: 'function'
     """
-    _uninherited_attrs = SharedParameter._uninherited_attrs.union({'function_name', 'function_parameter_name'})
+    _unsourced_attrs = SharedParameter._unsourced_attrs.union({'function_name', 'function_parameter_name'})
 
     def __init__(
         self,
@@ -2447,9 +2552,15 @@ class ParametersBase(ParametersTemplate):
                     # Parameters class)
                     aliases_to_create[param_name] = parent_param.source.name
                 else:
-                    new_param = copy.deepcopy(parent_param)
-                    new_param._owner = self
-                    new_param._inherited = True
+                    new_param = type(parent_param)(
+                        _owner=self,
+                        _inherited=True,
+                        _scalar_converted=parent_param._scalar_converted,
+                        **{
+                            k: copy_parameter_value(getattr(parent_param, k))
+                            for k in parent_param._uninherited_attrs
+                        },
+                    )
 
                     setattr(self, param_name, new_param)
 
@@ -2588,7 +2699,7 @@ class ParametersBase(ParametersTemplate):
                     current_value._is_invalid_source = True
 
                 else:
-                    new_param = Parameter(name=attr, _owner=self)
+                    new_param = Parameter(name=attr, _owner=self, _inherited=False)
 
                 super().__setattr__(attr, new_param)
                 new_param._set_default_value(value)
@@ -2660,35 +2771,7 @@ class ParametersBase(ParametersTemplate):
         return _get_prefixed_method(self, self._validation_method_prefix, parameter)
 
     def _validate(self, attr, value):
-        err_msg = None
-
-        valid_types = getattr(self, attr).valid_types
-        if valid_types is not None:
-            if not isinstance(value, valid_types):
-                err_msg = '{0} is an invalid type. Valid types are: {1}'.format(
-                    type(value),
-                    valid_types
-                )
-
-        validation_method = self._get_validate_method(attr)
-        if validation_method is not None:
-            err_msg = validation_method(value)
-            # specifically check for False because None indicates a valid assignment
-            if err_msg is False:
-                err_msg = '{0} returned False'.format(validation_method)
-
-        if err_msg is not None:
-            raise ParameterError(
-                "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
-                    value,
-                    attr,
-                    self._owner,
-                    err_msg
-                )
-            )
+        getattr(self, attr)._validate(value)
 
     def _parse(self, attr, value):
-        parse_method = self._get_parse_method(attr)
-        if parse_method is not None:
-            value = parse_method(value)
-        return value
+        return getattr(self, attr)._parse(value)

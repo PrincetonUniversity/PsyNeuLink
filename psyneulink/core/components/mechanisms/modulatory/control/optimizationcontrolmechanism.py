@@ -1838,6 +1838,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         function = function or GridSearch
 
+        if initial_seed is None:
+            initial_seed = np.random.randint(0, 2**31 - 1)
+
+        # Internal counter used to generate seeds for simulations
+        self._seed_counter = initial_seed
+
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -2960,7 +2966,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if num_estimates:
             # must be SampleSpec in allocation_samples arg
-            randomization_seed_mod_values = SampleSpec(start=1, stop=num_estimates, step=1)
+
+            # Now we need a sequence of random numbers (less than 2*32), each simulation gets a random 32 bit seed for
+            # mersenne twister.
+            randomization_seed_mod_values = self.gen_new_seed_sequence(context)
 
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -3775,3 +3784,34 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
+
+
+    def gen_new_seed_sequence(self, context=None):
+        """
+        Generate a new sequence of seeds for use in randomization control signal control allocations
+        """
+
+        num_estimates = self.parameters.num_estimates._get(context)
+        num_estimates = try_extract_0d_array_item(num_estimates)
+
+
+
+        seeds = [self._seed_counter + i for i in range(num_estimates)]
+
+        # Increment seed counter for next time
+        self._seed_counter += num_estimates
+
+        # If LLVM type is float32, limit to 2**21-1 because this ensures unbiased seeds
+        # Background:
+        # - Today seeds flow through the FP path in the compiler because integer computed results are not yet supported.
+        # - With `--fp-precision=fp64`, seed computations retain ~53 bits of precision; with `--fp-precision=fp32`,
+        #   only ~24 bits
+        # - Subsequent integer use (e.g., via fptoui) depends on the rounded FP value. This makes fp32 vs fp64 runs
+        # diverge.
+        # - Casting seeds to float32 and then using fptoui effectively restricts you to the subset of integers exactly
+        # representable as float32. If you draw seeds from [0, 2^31), many distinct integers collapse to the same
+        # float32, producing a non‑uniform seed distribution and fewer unique streams.
+        if pnlvm.LLVMBuilderContext.default_float_ty == pnlvm.ir.FloatType():
+            self._seed_counter = self._seed_counter % (2**21 - 1)
+
+        return seeds

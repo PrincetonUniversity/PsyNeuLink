@@ -338,3 +338,49 @@ def get_all_subclasses(
         classes.sort(key=lambda x: x.__name__)
 
     return classes
+
+@pytest.fixture
+def restore_num_threads():
+    """Fixture that saves the current global thread setting before a test
+    and restores it after the test finishes (even if the test fails). This
+    prevents thread-setting side-effects from leaking between tests.
+
+    It is implemented with best-effort safety: failures during restore are
+    caught and ignored so they don't mask test failures.
+    """
+    from psyneulink.core.globals import get_num_threads, set_num_threads
+
+    original = get_num_threads()
+    try:
+        yield
+    finally:
+        try:
+            set_num_threads(original)
+        except Exception:
+            # Avoid raising during teardown; log only if logging is available
+            try:
+                import logging
+                logging.getLogger(__name__).exception("Failed to restore original thread setting")
+            except Exception:
+                # Logging failed, suppress exception to avoid masking test error during teardown.
+                pass
+
+
+# Fixture: ensure tests in this module run with a single thread and restore afterward
+@pytest.fixture
+def set_threads_to_one():
+    """
+    Fixture that sets PsyNeuLink's global thread count to 1 and restores the original value afterward.
+    """
+    from psyneulink.core.globals import get_num_threads, set_num_threads
+    import logging
+
+    original = get_num_threads()
+    try:
+        set_num_threads(1)
+        yield
+    finally:
+        try:
+            set_num_threads(original)
+        except Exception:
+            logging.getLogger(__name__).exception("Failed to restore original thread setting")

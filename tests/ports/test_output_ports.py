@@ -8,25 +8,27 @@ class TestOutputPorts:
     @pytest.mark.mechanism
     def test_output_port_variable_spec(self, mech_mode):
         # Test specification of OutputPort's variable
-        mech = pnl.ProcessingMechanism(default_variable=[[1.],[2.],[3.]],
+        mech = pnl.ProcessingMechanism(default_variable=[[1.], [2.], [3.]],
                                        name='MyMech',
                                        output_ports=[
                                            pnl.OutputPort(name='z', variable=(pnl.OWNER_VALUE, 2)),
                                            pnl.OutputPort(name='y', variable=(pnl.OWNER_VALUE, 1)),
                                            pnl.OutputPort(name='x', variable=(pnl.OWNER_VALUE, 0)),
                                            pnl.OutputPort(name='all', variable=(pnl.OWNER_VALUE)),
+                                           pnl.OutputPort(name='xy', variable=[(pnl.OWNER_VALUE, 0), (pnl.OWNER_VALUE, 1)]),
                                            pnl.OutputPort(name='execution count', variable=(pnl.OWNER_EXECUTION_COUNT))
                                        ])
-        expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [0]]
+        expected = [[3.], [2.], [1.], [[1.], [2.], [3.]], [[1.], [2.]], [0]]
         for i, e in zip(mech.output_values, expected):
             assert np.array_equal(i, e)
+
         EX = pytest.helpers.get_mech_execution(mech, mech_mode)
 
-        EX([[1.],[2.],[3.]])
-        EX([[1.],[2.],[3.]])
-        EX([[1.],[2.],[3.]])
-        res = EX([[1.],[2.],[3.]])
-        expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [4]]
+        EX([[1.], [2.], [3.]])
+        EX([[1.], [2.], [3.]])
+        EX([[1.], [2.], [3.]])
+        res = EX([[1.], [2.], [3.]])
+        expected = [[3.], [2.], [1.],[[1.], [2.], [3.]], [[1.], [2.]], [4]]
         for i, e in zip(res, expected):
             assert np.array_equal(i, e)
 
@@ -61,8 +63,10 @@ class TestOutputPorts:
         C.add_node(node=mech)
         C.termination_processing[pnl.TimeScale.TRIAL] = pnl.AtPass(2)
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
+
         # outs is entire mechanism value, expected is output port value
         np.testing.assert_allclose(outs[0], expected1)
+
         outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
         np.testing.assert_allclose(outs[0], expected2)
 

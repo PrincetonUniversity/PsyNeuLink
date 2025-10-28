@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory
 from psyneulink.core.components.functions.stateful.memoryfunctions import STORAGE_PROB
@@ -24,9 +24,10 @@ from psyneulink.core.compositions.showgraph import (
     ShowGraphError,
     _gv_executable_not_found_error_msg,
 )
-from psyneulink.core.globals.keywords import ALL, INSET, INTERCEPT, NESTED, NOISE, SLOPE
+from psyneulink.core.globals.keywords import ALL, GAIN, INSET, INTERCEPT, NESTED, NOISE, SLOPE
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism, VALUE_INPUT, VALUE_OUTPUT, KEY_INPUT, KEY_OUTPUT
 
@@ -369,6 +370,17 @@ class TestControl:
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
         assert "out (5)" in c_label and "in (5)" in c_label
+
+    def test_objective_mechanism_without_NodeRole_CONTROL_OBJECTIVE(self):
+        expected_output = 'digraph "Composition-0" {\n\tgraph [label="Composition-0" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"ProcessingMechanism-0" [color=green penwidth=3 rank=source shape=oval]\n\t"ControlMechanism-0" -> "ProcessingMechanism-0" [label="" arrowhead=box color=blue penwidth=1]\n\t"LCAMechanism-0" -> "LCAMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\t"ProcessingMechanism-0" -> "LCAMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\t"ObjectiveMechanism-0" [color=black penwidth=1 rank=same shape=oval]\n\t"LCAMechanism-0" -> "ObjectiveMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\t"ObjectiveMechanism-0" -> "ControlMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\t"LCAMechanism-0" [color=red penwidth=3 rank=max shape=doublecircle]\n\t"ControlMechanism-0" [color=blue penwidth=3 rank=max shape=octagon]\n}\n'
+        input = ProcessingMechanism(input_shapes=2, function=Logistic)
+        response = LCAMechanism(input_shapes=2)
+        control = ControlMechanism(control=[(GAIN, input)])
+        monitor = ObjectiveMechanism()
+        comp = Composition(pathways=[[input, response], [response, monitor, control]])
+        gv = comp.show_graph(output_fmt='source')
+        assert gv == expected_output
+
 
     _no_nested_and_controler_name_with_space_in_it_data = [
         (
