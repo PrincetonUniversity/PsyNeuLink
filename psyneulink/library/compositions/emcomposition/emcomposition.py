@@ -2673,7 +2673,9 @@ class EMComposition(AutodiffComposition):
         """
 
         # BREADCRUMB: 8/21/25 MOVE THIS TO SOMEWHERE ELSE? OR REPLACE WITH ASSIGNMENT TO exclude_from_gradient_calc
-        self.execute_in_additional_optimizations = {self.storage_node: LAST}
+        self.execute_in_additional_optimizations = {}
+        if self._use_storage_node:
+            self.execute_in_additional_optimizations[self.storage_node] = LAST
 
         # Get field_weight projections and set all others to be non-learnable
         field_weight_projections = []
