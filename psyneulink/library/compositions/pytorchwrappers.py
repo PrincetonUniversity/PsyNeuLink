@@ -1436,7 +1436,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             if opt_spec == FIRST:
                 opt_spec = [0]
             elif opt_spec == LAST:
-                opt_spec = [num_optimizations-1]
+                opt_spec = [num_optimizations - 1]
             elif opt_spec in {True, ALL}:
                 opt_spec = range(0, num_optimizations)
 

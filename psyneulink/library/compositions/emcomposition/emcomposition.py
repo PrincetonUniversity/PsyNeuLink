@@ -1726,7 +1726,7 @@ class EMComposition(AutodiffComposition):
                 return f"must be a float in the interval [0,1]."
 
         def _validate_store_on_optimization(self, option):
-            if not option in {FIRST, LAST, ALL}:
+            if option not in {FIRST, LAST, ALL}:
                 return f"must be one of the following keywords: FIRST, LAST or ALL."
 
     @check_user_specified
