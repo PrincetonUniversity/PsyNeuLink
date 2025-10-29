@@ -14,7 +14,7 @@ import graph_scheduler
 import torch
 from typing import Union, Optional, Literal, Tuple
 
-from psyneulink.core.compositions.composition import NodeRole
+from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -24,7 +24,8 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
-    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, RUN, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS)
+    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS,
+)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
@@ -349,7 +350,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return {self.composition.gru_mech: output}
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
-        if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == RUN):
+        if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
             mech_wrapper.synch_with_pnl = True
         else:
             mech_wrapper.synch_with_pnl = False

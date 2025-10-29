@@ -82,7 +82,7 @@ __all__ = [
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNABLE', 'LEARNED_PROJECTIONS',
     'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM',
     'LEARNING_MECHANISMS', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
-    'LEARNING_SCALE', 'LEARNING_SCALE_LITERALS', 'LEARNING_SCALE_NAMES', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
+    'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
     'LEARNING_SIGNALS', 'LESS_THAN', 'LESS_THAN_OR_EQUAL',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_TIMER_FUNCTION',
     'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'Loss', 'LOSSES', 'LOW', 'LVOC_CONTROL_MECHANISM',
@@ -335,67 +335,11 @@ CONVERGENCE = 'CONVERGENCE'
 #region -------------------------------------------    LEARNING    -----------------------------------------------------
 
 
-class LearningScale:
-    """Scales at which `learning <Composition_Learning>` occurs
-
-    Used to specify the scales over which learning-related events occur when `learning <Composition_Learning>` is
-    executed in a `Composition`.
-
-    Attributes
-    ----------
-
-    OPTIMIZATION_STEP
-        a single step of gradient calculation, of which there can be one or more in a `minibatch
-        <LearningScale.minibatch>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
-        Parameter.
-
-    TRIAL
-        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
-        and unanticipated results can occur.
-
-    MINIBATCH
-        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
-        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
-        `matrix <MappingProjection.matrix>` Parameter.
-
-    EPOCH
-        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
-        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
-        <Composition.optimizations_per_minibatch>` Parameters of the Composition.
-
-    RUN
-        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
-        `num_epochs <Composition.num_epochs>` epochs.
-
-    """
-    def __init__(self):
-        self.OPTIMIZATION_STEP = OPTIMIZATION_STEP
-        self.TRIAL = MINIBATCH
-        self.MINIBATCH = MINIBATCH
-        self.EPOCH = EPOCH
-        self.RUN = RUN
-
-    def _values(self):
-        return list(self.__dict__.values())
-
-    def _set(self):
-        return set(self.__dict__.values())
-
-    def _names(self):
-        return list(self.__dict__)
-
-
 OPTIMIZATION_STEP = 'optimization_step'
 # TRIAL = 'trial'  # defined below in section on Composition
 MINIBATCH = 'minibatch'
 EPOCH = 'epoch'
 RUN = 'run'
-
-LEARNING_SCALE = LearningScale()
-LEARNING_SCALE_SET = LEARNING_SCALE._set()
-LEARNING_SCALE_VALUES = LEARNING_SCALE._values()
-LEARNING_SCALE_NAMES = LEARNING_SCALE._names()
-LEARNING_SCALE_LITERALS = Literal[tuple(LEARNING_SCALE_VALUES)] # Used for type hinting
 
 
 class Loss(Enum):

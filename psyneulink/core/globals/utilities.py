@@ -162,10 +162,12 @@ __all__ = [
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
     'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item', 'fill_array', 'update_array_in_place', 'array_from_matrix_string', 'get_module_file_prefix', 'get_stacklevel_skip_file_prefixes',
+    'PNLStrEnum',
 ]
 
 logger = logging.getLogger(__name__)
 _signature_cache = weakref.WeakKeyDictionary()
+_signature_strong_cache = {}
 
 
 class UtilitiesError(Exception):
@@ -268,6 +270,53 @@ class AutoNumber(IntEnum):
         obj = int.__new__(component_type)
         obj._value_ = value
         return obj
+
+
+class PNLStrEnumMeta(EnumMeta):
+    def __contains__(cls, member):
+        try:
+            member = cls(member)
+        except ValueError:
+            # allow standard failure to occur in super if wrong value type (not str)
+            if isinstance(member, str):
+                return False
+        return super().__contains__(member)
+
+
+# builtin StrEnum supported in python 3.11+
+class PNLStrEnum(str, Enum, metaclass=PNLStrEnumMeta):
+    def __new__(cls, value: str):
+        value = cls._normalize_value(value)
+        member = str.__new__(cls, value)
+        member._value_ = value
+        return member
+
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == self._normalize_value(other)
+
+    def _generate_next_value_(name, start, count, last_values):  # noqa: U100
+        return PNLStrEnum._normalize_value(name)
+
+    @classmethod
+    def _missing_(cls, value):
+        value = cls._normalize_value(value)
+        for member in cls:
+            if member.value == value:
+                return member
+        return None
+
+    @staticmethod
+    def _normalize_value(x):
+        try:
+            return x.lower()
+        except (AttributeError, TypeError):
+            return x
 
 
 #region ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *************************************
@@ -1823,6 +1872,24 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
+def _get_cached_function_signature(func):
+    try:
+        sig = _signature_cache[func]
+    except KeyError:
+        sig = inspect.signature(func)
+        _signature_cache[func] = sig
+    except TypeError:
+        # should be minimally used, primarily for object.__init__ slot
+        # wrapper type
+        try:
+            sig = _signature_strong_cache[func]
+        except KeyError:
+            sig = inspect.signature(func)
+            _signature_strong_cache[func] = sig
+
+    return sig
+
+
 def prune_unused_args(func, args=None, kwargs=None):
     """
         Arguments
@@ -1842,11 +1909,7 @@ def prune_unused_args(func, args=None, kwargs=None):
 
     """
     # use the func signature to filter out arguments that aren't compatible
-    try:
-        sig = _signature_cache[func]
-    except KeyError:
-        sig = inspect.signature(func)
-        _signature_cache[func] = sig
+    sig = _get_cached_function_signature(func)
 
     has_args_param = False
     has_kwargs_param = False
@@ -1982,11 +2045,13 @@ def get_all_explicit_arguments(cls_, func_str):
     """
     all_arguments = set()
 
-    for cls_ in cls_.__mro__:
-        func = getattr(cls_, func_str)
+    for c in cls_.__mro__:
+        func = getattr(c, func_str)
         has_args_or_kwargs = False
 
-        for arg_name, arg in inspect.signature(func).parameters.items():
+        sig = _get_cached_function_signature(func)
+
+        for arg_name, arg in sig.parameters.items():
             if (
                 arg.kind is inspect.Parameter.VAR_POSITIONAL
                 or arg.kind is inspect.Parameter.VAR_KEYWORD
@@ -2074,6 +2139,19 @@ def contains_type(
     except TypeError:
         return False
 
+    try:
+        dtype_kind = arr.dtype.kind
+    except AttributeError:
+        # non-array, so no addl info on contents
+        pass
+    else:
+        # only check object or void dtype further because their elements can vary in type
+        if dtype_kind not in {'O', 'V'}:
+            try:
+                return isinstance(next(arr_items), typ)
+            except StopIteration:
+                return False
+
     recurse = not isinstance(arr, np.matrix)
     for a in arr_items:
         if isinstance(a, typ) or (a is not arr and recurse and contains_type(a, typ)):
@@ -2105,11 +2183,7 @@ def get_function_sig_default_value(
             the default value of the **parameter** argument of
             **function** if it exists, or inspect._empty
     """
-    try:
-        sig = _signature_cache[function]
-    except KeyError:
-        sig = inspect.signature(function)
-        _signature_cache[function] = sig
+    sig = _get_cached_function_signature(function)
 
     try:
         return sig.parameters[parameter].default

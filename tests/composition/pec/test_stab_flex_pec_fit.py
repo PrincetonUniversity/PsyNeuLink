@@ -10,6 +10,9 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
 import numpy as np
 import pandas as pd
 
+# Set the number of threads to 1 for all tests in this module, tests are often run in parallel
+# and having multiple threads per test can lead to oversubscription of CPU resources.
+pytestmark = pytest.mark.usefixtures("set_threads_to_one")
 
 # Define function to generate a counterbalanced trial sequence with a specified switch trial frequency
 def generate_trial_sequence(n, frequency, seed: int = None):

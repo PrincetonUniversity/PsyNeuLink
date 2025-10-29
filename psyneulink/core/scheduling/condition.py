@@ -23,6 +23,7 @@ from psyneulink.core.globals.mdf import MDFSerializable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import (
+    _get_cached_function_signature,
     get_stacklevel_skip_file_prefixes,
     parse_valid_identifier,
     toposort_key,
@@ -109,7 +110,7 @@ def _create_as_pnl_condition(condition):
 
     new_args = [_create_as_pnl_condition(a) or a for a in condition.args]
     new_kwargs = {k: _create_as_pnl_condition(v) or v for k, v in condition.kwargs.items()}
-    sig = inspect.signature(pnl_class)
+    sig = _get_cached_function_signature(pnl_class)
 
     if 'func' in sig.parameters or 'function' in sig.parameters:
         # Condition takes a function as an argument
@@ -172,7 +173,7 @@ class Condition(*condition_class_parents, MDFSerializable):
 
         extra_args = {MODEL_SPEC_ID_TYPE: getattr(graph_scheduler.condition, type(self).__name__).__name__}
 
-        sig = inspect.signature(self.__init__)
+        sig = _get_cached_function_signature(self.__init__)
 
         for name, param in sig.parameters.items():
             if param.kind is inspect.Parameter.VAR_POSITIONAL:
