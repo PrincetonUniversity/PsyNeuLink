@@ -465,6 +465,7 @@ _test_as_mdf_model_defaults_excluded_classes = {
     pnl.OutputPort: _reason_no_default,
     pnl.Rearrange: _reason_no_default,
     pnl.UserDefinedFunction: _reason_no_default,
+    pnl.EMComposition: 'needs GraphStructureCondition by default (not implemented for MDF)',
 }
 
 try:
