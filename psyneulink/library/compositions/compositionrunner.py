@@ -26,7 +26,6 @@ from psyneulink.core.globals.keywords import (
 )
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import copy_parameter_value
-from psyneulink.core.globals.utilities import call_with_pruned_args
 from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
@@ -204,7 +203,7 @@ class CompositionRunner():
                     else: # list because ragged
                         inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
-                self._composition._stim_num = i # For debugging
+                self._composition._stim_num = i  # For debugging
 
                 # Cycle over optimizations per trial (stimulus)
                 for optimization_num in range(optimizations_per_minibatch):
@@ -297,7 +296,7 @@ class CompositionRunner():
 
                 for idx in range(i, i + minibatch_size):
                     try:
-                        self._composition._stim_num = i # For debugging
+                        self._composition._stim_num = i  # For debugging
                         input_batch, _ = self._composition._parse_learning_spec(inputs=inputs(idx),
                                                                                 targets=None,
                                                                                 execution_mode=execution_mode,

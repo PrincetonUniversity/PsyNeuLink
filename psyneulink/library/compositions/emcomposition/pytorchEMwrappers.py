@@ -89,7 +89,6 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
         if self.mechanism is self.composition.storage_node:
             # 8/20/25 BREADCRUMB: REFACTOR TO USE execution_in_additional_optimizations
             num_optimizations = self._context.composition.parameters.optimizations_per_minibatch._get(context)
-            stim_num = self._context.composition._stim_num
             store_on_optimization = self.composition.parameters.store_on_optimization._get(context)
             if optimization_num == 0 and store_on_optimization == FIRST:
                 store = True

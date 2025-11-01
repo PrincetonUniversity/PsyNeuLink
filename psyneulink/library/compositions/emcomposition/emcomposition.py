@@ -986,7 +986,9 @@ from psyneulink.core.components.functions.nonstateful.transformfunctions import 
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError, NodeRole
 from psyneulink.library.compositions.autodiffcomposition import (
-    AutodiffComposition, torch_available, EXCLUDE_FROM_GRADIENT_CALC)
+    AutodiffComposition,
+    torch_available,
+)
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -1751,7 +1753,7 @@ class EMComposition(AutodiffComposition):
 
         def _validate_store_on_optimization(self, option):
             if option not in {FIRST, LAST, ALL}:
-                return f"must be one of the following keywords: FIRST, LAST or ALL."
+                return "must be one of the following keywords: FIRST, LAST or ALL."
 
     @check_user_specified
     def __init__(self,
@@ -1770,7 +1772,7 @@ class EMComposition(AutodiffComposition):
                  softmax_threshold:Optional[float]=.001,
                  softmax_choice:Optional[Union[WEIGHTED_AVG, ARG_MAX, PROBABILISTIC]]=WEIGHTED_AVG,
                  storage_prob:float=1.0,
-                 store_on_optimization:Union[FIRST, LAST, ALL]=FIRST,
+                 store_on_optimization: Union[FIRST, LAST, ALL] = FIRST,
                  memory_decay_rate:Union[float,AUTO]=AUTO,
                  purge_by_field_weights:bool=False,
                  enable_learning:bool=True,
@@ -1841,7 +1843,7 @@ class EMComposition(AutodiffComposition):
                          softmax_threshold = softmax_threshold,
                          softmax_choice = softmax_choice,
                          storage_prob = storage_prob,
-                         store_on_optimization = store_on_optimization,
+                         store_on_optimization=store_on_optimization,
                          memory_decay_rate = memory_decay_rate,
                          purge_by_field_weights = purge_by_field_weights,
                          enable_learning = enable_learning,

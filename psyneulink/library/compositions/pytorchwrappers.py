@@ -36,7 +36,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
-from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
@@ -47,19 +47,15 @@ from psyneulink.core.globals.keywords import (
     DEFAULT_LEARNING_RATE,
     DEFAULT_SUFFIX,
     DEFAULT_VARIABLE,
-    EPOCH,
     EXCLUDE,
     FIRST,
-    INPUTS,
     LAST,
     LEARNING,
     MATRIX_WEIGHTS,
     NODE,
     NODE_VALUES,
     NODE_VARIABLES,
-    OUTPUTS,
     RESULTS,
-    RUN,
     SHOW_PYTORCH,
     SYNCH,
     TARGET_MECHANISM,
@@ -330,9 +326,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         composition.scheduler._delete_counts(execution_context.execution_id)
 
         self._execute_in_additional_optimizations = (
-            self._validate_and_parse_additional_optimizations(self.composition.execute_in_additional_optimizations,
-                                                              self.composition.optimizations_per_minibatch,
-                                                              source = CONSTRUCTOR))
+            self._validate_and_parse_additional_optimizations(
+                self.composition.execute_in_additional_optimizations,
+                self.composition.optimizations_per_minibatch,
+                source=CONSTRUCTOR,
+            )
+        )
 
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
@@ -1376,7 +1375,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
 
-    def _validate_and_parse_additional_optimizations(self, user_specs:dict, num_optimizations, source:str)->dict:
+    def _validate_and_parse_additional_optimizations(
+        self, user_specs: dict, num_optimizations, source: str
+    ) -> dict:
         """Validate entries of dict specified for execute_in_additional_optimizations in Composition or learn()
         Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
         values to use during multiple optimizations, or None if no Parameters should be modified for that node.
@@ -1493,7 +1494,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     #             #   for use in subsequent trials
     #             params_list[i] = (param, mod_value)
     # # MODIFIED 8/20/25 END
-
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -1721,7 +1721,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Return a dictionary {output_node:value} of output values for the model
         """
 
-        def get_nodes_to_execute_for_optimization(opt_num:int, exec_set:set)->set:
+        def get_nodes_to_execute_for_optimization(opt_num: int, exec_set: set) -> set:
             # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
             addition_opts_dict = self._execute_in_additional_optimizations
             # nodes_to_execute = {node for node in addition_opts_dict
@@ -1731,10 +1731,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # for node in exec_set:
             #     if (node in nodes_to_execute):
             #         exec_set -= {torch_node}
-            nodes_to_exclude = {node for node in addition_opts_dict
-                                if (isinstance(addition_opts_dict[node],list)
-                                    and opt_num not in addition_opts_dict[node])}
-            orig_exec_set = exec_set.copy()
+            nodes_to_exclude = {
+                node
+                for node in addition_opts_dict
+                if (
+                    isinstance(addition_opts_dict[node], list)
+                    and opt_num not in addition_opts_dict[node]
+                )
+            }
             exec_set -= nodes_to_exclude
 
             return exec_set

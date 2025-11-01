@@ -3224,7 +3224,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.graph import EdgeType, Graph
 from psyneulink.core.globals.keywords import \
     (AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, CROSS_ENTROPY,
-     DEFAULT, DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE, DICT, EXCLUDE, FULL, FUNCTION, HARD_CLAMP,
+     DEFAULT, DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE, DICT, FULL, FUNCTION, HARD_CLAMP,
      IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME,
      LEARNABLE, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY,
      LEARNING_RATE, LEARNING_SIGNAL, Loss,
@@ -3980,7 +3980,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
-            execute_in_additional_optimizations = None,  # BREADCRUMB: MOVE TO AUTODIFF
+            execute_in_additional_optimizations=None,  # BREADCRUMB: MOVE TO AUTODIFF
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4046,7 +4046,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
-        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}# BREADCRUMB: MOVE TO AUTODIFF
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}  # BREADCRUMB: MOVE TO AUTODIFF
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -11764,7 +11764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    content='run_start',
                    context=context)
 
-            self._trial_num = -1 # For debugging
+            self._trial_num = -1  # For debugging
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -11922,7 +11922,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
-            execute_in_additional_optimizations:Optional[dict]=None, # BREADCRUMB MOVE TO AUTODIFF
+            execute_in_additional_optimizations: Optional[dict] = None,  # BREADCRUMB MOVE TO AUTODIFF
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
