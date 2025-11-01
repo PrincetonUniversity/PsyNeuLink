@@ -994,11 +994,35 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    (ADAPTIVE, AFTER, ALL, ARG_MAX, ARG_MAX_INDICATOR, AUTO, CONTEXT, CONTROL,
-     DEFAULT_INPUT, DEFAULT_VARIABLE, DOT_PRODUCT,
-     EM_COMPOSITION, FIRST, FULL_CONNECTIVITY_MATRIX, GAIN, IDENTITY_MATRIX, INPUT_SHAPES, LAST, L0,
-     MULTIPLICATIVE_PARAM, NAME, PARAMS, PROB_INDICATOR, PRODUCT, PROJECTIONS, RANDOM, VARIABLE)
+from psyneulink.core.globals.keywords import (
+    ADAPTIVE,
+    ALL,
+    ARG_MAX,
+    ARG_MAX_INDICATOR,
+    AUTO,
+    CONTEXT,
+    CONTROL,
+    DEFAULT_INPUT,
+    DEFAULT_LEARNING_RATE,
+    DEFAULT_VARIABLE,
+    DOT_PRODUCT,
+    EM_COMPOSITION,
+    FIRST,
+    FULL_CONNECTIVITY_MATRIX,
+    GAIN,
+    IDENTITY_MATRIX,
+    INPUT_SHAPES,
+    L0,
+    LAST,
+    MULTIPLICATIVE_PARAM,
+    NAME,
+    PARAMS,
+    PROB_INDICATOR,
+    PRODUCT,
+    PROJECTIONS,
+    RANDOM,
+    VARIABLE,
+)
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, is_numeric_scalar, is_iterable
 from psyneulink.core.llvm import ExecutionMode
