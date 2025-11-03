@@ -6,12 +6,12 @@ OUTPUT_D = 11
 
 MEMORY_INIT = 0.01  # initial value for the memory entries
 
-SOFTMAX_THRESHOLD = 1e-10
-INTEGRATION_RATE = 0.5
+SOFTMAX_THRESHOLD = 1e-3
+INTEGRATION_RATE = .69
 NUM_OPTIM_STEPS = 10
-LEARNING_RATE = 0.2
+LEARNING_RATE = 1.
 
-TEMPERATURE = 1.
+TEMPERATURE = .1
 
 params_data = dict(
     n_participants=1,

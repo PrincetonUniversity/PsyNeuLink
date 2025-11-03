@@ -102,10 +102,10 @@ class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
             if store:
                 self.store_memory(variable, context)
                 # BREADCRUMB PRINT:
-                print(f"'STORE MEMORIES for STIM {stim_num} optimization_num': {optimization_num}\n")
-                print(f"  'STATE VALUE STORED': {variable[0][0][0]}\n")
-                print(f"  'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
-                print(f"  'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
+                # print(f"'STORE MEMORIES for STIM {stim_num} optimization_num': {optimization_num}\n")
+                # print(f"  'STATE VALUE STORED': {variable[0][0][0]}\n")
+                # print(f"  'PREVIOUS STATE VALUE STORED': {variable[0][0][1]}\n")
+                # print(f"  'CONTEXT VALUE STORED': {variable[0][0][2]}\n")
 
         else:
             super().execute(variable, optimization_num, synch_with_pnl_options, context)

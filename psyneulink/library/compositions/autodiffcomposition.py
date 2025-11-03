@@ -1358,7 +1358,7 @@ class AutodiffComposition(Composition):
         pytorch_rep.minibatch_loss_count += 1
 
         # BREADCRUMB PRINT:
-        print(f"LOSS for STIM {self._stim_num} optimization_num {optimization_num}: {float(comp_loss):.{6}f}")
+        # print(f"LOSS for STIM {self._stim_num} optimization_num {optimization_num}: {float(comp_loss):.{6}f}")
 
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 

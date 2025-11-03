@@ -332,7 +332,8 @@ def construct_model(model_name:str=model_params['name'],
                                 MappingProjection(sender=context_layer,
                                                   matrix=IDENTITY_MATRIX,
                                                   receiver=em.nodes[context_name + QUERY],
-                                                  learnable=True),
+                                                  learnable=True,
+                                                  ),
                                 em,
                                 MappingProjection(sender=em.nodes[state_input_name + RETRIEVED],
                                                   receiver=prediction_layer,
@@ -420,13 +421,16 @@ if __name__ == '__main__':
         start_time = timeit.default_timer()
         # FOR DEBUGGING:
         torch.autograd.set_detect_anomaly(True)
+
+
+
         model.learn(inputs={model_params['state_input_layer_name']:INPUTS},
                   # report_output=REPORT_OUTPUT,
                   # report_progress=REPORT_PROGRESS
-                  #   call_after_minibatch=print('Projections from context to EM: ',
+                  #call_after_minibatch=print('Projections from context to EM: ',
                   #                              model.projections[7].parameters.matrix.get(context)),
                   #                              # model.projections[7].matrix)
-                  #   call_after_minibatch=print_stuff,
+                    # call_after_minibatch=print_stuff,
                     optimizations_per_minibatch=model_params['num_optimization_steps'],
                     synch_projection_matrices_with_torch=model_params['synch_weights'],
                     synch_node_values_with_torch=model_params['synch_values'],

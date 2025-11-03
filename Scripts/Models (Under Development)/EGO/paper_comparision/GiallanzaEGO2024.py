@@ -199,16 +199,6 @@ def construct_model(
     return EGO_comp, state_input_layer
 
 
-# def run_model(model,
-#               input_layer,
-#               trials,
-#               ):
-#
-#     print_stuff()
-#
-#     return model.results[::NUM_OPTIMIZATION_STEPS][:, 2]
-
-
 def state_seq_ctx1(rng: random.Random) -> List[int]:
     """
     Generate a state sequence for Context 1:

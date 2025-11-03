@@ -13,7 +13,7 @@ def run_participant(params, data_loader, len_memory=2):
     prev_state = torch.zeros_like(context)
 
     # BREADCRUMB PRINT
-    print(f"TORCH LOSSES: ")
+    # print(f"TORCH LOSSES: ")
     # Loop over each state of the CSW task.
     for trial, (x, _, y) in enumerate(data_loader):
         if trial < 1:

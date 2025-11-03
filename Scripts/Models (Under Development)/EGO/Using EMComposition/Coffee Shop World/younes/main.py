@@ -21,9 +21,9 @@ PROBS = [1., 1., 1.]
 RUN_PSY_EGO = True
 RUN_TORCH = True
 
-IS_PLOT = True
+IS_PLOT = False
 IS_TEST = True
-IS_VERBOSE = True
+IS_VERBOSE = False
 
 TOLERANCE = 1e-10
 NR_TRIALS_TO_CHECK = 20
@@ -31,7 +31,7 @@ NR_TRIALS_TO_CHECK = 20
 
 def main():
     utils.set_random_seed(0)
-    data_loader = gen_data_loader_with_first(TRAINING_PARADIGM, PROBS, 1)
+    data_loader = gen_data_loader_with_first(TRAINING_PARADIGM, PROBS, 40)
     fig, axes = plt.subplots(2, 1, figsize=(5, 12))
 
     pnl_inputs = data_loader.dataset.xs.numpy().copy()[1:]  # Exclude first input for PNL

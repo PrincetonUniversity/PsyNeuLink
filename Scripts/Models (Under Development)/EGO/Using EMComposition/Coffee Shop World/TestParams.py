@@ -25,8 +25,8 @@ model_params = dict(
     # environment
     # curriculum_type = 'Interleaved',
     curriculum_type = 'Blocked',
-    num_stims = 7,  # Integer or ALL
-    # num_stims = ALL,  # Integer or ALL
+    # num_stims = 200,  # Integer or ALL
+    num_stims = ALL,  # Integer or ALL
 
     # Processing
     integration_rate = .69, # rate at which state is integrated into new context
