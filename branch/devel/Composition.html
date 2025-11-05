@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.18.0.0+63.ga3ea600d0 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.18.0.0+64.g02b767fa1 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+63
+                  0.18.0.0+64
                 </div>
               
             
@@ -2987,7 +2987,7 @@ When looking for values after a run, it’s important to know the execution cont
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.composition.</span></span><span class="sig-name descname"><span class="pre">Composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_probes=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_probes_in_output=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_mode='after'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_time_scale=TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_condition=&lt;psyneulink.core.scheduling.condition.Always</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_old_simulation_data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_graph_attributes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_processing=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.composition.</span></span><span class="sig-name descname"><span class="pre">Composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_probes=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_probes_in_output=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execute_in_additional_optimizations=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_mode='after'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_time_scale=TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_condition=&lt;psyneulink.core.scheduling.condition.Always</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_old_simulation_data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_graph_attributes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_processing=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Link to this definition">¶</a></dt>
 <dd><p>Base class for Composition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5491,7 +5491,7 @@ trials.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.learn">
-<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode=&lt;ExecutionMode.Python:</span> <span class="pre">0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_minibatches=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_before_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_after_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.learn" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execute_in_additional_optimizations=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode=&lt;ExecutionMode.Python:</span> <span class="pre">0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_minibatches=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_before_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_after_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.learn" title="Link to this definition">¶</a></dt>
 <dd><p>Runs the composition in learning mode - that is, any components with enable_learning <code class="docutils literal notranslate"><span class="pre">True</span></code> will be
 executed in learning mode. See <a class="reference internal" href="#composition-learning"><span class="std std-ref">Learning in a Composition</span></a> for details.</p>
 <dl class="field-list simple">
@@ -5527,16 +5527,37 @@ method (see <a class="reference internal" href="#composition-learning-rate"><spa
 for one step (gradient update) of learning, after which LearningMechanisms with learning mode TRIAL
 will update the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for which
 they are responsible; this overrides the Composition’s default value.</p></li>
-<li><p><strong>optimizations_per_minibatch</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – <p>specifies the number of executions and weight updates of learnable pathways that are carried out for
-each set of stimuli in a <code class="xref any docutils literal notranslate"><span class="pre">minibatch</span></code>; this overrides the Composition’s
-default value.</p>
+<li><p><strong>optimizations_per_minibatch</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – <p>specifies the number of executions and weight updates of learnable pathways (forward and backward
+passes – or optimization steps – in PyTorch), that are carried out for each set of stimuli in a
+<code class="xref any docutils literal notranslate"><span class="pre">minibatch</span></code>; this overrides the Composition’s default value. Optimization
+steps after the first can be restricted to a subset of nodes using the
+<strong>execute_in_additional_optimizations</strong> argument (see below), which can also designate particular
+Parameter values used for those optimization steps.</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>This can be used to implement the <a class="reference external" href="https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf">backprop-to-activation procedure</a> in which the <code class="xref any docutils literal notranslate"><span class="pre">backpropagation</span>
 <span class="pre">learning</span> <span class="pre">algorithm</span></code> is used, with a high learning rate, to quickly search
-for a pattern of activation in response to a given input (or set of inputs) that is useful for some
-downstream purpose.</p>
+for a pattern of activation in response to a given input (or set of inputs) that is useful for
+some downstream purpose (see EGO Model for an example).</p>
 </div>
+</p></li>
+<li><p><strong>BREADCRUMB</strong> (<em>#</em>)</p></li>
+<li><p><strong>execute_in_additional_optimizations</strong> (dict{<a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a>:[(Parameter, value)]} (default None)) – <p>specifies which <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> of the Composition should be included in the forward pass
+for any additional optimization steps after the first (see <strong>optimizations_per_minibatch</strong> for
+additional information); each key should be a <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> in the Composition or one
+nested within it, and the value can be one of the following:</p>
+<blockquote>
+<div><p><em>None</em> or <em>True</em>: execute in additional optimizations without any modificadtion(s) to its Parameters;</p>
+<dl class="simple">
+<dt><em>False</em> or <em>EXCLUDE</em>: exclude from execution during additional optimizations;  this is useful</dt><dd><p>primarly when a nested Composition is specified but nodes within it should be excluded;</p>
+</dd>
+<dt><em>(Parameter, value)</em> or <em>[(Parameter, value), …]</em>: assign specified Parameter values during</dt><dd><p>execution of additional optimizations, restoring to previous value(s) for first optimization
+of next trial.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
+are included, except for ones explicitly excluded.</p>
 </p></li>
 <li><p><strong>randomize_minibatch</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – specifies whether the order of the input trials should be randomized in each epoch</p></li>
 <li><p><strong>patience</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – used for early stopping of training; If a model has more than <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code> bad consecutive epochs,
@@ -6471,7 +6492,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=af0ff221"></script>
+         <script src="_static/documentation_options.js?v=a083b948"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
