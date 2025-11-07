@@ -1311,7 +1311,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs)
+                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs.union(set(['_user_specified'])))
                 if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
             )
 

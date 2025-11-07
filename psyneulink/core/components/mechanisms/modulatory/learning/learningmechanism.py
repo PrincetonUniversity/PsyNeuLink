@@ -1135,9 +1135,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             prefs=prefs,
             **kwargs
         )
-        # Set default value, so any later assignments can be detected
-        #    (e.g., in CompositionRunner.run_learning)
-        self.defaults.learning_rate = self.parameters.learning_rate.get()
 
     def _check_type_and_timing(self):
         try:

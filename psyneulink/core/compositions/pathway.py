@@ -352,8 +352,8 @@ from enum import Enum
 from psyneulink._typing import Literal
 
 from psyneulink.core.components.component import UsesParametersMeta
-from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole, _get_optimizer_Parameter_parser
 from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
@@ -558,6 +558,8 @@ class Pathway(object, metaclass=UsesParametersMeta):
     class Parameters(ParametersBase):
         learning_rate = Parameter(None, stateful=False)
 
+        _parse_learning_rate = _get_optimizer_Parameter_parser('learning_rate')
+
     def __init__(
             self,
             pathway:list,
@@ -718,3 +720,26 @@ class Pathway(object, metaclass=UsesParametersMeta):
                     assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                                   f"has PathwayRole.LEARNING assigned but no 'learning_function' attribute."
                 return None
+
+    @property
+    def _optimization_projections(self):
+        """
+        Contains projections that can have optimization parameter values
+        defined by this Pathway
+        """
+        opt_projections = set(filter(lambda o: isinstance(o, Projection), self.pathway))
+        # can use only if self.composition is not None and the
+        # composition is (in?) the proxy outer node composition(s?)
+        proxies = {p: p._proxy_for for p in opt_projections if p._proxy_for}
+        opt_projections.update(proxies)
+
+        outer_only_projs = set()
+        nested_comps = self.composition._get_nested_compositions()
+        for p in opt_projections:
+            if not self.composition._controls_optimization_for_projection(p, nested_comps):
+                outer_only_projs.add(p)
+
+        if len(outer_only_projs):
+            opt_projections.difference_update(outer_only_projs)
+
+        return opt_projections
