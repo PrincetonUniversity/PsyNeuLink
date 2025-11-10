@@ -454,10 +454,10 @@ def construct_model(model_name:str=MODEL_NAME,
     # state input (EXPERIENCE) -\
     #                            --> state_weight -------\
     # state from em (PREDICT)---/                         -> * (context_integration_rate) -----\
-    #                          /-----> context_weight ---/                                      --> context
+    #                                                    /                                      \
+    #                          /-----> context_weight --/                                       /--> context
     # context from em --------/      (=1- state_weight)                                        /
-    #                                                    /---> 1 - context_integration_rate --/
-    # context from prev. cycle -------------------------/
+    # context from prev. cycle ------------------------------> 1 - context_integration_rate --/
 
     assert 0 <= context_integration_rate <= 1,\
         f"context_retrieval_weight must be a number from 0 to 1"
