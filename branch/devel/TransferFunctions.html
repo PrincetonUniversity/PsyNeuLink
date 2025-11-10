@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.18.0.0+71.g6893dc08e documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.18.0.0+81.g90999fdfa documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+71
+                  0.18.0.0+81
                 </div>
               
             
@@ -250,94 +250,6 @@ inferring the input from the <strong>output</strong> and then computing the deri
 <section id="tranferfunction-class-references">
 <h2>TranferFunction Class References<a class="headerlink" href="#tranferfunction-class-references" title="Link to this heading">¶</a></h2>
 </section>
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle" title="Link to this definition">¶</a></dt>
-<dd><p id="angle-function"><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns Angle transform of vector in <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>1array : default class_defaults.variable</em>) – specifies a template for the value to be transformed;  length must be at least 2.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable" title="Link to this definition">¶</a></dt>
-<dd><p>contains value to be transformed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.owner" title="Link to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.name" title="Link to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.prefs" title="Link to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
-for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters" title="Link to this definition">¶</a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters.variable" title="Link to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Default value<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy.array([0.,0,])</p>
-</dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
-</dd>
-<dt class="field-odd">Read only<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.BinomialDistort">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">BinomialDistort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.BinomialDistort" title="Link to this definition">¶</a></dt>
@@ -3340,6 +3252,16 @@ settings for all other cost functions are left intact.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.nonstateful.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle" title="Link to this definition">¶</a></dt>
+<dd><p>DEPRECATED.</p>
+<p><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle" title="psyneulink.core.components.functions.nonstateful.transferfunctions.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> used a non-standard parameterization of hyperspherical coordinates.
+Use <code class="xref any docutils literal notranslate"><span class="pre">HypersphericalToCartesian</span></code> instead.</p>
+<p>This class is retained temporarily for backward compatibility.</p>
+<p>Will be removed in a future release.</p>
+</dd></dl>
+
 <dl class="simple">
 <dt>CostFunctions</dt><dd><dl class="field-list simple">
 <dt class="field-odd">private-members<span class="colon">:</span></dt>
@@ -3393,17 +3315,6 @@ settings for all other cost functions are left intact.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#tranferfunction-class-references">TranferFunction Class References</a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle"><code class="docutils literal notranslate"><span class="pre">Angle</span></code></a><ul>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.variable"><code class="docutils literal notranslate"><span class="pre">Angle.variable</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.owner"><code class="docutils literal notranslate"><span class="pre">Angle.owner</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.name"><code class="docutils literal notranslate"><span class="pre">Angle.name</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.prefs"><code class="docutils literal notranslate"><span class="pre">Angle.prefs</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters"><code class="docutils literal notranslate"><span class="pre">Angle.Parameters</span></code></a><ul>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle.Parameters.variable"><code class="docutils literal notranslate"><span class="pre">Angle.Parameters.variable</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.BinomialDistort"><code class="docutils literal notranslate"><span class="pre">BinomialDistort</span></code></a><ul>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.BinomialDistort.variable"><code class="docutils literal notranslate"><span class="pre">BinomialDistort.variable</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.BinomialDistort.p"><code class="docutils literal notranslate"><span class="pre">BinomialDistort.p</span></code></a></li>
@@ -3672,6 +3583,7 @@ settings for all other cost functions are left intact.</p>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferWithCosts.toggle_cost"><code class="docutils literal notranslate"><span class="pre">TransferWithCosts.toggle_cost()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.nonstateful.transferfunctions.Angle"><code class="docutils literal notranslate"><span class="pre">Angle</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -3691,7 +3603,7 @@ settings for all other cost functions are left intact.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=eae8b538"></script>
+         <script src="_static/documentation_options.js?v=8de9bdd5"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
