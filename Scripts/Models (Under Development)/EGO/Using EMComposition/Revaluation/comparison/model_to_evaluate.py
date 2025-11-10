@@ -116,6 +116,8 @@ def gen_memories(visited_states,
         # skip the first time step
         if True: #t > 0:
             # Here, we normalize the weights to sum to 1
+
+
             _len = old_context_integration_rate + state_integration_rate
             _old_weight_tmp = old_context_integration_rate / _len
             _state_weight_tmp = state_integration_rate / _len
