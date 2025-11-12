@@ -174,7 +174,7 @@ class TestThreshold:
 @pytest.mark.composition
 class TestInputPorts:
 
-    def test_regular_input_mode(self):
+    def test_regular_input_mode(self, comp_mode):
         input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             function=DriftDiffusionAnalytical(),
@@ -184,17 +184,20 @@ class TestInputPorts:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[input_mech, [[1],[-1]], ddm])
 
-        result = comp.run(inputs={input_mech:[1,0]})
+        result = comp.run(inputs={input_mech:[1,0]}, execution_mode=comp_mode)
 
-        np.testing.assert_allclose(ddm.output_ports[0].value, [1])
-        np.testing.assert_allclose(ddm.output_ports[1].value, [1])
+        if comp_mode is pnl.ExecutionMode.Python:
+            np.testing.assert_allclose(ddm.output_ports[0].value, [1])
+            np.testing.assert_allclose(ddm.output_ports[1].value, [1])
+
         np.testing.assert_allclose(ddm.value,
-                           [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
-                            [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
-                            [2.48491374e-01], [1.48291009e+00]])
+                                   [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
+                                    [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
+                                    [2.48491374e-01], [1.48291009e+00]])
         np.testing.assert_allclose(result, [[1.0], [1.0]])
 
-    def test_array_mode(self):
+    @pytest.mark.parametrize("with_modulation", [True, False], ids=["with modulation", "without modulation"])
+    def test_array_mode(self, with_modulation, comp_mode):
         input_mech = ProcessingMechanism(input_shapes=2)
         ddm = DDM(
             input_format=ARRAY,
@@ -205,39 +208,52 @@ class TestInputPorts:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[input_mech, ddm])
 
-        result = comp.run(inputs={input_mech:[1,0]})
+        inputs = {input_mech:[1, 0]}
+        if with_modulation:
+            control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, ddm)])
+            comp.add_node(control)
+            inputs[control] = [1]
 
-        np.testing.assert_allclose(ddm.output_ports[0].value, [1,0])
-        np.testing.assert_allclose(ddm.output_ports[1].value, [1,0])
+        result = comp.run(inputs={input_mech:[1, 0]}, execution_mode=comp_mode)
+
+        if comp_mode is pnl.ExecutionMode.Python:
+            np.testing.assert_allclose(ddm.output_ports[0].value, [1, 0])
+            np.testing.assert_allclose(ddm.output_ports[1].value, [1, 0])
+
         np.testing.assert_allclose(ddm.value,
-                           [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
-                            [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
-                            [2.48491374e-01], [1.48291009e+00]])
+                                   [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
+                                    [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
+                                    [2.48491374e-01], [1.48291009e+00]])
         np.testing.assert_allclose(result, [[1., 0.], [1.0, 0.0]])
 
 class TestOutputPorts:
 
-    @pytest.mark.parametrize('variable, expected, context',
+    @pytest.mark.parametrize('variable, expected_value, expected_result, context',
         [pytest.param([1.0],
-                      [],
+                      None,
+                      None,
                       pytest.raises(MechanismError,
                                     match=re.escape("Shape ((1,)) of input ([1.]) does not match required shape ((1, 2)) for input to InputPort 'ARRAY' of DDM.")),
+                      marks=pytest.mark.llvm_not_implemented,
                       id="negative"),
          pytest.param([1.0, 0.0],
                       [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04], [1.19932930e+00],
                        [2.48491374e-01], [1.48291009e+00], [1.19932930e+00], [2.48491374e-01], [1.48291009e+00]],
+                      [[1., 0.]],
                       contextlib.nullcontext(),
                       id="postive")])
-    def test_selected_input_array(self, variable, expected, context):
+    def test_selected_input_array(self, variable, expected_value, expected_result, context, mech_mode):
         action_selection = DDM(input_format=ARRAY,
                                function=DriftDiffusionAnalytical(),
                                output_ports=[SELECTED_INPUT_ARRAY],
                                name='DDM')
 
         with context:
-            result = action_selection.execute(variable)
+            EX = pytest.helpers.get_mech_execution(action_selection, mech_mode)
+            result = EX(variable)
 
-            np.testing.assert_allclose(result, expected)
+            np.testing.assert_allclose(result, expected_result)
+            np.testing.assert_allclose(action_selection.value, expected_value)
 
     def test_decision_outcome_integrator(self, mech_mode):
         ddm = pnl.DDM(function=DriftDiffusionIntegrator(rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0),
@@ -713,22 +729,24 @@ def test_DDM_threshold_modulation_analytical(comp_mode):
 @pytest.mark.composition
 @pytest.mark.ddm_mechanism
 def test_DDM_threshold_modulation_integrator(comp_mode):
-    M = pnl.DDM(name='DDM',
-                execute_until_finished=True,
-                function=pnl.DriftDiffusionIntegrator(threshold=20),
-               )
+    ddm = pnl.DDM(name='DDM',
+                  execute_until_finished=True,
+                  function=pnl.DriftDiffusionIntegrator(threshold=20),
+                 )
 
-    control = pnl.ControlMechanism(
-            control_signals=[(pnl.THRESHOLD, M)])
+    control = pnl.ControlMechanism(control_signals=[(pnl.THRESHOLD, ddm)])
 
     C = pnl.Composition()
-    C.add_node(M, required_roles=[pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
+    C.add_node(ddm, required_roles=[pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
     C.add_node(control)
-    inputs = {M:[1], control:[3]}
+
+    # Modulation value 3 changes the threshold from 20 -> 60.
+    # Input value 1.11 needs ~55 iterations to cross the new
+    # threshold.
+    inputs = {ddm:[1.11], control:[3]}
     val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
 
-    np.testing.assert_allclose(val[0], [60.0])
-    np.testing.assert_allclose(val[1], [60.0])
+    np.testing.assert_allclose(val, [[60.0], [55.0]])
 
 
 @pytest.mark.composition
