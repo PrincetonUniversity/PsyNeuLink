@@ -121,12 +121,7 @@ def run(
         # convenience partial function to generate memories with fixed parameters
         _gen_memories = partial(
             model_python.gen_memories,
-            old_context_integration_rate=old_context_integration_rate,
             state_integration_rate=state_integration_rate,
-            retrieved_context_integration_rate=new_context_integration_rate,
-            state_retrieval_weight=state_retrieval_weight,
-            context_retrieval_weight=context_retrieval_weight,
-            time_retrieval_weight=time_retrieval_weight,
             context_d=context_d)
 
         # memories baseline only
@@ -161,9 +156,7 @@ def run(
             state_retrieval_weight=state_retrieval_weight,
             context_retrieval_weight=context_retrieval_weight,
             time_retrieval_weight=time_retrieval_weight,
-            old_context_integration_rate=old_context_integration_rate,
             state_integration_rate=state_integration_rate,
-            new_context_integration_rate=new_context_integration_rate,
             context_d=context_d,
             state_d=state_d,
             time_d=time_d

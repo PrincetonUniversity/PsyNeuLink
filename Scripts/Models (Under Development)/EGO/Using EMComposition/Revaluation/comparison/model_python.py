@@ -44,38 +44,24 @@ def torch_append(tensor, value):
     return tensor
 
 
-def project_next_context(old_context,
+def project_next_context(context,
                          state,
-                         new_context,
-                         old_context_integration_rate,
-                         state_integration_rate,
-                         new_context_integration_rate):
+                         integration_rate):
     """
     Projected next context as weighted combination of old context, new state, and new context.
     """
-    return old_context_integration_rate * old_context + \
-        state_integration_rate * state + \
-        new_context_integration_rate * new_context
+    return context * (1 - integration_rate) + integration_rate * state
 
 
 def gen_memories(visited_states,
                  rewards,
                  time_sequence,
-                 old_context_integration_rate,
                  state_integration_rate,
-                 retrieved_context_integration_rate,
-                 state_retrieval_weight,
-                 context_retrieval_weight,
-                 time_retrieval_weight,
                  context_d=params.CONTEXT_SIZE):
     """
     Generate episodic memories from a sequence of visited states, rewards, and time codes.
 
-    Integration rates determine how much old context, state and retrieved context contribute to the
-    updated context representation.
-
-    Retrieval weights determine the importance of state, context, and time during retrieval from memory (to
-    get the retrieved context).
+    Integration rates determine how much old context and state.
     """
 
     # Initialize empty memories
@@ -101,19 +87,8 @@ def gen_memories(visited_states,
 
     for t in range(len(visited_states)):
         state_cur = visited_states[t]
-        time_code = time_sequence[t]
+        # time_code = time_sequence[t]
         reward_cur = rewards[t]
-
-        # retrieve context
-        memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
-        query = (state_cur, context_rep, time_code, reward_cur)  # tuple of keys
-
-        _, retrieved_context, _, _, _ = sample_memory(memories,
-                                                      query,
-                                                      state_retrieval_weight,
-                                                      context_retrieval_weight,
-                                                      time_retrieval_weight,
-                                                      mode='softmax')
 
         # store (not integrated yet) context with current state
         if isinstance(visited_states[t], torch.Tensor):
@@ -128,9 +103,8 @@ def gen_memories(visited_states,
         reward_memories[t] = reward_cur
 
         # Integration of context
-        context_rep = context_rep * old_context_integration_rate \
-                      + retrieved_context * retrieved_context_integration_rate \
-                      + state_cur * state_integration_rate
+        context_rep = context_rep * (1 - state_integration_rate) + \
+                      state_cur * state_integration_rate
 
     return state_memories, context_memories, time_memories, reward_memories
 
@@ -177,92 +151,6 @@ def sample_memory(memories,
     raise NotImplementedError(f'Mode {mode} not implemented. Try one of ["sample", "argmax", "softmax"].')
 
 
-def _sample_memory_sequential(memories,
-                             starting_query,
-                             n_simulations,  # number of simulation trajectories
-                             n_steps,  # number of steps per simulation trajectory
-
-                             state_retrieval_weight,
-                             context_retrieval_weight,
-                             time_retrieval_weight,
-
-                             old_context_integration_rate,
-                             state_integration_rate,
-                             new_context_integration_rate,
-
-                             context_d=params.STATE_SIZE,
-                             state_d=params.STATE_SIZE,
-                             time_d=params.TIME_SIZE,
-                             ):
-    # Unpack memories and query
-    state_memories, context_memories, time_memories, reward_memories = memories
-    starting_state, starting_context, starting_time, _ = starting_query
-
-    # Initialize arrays to hold retrieved values (for all simulations and steps)
-    retrieved_states = np.zeros((n_simulations, n_steps, state_d))
-    retrieved_contexts = np.zeros((n_simulations, n_steps, context_d))
-    retrieved_times = np.zeros((n_simulations, n_steps, time_d))
-    retrieved_rewards = np.zeros((n_simulations, n_steps))
-
-    retrieved_memory_idxs = np.zeros((n_simulations, n_steps), dtype=int)
-
-    # simulate n_simulation trajectories
-    for sim_idx in range(n_simulations):
-        # initialize state, context, and time for this simulation
-        state_sim = starting_state
-        context_sim = starting_context
-        time_sim = starting_time
-
-        # initialize retrieval weights for this simulation
-        state_retrieval_weight_sim = state_retrieval_weight
-        context_retrieval_weight_sim = context_retrieval_weight
-        time_retrieval_weight_sim = time_retrieval_weight
-
-        for step_idx in range(n_steps):
-            # retrieve from memory
-            memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
-            queries = (state_sim, context_sim, time_sim, 0)
-
-            # retrieve memory based on current query and current retrieval weights
-            retrieved_state, retrieved_context, retrieved_time, retrieved_reward, retrieved_memory_idx = \
-                sample_memory(memories,
-                              queries,
-                              state_retrieval_weight_sim,
-                              context_retrieval_weight_sim,
-                              time_retrieval_weight_sim,
-                              mode='sample')
-
-            # project the next context based on retrieved context and current state
-            context_sim = project_next_context(
-                context_sim,
-                retrieved_state,
-                retrieved_context,
-                old_context_integration_rate,
-                state_integration_rate,
-                new_context_integration_rate
-            )
-
-            # store the retrieved values
-            retrieved_states[sim_idx, step_idx] = retrieved_state.detach().clone().numpy()
-            retrieved_contexts[sim_idx, step_idx] = retrieved_context.detach().clone().numpy()
-            retrieved_times[sim_idx, step_idx] = retrieved_time.detach().clone().numpy()
-            retrieved_rewards[sim_idx, step_idx] = retrieved_reward.item()
-            retrieved_memory_idxs[sim_idx, step_idx] = retrieved_memory_idx
-
-            # update the retrieval weights for the neext step (don't use state after first step)
-            state_retrieval_weight_sim = 0.  # set state weight to 0 after first step
-
-            # since state weight is 0, we re-normalize the other two weights to sum to 1
-            _len = context_retrieval_weight_sim + time_retrieval_weight_sim
-            if _len > 0:
-                context_retrieval_weight_sim = context_retrieval_weight_sim / _len
-                time_retrieval_weight_sim = time_retrieval_weight_sim / _len
-            else:
-                context_retrieval_weight_sim = 0
-                time_retrieval_weight_sim = 0
-
-    return retrieved_states, retrieved_contexts, retrieved_times, retrieved_rewards, retrieved_memory_idxs
-
 def sample_memory_sequential(memories,
                              starting_query,
                              n_simulations,  # number of simulation trajectories
@@ -272,9 +160,7 @@ def sample_memory_sequential(memories,
                              context_retrieval_weight,
                              time_retrieval_weight,
 
-                             old_context_integration_rate,
                              state_integration_rate,
-                             new_context_integration_rate,
 
                              context_d=params.STATE_SIZE,
                              state_d=params.STATE_SIZE,
@@ -299,24 +185,20 @@ def sample_memory_sequential(memories,
         context_sim = starting_context
         time_sim = starting_time
 
-        # initialize retrieval weights for this simulation
-        state_retrieval_weight_sim = state_retrieval_weight
-        context_retrieval_weight_sim = context_retrieval_weight
-        time_retrieval_weight_sim = time_retrieval_weight
 
         for step_idx in range(n_steps):
             # retrieve from memory
             memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
 
-
             context_retrieval_weight_sim = 0.
+
             state_retrieval_weight_sim = .9
             time_retrieval_weight_sim = .1
 
             queries = (state_sim, context_sim, time_sim, 0)
 
-            # retrieve memory based on current query and current retrieval weights
-            retrieved_state, retrieved_context, retrieved_time, retrieved_reward, retrieved_memory_idx = \
+            # retrieve reward based on current state (state_retrieval_weight_sim == 0)
+            _, retrieved_context, _, retrieved_reward, _ = \
                 sample_memory(memories,
                               queries,
                               state_retrieval_weight_sim,
@@ -324,25 +206,24 @@ def sample_memory_sequential(memories,
                               time_retrieval_weight_sim,
                               mode='sample')
 
-            # project the next context based on retrieved context and current state
+            # project the next context based on context and state
+            MODEL_BASED_NESS = 1.
+            context_sim = context_sim * (1 - MODEL_BASED_NESS) + MODEL_BASED_NESS * retrieved_reward
+
             context_sim = project_next_context(
                 context_sim,
-                # retrieved_state,
                 state_sim,
-                retrieved_context,
-                old_context_integration_rate,
                 state_integration_rate,
-                new_context_integration_rate
             )
 
             context_retrieval_weight_sim = .9
             state_retrieval_weight_sim = 0.
             time_retrieval_weight_sim = .1
 
-
             queries = (state_sim, context_sim, time_sim, 0)
 
-            # retrieve memory based on current query and current retrieval weights
+            # retrieve state based on projected context (state_retrieval_weight_sim == 0)
+            # Note
             retrieved_state, retrieved_context, retrieved_time, _, retrieved_memory_idx = \
                 sample_memory(memories,
                               queries,
@@ -353,26 +234,12 @@ def sample_memory_sequential(memories,
 
             state_sim = retrieved_state
 
-
-
             # store the retrieved values
             retrieved_states[sim_idx, step_idx] = retrieved_state.detach().clone().numpy()
             retrieved_contexts[sim_idx, step_idx] = retrieved_context.detach().clone().numpy()
             retrieved_times[sim_idx, step_idx] = retrieved_time.detach().clone().numpy()
             retrieved_rewards[sim_idx, step_idx] = retrieved_reward.item()
             retrieved_memory_idxs[sim_idx, step_idx] = retrieved_memory_idx
-
-            # # update the retrieval weights for the neext step (don't use state after first step)
-            # state_retrieval_weight_sim = 0.  # set state weight to 0 after first step
-            #
-            # # since state weight is 0, we re-normalize the other two weights to sum to 1
-            # _len = context_retrieval_weight_sim + time_retrieval_weight_sim
-            # if _len > 0:
-            #     context_retrieval_weight_sim = context_retrieval_weight_sim / _len
-            #     time_retrieval_weight_sim = time_retrieval_weight_sim / _len
-            # else:
-            #     context_retrieval_weight_sim = 0
-            #     time_retrieval_weight_sim = 0
 
     return retrieved_states, retrieved_contexts, retrieved_times, retrieved_rewards, retrieved_memory_idxs
 
@@ -384,11 +251,7 @@ def estimate_reward_from_starting_state(memories,
                                         state_retrieval_weight,
                                         context_retrieval_weight,
                                         time_retrieval_weight,
-
-                                        old_context_integration_rate,
                                         state_integration_rate,
-                                        new_context_integration_rate,
-
                                         context_d=params.STATE_SIZE,
                                         state_d=params.STATE_SIZE,
                                         time_d=params.TIME_SIZE,
@@ -396,20 +259,19 @@ def estimate_reward_from_starting_state(memories,
     starting_context = memories[1][-1]
     starting_time = memories[2][-1]
     starting_query = (starting_state, starting_context, starting_time, None)
-    sampled_trajectories = sample_memory_sequential(memories,
-                                                    starting_query,
-                                                    n_simulations,  # number of simulation trajectories
-                                                    n_steps,  # number of steps per simulation trajectory
-                                                    state_retrieval_weight,
-                                                    context_retrieval_weight,
-                                                    time_retrieval_weight,
-                                                    old_context_integration_rate,
-                                                    state_integration_rate,
-                                                    new_context_integration_rate,
-                                                    context_d,
-                                                    state_d,
-                                                    time_d,
-                                                    )
+    sampled_trajectories = sample_memory_sequential(
+        memories=memories,
+        starting_query=starting_query,
+        n_simulations=n_simulations,
+        n_steps=n_steps,
+        state_retrieval_weight=state_retrieval_weight,
+        context_retrieval_weight=context_retrieval_weight,
+        time_retrieval_weight=time_retrieval_weight,
+        state_integration_rate=state_integration_rate,
+        context_d=context_d,
+        state_d=state_d,
+        time_d=time_d
+    )
     estimated_reward = sampled_trajectories[3].sum(axis=-1).mean()  # Sum over steps in each sim and avg over sims
     if return_trajectories:
         return estimated_reward, sampled_trajectories

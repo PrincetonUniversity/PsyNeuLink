@@ -19,9 +19,9 @@ TIME_RETRIEVAL_WEIGHT = 0 #.1#.03#.2
 REWARD_RETRIEVAL_WEIGHT = None
 
 # integration rates (how much to integrate old context, state and retrieved context into the new context)
-OLD_CONTEXT_INTEGRATION_RATE = .39# .3 #.25
+OLD_CONTEXT_INTEGRATION_RATE = .4# .3 #.25
 STATE_INTEGRATION_RATE = .6 # .45
-NEW_CONTEXT_INTEGRATION_RATE = 0.01 #.1 #.3
+NEW_CONTEXT_INTEGRATION_RATE = 0.0 #.1 #.3
 RETRIEVED_CONTEXT_INTEGRATION_RATE = NEW_CONTEXT_INTEGRATION_RATE
 
 
@@ -30,7 +30,7 @@ MEMORY_INIT = .001
 SOFTMAX_THRESHOLD = .001
 
 # SIMULATION parameters
-N_PARTICIPANTS = 58 # 58 # number of participants to simulate
+N_PARTICIPANTS = 10 # 58 # 58 # number of participants to simulate
 N_BASELINE_TRIALS = 20  # number of baseline trials per participant (one sequence = one trial of each stimulus sequence)
 N_REVALUATION_TRIALS = 20 # number of revaluation trials per participant (one sequence = one trial of each stimulus sequence)
 N_EXPERIENCE_SEQS = 3 * N_BASELINE_TRIALS  + 2 * N_REVALUATION_TRIALS
