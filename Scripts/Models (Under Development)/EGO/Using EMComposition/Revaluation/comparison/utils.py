@@ -29,10 +29,18 @@ def safe_softmax(t, threshold=0.01, **kwargs):
         return v / torch.sum(v)
 
 
-def normalized(vector):
+def normalized(vector: torch.Tensor) -> torch.Tensor:
     """
     Normalize the provided vector to unit length
+    Examples:
+        >>> v = torch.tensor([3.0, 4.0])
+        >>> v
+        tensor([3., 4.])
+        >>> normalized(v)
+        tensor([0.6000, 0.8000])
     """
+    if not isinstance(vector, torch.Tensor):
+        vector = torch.tensor(vector, dtype=torch.float)
     return vector / vector.norm(dim=-1, keepdim=True)
 
 
@@ -88,6 +96,8 @@ def plot_trials(trial_states, trial_rewards):
     plt.show()
 
 def set_random_seed(seed):
+    if seed is None:
+        return
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.mps.manual_seed(seed)

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-import comparison.params as params
+import ..comparison.params as params
 
 
 def normalized(vector: torch.Tensor) -> torch.Tensor:
