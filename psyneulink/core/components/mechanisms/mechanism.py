@@ -3154,8 +3154,6 @@ class Mechanism_Base(Mechanism):
         else:
             aggregate_type = pnlvm.ir.LiteralStructType(types)
 
-        print(aggregate_type)
-
         aggregate_storage = builder.alloca(aggregate_type)
         for idx, location in enumerate(parsed):
             out_ptr = builder.gep(aggregate_storage, [ctx.int32_ty(0), ctx.int32_ty(idx)])
