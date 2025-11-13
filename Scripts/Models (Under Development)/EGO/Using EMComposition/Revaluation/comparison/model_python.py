@@ -155,13 +155,9 @@ def sample_memory_sequential(memories,
                              starting_query,
                              n_simulations,  # number of simulation trajectories
                              n_steps,  # number of steps per simulation trajectory
-
-                             state_retrieval_weight,
-                             context_retrieval_weight,
                              time_retrieval_weight,
-
                              state_integration_rate,
-
+                             model_based_ness=params.MODEL_BASED_NESS,
                              context_d=params.STATE_SIZE,
                              state_d=params.STATE_SIZE,
                              time_d=params.TIME_SIZE,
@@ -185,15 +181,13 @@ def sample_memory_sequential(memories,
         context_sim = starting_context
         time_sim = starting_time
 
-
         for step_idx in range(n_steps):
             # retrieve from memory
             memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
 
             context_retrieval_weight_sim = 0.
-
-            state_retrieval_weight_sim = .9
             time_retrieval_weight_sim = .1
+            state_retrieval_weight_sim = 1 - time_retrieval_weight
 
             queries = (state_sim, context_sim, time_sim, 0)
 
@@ -207,8 +201,8 @@ def sample_memory_sequential(memories,
                               mode='sample')
 
             # project the next context based on context and state
-            MODEL_BASED_NESS = 1.
-            context_sim = context_sim * (1 - MODEL_BASED_NESS) + MODEL_BASED_NESS * retrieved_reward
+
+            context_sim = context_sim * (1 - model_based_ness) + model_based_ness * retrieved_reward
 
             context_sim = project_next_context(
                 context_sim,
@@ -216,9 +210,9 @@ def sample_memory_sequential(memories,
                 state_integration_rate,
             )
 
-            context_retrieval_weight_sim = .9
             state_retrieval_weight_sim = 0.
             time_retrieval_weight_sim = .1
+            context_retrieval_weight_sim = 1 - time_retrieval_weight
 
             queries = (state_sim, context_sim, time_sim, 0)
 
@@ -248,8 +242,6 @@ def estimate_reward_from_starting_state(memories,
                                         starting_state,
                                         n_simulations,  # number of simulation trajectories
                                         n_steps,  # number of steps per simulation trajectory
-                                        state_retrieval_weight,
-                                        context_retrieval_weight,
                                         time_retrieval_weight,
                                         state_integration_rate,
                                         context_d=params.STATE_SIZE,
@@ -264,8 +256,6 @@ def estimate_reward_from_starting_state(memories,
         starting_query=starting_query,
         n_simulations=n_simulations,
         n_steps=n_steps,
-        state_retrieval_weight=state_retrieval_weight,
-        context_retrieval_weight=context_retrieval_weight,
         time_retrieval_weight=time_retrieval_weight,
         state_integration_rate=state_integration_rate,
         context_d=context_d,

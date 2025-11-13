@@ -78,12 +78,8 @@ def run(
         num_seqs_revaluation: int = params.N_REVALUATION_TRIALS,
         n_simulations: int = params.N_SIMULATIONS,  # number of simulation trajectories
         n_steps: int = params.N_STEPS,  # number of steps per simulation trajectory
-        state_retrieval_weight: float = params.STATE_RETRIEVAL_WEIGHT,
-        context_retrieval_weight: float = params.CONTEXT_RETRIEVAL_WEIGHT,
         time_retrieval_weight: float = params.TIME_RETRIEVAL_WEIGHT,
-        old_context_integration_rate: float = params.OLD_CONTEXT_INTEGRATION_RATE,
         state_integration_rate: float = params.STATE_INTEGRATION_RATE,
-        new_context_integration_rate: float = params.NEW_CONTEXT_INTEGRATION_RATE,
         context_d=params.STATE_SIZE,
         state_d=params.STATE_SIZE,
         time_d=params.TIME_SIZE,
@@ -153,8 +149,6 @@ def run(
             estimate_reward_from_starting_state,
             n_simulations=n_simulations,
             n_steps=n_steps,
-            state_retrieval_weight=state_retrieval_weight,
-            context_retrieval_weight=context_retrieval_weight,
             time_retrieval_weight=time_retrieval_weight,
             state_integration_rate=state_integration_rate,
             context_d=context_d,
