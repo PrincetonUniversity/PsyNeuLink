@@ -165,9 +165,9 @@ search_range = pnl.SampleSpec(start=0.1, stop=0.3, num=3)
 
 
 signal = pnl.ControlSignal(modulates=[(pnl.GAIN, activation)],
-                           function=pnl.Linear,
+                           # function=pnl.Linear,
                            variable=1.0,
-                           intensity_cost_function=pnl.Linear(slope=0.),
+                           # intensity_cost_function=pnl.Linear(slope=0.),
                            allocation_samples=search_range)
 
 objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
@@ -176,23 +176,23 @@ objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
                                         function=computeAccuracy
                                         )
 
-meta_controller = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                                   state_features=[inputLayer.input_port, stimulusInfo.input_port],
-                                                   state_feature_function=pnl.Buffer(history=3),
-                                                   objective_mechanism=objective_mech,
-                                                   function=pnl.GridSearch(),
-                                                   control_signals=[signal])
+# meta_controller = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+#                                                    state_features=[inputLayer.input_port, stimulusInfo.input_port],
+#                                                    state_feature_function=pnl.Buffer(history=3),
+#                                                    objective_mechanism=objective_mech,
+#                                                    function=pnl.GridSearch(),
+#                                                    control_signals=[signal])
 
 inputs = {inputLayer: INPUT, stimulusInfo: stimulusInput}
-stabilityFlexibility.add_controller(meta_controller)
-stabilityFlexibility.enable_model_based_optimizer = True
+# stabilityFlexibility.add_controller(meta_controller)
+# stabilityFlexibility.enable_model_based_optimizer = True
 
-print("Beginning of Run")
+# print("Beginning of Run")
+#
+# for i in range(1, len(stabilityFlexibility.controller.input_ports)):
+#     stabilityFlexibility.controller.input_ports[i].function.reset()
 
-for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-    stabilityFlexibility.controller.input_ports[i].function.reset()
-
-# stabilityFlexibility.show_graph(show_controller=True)
+stabilityFlexibility.show_graph(show_controller=True)
 
 # stabilityFlexibility.run(inputs)
 # print(stabilityFlexibility.results)

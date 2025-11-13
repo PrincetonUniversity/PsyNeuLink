@@ -1142,7 +1142,10 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
-        result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
+        # result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
+        result = EGO.learn(inputs={'STATE':INPUTS},
+                           # execution_mode=pnl.ExecutionMode.PyTorch
+                           )
 
         if not field_weight_learning:
             expected = [
