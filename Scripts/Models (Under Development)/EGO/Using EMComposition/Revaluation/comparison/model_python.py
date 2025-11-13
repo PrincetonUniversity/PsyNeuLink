@@ -327,7 +327,8 @@ def sample_memory_sequential(memories,
             # project the next context based on retrieved context and current state
             context_sim = project_next_context(
                 context_sim,
-                retrieved_state,
+                # retrieved_state,
+                state_sim,
                 retrieved_context,
                 old_context_integration_rate,
                 state_integration_rate,
