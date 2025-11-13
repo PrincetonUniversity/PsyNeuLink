@@ -7,7 +7,7 @@
 
 # TODO:
 
-# FIX: TERMINATION CONDITION IS GETTING TRIGGED AFTER 1st TRIAL
+# FIX: TERMINATION CONDITION IS GETTING TRIGGERED AFTER 1st TRIAL
 
 # FOR INPUT NODES: scheduler.add_condition(A, BeforeNCalls(A,1)
 # Termination: AfterNCalls(Ctl,2)
@@ -118,7 +118,10 @@ from psyneulink import *
 from psyneulink._typing import Union, Literal
 from psyneulink.core.scheduling.condition import Any, And, AllHaveRun, AtRunStart
 
-# Settings for running script:
+#region SCRIPT CONTROL
+# ======================================================================================================================
+#                                                 SCRIPT CONTROL
+# ======================================================================================================================
 
 NUM_EXP_SEQS = 5               # Number of sequences to run in EXPERIENCE Phase (includes baseline + revaluation)
 NUM_PRED_TRIALS = 10           # Number of trials (ROLL OUTS) to run in PREDICTION Phase
@@ -129,17 +132,17 @@ DISPLAY_MODEL = (                      # Only one of the following can be uncomm
     {}                               # show simple visual display of model
     # {'show_node_structure': True}    # show detailed view of node structures and projections
 )
-RUN_MODEL = False                       # True => run the model
 # RUN_MODEL = False                      # False => don't run the model
+RUN_MODEL = True                       # True => run the model
 EXECUTION_MODE = ExecutionMode.Python
 # EXECUTION_MODE = ExecutionMode.PyTorch
 ANALYZE_RESULTS = False                # True => output analysis of results of run
-# REPORT_OUTPUT = ReportOutput.FULL     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
-REPORT_OUTPUT = ReportOutput.OFF     # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+# REPORT_OUTPUT = ReportOutput.FULL      # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
+REPORT_OUTPUT = ReportOutput.OFF       # Sets console output during run [ReportOutput.ON, .TERSE OR .FULL]
 REPORT_PROGRESS = ReportProgress.OFF   # Sets console progress bar during run
-PRINT_RESULTS = False                  # print model.results after execution
+PRINT_RESULTS = True                  # print model.results after execution
 ANIMATE = False # {UNIT:EXECUTION_SET} # Specifies whether to generate animation of execution
-
+#endregion
 
 #region   PARAMETERS
 # ======================================================================================================================
@@ -226,10 +229,10 @@ assert (model_params['retrieved_context_weight'] + STATE_WEIGHT + CONTEXT_INTEGR
      f"and RETRIEVED_CONTEXT_WEIGHT ({model_params['retrieved_context_weight']}) must equal 1")
 
 # EM retrieval
-STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM
-TIME_RETRIEVAL_WEIGHT = model_params['time_weight']       # weight of time field in retrieval from EM
-CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM
-REWARD_RETRIEVAL_WEIGHT = 0                               # weight of reward field in retrieval from EM
+STATE_RETRIEVAL_WEIGHT = model_params['state_weight']     # weight of state field in retrieval from EM (key)
+TIME_RETRIEVAL_WEIGHT = model_params['time_weight']       # weight of time field in retrieval from EM (key)
+CONTEXT_RETRIEVAL_WEIGHT = model_params['context_weight'] # weight of context field in retrieval from EM (key)
+REWARD_RETRIEVAL_WEIGHT = None                            # weight of reward field in retrieval from EM (value)
 RETRIEVAL_SOFTMAX_GAIN = 1/model_params['temperature']    # gain on softmax retrieval function
 # RETRIEVAL_HAZARD_RATE = 0.04   # rate of re=sampling of em following non-match determination in a pass through ffn
 
@@ -616,7 +619,6 @@ def construct_model(model_name:str=MODEL_NAME,
     # ----------------------------------------------------------------------------------------------------------------
     # -------------------------------------------------  EGO Composition  --------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
-    
 
     EGO_comp = Composition(name=model_name,
                            # # Terminate a Task.PREDICT trial after decision_layer executes if a reward is retrieved

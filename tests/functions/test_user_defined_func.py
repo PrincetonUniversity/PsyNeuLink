@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
@@ -280,6 +281,13 @@ def simpleFun(variable, param1, param2):
     return variable * 2 + param2
 
 
+def castReturn(variable, param1, param2):
+    return float(int(param1)) + float(param2) + float(variable[0] + variable[1])
+
+def singletonArrayCast(variable, param1, param2):
+    return float(variable) + float(int(param1)) + float(bool(param2))
+
+
 def condReturn(variable, param1, param2):
     if variable[0]:
         return param1 + 0.5
@@ -293,12 +301,15 @@ def condValReturn(variable, param1, param2):
         val = param2 + 0.3
     return val
 
+
 def lambdaGen():
     return lambda var, param1, param2: var + param1 * param2
 
 
 @pytest.mark.parametrize("func,var,params,expected", [
     (simpleFun, [1, 3], {"param1":None, "param2":3}, [5, 9]),
+    (singletonArrayCast, [1], {"param1":5.5, "param2":3.6}, [7]),
+    (castReturn, [1, 3], {"param1":5.5, "param2":3.6}, [12.6]),
     (condReturn, [0], {"param1":1, "param2":2}, [2.3]),
     (condReturn, [1], {"param1":1, "param2":2}, [1.5]),
     (condValReturn, [0], {"param1":1, "param2":2}, [2.3]),
@@ -336,8 +347,16 @@ def swap(variable, param1, param2):
     return variable
 
 
-def indexLit(variable, param1, param2):
+def ternaryOp(variable, param1, param2):
+    return variable[0] if variable[1] else variable[2]
+
+
+def indexBinOp(variable, param1, param2):
     return [1,2,3,4][variable[0] + 2]
+
+
+def indexLit(variable, param1, param2):
+    return [[1,5],2,3,4][2]
 
 
 @pytest.mark.parametrize("func,var,expected", [
@@ -352,7 +371,10 @@ def indexLit(variable, param1, param2):
     (branchOnVarFloat, [float("NaN")], [1.0]),
     (branchOnVarFloat, [float("-NaN")], [1.0]),
     (swap, [-1, 3], [3, -1]),
-    (indexLit, [0], [3]),
+    (ternaryOp, [-1,0,1], [1]),
+    (ternaryOp, [-1,1,1], [-1]),
+    (indexLit, [1,2,3,4], [3]),
+    (indexBinOp, [1], [4]),
 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_branching(func, var, expected, func_mode, benchmark):
@@ -475,59 +497,58 @@ def test_user_def_func_return(dtype, expected, func_mode, benchmark):
     np.testing.assert_allclose(val, expected)
 
 
-@pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                ("TANH", [[1, 3]], [[0.76159416, 0.99505475]]),
-                ("EXP", [[1, 3]], [[2.71828183, 20.08553692]]),
-                ("SQRT", [[1, 3]], [[1.0, 1.7320508075688772]]),
-                ("SHAPE", [1, 2], [2]),
-                ("SHAPE", [[1, 3]], [1, 2]),
-                ("ASTYPE_FLOAT", [1], [1.0]),
-                ("ASTYPE_INT", [-1.5], [-1.0]),
-                ("NP_MAX", 5.0, 5.0),
-                ("NP_MAX", [0.0, 0.0], 0),
-                ("NP_MAX", [1.0, 2.0], 2),
-                ("NP_MAX", [1.0, 2.0, float("-Inf"), float("Inf"), float("NaN")], float("NaN")),
-                ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
-                ("NP_MAX", [[[-2.0, -1.0], [-6.0, -2.0]],[[2.0, 1.0], [6.0, 2.0]]], 6),
-                ("NP_MAX", [[float('-Inf'), 1.0], [6.0, 2.0]], 6),
-                ("NP_MAX", [[float('Inf'), 1.0], [6.0, 2.0]], float('Inf')),
-                ("NP_MAX", [[float('NaN'), 1.0], [6.0, 2.0]], float('NaN')),
-                ("NP_MAX", [[float('-NaN'), 1.0], [6.0, 2.0]], float('-NaN')),
-                ("NP_MAX", [[5.0, float('-Inf'), 1.0], [3.0, 6.0, 2.0]], 6),
-                ("NP_MAX", [[5.0, float('Inf'), 1.0], [3.0, 6.0, 2.0]], float('Inf')),
-                ("NP_MAX", [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], float('NaN')),
-                ("NP_MAX", [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], float('-NaN')),
-                ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
-                ])
-@pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
-    if op == "TANH":
-        def myFunction(variable):
-            return np.tanh(variable)
-    elif op == "EXP":
-        def myFunction(variable):
-            return np.exp(variable)
-    elif op == "SQRT":
-        def myFunction(variable):
-            return np.sqrt(variable)
-    elif op == "SHAPE":
-        def myFunction(variable):
-            return variable.shape
-    elif op == "ASTYPE_FLOAT":
-        def myFunction(variable):
-            return variable.astype(float)
-    elif op == "ASTYPE_INT":
-        # return types cannot be integers, so we cast back to float and check for truncation
-        def myFunction(variable):
-            return variable.astype(int).astype(float)
-    elif op == "NP_MAX":
-        def myFunction(variable):
-            return np.max(variable)
-    elif op == "FLATTEN":
-        def myFunction(variable):
-            return variable.flatten()
+def numpy_shape(variable):
+    return variable.shape
 
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
+def numpy_max(variable):
+    return np.max(variable)
+
+def numpy_argmax(variable):
+    return np.argmax(variable)
+
+@pytest.mark.parametrize("function,variable,expected", [
+    pytest.param(lambda x: np.tanh(x), [[1, 3]], [[0.76159416, 0.99505475]], id="TANH"),
+    pytest.param(lambda x: np.exp(x), [[1, 3]], [[2.71828183, 20.08553692]], id="EXP"),
+    pytest.param(lambda x: np.sqrt(x), [[1, 3]], [[1.0, 1.7320508075688772]], id="SQRT"),
+    pytest.param(numpy_shape, [1, 2], [2], id="SHAPE 1D"),
+    pytest.param(numpy_shape, [[1, 3]], [1, 2], id="SHAPE 2D"),
+    pytest.param(lambda x: x.astype(float), [1], [1.0], id="ASTYPE_FLOAT"),
+    pytest.param(lambda x: x.astype(int).astype(float), [-1.5], [-1.0], id="ASTYPE_INT"),
+    pytest.param(numpy_max, 5.0, 5.0, id="NP_MAX scalar"),
+    pytest.param(numpy_max, [0.0, 0.0], 0, id="NP_MAX 1D equal"),
+    pytest.param(numpy_max, [1.0, 2.0], 2, id="NP_MAX 1D"),
+    pytest.param(numpy_max, [1.0, 2.0, float("-Inf"), float("Inf"), float("NaN")], float("NaN"), id="NP_MAX 2D Inf/NaN"),
+    pytest.param(numpy_max, [[2.0, 1.0], [6.0, 2.0]], 6, id="NP_MAX 2D"),
+    pytest.param(numpy_max, [[[-2.0, -1.0], [-6.0, -2.0]],[[2.0, 1.0], [6.0, 2.0]]], 6, id="NP_MAX 3D"),
+    pytest.param(numpy_max, [[float('-Inf'), 1.0], [6.0, 2.0]], 6, id="NP_MAX -Inf in array2"),
+    pytest.param(numpy_max, [[float('Inf'), 1.0], [6.0, 2.0]], float('Inf'), id="NP_MAX Inf in array2"),
+    pytest.param(numpy_max, [[float('NaN'), 1.0], [6.0, 2.0]], float('NaN'), id="NP_MAX NaN in array2"),
+    pytest.param(numpy_max, [[float('-NaN'), 1.0], [6.0, 2.0]], float('-NaN'), id="NP_MAX NaN in array2"),
+    pytest.param(numpy_max, [[5.0, float('-Inf'), 1.0], [3.0, 6.0, 2.0]], 6, id="NP_MAX -Inf in array3"),
+    pytest.param(numpy_max, [[5.0, float('Inf'), 1.0], [3.0, 6.0, 2.0]], float('Inf'), id="NP_MAX Inf in array3"),
+    pytest.param(numpy_max, [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], float('NaN'), id="NP_MAX NaN in array3"),
+    pytest.param(numpy_max, [[5.0, float('-NaN'), 1.0], [3.0, 6.0, 2.0]], float('-NaN'), id="NP_MAX -NaN in array3"),
+    pytest.param(lambda x: x.flatten(), [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0], id="FLATTEN"),
+    pytest.param(numpy_argmax, 5.0, 0, id="NP_ARGMAX scalar"),
+    pytest.param(numpy_argmax, [0.0, 0.0], 0, id="NP_ARGMAX 1D equal"),
+    pytest.param(numpy_argmax, [1.0, 2.0], 1, id="NP_ARGMAX 1D"),
+    pytest.param(numpy_argmax, [1.0, 2.0, float("-Inf"), float("Inf"), float("NaN")], 4, id="NP_ARGMAX 2D Inf/NaN"),
+    pytest.param(numpy_argmax, [[2.0, 1.0], [6.0, 2.0]], 2, id="NP_ARGMAX 2D"),
+    pytest.param(numpy_argmax, [[[-2.0, -1.0], [-6.0, -2.0]],[[2.0, 1.0], [6.0, 2.0]]], 6, id="NP_ARGMAX 3D"),
+    pytest.param(numpy_argmax, [[float('-Inf'), 1.0], [6.0, 2.0]], 2, id="NP_ARGMAX -Inf in array2"),
+    pytest.param(numpy_argmax, [[float('Inf'), 1.0], [6.0, 2.0]], 0, id="NP_ARGMAX Inf in array2"),
+    pytest.param(numpy_argmax, [[float('NaN'), 1.0], [6.0, 2.0]], 0, id="NP_ARGMAX NaN in array2"),
+    pytest.param(numpy_argmax, [[float('-NaN'), 1.0], [6.0, 2.0]], 0, id="NP_ARGMAX NaN in array2"),
+    pytest.param(numpy_argmax, [[5.0, float('-Inf'), 1.0], [3.0, 6.0, 2.0]], 4, id="NP_ARGMAX -Inf in array3"),
+    pytest.param(numpy_argmax, [[5.0, float('Inf'), 1.0], [3.0, 6.0, 2.0]], 1, id="NP_ARGMAX Inf in array3"),
+    pytest.param(numpy_argmax, [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], 1, id="NP_ARGMAX NaN in array3"),
+    pytest.param(numpy_argmax, [[5.0, float('-NaN'), 1.0], [3.0, 6.0, 2.0]], 1, id="NP_ARGMAX -NaN in array3"),
+    pytest.param(lambda x: np.nan, [[5.0, float('-NaN'), 1.0], [3.0, 6.0, 2.0]], np.nan, id="NP_NAN"),
+])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_numpy(function, variable, expected, func_mode, benchmark):
+
+    U = UserDefinedFunction(custom_function=function, default_variable=variable)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
@@ -546,6 +567,21 @@ def test_udf_in_mechanism(mech_mode, benchmark):
 
     val = benchmark(e, [-1, 2, 3, 4])
     np.testing.assert_allclose(val, [[10]])
+
+@pytest.mark.benchmark(group="UDF in Mechanism")
+@pytest.mark.parametrize("variable,shapes,expected,ports", [
+    pytest.param([-1, 2, 3, 4], 4, [[7]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, (pnl.OWNER_VALUE, 0, 0)], pnl.FUNCTION: lambda x: sum(x[0][0]) + x[1]}], id="aggregate_variable"),
+    pytest.param([-1, 2, 3, 4], 4, [[9]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, "is_finished_flag"], pnl.FUNCTION: lambda x: sum(x[0][0]) + x[1]}], id="is_finished"),
+    pytest.param([-1, 2, 4, 3], 4, [[2]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, "is_finished_flag"], pnl.FUNCTION: lambda x: np.argmax(x[0]) if x[1] else np.nan}], id="decision_index"),
+])
+def test_udf_in_output_port(variable, shapes, expected, ports, mech_mode, benchmark):
+
+    myMech = ProcessingMechanism(input_shapes=shapes, output_ports=ports)
+
+    e = pytest.helpers.get_mech_execution(myMech, mech_mode)
+
+    val = benchmark(e, variable)
+    np.testing.assert_allclose(val, expected)
 
 
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present

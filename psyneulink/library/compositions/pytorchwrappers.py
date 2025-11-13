@@ -1,4 +1,4 @@
- # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -36,15 +36,31 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
-from psyneulink.core.compositions.composition import Composition, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
-from psyneulink.core.globals.keywords import (AFTER, ALL, BEFORE,
-                                              DEFAULT_LEARNING_RATE, DEFAULT_SUFFIX, DEFAULT_VARIABLE,
-                                              INPUTS, LEARNING, Loss, MATRIX_WEIGHTS,
-                                              NODE, NODE_VALUES, NODE_VARIABLES, OUTPUTS,
-                                              RESULTS, SHOW_PYTORCH, SYNCH, TARGET_MECHANISM, )
+from psyneulink.core.globals.keywords import (
+    AFTER,
+    ALL,
+    BEFORE,
+    DEFAULT_LEARNING_RATE,
+    DEFAULT_SUFFIX,
+    DEFAULT_VARIABLE,
+    EXCLUDE,
+    FIRST,
+    LAST,
+    LEARNING,
+    MATRIX_WEIGHTS,
+    NODE,
+    NODE_VALUES,
+    NODE_VARIABLES,
+    RESULTS,
+    SHOW_PYTORCH,
+    SYNCH,
+    TARGET_MECHANISM,
+    Loss,
+)
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
@@ -66,6 +82,8 @@ LEARN_CONSTRUCTION = 'learn_construction'
 LEARN_OVERRIDE = 'learn_override'
 LEARN_METHOD = 'learn() method'
 CONSTRUCTOR = 'constructor'
+
+NUM_OPTIMIZATIONS = 'num_optimizations'
 
 TorchParam = namedtuple("TorchParam", "name slice")
 TorchParamTuple = namedtuple('ParamTuple', "orig_spec, value")
@@ -306,6 +324,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.projection_wrappers = list(self.projections_map.values())
 
         composition.scheduler._delete_counts(execution_context.execution_id)
+
+        self._execute_in_additional_optimizations = (
+            self._validate_and_parse_additional_optimizations(
+                self.composition.execute_in_additional_optimizations,
+                self.composition.optimizations_per_minibatch,
+                source=CONSTRUCTOR,
+            )
+        )
 
         self._regenerate_torch_parameter_list()
         assert 'DEBUGGING BREAKPOINT'
@@ -1348,7 +1374,126 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Register pytorch Parameters for ProjectionWrappers (since they are not already torch parameters
         for proj_wrapper in [p for p in self.projection_wrappers if not p.projection.exclude_in_autodiff]:
             self.register_parameter(proj_wrapper.name, proj_wrapper.matrix)
-            # self.register_parameter(proj_wrapper.projection.name, proj_wrapper.matrix)
+
+    def _validate_and_parse_additional_optimizations(
+        self, user_specs: dict, num_optimizations, source: str
+    ) -> dict:
+        """Validate entries of dict specified for execute_in_additional_optimizations in Composition or learn()
+        Keys should be nodes in self or a Composition nested within it, and values a list of tuples containing Parameter
+        values to use during multiple optimizations, or None if no Parameters should be modified for that node.
+        """
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+
+        if not isinstance(user_specs, dict):
+            raise AutodiffCompositionError(f"Specification for 'execute_in_additional_optimizations' arg "
+                                           f"in {source} of '{self.name}' must be a dict: {user_specs}.")
+        execute_in_additional_optimizations = {}
+        nodes_to_exclude = set()
+        bad_nodes = []
+        bad_opt_specs = []
+
+        for nested_comp in self.composition._get_nested_compositions():
+            user_specs.update(nested_comp.execute_in_additional_optimizations)
+
+        for node, opt_spec in user_specs.items():
+            if node not in self.composition._get_all_nodes() + self.composition._get_nested_compositions():
+                # Node is not in the Composition or any nested within it
+                bad_nodes.append(node)
+                continue
+            if opt_spec in {False, EXCLUDE, None}:
+                # Deal with exclusion outside for loop (see comment below)
+                nodes_to_exclude.add(node)
+                continue
+            if isinstance(node, Composition):
+                # BREADCRUMB: 8/21/25 - TEST SPECIFICATION OF NESTED COMP HERE AND BELOW
+                # # BREADCRUMB: ??IS THIS STILL NEEDED (SINCE NESTED NODES ARE FLATTENED INTO self.nodes[map]
+                # # Add Composition (needed for forward() method
+                # execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
+                # Add all nodes within that Composition and any nested within in
+                execute_in_additional_optimizations.update({self.nodes_map[nested_node]: opt_spec
+                                                            for nested_node in node._get_all_nodes()})
+            else:
+                execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
+
+                # # BREADCRUMB: 8/21/25 - ??IS THIS STILL NEEDED (SINCE NESTED NODES ARE FLATTENED INTO self.nodes[map]
+                # if node not in self.composition.nodes:
+                #     # For a nested node, add its Composition to nodes_to_execute since that will be needed by forward()
+                #     try:
+                #         comp = next(item[1] for item in self.composition._get_nested_nodes() if node is item[0])
+                #     except StopIteration:
+                #         assert False, f"PROGRAM ERROR: Can't find nested Composition to which '{node.name}' belongs."
+                #     execute_in_additional_optimizations[self.nodes_map[comp]] = opt_spec
+
+            # Validate opt_spec
+            if not (opt_spec in {FIRST, LAST, ALL, True}
+                    or isinstance(opt_spec, (int, range) and opt_spec.stop < num_optimizations)
+                    or (isinstance(opt_spec, list)
+                        and all(isinstance(spec, int) for spec in opt_spec)
+                        and (max < num_optimizations))):
+                bad_opt_specs.append(opt_spec)
+                continue
+
+            # parse opt_spec
+            if opt_spec == FIRST:
+                opt_spec = [0]
+            elif opt_spec == LAST:
+                opt_spec = [num_optimizations - 1]
+            elif opt_spec in {True, ALL}:
+                opt_spec = range(0, num_optimizations)
+
+            execute_in_additional_optimizations[self.nodes_map[node]] = opt_spec
+
+        if bad_nodes:
+            raise CompositionError(
+                f"The following nodes were specified in the 'execute_in_additional_optimizations' arg of learn() method"
+                f"for '{self.name}' but were either not found in the Composition (or any nested within it) or "
+                f"associated with a badly formatted Parameter specification: {', '.join(bad_nodes)}.")
+        if bad_opt_specs:
+            raise CompositionError(
+                f"The following entries in 'execute_in_additional_optimizations' arg for {source} of "
+                f"'{self.composition.name}' have a bad value, which must be an appropriate keyword "
+                f"('FIRST', 'LAST', 'EXCLUDE', or 'ALL'), a bool, or a numeric value: {', '.join(bad_opt_specs)}.")
+
+        # Remove any nodes specified for exclusion
+        # Note: do this after the for loop above since
+        #       some nodes might have been added from a nested Composition before being identified for exclusion
+        (execute_in_additional_optimizations.pop(self.nodes_map[node]) for node in nodes_to_exclude)
+        if execute_in_additional_optimizations:
+            # If any valid nodes have been specified,
+            #   add num_optimizations to dict for reference in learn() in case optimizations_for_minibatch is changed
+            execute_in_additional_optimizations[NUM_OPTIMIZATIONS] = num_optimizations
+        return execute_in_additional_optimizations
+
+    # # MODIFIED 8/20/25 OLD:
+    # def _call_before_additional_optimizations(self, context):
+    #     """Assign specified Parameters values used for additional optimizations
+    #     Get values to assigne from self._params_to_modify_in_additional_optimizations,
+    #     and then use that to cache old values until _call_after_additional_optimizations is called.
+    #     """
+    #     # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+    #     for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+    #         for i, item in enumerate(params_list.copy()):
+    #             param, mod_value = item
+    #             orig_value = param.get(context)
+    #             param._set(mod_value, context)
+    #             # Cache old value in place of new one in params list
+    #             params_list[i] = (param, orig_value)
+    #
+    # def _call_after_additional_optimizations(self, context):
+    #     """Restore Parameter values that were modified during additional optimizations to their original values
+    #     Get values to restore from ones cached in self._params_to_modify_in_additional_optimizations
+    #     """
+    #     # BREADCRUMB: MAY NEED TO UPDATE PYTORCH WRAPPER FOR MECHANISM FOR CHANGES IN PARAMETER VALUES TO TAKE EFFECT
+    #     for node, params_list in self._params_to_modify_in_additional_optimizations.items():
+    #         for i, item in enumerate(params_list.copy()):
+    #             param, orig_value = item
+    #             mod_value = param.get(context)
+    #             # Resore original value of Parameter
+    #             param._set(orig_value, context)
+    #             # Restore values used for additional optimizations in self._params_to_modify_in_additional_optimizations
+    #             #   for use in subsequent trials
+    #             params_list[i] = (param, mod_value)
+    # # MODIFIED 8/20/25 END
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -1558,7 +1703,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         builder.call(optimizer_step_f, [optimizer_struct, state, params])
 
     def _get_compiled_optimizer(self):
-        # FIX: 7/1/25 - THIS BE MODIFIED TO USE CONTEXT-SPECIFIC LEARNING RATES
+        # BREADCRUMB: 7/1/25 - THIS NEEDS TO BE MODIFIED TO USE CONTEXT-SPECIFIC LEARNING RATES
         # setup optimizer
         optimizer_type = self.composition.optimizer_type
         if optimizer_type == 'adam':
@@ -1575,6 +1720,28 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
         """
+
+        def get_nodes_to_execute_for_optimization(opt_num: int, exec_set: set) -> set:
+            # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
+            addition_opts_dict = self._execute_in_additional_optimizations
+            # nodes_to_execute = {node for node in addition_opts_dict
+            #                     # BREADCRUMB:
+            #                     # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}
+            #                     if (isinstance(addition_opts_dict[node],list) and opt_num in addition_opts_dict[node])}
+            # for node in exec_set:
+            #     if (node in nodes_to_execute):
+            #         exec_set -= {torch_node}
+            nodes_to_exclude = {
+                node
+                for node in addition_opts_dict
+                if (
+                    isinstance(addition_opts_dict[node], list)
+                    and opt_num not in addition_opts_dict[node]
+                )
+            }
+            exec_set -= nodes_to_exclude
+
+            return exec_set
 
         # Store the batch_size we are currently using
         inp = inputs[list(inputs.keys())[0]]
@@ -1609,8 +1776,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 inputs_to_run = inputs
 
+            # Execute nodes
             outputs = {}  # dict for storing values of terminal (output) nodes
             for current_exec_set in self.execution_sets:
+
+                if self._execute_in_additional_optimizations:
+                    # If _execute_in_additional_optimizations is specified,
+                    #   only execute nodes specified for curent optmization_num
+                    current_exec_set = get_nodes_to_execute_for_optimization(optimization_num, current_exec_set.copy())
+
                 for node in current_exec_set:
 
                     # If node is nested Composition (wrapped in PytorchCompositionWrapper),
@@ -1703,8 +1877,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
+                        # if node.exclude_from_gradient_calc in {AFTER, LAST}:
                         if node.exclude_from_gradient_calc == AFTER:
-                            # Cache variable for later execution
+                            # Store variable for execution after gradient calculations are complete
                             self._nodes_to_execute_after_gradient_calc[node] = variable
                             continue
                         elif node.exclude_from_gradient_calc == BEFORE:
@@ -1719,7 +1894,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
                     node.execute(variable, optimization_num, synch_with_pnl_options, context)
-
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
@@ -1915,11 +2089,17 @@ class PytorchMechanismWrapper(torch.nn.Module):
     efferents : List[PytorchProjectionWrapper]
         list of `PytorchProjectionWrapper` objects that project from the PytorchMechanismWrapper.
 
-    exclude_from_gradient_calc : bool or str[BEFORE | AFTER]: False
-        used to prevent a node from being included in the Pytorch gradient calculation by excluding it in calls to
-        the forward() and backward(). If AFTER is specified, the node is executed after at the end of the
-        `update_learning_parameters` method;  it must be specified as an attribute of the Mechanism being wrapped.
-        BEFORE is not currently supported.
+    exclude_from_gradient_calc : bool or str[BEFORE | AFTER | LAST]: False
+        prevents a node from being included in the Pytorch gradient calculation by execluding it in calls to
+        Autodiff.autodiff_backward(); entered in PytorchCompositionWrapper._nodes_to_execute_after_gradient_calc
+        as a key, and the current variable that it uses for execution at the end of CompositionRuner._batch_input().
+
+        * *AFTER*: the node is executed on every optimization step, after all gradient updates have been done;
+
+        * *LAST*: if `Compositon.optimizations_per_minibatch` is greater than 1, the node is executed only
+          after the last optimization step
+
+        * *BEFORE*: not currently supported
 
     _use : list[LEARNING, SYNCH]
         designates the uses of the Mechanism, specified by the following keywords (see
@@ -1962,11 +2142,9 @@ class PytorchMechanismWrapper(torch.nn.Module):
         self._is_output = False
         self._use = use or [LEARNING, SYNCH, SHOW_PYTORCH]
         self._curr_sender_value = None # Used to assign initializer or default if value == None (i.e., not yet executed)
-
         from psyneulink.library.compositions.autodiffcomposition import EXCLUDE_FROM_GRADIENT_CALC
         self.exclude_from_gradient_calc = mechanism.exclude_from_gradient_calc \
-            if hasattr(mechanism, 'EXCLUDE_FROM_GRADIENT_CALC') else False
-
+            if hasattr(mechanism, EXCLUDE_FROM_GRADIENT_CALC) else False
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         assert isinstance(composition, AutodiffComposition), \
             f"PROGRAM ERROR: {composition} must be an AutodiffComposition."
@@ -2044,7 +2222,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 proj_wrapper._curr_sender_value = val
 
             proj_wrapper._curr_sender_value = torch.atleast_1d(proj_wrapper._curr_sender_value)
-            assert True
 
         # Specific port is specified
         if port is not None:
@@ -2412,8 +2589,6 @@ class PytorchProjectionWrapper():
         self.receiver_wrapper = receiver_wrapper  # PytorchMechanismWrapper to which Projection's receiver is mapped
         self._context = context
 
-        # if (projection.parameters.has_initializers._get(context, fallback_value=False)
-        #         and projection.parameters.value.initializer):
         if (projection.parameters.has_initializers.get(context)
                 and projection.parameters.value.initializer):
             self.default_value = projection.parameters.value.initializer.get(context)
@@ -2436,8 +2611,13 @@ class PytorchProjectionWrapper():
         self.matrix = torch.nn.Parameter(torch.tensor(matrix.copy(),
                                          device=device,
                                          dtype=torch.double))
-        # 2/16/25 4/13/25- FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_torch_params_full_with_specified
-        #           cf _update_optimizer_params():
+        # MODIFIED 8/18/25 OLD:
+        # BREADCRUMB: DELETE THIS IF DOING SO PASSES pytrests()
+        # Use Projection's name as key to align with name of torch Parameter
+        self._pnl_refs_to_torch_params_map = {pnl_proj.name: self.matrix}
+        # 2/16/25 - FIX: RECONCILE THIS WITH ANY SPECS FOR PROJECTION IN optimizer_params
+        #           cf _parse_optimizer_params():
+        # MODIFIED 8/18/25 END
         if projection.learnable is False:
             self.matrix.requires_grad = False
 

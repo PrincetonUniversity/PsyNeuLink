@@ -1,4 +1,4 @@
-# "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -3980,6 +3980,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
+            execute_in_additional_optimizations=None,  # BREADCRUMB: MOVE TO AUTODIFF
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4045,6 +4046,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}  # BREADCRUMB: MOVE TO AUTODIFF
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -11762,7 +11764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    content='run_start',
                    context=context)
 
-            self.TRIAL_NUM = -1
+            self._trial_num = -1  # For debugging
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -11782,6 +11784,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ):
                     break
 
+                optimization_num = None
+
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 if input_nodes:
@@ -11794,7 +11798,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # from the call to _parse_learning_spec
                         if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
                                                     'CompositionRunner._batch_function_inputs' in str(inputs)):
-                            execution_stimuli = next(inputs)
+                            execution_stimuli, optimization_num = next(inputs)
                         else:
                             execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
 
@@ -11806,6 +11810,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
+                                            optimization_num=optimization_num,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
                                             call_before_time_step=call_before_time_step,
@@ -11917,6 +11922,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
+            execute_in_additional_optimizations: Optional[dict] = None,  # BREADCRUMB MOVE TO AUTODIFF
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
@@ -11983,16 +11989,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 they are responsible; this overrides the Composition's default value.
 
             optimizations_per_minibatch : int (default=1)
-                specifies the number of executions and weight updates of learnable pathways that are carried out for
-                each set of stimuli in a `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's
-                default value.
+                specifies the number of executions and weight updates of learnable pathways (forward and backward
+                passes -- or optimization steps -- in PyTorch), that are carried out for each set of stimuli in a
+                `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's default value. Optimization
+                steps after the first can be restricted to a subset of nodes using the
+                **execute_in_additional_optimizations** argument (see below), which can also designate particular
+                Parameter values used for those optimization steps.
 
                 .. hint::
                    This can be used to implement the `backprop-to-activation procedure
                    <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
                    learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
-                   for a pattern of activation in response to a given input (or set of inputs) that is useful for some
-                   downstream purpose.
+                   for a pattern of activation in response to a given input (or set of inputs) that is useful for
+                   some downstream purpose (see EGO Model for an example).
+
+            # BREADCRUMB: 8/21/25 MOVE THIS (AND REFERENCE ABOVE TO IT) TO AutodiffComposition
+            execute_in_additional_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
+                specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
+                for any additional optimization steps after the first (see **optimizations_per_minibatch** for
+                additional information); each key should be a `Node <Composition_Nodes>` in the Composition or one
+                nested within it, and the value can be one of the following:
+
+                  *None* or *True*: execute in additional optimizations without any modificadtion(s) to its Parameters;
+
+                  *False* or *EXCLUDE*: exclude from execution during additional optimizations;  this is useful
+                    primarly when a nested Composition is specified but nodes within it should be excluded;
+
+                  *(Parameter, value)* or *[(Parameter, value), ...]*: assign specified Parameter values during
+                    execution of additional optimizations, restoring to previous value(s) for first optimization
+                    of next trial.
+
+                If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
+                are included, except for ones explicitly excluded.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch
@@ -12097,6 +12125,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
+        else:
+            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
 
         result = runner.run_learning(
             inputs=inputs,

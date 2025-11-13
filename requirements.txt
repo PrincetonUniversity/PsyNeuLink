@@ -3,7 +3,7 @@ dill<0.4.1
 fastkde>=2.0.0, <2.1.6
 graph-scheduler>=1.2.1, <1.3.0
 graphviz<0.22.0
-grpcio<1.76.0
+grpcio<1.77.0
 leabra-psyneulink<0.3.3
 llvmlite<0.45
 matplotlib>=3.7.0, <3.10.8
@@ -20,4 +20,4 @@ rich>=10.2, <10.13
 scipy>=1.7.3, <1.17
 toposort<1.11
 torch>=1.13.0, <2.10.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64' or platform_machine == 'arm64' or platform_machine == 'aarch64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
-psutil<=7.1.1
+psutil<=7.1.3

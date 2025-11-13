@@ -52,8 +52,8 @@ model_params = dict(
     memory_capacity = ALL, # number of entries in EM memory; ALL=> match to number of stims
     memory_init = (0,.0001),  # Initialize memory with random values in interval
     # memory_init = None,  # Initialize with zeros
-    # concatenate_queries = False,
-    concatenate_queries = True,
+    concatenate_queries = False,
+    # concatenate_queries = True,
 
     # environment
     # curriculum_type = 'Interleaved',

@@ -27,23 +27,23 @@ jobs:
     # line 1: Check if the job environment is listed in repository-scale "SELF_HOSTED" variable
     # line 2: "true" branch. Construct tag array to match one of the self hosted runners. All tags need to match.
     # line 3: "else" branch. Construct GA image description. Generally the {windows,macos,ubuntu}-latest.
-    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args))
+    runs-on: ${{ (contains(vars.SELF_HOSTED, format(';{0}_{1}_{2};', matrix.os, matrix.python-version, matrix.extra-args))
                 && fromJSON(format('[ "self-hosted","{0}", "X64", "enabled" ]', matrix.os == 'ubuntu' && 'Linux' || matrix.os)))
                 || format('{0}-latest', matrix.os) }}
     env:
       # Keep DESCRIPTION in sync with the above
-      DESCRIPTION: ${{ format(';{0}_{1}_{2}_{3};', matrix.os, matrix.python-version, matrix.python-architecture, matrix.extra-args) }}
+      DESCRIPTION: ${{ format(';{0}_{1}_{2};', matrix.os, matrix.python-version, matrix.extra-args) }}
       SELF_HOSTED: ${{ vars.SELF_HOSTED }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.11', '3.12', '3.13']
-        python-architecture: ['x64']
         extra-args: ['']
         os: [ubuntu, macos, windows]
         version-restrict: ['']
+        torch: ['']
         include:
-          # code-coverage build on macos python 3.9
+          # code-coverage run on macos python 3.9
           - python-version: '3.9'
             os: macos
             extra-args: '--cov=psyneulink'
@@ -53,11 +53,6 @@ jobs:
           - python-version: '3.9'
             os: ubuntu
             extra-args: '--forked -m "not llvm"'
-
-          # add 32-bit build on windows
-          - python-version: '3.9'
-            python-architecture: 'x86'
-            os: windows
 
           # fp32 run on linux python 3.10
           - python-version: '3.10'
@@ -73,19 +68,19 @@ jobs:
             # The latter works around a crash in pytest when collecting tests:
             # https://github.com/ionelmc/pytest-benchmark/issues/243
             extra-args: '-m benchmark --benchmark-enable --benchmark-only --benchmark-min-rounds=2 --benchmark-max-time=0.001 --benchmark-warmup=off -n0 --dist=no'
+          # run without pytorch on windows python 3.10
+          - python-version: '3.10'
+            os: windows
+            torch: 'notorch'
 
-          # add python 3.8 with deps restricted to min supported version
-          # use default python architecture
-          # https://github.com/actions/setup-python/issues/960
+
+          # add python 3.8 with deps restricted to min supported package versions
           - python-version: '3.8'
             os: macos
             version-restrict: 'min'
 
         exclude:
-          # 3.8/x64 python is broken on aarch64 macos runners
-          # https://github.com/actions/setup-python/issues/960
           - python-version: '3.8'
-            python-architecture: 'x64'
             os: macos
 
     steps:
@@ -106,7 +101,6 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: ${{ matrix.python-architecture }}
 
     - name: Restrict version of direct dependencies
       if: ${{ matrix.version-restrict == 'min' }}
@@ -130,8 +124,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}
+
+    - name: Drop PyTorch requirement
+      if: ${{ matrix.torch == 'notorch' }}
+      shell: bash
+      run: |
+        # macos/bsd sed requires backup suffix argument to -i
+        sed -i=.bak -e '/torch/d' requirements.txt
+        sed -i=.bak -e '/modeci_mdf/d' requirements.txt
 
     - name: Install PNL package
       uses: ./.github/actions/install-pnl
@@ -196,10 +198,16 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v5
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.version-restrict }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
         path: tests_out.xml
         retention-days: 5
       if: (success() || failure()) && ! contains(matrix.extra-args, 'forked')
+
+    - name: Check that PyTorch wasn't transitively included
+      if: ${{ matrix.torch == 'notorch' }}
+      shell: bash
+      run: |
+        ! pip show torch
 
     - name: Upload coveralls code coverage
       if: contains(matrix.extra-args, '--cov=psyneulink')
@@ -218,7 +226,7 @@ jobs:
       uses: actions/upload-artifact@v5
       if: matrix.version-restrict == ''
       with:
-        name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: dist-${{ matrix.os }}-${{ matrix.python-version }}
         path: |
           ${{ steps.install.outputs.wheel }}
           ${{ steps.install.outputs.sdist }}
