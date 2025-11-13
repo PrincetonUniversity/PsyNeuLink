@@ -388,7 +388,7 @@ def main():
     steps = 0
     start_time = timeit.default_timer()
     entropy_thresh = 0.5
-    # agent_comp.show_graph()
+    agent_comp.show_graph()
     for _ in range(num_trials):
         observation = env.reset()
         while True:
