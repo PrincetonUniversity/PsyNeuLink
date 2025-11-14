@@ -14186,7 +14186,12 @@ def get_composition_for_node(node):
         return None
     while not isinstance(receiver, CompositionInterfaceMechanism):
         for efferent in receiver.efferents:
+            if not isinstance(efferent.receiver.owner, Mechanism):
+                # Skip if receiver is not a Mechanism
+                #     (e.g., could be a Projection.matrix if efferent is a LearningProjection)
+                continue
             receiver = efferent.receiver.owner
+
     return receiver.composition
 
 
