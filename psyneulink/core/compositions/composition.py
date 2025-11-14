@@ -14190,6 +14190,7 @@ def get_composition_for_node(node):
                 # Skip if receiver is not a Mechanism
                 #     (e.g., could be a Projection.matrix if efferent is a LearningProjection)
                 continue
+            receiver = efferent.receiver.owner
 
     return receiver.composition
 
