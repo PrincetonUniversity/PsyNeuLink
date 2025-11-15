@@ -2,11 +2,10 @@ import numpy as np
 
 import psyneulink as pnl
 
-import comparison.params as params
-import comparison.data as data
+import params as params
+import data as data
 
 DISPLAY_MODEL = False
-
 
 # region   MODEL
 # ======================================================================================================================

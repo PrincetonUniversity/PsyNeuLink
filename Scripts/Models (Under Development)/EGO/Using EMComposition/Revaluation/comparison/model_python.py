@@ -202,7 +202,7 @@ def sample_memory_sequential(memories,
 
             # project the next context based on context and state
 
-            context_sim = context_sim * (1 - model_based_ness) + model_based_ness * retrieved_reward
+            context_sim = context_sim * (1 - model_based_ness) + model_based_ness * retrieved_context
 
             context_sim = project_next_context(
                 context_sim,
@@ -217,7 +217,7 @@ def sample_memory_sequential(memories,
             queries = (state_sim, context_sim, time_sim, 0)
 
             # retrieve state based on projected context (state_retrieval_weight_sim == 0)
-            # Note
+
             retrieved_state, retrieved_context, retrieved_time, _, retrieved_memory_idx = \
                 sample_memory(memories,
                               queries,

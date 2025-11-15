@@ -4,6 +4,7 @@ STATE_SIZE = 7  # length of state vector (number of unique states)
 CONTEXT_SIZE = STATE_SIZE  # length of the context vector (usually the same as state vector)
 
 REWARD_SIZE = 1
+TASK_SIZE = 1
 
 # Params for drift on a sphere
 TIME_SIZE = 25  # length of the time vector (arbitrary choice, the more dimensions, the less likely `wrap-around`)
@@ -14,7 +15,6 @@ TIME_DRIFT_NOISE = 0.1  # Brownian motion noise on the sphere
 
 # retrieval weight (weight the matches by these weights when retrieving from memory)
 TIME_RETRIEVAL_WEIGHT = 0.1  # .1#.03#.2
-REWARD_RETRIEVAL_WEIGHT = None
 
 # integration rates (how much to integrate old context, state and retrieved context into the new context)
 STATE_INTEGRATION_RATE = .6  # .45
@@ -39,3 +39,8 @@ RANDOM_SEED = None  # 1234
 
 # Only "nob" to replicate the full behavior (how much to use retrieved vs simulated context)
 MODEL_BASED_NESS = 0.
+
+# This is the "noob" that moves between
+# - "model free" (0, no retrieval of context)
+# - "model based"  (1, use retrieved context)
+CONTEXT_RETRIEVE_IN_SIM = 0.

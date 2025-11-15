@@ -248,7 +248,7 @@ RANDOM_WEIGHTS_INITIALIZATION=RandomMatrix(center=0.0, range=0.1)  # Matrix spec
 # Temporal context vector generation as input to time_input_layer of model
 TIME_DRIFT_RATE = 0.1          # noise used by DriftOnASphereIntegrator (function of Context mech)
 TIME_DRIFT_NOISE = 0.0         # noise used by DriftOnASphereIntegrator (function of Context mech)
-time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE - 1),
+time_fct = DriftOnASphereIntegrator(initializer=np.random.random(TIME_SIZE),
                                     noise=TIME_DRIFT_NOISE,
                                     dimension=TIME_SIZE)
 # Task environment:
@@ -490,6 +490,7 @@ def construct_model(model_name:str=MODEL_NAME,
                        memory_fill=(0,.01),
                        memory_capacity=NUM_EXPERIENCE_SEQS,
                        softmax_gain=1.0,
+                       memory_decay_rate=0,
                        # Input Nodes:
                        field_names=[state_input_name,
                                     time_input_name,
@@ -595,7 +596,6 @@ def construct_model(model_name:str=MODEL_NAME,
             control_em.distance_field_weights = [1] * num_keys + [0] * num_vals
             # Set control_signals for PREDICT
             control_signals = control_em.execute(query)[num_keys:]
-
         return control_signals
 
     # Monitored for control
