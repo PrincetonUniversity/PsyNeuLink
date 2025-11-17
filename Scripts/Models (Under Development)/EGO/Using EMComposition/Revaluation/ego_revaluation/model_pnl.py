@@ -1,6 +1,6 @@
 """
 Here, we simulate reward estimation task from
-`Giallanza et al. (2024)<https://direct.mit.edu/opmi/article/doi/10.1162/opmi_a_00143/12108>`_.
+`Giallanza et al. (2024)<https://direct.mit.edu/opmi/article/doi/10.1162/opmi_a_00143/12108>`_ (Study 1).
 
 Task
 ----
@@ -47,8 +47,9 @@ It is also used to halt storing in estimation mode and to freeze the context in 
 # Imports
 import psyneulink as pnl
 
-import params as params
-import data as data
+from .config import defaults
+
+# import data as data
 
 # Script Control
 DISPLAY_MODEL = False
@@ -65,33 +66,33 @@ TASK_NAME = 'TASK'
 
 
 def construct_model(
-        capacity=params.N_EXPERIENCE_SEQS,
-        context_retrieval_in_sim=params.CONTEXT_RETRIEVE_IN_SIM,
-        time_retrieval_weight=params.TIME_RETRIEVAL_WEIGHT,
+        capacity=defaults.N_EXPERIENCE_SEQS,
+        context_retrieval_in_sim=defaults.CONTEXT_RETRIEVE_IN_SIM,
+        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
 ):
     # Input Layers
     state_input = pnl.ProcessingMechanism(
         name=STATE_NAME,
-        input_shapes=params.STATE_SIZE)
+        input_shapes=defaults.STATE_SIZE)
     time_input = pnl.ProcessingMechanism(
         name=TIME_NAME,
-        input_shapes=params.TIME_SIZE)
+        input_shapes=defaults.TIME_SIZE)
     reward_input = pnl.ProcessingMechanism(
         name=REWARD_NAME,
-        input_shapes=params.REWARD_SIZE)
+        input_shapes=defaults.REWARD_SIZE)
 
     # Task: Observation or Prediction
     task_input = pnl.ProcessingMechanism(
         name=TASK_NAME,
-        input_shapes=params.TASK_SIZE
+        input_shapes=defaults.TASK_SIZE
     )
 
     # Context layer (working memory)
     context = pnl.TransferMechanism(
         name=CONTEXT_NAME,
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
         integrator_mode=True,
-        integration_rate=params.STATE_INTEGRATION_RATE  # How much of the input to integrate
+        integration_rate=defaults.STATE_INTEGRATION_RATE  # How much of the input to integrate
     )
 
     # Cache the names (if we construct multiple models, the constants above will be enumerated)
@@ -106,15 +107,15 @@ def construct_model(
     #   Note: We set retrieval weights to 1. since they will be modulated in the control signal (all but
     #       reward)
     em = pnl.EMComposition(name=EM_NAME,
-                           memory_template=[[0] * params.STATE_SIZE,  # state
-                                            [0] * params.TIME_SIZE,  # time
-                                            [0] * params.CONTEXT_SIZE,  # context
-                                            [0] * params.REWARD_SIZE],  # reward
-                           memory_fill=params.MEMORY_INIT,
+                           memory_template=[[0] * defaults.STATE_SIZE,  # state
+                                            [0] * defaults.TIME_SIZE,  # time
+                                            [0] * defaults.CONTEXT_SIZE,  # context
+                                            [0] * defaults.REWARD_SIZE],  # reward
+                           memory_fill=defaults.MEMORY_INIT,
                            memory_capacity=capacity,
                            memory_decay_rate=0,
-                           softmax_gain=1.0 / params.TEMPERATURE,
-                           softmax_threshold=params.SOFTMAX_THRESHOLD,
+                           softmax_gain=1.0 / defaults.TEMPERATURE,
+                           softmax_threshold=defaults.SOFTMAX_THRESHOLD,
                            normalize_memories=False,
                            normalize_field_weights=False,
                            concatenate_queries=False,
@@ -176,7 +177,7 @@ def construct_model(
     # is happening above with state or retrieved state
     context_projected = pnl.TransferMechanism(
         name=_context_name + ' PROJECTED',
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
         integrator_mode=True,
         integration_rate=1.
     )
@@ -199,7 +200,7 @@ def construct_model(
     # Attend context to update context_projected
     attend_context_cp = pnl.ProcessingMechanism(
         name='ATTEND ' + _context_name + ' CP',
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
     )
     ego_comp.add_node(attend_context_cp)
     ego_comp.add_projection(
@@ -212,7 +213,7 @@ def construct_model(
     # Attend state to update context_projected
     attend_state_cp = pnl.ProcessingMechanism(
         name='ATTEND ' + _state_name + ' CP',
-        input_shapes=params.STATE_SIZE,
+        input_shapes=defaults.STATE_SIZE,
     )
     ego_comp.add_node(attend_state_cp)
     ego_comp.add_projection(
@@ -228,7 +229,7 @@ def construct_model(
     # Attend retrieved state to update context_projected
     attend_state_retrieved_cp = pnl.ProcessingMechanism(
         name='ATTEND ' + _state_name + RETRIEVED + ' CP',
-        input_shapes=params.STATE_SIZE,
+        input_shapes=defaults.STATE_SIZE,
     )
     ego_comp.add_node(attend_state_retrieved_cp)
     ego_comp.add_projection(
@@ -243,7 +244,7 @@ def construct_model(
     # Attend retrieved context to update context_projected (instead of previous context_projected)
     attend_context_retrieved_cp = pnl.ProcessingMechanism(
         name='ATTEND ' + _context_name + RETRIEVED + ' CP',
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
     )
     ego_comp.add_node(attend_context_retrieved_cp)
     ego_comp.add_projection(
@@ -265,7 +266,7 @@ def construct_model(
     # Attend state (in observation mode)
     attend_state_r = pnl.ProcessingMechanism(
         name='ATTEND ' + _state_name + ' R',
-        input_shapes=params.STATE_SIZE,
+        input_shapes=defaults.STATE_SIZE,
     )
     ego_comp.add_node(attend_state_r)
     ego_comp.add_projection(
@@ -278,7 +279,7 @@ def construct_model(
     # Attend retrieved state (in the estimation mode)
     attend_state_retrieved_r = pnl.ProcessingMechanism(
         name='ATTEND ' + _state_name + RETRIEVED + ' R',
-        input_shapes=params.STATE_SIZE,
+        input_shapes=defaults.STATE_SIZE,
     )
     ego_comp.add_node(attend_state_retrieved_r)
     ego_comp.add_projection(
@@ -291,7 +292,7 @@ def construct_model(
     # Attend context (in observation mode)
     attend_context_r = pnl.ProcessingMechanism(
         name='ATTEND ' + _context_name + ' R',
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
     )
     ego_comp.add_node(attend_context_r)
     ego_comp.add_projection(
@@ -304,7 +305,7 @@ def construct_model(
     # Attend projected context (in estimation mode)
     attend_context_projected_r = pnl.ProcessingMechanism(
         name='ATTEND ' + _context_name + ' PROJECTED' + ' R',
-        input_shapes=params.CONTEXT_SIZE,
+        input_shapes=defaults.CONTEXT_SIZE,
     )
     ego_comp.add_node(attend_context_projected_r)
     ego_comp.add_projection(
@@ -340,10 +341,10 @@ def construct_model(
 
         ## -- Retrieval Weights -- #
         # Alternating between retrieving reward from state and state from context
-        (pnl.SLOPE, em.nodes['STATE [WEIGHT]']), (pnl.SLOPE, em.nodes['CONTEXT [WEIGHT]']),
+        (pnl.SLOPE, em.nodes[_state_name + ' [WEIGHT]']), (pnl.SLOPE, em.nodes[_context_name + ' [WEIGHT]']),
 
         ## -- Storage -- ##
-        (pnl.STORAGE_PROB, em.nodes['STORE']),
+        (pnl.STORAGE_PROB, em.storage_node),
         ## -- Context -- ## (This is used to 'freeze' the context during estimation
         (pnl.INTEGRATION_RATE, context),
     ]
@@ -358,7 +359,7 @@ def construct_model(
         1, 0,  # context, projected context
         1, 0,  # state, retrieved state
         # Retrieval weights
-        0, 1 - time_retrieval_weight,  # state, context [query]
+        1 - time_retrieval_weight, 0,  # state, context [query]
         # storage
         1,  # storage probability
         # context integration
@@ -370,13 +371,13 @@ def construct_model(
     # set the attend_state_cp to sr
 
     # how much the context vs context_retrieved (model free vs model based)
-    context_rate = (1 - context_retrieval_in_sim) * (1 - params.STATE_INTEGRATION_RATE)
-    context_retrieved_rate = context_retrieval_in_sim * (1 - params.STATE_INTEGRATION_RATE)
+    context_rate = (1 - context_retrieval_in_sim) * (1 - defaults.STATE_INTEGRATION_RATE)
+    context_retrieved_rate = context_retrieval_in_sim * (1 - defaults.STATE_INTEGRATION_RATE)
     _control_signal_estimation_init = [
         # Projected Context integration from context
         context_rate, 1., context_retrieved_rate,  # context, context_projected (integration rate), retrieved
         # Projected Context integration from state
-        params.STATE_INTEGRATION_RATE, 0,  # state, retrieved state
+        defaults.STATE_INTEGRATION_RATE, 0,  # state, retrieved state
         # Retrieval weights
         0, 1,  # context, projected context
         1, 0,  # state, retrieved state
@@ -394,9 +395,9 @@ def construct_model(
     # (2) The weight of retrieved context between 0 and 1-sr
     # (3) The weight of state between 1 and sr
     context_projected_rate = (
-            params.STATE_INTEGRATION_RATE + (1 - params.STATE_INTEGRATION_RATE) * context_retrieval_in_sim)
-    context_retrieved_rate = (1 - params.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
-    state_rate = 1 - (1 - params.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
+            defaults.STATE_INTEGRATION_RATE + (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim)
+    context_retrieved_rate = (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
+    state_rate = 1 - (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
 
     _control_signal_estimation_1 = [
         # Projected Context integration from context
@@ -466,68 +467,3 @@ def construct_model(
     ego_comp.scheduler.add_condition(context_projected, pnl.BeforeNodes(attend_context_projected_r))
 
     return ego_comp, state_input, time_input, reward_input, task_input
-
-
-# region SCRIPT EXECUTION
-# ======================================================================================================================
-#                                                   SCRIPT EXECUTION
-# ======================================================================================================================
-
-
-if __name__ == '__main__':
-    seq_baseline = 20
-
-    memory_capacity = seq_baseline * 3
-    model, _state_input, _time_input, _reward_input, _task_input = construct_model(memory_capacity)
-
-    if DISPLAY_MODEL:
-        model.show_graph()
-
-    states, rewards = data.get_baseline_trials(num_seqs=seq_baseline)
-
-    times = data.get_time_sequence(num_trials=len(states))
-
-    inputs = {
-        _state_input: states,
-        _time_input: times,
-        _reward_input: rewards,
-        _task_input: [0] * len(states),
-    }
-
-
-    def _cb():
-        print('*' * 10)
-
-
-    def _ca():
-        print('*' * 10)
-
-
-    model.run(inputs=inputs,
-              # call_before_trial=_cb,
-              # call_after_trial=_ca
-              )
-    _memory = model.nodes[EM_NAME].parameters.memory.get(MODEL_NAME)
-
-    print('*' * 10)
-    print()
-    print(model.results)
-    #
-    prediction_task_baseline = {
-        _task_input: [1, 3, 2, 3, 2],
-        _state_input: [[0, 1, 0, 0, 0, 0, 0]] * 5,
-        _time_input: [times[-1]] * 5,
-        _reward_input: [0] * 5,
-    }
-
-    model.run(
-        inputs=prediction_task_baseline,
-        call_before_trial=_cb,
-        call_after_trial=_ca
-    )
-    print('*' * 10)
-    print('Estimated Reward State 1 (~10)')
-    print(model.results[-1])
-    print('*' * 10)
-
-# print(model.results)
