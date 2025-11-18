@@ -48,6 +48,7 @@ def main():
             state_retrieval_weight=.9,
             memories=memories_python,
             query=(test_query_state, test_query_context, test_query_time, 0),
+            metric='dot_product',
             mode='softmax'
         )
 
