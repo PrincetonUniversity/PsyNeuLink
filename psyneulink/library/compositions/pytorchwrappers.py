@@ -758,43 +758,20 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # 3) Remove empty execution sets
         execution_sets = [x for x in execution_sets if len(x) > 0]
 
-        # Flattening for forward() and AutodiffComposition.do_gradient_optimization
-
-        # Flatten nested execution sets:
-        # # MODIFIED 11/20/25 OLD:
-        # nested_execution_sets = {}
-        # for exec_set in execution_sets:
-        #     for node in exec_set:
-        #         if isinstance(node, PytorchCompositionWrapper):
-        #             nested_execution_sets[node] = node.execution_sets
-        # flattened_execution_sets = []
-        # for node, nested_exec_sets in nested_execution_sets.items():
-        #     index = execution_sets.index({node})
-        #     # Remove nested Composition from execution sets
-        #     execution_sets.remove({node})
-        #     # Insert nested execution sets in place of nested Composition
-        #     execution_sets[index:index] = exec_sets
-        #
-        # return execution_sets, execution_context
-        # MODIFIED 11/20/25 NEW:
-            # BREADCRUMB: NEED TO ACCOMODATE POSSIBILITY THAT SET AS ITEM OF execution_sets MAY HAVE MORE THAN ONE NODE
-            # Get index of item in execution_sets that is a nested composition (i.e., has nested_exec_sets)
-            #  Note: need for loop, as an item in execution_sets is a set that can contain more then one node
+        # Flatten nested execution sets (forward() and AutodiffComposition.do_gradient_optimization)
         flattened_execution_sets = []
         for exec_set in execution_sets:
             nested_comps =  [node for node in exec_set if isinstance(node, PytorchCompositionWrapper)]
-
             # If none of the nodes in the exec_set are a nested composition, add exec_set as is
             if not nested_comps:
                 flattened_execution_sets.append(exec_set)
                 continue
-
             # If any of the nodes in the exec_set are nested compositions, interleave their executions sets
             first_exec_set = set()
             for node in exec_set:
-                # Create execution set from any non-cmoposition nodes and first execution set of all nested comps
+                # Create execution set from any non-composition nodes and first execution set of all nested comps
                 if node not in nested_comps:
-                    # If it is not a nested_comp, simply node to execution_set
+                    # If it is not a nested composition, simply add node to execution_set
                     first_exec_set.add(node)
                 else:
                     # Add nodes in first execution set of each nested comp
@@ -804,18 +781,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nodes_left = True
             i = 1
             while (nodes_left):
+                # Get ith execution set from each nested comp and combine into new execution set
                 new_exec_set = set()
                 nodes_left = False
                 for node in nested_comps:
                     if i < len(node.execution_sets):
                         new_exec_set |= node.execution_sets[i]
                         nodes_left = True
-                flattened_execution_sets.extend(new_exec_set)
+                flattened_execution_sets.append(new_exec_set)
                 i += 1
-        # MODIFIED 11/20/25 END
         return flattened_execution_sets, execution_context
-
-
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
