@@ -761,7 +761,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Flatten nested execution sets (forward() and AutodiffComposition.do_gradient_optimization)
         flattened_execution_sets = []
         for exec_set in execution_sets:
-            nested_comps =  [node for node in exec_set if isinstance(node, PytorchCompositionWrapper)]
+            nested_comps = [node for node in exec_set if isinstance(node, PytorchCompositionWrapper)]
             # If none of the nodes in the exec_set are a nested composition, add exec_set as is
             if not nested_comps:
                 flattened_execution_sets.append(exec_set)

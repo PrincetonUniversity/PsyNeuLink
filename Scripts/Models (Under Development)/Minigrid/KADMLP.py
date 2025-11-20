@@ -451,7 +451,7 @@ def main():
                                      mlp_input: flattened_input},
                              targets={mlp_output: output.value,
                                       output: [[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]},
-                             # execution=ExecutionMode.PyTorch
+                             execution=ExecutionMode.PyTorch
                              )
             weights_after = hidden_to_output.matrix.base.copy()
             weight_change = np.abs(weights_after - weights_before).sum()
