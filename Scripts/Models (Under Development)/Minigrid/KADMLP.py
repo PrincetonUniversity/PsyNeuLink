@@ -449,8 +449,8 @@ def main():
             weights_before = hidden_to_output.matrix.base.copy()
             agent_comp.learn(inputs={state_input: input_array,
                                      mlp_input: flattened_input},
-                             targets={mlp_output: output,
-                                      output: None},
+                             targets={mlp_output: output.value,
+                                      output: [[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]},
                              # execution=ExecutionMode.PyTorch
                              )
             weights_after = hidden_to_output.matrix.base.copy()

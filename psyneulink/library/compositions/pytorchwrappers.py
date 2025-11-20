@@ -767,6 +767,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if isinstance(node, PytorchCompositionWrapper):
                     nested_execution_sets[node] = node.execution_sets
         for node, exec_sets in nested_execution_sets.items():
+            # BREADCRUMB: NEED TO ACCOMODATE POSSIBLE THAT SETS AS ITEMS OF execution_sets MAY HAVE MORE THAN ONE NODE
             index = execution_sets.index({node})
             # Remove nested Composition from execution sets
             execution_sets.remove({node})
