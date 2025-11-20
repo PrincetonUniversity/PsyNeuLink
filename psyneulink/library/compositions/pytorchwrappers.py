@@ -798,9 +798,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     first_exec_set.add(node)
                 else:
                     # Add nodes in first execution set of each nested comp
-                    first_exec_set.add(node.executions_sets[0])
+                    first_exec_set |= node.execution_sets[0]
             flattened_execution_sets.append(first_exec_set)
-
 
             nodes_left = True
             i = 1
@@ -809,7 +808,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 nodes_left = False
                 for node in nested_comps:
                     if i < len(node.execution_sets):
-                        new_exec_set.add(node.execution_sets[i])
+                        new_exec_set |= node.execution_sets[i]
                         nodes_left = True
                 flattened_execution_sets.extend(new_exec_set)
                 i += 1
