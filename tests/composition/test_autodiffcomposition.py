@@ -2940,6 +2940,9 @@ class TestNestedLearning:
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
     # def test_output_from_multiple_output_ports_and_OUTPUT_nodes(self, nodes_for_testing_nested_comps, execute_learning):
+    #     #            [ / hidden_1  ] -> output_2
+    #     # input_1 -< |             | /
+    #     #            [ \ hidden 2d ] -> output_1
     #     # FIX:  1) No input assigned to hidden_2d.input_port[1]
     #     #       2) Output from hidden_2d.output_port[0] erroneously projects to output_nodes[1]
     #     #          in addition to correctly projecting to output_nodes[0]
@@ -2974,6 +2977,7 @@ class TestNestedLearning:
     #     for i in range(len(autodiff_results)):
     #         for j in range(len(autodiff_results[i])):
     #             np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+
     def test_2_direct_output_nodes_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
         #        [   / node ]
         # node - | <        |
@@ -3004,9 +3008,9 @@ class TestNestedLearning:
                 np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
 
     def test_1_direct_and_1_ordinary_output_from_nested(self, nodes_for_testing_nested_comps, execute_learning):
-        #        [   / node ] -> node
-        # node - | <        |
-        #        [   \ node ]
+        #           [   / hidden_2 ] -> output_1
+        # input_1 - | <            |
+        #           [   \ hidden_1 ]
 
         nodes = nodes_for_testing_nested_comps(1, 2, 1)
         input_nodes, hidden_nodes, output_nodes = nodes
@@ -3017,7 +3021,7 @@ class TestNestedLearning:
         pathway_b = [input_nodes[0],
                      MappingProjection(input_nodes[0], hidden_nodes[1]),
                      nested,
-                     MappingProjection(hidden_nodes[1]), # <- FIX FAILS
+                     MappingProjection(hidden_nodes[1]),
                      output_nodes[0]]
 
         autodiff_results = execute_learning(comp_type='autodiff',
@@ -3033,6 +3037,76 @@ class TestNestedLearning:
                                         inputs=inputs)
 
         np.testing.assert_allclose(comp_results, autodiff_results)
+
+    def test_1_direct_and_1_ordinary_output_from_nested_to_another_node(self,
+                                                                        nodes_for_testing_nested_comps,
+                                                                        execute_learning):
+        #           [   / hidden_2 ] -> output_1 -> output_2
+        # input_1 - | <            |
+        #           [   \ hidden_1 ]
+
+        nodes = nodes_for_testing_nested_comps(1, 2, 2)
+        input_nodes, hidden_nodes, output_nodes = nodes
+        inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+
+        nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
+        pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
+        pathway_b = [input_nodes[0],
+                     MappingProjection(input_nodes[0], hidden_nodes[1]),
+                     nested,
+                     MappingProjection(hidden_nodes[1]),
+                     output_nodes[0],
+                     output_nodes[1]]
+
+        autodiff_results = execute_learning(comp_type='autodiff',
+                                            execution_mode=pnl.ExecutionMode.PyTorch,
+                                            pathways=[pathway_a, pathway_b],
+                                            inputs=inputs)
+
+        pathway_a = [input_nodes[0], hidden_nodes[0]]
+        pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0], output_nodes[1]]
+        comp_results = execute_learning(comp_type='composition',
+                                        execution_mode=pnl.ExecutionMode.Python,
+                                        pathways=[pathway_a, pathway_b],
+                                        inputs=inputs)
+
+        for i in range(len(autodiff_results)):
+            for j in range(len(autodiff_results[i])):
+                np.testing.assert_allclose(comp_results[i][j], autodiff_results[i][j])
+    #
+    # def test_YOUNES_MODEL(self, nodes_for_testing_nested_comps, execute_learning):
+    #     #          [   / node ] -> node -> node
+    #     # node --- | <        |        /
+    #     #       \  [   \ node ]       /
+    #     #        \ -----------> node /
+    #
+    #     nodes = nodes_for_testing_nested_comps(1, 2, 2)
+    #     input_nodes, hidden_nodes, output_nodes = nodes
+    #     inputs = {input_nodes[0]:np.array([[0, 0], [0, 1], [1, 0], [1, 1]])}
+    #
+    #     nested = AutodiffComposition(nodes = [hidden_nodes[0], hidden_nodes[1]], name='nested')
+    #     pathway_a = [input_nodes[0], MappingProjection(input_nodes[0], hidden_nodes[0]), nested]
+    #     pathway_b = [input_nodes[0],
+    #                  MappingProjection(input_nodes[0], hidden_nodes[1]),
+    #                  nested,
+    #                  MappingProjection(hidden_nodes[1]),
+    #                  output_nodes[0],
+    #                  output_nodes[1]]
+    #
+    #     autodiff_results = execute_learning(comp_type='autodiff',
+    #                                         execution_mode=pnl.ExecutionMode.PyTorch,
+    #                                         pathways=[pathway_a, pathway_b],
+    #                                         inputs=inputs)
+    #
+    #     pathway_a = [input_nodes[0], hidden_nodes[0]]
+    #     pathway_b = [input_nodes[0], hidden_nodes[1], output_nodes[0], output_nodes[1]]
+    #     comp_results = execute_learning(comp_type='composition',
+    #                                     execution_mode=pnl.ExecutionMode.Python,
+    #                                     pathways=[pathway_a, pathway_b],
+    #                                     inputs=inputs)
+    #
+    #     np.testing.assert_allclose(comp_results, autodiff_results)
+
 
     def test_nested_autodiff_learning_with_input_func(self):
         """Note: this uses the same Composition and results as test_learning/test_identicalness_of_input_types"""
