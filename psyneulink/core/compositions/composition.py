@@ -6085,23 +6085,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
                     and NodeRole.OUTPUT not in self.get_required_roles_by_node(node)
                     and not proj_sender_is_PROBE
-                    # # MODIFIED 11/22/25 OLD:
-                    # and len([p for p in proj.sender.efferents
-                    #          if (p in self.projections
-                    #              and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
-                    #              and not isinstance(p, AutoAssociativeProjection))]) != 0):
-                    # MODIFIED 11/22/25 NEW:
                     and any([p for p in proj.sender.efferents
                              if (p in self.projections
                                  and p.receiver.owner in self.nodes
                                  and not isinstance(p.receiver.owner, ControlMechanism)
-                                 # and (p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
-                                 #      or not any(role in {NodeRole.CONTROLLER,
-                                 #                          NodeRole.FEEDBACK_RECEIVER,
-                                 #                          NodeRole.CONTROLLER_OBJECTIVE,
-                                 #                          NodeRole.CONTROL_OBJECTIVE,
-                                 #                          NodeRole.LEARNING}
-                                 #                 for role in self.get_roles_by_node(p.receiver.owner)))
                                  and not any(role in {NodeRole.CONTROLLER,
                                                       NodeRole.FEEDBACK_RECEIVER,
                                                       NodeRole.CONTROLLER_OBJECTIVE,
@@ -6109,7 +6096,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       NodeRole.LEARNING}
                                              for role in self.get_roles_by_node(p.receiver.owner))
                                  and not isinstance(p, AutoAssociativeProjection))])):
-                # MODIFIED 11/22/25 END
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port and its corresponding output_port
         for input_port in defunct_input_ports:
