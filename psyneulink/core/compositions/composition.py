@@ -14194,10 +14194,12 @@ def get_composition_for_node(node):
                 #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
                 return None
             else:
-                search_for_output_CIM(receiver)
+                return search_for_output_CIM(receiver)
         return receiver
 
-    return search_for_output_CIM(node)
+    comp = search_for_output_CIM(node)
+    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    return comp
 
 
 class LearningScale(PNLStrEnum):

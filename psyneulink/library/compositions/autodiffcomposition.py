@@ -1399,13 +1399,14 @@ class AutodiffComposition(Composition):
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
         # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
-
         # Get output Nodes, their out_ports and corresponding indices
         #     in order of outermost AutodiffComposition's output_CIM Ports
         outputs_idx_port_node_comp = []
         for port in self.output_CIM.input_ports:
+
             source_info = self.output_CIM._get_source_info_from_output_CIM(port)
             source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
+            # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
             outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
 
         # Assign values to trained_output_values and all_output_values
