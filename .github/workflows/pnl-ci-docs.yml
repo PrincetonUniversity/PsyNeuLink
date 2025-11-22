@@ -39,14 +39,14 @@ jobs:
     steps:
     # Increased fetch-depth and tag checkout needed compared to pnl-ci.yml
     - name: Checkout sources
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       if: ${{ matrix.pnl-version == 'head' }}
       with:
         fetch-depth: 200
         ref: ${{ github.ref }}
 
     - name: Checkout pull base
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       if: ${{ matrix.pnl-version == 'base' }}
       with:
         fetch-depth: 200
@@ -150,7 +150,7 @@ jobs:
 
     steps:
     - name: Checkout docs
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         ref: gh-pages
 
