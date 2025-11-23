@@ -227,6 +227,7 @@ open_matrix = np.array([[0, 0, 0, 0, 1, 0, 0]])  # Maps to third position
 pickup_matrix = np.array([[0, 0, 0, 0, 0, 1, 0]])
 read_matrix = np.array([[0, 0, 0, 0, 0, 0, 1]])
 
+
 state_to_em_right = [state_input,
                   MappingProjection(matrix=IDENTITY_MATRIX,
                                     sender=state_input,
@@ -314,7 +315,7 @@ state_to_em_read = [state_input,
 
 # There were issues with projecting the state input directly through the mlp
 # MLP input is a separate input that I send the state input through as a work around
-mlp_input = ProcessingMechanism(name='MLP INPUT', default_variable=[0] * obs_len)
+# mlp_input = ProcessingMechanism(name='MLP INPUT', default_variable=[0] * obs_len)
 
 # MLP output mechanism with Softmax activation
 # Even with calculating the correct entropy for this it showed no learning when using the logistic function
@@ -323,6 +324,21 @@ mlp_output = TransferMechanism(name="MLP OUTPUT",
                                function=SoftMax,
                                )
 
+hidden_layer = TransferMechanism(name="HIDDEN",
+                                default_variable=[0] * 64,
+                                function=ReLU)
+
+learning_rate = 0.01
+mlp_pway = [state_input,
+            MappingProjection(state_input, hidden_layer,
+                              learning_rate = learning_rate),
+            hidden_layer,
+            MappingProjection(hidden_layer, mlp_output,
+                                learning_rate = learning_rate),
+            mlp_output]
+em_to_mlp_pway = [output,
+                  MappingProjection(output, mlp_output, learnable=False),
+                  mlp_output]
 
 # Create Composition
 agent_comp = AutodiffComposition([state_to_em_agent_x,
@@ -339,33 +355,17 @@ agent_comp = AutodiffComposition([state_to_em_agent_x,
                                   state_to_em_down,
                                   state_to_em_open,
                                   state_to_em_pickup,
-                                  state_to_em_read],
+                                  state_to_em_read,
+                                  mlp_pway,
+                                  em_to_mlp_pway],
                                  name='KEYS AND DOORS COMPOSITION')
 
-hidden_layer = TransferMechanism(name="HIDDEN",
-                                default_variable=[0] * 64,
-                                function=ReLU)
-
-# Issue: Not learning?
-# Add a hidden layer to the learning pathway
-agent_comp.add_linear_learning_pathway(
-    pathway=[mlp_input, hidden_layer, mlp_output],
-    learning_rate=0.1,
-    loss_spec=Loss.CROSS_ENTROPY,
-    learning_function=BackPropagation
-)
-
-EMoutput_output = MappingProjection(sender=output,
-                                    receiver=mlp_output,
-                                    learnable=False,
-                                    name="DEPENDENCY_PROJECTION")
-agent_comp.add_projection(EMoutput_output, output, mlp_output)
-agent_comp.scheduler.add_condition(mlp_output, AfterNodes(output))
-print("show_graph w/ pytorch...")
+# print("Calling show_graph for pytorch...")
 # agent_comp.show_graph(show_pytorch=True)
-agent_comp.show_graph()
-print("finished show_graph")
-
+print(f"\nLearnable projections in {agent_comp.name} with their learning rates:")
+for p in agent_comp.projections:
+    if p.learnable:
+      print(f"\t{p.name}: {p.learning_rate}")
 
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
@@ -452,7 +452,8 @@ def main():
             hidden_to_output = hidden_layer.efferents[0]
             weights_before = hidden_to_output.matrix.base.copy()
             agent_comp.learn(inputs={state_input: input_array,
-                                     mlp_input: flattened_input},
+                                     # mlp_input: flattened_input
+                                     },
                              targets={mlp_output: output.value,
                                       # output: [[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]
                                       },

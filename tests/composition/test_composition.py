@@ -7688,9 +7688,9 @@ class TestNodeRoles:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
 
     def test_three_node_cycle_with_FEEDBACK(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C')
         comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
         comp._analyze_graph()
