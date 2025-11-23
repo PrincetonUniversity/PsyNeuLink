@@ -360,10 +360,12 @@ agent_comp = AutodiffComposition([state_to_em_agent_x,
                                   em_to_mlp_pway],
                                  name='KEYS AND DOORS COMPOSITION')
 
-print(f"Learnable projections in {agent_comp.name} with their learning rates:")
+# print("Calling show_graph for pytorch...")
+# agent_comp.show_graph(show_pytorch=True)
+print(f"\nLearnable projections in {agent_comp.name} with their learning rates:")
 for p in agent_comp.projections:
     if p.learnable:
-      print(f"{p.name}: {p.learning_rate}")
+      print(f"\t{p.name}: {p.learning_rate}")
 
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
@@ -450,7 +452,8 @@ def main():
             hidden_to_output = hidden_layer.efferents[0]
             weights_before = hidden_to_output.matrix.base.copy()
             agent_comp.learn(inputs={state_input: input_array,
-                                     mlp_input: flattened_input},
+                                     # mlp_input: flattened_input
+                                     },
                              targets={mlp_output: output.value,
                                       # output: [[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]]
                                       },
