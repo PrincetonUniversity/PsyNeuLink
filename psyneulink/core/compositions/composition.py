@@ -1196,7 +1196,8 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
-   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                   |
+   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val) or ''                               |
+   |                |    ``my_pathway = Pathway(<pathway>, learning_rate=val); my_composition=Composition(pathways=my_pathway``           |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
