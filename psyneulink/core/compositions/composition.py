@@ -14181,18 +14181,23 @@ def get_compositions():
 
 def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
-    receiver = node
-    if not receiver.efferents:
-        return None
-    while not isinstance(receiver, CompositionInterfaceMechanism):
-        for efferent in receiver.efferents:
-            if not isinstance(efferent.receiver.owner, Mechanism):
-                # Skip if receiver is not a Mechanism
-                #     (e.g., could be a Projection.matrix if efferent is a LearningProjection)
-                continue
-            receiver = efferent.receiver.owner
 
-    return receiver.composition
+    def search_for_output_CIM(node):
+        # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
+        for efferent in node.efferents:
+            receiver = efferent.receiver.owner
+            if isinstance(receiver, CompositionInterfaceMechanism):
+                return receiver.composition
+            elif isinstance(receiver, ModulatoryMechanism_Base):
+                # End search on this path if receiver is a ModulatoryMechanism since it:
+                #   - won't lead to a CIM
+                #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
+                return None
+            else:
+                search_for_output_CIM(receiver)
+        return receiver
+
+    return search_for_output_CIM(node)
 
 
 class LearningScale(PNLStrEnum):
