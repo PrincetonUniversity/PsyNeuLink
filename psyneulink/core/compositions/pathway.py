@@ -557,6 +557,7 @@ class Pathway(object):
             self,
             pathway:list,
             # default_projection_matrix=None,
+            learning_rate: float = None,
             name=None,
             **kwargs
     ):
@@ -572,7 +573,6 @@ class Pathway(object):
                 raise CompositionError(
                     f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
                 )
-
         # There should be no other arguments in constructor
         if kwargs:
             raise CompositionError(f"Illegal argument(s) used in constructor for {self.__class__.__name__}: "
@@ -591,6 +591,8 @@ class Pathway(object):
                 registry=PathwayRegistry,
                 name=name
             )
+
+        self.learning_rate = learning_rate
 
         # Initialize attributes
         self.pathway = pathway
