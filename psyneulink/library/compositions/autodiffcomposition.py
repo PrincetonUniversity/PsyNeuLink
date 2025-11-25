@@ -933,8 +933,17 @@ class AutodiffComposition(Composition):
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
         pathways = self._get_pytorch_backprop_pathways(context)
 
+        # Construct learning components
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
-            self._infer_target_nodes(pathways)
+            # For PyTorch, all that needs to be constructed are TARGET Nodes, and map outputs to them
+            self.outputs_to_targets_map = self._infer_outputs_for_targets(pathways)
+        else:
+            # Otherwise, construct and add PNL backpropagation learning pathways for each INPUT Node
+            #    that will construct learning components
+            for pathway in pathways:
+                self.add_backpropagation_learning_pathway(pathway=pathway,
+                                                          loss_spec=self.loss_spec)
+
         self._analyze_graph()
         return self.learning_components
 
@@ -1095,64 +1104,43 @@ class AutodiffComposition(Composition):
 
         return pathways
 
-    # MODIFIED 11/25/25 NEW:  PER COPILOT
-    # def _infer_target_nodes(self, targets: dict, execution_mode) ->dict:
-    #     """Identify target nodes for each output node in targets dict
-    #     In PyTorch execution mode, targets are specified for OUTPUT Nodes that are trained in PyTorch,
-    #     so need to be mapped to the corresponding TARGET Nodes created in infer_backpropagation_learning_pathways()
-    #
-    #     Returns updated targets dict mapping TARGET Nodes to target values
-    #     """
-    #     if execution_mode is pnlvm.ExecutionMode.PyTorch:
-    #         updated_targets = {}
-    #         for output_node, target_value in targets.items():
-    #             if output_node in self.outputs_to_targets_map:
-    #                 target_node = self.outputs_to_targets_map[output_node]
-    #                 updated_targets[target_node] = target_value
-    #             else:
-    #                 updated_targets[output_node] = target_value
-    #         return updated_targets
-    #     else:
-    #         return targets
-    # MODIFIED 11/25/25: MINE
-    def _infer_target_nodes(self, targets: dict, execution_mode) ->dict:
+    # MODIFIED 11/25/25: NEW
+    def _infer_outputs_for_targets(self, targets: dict, execution_mode) ->dict:
         """Identify target nodes for each output node in targets dict
-        In PyTorch execution mode, targets are specified for OUTPUT Nodes that are trained in PyTorch,
-        so need to be mapped to the corresponding TARGET Nodes created in infer_backpropagation_learning_pathways()
-
-        Returns updated targets dict mapping TARGET Nodes to target values
+        Identify targets: specified in:
+          - specified in:
+            - **targets** arg of the AutodiffComposition constructor
+            - TargetProjection specifications
+          - else:
+            - assign one for each OUTPUT Node
+        Create outputs_to_targets_map dict
         """
         # Identify/create "dummy" TARGET nodes:
-            # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
-            # assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
-            pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
-            identified_target_nodes = self._identify_target_nodes(context)
-            output_mechs_for_learning = [node for node in identified_target_nodes if node in pathway_terminal_nodes]
-            # IMPLEMENTATION NOTE:
-            #    only add target nodes if *not* already present
-            #    (to avoid duplication in multiple calls, including from command line;
-            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
-                                                                             for value in mech.value],
-                                                                            dtype=object),
-                                                name= 'TARGET for ' + mech.name)
-                            for mech in output_mechs_for_learning if mech not in self.targets_from_outputs_map.values()]
-            # Suppress warnings about role assignments
-            context = Context(source=ContextFlags.METHOD)
-            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
-            for target_mech in target_mechs:
-                self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
-                for output_port in target_mech.output_ports:
-                    output_port.parameters.require_projection_in_composition.set(False, override=True)
-            self.targets_from_outputs_map.update({target: output for target, output
-                                           in zip(target_mechs, output_mechs_for_learning)})
-        else:
-            # Construct entire PNL backpropagation learning pathways for each INPUT Node
-            for pathway in pathways:
-                self.add_backpropagation_learning_pathway(pathway=pathway,
-                                                          loss_spec=self.loss_spec)
+        # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
+        # assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
+        pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
+        identified_target_nodes = self._identify_target_nodes(context)
+        output_mechs_for_learning = [node for node in identified_target_nodes if node in pathway_terminal_nodes]
+        # IMPLEMENTATION NOTE:
+        #    only add target nodes if *not* already present
+        #    (to avoid duplication in multiple calls, including from command line;
+        #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+        target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                         for value in mech.value],
+                                                                        dtype=object),
+                                            name= 'TARGET for ' + mech.name)
+                        for mech in output_mechs_for_learning if mech not in self.targets_from_outputs_map.values()]
+        # Suppress warnings about role assignments
+        context = Context(source=ContextFlags.METHOD)
+        self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        for target_mech in target_mechs:
+            self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+            for output_port in target_mech.output_ports:
+                output_port.parameters.require_projection_in_composition.set(False, override=True)
+        self.targets_from_outputs_map.update({target: output for target, output
+                                       in zip(target_mechs, output_mechs_for_learning)})
 
-        self.outputs_to_targets_map = {output: target for target, output in self.targets_from_outputs_map.items()}
+        return {output: target for target, output in self.targets_from_outputs_map.items()}
     # MODIFIED 11/25/25 END
 
 
