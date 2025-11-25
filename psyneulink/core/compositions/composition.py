@@ -3179,6 +3179,7 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
+from psyneulink import TargetProjection
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
@@ -8339,7 +8340,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_name = name or pathway.name
             pathway = pathway.pathway
             # learning_rate specified in call to method takes precedence
+            # MODIFIED 11/24/25 NEW:
             learning_rate = learning_rate or pathway.learning_rate
+            # MODIFIED 11/24/25 END
         else:
             pathway_name = name
 
@@ -14199,10 +14202,16 @@ def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
 
     def search_for_output_CIM(node):
-        if not node.efferents:
-            return None
+        # 11/25/25 BREADCRUMB: SHOULD NOT BE NEEDED ONCE TargetProjections HAVE BEEN ASSIGNED IN PyTorch mode
+        # if not node.efferents:
+        #     # If there are no efferents, probably a TARGET Node
+        #     return None
         # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
         for efferent in node.efferents:
+            # 11/25/25 BREADCRUMB: REMOVE UNLESS TURNS OUT TO BE NEEDED
+            # if isinstance(efferent, TargetProjection):
+            #     # This is not a true Pathway
+            #     return None
             receiver = efferent.receiver.owner
             if isinstance(receiver, CompositionInterfaceMechanism):
                 return receiver.composition
@@ -14216,7 +14225,7 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
-    # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
     return comp
 
 

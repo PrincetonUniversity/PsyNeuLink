@@ -25,13 +25,12 @@ Contents
           COMMENT
           - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
-
-  * `AutodiffComposition_Execution`
-      - `AutodiffComposition_PyTorch`
-      - `AutodiffComposition_LLVM`
-      - `AutodiffComposition_Python`
-      - `AutodiffComposition_Nested_Modulation`
-      - `AutodiffComposition_Logging`
+      * `AutodiffComposition_Execution`
+          - `AutodiffComposition_PyTorch`
+          - `AutodiffComposition_LLVM`
+          - `AutodiffComposition_Python`
+          - `AutodiffComposition_Nested_Modulation`
+          - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
@@ -917,6 +916,17 @@ class AutodiffComposition(Composition):
           - excludes Projections from/to CIMs in the nested Composition
             (from input_CIMs and to output_CIMs), as those should remain identity Projections;
           see `PytorchCompositionWrapper` for table of how Projections are handled and further details.
+        For Python mode:
+           - calls add_backpropagation_learning_pathway() for each identified pathway
+               which also creates TARGET Nodes
+        For PyTorch mode:
+            BREADCRUMB: ALLOW TARGETS TO BE SPECIFIED AS INTERNAL (TEACHER) NODES
+           - only need to create a TARGET Nodes (since pathways are constructed in _get_pytorch_backprop_pathways
+           - identify or create a "dummy" TARGET node for terminal node of each pathway, to allow targets to be:
+             - specified in the same way as for other execution_modes
+             - trial-by-trial values kept aligned with inputs in batch / minibatch construction
+             - tracked for logging (as mechs of a Composition)
+
         Returns list of target nodes for each pathway
         """
 
@@ -924,19 +934,16 @@ class AutodiffComposition(Composition):
         pathways = self._get_pytorch_backprop_pathways(context)
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
-            # For PyTorch mode, only need to construct dummy TARGET Nodes, to allow targets to be:
-            #  - specified in the same way as for other execution_modes
-            #  - trial-by-trial values kept aligned with inputs in batch / minibatch construction
-            #  - tracked for logging (as mechs of a Composition)
-            # IMPLEMENTATION NOTE:
-            #    only add target nodes if not already present
-            #    (to avoid duplication in multiple calls, including from command line;
-            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+            # Identify/create "dummy" TARGET nodes:
             # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
             # assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
             pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
             identified_target_nodes = self._identify_target_nodes(context)
             output_mechs_for_learning = [node for node in identified_target_nodes if node in pathway_terminal_nodes]
+            # IMPLEMENTATION NOTE:
+            #    only add target nodes if *not* already present
+            #    (to avoid duplication in multiple calls, including from command line;
+            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
                                                                             dtype=object),
@@ -1400,11 +1407,11 @@ class AutodiffComposition(Composition):
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
         # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
+
         # Get output Nodes, their out_ports and corresponding indices
         #     in order of outermost AutodiffComposition's output_CIM Ports
         outputs_idx_port_node_comp = []
         for port in self.output_CIM.input_ports:
-
             source_info = self.output_CIM._get_source_info_from_output_CIM(port)
             source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
             # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
@@ -1564,7 +1571,11 @@ class AutodiffComposition(Composition):
     def _get_autodiff_targets_values(self, input_dict):
         """Return dict with input values for TARGET Nodes
         Get inputs to TARGET Nodes used for computation of loss in autodiff_forward().
-        Uses input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
+        BREADCRUMB: THE FOLLOWING IS LIMITING;
+                      SHOULD ALLOW USE OF THE TARGET NODE'S VALUE ITSELF,
+                      SO THAT IT CAN BE SET INTERNALLY BY OTHER NODES (E.G., FOR TEACHING/CONSOLIDATION)
+                      MAY NEED TO INSURE THAT TARGET NODE GETS EXECUTED IN FORWARD PASS
+        Use input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
         If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
         and the value is determined by searching recursively for the input Node that projects to the TARGET Node.
 

@@ -101,9 +101,9 @@ from psyneulink._typing import Optional
 
 from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.globals.keywords import \
-    (AUTO_ASSIGN_MATRIX, DEFAULT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX,
-     IDENTITY_MATRIX, INPUT_PORT, MAPPING_PROJECTION, MATRIX, OUTPUT_PORT, TARGET_PROJECTION, VALUE)
+    (INPUT_PORT, NAME, OUTPUT_PORT, TARGET_PROJECTION)
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -195,13 +195,34 @@ class TargetProjection(Projection_Base):
         if sender is None or receiver is None:
             self.initialization_status = ContextFlags.DEFERRED_INIT
 
+
         # Validate sender (as variable) and params
         super().__init__(sender=sender,
                          receiver=receiver,
+                         function=Linear,
                          params=params,
                          name=name,
                          prefs=prefs,
                          **kwargs)
+
+    def _assign_default_projection_name(self, port=None, sender_name=None, receiver_name=None):
+
+        template = "{} from {} to {}"
+
+        if self.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
+            self.name = template.format(self.className, self.sender.owner.name, self.receiver.owner.name)
+
+        elif self.initialization_status == ContextFlags.DEFERRED_INIT:
+            sender = self._init_args[SENDER]
+            sender_name = sender.name if sender else "[TBD]"
+            receiver = self._init_args[RECEIVER]
+            receiver_name = receiver.name if receiver else "[TBD]"
+            projection_name = template.format(self.className, sender_name, receiver_name)
+            self.name = self._init_args[NAME] or projection_name
+
+        else:
+            raise TargetProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
+                                            format(self, self.initialization_status))
 
 
     @property
