@@ -25,12 +25,13 @@ Contents
           COMMENT
           - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
-      * `AutodiffComposition_Execution`
-          - `AutodiffComposition_PyTorch`
-          - `AutodiffComposition_LLVM`
-          - `AutodiffComposition_Python`
-          - `AutodiffComposition_Nested_Modulation`
-          - `AutodiffComposition_Logging`
+
+  * `AutodiffComposition_Execution`
+      - `AutodiffComposition_PyTorch`
+      - `AutodiffComposition_LLVM`
+      - `AutodiffComposition_Python`
+      - `AutodiffComposition_Nested_Modulation`
+      - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 

@@ -1181,7 +1181,7 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_composition.learn(learning_rate={my_projection:val})`` (applies only during that execution)                 |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  MappingProjection in Composition constructor dict                                                                  |
-   |                |    ``my_composition=Composition(learning_rate={my_projection: val})``                                               |
+   |                |    ``my_composition=Composition(learning_rate={my_projection:val})``                                                |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (before Composition construction)  |
    |                |    ``my_projection.learning_rate=val``                                                                              |
@@ -1196,16 +1196,17 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
-   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                   |
+   |                |    ``my_composition.add_linear_learning_pathway([<pathway>],learning_rate=val) or                                   |
+   |                |    my_pathway=Pathway(<pathway>,learning_rate=val); my_composition=Composition(pathways=my_pathway``                |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  Nested Composition constructor                                                                                     |
-   |                |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
+   |                |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE:val})``                                 |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  Outer Composition constructor                                                                                      |
-   |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE: val})``                                |
+   |  **Lowest**:   |    ``my_composition=Composition(learning_rate=val or {DEFAULT_LEARNING_RATE:val})``                                 |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
    |                |  `MappingProjection` `learning_rate <MappingProjection.learning_rate>` Parameter (*after* Composition assginment)   |
    | **No effect**: |    ``my_projection.learning_rate=val`` (see `note <Composition_Learning_Rate_Assignment_After_Construction>` above) |
@@ -1286,7 +1287,7 @@ that they
 COMMENT
 which can provide up to three orders of magnitude speed-up in training a model. This is done by specifying
 the **execution_mode** = `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method of the
-AutodiffComposition. Use of the `PyTorch` mode also supports learning of `nested Compositions <Composition_Nested>`
+AutodiffComposition. Use of the `AutodiffComposition_PyTorch` also supports learning of `nested Compositions <Composition_Nested>`
 (see `AutodiffComposition_Nesting`). However, there are restrictions on the kinds of Compositions that be implemented
 in this way (see `AutodiffComposition_Restrictions`). The table below summarizes the different ways to implement and
 execute learning, and features specific to each; these are described in more detail in `AutodiffComposition`.
@@ -2330,7 +2331,7 @@ in order of their power, are:
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
     * `ExecutionMode.PyTorch` -- used only for `AutodiffComposition`: executes `learn <AutodiffComposition.learn>`
-       using `PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
+       using `AutodiffComposition_PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
        <Composition_Compilation_PyTorch>` for additional details).
 
       .. warning::
@@ -8337,6 +8338,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(pathway, Pathway):
             pathway_name = name or pathway.name
             pathway = pathway.pathway
+            # learning_rate specified in call to method takes precedence
+            learning_rate = learning_rate or pathway.learning_rate
         else:
             pathway_name = name
 
@@ -14196,6 +14199,8 @@ def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
 
     def search_for_output_CIM(node):
+        if not node.efferents:
+            return None
         # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
         for efferent in node.efferents:
             receiver = efferent.receiver.owner
@@ -14211,7 +14216,7 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
-    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
     return comp
 
 
