@@ -515,11 +515,11 @@ class DuplicateProjectionError(Exception):
 
 class Projection_Base(Projection):
     """
-    Projection_Base(           \
-        sender=None,           \
+    Projection_Base(              \
+        sender=None,              \
         function=MatrixTransform, \
-        receiver=None,         \
-        feedback=None          \
+        receiver=None,            \
+        feedback=None             \
         )
 
     Abstract base class for all Projections.

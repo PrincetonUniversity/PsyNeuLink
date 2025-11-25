@@ -99,8 +99,7 @@ from typing import Union
 
 from psyneulink._typing import Optional
 
-from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     (AUTO_ASSIGN_MATRIX, DEFAULT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX,
@@ -119,7 +118,7 @@ class TargetProjectionError(ProjectionError):
     pass
 
 
-class TargetProjection(PathwayProjection_Base):
+class TargetProjection(Projection_Base):
     """
     TargetProjection(  \
         sender=None,   \
