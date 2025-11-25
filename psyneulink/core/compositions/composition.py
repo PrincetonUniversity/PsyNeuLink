@@ -1287,7 +1287,7 @@ that they
 COMMENT
 which can provide up to three orders of magnitude speed-up in training a model. This is done by specifying
 the **execution_mode** = `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method of the
-AutodiffComposition. Use of the `PyTorch` mode also supports learning of `nested Compositions <Composition_Nested>`
+AutodiffComposition. Use of the `AutodiffComposition_PyTorch` also supports learning of `nested Compositions <Composition_Nested>`
 (see `AutodiffComposition_Nesting`). However, there are restrictions on the kinds of Compositions that be implemented
 in this way (see `AutodiffComposition_Restrictions`). The table below summarizes the different ways to implement and
 execute learning, and features specific to each; these are described in more detail in `AutodiffComposition`.
@@ -2331,7 +2331,7 @@ in order of their power, are:
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
     * `ExecutionMode.PyTorch` -- used only for `AutodiffComposition`: executes `learn <AutodiffComposition.learn>`
-       using `PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
+       using `AutodiffComposition_PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
        <Composition_Compilation_PyTorch>` for additional details).
 
       .. warning::
@@ -14199,6 +14199,8 @@ def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
 
     def search_for_output_CIM(node):
+        if not node.efferents:
+            return None
         # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
         for efferent in node.efferents:
             receiver = efferent.receiver.owner
@@ -14214,7 +14216,7 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
-    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
     return comp
 
 

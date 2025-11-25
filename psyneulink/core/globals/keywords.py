@@ -136,7 +136,7 @@ __all__ = [
     'SINGLE', 'SINGLETON', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION',
     'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS', 'START', 'STORE', 'SUBTRACTION', 'SUM',
     'SYNCH', 'SYNCH_WITH_PNL_OPTIONS',
-    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TARGETS',
+    'TARGET', 'TARGET_PROJECTION', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TARGETS',
     'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD', 'TERMINATION_COMPARISION_OP', 'TERSE', 'TEXT', 'THRESHOLD',
     'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TIMER_FUNCTION', 'TIMER_FUNCTION_TYPE', 'TOLERANCE',
     'TRAINED_OUTPUTS', 'TRAINING_SET', 'TRAJECTORY',
@@ -349,7 +349,7 @@ class Loss(Enum):
     or in the `learning pathway methods <Composition_Learning_Methods>` used to construct `learning pathways
     <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
     for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
-    used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
+    used by `AutodiffComposition_PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
     COMMENT:
     Get latex for remaining equations from https://blmoistawinde.github.io/ml_equations_latex/#cross-entropy
     COMMENT
@@ -657,6 +657,7 @@ EFFERENTS = 'efferents'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
+TARGET_PROJECTION = "TargetProjection"
 AUTO_ASSOCIATIVE_PROJECTION = "AutoAssociativeProjection"
 MASKED_MAPPING_PROJECTION = 'MaskedMappingProjection'
 LEARNING_PROJECTION = "LearningProjection"
