@@ -3179,7 +3179,6 @@ import toposort
 from PIL import Image
 from beartype import beartype
 
-from psyneulink import TargetProjection
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
