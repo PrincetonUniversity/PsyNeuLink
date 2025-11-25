@@ -6052,13 +6052,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check for any errant / residual output_CIM.input_ports
         #  (these can result from order of construction and/or selective outputs from nodes within a nested Composition)
-        # Do this by checking if the source of the projection to each output_CIM.input_port has any other efferents;
+        # Do this by checking if the sender of the projection to each output_CIM.input_port has any other efferents;
         #  if it does, and the following are true:
         #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
         #  - and the other efferents are NOT to ones allowed for an OUTPUT Node
-        #    (i.e., AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
+        #    (i.e., PROBES, AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
         #  then the Node should NOT be considered an OUTPUT Node,
-        #  so remove the input_port for it on the OutputCIM and the corresponding Projection
+        #  so remove the input_port for it on the OutputCIM and the corresponding Projection to that
         defunct_input_ports = set()
         for input_port in self.output_CIM.input_ports:
             # First ensure that input_port under consideration has only one afferent belonging to the Composition
@@ -6076,13 +6076,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # And check the other efferents of its sender
             # FIX: 9/1/23 - NEED TO CHECK THAT ALL NODES IN THE CYCLE ARE OUTPUT NODES, OTHERWISE THEY SHOULD BE PROBES
             #               LEAVE PROJECTION FROM SENDER TO AN OUTPUT_CIM.INPUT_PORT THAT IS A PROBE TO
+            # BREADCRUMB: SHOULD MAKE THE FOLLOWING A METHOD ON Composition OR A ROLE ASSIGNMENT
+            # If projection's sender:
+            #   is not a PROBE, OUTPUT or in a CYCLE
+            #   and its other efferents are in self.projections
+            #       and go to Nodes that are not OUTPUT Nodes in self
+            #  then remove the input_port for it on the output_CIM and the corresponding Projection
             if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
                     and NodeRole.OUTPUT not in self.get_required_roles_by_node(node)
                     and not proj_sender_is_PROBE
-                    and len([p for p in proj.sender.efferents
+                    and any([p for p in proj.sender.efferents
                              if (p in self.projections
-                                 and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
-                                 and not isinstance(p, AutoAssociativeProjection))]) != 0):
+                                 and p.receiver.owner in self.nodes
+                                 and not isinstance(p.receiver.owner, ControlMechanism)
+                                 and not any(role in {NodeRole.CONTROLLER,
+                                                      NodeRole.FEEDBACK_RECEIVER,
+                                                      NodeRole.CONTROLLER_OBJECTIVE,
+                                                      NodeRole.CONTROL_OBJECTIVE,
+                                                      NodeRole.LEARNING}
+                                             for role in self.get_roles_by_node(p.receiver.owner))
+                                 and not isinstance(p, AutoAssociativeProjection))])):
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port and its corresponding output_port
         for input_port in defunct_input_ports:
@@ -14194,10 +14207,12 @@ def get_composition_for_node(node):
                 #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
                 return None
             else:
-                search_for_output_CIM(receiver)
+                return search_for_output_CIM(receiver)
         return receiver
 
-    return search_for_output_CIM(node)
+    comp = search_for_output_CIM(node)
+    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    return comp
 
 
 class LearningScale(PNLStrEnum):

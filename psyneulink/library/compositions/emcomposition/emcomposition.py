@@ -2555,7 +2555,8 @@ class EMComposition(AutodiffComposition):
             self.combined_matches_node = None
             return
 
-        field_weighting = len([weight for weight in self.field_weights if weight]) > 1 and not concatenate_queries
+        field_weighting = (len([weight for weight in self.field_weights if weight is not False]) > 1
+                           and not concatenate_queries)
 
         if not field_weighting or use_gating_for_weighting:
             input_source = self.match_nodes
