@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.18.0.0+125.gfa17aea26 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.18.0.0+310.g35d8c398c documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.18.0.0+125
+                  0.18.0.0+310
                 </div>
               
             
@@ -1277,7 +1277,7 @@ determining the learning_rate for a Projection used at execution:</p>
 </tr>
 <tr class="row-odd"><td rowspan="7"></td>
 <td><dl class="simple">
-<dt>MappingProjection in Composition constructor dict</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate={my_projection:</span> <span class="pre">val})</span></code></p>
+<dt>MappingProjection in Composition constructor dict</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate={my_projection:val})</span></code></p>
 </dd>
 </dl>
 </td>
@@ -1307,7 +1307,8 @@ determining the learning_rate for a Projection used at execution:</p>
 </td>
 </tr>
 <tr class="row-even"><td><dl class="simple">
-<dt><a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">Learning pathway</span></a> constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition.add_linear_learning_pathway([&lt;pathway&gt;],</span> <span class="pre">learning_rate=val)</span></code></p>
+<dt><a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">Learning pathway</span></a> constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition.add_linear_learning_pathway([&lt;pathway&gt;],learning_rate=val)</span> <span class="pre">or</span>
+<span class="pre">my_pathway=Pathway(&lt;pathway&gt;,learning_rate=val);</span> <span class="pre">my_composition=Composition(pathways=my_pathway</span></code></p>
 </dd>
 </dl>
 </td>
@@ -1320,14 +1321,14 @@ determining the learning_rate for a Projection used at execution:</p>
 </tr>
 <tr class="row-even"><td></td>
 <td><dl class="simple">
-<dt>Nested Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:</span> <span class="pre">val})</span></code></p>
+<dt>Nested Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:val})</span></code></p>
 </dd>
 </dl>
 </td>
 </tr>
 <tr class="row-odd"><td><p><strong>Lowest</strong>:</p></td>
 <td><dl class="simple">
-<dt>Outer Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:</span> <span class="pre">val})</span></code></p>
+<dt>Outer Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:val})</span></code></p>
 </dd>
 </dl>
 </td>
@@ -1398,7 +1399,7 @@ can be used for regression, or <a class="reference internal" href="Keywords.html
 exploiting the acceleration of optimized execution of learning in PyTorch
 which can provide up to three orders of magnitude speed-up in training a model. This is done by specifying
 the <strong>execution_mode</strong> = <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method of the
-AutodiffComposition. Use of the <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> mode also supports learning of <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a>
+AutodiffComposition. Use of the <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a> also supports learning of <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a>
 (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-nesting"><span class="std std-ref">Nesting</span></a>). However, there are restrictions on the kinds of Compositions that be implemented
 in this way (see <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-restrictions"><span class="std std-ref">Only one OutputPort per Node</span></a>). The table below summarizes the different ways to implement and
 execute learning, and features specific to each; these are described in more detail in <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>.
@@ -2206,7 +2207,7 @@ execute each Node and iterate over <a class="reference internal" href="Time.html
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that rely on Node <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> are not supported;</p></li>
 <li><p><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.Python" title="psyneulink.core.llvm.__init__.ExecutionMode.Python"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.Python</span></code></a> (same as <em>False</em>; the default) – use the Python interpreter to execute the <a class="reference internal" href="#"><span class="doc">Composition</span></a>.</p></li>
 <li><dl class="simple">
-<dt><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> – used only for <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>: executes <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a></dt><dd><p>using <a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PyTorch</span></code></a> and <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> using Python interpreter (see <a class="reference internal" href="#composition-compilation-pytorch"><span class="std std-ref">below</span></a> for additional details).</p>
+<dt><a class="reference internal" href="LLVM.html#psyneulink.core.llvm.__init__.ExecutionMode.PyTorch" title="psyneulink.core.llvm.__init__.ExecutionMode.PyTorch"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ExecutionMode.PyTorch</span></code></a> – used only for <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>: executes <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a></dt><dd><p>using <a class="reference internal" href="AutodiffComposition.html#autodiffcomposition-pytorch"><span class="std std-ref">PyTorch mode</span></a> and <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> using Python interpreter (see <a class="reference internal" href="#composition-compilation-pytorch"><span class="std std-ref">below</span></a> for additional details).</p>
 </dd>
 </dl>
 <div class="admonition warning">
@@ -6492,7 +6493,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=d3efb68d"></script>
+         <script src="_static/documentation_options.js?v=86300b1d"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
