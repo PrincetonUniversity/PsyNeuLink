@@ -476,7 +476,7 @@ from psyneulink.core.globals.keywords import (
     Loss,
 )
 from psyneulink.core.globals.utilities import (
-    is_matrix_keyword, is_numeric_scalar, convert_to_np_array, deprecation_warning)
+    is_matrix_keyword, is_numeric_scalar, convert_to_list, convert_to_np_array, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -792,7 +792,7 @@ class AutodiffComposition(Composition):
             if isinstance (spec, (tuple, dict)):
                 spec = convert_to_list(spec)
             for item in spec:
-                if not isinstance(item, LossMechanism) or not isinstance(item, tuple):
+                if not isinstance(item, (LossMechanism, tuple)):
                     return f"all items in list must be LossMechanisms or a collection of student:teacher node pairs."
                 for elem in item:
                     if not isinstance(elem, ProcessingMechanism):
@@ -811,7 +811,7 @@ class AutodiffComposition(Composition):
             if isinstance(spec, (LossMechanism, tuple, dict)):
                 targets = convert_to_list(spec)
             for item in spec:
-                if isinstance(item, LearningMechanism):
+                if isinstance(item, LossMechanism):
                     targets.append(item)
                 elif isinstance(item, tuple):
                     targets.extend(LossMechanism(sample=item[0],
@@ -931,6 +931,7 @@ class AutodiffComposition(Composition):
             pathways=pathways,
             optimizer_type = optimizer_type,
             loss_spec = loss_spec,
+            targets = targets,
             weight_decay = weight_decay,
             enable_learning = enable_learning,
             learning_rate = learning_rate,
@@ -1008,14 +1009,17 @@ class AutodiffComposition(Composition):
            - calls add_backpropagation_learning_pathway() for each identified pathway
                which also creates TARGET Nodes
         For PyTorch mode:
-            BREADCRUMB: ALLOW TARGETS TO BE SPECIFIED AS INTERNAL (TEACHER) NODES
-           - only need to create a TARGET Nodes (since pathways are constructed in _get_pytorch_backprop_pathways
-           - identify or create a "dummy" TARGET node for terminal node of each pathway, to allow targets to be:
-             - specified in the same way as for other execution_modes
-             - trial-by-trial values kept aligned with inputs in batch / minibatch construction
-             - tracked for logging (as mechs of a Composition)
+           - add any specified LossMechanisms and LossProjections to relevant pathways
+             (since pathways are constructed in _get_pytorch_backprop_pathways
+           - if no LossMechanisms are specified,
+             - create those and associated TARGET Nodes and LossProjections for TERMINAL node of each pathway,
+               to allow:
+                 - targets to be specified in the same way as for other execution_modes (that don't use LossMechanisms)
+           - the above allow:
+             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
+             - losses to be tracked for logging (as mechs of a Composition)
 
-        Returns list of target nodes for each pathway
+        Returns list of any TARGET nodes that need to be referenced in inputs argument of learn()
         """
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
@@ -1024,7 +1028,7 @@ class AutodiffComposition(Composition):
         # Construct learning components
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # For PyTorch, all that needs to be constructed are TARGET Nodes, and map outputs to them
-            self.outputs_to_targets_map = self._infer_outputs_for_targets(pathways)
+            self.loss_mechanisms = self._instantiate_loss_mechanisms(pathways, context)
         else:
             # Otherwise, construct and add PNL backpropagation learning pathways for each INPUT Node
             #    that will construct learning components
@@ -1193,16 +1197,25 @@ class AutodiffComposition(Composition):
         return pathways
 
     # MODIFIED 11/25/25: NEW
-    def _infer_outputs_for_targets(self, targets: dict, execution_mode) ->dict:
+    def _instantiate_loss_mechanisms(self, pathways, context) ->dict:
         """Identify target nodes for each output node in targets dict
+
+        11/25/25 BREADCRUMB:
+                  ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
+                  FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
+                  IF NOT, WHERE IS IT POPULATED?
+
+        11/25/25 BREADCRUMB:
+                  ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
+
         Identify targets: specified in:
-          - specified in:
-            - **targets** arg of the AutodiffComposition constructor
+            - self.targets
             - LossProjection specifications
           - else:
             - assign one for each OUTPUT Node
         Create outputs_to_targets_map dict
         """
+        assert True
         # Identify/create "dummy" TARGET nodes:
         # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()
         # assert set([mech for mech in [pathway[-1] for pathway in pathways]]) == set(output_mechs_for_learning)
