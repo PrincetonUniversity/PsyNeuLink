@@ -23,14 +23,15 @@ Contents
           COMMENT:
           - `AutodiffComposition_Optimizer`
           COMMENT
+          - `AutodiffComposition_Targets`
           - `AutodiffComposition_Exchange_With_Torch_Parameters`
           - `AutodiffComposition_Post_Construction_Modification`
-      * `AutodiffComposition_Execution`
-          - `AutodiffComposition_PyTorch`
-          - `AutodiffComposition_LLVM`
-          - `AutodiffComposition_Python`
-          - `AutodiffComposition_Nested_Modulation`
-          - `AutodiffComposition_Logging`
+  * `AutodiffComposition_Execution`
+      - `AutodiffComposition_PyTorch`
+      - `AutodiffComposition_LLVM`
+      - `AutodiffComposition_Python`
+      - `AutodiffComposition_Nested_Modulation`
+      - `AutodiffComposition_Logging`
   * `AutodiffComposition_Examples`
   * `AutodiffComposition_Class_Reference`
 
@@ -63,7 +64,6 @@ the standard `Composition methods <Composition_Creation>` for doing so (e.g., `a
 specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
 and `examples <AutodiffComposition_Examples>` below). While an AutodiffComposition can generally be created using the
 same methods as a standard Composition, there are a few restrictions that apply to its construction, summarized below.
-
 
 .. _AutodiffComposition_Restrictions:
 
@@ -179,6 +179,44 @@ and adding ``param_groups`` for the `torch.nn.Parameters
 specified, which are listed in the AutodiffComposition's `torch_parameters <AutodiffComposition.torch_parameters>`
 attribute.
 COMMENT
+
+.. _AutodiffComposition_Targets:
+
+*AutodiffComposition Target Specification(s)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# 11/25/25 BREADCRUMB: EDIT
+Mention student:teacher
+Formats:
+- LossMechanism
+- tuple
+- list of LearningMechanisms and/or tuples
+- dict of student:teacher pairs
+- default loss function for LossMechanisms is loss_spec
+- automatically constructs LossProjections from SAMPLE ("student") and TARGET ("teacher") Nodes
+  - technical note::  values of LossProjection(s) received from TARGET Nodes are detached
+      (to prevent gradient propagation)
+  - a SAMPLE can receive error signals from multiple LossMechanisms, directly or indirectly;
+    gradients combined
+- ??handling of multiple targets for a single student??
+- comparable to use of ComparatorMechanisms for PNL learning in Composition
+- if none is specified:
+   - OUTPUT Nodes are used as students
+   - TARGET Nodes constructed automatically to receive target inputs specified in **inputs** argument learn()
+- must specify targets either in constructor or learn() method
+
+ ----------
+ OLD
+ This can be specified in any of the following ways:
+        - as a `LossMechanism` added to the AutodiffComposition (see `LossMechanism <LossMechanism_Class_Reference>`);
+        - as a tuple or list of target values, in which case a `LossMechanism` is created automatically using the
+            specified values as its `value <LossMechanism.value>` attribute; or
+        - as a dict mapping `Nodes <Composition_Nodes>` in the AutodiffComposition to their target values, in which
+            case a `LossMechanism` is created automatically using the specified values as its `value
+            <LossMechanism.value>` attribute.
+        If None (the default), no targets are used for training; in this case, the AutodiffComposition can only be
+        executed in `test mode <Composition_Learning_Test_Mode>`.
+------------
 
 .. _AutodiffComposition_Exchange_With_Torch_Parameters:
 
@@ -521,7 +559,11 @@ class AutodiffComposition(Composition):
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
 
     loss_spec : Loss or PyTorch loss function : default Loss.MSE
-        specifies the loss function for training; see `Loss` for arguments.
+        specifies the default loss function for training; see `Loss` for arguments;
+        any specifications in **targets** override this default.
+
+    targets : LossMechanism, tuple, list or dict  : default None
+        specifies the target(s) used for training the model; see `AutodiffComposition_Targets` for additional details;
 
     weight_decay : float : default 0
         specifies the L2 penalty (which discourages large weights) used by the optimizer.
@@ -603,8 +645,14 @@ class AutodiffComposition(Composition):
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
         arguments from initialization.
 
-    loss : PyTorch loss function
+    loss_spec : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
+
+    targets : list of LossMechanisms
+        each LossMechanism computes the loss for the output of the Node from which it recieves its *SAMPLE* input
+        (the "student" Node) by comparing it to the output of the Node from which it receives its *TARGET* input
+        (the "teacher" Node), using the specified loss function; see `AutodiffComposition_Targets` for additional
+        details.
 
     learning_rate : float or bool
         determines the default learning_rate passed the `optimizer <PytorchCompositionWrappe.optimizer>`,
