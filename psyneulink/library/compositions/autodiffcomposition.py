@@ -1110,7 +1110,7 @@ class AutodiffComposition(Composition):
         Identify targets: specified in:
           - specified in:
             - **targets** arg of the AutodiffComposition constructor
-            - TargetProjection specifications
+            - LossProjection specifications
           - else:
             - assign one for each OUTPUT Node
         Create outputs_to_targets_map dict

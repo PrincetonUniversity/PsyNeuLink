@@ -1,9 +1,9 @@
 from . import pathway
-from . import targetprojection
+from . import lossprojection
 
 from .pathway import *
-from .targetprojection import *
+from .lossprojection import *
 
 __all__ = list(pathway.__all__)
-__all__ = list(targetprojection.__all__)
+__all__ = list(lossprojection.__all__)
 

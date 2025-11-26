@@ -6,87 +6,87 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **********************************************  TargetProjection ****************************************************
+# **********************************************  LossProjection ****************************************************
 
 """
 
 Contents
 --------
-  * `TargetProjection_Overview`
-  * `TargetProjection_Creation`
+  * `LossProjection_Overview`
+  * `LossProjection_Creation`
       COMMENT: DELETE IF NOT NEEDED
-      - `TargetProjection_Deferred_Initialization`
+      - `LossProjection_Deferred_Initialization`
       COMMENT
-  * `TargetProjection_Structure`
-  * `TargetProjection_Execution`
-  * `TargetProjection_Class_Reference`
+  * `LossProjection_Structure`
+  * `LossProjection_Execution`
+  * `LossProjection_Class_Reference`
 
 
-.. _TargetProjection_Overview:
+.. _LossProjection_Overview:
 
 Overview
 --------
 
-A TargetProjection is used for `learning <Composition_learning>`, to specify where the target pattern of activity
+A LossProjection is used for `learning <Composition_learning>`, to specify where the target pattern of activity
 used to train the output of a `ProcessingMechanism <ProcessingMechanism>` comes from. How it is used depends on the
 `configuration <Composition_Learning_Configurations>` used for learning; see `Composition_Learning_Components`
 for the standard learning configuration in PsyNeuLink, and `AutodiffComposition_PyTorch` for configuration when
 using `PyTorch <https://pytorch.org>` for learning in an `AutodiffComposition`.
 
 
-.. _TargetProjection_Creation:
+.. _LossProjection_Creation:
 
-Creating a TargetProjection
+Creating a LossProjection
 -----------------------------
 
-A TargetProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
-(see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <TargetProjection.sender>` and
-`receiver <TargetProjection.receiver>` attributes, respectively).
+A LossProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
+(see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <LossProjection.sender>` and
+`receiver <LossProjection.receiver>` attributes, respectively).
 
-TargetProjections are also assigned automatically in the following circumstances:
+LossProjections are also assigned automatically in the following circumstances:
 
   * by a `Composition` when a learning pathway is specified (see `Composition_Learning_Methods` for details)
     and the standard learning configuration is used (see `Composition_Learning_Components` for details),
-    with the automatically created `TARGET_MECHANISM <TARGET_MECHANISM>` as its `sender <TargetProjection.sender>`
+    with the automatically created `TARGET_MECHANISM <TARGET_MECHANISM>` as its `sender <LossProjection.sender>`
     and the automatically created  `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as its `receiver
-    <TargetProjection.receiver>`;
+    <LossProjection.receiver>`;
 
   COMMENT:  TBI
-  * by a `AutodiffComposition` when `AutodiffComposition_PyTorch` is used for learning and no TargetProjections
+  * by a `AutodiffComposition` when `AutodiffComposition_PyTorch` is used for learning and no LossProjections
     are specified, with the automatically created `TARGET_MECHANISM <TARGET_MECHANISM>` as its `sender
-    <TargetProjection.sender>` and the automatically created  `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as its
-    `receiver <TargetProjection.receiver>`;
+    <LossProjection.sender>` and the automatically created  `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as its
+    `receiver <LossProjection.receiver>`;
   COMMENT
 
 COMMENT:  DELETE IF NOT NEEDED
-.. _TargetProjection_Deferred_Initialization:
+.. _LossProjection_Deferred_Initialization:
 
 *Deferred Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 FILL OUT IF NEEDED
 COMMENT
 
-.. _TargetProjection_Structure:
+.. _LossProjection_Structure:
 
 Structure
 ---------
 
-The `function <Projection_Base.function>` for a TargetProjection is a `Linear`, that simply passes its `variable
+The `function <Projection_Base.function>` for a LossProjection is a `Linear`, that simply passes its `variable
 <Projection_Base.variable>` unmodified to its `value <Projection_Base.value>`. An error is generated if any attempt
 is made to modify any of its attributes or `Parameters <Parameter>`, and they are left unchanged.
 
 
-.. _TargetProjection_Execution:
+.. _LossProjection_Execution:
 
 Execution
 ---------
 
-When a TargetProjection is executed, it simply passes the value it receives from its `sender <TargetProjection.sender>`,
+When a LossProjection is executed, it simply passes the value it receives from its `sender <LossProjection.sender>`,
 which is a `TARGET MECHANISM <TARGET_MECHANISM>` in a `learning pathway <Composition_Learning_Methods>`, directly to its
-`receiver <TargetProjection.receiver>`, which is an `OBJECTIVE MECHANISM <OBJECTIVE_MECHANISM>` in the same learning
+`receiver <LossProjection.receiver>`, which is an `OBJECTIVE MECHANISM <OBJECTIVE_MECHANISM>` in the same learning
 pathway.
 
-.. _TargetProjection_Class_Reference:
+.. _LossProjection_Class_Reference:
 
 Class Reference
 ---------------
@@ -109,18 +109,18 @@ from psyneulink.core.globals.parameters import FunctionParameter, Parameter, che
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
-__all__ = ['TargetProjection', 'TargetProjectionError']
+__all__ = ['LossProjection', 'LossProjectionError']
 
 projection_keywords.update({TARGET_PROJECTION})
 
 
-class TargetProjectionError(ProjectionError):
+class LossProjectionError(ProjectionError):
     pass
 
 
-class TargetProjection(Projection_Base):
+class LossProjection(Projection_Base):
     """
-    TargetProjection(  \
+    LossProjection(  \
         sender=None,   \
         receiver=None, \
 
@@ -136,14 +136,14 @@ class TargetProjection(Projection_Base):
     sender : OutputPort or Mechanism : default None
         specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
         `primary OutputPort <OutputPort_Primary>` is used. If it is not specified, it is assigned in
-        the context in which the TargetProjection is used, or its initialization will be `deferred
+        the context in which the LossProjection is used, or its initialization will be `deferred
         <Projection_Deferred_Initialization>`.
 
     receiver: InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
         `primary InputPort <InputPort_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
-        <TargetProjection_Deferred_Initialization>`.
+        <LossProjection_Deferred_Initialization>`.
 
 
     Attributes
@@ -156,17 +156,17 @@ class TargetProjection(Projection_Base):
         the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
 
     name : str
-        the name of the TargetProjection. If the specified name is the name of an existing TargetProjection,
-        it is appended with an indexed suffix, incremented for each TargetProjection with the same base name (see
+        the name of the LossProjection. If the specified name is the name of an existing LossProjection,
+        it is appended with an indexed suffix, incremented for each LossProjection with the same base name (see
         `Registry_Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
-        'TargetProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
-        (for example, ``'TargetProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
-        If either the `sender <TargetProjection.sender>` or `receiver <TargetProjection.receiver>` has not yet been
-        assigned (the TargetProjection is in `deferred initialization <TargetProjection_Deferred_Initialization>`),
+        'LossProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
+        (for example, ``'LossProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
+        If either the `sender <LossProjection.sender>` or `receiver <LossProjection.receiver>` has not yet been
+        assigned (the LossProjection is in `deferred initialization <LossProjection_Deferred_Initialization>`),
         then the parenthesized name of class is used in place of the unassigned attribute
-        (for example, if the `sender <TargetProjection.sender>` has not yet been specified:
-        ``'TargetProjection from (OutputPort-0) to my_mech2[InputPort-0]'``).
+        (for example, if the `sender <LossProjection.sender>` has not yet been specified:
+        ``'LossProjection from (OutputPort-0) to my_mech2[InputPort-0]'``).
 
     """
 
@@ -221,7 +221,7 @@ class TargetProjection(Projection_Base):
             self.name = self._init_args[NAME] or projection_name
 
         else:
-            raise TargetProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
+            raise LossProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self, self.initialization_status))
 
 

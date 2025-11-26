@@ -14201,14 +14201,14 @@ def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
 
     def search_for_output_CIM(node):
-        # 11/25/25 BREADCRUMB: SHOULD NOT BE NEEDED ONCE TargetProjections HAVE BEEN ASSIGNED IN PyTorch mode
+        # 11/25/25 BREADCRUMB: SHOULD NOT BE NEEDED ONCE LossProjections HAVE BEEN ASSIGNED IN PyTorch mode
         # if not node.efferents:
         #     # If there are no efferents, probably a TARGET Node
         #     return None
         # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
         for efferent in node.efferents:
             # 11/25/25 BREADCRUMB: REMOVE UNLESS TURNS OUT TO BE NEEDED
-            # if isinstance(efferent, TargetProjection):
+            # if isinstance(efferent, LossProjection):
             #     # This is not a true Pathway
             #     return None
             receiver = efferent.receiver.owner
