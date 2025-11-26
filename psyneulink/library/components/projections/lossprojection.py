@@ -14,57 +14,27 @@ Contents
 --------
   * `LossProjection_Overview`
   * `LossProjection_Creation`
-      COMMENT: DELETE IF NOT NEEDED
-      - `LossProjection_Deferred_Initialization`
-      COMMENT
   * `LossProjection_Structure`
   * `LossProjection_Execution`
   * `LossProjection_Class_Reference`
-
 
 .. _LossProjection_Overview:
 
 Overview
 --------
 
-A LossProjection is used for `learning <Composition_learning>`, to specify where the target pattern of activity
-used to train the output of a `ProcessingMechanism <ProcessingMechanism>` comes from. How it is used depends on the
-`configuration <Composition_Learning_Configurations>` used for learning; see `Composition_Learning_Components`
-for the standard learning configuration in PsyNeuLink, and `AutodiffComposition_PyTorch` for configuration when
-using `PyTorch <https://pytorch.org>` for learning in an `AutodiffComposition`.
-
+A LossProjection is used for `learning <Composition_Learning_AutodiffComposition>` in an `AutodiffComposition`,
+to transmit the outputs of a sample `Mechanism` and a target `Mechanism` to a `LossMechanism`, that computes an
+error signal for learning.
 
 .. _LossProjection_Creation:
 
 Creating a LossProjection
 -----------------------------
 
-A LossProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
-(see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <LossProjection.sender>` and
-`receiver <LossProjection.receiver>` attributes, respectively).
-
-LossProjections are also assigned automatically in the following circumstances:
-
-  * by a `Composition` when a learning pathway is specified (see `Composition_Learning_Methods` for details)
-    and the standard learning configuration is used (see `Composition_Learning_Components` for details),
-    with the automatically created `TARGET_MECHANISM <TARGET_MECHANISM>` as its `sender <LossProjection.sender>`
-    and the automatically created  `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as its `receiver
-    <LossProjection.receiver>`;
-
-  COMMENT:  TBI
-  * by a `AutodiffComposition` when `AutodiffComposition_PyTorch` is used for learning and no LossProjections
-    are specified, with the automatically created `TARGET_MECHANISM <TARGET_MECHANISM>` as its `sender
-    <LossProjection.sender>` and the automatically created  `OBJECTIVE_MECHANISM <OBJECTIVE_MECHANISM>` as its
-    `receiver <LossProjection.receiver>`;
-  COMMENT
-
-COMMENT:  DELETE IF NOT NEEDED
-.. _LossProjection_Deferred_Initialization:
-
-*Deferred Initialization*
-~~~~~~~~~~~~~~~~~~~~~~~~~
-FILL OUT IF NEEDED
-COMMENT
+A LossProjection is created automatically for `LossMechanisms <LossMechanism>` specified in the constructor of an
+`AutodiffComposition`, or any that are themsleves automatically created by the `AutodiffComposition` to implement
+`learning <Composition_Learning_AutodiffComposition>`.
 
 .. _LossProjection_Structure:
 
@@ -75,16 +45,13 @@ The `function <Projection_Base.function>` for a LossProjection is a `Linear`, th
 <Projection_Base.variable>` unmodified to its `value <Projection_Base.value>`. An error is generated if any attempt
 is made to modify any of its attributes or `Parameters <Parameter>`, and they are left unchanged.
 
-
 .. _LossProjection_Execution:
 
 Execution
 ---------
 
-When a LossProjection is executed, it simply passes the value it receives from its `sender <LossProjection.sender>`,
-which is a `TARGET MECHANISM <TARGET_MECHANISM>` in a `learning pathway <Composition_Learning_Methods>`, directly to its
-`receiver <LossProjection.receiver>`, which is an `OBJECTIVE MECHANISM <OBJECTIVE_MECHANISM>` in the same learning
-pathway.
+When a LossProjection is executed, it simply passes the value it receives from its `sender <LossProjection.sender>`
+to its `receiver <LossProjection.receiver>`, which is always the `LossMechanism` to which it projects.
 
 .. _LossProjection_Class_Reference:
 
@@ -102,8 +69,7 @@ from psyneulink._typing import Optional
 from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
-from psyneulink.core.globals.keywords import \
-    (INPUT_PORT, NAME, OUTPUT_PORT, TARGET_PROJECTION)
+from psyneulink.core.globals.keywords import INPUT_PORT, LOSS_PROJECTION, NAME, OUTPUT_PORT
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -111,7 +77,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = ['LossProjection', 'LossProjectionError']
 
-projection_keywords.update({TARGET_PROJECTION})
+projection_keywords.update({LOSS_PROJECTION})
 
 
 class LossProjectionError(ProjectionError):
@@ -120,7 +86,7 @@ class LossProjectionError(ProjectionError):
 
 class LossProjection(Projection_Base):
     """
-    LossProjection(  \
+    LossProjection(    \
         sender=None,   \
         receiver=None, \
 
@@ -170,7 +136,7 @@ class LossProjection(Projection_Base):
 
     """
 
-    componentType = TARGET_PROJECTION
+    componentType = LOSS_PROJECTION
     className = componentType
     suffix = " " + className
     classPreferenceLevel = PreferenceLevel.TYPE

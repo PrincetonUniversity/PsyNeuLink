@@ -416,6 +416,8 @@ from psyneulink.core.compositions.composition import (
 )
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
+from psyneulink.library.components.projections.lossprojection import LossProjection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     AUTODIFF_COMPOSITION,
@@ -491,19 +493,20 @@ class AutodiffCompositionError(CompositionError):
 
 class AutodiffComposition(Composition):
     """
-    AutodiffComposition(                        \
-        optimizer_type='sgd',
-        loss_spec=Loss.MSE,
-        weight_decay=0,
-        enable_learning=True,
-        learning_rate=0.001,
-        synch_projection_matrices_with_torch=RUN,
-        synch_node_variables_with_torch=None,
-        synch_node_values_with_torch=RUN,
-        synch_results_with_torch=RUN,
-        retain_torch_trained_outputs=MINIBATCH,
-        retain_torch_targets=MINIBATCH,
-        retain_torch_losses=MINIBATCH,
+    AutodiffComposition(                           \
+        optimizer_type='sgd',                      \
+        loss_spec=Loss.MSE,                        \
+        targets=None,                              \
+        weight_decay=0,                            \
+        enable_learning=True,                      \
+        learning_rate=0.001,                       \
+        synch_projection_matrices_with_torch=RUN,  \
+        synch_node_variables_with_torch=None,      \
+        synch_node_values_with_torch=RUN,          \
+        synch_results_with_torch=RUN,              \
+        retain_torch_trained_outputs=MINIBATCH,    \
+        retain_torch_targets=MINIBATCH,            \
+        retain_torch_losses=MINIBATCH,             \
         device=CPU
         )
 
@@ -714,6 +717,10 @@ class AutodiffComposition(Composition):
     class Parameters(Composition.Parameters):
         pytorch_representation = None
         # optimizer = None
+        loss_spec = Parameter(Loss.MSE, stateful=False, modulable=False)
+        targets = Parameter(None, fallback_value=None, structural=True, stateful=False, modulable=False,
+                            dependencies={'loss_spec'}
+                            )
         synch_projection_matrices_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
         synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
         synch_node_values_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
@@ -727,10 +734,42 @@ class AutodiffComposition(Composition):
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
-        # def _validate_memory_template(self, device):
-        #     if isinstance(device, str) and device not in [CPU, CUDA, MPS]:
-        #         raise AutodiffCompositionError(f"Device must be one of {CPU}, {CUDA}, or {MPS}")
-        #
+        def _validate_loss_spec(self, spec):
+            if spec and not isinstance(spec, Loss):
+                return f"must be a member of the Loss enum or a PyTorch loss function."
+
+        def _validate_targets(self, spec):
+            if isinstance(spec, LossMechanism) or spec==None:
+                return None
+            if isinstance (spec, (tuple, dict)):
+                spec = convert_to_list(spec)
+            for item in spec:
+                if not isinstance(item, LossMechanism) or not isinstance(item, tuple):
+                    return f"all items in list must be LossMechanisms or a collection of student:teacher node pairs."
+                for elem in item:
+                    if not isinstance(elem, ProcessingMechanism):
+                        return (f"both items in a student:teacher pair of a tuple or dict entry "
+                                f"must be ProcessingMechanisms.")
+                return None
+            else:
+                return (f"must be a LossMechanism, list of them, "
+                        f"or a tuple or dict containing pairs of teacher:student nodes.")
+
+        def _parse_targets(self, spec):
+            """Parse targets argument to standardize into list of LossMechanisms
+            Note:  default loss_spec for Mechanisms needs to be set in init, since not available here"""
+            if spec is None:
+                return None
+            if isinstance(spec, (LossMechanism, tuple, dict)):
+                targets = convert_to_list(spec)
+            for item in spec:
+                if isinstance(item, LearningMechanism):
+                    targets.append(item)
+                elif isinstance(item, tuple):
+                    targets.extend(LossMechanism(sample=item[0],
+                                                 target=item[1],
+                                                 loss_spec=self.loss_spec.get()))
+            return targets
 
         def _parse_LearningScale_param(self, value):
             try:
@@ -805,7 +844,8 @@ class AutodiffComposition(Composition):
     def __init__(self,
                  pathways=None,
                  optimizer_type: str = 'sgd',
-                 loss_spec: Loss = Loss.MSE,
+                 loss_spec: Loss = None, # default is Loss.MSE set in Parameters
+                 targets: Union[LossMechanism, list, dict] = None,
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning: bool = True,
@@ -837,6 +877,7 @@ class AutodiffComposition(Composition):
                 opt_params_arg[DEFAULT_LEARNING_RATE] = learning_rate
             learning_rate = opt_params_arg.pop(LEARNING_RATE)
 
+
         super(AutodiffComposition, self).__init__(
             name = name,
             pathways=pathways,
@@ -862,7 +903,6 @@ class AutodiffComposition(Composition):
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
         self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
-        self.loss_spec = loss_spec
         self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses

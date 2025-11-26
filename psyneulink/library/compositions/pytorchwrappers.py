@@ -2324,7 +2324,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         Enforce result to be 2d, and assign to self.output
         """
         def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
             If False, compute function for each item in variable and return results in a list
             """
