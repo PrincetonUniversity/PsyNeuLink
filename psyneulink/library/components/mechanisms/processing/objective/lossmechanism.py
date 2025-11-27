@@ -96,15 +96,12 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
-# from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.keywords import \
-    LOSS_MECHANISM, INPUT_PORTS, OUTCOME, SAMPLE, TARGET, \
-    VARIABLE, PREFERENCE_SET_NAME, Loss
+from psyneulink.core.globals.keywords import (
+    ALL, CROSS_ENTROPY, FUNCTION, Loss, LOSS_MECHANISM, OUTCOME, PREFERENCE_SET_NAME, SUM, WEIGHT)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -200,27 +197,27 @@ class LossMechanism(ComparatorMechanism):
         """
         function = Parameter(Loss.MSE, stateful=False, loggable=False)
 
-        def _validate_function(self, function):
-            # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
-
-            def is_loss_spec_or_torch_loss(function):
-                # Check for Loss spec
-                from psyneulink.core.globals.keywords import Loss
-                import torch.nn
-
-                if isinstance(function, Loss):
-                    return True
-                # Check for torch.nn loss function instance
-                if isinstance(function, torch.nn.modules.loss._Loss):
-                    return True
-                # Check for torch.nn loss class
-                if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
-                    return True
-                return False
-
-            if not is_loss_spec_or_torch_loss(function):
-                return f"must be a Loss spec or a torch.nn loss function."
-            return None
+        # def _validate_function(self, function):
+        #     # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
+        #
+        #     def is_loss_spec_or_torch_loss(function):
+        #         # Check for Loss spec
+        #         from psyneulink.core.globals.keywords import Loss
+        #         import torch.nn
+        #
+        #         if isinstance(function, Loss):
+        #             return True
+        #         # Check for torch.nn loss function instance
+        #         if isinstance(function, torch.nn.modules.loss._Loss):
+        #             return True
+        #         # Check for torch.nn loss class
+        #         if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
+        #             return True
+        #         return False
+        #
+        #     if not is_loss_spec_or_torch_loss(function):
+        #         return f"must be a Loss spec or a torch.nn loss function."
+        #     return None
 
     @check_user_specified
     @beartype
@@ -228,7 +225,8 @@ class LossMechanism(ComparatorMechanism):
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
-                 function = None,
+                 function=None,
+                 loss: Optional[Loss] = None,
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
@@ -236,15 +234,44 @@ class LossMechanism(ComparatorMechanism):
                  **kwargs
                  ):
 
-        # 11/25/25 - BREADCRUMB: CONVERT Loss TO FUNCTION SPEC HERE
-        function = function
+        if loss == Loss.CROSS_ENTROPY:
+            # use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
+            if isinstance(sample, dict):
+                sample.update({FUNCTION: SoftMax(output=ALL)})
+            else:
+                sample.function = SoftMax(output=ALL)
+            if isinstance(target, dict):
+                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
+                target.update({FUNCTION: SoftMax(output=ALL)})
+            else:
+                target.function = SoftMax(output=ALL)
+            function = LinearCombination(operation=CROSS_ENTROPY)
+            needed_output_ports = [OUTCOME, SUM.upper()]
+            if not output_ports:
+                output_ports = needed_output_ports
+            else:
+                output_ports.append(needed_output_ports)
+        else:
+            # error_function: use default for Comparator (LinearCombination) =>  target - sample
+            if isinstance(sample, dict):
+                sample.update({WEIGHT: -1})
+            if loss == Loss.L0:
+                needed_output_ports = [OUTCOME, SUM.upper()]
+            elif loss == Loss.SSE:
+                needed_output_ports = [OUTCOME, Loss.SSE.name]
+            else:
+                needed_output_ports = [OUTCOME, Loss.MSE.name]
+            if not output_ports:
+                output_ports = needed_output_ports
+            else:
+                output_ports.append(needed_output_ports)
 
         super().__init__(
                  default_variable=default_variable,
                  sample=sample,
                  target=target,
                  function=function,
-                 output_ports=output_ports or OUTCOME,
+                 output_ports=output_ports,
                  params=params,
                  name=name,
                  prefs=prefs,

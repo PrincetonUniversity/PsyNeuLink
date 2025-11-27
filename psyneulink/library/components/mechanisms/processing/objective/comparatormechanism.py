@@ -335,7 +335,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  function=None,
-                 output_ports:Optional[Union[str, Iterable]] = None,
+                 output_ports: Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
