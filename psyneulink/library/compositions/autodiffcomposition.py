@@ -428,8 +428,6 @@ from pathlib import Path, PosixPath
 from collections import deque
 from typing import Any, Dict, Set, Tuple, Union
 
-from psyneulink import LinearCombination
-
 try:
     import torch
     from torch import nn
@@ -1216,7 +1214,7 @@ class AutodiffComposition(Composition):
                 elif isinstance(item, tuple):
                     loss_mech = LossMechanism(sample=item[0],
                                               target=item[1],
-                                              function=LinearCombination(operation=item[2])
+                                              function=LinearCombination(operation=item[2]),
                                               loss_spec=self.loss_spec,
                                               )
                     targets.extend(loss_mech)
