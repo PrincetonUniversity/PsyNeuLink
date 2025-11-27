@@ -1,6 +1,6 @@
 """
-Architecture
-============
+Model
+=====
 
             +-------------+
             | learn_net_1 |
@@ -13,22 +13,21 @@ inputs ---> |             + --> student --> outputs
 
 Learnable paths
 ---------------
-
 - input -> learn_net_1 -> student
 - input -> learn_net_2 -> student
 
 
 Fixed paths
 -----------
-
 - input -> teach_hidden -> teacher
 - student -> outputs
 
+
 Test Procedure
---------------
+==============
 
 Setup
-*****
+-----
 input -> teach_hidden -> teacher:
 This is the "teacher function" since the teacher value will be used as target for the student.
 In our example this implements a random rotation in 3D space (ROT)
@@ -36,26 +35,29 @@ In our example this implements a random rotation in 3D space (ROT)
 student -> outputs:
 We fix this to be the inverse rotation to `input -> teach_hidden -> teacher` (ROT_INV)
 
-Expectation
-************
 
+Expectation
+-----------
 If `input -> ... -> student` really learns ROT, then the full `input -> ... -> student -> outputs` should
 be the identity since it now implements input -> ROT (learned) -> ROT_INV (fixed) -> output
+
 """
 
 
+# Inports
 import torch
 import torch.nn as nn
 
 
+# Model params
 DIM = 3
 
+# Training params
 TRAINING_LOOPS = 10000
 TRAINING_EXAMPLES = 10000
 LEARNING_RATE = 1e-3
 
-
-
+# ** Model ** #
 class InnerTarget(nn.Module):
     """
     Architecture:
@@ -143,6 +145,7 @@ class InnerTarget(nn.Module):
         return student, teacher, out
 
 
+# ** Run Script ** #
 def run(seed=None):
     if seed is not None:
         torch.manual_seed(seed)
@@ -204,7 +207,7 @@ def run(seed=None):
     print("\n✓ Identity test passed!  (out ≈ x)")
 
 
-
+# ** Helper Functions ** #
 def get_rotation_matrices(
         psi,
         theta,
