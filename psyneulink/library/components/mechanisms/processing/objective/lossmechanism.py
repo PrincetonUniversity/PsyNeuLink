@@ -197,10 +197,27 @@ class LossMechanism(ComparatorMechanism):
         """
         function = Parameter(Loss.MSE, stateful=False, loggable=False)
 
-        def _validate_function(self, function):
-            if not isinstance(function, (Loss, torch.nn)):
-                return f"must be a Loss spec or a torch.nn loss function."
-            return None
+        # def _validate_function(self, function):
+        #     # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
+        #
+        #     def is_loss_spec_or_torch_loss(function):
+        #         # Check for Loss spec
+        #         from psyneulink.core.globals.keywords import Loss
+        #         import torch.nn
+        #
+        #         if isinstance(function, Loss):
+        #             return True
+        #         # Check for torch.nn loss function instance
+        #         if isinstance(function, torch.nn.modules.loss._Loss):
+        #             return True
+        #         # Check for torch.nn loss class
+        #         if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
+        #             return True
+        #         return False
+        #
+        #     if not is_loss_spec_or_torch_loss(function):
+        #         return f"must be a Loss spec or a torch.nn loss function."
+        #     return None
 
     @check_user_specified
     @beartype
