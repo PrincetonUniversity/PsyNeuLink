@@ -120,7 +120,7 @@ class LossMechanism(ComparatorMechanism):
         sample,                         \
         target,                         \
         input_ports=[SAMPLE,TARGET],    \
-        function=Loss.MSE,              \
+        loss=Loss.MSE,                  \
         output_ports=OUTCOME)
 
     Subclass of `ComparatorMechanism` that computes the loss (error) between a `sample` and a `target` used for
@@ -141,7 +141,7 @@ class LossMechanism(ComparatorMechanism):
         specified in the **sample** and **target** arguments, respectively (see `LossMechanism_Structure`
         for additional details).
 
-    function :  Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
+    loss :  Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
         specifies the `function <Loss.function>` used to compare the `sample` with the `target`.
 
 
@@ -189,35 +189,35 @@ class LossMechanism(ComparatorMechanism):
             Attributes
             ----------
 
-                function
-                    see `function <LossMechanism.function>`
+                loss
+                    see `loss <LossMechanism.loss>`
 
                     :default value: `Loss.MSE`
-                    :type: `Function`
+                    :type: `Loss`
         """
         function = Parameter(Loss.MSE, stateful=False, loggable=False)
 
-        # def _validate_function(self, function):
-        #     # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
-        #
-        #     def is_loss_spec_or_torch_loss(function):
-        #         # Check for Loss spec
-        #         from psyneulink.core.globals.keywords import Loss
-        #         import torch.nn
-        #
-        #         if isinstance(function, Loss):
-        #             return True
-        #         # Check for torch.nn loss function instance
-        #         if isinstance(function, torch.nn.modules.loss._Loss):
-        #             return True
-        #         # Check for torch.nn loss class
-        #         if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
-        #             return True
-        #         return False
-        #
-        #     if not is_loss_spec_or_torch_loss(function):
-        #         return f"must be a Loss spec or a torch.nn loss function."
-        #     return None
+        def _validate_loss(self, function):
+            # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
+
+            def is_loss_spec_or_torch_loss(function):
+                # Check for Loss spec
+                from psyneulink.core.globals.keywords import Loss
+                import torch.nn
+
+                if isinstance(function, Loss):
+                    return True
+                # Check for torch.nn loss function instance
+                if isinstance(function, torch.nn.modules.loss._Loss):
+                    return True
+                # Check for torch.nn loss class
+                if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
+                    return True
+                return False
+
+            if not is_loss_spec_or_torch_loss(function):
+                return f"must be a Loss spec or a torch.nn loss function."
+            return None
 
     @check_user_specified
     @beartype
@@ -225,7 +225,8 @@ class LossMechanism(ComparatorMechanism):
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
-                 function=None,
+                 # function: Optional[Union[Loss, callable]] = None,
+                 function = None,
                  loss: Optional[Loss] = None,
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
@@ -235,6 +236,7 @@ class LossMechanism(ComparatorMechanism):
                  ):
 
         if loss == Loss.CROSS_ENTROPY:
+            function = LinearCombination(operation=CROSS_ENTROPY)
             # use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
             if isinstance(sample, dict):
                 sample.update({FUNCTION: SoftMax(output=ALL)})
@@ -245,16 +247,14 @@ class LossMechanism(ComparatorMechanism):
                 target.update({FUNCTION: SoftMax(output=ALL)})
             else:
                 target.function = SoftMax(output=ALL)
-            function = LinearCombination(operation=CROSS_ENTROPY)
             needed_output_ports = [OUTCOME, SUM.upper()]
             if not output_ports:
                 output_ports = needed_output_ports
             else:
                 output_ports.append(needed_output_ports)
         else:
-            # error_function: use default for Comparator (LinearCombination) =>  target - sample
-            if isinstance(sample, dict):
-                sample.update({WEIGHT: -1})
+            # function = LinearCombination(weights=[[-1], [1]]) # =>  target - sample
+            function = LinearCombination(operation=loss)
             if loss == Loss.L0:
                 needed_output_ports = [OUTCOME, SUM.upper()]
             elif loss == Loss.SSE:

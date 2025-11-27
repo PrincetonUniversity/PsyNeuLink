@@ -3259,7 +3259,6 @@ from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -9160,11 +9159,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     VARIABLE: output_source.output_ports[0].value}
             target={NAME: TARGET,
                     VARIABLE: target_mechanism.output_ports[0].value}
-            objective_mechanism = LossMechanism(name='Comparator',
-                                                sample=sample,
-                                                target=target,
-                                                function=error_function,
-                                                loss=loss_spec)
+            if loss_spec == Loss.CROSS_ENTROPY:
+                # error function:  use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
+                sample.update({FUNCTION: SoftMax(output=ALL)})
+                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
+                target.update({FUNCTION: SoftMax(output=ALL)})
+                error_function = LinearCombination(operation=CROSS_ENTROPY)
+                output_ports = [OUTCOME, SUM.upper()]
+            else:
+                # error_function: use default for Comparator (LinearCombination) =>  target - sample
+                sample.update({WEIGHT: -1})
+                if loss_spec == Loss.L0:
+                    output_ports = [OUTCOME, SUM.upper()]
+                elif loss_spec == Loss.SSE:
+                    output_ports = [OUTCOME, Loss.SSE.name]
+                else:
+                    output_ports = [OUTCOME, Loss.MSE.name]
+            objective_mechanism = ComparatorMechanism(name='Comparator',
+                                                      sample=sample,
+                                                      target=target,
+                                                      function=error_function,
+                                                      output_ports=output_ports)
 
         input_source_output_port, output_source_input_port = \
             self._get_ports_for_input_output_sources(learned_projection, output_source)

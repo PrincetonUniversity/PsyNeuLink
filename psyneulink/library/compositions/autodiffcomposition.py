@@ -1212,12 +1212,13 @@ class AutodiffComposition(Composition):
                 if isinstance(item, LossMechanism):
                     targets.append(item)
                 elif isinstance(item, tuple):
-                    loss_mech = LossMechanism(sample=item[0],
+                    loss_mech = LossMechanism(name=f"LOSS for {item[0].name}",
+                                              sample=item[0],
                                               target=item[1],
-                                              function=LinearCombination(operation=item[2]),
-                                              loss_spec=self.loss_spec,
+                                              function=None,
+                                              loss=self.loss_spec,
                                               )
-                    targets.extend(loss_mech)
+                    targets.append(loss_mech)
                 else:
                     assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
         else:
