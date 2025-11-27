@@ -338,7 +338,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
-                 prefs:   Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
 

@@ -428,6 +428,8 @@ from pathlib import Path, PosixPath
 from collections import deque
 from typing import Any, Dict, Set, Tuple, Union
 
+from psyneulink import LinearCombination
+
 try:
     import torch
     from torch import nn
@@ -787,37 +789,27 @@ class AutodiffComposition(Composition):
                 return f"must be a member of the Loss enum or a PyTorch loss function."
 
         def _validate_targets(self, spec):
-            if isinstance(spec, LossMechanism) or spec==None:
+            if spec is None:
                 return None
-            if isinstance (spec, (tuple, dict)):
-                spec = convert_to_list(spec)
-            for item in spec:
-                if not isinstance(item, (LossMechanism, tuple)):
-                    return f"all items in list must be LossMechanisms or a collection of student:teacher node pairs."
-                for elem in item:
-                    if not isinstance(elem, ProcessingMechanism):
-                        return (f"both items in a student:teacher pair of a tuple or dict entry "
-                                f"must be ProcessingMechanisms.")
-                return None
+            if isinstance(spec, list):
+                for item in spec:
+                    if not isinstance(item, (LossMechanism, tuple)):
+                        return f"all items in list must be LossMechanisms or a collection of student:teacher node pairs."
+                    for elem in item:
+                        if not isinstance(elem, ProcessingMechanism):
+                            return (f"both items in a student:teacher pair of a tuple or dict entry "
+                                    f"must be ProcessingMechanisms.")
+                    return None
             else:
                 return (f"must be a LossMechanism, list of them, "
                         f"or a tuple or dict containing pairs of teacher:student nodes.")
 
         def _parse_targets(self, spec):
-            """Parse targets argument to standardize into list of LossMechanisms
-            Note:  default loss_spec for Mechanisms needs to be set in init, since not available here"""
-            if spec is None:
-                return None
+            """Parse targets argument to standardize into list of LossMechanisms or tuples specifying them.
+            """
             if isinstance(spec, (LossMechanism, tuple, dict)):
-                targets = convert_to_list(spec)
-            for item in spec:
-                if isinstance(item, LossMechanism):
-                    targets.append(item)
-                elif isinstance(item, tuple):
-                    targets.extend(LossMechanism(sample=item[0],
-                                                 target=item[1],
-                                                 loss_spec=self.loss_spec.get()))
-            return targets
+                spec = convert_to_list(spec)
+            return spec
 
         def _parse_LearningScale_param(self, value):
             try:
@@ -892,7 +884,7 @@ class AutodiffComposition(Composition):
     def __init__(self,
                  pathways=None,
                  optimizer_type: str = 'sgd',
-                 loss_spec: Loss = None, # default is Loss.MSE set in Parameters
+                 loss_spec: Loss = Loss.MSE, # default is Loss.MSE set in Parameters
                  targets: Union[LossMechanism, list, dict] = None,
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
@@ -1215,6 +1207,27 @@ class AutodiffComposition(Composition):
             - assign one for each OUTPUT Node
         Create outputs_to_targets_map dict
         """
+        if self.targets:
+            # Instantiate any LossMechanisms specified in self.targets
+            for item in self.targets:
+                targets = []
+                if isinstance(item, LossMechanism):
+                    targets.append(item)
+                elif isinstance(item, tuple):
+                    loss_mech = LossMechanism(sample=item[0],
+                                              target=item[1],
+                                              function=LinearCombination(operation=item[2])
+                                              loss_spec=self.loss_spec,
+                                              )
+                    targets.extend(loss_mech)
+                else:
+                    assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
+        else:
+            # Instantiate default LossMechanism and corresponding TARGET Node for each OUTPUT Node
+            # BREADCRUMB: 11/25/25 DO RELEVANTS STUFF FROM BELOW
+            pass
+
+        # 11/25/25 BREADCRUMB: OLD STUFF:
         assert True
         # Identify/create "dummy" TARGET nodes:
         # output_mechs_for_learning = self.get_nested_output_nodes_at_all_levels()

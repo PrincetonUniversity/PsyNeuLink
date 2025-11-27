@@ -10307,8 +10307,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ContextFlags.PREPARING in context.execution_phase
 
     def _infer_target_nodes(self, targets: dict, execution_mode)->dict:
-        """
-        Maps target values to target mechanisms (as needed by learning)
+        """Map target values to target mechanisms (as needed by learning)
 
         Returns
         ---------

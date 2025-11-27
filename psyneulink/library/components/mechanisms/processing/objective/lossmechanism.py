@@ -201,7 +201,24 @@ class LossMechanism(ComparatorMechanism):
         function = Parameter(Loss.MSE, stateful=False, loggable=False)
 
         def _validate_function(self, function):
-            if not isinstance(function, (Loss, torch.nn)):
+            # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
+
+            def is_loss_spec_or_torch_loss(function):
+                # Check for Loss spec
+                from psyneulink.core.globals.keywords import Loss
+                import torch.nn
+
+                if isinstance(function, Loss):
+                    return True
+                # Check for torch.nn loss function instance
+                if isinstance(function, torch.nn.modules.loss._Loss):
+                    return True
+                # Check for torch.nn loss class
+                if isinstance(function, type) and issubclass(function, torch.nn.modules.loss._Loss):
+                    return True
+                return False
+
+            if not is_loss_spec_or_torch_loss(function):
                 return f"must be a Loss spec or a torch.nn loss function."
             return None
 
@@ -211,13 +228,16 @@ class LossMechanism(ComparatorMechanism):
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
-                 function=None,
+                 function = None,
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
+
+        # 11/25/25 - BREADCRUMB: CONVERT Loss TO FUNCTION SPEC HERE
+        function = function
 
         super().__init__(
                  default_variable=default_variable,
@@ -227,6 +247,6 @@ class LossMechanism(ComparatorMechanism):
                  output_ports=output_ports or OUTCOME,
                  params=params,
                  name=name,
-                 prefs=prefs
+                 prefs=prefs,
                  **kwargs
         )
