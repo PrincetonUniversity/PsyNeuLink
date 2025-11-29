@@ -1238,7 +1238,7 @@ class GRUComposition(AutodiffComposition):
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, self))
 
-    def _identify_target_nodes(self, context):
+    def _identify_output_nodes(self, context):
         return [self.gru_mech]
 
     def add_node(self, node, required_roles=None, context=None):

@@ -441,7 +441,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     def _merge_legacy_constructor_args(self, sample, target, default_variable=None, input_ports=None):
 
-        # USE sample and target TO CREATE AN InputPort specfication dictionary for each;
+        # USE sample and target TO CREATE AN InputPort specification dictionary for each;
         # DO SAME FOR InputPorts argument, USE TO OVERWRITE ANY SPECIFICATIONS IN sample AND target DICTS
         # TRY tuple format AS WAY OF PROVIDED CONSOLIDATED variable AND OutputPort specifications
 

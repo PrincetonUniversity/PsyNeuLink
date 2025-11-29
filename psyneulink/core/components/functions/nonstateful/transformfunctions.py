@@ -13,7 +13,6 @@
 * `Concatenate`
 * `Rearrange`
 * `Reduce`
-* `Loss`
 * `LinearCombination`
 * `CombineMeans`
 * `MatrixTransform`
@@ -55,7 +54,7 @@ from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import (
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION,
      CROSS_ENTROPY, DEFAULT, DEFAULT_VARIABLE, DOT_PRODUCT, EXPONENTS,
-     HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0, Loss,
+     HAS_INITIALIZERS, HOLLOW_MATRIX, IDENTITY_MATRIX, LINEAR_COMBINATION_FUNCTION, L0,
      MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_TRANSFORM_FUNCTION,  MULTIPLICATIVE_PARAM, NORMALIZE,
      OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT,
      REARRANGE_FUNCTION, RECEIVER, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, PREFERENCE_SET_NAME)
@@ -1007,9 +1006,6 @@ class Reduce(TransformFunction):  # --------------------------------------------
         builder.store(val, ptro)
 
 
-
-
-
 class LinearCombination(
     TransformFunction):  # ------------------------------------------------------------------------
     """
@@ -1243,7 +1239,7 @@ class LinearCombination(
                  # exponents:  Optional[ValidParamSpecType] = None,
                  weights=None,
                  exponents=None,
-                 operation: Optional[Union[Loss, Literal['sum', 'product', 'cross-entropy']]] = None,
+                 operation: Optional[Literal['sum', 'product', 'cross-entropy']] = None,
                  scale=None,
                  offset=None,
                  params=None,
@@ -1463,43 +1459,14 @@ class LinearCombination(
             combination = np.sum(variable, axis=0)
         elif operation == PRODUCT:
             combination = np.prod(variable, axis=0)
-        elif operation == Loss.L0:
-            combination = np.difference(variable, axis=0)
-        elif operation in {Loss.CROSS_ENTROPY, CROSS_ENTROPY}:
+        elif operation == CROSS_ENTROPY:
             v1 = variable[0]
             v2 = variable[1]
             both_zero = np.logical_and(v1 == 0, v2 == 0)
             combination = v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero)))
-
-        # elif loss_spec == Loss.MSE:
-        #     return nn.MSELoss(reduction='mean')
-        # elif loss_spec == Loss.SSE:
-        #     return nn.MSELoss(reduction='sum')
-        # elif loss_spec == Loss.CROSS_ENTROPY:
-        #     if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
-        #         return nn.CrossEntropyLoss()
-        #     # Cross entropy loss is used for multiclass categorization and needs inputs in shape
-        #     # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
-        #     # and where target is a 1d vector of type long specifying the index to the target category. This
-        #     # formatting is different from most other loss functions available to autodiff compositions,
-        #     # and therefore requires a wrapper function to properly package inputs.
-        #     return lambda x, y: nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
-        # elif loss_spec == Loss.BINARY_CROSS_ENTROPY:
-        #     return nn.BCELoss()
-        # elif loss_spec == Loss.L1:
-        #     return nn.L1Loss(reduction='sum')
-        # elif loss_spec == Loss.NLL:
-        #     return nn.NLLLoss(reduction='sum')
-        # elif loss_spec == Loss.POISSON_NLL:
-        #     return nn.PoissonNLLLoss(reduction='sum')
-        # elif loss_spec == Loss.KL_DIV:
-        #     return nn.KLDivLoss(reduction='sum')
-        #
-
-
         else:
-            raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
-                                format(operation.self.Operation.SUM))
+            raise FunctionError(f"Unrecognized operation ({operation}) for LinearCombination function.")
+
         if isinstance(scale, numbers.Number):
             # scalar scale
             product = combination * scale

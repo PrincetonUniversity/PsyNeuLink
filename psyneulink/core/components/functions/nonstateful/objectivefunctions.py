@@ -14,6 +14,7 @@
 * `Energy`
 * `Entropy`
 * `Distance`
+* `LossFunction`
 
 Functions that return a scalar evaluation of their input.
 
@@ -29,10 +30,11 @@ from psyneulink._typing import Optional, Callable
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.globals.keywords import \
-    CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
+    ALL, CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
-    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, Loss, LOSS_FUNCTION, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, INPUT_SHAPES, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -40,7 +42,7 @@ from psyneulink.core.globals.utilities import DistanceMetricLiteral, safe_len, c
 from psyneulink.core.globals.utilities import is_iterable
 
 
-__all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
+__all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy', 'LossFunction']
 
 
 class ObjectiveFunction(Function_Base):
@@ -514,7 +516,7 @@ class Energy(Stability):
 
     transfer_fct : function or method : Default None
         specifies the function used to transform output of `matrix <Stability.matrix>` prior to the energy calculation
-        (see `Stablility <Stability>` for explanation).
+        (see `Stability <Stability>` for explanation).
 
     normalize : bool : Default False
         specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
@@ -714,9 +716,9 @@ class Distance(ObjectiveFunction):
     .. _Distance:
 
     Return the distance between the vectors in the two items of `variable <Distance.variable>` using the `distance
-    metric <DistanceMetrics>` specified in the `metric <Stability.metric>` attribute.  If `normalize
+    metric <DistanceMetrics>` specified in the `metric <Distance.metric>` attribute.  If `normalize
     <Distance.normalize>` is `True`, the result is normalized by the length of (number of elements in) `variable
-    <Stability.variable>`.
+    <Distance.variable>`.
 
     Arguments
     ---------
@@ -1152,7 +1154,7 @@ class Distance(ObjectiveFunction):
                  context=None,
                  params=None,
                  ):
-        """Calculate the distance between the two vectors in `variable <Stability.variable>`.
+        """Calculate the distance between the two vectors in `variable <Distance.variable>`.
 
         Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.
         If `normalize <Distance.normalize>` is `True`, the result is divided by the length of `variable
@@ -1183,6 +1185,7 @@ class Distance(ObjectiveFunction):
         elif self.metric == DIFFERENCE:
             result = np.sum(np.fabs(v1 - v2))
 
+        # TEACHER_TARGET - BREADCRUMB: SHOULDN'T THIS BE L1?
         # Similarity (used specifically for testing Compilation of Predator-Prey Model)
         elif self.metric == NORMED_L0_SIMILARITY:
             result = 1.0 - np.sum(np.abs(v1 - v2)) / 4.0
@@ -1231,3 +1234,278 @@ class Distance(ObjectiveFunction):
                 result /= len(v1)
 
         return self.convert_output_type(result)
+
+# TEACHER_TARGET - BREADCRUMB: ADD SUPPORT FOR scale AND offset AS MODULABLE PARAMETERS
+#                        ADD SUPPORT TO DISTANCE for LOSSES OTHER THAN L1, MSE and CROSS-ENTROPY
+class LossFunction(ObjectiveFunction):
+    """
+    Loss(                      \
+       default_variable=None,  \
+       loss=Loss.MSE           \
+       normalize=False,        \
+       params=None,            \
+       owner=None,             \
+       prefs=None              \
+       )
+
+    .. _Loss:
+
+    Return the loss calculated for the `sample <LossFunction.sample>` array (first item of `variable
+    <LossFunction.variable>`) with respect to the `target <LossFunction.target>` array (second item of
+    `variable <LossFunction.variable>`, using the `Loss <Loss>` specified in the `loss <LossFunction.loss>`
+    attribute. If `normalize <LossFunction.normalize>` is ``True``, the result is normalized by the length
+    of (number of elements in) the `sample <LossFunction.sample>` and `target <LossFunction.target>` arrays.
+
+    .. technical_note::
+       Loss uses the `Distance` `Function` to compute the loss where possible, using the the `loss <LossFunction.loss>`
+       attribute to specify the appropriate `metric <Distance.metric>` argument of Distance.
+
+
+    Arguments
+    ---------
+
+    default_variable : 2d array with two items : Default class_defaults.variable
+        specifies the shape and default value for the `sample <LossFunction.sample>` and `target <LossFunction.target>`
+        arrays; these are, respectively, the first and second items of the <variable <LossFunction.variable>` attribute
+        (variable[0] and variable[1]) used to compute the loss.
+
+    loss : member of keyword in Loss enum : Default Loss.MSE
+        specifies the `loss <Loss>` which is computed for the `sample <LossFunction.sample>` array (variable[0]) with
+        respect to the `target <LossFunction.target>` array (variable[1]).
+
+    normalize : bool : Default False
+        specifies whether to normalize the loss by the length of the `sample <LossFunction.sample>` and `target
+            <LossFunction.target>` arrays `variable <LossFunction.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those
+        parameters in arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 2d array with two items
+        contains the `sample <LossFunction.sample>` array (first item) for which the `loss <LossFunction.loss>` is
+        computed with respect to `target <LossFunction.target>` array (second item).
+
+    loss : Loss
+        determines the `loss <Loss>` computed for the `sample <LossFunction.sample>` array with respect to the
+        `target <LossFunction.target>` array.
+
+    normalize : bool
+        determines whether the `loss <LossFunction.loss>` is normalized by the length of `sample <LossFunction.sample>`
+        and `target <LossFunction.target>` arrays in `variable <LossFunction.variable>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    componentName = LOSS_FUNCTION
+
+    class Parameters(ObjectiveFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <Loss.variable>`
+
+                    :default value: numpy.array([[0], [0]])
+                    :type: ``numpy.ndarray``
+                    :read only: True
+
+                loss
+                    see `loss <Loss.loss>`
+
+                    :default value: `Loss.MSE`
+                    :type: ``str``
+        """
+        variable = Parameter(np.array([[0], [0]]),
+                             read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        loss = Parameter(Loss.MSE, stateful=False)
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 loss: Optional[Loss] = None,
+                 normalize: Optional[bool] = None,
+                 params=None,
+                 owner=None,
+                 prefs:  Optional[ValidPrefSet] = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            loss=loss,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs)
+
+        # TEACHER_TARGET - BREADCRUMB: ADD SUPPORT FOR OTHER LOSSES USING Distance FUNCTION
+        # self.loss_function = None
+        # if: # loss == Loss.L1
+        #     self.loss_function = Distance(metric=DIFFERENCE, normalize=normalize)
+        # elif loss == Loss.MSE:
+        #     self.loss_function = Distance(metric=EUCLIDEAN, normalize=normalize)
+        # elif loss == Loss.CROSS_ENTROPY:
+        #     self.loss_function = Distance(metric=CROSS_ENTROPY, normalize=normalize)
+
+        if loss == Loss.CROSS_ENTROPY:
+            self.softmax = SoftMax(output=ALL)
+
+    def _validate_params(self, request_set, target_set=None, variable=None, context=None):
+        """Validate that variable has two items of equal length
+
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        err_two_items = FunctionError(f"variable for {self.name} ({variable}) must have two items (sample and target).")
+        try:
+            if len(variable) != 2:
+                raise err_two_items
+        except TypeError:
+            raise err_two_items
+
+        err_unequal_length = FunctionError(f"The lengths of sample ({len(variable[0])}) and target ({len(variable[1])}) "
+                                    f"in variable for {self.name} must be equal.")
+        try:
+            if len(variable[0]) != len(variable[1]):
+                raise err_unequal_length
+        except TypeError:
+            if is_iterable(variable[0]) ^ is_iterable(variable[1]):
+                raise err_unequal_length
+
+    def _gen_pytorch_function_body(self):
+        pass
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None
+                 ):
+        """Calculate the loss between a sample and target vector in `variable <LossFunction.variable>`.
+
+        Use the `distance metric <DistanceMetrics>` specified in `metric <Distance.metric>` to calculate the distance.
+        If `normalize <Distance.normalize>` is `True`, the result is divided by the length of `variable
+        <Distance.variable>`.
+
+        Returns
+        -------
+
+        distance : scalar
+
+        """
+
+        sample = variable[0]
+        target = variable[1]
+        loss = self._get_current_parameter_value('loss', context)
+        normalize = self._get_current_parameter_value('normalize', context)
+
+        if loss == Loss.L0:
+            result = np.sum(sample - target)
+        if loss == Loss.SSE:
+            result = np.sum((sample - target)**2)
+        elif loss == Loss.MSE:
+            result = np.mean((sample - target)**2)
+        elif loss == Loss.CROSS_ENTROPY:
+            """Computes the categorical cross-entropy loss"""
+            # BREADCRUMB: - ALIGN THIS WITH (OR USE Distance FUNCTION)
+            #             - DO WE WANT THIS OR "PARAMETRIC" (I.E., TARGETS ARE NOT FORCED TO BE ONE HOTS)
+            #             - USUALLY INPUTS ARE ONE-HOTS, BUT SHOULD IT BE ENFORCED HERE, TO BE CONSISTENT WITH PYTORCH?
+            # # THE FOLLOWING IS FROM COPILOT:
+            # # Apply softmax to convert samples to probabilities
+            # exp_sample = np.exp(sample - np.max(sample))  # For numerical stability
+            # probabilities = exp_sample / np.sum(exp_sample)
+            # # Compute the cross-entropy loss
+            # # Add a small epsilon to probabilities to prevent log(0)
+            # epsilon = 1e-9
+            # result = -np.sum(target * np.log(probabilities + epsilon))
+
+            # Apply softmax to convert samples to probabilities
+            # TEACHER_TARGET - BREADCRUMB:
+            #                      SHOULD SOFTMAX BE APPLIED TO TARGETS (IF THEY ARE SUPPOSED TO BE ONE HOTS ALREADY)?
+            #                      SHOULD ALIGN THIS WITH HANDLING IN _create_terminal_backprop_learning_components
+            sample_softmax = self.softmax(variable[0])
+            target_softmax = self.softmax(variable[1])
+            both_zero = np.logical_and(sample_softmax == 0, target_softmax == 0)
+            result = np.sum(sample_softmax *
+                             np.where(both_zero, 0.0, np.log(target_softmax, where=np.logical_not(both_zero))))
+        else:
+            raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
+        
+        if normalize:
+            result /= len(sample)
+
+        # BREADCRUMB: SUPPORT scale AND offset AS MODULABLE PARAMETERS
+        # if isinstance(scale, numbers.Number):
+        #     # scalar scale
+        #     product = combination * scale
+        # else:
+        #     # Hadamard scale
+        #     product = np.prod([combination, scale], axis=0)
+        #
+        # if isinstance(offset, numbers.Number):
+        #     # scalar offset
+        #     result = product + offset
+        # else:
+        #     # Hadamard offset
+        #     result = np.sum([product, offset], axis=0)
+        return self.convert_output_type(result)
+
+    def _gen_pytorch_fct(self, device, context=None):
+
+        import torch
+        loss = self._get_pytorch_fct_param_value('loss', device, context)
+        normalize = self._get_pytorch_fct_param_value('normalize', device, context)
+
+        if loss == Loss.L1:
+            return torch.nn.L1Loss(reduction='sum')
+        elif loss == Loss.SSE:
+            fct =  torch.nn.MSELoss(reduction='sum')
+        elif loss == Loss.MSE:
+            fct =  torch.nn.MSELoss(reduction='mean')
+        elif loss == CROSS_ENTROPY:
+            from packaging import version
+            if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
+                fct =  torch.nn.CrossEntropyLoss()
+            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
+            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
+            # and where target is a 1d vector of type long specifying the index to the target category. This
+            # formatting is different from most other loss functions available to autodiff compositions,
+            # and therefore requires a wrapper function to properly package inputs.
+            fct =  lambda x, y: torch.nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
+        elif loss == Loss.BINARY_CROSS_ENTROPY:
+            fct =  torch.nn.BCELoss()
+        elif loss == Loss.NLL:
+            fct =  torch.nn.NLLLoss(reduction='sum')
+        elif loss == Loss.POISSON_NLL:
+            fct =  torch.nn.PoissonNLLLoss(reduction='sum')
+        elif loss == Loss.KL_DIV:
+            fct =  torch.nn.KLDivLoss(reduction='sum')
+        else:
+            raise FunctionError(f"The 'loss' parameter of {self.componentName} ({loss.name}) is not supported.")
+
+        if normalize:
+            # 11/11/25 - BREADCRUMB: NEED AXIS 2 HERE TO MANAGE BATCH DIMENSION?
+            return lambda x, y: fct(x, y) / x.torch.shape[1]
+        else:
+            return fct

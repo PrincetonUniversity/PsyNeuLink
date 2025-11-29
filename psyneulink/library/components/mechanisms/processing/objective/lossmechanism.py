@@ -96,7 +96,7 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
-from psyneulink.core.components.functions.nonstateful.transformfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import LossFunction
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -120,48 +120,68 @@ class LossMechanism(ComparatorMechanism):
         sample,                         \
         target,                         \
         input_ports=[SAMPLE,TARGET],    \
-        loss=Loss.MSE,                  \
+        loss=None,                      \
         output_ports=OUTCOME)
 
-    Subclass of `ComparatorMechanism` that computes the loss (error) between a `sample` and a `target` used for
-    training in an `AutodiffComposition`.
+    Subclass of `ComparatorMechanism` that computes the loss (error) between a `sample <LossMechanism.sample>`
+    and a `target <LossMechanism.target>` used for training in an `AutodiffComposition`.
 
     Arguments
     ---------
 
     sample : OutputPort, Mechanism, value, or string
-        specifies the value to compare with the `target` by the `function <LossMechanism.function>`.
+        specifies the value to for which to compute the `loss <LossMechanism.loss>` with respect to the
+        `target <LossMechanism.target>`.
 
     target :  OutputPort, Mechanism, value, or string
-        specifies the value with which the `sample` is compared by the `function <LossMechanism.function>`.
+        specifies the value with respect to which the `loss <LossMechanism.loss>` is computed for the
+        `sample <LossMechanism.sample>`.
 
     input_ports :  List[InputPort, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
-        specifies the names and/or formats to use for the values of the sample and target InputPorts;
-        by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputPorts
-        specified in the **sample** and **target** arguments, respectively (see `LossMechanism_Structure`
-        for additional details).
+        specifies the names and/or formats to use for the values of the `sample <LossMechanism.sample>`
+        and `target <LossMechanism.target>` InputPorts; by default they are named *SAMPLE* and *TARGET*,
+        and their formats match the value of the OutputPorts specified in the **sample** and **target**
+        arguments, respectively (see `LossMechanism_Structure` for additional details).
 
     loss :  Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
-        specifies the `function <Loss.function>` used to compare the `sample` with the `target`.
+        specifies the `function <Loss.function>` used to compute the loss for
+        `sample <LossMechanism.sample>` with respect to the `target <LossMechanism.target>`.
+
+    function : function or method
+        specifies a function used  to compute the loss for the `sample <LearningMechanism.sample>` with
+        respect to the `target <LearningMechanism.target>`. It can be any function that takes two arrays
+        as input arguments (the sample and target values) and returns a scalar, including a `torch.nn loss
+        function <https://pytorch.org/docs/stable/nn.html#loss-functions>`_. It must also `detach
+        <https://pytorch.org/docs/stable/generated/torch.Tensor.detach.html>`_ the tensor used as the target
+        values in computing the loss.  If both **loss** and **function** are specified, an error is raisedIf
+        neither is specified, the default is determined by the `loss_spec <AutodiffComposition.loss_spec>`
+        attribute of the `AutodiffComposition` in which the LossMechanism is contained.
 
 
     Attributes
     ----------
 
     sample : OutputPort
-        determines the value to compare with the `target` by the `function <LossMechanism.function>`.
+        determines the value for which the `loss <LossMechanism.loss>` is computed with respect to the
+        `target <LossMechanism.target>`.
 
     target : OutputPort
-        determines the value with which `sample` is compared by the `function <LossMechanism.function>`.
+        determines the value with respect to which the `loss <LossMechanism.loss>` is computed for the
+        `sample <LossMechanism.sample>`.
 
     input_ports : ContentAddressableList[InputPort, InputPort]
         contains the two InputPorts named, by default, *SAMPLE* and *TARGET*, each of which receives a
-        `MappingProjection` from the OutputPorts referenced by the `sample` and `target` attributes
-        (see `LossMechanism_Structure` for additional details).
+        `MappingProjection` from the OutputPorts referenced by the `sample <LossMechanism.sample>` and
+        `target <LossMechanims.target>` attributes (see `LossMechanism_Structure` for additional details).
 
-    function : Loss, function or method
-        used to compare the `sample` with the `target`.  It can be any `Loss` specification or `PyTorch loss function
-        <https://docs.pytorch.org/docs/stable/nn.functional.html#loss-functions>_.
+    loss :  Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
+        specifies the `function <Loss.function>` used to compute the loss for `sample <LossMechanism.sample>`
+        with respect to the `target <LossMechanism.target>`.
+
+    function : function or method
+        used to compute the loss for the `sample <LearningMechanism.sample>` with respect to the
+        `target <LearningMechanism.target>`; determined either by the **loss** or **function*** argument
+        to the constructor.
 
     output_port : OutputPort
         contains the `primary <OutputPort_Primary>` OutputPort of the LossMechanism; the default is
@@ -195,10 +215,9 @@ class LossMechanism(ComparatorMechanism):
                     :default value: `Loss.MSE`
                     :type: `Loss`
         """
-        function = Parameter(Loss.MSE, stateful=False, loggable=False)
+        loss = Parameter(Loss.MSE, stateful=False, loggable=False)
 
         def _validate_loss(self, function):
-            # if not issubclass(type(function), torch.nn.modules.loss.MSELoss)
 
             def is_loss_spec_or_torch_loss(function):
                 # Check for Loss spec
@@ -215,8 +234,8 @@ class LossMechanism(ComparatorMechanism):
                     return True
                 return False
 
-            if not is_loss_spec_or_torch_loss(function):
-                return f"must be a Loss spec or a torch.nn loss function."
+            if function and not is_loss_spec_or_torch_loss(function):
+                return f"must be a torch.nn loss function."
             return None
 
     @check_user_specified
@@ -225,7 +244,8 @@ class LossMechanism(ComparatorMechanism):
                  default_variable=None,
                  sample: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
                  target: Optional[Union[OutputPort, Mechanism_Base, dict, NumericCollections, str]] = None,
-                 # function: Optional[Union[Loss, callable]] = None,
+                 # TEACHER_TARGET BREADCRUMB: INSTANTIATE TYPE CHECKING BELOW:
+                 # function: Optional[Union[torch.nn]] = None,
                  function = None,
                  loss: Optional[Loss] = None,
                  output_ports:Optional[Union[str, Iterable]] = None,
@@ -235,36 +255,12 @@ class LossMechanism(ComparatorMechanism):
                  **kwargs
                  ):
 
-        if loss == Loss.CROSS_ENTROPY:
-            function = LinearCombination(operation=CROSS_ENTROPY)
-            # use LinearCombination to implement cross_entropy: (SoftMax(sample), SoftMax(target))
-            if isinstance(sample, dict):
-                sample.update({FUNCTION: SoftMax(output=ALL)})
-            else:
-                sample.function = SoftMax(output=ALL)
-            if isinstance(target, dict):
-                # [JDC 12/4/22]: FIX: IS THIS CORRECT, OR SHOULD IT BE ASSUMED TO BE A ONE-HOT AND COMPLAIN IF NOT?
-                target.update({FUNCTION: SoftMax(output=ALL)})
-            else:
-                target.function = SoftMax(output=ALL)
-            needed_output_ports = [OUTCOME, SUM.upper()]
-            if not output_ports:
-                output_ports = needed_output_ports
-            else:
-                output_ports.append(needed_output_ports)
+        if function:
+            if loss is not None:
+                raise LossMechanismError(f"LossMechanism '{self.name}': 'function' and 'loss' arguments "
+                                         f"are mutually exclusive; only one can be specified.")
         else:
-            # function = LinearCombination(weights=[[-1], [1]]) # =>  target - sample
-            function = LinearCombination(operation=loss)
-            if loss == Loss.L0:
-                needed_output_ports = [OUTCOME, SUM.upper()]
-            elif loss == Loss.SSE:
-                needed_output_ports = [OUTCOME, Loss.SSE.name]
-            else:
-                needed_output_ports = [OUTCOME, Loss.MSE.name]
-            if not output_ports:
-                output_ports = needed_output_ports
-            else:
-                output_ports.append(needed_output_ports)
+            function = LossFunction(loss=loss)
 
         super().__init__(
                  default_variable=default_variable,
