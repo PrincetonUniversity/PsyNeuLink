@@ -1197,6 +1197,10 @@ class AutodiffComposition(Composition):
           FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
           IF NOT, WHERE IS IT POPULATED?
 
+          DEAL WITH outputs_to_targets_map; REPLACE WITH loss_mechs_map
+          OLD:
+            self.outputs_to_targets_map = {output: target for target, output in self.targets_from_outputs_map.items()}
+
           ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
 
         If **targets** arg of AutodiffComposition constructor:
