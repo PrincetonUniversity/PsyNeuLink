@@ -10307,7 +10307,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition is currently preparing to execute (run or learn)"""
         return ContextFlags.PREPARING in context.execution_phase
 
-    def _infer_target_nodes(self, targets: dict, execution_mode)->dict:
+    def _map_external_target_values_to_target_nodes(self, targets: dict, execution_mode)->dict:
         """Map target values to target mechanisms (as needed by learning)
 
         Returns
@@ -10328,7 +10328,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if num_specified_targets != num_target_mechs_in_comp:
                 raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
                                        f"`targets` arg of the learn method for '{self.name}' must equal "
-                                       f"the number of OUTPUT Nodes in the Composition ({num_target_mechs_in_comp}).")
+                                       f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
+            # TEACHER_TARGET BREADCRUMB: MODIFY BELOW TO DEAL WITH LossMechanisms,ETC
             # Check for target_mechs in targets
             target_mechs_as_targets = [target for target in targets.keys() if target in target_mechs]
             if not target_mechs_as_targets:
@@ -10345,9 +10346,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._warned_about_target_mechs_in_targets_arg = True
             return True
 
+        # TEACHER_TARGET BREADCRUMB:
+        #                  RE-WRITE THIS AS OVERRIDE BY AUTODIFF
+        #                SINCE COMPOSITION SHOULDN'T KNOW ABOUT PYTORCH STUFF
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            # target_mechs_as_targets = [target for target in targets.keys() if target in self.outputs_to_targets_map.values()]
             if validate_targets(list(self.outputs_to_targets_map.values())):
                 target_values_for_target_nodes = targets
             else:
@@ -10416,7 +10419,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         if targets is not None:
-            targets = self._infer_target_nodes(targets, execution_mode)
+            targets = self._map_external_target_values_to_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
             duplicate_targets = sorted([item.name for item in inputs if item in targets])
