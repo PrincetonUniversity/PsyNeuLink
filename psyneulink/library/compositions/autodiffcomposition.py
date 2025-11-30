@@ -938,7 +938,8 @@ class AutodiffComposition(Composition):
             **kwargs)
 
         self._built_pathways = False
-        self.loss_mechs_map = {}  # Map from LossMechanism to a (sample, target) tuple of its sender Ports
+        self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
+        self.target_nodes_for_outputs = {} # {TARGET Node : OUTPUT Node (for which it is the target)}
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
@@ -1004,11 +1005,12 @@ class AutodiffComposition(Composition):
         For PyTorch mode:
           - if **targets** are specified in the AutodiffComposition constructor,
              LossMechanisms and MappingProjections are constructed for them;
-          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and MappingProjections
-            (with associated TARGET Nodes) to allow targets to be specified in inputs argument of learn().
+          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and TARGET Nodes
+            with associated MappingProjections) to allow targets to be specified in inputs argument of learn().
           - the above allow:
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
             - losses to be tracked for logging (as mechs of a Composition)
+        TEACHER_TARGET BREADCRUMB:
         Returns list of any TARGET nodes that need to be referenced in inputs argument of learn()
         """
 
@@ -1196,11 +1198,15 @@ class AutodiffComposition(Composition):
           ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
           FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
           IF NOT, WHERE IS IT POPULATED?
+          
+          DOCUMENT THAT AutoDiff PUTS LOSS AS WELL AS TARGET NODES IN learning_components
+          PUT TARGET Nodes in self.target_nodes ATTRIBUTE
+          CHANGE TESTS/SCRIPTS THAT USE learning_components TO IDENTIFY TARGET Nodes TO USE self.target_nodes
 
           DEAL WITH outputs_to_targets_map; REPLACE WITH loss_mechs_map
           OLD:
-            self.outputs_to_targets_map = {output: target for target, output in self.targets_from_outputs_map.items()}
-
+            self.outputs_to_targets_map = {output: target
+                                           for target, output in self.target_nodes_for_outputs.items()}
           ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
 
         If **targets** arg of AutodiffComposition constructor:
@@ -1220,6 +1226,7 @@ class AutodiffComposition(Composition):
             - losses to be tracked for logging (as mechs of a Composition)
 
         Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
+        Add loss_mechs and any constructed TARGET Nodes to self.learning_components
         """
         if self.targets:
             # LossMechanism and/or sample:target tuples specified by user in self.targets
@@ -1230,7 +1237,7 @@ class AutodiffComposition(Composition):
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
             # IMPLEMENTATION NOTE:
-            #    only add target nodes if *not* already present in self.targets_from_outputs_map.values()
+            #    only add target nodes if *not* already present in self.target_nodes_for_outputs.values()
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
@@ -1243,6 +1250,7 @@ class AutodiffComposition(Composition):
                             for mech in sample_mechs_for_learning if not any(mech is target.owner for sample, target
                                                                              in self.loss_mechs_map.values())]
             loss_mech_specs = zip(sample_mechs_for_learning, target_mechs)
+            self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
 
         # Validate LossMechanism specs
         for loss_mech in loss_mech_specs:
@@ -1526,30 +1534,63 @@ class AutodiffComposition(Composition):
                                                        synch_with_pnl_options=synch_with_pnl_options,
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
-        # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
-        curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
-                                            if k in self.outputs_to_targets_map}
+        # TEACHER_TARGET OLD:
+        # # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
+        # curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
+        #                                     if k in self.outputs_to_targets_map}
+        #
+        # # Get value of TARGET nodes for current trial
+        # curr_tensors_for_targets = {}
+        # for component, target in targets.items():
+        #     if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+        #         curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
+        #     else:
+        #         # It's  a list, of lists, of torch tensors because it is ragged
+        #         num_outputs = len(target[0][0])
+        #         curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+        #
+        # # Map value of TARGET nodes to trained OUTPUT nodes
+        # curr_target_tensors_for_trained_outputs = {}
+        # for trained_output, target in self.outputs_to_targets_map.items():
+        #     curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
+        #
+        # # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
+        #
+        # # Calculate and track the loss over the trained OUTPUT nodes:
+        # #   curr_target_tensors_for_trained_outputs compared against curr_tensors_for_trained_outputs
+        # for component, outputs in curr_tensors_for_trained_outputs.items():
+        #     BREADCRUMB: COMPONENT IS A TENSOR
+        #                 OUTPUT IS A NODE
+        #                 targets IS A TENSOR
+        #     trial_loss = 0
+        #     targets = curr_target_tensors_for_trained_outputs[component]
 
-        # Get value of TARGET nodes for current trial
-        curr_tensors_for_targets = {}
-        for component, target in targets.items():
-            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
-            else:
-                # It's  a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(target[0][0])
-                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+        #     num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
+        #     for i in range(num_outputs):
+        #         # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
+        #
+        #         # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
+        #         # need to index
+        #         output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
+        #
+        #         # If the sequence dimension is singleton, it can be dropped
+        #         if len(output.shape) > 1 and output.shape[1] == 1:
+        #             output = output.squeeze(1)
+        #             target = torch.atleast_1d(targets[i].squeeze(1))
+        #
+        #         comp_loss = self.loss_function(
+        #             output,
+        #             target
+        #         )
+        #         comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
+        #         trial_loss += comp_loss
+        #     pytorch_rep.minibatch_loss += trial_loss
+        # pytorch_rep.minibatch_loss_count += 1
 
-        # Map value of TARGET nodes to trained OUTPUT nodes
-        curr_target_tensors_for_trained_outputs = {}
-        for trained_output, target in self.outputs_to_targets_map.items():
-            curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
+        # TEACHER_TARGET NEW
 
-        # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
-
-        # Calculate and track the loss over the trained OUTPUT nodes:
-        #   curr_target_tensors_for_trained_outputs compared against curr_tensors_for_trained_outputs
-        for component, outputs in curr_tensors_for_trained_outputs.items():
+        # TEACHER_TARGET BREADCRUMB: DAVE, OK?
+        for loss_mech in self.loss_mechs_map:
             trial_loss = 0
             targets = curr_target_tensors_for_trained_outputs[component]
             num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
@@ -1573,6 +1614,12 @@ class AutodiffComposition(Composition):
                 trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
+
+
+        # TEACHER_TARGET END
+
+
+
 
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
@@ -1605,7 +1652,7 @@ class AutodiffComposition(Composition):
                 output = output.squeeze(1)
 
             output = output.detach().cpu().numpy().copy().tolist()
-            if self.targets_from_outputs_map.values():
+            if self.target_nodes_for_outputs.values():
                 trained_output_values += [output]
             all_output_values += [output]
 
@@ -1763,7 +1810,7 @@ class AutodiffComposition(Composition):
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target in self.targets_from_outputs_map:
+        for target in self.target_nodes_for_outputs:
             target_values[target] = get_target_value(target)
         return target_values
 

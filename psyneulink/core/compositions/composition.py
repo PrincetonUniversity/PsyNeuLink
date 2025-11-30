@@ -8666,7 +8666,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"but it does not (yet) have any learning pathways.")
             else:
                 assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
-        return self.get_nodes_by_role(NodeRole.TARGET)
+        return target_nodes
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
         # unpack processing components and add to composition
