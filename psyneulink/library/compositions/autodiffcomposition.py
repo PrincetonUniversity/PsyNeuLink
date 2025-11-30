@@ -1766,6 +1766,15 @@ class AutodiffComposition(Composition):
         return target_values
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
+
+        if self.loss_mechs_map:
+            target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
+            target_error_msg = (f"The output(s) of the following node(s) were specified as targets "
+                                f"for learning in the constructor for '{self.name}', so none need to "
+                                f"(or should be) specified in the 'inputs' argument of the call to its "
+                                f"learn() method: {', '.join(target_node_names)}.")
+            raise AutodiffCompositionError(target_error_msg)
+
         stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
 
         if not callable(inputs):
