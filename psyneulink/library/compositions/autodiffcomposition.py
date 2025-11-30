@@ -938,9 +938,7 @@ class AutodiffComposition(Composition):
             **kwargs)
 
         self._built_pathways = False
-        self.loss_mechs_map = {}  # Map from LossMechanism to a (sample, target) tuple of it sender Ports
-        self.targets_from_outputs_map = {} # Map from TARGETS nodes to any OUTPUT nodes from which they receive input
-        self.outputs_to_targets_map = {}   # Map from trained OUTPUT nodes to their TARGETS
+        self.loss_mechs_map = {}  # Map from LossMechanism to a (sample, target) tuple of its sender Ports
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
@@ -1195,19 +1193,29 @@ class AutodiffComposition(Composition):
         """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
 
         TEACHER_TARGET BREADCRUMB:
-                  ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
-                  FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
-                  IF NOT, WHERE IS IT POPULATED?
+          ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
+          FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
+          IF NOT, WHERE IS IT POPULATED?
 
-        TEACHER_TARGET BREADCRUMB:
-                  ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
+          ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
 
-        Identify targets: specified in:
-            - self.targets
-            - MappingProjection specifications
-          - else:
-            - assign one for each OUTPUT Node
-        Create outputs_to_targets_map dict
+        If **targets** arg of AutodiffComposition constructor:
+        - IS specified:
+          - construct LossMechanisms:
+            {<student Node> : <teacher Node>} ->
+                student Node -> LossMechanism.input_port[SAMPLE]
+                reacher Node -> LossMechanism.input_port[TARGET]
+        - is NOT specified:
+          - use TERMINAL nodes of pathways to construct TARGET Nodes and LossMechanisms:
+              learn(targets = {<OUTPUT Node> : <value>}) -> TARGET Node (in _map_external_target_values_to_target_nodes)
+              TARGET Node -> LossMechanism.input_port[SAMPLE]
+              OUTPUT Node  -> LossMechanism.input_port[TARGET]
+          - this allows:
+            - external targets to be specified in the same way as for other execution_modes
+            - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
+            - losses to be tracked for logging (as mechs of a Composition)
+
+        Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
         """
         if self.targets:
             # LossMechanism and/or sample:target tuples specified by user in self.targets
@@ -1216,11 +1224,7 @@ class AutodiffComposition(Composition):
                             for loss_mech in loss_mech_specs]
 
         else:
-            # No targets specified by user, so use TERMINAL nodes of pathways to create LossMechanisms and TARGET Nodes
-            #   this allows:
-            #  - external targets to be specified in the same way as for other execution_modes
-            #  - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
-            #  - losses to be tracked for logging (as mechs of a Composition)
+            # No targets specified by user, so construct TARGET Node for external targets specified in learn():
             # IMPLEMENTATION NOTE:
             #    only add target nodes if *not* already present in self.targets_from_outputs_map.values()
             #    (to avoid duplication in multiple calls, including from command line;
@@ -1285,12 +1289,6 @@ class AutodiffComposition(Composition):
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
-
-        # self.targets_from_outputs_map.update({target: output for target, output
-        #                                in zip(target_mechs, output_mechs_for_learning)})
-        #
-        # return {output: target for target, output in self.targets_from_outputs_map.items()}
-        assert True
     # MODIFIED TEACHER_TARGET END
 
     def _add_dependency(self,
