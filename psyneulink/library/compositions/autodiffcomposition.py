@@ -193,8 +193,8 @@ Formats:
 - list of LearningMechanisms and/or tuples
 - dict of student:teacher pairs
 - default loss function for LossMechanisms is loss_spec
-- automatically constructs LossProjections from SAMPLE ("student") and TARGET ("teacher") Nodes
-  - technical note::  values of LossProjection(s) received from TARGET Nodes are detached
+- automatically constructs MappingProjections from SAMPLE ("student") and TARGET ("teacher") Nodes
+  - technical note::  values of MappingProjection(s) received from TARGET Nodes are detached
       (to prevent gradient propagation)
   - a SAMPLE can receive error signals from multiple LossMechanisms, directly or indirectly;
     gradients combined
@@ -455,7 +455,6 @@ from psyneulink.core.compositions.composition import (
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
-from psyneulink.library.components.projections.lossprojection import LossProjection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     AUTODIFF_COMPOSITION,
@@ -1006,8 +1005,8 @@ class AutodiffComposition(Composition):
             which also creates TARGET Nodes for TERMINAL Nodes in each pathway
         For PyTorch mode:
           - if **targets** are specified in the AutodiffComposition constructor,
-             LossMechanisms and LossProjections are constructed for them;
-          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and LossProjections
+             LossMechanisms and MappingProjections are constructed for them;
+          - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and MappingProjections
             (with associated TARGET Nodes) to allow targets to be specified in inputs argument of learn().
           - the above allow:
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
@@ -1205,7 +1204,7 @@ class AutodiffComposition(Composition):
 
         Identify targets: specified in:
             - self.targets
-            - LossProjection specifications
+            - MappingProjection specifications
           - else:
             - assign one for each OUTPUT Node
         Create outputs_to_targets_map dict
@@ -1213,6 +1212,9 @@ class AutodiffComposition(Composition):
         if self.targets:
             # LossMechanism and/or sample:target tuples specified by user in self.targets
             loss_mech_specs = self.targets
+            target_mechs = [loss_mech.target if isinstance(loss_mech, LossMechanism) else loss_mech[1]
+                            for loss_mech in loss_mech_specs]
+
         else:
             # No targets specified by user, so use TERMINAL nodes of pathways to create LossMechanisms and TARGET Nodes
             #   this allows:
@@ -1251,7 +1253,7 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-        # Construct LossMechanisms and LossProjections
+        # Construct LossMechanisms (and their  MappingProjections)
         loss_projections = []
         for i, item in enumerate(loss_mech_specs):
             # Constructe LossMechanism
@@ -1263,21 +1265,20 @@ class AutodiffComposition(Composition):
                                           function=None,
                                           loss=self.loss_spec)
             self.loss_mechs_map[loss_mech] = (sample, target)
-
-            # Construct LossProjections for each LossMechanism
-            loss_projections.append(LossProjection(sample,loss_mech.input_ports[SAMPLE]))
-            loss_projections.append(target_proj = LossProjection(target,loss_mech.input_ports[TARGET]))
+            loss_projections.extend(loss_mech.path_afferents)
+            target_mechs.append(loss_mech.target)
         loss_mechs = list(self.loss_mechs_map.keys())
 
-        # Add LossMechanisms, LossProjections and any TARGET Nodes to AutodiffComposition
+        # Add LossMechanisms, MappingProjections and any TARGET Nodes to AutodiffComposition
         context = Context(source=ContextFlags.METHOD)
-        self.add_nodes(loss_mechs, required_roles=[NodeRole.LOSS,
+        self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
                                                             NodeRole.LEARNING,
                                                             NodeRole.LEARNING_OBJECTIVE],
                        context=context)
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+        # TEACHER_TARGET BREADCRUMB: ??NEEDED?
         self.add_projections(loss_projections, context=context)
-        self.learning_components.append(self.loss_mechs + target_mechs)
+        self.learning_components.append(loss_mechs + target_mechs)
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:

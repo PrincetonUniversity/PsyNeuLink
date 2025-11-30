@@ -659,7 +659,6 @@ EFFERENTS = 'efferents'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
-LOSS_PROJECTION = "LossProjection"
 AUTO_ASSOCIATIVE_PROJECTION = "AutoAssociativeProjection"
 MASKED_MAPPING_PROJECTION = 'MaskedMappingProjection'
 LEARNING_PROJECTION = "LearningProjection"

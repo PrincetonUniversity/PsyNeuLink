@@ -40,8 +40,8 @@ LossMechanisms are created automatically when specified in the constructor of an
 It is important to recognize that the value of the *SAMPLE* and *TARGET* InputPorts must have the same length and
 type, so that they can be compared using the LossMechanism's `function <LossMechanism.function>`. They use format
 of the OutputPorts (or those of the Mechanisms) specified in the **sample** and **target**  arguments, respectively,
-and the `LossProjection` to each preserves those dimensions. Therefore, the OutputPorts (or Mechanisms) specified in
-the **sample** and **target** arguments must have values of the same length and type. If the **input_ports**
+and the `MappingProjection` to each preserves those dimensions. Therefore, the OutputPorts (or Mechanisms) specified
+in the **sample** and **target** arguments must have values of the same length and type. If the **input_ports**
 argument is used, then *both* the *SAMPLE* and *TARGET* InputPorts must be specified. Any of the formats for
 `specifying InputPorts <InputPort_Specification>` can be used in the argument, however the number and use of these
 must conform to the format of the `variable <Function.variable>` for `function <LossMechanism.function>` of
@@ -55,7 +55,7 @@ Structure
 ---------
 
 A LossMechanism has, by default, two `input_ports <LossMechanism.input_ports>`, each of which receives a
-`LossProjection` from a corresponding OutputPort specified in the **sample** and **target** arguments of its
+`MappingProjection` from a corresponding OutputPort specified in the **sample** and **target** arguments of its
 constructor. The InputPorts are listed in the Mechanism's `input_ports <LossMechanism.input_ports>` attribute
 and named, respectively, *SAMPLE* and *TARGET*. The OutputPorts from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <LossMechanism.sample>` and
@@ -97,16 +97,15 @@ from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import LossFunction
-from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import (
-    ALL, CROSS_ENTROPY, FUNCTION, Loss, LOSS_MECHANISM, OUTCOME, PREFERENCE_SET_NAME, SUM, WEIGHT)
+    Loss, LOSS_MECHANISM, NAME, PREFERENCE_SET_NAME, PROJECTION, SAMPLE, TARGET)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    NumericCollections, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
+from psyneulink.core.globals.utilities import NumericCollections
+from psyneulink.core.globals.context import handle_external_context
 
 __all__ = ['LossMechanism', 'LossMechanismError']
 
@@ -238,6 +237,7 @@ class LossMechanism(ComparatorMechanism):
                 return f"must be a torch.nn loss function."
             return None
 
+    @handle_external_context()
     @check_user_specified
     @beartype
     def __init__(self,
@@ -252,6 +252,7 @@ class LossMechanism(ComparatorMechanism):
                  params=None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None,
+                 context=None,
                  **kwargs
                  ):
 
@@ -262,14 +263,17 @@ class LossMechanism(ComparatorMechanism):
         else:
             function = LossFunction(loss=loss)
 
-        super().__init__(
-                 default_variable=default_variable,
-                 sample=sample,
-                 target=target,
-                 function=function,
-                 output_ports=output_ports,
-                 params=params,
-                 name=name,
-                 prefs=prefs,
-                 **kwargs
-        )
+        super().__init__(default_variable=default_variable,
+                         sample=sample,
+                         target=target,
+                         function=function,
+                         output_ports=output_ports,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         **kwargs)
+
+        self.parameters.sample._set(sample, context)
+        self.parameters.target._set(target, context)
+
+
