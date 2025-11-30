@@ -1559,8 +1559,8 @@ class AutodiffComposition(Composition):
         # # Calculate and track the loss over the trained OUTPUT nodes:
         # #   curr_target_tensors_for_trained_outputs compared against curr_tensors_for_trained_outputs
         # for component, outputs in curr_tensors_for_trained_outputs.items():
-        #     BREADCRUMB: COMPONENT IS A TENSOR
-        #                 OUTPUT IS A NODE
+        #     BREADCRUMB: COMPONENT IS A OUTPUT NODE
+        #                 OUTPUTS IS TENSOR FOR OUTPUT Node
         #                 targets IS A TENSOR
         #     trial_loss = 0
         #     targets = curr_target_tensors_for_trained_outputs[component]
