@@ -1623,10 +1623,19 @@ class AutodiffComposition(Composition):
         #     all_output_values += [output]
 
         # TEACHER_TARGET NEW
+        curr_tensors_for_targets = {}
+        for component, target in targets.items():
+            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
+            else:
+                # It's  a list, of lists, of torch tensors because it is ragged
+                num_outputs = len(target[0][0])
+                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+
         # TEACHER_TARGET BREADCRUMB: DAVE, OK?
         trial_loss = 0
-        for loss_mech in self.loss_mechs_map:
-            comp_loss = loss_mech.value
+        for loss_node in self.loss_nodes:
+            comp_loss = loss_node.value
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
@@ -1642,6 +1651,7 @@ class AutodiffComposition(Composition):
         pytorch_rep.all_output_values = all_output_values
 
         # Get values of TARGET nodes
+        # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE LossMechs (IF curr_tensors_for_targets IS NOT SUPPORTED)
         target_values = [value[0].detach().cpu().numpy().copy().tolist()
                          for value in list(curr_tensors_for_targets.values())]
         pytorch_rep.target_values = target_values
@@ -1652,6 +1662,7 @@ class AutodiffComposition(Composition):
                                           [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
                                           context,
                                           [NODE_VARIABLES, NODE_VALUES])
+        # TEACHER_TARGET BREADCRUMB: REFACDTOR TO USE LossMechs (IF trained_output_values IS NOT SUPPORTED)
         pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: trained_output_values,
                                            TARGETS: target_values},
                                           retain_in_pnl_options,
@@ -1793,7 +1804,7 @@ class AutodiffComposition(Composition):
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
 
-        if self.loss_mechs_map:
+        if targets and self.loss_mechs_map:
             target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
             target_error_msg = (f"The output(s) of the following node(s) were specified as targets "
                                 f"for learning in the constructor for '{self.name}', so none need to "

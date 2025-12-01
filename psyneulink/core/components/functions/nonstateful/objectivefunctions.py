@@ -1242,6 +1242,7 @@ class LossFunction(ObjectiveFunction):
     Loss(                      \
        default_variable=None,  \
        loss=Loss.MSE           \
+       function=None,          \
        normalize=False,        \
        params=None,            \
        owner=None,             \

@@ -1892,6 +1892,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
 
+                    if node.is_loss:
+                        # TEACHER_TARGET BREADCRUMB: POSSIBLY DETACH TARGET INPUT HERE
+                        # If node is a loss node, its output is not used in forward pass,
+                        #  so just cache for later use during backpropagation
+                        self._loss_nodes_outputs[node] = variable
+                        continue
+
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
                         # if node.exclude_from_gradient_calc in {AFTER, LAST}:
@@ -2221,6 +2228,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
             f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
         for proj_wrapper in self.afferents:
+            # TEACHER_TARGET BREADCRUMB:  AUGMENT TO SUPPORT LossMechanism FOR WHICH AFFERENTS SHOULD BE DETACHED
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
@@ -2343,7 +2351,12 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 batch_size = res[0].shape[0]
                 seq_size = res[0].shape[1]
                 res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
-
+            # TEACHER_TARGET BREADCRUMB: DETACH TARGET
+            elif isinstance(NODE, (LossMechanism)): # NODE IS LOSS
+                sample = variable[:,:,0,...]
+                target = variable[:,:,1,...].detach()
+                # VALIDATE THAT THIS IS A LOSS FUNCTION
+                res = function(sample, target)
             else:
                 # Functions handle batch dimensions, just run the
                 # function with the variable and get back a tensor.
