@@ -1586,75 +1586,52 @@ class AutodiffComposition(Composition):
         #         trial_loss += comp_loss
         #     pytorch_rep.minibatch_loss += trial_loss
         # pytorch_rep.minibatch_loss_count += 1
+        #
+        # # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
+        #
+        # # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
+        #
+        # # Get output Nodes, their out_ports and corresponding indices
+        # #     in order of outermost AutodiffComposition's output_CIM Ports
+        # outputs_idx_port_node_comp = []
+        # for port in self.output_CIM.input_ports:
+        #     source_info = self.output_CIM._get_source_info_from_output_CIM(port)
+        #     source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
+        #     # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
+        #     outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
+        #
+        # # Assign values to trained_output_values and all_output_values
+        # trained_output_values = []
+        # all_output_values = []
+        # for item in outputs_idx_port_node_comp:
+        #     idx, port, node, comp = item
+        #     if comp._trained_comp_nodes_to_pytorch_nodes_map:
+        #         node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
+        #     outputs = curr_tensors_for_outputs[node]
+        #     if type(outputs) is torch.Tensor:
+        #         output = outputs[:, :, idx, ...]
+        #     else:
+        #         output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+        #
+        #     # If the sequence dimension is singleton, squeeze it away
+        #     if output.shape[1] == 1:
+        #         output = output.squeeze(1)
+        #
+        #     output = output.detach().cpu().numpy().copy().tolist()
+        #     if self.target_nodes_for_outputs.values():
+        #         trained_output_values += [output]
+        #     all_output_values += [output]
 
         # TEACHER_TARGET NEW
-
         # TEACHER_TARGET BREADCRUMB: DAVE, OK?
+        trial_loss = 0
         for loss_mech in self.loss_mechs_map:
-            trial_loss = 0
-            targets = curr_target_tensors_for_trained_outputs[component]
-            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
-            for i in range(num_outputs):
-                # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
-
-                # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
-                # need to index
-                output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
-
-                # If the sequence dimension is singleton, it can be dropped
-                if len(output.shape) > 1 and output.shape[1] == 1:
-                    output = output.squeeze(1)
-                    target = torch.atleast_1d(targets[i].squeeze(1))
-
-                comp_loss = self.loss_function(
-                    output,
-                    target
-                )
-                comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
-                trial_loss += comp_loss
+            comp_loss = loss_mech.value
+            comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
+            trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
-
-
         # TEACHER_TARGET END
-
-
-
-
-        # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
-
-        # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
-
-        # Get output Nodes, their out_ports and corresponding indices
-        #     in order of outermost AutodiffComposition's output_CIM Ports
-        outputs_idx_port_node_comp = []
-        for port in self.output_CIM.input_ports:
-            source_info = self.output_CIM._get_source_info_from_output_CIM(port)
-            source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
-            # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
-            outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
-
-        # Assign values to trained_output_values and all_output_values
-        trained_output_values = []
-        all_output_values = []
-        for item in outputs_idx_port_node_comp:
-            idx, port, node, comp = item
-            if comp._trained_comp_nodes_to_pytorch_nodes_map:
-                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
-            outputs = curr_tensors_for_outputs[node]
-            if type(outputs) is torch.Tensor:
-                output = outputs[:, :, idx, ...]
-            else:
-                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
-
-            # If the sequence dimension is singleton, squeeze it away
-            if output.shape[1] == 1:
-                output = output.squeeze(1)
-
-            output = output.detach().cpu().numpy().copy().tolist()
-            if self.target_nodes_for_outputs.values():
-                trained_output_values += [output]
-            all_output_values += [output]
 
         # Turn into a numpy array, possibly ragged
         all_output_values = convert_to_np_array(all_output_values)
