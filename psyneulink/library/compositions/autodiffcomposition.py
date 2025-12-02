@@ -1245,11 +1245,11 @@ class AutodiffComposition(Composition):
                                                 name= 'TARGET for ' + mech.name)
                             for mech in sample_mechs_for_learning if not any(mech is target.owner for sample, target
                                                                              in self.loss_mechs_map.values())]
-            loss_mech_specs = zip(sample_mechs_for_learning, target_mechs)
+            loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
 
         # Validate LossMechanism specs
-        for loss_mech in loss_mech_specs:
+        for loss_mech in list(loss_mech_specs):
             # Assume that self.targets is a list of LossMechanisms and/or tuples specifying sample:target pairs
             assert isinstance(loss_mech, (LossMechanism, tuple)), \
                 (f"PROGRAM ERROR: item in self.targets is neither LossMechanism nor 2-item tuple: {loss_mech};"
@@ -1628,9 +1628,9 @@ class AutodiffComposition(Composition):
                 num_outputs = len(target[0][0])
                 curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
 
-        # TEACHER_TARGET BREADCRUMB: DAVE, OK?
         trial_loss = 0
-        for loss_node in self.loss_nodes:
+        # TEACHER_TARGET BREADCRUMB: NEED TO GET NODES THAT ARE PytorchLossMechanismWrappers
+        for loss_node in self.loss_mechs_map:
             comp_loss = loss_node.value
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
@@ -1800,7 +1800,9 @@ class AutodiffComposition(Composition):
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
 
-        if targets and self.loss_mechs_map:
+        # TEACHER_TARGET BREADCRUMB: HANDLE "INPUT" KEYWORD IN **targets** ARG OF CONSTRUCTOR HERE
+        if targets and self.targets:
+            # targets is from learn() and self.targets is from **targets** arg of AutodiffComposition constructor
             target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
             target_error_msg = (f"The output(s) of the following node(s) were specified as targets "
                                 f"for learning in the constructor for '{self.name}', so none need to "

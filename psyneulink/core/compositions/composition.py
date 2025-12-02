@@ -3259,6 +3259,7 @@ from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -14205,9 +14206,9 @@ def get_composition_for_node(node):
 
     def search_for_output_CIM(node):
         # TEACHER_TARGET BREADCRUMB: SHOULD NOT BE NEEDED ONCE MappnigProjections HAVE BEEN ASSIGNED IN PyTorch mode
-        # if not node.efferents:
-        #     # If there are no efferents, probably a TARGET Node
-        #     return None
+        if not node.efferents:
+            # If there are no efferents, probably a TARGET Node
+            return None
         # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
         for efferent in node.efferents:
             receiver = efferent.receiver.owner

@@ -37,6 +37,7 @@ from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
@@ -443,15 +444,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism
             else:
-                pytorch_node_wrapper = \
+                # # TEACHER_TARGET BREADCRUMB:  USE IF PytorchLossMechanismWrapper IS USED
+                # if isinstance(node, LossMechanism):
+                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
+                # else:
+                #     pytorch_mechanism_wrapper_type self.composition.pytorch_mechanism_wrapper_type
+                pytorch_node_wrapper = (
                     self.composition.pytorch_mechanism_wrapper_type(
+                    # pytorch_mechanism_wrapper_type(
                         mechanism=node,
                         composition=composition,
                         component_idx=self.composition._get_node_index(node),
                         use=[LEARNING, SYNCH, SHOW_PYTORCH],
                         dtype=self.torch_dtype,
                         device=device,
-                        context=context)
+                        context=context))
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
@@ -2344,12 +2351,12 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 batch_size = res[0].shape[0]
                 seq_size = res[0].shape[1]
                 res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
-            # TEACHER_TARGET BREADCRUMB: DETACH TARGET
-            elif isinstance(NODE, (LossMechanism)): # NODE IS LOSS
+
+            elif isinstance(self.mechanism, LossMechanism):
                 sample = variable[:,:,0,...]
                 target = variable[:,:,1,...].detach()
-                # VALIDATE THAT THIS IS A LOSS FUNCTION
                 res = function(sample, target)
+
             else:
                 # Functions handle batch dimensions, just run the
                 # function with the variable and get back a tensor.
@@ -2519,6 +2526,22 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     def __repr__(self):
         return "PytorchWrapper for: " +self.mechanism.__repr__()
+
+# TEACHER_TARGET BREADCRUMB: UNCOMMENT CODE IN _instantiate_pytorch_mechanism_wrappers IF THIS IS USED
+class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
+    """Subclass of PytorchMechanismWrapper that override self.function.execute to detach() tensor from TARGET input.
+    """
+    def __init__(self, *args, **kwargs):
+        super(PytorchLossMechanismWrapper, self).__init__(*args, **kwargs)
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+        self.input = variable
+
+        sample = variable[:,:,0,...]
+        target = variable[:,:,1,...].detach()
+        self.output = self.function(sample, target)
+
+        return self.output
 
 
 class PytorchProjectionWrapper():
