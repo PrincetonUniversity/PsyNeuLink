@@ -281,6 +281,7 @@ class TestLCA:
     @pytest.mark.lca_mechanism
     def test_LCAMechanism_standard_output_ports(self):
         lca = pnl.LCAMechanism(
+            name='TEST_LCA',
             input_shapes=2,
             function=pnl.Logistic(gain=1, bias=0),
             threshold=0.55,

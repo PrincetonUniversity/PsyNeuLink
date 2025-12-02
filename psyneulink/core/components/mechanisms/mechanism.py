@@ -2594,27 +2594,36 @@ class Mechanism_Base(Mechanism):
 
                 self.parameters.value._set(value, context=context)
 
-            # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
-
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
             num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
+            set_break = False
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 
             if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
-                break
+                set_break = True
 
-            if self.is_finished(context):
+            if self.is_finished(context) and not set_break:
+                # Set flag to True since call to method says it is finished (could be override)
                 self.parameters.is_finished_flag._set(True, context)
+                set_break = True
+
+            if not set_break:
+                # Set flag to False as default, and use that to break if execute_until_finished is False
+                self.parameters.is_finished_flag._set(False, context)
+                if not self.parameters.execute_until_finished._get(context):
+                    set_break = True
+
+            # UPDATE OUTPUTPORT(S)
+            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
+
+            if set_break:
                 break
 
-            self.parameters.is_finished_flag._set(False, context)
-            if not self.parameters.execute_until_finished._get(context):
-                break
+
 
         # REPORT EXECUTION
 
