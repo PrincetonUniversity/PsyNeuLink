@@ -74,6 +74,7 @@ from enum import Flag, auto
 from math import e, pi, sqrt
 
 import numpy as np
+
 try:
     import torch
 except ImportError:
@@ -98,6 +99,7 @@ from psyneulink.core.globals.keywords import (
     ADAPTIVE, ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, BINOMIAL_DISTORT_FUNCTION,
     DETERMINISTIC_TRANSFER_FUNCTION_TYPE, DROPOUT_FUNCTION,
     EXPONENTIAL_FUNCTION, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION,
+    HYPERSPHERICAL_TO_CARTESIAN_FUNCTION,
     IDENTITY_FUNCTION, INTERCEPT, LEAK, LINEAR_FUNCTION, LOGISTIC_FUNCTION,
     MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, OFF, OFFSET, ON, OUTPUT_TYPE,
     PER_ITEM, PROB, PRODUCT, PROB_INDICATOR, PROBABILISTIC_TRANSFER_FUNCTION_TYPE,
@@ -112,9 +114,10 @@ from psyneulink.core.globals.preferences.basepreferenceset import \
 from psyneulink.core.globals.utilities import (
     ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword)
 
-__all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
-           'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+__all__ = ['BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'HypersphericalToCartesian',
+           'Identity', 'Linear', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
+
 
 def _range_getter_using_scale_and_offset(owning_component=None, context=None):
     """Reassign range based on scale and offset applied to function's default_range
@@ -178,9 +181,9 @@ class TransferFunction(Function_Base):
                     :type:
 
         """
-        range = Parameter((None,None), read_only=True)
+        range = Parameter((None, None), read_only=True)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert arg_in.type == arg_out.type
 
@@ -199,6 +202,7 @@ class TransferFunction(Function_Base):
                                         params=params, state=state, tags=tags)
 
         return builder
+
 
 class DeterministicTransferFunction(TransferFunction):
     """Subclass of TransferFunction that computes a deterministic function.
@@ -255,9 +259,9 @@ class DeterministicTransferFunction(TransferFunction):
                     :type: float
         """
         range = Parameter((None, None),
-                           getter=_range_getter_using_scale_and_offset,
-                           read_only=True,
-                           dependencies={'scale', 'offset'})
+                          getter=_range_getter_using_scale_and_offset,
+                          read_only=True,
+                          dependencies={'scale', 'offset'})
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
@@ -335,7 +339,7 @@ class Identity(DeterministicTransferFunction):  #
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -345,10 +349,10 @@ class Identity(DeterministicTransferFunction):  #
         # self.functionOutputType = None
 
     def _function(
-        self,
-        variable=None,
-        context=None,
-        params=None,
+            self,
+            variable=None,
+            context=None,
+            params=None,
 
     ):
         """
@@ -376,7 +380,7 @@ class Identity(DeterministicTransferFunction):  #
 
         return variable
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags: frozenset):
         val = builder.load(arg_in)
         builder.store(val, arg_out)
         return builder
@@ -537,7 +541,7 @@ class Linear(DeterministicTransferFunction):  #
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -551,10 +555,10 @@ class Linear(DeterministicTransferFunction):  #
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -650,7 +654,7 @@ class Linear(DeterministicTransferFunction):  #
 
         return slope == 1 and intercept == 0 and scale == 1 and offset == 0
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = ctx.get_param_or_state_ptr(builder, self, SLOPE, param_struct_ptr=params)
@@ -663,11 +667,10 @@ class Linear(DeterministicTransferFunction):  #
         scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
-
         if "derivative" in tags:
             # f'(x) = m * scale
             val = slope
-            val = builder.fmul(val,scale)
+            val = builder.fmul(val, scale)
         else:
             # f(x) = scale * (mx + b) + offset
             val = builder.load(ptri)
@@ -791,7 +794,6 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
     componentName = EXPONENTIAL_FUNCTION
     default_range = (0, None)
 
-
     class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
@@ -822,7 +824,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -835,10 +837,10 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -863,7 +865,7 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
 
-        result = scale * e**(rate * variable + bias) + offset
+        result = scale * e ** (rate * variable + bias) + offset
         return self.convert_output_type(result)
 
     @handle_external_context()
@@ -888,9 +890,9 @@ class Exponential(DeterministicTransferFunction):  # ---------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         bias = self._get_current_parameter_value(BIAS, context)
 
-        return scale * rate * e**(rate * input + bias)
+        return scale * rate * e ** (rate * input + bias)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1061,7 +1063,6 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
     _model_spec_class_name_is_generic = True
     default_range = (0, 1)
 
-
     class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
@@ -1100,7 +1101,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         super().__init__(
             default_variable=default_variable,
@@ -1116,10 +1117,10 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -1145,7 +1146,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
         scale = self._get_current_parameter_value(SCALE, context)
 
-        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0)))) + offset
+        result = scale * (1. / (1 + e ** (-gain * (variable + bias - x_0)))) + offset
 
         return self.convert_output_type(result)
 
@@ -1192,7 +1193,7 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
 
         return gain * scale * output * (1 - output)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1211,15 +1212,15 @@ class Logistic(DeterministicTransferFunction):  # ------------------------------
         val = builder.load(ptri)
 
         if "derivative_out" not in tags:
-            val = builder.fadd(val, bias)             # variable + bias
-            val = builder.fsub(val, x_0)              # variable + bias - x_0
-            val = builder.fmul(val, gain)             # gain * (variable + bias - x_0)
-            val = builder.fneg(val)                   # -gain * (variable + bias - x_0)
-            val = builder.call(exp_f, [val])          # e^(-gain * (variable + bias - x_0))
-            val = builder.fadd(val.type(1), val)      # 1 + e^(-gain * (variable + bias - x_0))
-            val = builder.fdiv(val.type(1), val)      # 1 / (1 + e^(-gain * (variable + bias - x_0)))
-            val = builder.fmul(val, scale)            # scale * (1 / (1 + e^(-gain * (variable + bias - x_0)))
-            val = builder.fadd(val, offset)           # scale * (1 / (1 + e^(-gain * (variable + bias - x_0))) + offset
+            val = builder.fadd(val, bias)  # variable + bias
+            val = builder.fsub(val, x_0)  # variable + bias - x_0
+            val = builder.fmul(val, gain)  # gain * (variable + bias - x_0)
+            val = builder.fneg(val)  # -gain * (variable + bias - x_0)
+            val = builder.call(exp_f, [val])  # e^(-gain * (variable + bias - x_0))
+            val = builder.fadd(val.type(1), val)  # 1 + e^(-gain * (variable + bias - x_0))
+            val = builder.fdiv(val.type(1), val)  # 1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fmul(val, scale)  # scale * (1 / (1 + e^(-gain * (variable + bias - x_0)))
+            val = builder.fadd(val, offset)  # scale * (1 / (1 + e^(-gain * (variable + bias - x_0))) + offset
 
         if "derivative" in tags or "derivative_out" in tags:
             # f(x) = g * s * o * (1 - o)
@@ -1371,7 +1372,6 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
     # parameter_keywords.update({GAIN, BIAS, OFFSET})
     default_range = (-1, 1)
 
-
     class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
@@ -1410,7 +1410,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         super().__init__(
             default_variable=default_variable,
@@ -1426,10 +1426,10 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -1456,10 +1456,9 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
 
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
-        result = scale * (1 - e**exponent)/ (1 + e**exponent)
+        result = scale * (1 - e ** exponent) / (1 + e ** exponent)
 
         return self.convert_output_type(result)
-
 
     @handle_external_context()
     def derivative(self, input, output=None, context=None):
@@ -1487,12 +1486,12 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
 
         exponent = -2 * (gain * (input + bias - x_0) + offset)
         mult = -2 * gain * scale
-        numerator = -2 * e**(exponent)
-        denominator = (1 + e**(exponent))**2
+        numerator = -2 * e ** (exponent)
+        denominator = (1 + e ** (exponent)) ** 2
 
         return mult * (numerator / denominator)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1551,6 +1550,7 @@ class Tanh(DeterministicTransferFunction):  # ----------------------------------
         # return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
         return lambda x: ((torch.exp(gain * (x + bias) + offset) - torch.exp(gain * (-x + bias) + offset))
                           / (torch.exp(gain * (x + bias) + offset) + torch.exp(gain * (-x + bias) + offset)))
+
 
 # **********************************************************************************************************************
 #                                                    ReLU
@@ -1666,7 +1666,6 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
     # parameter_keywords.update({GAIN, BIAS, LEAK})
     default_range = (None, None)
 
-
     class Parameters(DeterministicTransferFunction.Parameters):
         """
             Attributes
@@ -1705,7 +1704,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         super().__init__(
             default_variable=default_variable,
@@ -1721,10 +1720,10 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -1789,7 +1788,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         value = np.where(variable > 0, scale * gain, scale * gain * leak)
         return value
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1832,7 +1831,7 @@ class ReLU(DeterministicTransferFunction):  # ----------------------------------
         bias = self._get_pytorch_fct_param_value('bias', device, context)
         leak = self._get_pytorch_fct_param_value('leak', device, context)
         return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
-                            torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
+                          torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
 
 
 # **********************************************************************************************************************
@@ -1973,7 +1972,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
                  offset: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
         super().__init__(
             default_variable=default_variable,
@@ -1987,7 +1986,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
             **kwargs
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2024,10 +2023,10 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
         builder.store(val, ptro)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -2053,7 +2052,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
         scale = self._get_current_parameter_value(SCALE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
 
-        gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
+        gaussian = e ** (-(variable - bias) ** 2 / (2 * standard_deviation ** 2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
@@ -2083,7 +2082,7 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
         bias = self._get_current_parameter_value(BIAS, context)
 
         adjusted_input = input - bias
-        result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
+        result = (-adjusted_input * e ** (-(adjusted_input ** 2 / (2 * sigma ** 2)))) / sqrt(2 * pi * sigma ** 3)
 
         return self.convert_output_type(result)
 
@@ -2092,7 +2091,8 @@ class Gaussian(DeterministicTransferFunction):  # ------------------------------
 #                                               GaussianDistort
 # **********************************************************************************************************************
 
-class GaussianDistort(TransferFunction):  #-----------------------------------------------------------------------------
+class GaussianDistort(
+    TransferFunction):  # -----------------------------------------------------------------------------
     """
     GaussianDistort(       \
          default_variable, \
@@ -2194,6 +2194,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     """
 
     componentName = GAUSSIAN_DISTORT_FUNCTION
+
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
     class Parameters(TransferFunction.Parameters):
@@ -2250,8 +2251,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-
+                 prefs: Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             variance=variance,
@@ -2264,7 +2264,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2294,10 +2294,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         builder.store(val, ptro)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -2361,7 +2361,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 #                                               BinomialDistort
 # **********************************************************************************************************************
 
-class BinomialDistort(TransferFunction):  #-----------------------------------------------------------------------------
+class BinomialDistort(
+    TransferFunction):  # -----------------------------------------------------------------------------
     """
     BinomialDistort(          \
          default_variable,    \
@@ -2482,7 +2483,7 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2509,10 +2510,10 @@ class BinomialDistort(TransferFunction):  #-------------------------------------
         builder.store(val, ptro)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -2690,7 +2691,7 @@ class Dropout(TransferFunction):  #
                  p: Optional[ValidParamSpecType] = None,
                  params=None,
                  owner=None,
-                 prefs: Optional[ValidPrefSet]  = None):
+                 prefs: Optional[ValidPrefSet] = None):
         self.binomial_distort = BinomialDistort(default_variable=default_variable, p=p)
 
         super().__init__(
@@ -2702,10 +2703,10 @@ class Dropout(TransferFunction):  #
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -2770,7 +2771,7 @@ class Dropout(TransferFunction):  #
 
         return (context.run_mode != ContextFlags.LEARNING_MODE) or (p == 0.0)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags: frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -3037,7 +3038,8 @@ class SoftMax(TransferFunction):
                     :default value: None
                     :type: ``float``
         """
-        variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True,
+                             constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mask_threshold = Parameter(None, modulable=True)
         adapt_scale = Parameter(1.0, modulable=True)
@@ -3104,7 +3106,7 @@ class SoftMax(TransferFunction):
                  per_item=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -3193,10 +3195,10 @@ class SoftMax(TransferFunction):
             return sm
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -3235,7 +3237,7 @@ class SoftMax(TransferFunction):
 
         return self.convert_output_type(output)
 
-    def adapt_gain(self, v, context)->float:
+    def adapt_gain(self, v, context) -> float:
         """Compute the softmax gain (inverse temperature) based on the entropy of the distribution of values.
         Uses base, scale, and entropy_weighting parameters of SoftMax function to compute gain:
 
@@ -3272,7 +3274,7 @@ class SoftMax(TransferFunction):
             output = self.function(input, params={OUTPUT_TYPE: ALL}, context=context)
         elif np.any(np.equal(0, output)) and context.source == ContextFlags.CONSTRUCTOR:
             # Allow derivative to be computed when output is 0 during initialization
-            output = np.where(output, output==0, 1)
+            output = np.where(output, output == 0, 1)
         else:
             assert not np.any(np.equal(0, output)), \
                 f"Derivative of SoftMax function for '{self.owner.name}' is not defined when output is 0."
@@ -3349,7 +3351,7 @@ class SoftMax(TransferFunction):
 
         builder.store(val, ptro)
 
-    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags:frozenset):
+    def __gen_llvm_apply(self, ctx, builder, params, state, arg_in, arg_out, output_type, tags: frozenset):
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
@@ -3363,7 +3365,8 @@ class SoftMax(TransferFunction):
         exp_sum = builder.load(exp_sum_ptr)
 
         if output_type == ALL:
-            one_hot_p = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
+            one_hot_p = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params,
+                                                   state_struct_ptr=state)
 
             # Derivative first gets the output_type == ALL result even if the selected output type is different.
             assert self.output != output_type or one_hot_p.type.pointee.elements == (), \
@@ -3373,7 +3376,8 @@ class SoftMax(TransferFunction):
                                         gain=gain, exp_sum=exp_sum, *args)
             return builder
 
-        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params, state_struct_ptr=state)
+        one_hot_p, one_hot_s = ctx.get_param_or_state_ptr(builder, self, 'one_hot_function', param_struct_ptr=params,
+                                                          state_struct_ptr=state)
         one_hot_f = ctx.import_llvm_function(self.one_hot_function, tags=tags)
 
         assert one_hot_f.args[3].type == arg_out.type
@@ -3399,14 +3403,13 @@ class SoftMax(TransferFunction):
                 dist_out = b.gep(one_hot_in_data, [ctx.int32_ty(0), i])
                 b.store(b.load(dist_in), dist_out)
 
-
             builder.call(one_hot_f, [one_hot_p, one_hot_s, one_hot_in, one_hot_out])
         else:
             assert False, "Unsupported output in {} for LLVM execution mode: {}".format(self, output_type)
 
         return builder
 
-    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_derivative_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         assert "derivative" in tags or "derivative_out" in tags
         assert arg_in.type == arg_out.type
         forward_tags = tags.difference({"derivative", "derivative_out"})
@@ -3416,7 +3419,8 @@ class SoftMax(TransferFunction):
             all_out = arg_in
         else:
             all_out = builder.alloca(arg_out.type.pointee)
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL, tags=forward_tags)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, all_out, output_type=ALL,
+                                                   tags=forward_tags)
 
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
@@ -3424,12 +3428,13 @@ class SoftMax(TransferFunction):
             for i in range(arg_in.type.pointee.count):
                 inner_all_out = builder.gep(all_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out, tags=tags)
+                builder = self.__gen_llvm_apply_derivative(ctx, builder, params, state, inner_all_out, inner_out,
+                                                           tags=tags)
             return builder
         else:
             return self.__gen_llvm_apply_derivative(ctx, builder, params, state, all_out, arg_out, tags=tags)
 
-    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags:frozenset):
+    def __gen_llvm_apply_derivative(self, ctx, builder, params, state, all_out, arg_out, *, tags: frozenset):
 
         assert self.output in {ARG_MAX, ARG_MAX_INDICATOR, MAX_VAL, MAX_INDICATOR}, (
             "Derivative of SoftMax is only implemented for ARG_MAX and ARG_MAX_INDICATOR "
@@ -3466,7 +3471,8 @@ class SoftMax(TransferFunction):
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, output_type=None, *,
+                                tags: frozenset):
         output_type = self.output if output_type is None else output_type
         if "derivative" in tags or "derivative_out" in tags:
             return self._gen_llvm_function_derivative_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
@@ -3477,7 +3483,8 @@ class SoftMax(TransferFunction):
             for i in range(arg_in.type.pointee.count):
                 inner_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 inner_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type, tags=tags)
+                builder = self.__gen_llvm_apply(ctx, builder, params, state, inner_in, inner_out, output_type,
+                                                tags=tags)
             return builder
         else:
             return self.__gen_llvm_apply(ctx, builder, params, state, arg_in, arg_out, output_type, tags=tags)
@@ -3496,7 +3503,7 @@ class SoftMax(TransferFunction):
                 # Apply threshold-based masking
                 if mask_threshold is not None:
                     if torch.any(_input < 0) and not self._negative_input_warning:
-                        warnings.warn(f"Softmax function: mask_threshold is set to {mask_threshold}, "
+                        warnings.warn(f"Softmax function: mask_threshold is set to {float(mask_threshold)}, "
                                       f"but input contains negative values. "
                                       f"Masking will be applied to the magnitude of the input.")
                         self._negative_input_warning = True
@@ -3518,6 +3525,7 @@ class SoftMax(TransferFunction):
                 sm = exp_v / torch.sum(exp_v, dim=-1, keepdim=True)
 
                 return sm
+
             # Return the function
             return pytorch_thresholded_softmax
 
@@ -3529,46 +3537,45 @@ class SoftMax(TransferFunction):
         base = self._get_pytorch_fct_param_value('adapt_base', device, context)
         entropy_weighting = self._get_pytorch_fct_param_value('adapt_entropy_weighting', device, context)
         # v = torch.squeeze(v)
-        return lambda x : scale * (base +
-                                   (entropy_weighting * len(x) *
-                                    torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
-                                                             * torch.log(1 / (1 + torch.exp(-1 * x)))))))
+        return lambda x: scale * (base +
+                                  (entropy_weighting * len(x) *
+                                   torch.log(-1 * torch.sum((1 / (1 + torch.exp(-1 * x)))
+                                                            * torch.log(1 / (1 + torch.exp(-1 * x)))))))
 
 
 # **********************************************************************************************************************
-#                                                    Angle
+#                                                HypersphericalToCartesian
 # **********************************************************************************************************************
 
-# FIX: VALIDATE LEN(VARIABLE)>=2
-
-class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
+class HypersphericalToCartesian(TransferFunction):
     """
-    Angle(                 \
-         default_variable, \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
+    HypersphericalToCartesian(  \
+         default_variable,      \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
          )
 
-    .. _Angle_Function:
+    .. _HypersphericalToCartesian_Function:
 
-    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
+    `function <HypersphericalToCartesian._function>` Map n angles θ=(θ0,...,θ{n-1})
+    to an (n+1)-dimensional point x on the unit n-sphere S^n
+    using the *standard* (prefix-sine) hyperspherical parameterization:
 
-    COMMENT:
-    FIX: WITH PROPER MATHEMATICAL DEFN
     .. math::
+        x\\_0 = \\cos(\\theta_0)
+        x\\_j = \\left(\\prod_{k=0}^{j-1} \\sin(\\theta_k) \\right) \\cos(\\theta_j)
+            \\qquad \\text{for } 1 \\le j \\le n-1
+        x\\_n = \\prod_{k=0}^{n-1} \\sin(\\theta_k)
 
-        slope * variable + intercept
-
-    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
-    COMMENT
+    This returns a unit-length vector for any input angles.
 
     Arguments
     ---------
 
     default_variable : 1array : default class_defaults.variable
-        specifies a template for the value to be transformed;  length must be at least 2.
+        specifies a template for the value to be transformed;  length must be at least 1.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3603,10 +3610,10 @@ class Angle(TransferFunction):  # ----------------------------------------------
         for details).
     """
 
-    componentName = ANGLE_FUNCTION
+    componentName = HYPERSPHERICAL_TO_CARTESIAN_FUNCTION
 
     classPreferences = {
-        PREFERENCE_SET_NAME: 'AngleClassPreferences',
+        PREFERENCE_SET_NAME: 'HypersphericalToCartesianClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
@@ -3618,22 +3625,22 @@ class Angle(TransferFunction):  # ----------------------------------------------
             ----------
 
                 variable
-                    see `variable <Angle.variable>`
+                    see `variable <HypersphericalToCartesian.variable>`
 
-                    :default value: numpy.array([0.,0,])
+                    :default value: numpy.array([1.])
                     :type: ``numpy.ndarray``
                     :read only: True
 
         """
-        variable = Parameter(np.array([1,1]),
+        variable = Parameter(np.array([1.]),
                              read_only=True,
                              pnl_internal=True,
                              constructor_argument='default_variable')
 
         def _validate_variable(self, variable):
-            variable = np.squeeze(variable)
-            if variable.ndim != 1 or len(variable) < 2:
-                return f"must be list or 1d array of length 2 or greater."
+            variable = np.atleast_1d(np.asarray(variable, dtype=float))
+            if variable.ndim != 1 or len(variable) < 1:
+                return f"must be list or 1d array of length 1 or greater."
 
     @check_user_specified
     @beartype
@@ -3641,8 +3648,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
-
+                 prefs: Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             params=params,
@@ -3651,17 +3657,18 @@ class Angle(TransferFunction):  # ----------------------------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
         ---------
 
         variable : ndarray : default class_defaults.variable
-           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
+            an  array of n angular coordinates to be transformed to n+1d coordinates on a
+            unit sphere;  must be at least 1d.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3671,19 +3678,19 @@ class Angle(TransferFunction):  # ----------------------------------------------
         Returns
         -------
 
-        Angle transformation of variable : ndarray of variable.ndim+1
+        Cartesian coordinates on the unit n-sphere: ndarray of length (len(variable) + 1)
 
         """
         try:
             # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = self._angle(variable)
+            result = self._hyperspherical_to_cartesian(variable)
         except TypeError:
             if hasattr(variable, "dtype"):
                 # If variable is an array with mixed sizes or types, try item-by-item operation
                 if variable.dtype == object:
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
-                        result[i] = self._angle(variable[i])
+                        result[i] = self._hyperspherical_to_cartesian(variable[i])
                 else:
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
@@ -3692,100 +3699,146 @@ class Angle(TransferFunction):  # ----------------------------------------------
             elif isinstance(variable, list):
                 result = []
                 for variable_item in variable:
-                    result.append(self._angle(variable_item))
+                    result.append(self._hyperspherical_to_cartesian(variable_item))
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
         return self.convert_output_type(result)
 
-    def _angle(self, value):
-        """Take nd value and return n+1d coordinates for angle on a sphere"""
-        value = np.squeeze(value)
-        dim = len(value) + 1
-        angle = np.zeros(dim)
-        sin_value = np.sin(value)
-        cos_value = np.cos(value)
-        angle[0] = cos_value[0]
-        prod_a = np.cumprod(np.flip(sin_value))[:-1]
-        angle[dim - 1] = prod_a[-1]
-        prod_a[-1] = 1.
+    def _hyperspherical_to_cartesian(self, value):
+        """Standard hyperspherical map: angles → Cartesian on S^n."""
+        value = np.atleast_1d(np.asarray(value, dtype=float))
+        n = len(value)
+        s = np.sin(value)
+        c = np.cos(value)
 
-        # going down from the top of cumprod we skip: 2 edge values +1 extra for output size
-        for j in range(1, dim - 1):
-            angle[j] = prod_a[dim -3 -j] * cos_value[j]
-        return angle
+        out = np.zeros(n + 1, dtype=float)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        # x0 = cos(theta_0)
+        out[0] = c[0]
+
+        sin_prod = 1.0
+        for j in range(1, n):
+            sin_prod *= s[j - 1]
+            out[j] = sin_prod * c[j]
+
+        # xn = sin(theta_0) * sin(theta_1) * ... * sin(theta_{n-1})
+        out[n] = sin_prod * s[n - 1]
+
+        return out
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType)
+        # len(out) == len(in) + 1
         assert len(arg_in.type.pointee) + 1 == len(arg_out.type.pointee)
 
-        # The first cos
-        res0_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val0_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Types & constants
+        zero = ctx.int32_ty(0)
+        one = ctx.int32_ty(1)
+        n_angles = ctx.int32_ty(len(arg_in.type.pointee))  # n
+        # n_out = n + 1, so last index in out is exactly n
+        last_out_idx = n_angles
+
+        # Builtins for cos/sin with the input element type
+        val0_ptr = builder.gep(arg_in, [zero, zero])
         val0 = builder.load(val0_ptr)
-        cos_f = ctx.get_builtin("cos", [val0.type])
+        fty = val0.type
+        cos_f = ctx.get_builtin("cos", [fty])
+        sin_f = ctx.get_builtin("sin", [fty])
+
+        # out[0] = cos(in[0])
+        res0_ptr = builder.gep(arg_out, [zero, zero])
         cos_val0 = builder.call(cos_f, [val0])
         builder.store(cos_val0, res0_ptr)
 
-        # calculate suffix product
-        sin_f = ctx.get_builtin("sin", [val0.type])
-        prod_ptr = builder.alloca(val0.type)
-        builder.store(prod_ptr.type.pointee(1.0), prod_ptr)
+        # sin_prod = 1.0
+        sinprod_ptr = builder.alloca(fty)
+        builder.store(fty(1.0), sinprod_ptr)
 
-        dim_m1 = ctx.int32_ty(len(arg_out.type.pointee) - 1)
-        with pnlvm.helpers.for_loop(builder, dim_m1.type(1), dim_m1, dim_m1.type(1), id="suff_prod") as (b, idx):
-            #revert the index to go from the end
-            idx = b.sub(dim_m1, idx)
+        with pnlvm.helpers.for_loop(builder, one, n_angles, one, id="prefix_prod") as (b, j):
+            # j runs up to (but not including) n_angles, so j ∈ [1, n-1]
+            jm1 = b.sub(j, one)
 
-            prod = b.load(prod_ptr)
-            val_ptr = b.gep(arg_in, [ctx.int32_ty(0), idx])
-            val = b.load(val_ptr)
+            sin_prod = b.load(sinprod_ptr)
 
-            # calculate suffix product of sin(input)
-            val_sin = b.call(sin_f, [val])
-            new_prod = b.fmul(prod, val_sin)
-            b.store(new_prod, prod_ptr)
+            # sin term from previous angle: sin(in[j-1])
+            prev_ptr = b.gep(arg_in, [zero, jm1])
+            prev = b.load(prev_ptr)
+            prev_sin = b.call(sin_f, [prev])
+            sin_prod = b.fmul(sin_prod, prev_sin)
+            b.store(sin_prod, sinprod_ptr)
 
-            # output value is suffix product * cos(val)
-            val_cos = b.call(cos_f, [val])
-            res = b.fmul(prod, val_cos)
-            res_ptr = b.gep(arg_out, [ctx.int32_ty(0), idx])
-            b.store(res, res_ptr)
+            # cos term from current angle: cos(in[j])
+            curr_ptr = b.gep(arg_in, [zero, j])
+            curr = b.load(curr_ptr)
+            curr_cos = b.call(cos_f, [curr])
 
-        # The last element is just the suffix product * 1
-        last_ptr = builder.gep(arg_out, [ctx.int32_ty(0), dim_m1])
-        builder.store(builder.load(prod_ptr), last_ptr)
+            # out[j] = sin_prod * cos(in[j])
+            res = b.fmul(sin_prod, curr_cos)
+            out_ptr = b.gep(arg_out, [zero, j])
+            b.store(res, out_ptr)
+
+        # out[n] = sin_prod * sin(in[n-1])
+        nm1 = builder.sub(n_angles, one)  # n-1
+        last_in = builder.load(builder.gep(arg_in, [zero, nm1]))
+        last_sin = builder.call(sin_f, [last_in])
+        sin_prod = builder.load(sinprod_ptr)
+        last_val = builder.fmul(sin_prod, last_sin)
+
+        last_ptr = builder.gep(arg_out, [zero, last_out_idx])  # index n in out
+        builder.store(last_val, last_ptr)
 
         return builder
 
-    # @handle_external_context()
-    # def derivative(self, input=None, output=None, context=None):
-    #     """
-    #     derivative(input)
-    #
-    #     Derivative of `function <Angle._function>` at **input**.
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     input : number
-    #         value of the input to the Angle transform at which derivative is to be taken.
-    #
-    #     Returns
-    #     -------
-    #
-    #     Slope of function :  number or array
-    #
-    #     """
-    #
-    #     return self._get_current_parameter_value(SLOPE, context)
-    #
-    # def _is_identity(self, context=None):
-    #     return (
-    #         self.parameters.slope._get(context) == 1
-    #         and self.parameters.intercept._get(context) == 0
-    #     )
+
+# **********************************************************************************************************************
+#                                                    Angle
+# **********************************************************************************************************************
+
+
+class Angle(HypersphericalToCartesian):
+    """
+    DEPRECATED.
+
+    `Angle` used a non-standard parameterization of hyperspherical coordinates.
+    Use `HypersphericalToCartesian` instead.
+
+    This class is retained temporarily for backward compatibility.
+
+    Will be removed in a future release.
+    """
+
+    componentName = ANGLE_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'AngleClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
+    @check_user_specified
+    @beartype
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs: Optional[ValidPrefSet] = None):
+        warnings.warn(
+            "Angle is deprecated and will be removed in a future version. "
+            "Use HypersphericalToCartesian instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
+        # Initialize same as before (but now inherits correct behavior)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
 
 # **********************************************************************************************************************
@@ -3877,12 +3930,12 @@ class CostFunctions(Flag):
         assign default set of cost functions as `INTENSITY`).
 
     """
-    NONE          = 0
-    INTENSITY     = auto()
-    ADJUSTMENT    = auto()
-    DURATION      = auto()
-    ALL           = INTENSITY | ADJUSTMENT | DURATION
-    DEFAULTS      = NONE
+    NONE = 0
+    INTENSITY = auto()
+    ADJUSTMENT = auto()
+    DURATION = auto()
+    ALL = INTENSITY | ADJUSTMENT | DURATION
+    DEFAULTS = NONE
 
 
 TRANSFER_FCT = 'transfer_fct'
@@ -3890,6 +3943,7 @@ INTENSITY_COST_FCT = 'intensity_cost_fct'
 ADJUSTMENT_COST_FCT = 'adjustment_cost_fct'
 DURATION_COST_FCT = 'duration_cost_fct'
 COMBINE_COSTS_FCT = 'combine_costs_fct'
+
 
 class TransferWithCosts(TransferFunction):
     """
@@ -4434,10 +4488,10 @@ class TransferWithCosts(TransferFunction):
                 return fct
             elif isinstance(fct, (types.FunctionType, types.MethodType)):
                 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-                return UserDefinedFunction(#default_variable=function_variable,
-                        custom_function=fct,
-                        owner=self,
-                        context=context)
+                return UserDefinedFunction(  # default_variable=function_variable,
+                    custom_function=fct,
+                    owner=self,
+                    context=context)
             elif issubclass(fct, Function):
                 return fct()
             else:
@@ -4461,9 +4515,9 @@ class TransferWithCosts(TransferFunction):
                 self.defaults.intensity_cost = self.intensity_cost
 
     def _function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
+                  variable=None,
+                  params=None,
+                  context=None):
         """
 
         Arguments
@@ -4496,7 +4550,7 @@ class TransferWithCosts(TransferFunction):
 
         # Get costs for each cost function that is enabled in enabled_cost_functions
         enabled_cost_functions = self.parameters.enabled_cost_functions._get(context)
-        enabled_costs = [] # Used to aggregate costs that are enabled and submit to combine_costs_fct
+        enabled_costs = []  # Used to aggregate costs that are enabled and submit to combine_costs_fct
         if enabled_cost_functions:
 
             # For each cost function that is enabled:
@@ -4651,7 +4705,7 @@ class TransferWithCosts(TransferFunction):
         if assignment:
             if cost_function_name not in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
-                                         format(cost_function_name))
+                                    format(cost_function_name))
             if not enabled_cost_functions:
                 enabled_cost_functions = cost_function
             else:
@@ -4662,7 +4716,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
@@ -4712,8 +4766,8 @@ class TransferWithCosts(TransferFunction):
                 # Intensity is [1] when the cost function is disabled but other cost functions are enabled
                 # https://github.com/PrincetonUniversity/PsyNeuLink/issues/2711
                 exp_out_len = 0 if self.parameters.enabled_cost_functions.get() == CostFunctions.NONE or flag != CostFunctions.INTENSITY else 1
-                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag, cost_out.type.pointee)
-
+                assert len(cost_out.type.pointee) == exp_out_len, "Unexpected out sturct for {}: {}".format(flag,
+                                                                                                            cost_out.type.pointee)
 
         # TODO: combine above costs via a call to combine_costs_fct
         # depends on: https://github.com/PrincetonUniversity/PsyNeuLink/issues/2712

@@ -19,9 +19,9 @@ import time
 from typing import Callable, Optional
 import weakref
 
-
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals import get_num_threads
 
 from . import builder_context, jit_engine, scheduler
 from .debug import debug_env
@@ -533,8 +533,24 @@ class CompExecution(CUDAExecution):
         return c_inputs
 
     def _get_generator_run_input_struct(self, inputs, runs):
+        # ignore optimization_num from CompositionRunner._batch_inputs,
+        # but also handle externally-passed generators that do not
+        # include this second element
+        def _get_item_input(x):
+            if isinstance(x, tuple):
+                return x[0]
+            return x
+
         # Extract input for each trial
-        run_inputs = ((np.atleast_2d(x) for x in self._composition._build_variable_for_input_CIM({k:np.atleast_1d(v) for k,v in inp.items()})) for inp in inputs)
+        run_inputs = (
+            (
+                np.atleast_2d(x)
+                for x in self._composition._build_variable_for_input_CIM(
+                    {k: np.atleast_1d(v) for k, v in _get_item_input(inp).items()}
+                )
+            )
+            for inp in inputs
+        )
         run_inputs = _tupleize(run_inputs)
         num_input_sets = len(run_inputs)
         runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
@@ -663,7 +679,9 @@ class CompExecution(CUDAExecution):
         comp_params, comp_state, comp_data, ct_inputs, outputs, num_inputs = \
             self._prepare_evaluate(inputs, num_input_sets, num_evaluations, all_results)
 
-        jobs = min(os.cpu_count(), num_evaluations)
+
+
+        jobs = min(get_num_threads(), num_evaluations)
         evals_per_job = (num_evaluations + jobs - 1) // jobs
 
         parallel_start = time.time()

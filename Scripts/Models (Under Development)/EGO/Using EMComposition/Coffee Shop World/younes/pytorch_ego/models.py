@@ -5,6 +5,11 @@ torch.set_printoptions(precision=8)
 
 
 def prep_EM(em, n, l, fill=.001):
+    for name, p in em.named_parameters():
+        if 'context_in' not in name:
+            p.requires_grad = False
+        else:
+            p.requires_grad = True
     for _ in range(n):
         em.prep(torch.tensor([[fill] * l], dtype=torch.float64),
                 torch.tensor([[fill] * l], dtype=torch.float64),
@@ -51,6 +56,7 @@ class EMModule(nn.Module):
         self.index = 0
         self.state_keys = None
         self.context_keys = None
+        self.context_query = None
         self.values = None
         self.encode_context = True
 
@@ -59,6 +65,23 @@ class EMModule(nn.Module):
         self.normalize_keys = normalize_keys  # normalize_keys
 
         self.state_weight = nn.Parameter(torch.zeros(1))
+
+        self.context_in = nn.Linear(11, 11, bias=False)
+        with torch.no_grad():
+            self.context_in.weight.copy_(torch.eye(11))
+            # self.context_in.bias.zero_()
+
+        self.context_in.weight.requires_grad = True
+        # self.context_in.bias.requires_grad = False
+        self.context_in.requires_grad = True
+
+        # Freeze recurrent weights to stabilize training
+        # for name, p in rnet.named_parameters():
+        #     if 'hidden_to_context' not in name:
+        #         p.requires_grad = False
+        #     else:
+        #         p.requires_grad = True
+
 
         self.state_match_weights_ = None
         self.context_match_weights_ = None
@@ -89,8 +112,9 @@ class EMModule(nn.Module):
         self.context_match_weights_ = torch.einsum('b a, c a -> c b', self.context_keys, context) / self.temperature
         return self.state_match_weights_ + self.context_match_weights_
 
-    def forward(self, state: torch.tensor, context: torch.tensor) -> torch.tensor:
-        self.match_weights_ = self.get_match_weights(state, context)
+    def forward(self, state: torch.tensor, context_: torch.tensor) -> torch.tensor:
+        self.context_query = self.context_in(context_)
+        self.match_weights_ = self.get_match_weights(state, self.context_query)
         matches = torch.einsum('a b, c a -> c b', self.values,
                                safe_softmax(self.match_weights_, self.softmax_threshold, dim=-1))
 
@@ -143,9 +167,9 @@ class RecurrentContextModule(nn.Module):
     def __init__(self, n_inputs, n_hidden, n_outputs, integration_rate=.5) -> None:
         super().__init__()
         self.integration_rate = integration_rate
-        self.state_to_hidden = nn.Linear(n_inputs, n_hidden, dtype=torch.float64)
-        self.hidden_to_hidden = nn.Linear(n_hidden, n_hidden, dtype=torch.float64)
-        self.hidden_to_context = nn.Linear(n_hidden, n_outputs, dtype=torch.float64)
+        self.state_to_hidden = nn.Linear(n_inputs, n_hidden)
+        self.hidden_to_hidden = nn.Linear(n_hidden, n_hidden)
+        self.hidden_to_context = nn.Linear(n_hidden, n_outputs)
         self.n_hidden_units = n_hidden
         self.hidden_state = torch.zeros((self.n_hidden_units,), dtype=torch.float64)
         self.update_hidden_state = True
@@ -171,15 +195,15 @@ def prep_recurrent_network(rnet, state_d):
         rnet.hidden_to_context.bias.zero_()
 
     # Set requires_grad to True for hidden_to_context.weight before freezing other parameters
-    rnet.hidden_to_context.weight.requires_grad = True
-    rnet.hidden_to_context.bias.requires_grad = True
+    rnet.hidden_to_context.weight.requires_grad = False
+    rnet.hidden_to_context.bias.requires_grad = False
 
     # Freeze recurrent weights to stabilize training
     for name, p in rnet.named_parameters():
         if 'hidden_to_context' not in name:
             p.requires_grad = False
         else:
-            p.requires_grad = True
+            p.requires_grad = False
     return rnet
 
 

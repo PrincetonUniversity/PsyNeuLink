@@ -48,35 +48,6 @@ runs:
       shell: bash
       run: python -m pip install --upgrade pip wheel
 
-    - name: Drop pytorch on x86
-      shell: bash
-      run: |
-        echo > env_constraints.txt
-        if [ $(python -c 'import struct; print(struct.calcsize("P") * 8)') == 32 ]; then
-          sed -i /torch/d requirements.txt
-          sed -i /modeci_mdf/d requirements.txt
-          # pywinpty is a transitive dependency and v1.0+ removed support for x86 wheels
-          echo "pywinpty<1" >> env_constraints.txt
-          # jupyter_server >= 2 pulls jupyter_server_terminals which depends on in pywinpty >= 2.0.3
-          echo "jupyter_server<2" >> env_constraints.txt
-          # scipy >=1.9.2 doesn't provide win32 wheel and GA doesn't have working fortran on windows
-          echo "scipy<1.9.2" >> env_constraints.txt
-          # scikit-learn >= 1.1.3 doesn't provide win32 wheel
-          echo "scikit-learn<1.1.3" >> env_constraints.txt
-          # countourpy >=1.1.0 doesn't provide win32 wheel
-          echo "contourpy<1.1.0" >> env_constraints.txt
-          # pillow >= 10.0.0 doesn't provide win32 wheel
-          echo "pillow < 10.0.0" >> env_constraints.txt
-          # pandas >= 2.1.0 doesn't provide win32 wheel
-          echo "pandas < 2.1.0" >> env_constraints.txt
-          # llvmlite >= 0.42.0 doesn't provide win32 wheel
-          echo "llvmlite < 0.42.0" >> env_constraints.txt
-          # matplotlib >=3.8.0 doesn't provide win32 wheel
-          echo "matplotlib < 3.8.0" >> env_constraints.txt
-          # fastkde >= 2.1.3 doesn't provide win32 wheel
-          echo "fastkde < 2.1.3" >> env_constraints.txt
-        fi
-
     - name: Install updated package
       if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' }}
       shell: bash
@@ -89,7 +60,7 @@ runs:
           echo "new_package=$NEW_PACKAGE" >> $GITHUB_OUTPUT
           # save a list of all installed packages (including pip, wheel; it's never empty)
           pip freeze --all > orig
-          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c env_constraints.txt -c broken_trans_deps.txt
+          pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c broken_trans_deps.txt
           pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
           # uninstall new packages but skip those from previous steps (pywinpty, terminado on windows x86)
           # the 'orig' list is not empty (includes at least pip, wheel)
@@ -110,7 +81,7 @@ runs:
     - name: Python dependencies
       shell: bash
       run: |
-        pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c env_constraints.txt -c broken_trans_deps.txt
+        pip install ${{ steps.dist.outputs.wheel }}[${{ inputs.features }}] -c broken_trans_deps.txt
       env:
         # Setting CXXFLAGS works around a missing include that breaks the build
         # of onnx-1/17.0 on recent gcc/clang compilers.

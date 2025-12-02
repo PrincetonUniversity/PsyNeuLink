@@ -187,8 +187,13 @@ class PytorchShowGraph(ShowGraph):
             kwargs['color'] = self.default_node_color
 
             modulatory_node = None
+
             if proj.parameter_ports[0].mod_afferents:
-                modulatory_node = self.pytorch_rep.nodes_map[proj.parameter_ports[0].mod_afferents[0].sender.owner]
+                modulatory_mech = proj.parameter_ports[0].mod_afferents[0].sender.owner
+                try:
+                    modulatory_node = self.pytorch_rep.nodes_map[modulatory_mech]
+                except KeyError:
+                    pass
 
             if proj in self.pytorch_rep.projections_map:
                 # If Projection is a LearningProjection that is active, assign color and arrowhead of a LearningProjection

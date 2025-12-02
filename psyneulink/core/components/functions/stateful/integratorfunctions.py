@@ -30,6 +30,7 @@ import warnings
 
 import numpy as np
 from math import e
+
 try:
     import torch
 except ImportError:
@@ -236,7 +237,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  context=None,
                  **kwargs):
 
@@ -266,7 +267,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                  _instantiate_attributes_before_function below
         """
 
-
         super()._validate_params(
             request_set=request_set,
             target_set=target_set,
@@ -281,9 +281,9 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             # If param is in Parameter class for function and it is a function_arg:
             if (param in self.parameters.names() and getattr(self.parameters, param).function_arg
                     and getattr(self.parameters, param)._user_specified):
-                if value is not None and isinstance(value, (list, np.ndarray)) and safe_len(value)>1:
+                if value is not None and isinstance(value, (list, np.ndarray)) and safe_len(value) > 1:
                     # Store ones with length > 1 in dict for evaluation below
-                    params_to_check.update({param:value})
+                    params_to_check.update({param: value})
 
         values = list(params_to_check.values())
 
@@ -291,14 +291,14 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         #    as the length of items in the inner-most dimension (axis) of default_variable
         if self.parameters.variable._user_specified:
             default_variable_len = self.parameters.variable.default_value.shape[-1]
-            violators = [k for k,v in params_to_check.items() if np.array(v).shape[-1]!=default_variable_len]
+            violators = [k for k, v in params_to_check.items() if np.array(v).shape[-1] != default_variable_len]
             if violators:
                 raise FunctionError(f"The following parameters with len>1 specified for {self.name} "
                                     f"don't have the same length as its {repr(DEFAULT_VARIABLE)} "
                                     f"({default_variable_len}): {violators}.", component=self)
 
         # Check that all function_arg params with length > 1 have the same length
-        elif any(len(v)!=len(values[0]) for v in values):
+        elif any(len(v) != len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
                                 f"({sorted(params_to_check.keys())}) don't all have the same length")
 
@@ -310,7 +310,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             values_with_a_len = [param.default_value for param in self.parameters if
                                  param.function_arg and
                                  isinstance(param.default_value, (list, np.ndarray)) and
-                                 safe_len(param.default_value)>1]
+                                 safe_len(param.default_value) > 1]
             # One or more parameters are specified with length > 1 in the inner dimension
             if values_with_a_len:
                 # If shape already matches,
@@ -372,7 +372,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         # Get rid of 2d array.
         # When part of a Mechanism, the input and output are 2d arrays.
         arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
@@ -561,7 +561,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -614,14 +614,15 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters, param_name)._get(context)
+                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
+                                                                                           param_name)._get(context)
                     self._set_parameter_value(param_name, runtime_params[param_name], context)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -808,7 +809,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
 
-
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
@@ -839,7 +839,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -852,10 +852,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
         Arguments
         ---------
@@ -1075,7 +1075,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1192,10 +1192,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         builder.store(res, prev_ptr)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -1575,7 +1575,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         short_term_logistic = None
         long_term_logistic = None
 
-
     @check_user_specified
     @beartype
     def __init__(self,
@@ -1595,7 +1594,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  offset=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None):
+                 prefs: Optional[ValidPrefSet] = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1693,10 +1692,10 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                                     format(OPERATION, self.name, OPERATIONS))
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -1976,7 +1975,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
     componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
 
-
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
@@ -2031,7 +2029,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  # **kwargs
                  ):
 
@@ -2044,7 +2042,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         #     for k in unsupported_args:
         #         if k in kwargs:
         #             del kwargs[k]
-
 
         if initializer is None:
             initializer = rest
@@ -2067,7 +2064,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if RATE in request_set and request_set[RATE] is not None:
             rate = request_set[RATE]
@@ -2119,7 +2116,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         # FIX: ?CLEAN THIS UP BY SETTING initializer IN __init__ OR OTHER RELEVANT PLACE?
         if self.is_initializing:
-            if rest.ndim == 0 or len(rest)==1:
+            if rest.ndim == 0 or len(rest) == 1:
                 # self.parameters.previous_value._set(np.full_like(current_input, rest), context)
                 self._initialize_previous_value(np.full_like(current_input, rest), context)
             elif np.atleast_2d(rest).shape == current_input.shape:
@@ -2442,20 +2439,20 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     @check_user_specified
     @beartype
     def __init__(
-        self,
-        default_variable=None,
-        rate: Optional[Union[ValidParamSpecType, Callable]] = None,
-        noise=None,
-        offset: Optional[ValidParamSpecType] = None,
-        starting_value=None,
-        non_decision_time=None,
-        threshold=None,
-        time_step_size=None,
-        seed=None,
-        params: Optional[Mapping] = None,
-        owner=None,
-        prefs:  Optional[ValidPrefSet] = None,
-        **kwargs
+            self,
+            default_variable=None,
+            rate: Optional[Union[ValidParamSpecType, Callable]] = None,
+            noise=None,
+            offset: Optional[ValidParamSpecType] = None,
+            starting_value=None,
+            non_decision_time=None,
+            threshold=None,
+            time_step_size=None,
+            seed=None,
+            params: Optional[Mapping] = None,
+            owner=None,
+            prefs: Optional[ValidPrefSet] = None,
+            **kwargs
     ):
 
         # Make sure rate is a 1D array or scalar
@@ -2485,19 +2482,21 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         )
 
     def _validate_noise(self, noise):
-        if noise is not None and not isinstance(noise, float) and not (isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
+        if noise is not None and not isinstance(noise, float) and not (
+                isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
             raise FunctionError(
                 "Invalid noise parameter for {}: {}. DriftDiffusionIntegrator requires noise parameter to be a float or float array."
-                " Noise parameter is used to construct the standard DDM noise distribution".format(self.name, type(noise)))
+                " Noise parameter is used to construct the standard DDM noise distribution".format(self.name,
+                                                                                                   type(noise)))
 
     def _initialize_previous_value(self, initializer, context=None):
         return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -2604,7 +2603,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
 
-    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         assert "reset" in tags
 
         builder = super()._gen_llvm_function_reset(ctx, builder, params, state, arg_in, arg_out, tags=tags)
@@ -2672,545 +2671,608 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         return f'{parse_valid_identifier(self.name)}_value_result, previous_time'
 
 
-class DriftOnASphereIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
+class DriftOnASphereIntegrator(IntegratorFunction):
     """
-    DriftOnASphereIntegrator(                \
-        default_variable=None,               \
-        rate=1.0,                            \
-        noise=0.0,                           \
-        offset= 0.0,                         \
-        starting_point=0.0,                  \
-        threshold=1.0                        \
-        time_step_size=1.0,                  \
-        initializer=None,                    \
-        dimension=2,                         \
-        params=None,                         \
-        owner=None,                          \
-        prefs=None,                          \
-        )
-        COMMENT: REMOVED FROM ABOVE
-        threshold=1.0
-        COMMENT
-
+    DriftOnASphereIntegrator(   \
+        default_variable=None,  \
+        rate=1.0,               \
+        noise=0.0,              \
+        offset=0.0,             \
+        time_step_size=1.0,    \
+        initializer=None,       \
+        dimension=3,            \
+        seed=None,              \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+    )
     .. _DriftOnASphereIntegrator:
 
-    Drift and diffuse on a sphere.  `function <DriftOnASphereIntegrator._function>` integrates previous coordinates
-    with drift and/or noise that is applied either equally to all coordinates or dimension by dimension:
+    Integrate a state evolving on the **unit sphere** :math:`S^{dimension-1}` embedded in
+    :math:`\\mathbb{R}^{dimension}`.  The value stored in `previous_value <DriftOnASphereIntegrator.previous_value>` is
+    always a **unit vector**, and updates occur by applying drift and noise in the **tangent space** and mapping back to
+    the sphere using the **exponential map**.  This yields the correct form of geometric Brownian motion on a sphere.
 
-    ..  math::
-        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
+    **Drift Input**
+        - If `variable <DriftOnASphereIntegrator.variable>` is a **scalar**, drift is applied along a persistent tangent
+          direction that is **parallel transported** at each step.
+        - If it is a **vector** of length `(dimension - 1)`, it is interpreted as a tangent-space displacement.
+            The **magnitude of the vector corresponds to an angular rotation** (in radians) along the sphere.
+        - If it is a **vector** (length = `dimension`), it is a target on the sphere to in.
+            The **magnitude is ignored** and the vector is projected onto the sphere.
 
-    where
 
-    ..  math::
-        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+    **Rate**
+        The `rate` parameter controls the **amount of angular movement per unit time**:
 
-    *Modulatory Parameters:*
+        - In **scalar drift mode**, `rate` scales the angular velocity along the persistent drift direction.
+        - In **tangent mode**, the **norm** of the input vector encodes an angular displacement (in radians),
+          and `rate` scales this angular step size.
+        - In **target mode**, the drift direction is the geodesic pointing toward the target; `rate` specifies
+          the **fraction of the remaining geodesic distance traveled per time step**. Thus, with
+          `rate = 1.0` and `time_step_size = 1.0`, the system reaches the target **in exactly one step**.
+          Values `0 < rate < 1` move only partway toward the target.
 
-    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
-    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
-    |
 
-    Arguments
-    ---------
+    **Initializer**
+        - A 1D array of length ``dimension`` is interpreted as a Cartesian point (normalized to unit length).
+        - A 1D array of length ``dimension - 1`` is interpreted as **hyperspherical coordinates**.
 
-    default_variable : list or 1d array : default class_defaults.variable
-        specifies template for drift:  if specified, its length must be 1 or the value specified for *dimension*
-        minus 1 (see `variable <DriftOnASphereIntegrator._function.variable>` for additional details).
+    **Noise**
+        - A scalar specifies **isotropic** diffusion on the sphere.
+        - A 1D array of length ``dimension - 1`` specifies **anisotropic** diffusion in tangent coordinates.
 
-    rate : float, list or 1d array : default 1.0
-        applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>`;  If it is a list or array, it must
-        be the same length as `variable <DriftOnASphereIntegrator.variable>` (see `rate <DriftOnASphereIntegrator.rate>`
-        for details).
+    **Mathematical Form**
+    .. math::
+        y = dt \\cdot \\text{drift\\_tangent} \\;+\\; \\sqrt{dt} \\cdot \\text{noise\\_tangent}
+        \\\\
+        x_{t+dt} = \\exp_{x}(y)
 
-    noise : float : default 0.0
-        specifies a value by which to scale the normally distributed random value added to the integral in each call to
-        `function <DriftOnASphereIntegrator._function>` (see `noise <DriftOnASphereIntegrator.noise>` for details).
+    where :math:`\\exp_{x}` is the exponential map on the unit sphere and all drift/noise terms are orthogonally projected
+    into the tangent space :math:`T_{x}S^{d-1}` at the current state :math:`x`.
 
-    COMMENT:
-    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
-    noise : float, list or 1d array : default 0.0
-        specifies a value by which to scale the normally distributed random value added to the integral in each call to
-        `function <DriftOnASphereIntegrator._function>`; if it is a list or array, it must be the same length as
-        `variable <DriftOnASphereIntegrator.variable>` (see `noise <DriftOnASphereIntegrator.noise>` for details).
-    COMMENT
+    ---
 
-    offset : float, list or 1d array : default 0.0
-        specifies constant value added to integral in each call to `function <DriftOnASphereIntegrator._function>`;
-        if it is a list or array, it must be the same length as `variable <DriftOnASphereIntegrator.variable>`
-        (see `offset <DriftOnASphereIntegrator.offset>` for details).
-        COMMENT:
-        specifies constant value added to integral in each call to `function <DriftOnASphereIntegrator._function>`
-        if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`;
-        if it is a list or array, it must be the same length as `variable <DriftOnASphereIntegrator.variable>`
-        (see `offset <DriftOnASphereIntegrator.offset>` for details).
-        COMMENT
+    **Modulatory Parameters**
 
-    starting_point : float, list or 1d array:  default 0.0
-        specifies the starting value for the integration process; if it is a list or array, it must be the
-        same length as `variable <DriftOnASphereIntegrator.variable>` (see `starting_point
-        <DriftOnASphereIntegrator.starting_point>` for details).
+    | *MULTIPLICATIVE_PARAM:* `rate <DriftOnASphereIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <DriftOnASphereIntegrator.offset>`
 
-    COMMENT:
-    threshold : float : default 0.0
-        specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
-        integration process terminates (see `threshold <DriftOnASphereIntegrator.threshold>` for details).
-    COMMENT
+    ---
 
-    time_step_size : float : default 0.0
-        specifies the timing precision of the integration process (see `time_step_size
-        <DriftOnASphereIntegrator.time_step_size>` for details.
+    Parameters
+    ----------
+    default_variable : float or 1d array : default class_defaults.variable
+        Template for input to the integrator. If a vector, its length must equal ``dimension - 1``.
 
-    dimension : int : default 2
-        specifies dimensionality of the sphere over which drift occurs.
+    rate : float or 1d array : default 1.0
+        Multiplies the drift input (see `rate <DriftOnASphereIntegrator.rate>`).
 
-    initializer : 1d array : default [0]
-        specifies the starting point on the sphere from which angle is derived;  its length must be equal to
-        `dimension <DriftOnASphereIntegrator.dimension>` (see `initializer <DriftOnASphereIntegrator.initializer>`
-        for additional details).
+    noise : float or 1d array : default 0.0
+        Scales random diffusion. A float applies isotropically; an array must be length ``dimension - 1``.
 
-    angle_function : TransferFunction : default Angle
-        specifies function used to compute angle from position on sphere specified by coordinates in
-        `previous_value <DriftOnASphereIntegrator.previous_value>`.
+    offset : float or 1d array : default 0.0
+        Additive drift term (projected into tangent space).
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
+    time_step_size : float : default 1.0
+        Integration time step :math:`dt`.
+
+    initializer : 1d array or None
+        Starting point on the sphere; either Cartesian of length ``dimension`` or hyperspherical of length ``dimension-1``.
+
+    dimension : int : default 3
+        Ambient dimension of the embedding space :math:`\\mathbb{R}^{dimension}`.
+
+    seed : int : default None
+        Seeds the internal random number generator.
+
+    params : Dict[param keyword : param value] : default None
+        Parameter dictionary.
 
     owner : Component
-        `component <Component>` to which to assign the Function.
+        Component to which this Function is assigned.
 
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    prefs : PreferenceSet or specification dict
+        Preference settings.
 
     Attributes
     ----------
+    previous_value : 1d array
+        Current point on the sphere.
 
-    variable : float or array
-        current input value that determines rate of drift on the sphere.  If it is a scalar, it is applied equally
-        to all coordinates (subject to `noise <DriftOnASphereIntegrator.noise>`; if it is an array, each element
-        determines rate of drift over a given dimension;  coordinate values are integrated over each execution, with
-        the previous set stored in `previous_value <DriftOnASphereIntegrator.previous_value>`.
-
-    rate : float or 1d array
-        applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>` (can be thought of as implementing
-        the attentional component of the drift rate).  If it is a float or has a single element, its value is applied
-        to all the elements of `variable <DriftOnASphereIntegrator.variable>`; if it is an array, each element is
-        applied to the corresponding element of `variable <DriftOnASphereIntegrator.variable>`. Serves as
-        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
-        <DriftOnASphereIntegrator._function>`.
+    drift_dir : 1d array
+        The persistent drift direction used for scalar drift inputs, transported along the sphere.
 
     random_state : numpy.RandomState
-        private pseudorandom number generator
+        Private pseudorandom number generator.
 
-    noise : float or 1d array
-        scales the normally distributed random value added to integral in each call to `function
-        <DriftOnASphereIntegrator._function>`. If `variable <DriftOnASphereIntegrator.variable>` is a list or array,
-        and noise is a float, a single random term is generated and applied for each element of `variable
-        <DriftOnASphereIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
-        <DriftOnASphereIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
-        corresponding elements of `variable <DriftOnASphereIntegrator.variable>`.
-
-    offset : float or 1d array
-        constant value added to integral in each call to `function <DriftOnASphereIntegrator._function>`.
-        If `variable <DriftOnASphereIntegrator.variable>` is an array and offset is a float, offset is applied
-        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
-        `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator._function>`.
-        COMMENT:
-        constant value added to integral in each call to `function <DriftOnASphereIntegrator._function>`
-        if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`.
-        If `variable <DriftOnASphereIntegrator.variable>` is an array and offset is a float, offset is applied
-        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
-        `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator._function>`.
-        COMMENT
-
-    COMMENT:
-    FIX: starting_point MAY NEED TO BE REDEFINED (HERE AND FOR DriftDiffusionIntegratorFunction?)
-    COMMENT
-
-    starting_point : float or 1d array
-        determines the starting value for the integration process; if it is a list or array, it must be the
-        same length as `variable <DriftOnASphereIntegrator.variable>`. If `variable <DriftOnASphereIntegrator.variable>`
-        is an array and starting_point is a float, starting_point is used for each element of the integral;  if
-        starting_point is a list or array, each of its elements is used as the starting point for each element of the
-        integral.
-
-    COMMENT:
-    threshold : float
-        determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
-        terminate when the result of `function <DriftOnASphereIntegrator._function>` equals or exceeds either the
-        positive or negative value of threshold (see hint).
-        NOTE: Vector version of this parameter acts as a saturation barrier.
-        While it is possible to subtract from value == threshold, any movement
-        in the threshold direction will be capped at the threshold value.
-
-        .. hint::
-           To terminate execution of the `Mechanism <Mechanism>` to which the `function
-           <DriftOnASphereIntegrator._function>` is assigned, a `WhenFinished` `Condition` should be assigned for that
-           Mechanism to `scheduler <Composition.scheduler>` of the `Composition` to which the Mechanism belongs.
-    COMMENT
-
-    time_step_size : float
-        determines the timing precision of the integration process and is used to scale the `noise
-        <DriftOnASphereIntegrator.noise>` parameter.
-
-    dimension : int
-        determines dimensionality of sphere on which drift occurs.
-
-    initializer : 1d array
-        determines the starting point on the sphere from which angle is derived;  its length must be equal to
-        `dimension <DriftOnASphereIntegrator.dimension>`.
-
-    angle_function : TransferFunction
-        determines the function used to compute angle (reported as result) from coordinates on sphere specified by
-        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displaced by `variable
-        <DriftOnASphereIntegrator.variable>` and possibly `noise <DriftOnASphereIntegrator.noise>`.
-
-    previous_time : float
-        stores previous time at which the function was executed and accumulates with each execution according to
-        `time_step_size <DriftOnASphereIntegrator.default_time_step_size>`.
-
-    previous_value : 1d array : default class_defaults.variable
-        stores previous set of coordinates on sphere over which drift is occuring.
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
-        for details).
     """
 
+
     componentName = DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION
+    _warned_auto_target_once = False
+
+    # --- Geometry utilities ---
+
+
+    @staticmethod
+    def _proj_tangent(x, v):
+        """Project v into the tangent space at x."""
+        return v - (v @ x) * x
+
+    @staticmethod
+    def _expmap_sphere(x, y):
+        """Exponential map at point x with tangent vector y."""
+        r = np.linalg.norm(y)
+        if r == 0.0:
+            return x.copy()
+        u = y / r
+        x_new = np.cos(r) * x + np.sin(r) * u
+        return x_new / np.linalg.norm(x_new)
+
+    @staticmethod
+    def _parallel_transport_exact(x, y, v):
+        """Parallel transport tangent vector v along geodesic exp_x(y)."""
+        r = np.linalg.norm(y)
+        if r == 0.0:
+            return v.copy()
+        u = y / r
+        a = v @ u
+        return (v - a * u) + a * (np.cos(r) * u - np.sin(r) * x)
+
+    @staticmethod
+    def _tangent_basis(x):
+        """
+        Return orthonormal basis of tangent space at x (matrix shape: [dimension, dimension-1]).
+        Uses a Householder reflection to align x with e_0.
+        """
+        x = x / np.linalg.norm(x)
+        d = len(x)
+        e0 = np.zeros(d)
+        e0[0] = 1.0
+        if np.allclose(x, e0):
+            return np.eye(d)[:, 1:]
+        v = x - e0
+        v /= np.linalg.norm(v)
+        H = np.eye(d) - 2 * np.outer(v, v)
+        return H[:, 1:]
+
+    @staticmethod
+    def _hyperspherical_to_cartesian(theta):
+        """Convert hyperspherical angle vector of length d-1 to a unit Cartesian vector in R^d."""
+        theta = np.asarray(theta, float)
+        d = theta.size + 1
+        x = np.empty(d, float)
+        s = np.ones(d, float)
+        for k in range(1, d):
+            s[k] = s[k - 1] * np.sin(theta[k - 1])
+        x[0] = np.cos(theta[0]) if d > 1 else 1.0
+        for i in range(1, d - 1):
+            x[i] = s[i - 1] * np.cos(theta[i])
+        x[d - 1] = s[d - 1]
+        return x / np.linalg.norm(x)
+
+    @staticmethod
+    def _logmap_sphere(x, t):
+        """Return tangent vector y at x such that exp_x(y)=t (shortest geodesic)."""
+        eps = 1e-14
+        x_norm = np.linalg.norm(x)
+        if x_norm < eps:
+            # this is a bug → fix, don’t silently normalize
+            raise FunctionError("State x became zero vector — integration step failed.")
+        x = x / x_norm
+
+        t_norm = np.linalg.norm(t)
+        if t_norm < eps:
+            # no drift direction from a zero target
+            return np.zeros_like(x)  # i.e., drift_tan = 0
+        t = t / t_norm
+
+        dot = np.clip(np.dot(x, t), -1.0, 1.0)
+        theta = np.arccos(dot)
+
+        # If already at target → zero tangent step
+        if theta < 1e-14:
+            return np.zeros_like(x)
+
+        u = t - dot * x
+        n = np.linalg.norm(u)
+        if n < 1e-14:
+            # antipodal case: choose any unit tangent direction
+            # Householder gives consistent orthonormal basis
+            B = DriftOnASphereIntegrator._tangent_basis(x)
+            u = B[:, 0]
+        else:
+            u = u / n
+
+        return theta * u
+
+
+    # --- Parameter definitions ---
 
     class Parameters(IntegratorFunction.Parameters):
         """
             Attributes
             ----------
+            rate
+                see `rate <DriftOnASphereIntegrator.rate>`
 
-                angle_function
-                    see `angle_function <DriftOnASphereIntegrator.angle_function>`
+                :default value: 1.0
+                :type: ``float``
 
-                    :default value: Angle
-                    :type: ``Function``
+            noise
+                see `noise <DriftOnASphereIntegrator.noise>`
 
-                dimension
-                    see `dimension <DriftOnASphereIntegrator.dimension>`
+                :default value: 0.0
+                :type: ``float or 1d array``
 
-                    :default value: 3
-                    :type: ``int``
+            offset
+                see `offset <DriftOnASphereIntegrator.offset>`
 
-                enable_output_type_conversion
-                    see `enable_output_type_conversion <DriftOnASphereIntegrator.enable_output_type_conversion>`
+                :default value: 0.0
+                :type: ``float``
 
-                    :default value: False
-                    :type: ``bool``
-                    :read only: True
+            time_step_size
+                see `time_step_size <DriftOnASphereIntegrator.time_step_size>`
 
-                initializer
-                    see `initializer <DriftOnASphereIntegrator.initializer>`
+                :default value: 1.0
+                :type: ``float``
 
-                    :default value: np.zeros(dimension)
-                    :type: ``numpy.ndarray``
+            dimension
+                see `dimension <DriftOnASphereIntegrator.dimension>`
 
-                offset
-                    see `offset <DriftOnASphereIntegrator.offset>`
+                :default value: 3
+                :type: ``int``
+                :read only: True
 
-                    :default value: 0.0
-                    :type: ``float``
+            initializer
+                see `initializer <DriftOnASphereIntegrator.initializer>`
 
-                previous_time
-                    see `previous_time <DriftOnASphereIntegrator.previous_time>`
+                :default value: None
+                :type: ``numpy.ndarray or None``
 
-                    :default value: None
-                    :type:
+            drift_dir
+                Persistent tangent drift direction used when drift input is scalar.
+                Updated via parallel transport after each step.
 
-                random_state
-                    see `random_state <DriftOnASphereIntegrator.random_state>`
+                :default value: None
+                :type: ``numpy.ndarray or None``
+                :read only: True
 
-                    :default value: None
-                    :type: ``numpy.random.RandomState``
+            previous_value
+                see `previous_value <DriftOnASphereIntegrator.previous_value>`
 
-                rate
-                    see `rate <DriftOnASphereIntegrator.rate>`
+                :default value: class_defaults.variable
+                :type: ``numpy.ndarray``
 
-                    :default value: 1.0
-                    :type: ``float``
+            previous_time
+                see `previous_time <DriftOnASphereIntegrator.previous_time>`
 
-                seed
-                    see `seed <DriftOnASphereIntegrator.seed>`
+                :default value: 0.0
+                :type: ``float``
 
-                    :default value: None
-                    :type:
-                    :read only: True
+            random_state
+                see `random_state <DriftOnASphereIntegrator.random_state>`
 
-                starting_point
-                    see `starting_point <DriftOnASphereIntegrator.starting_point>`
+                :default value: None
+                :type: ``numpy.random.RandomState``
 
-                    :default value: 0.0
-                    :type: ``float``
+            seed
+                see `seed <DriftOnASphereIntegrator.seed>`
 
-                COMMENT:
-                threshold
-                    see `threshold <DriftOnASphereIntegrator.threshold>`
+                :default value: None
+                :type: ``int``
 
-                    :default value: 100.0
-                    :type: ``float``
-                COMMENT
+            enable_output_type_conversion
+                see `enable_output_type_conversion <DriftOnASphereIntegrator.enable_output_type_conversion>`
 
-                time_step_size
-                    see `time_step_size <DriftOnASphereIntegrator.time_step_size>`
-
-                    :default value: 1.0
-                    :type: ``float``
-        """
+                :default value: False
+                :type: ``bool``
+                :read only: True
+            """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        noise = Parameter(0.0, modulable=True, function_arg=False)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        starting_point = 0.0
-        # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
+        previous_time = Parameter(0.0, pnl_internal=True)
         dimension = Parameter(3, stateful=False, read_only=True)
-        initializer = Parameter([0, 0], initalizer='variable', dependencies=dimension, stateful=True)
-        angle_function = Parameter(None, stateful=False, loggable=False)
-        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
-        enable_output_type_conversion = Parameter(
-            False,
-            stateful=False,
+        input_space = Parameter("auto", stateful=False)
+
+        initializer = Parameter(
+            None,
+            stateful=True,
+            function_arg=False,
+            pnl_internal=True,
+            dependencies=dimension,
+        )
+
+        drift_dir = Parameter(
+            None,
+            stateful=True,
+            function_arg=False,
             loggable=False,
             pnl_internal=True,
-            read_only=True
         )
 
-        def _validate_dimension(self, dimension):
-            dimension = try_extract_0d_array_item(dimension)
-            if not isinstance(dimension, int) or dimension < 2:
-                return 'dimension must be an integer >= 2'
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED(), modulable=True, fallback_value=DEFAULT, setter=_seed_setter)
+        enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True,
+                                                  read_only=True)
 
-        def _parse_initializer(self, initializer):
-            if initializer is not None:
-                initializer = np.asarray(initializer)
-            return initializer
+        def _validate_noise(self, noise):
+            return
 
-        # FIX: THIS SEEMS DUPLICATIVE OF DriftOnASphereIntegrator._validate_params() (THOUGH THAT GETS CAUGHT EARLIER)
-        def _validate_initializer(self, initializer):
-            initializer_len = self.dimension.default_value - 1
-            if (self.initializer._user_specified
-                    and (initializer.ndim != 1 or len(initializer) != initializer_len)):
-                return f"'initializer' must be a list or 1d array of length {initializer_len} " \
-                       f"(the value of the \'dimension\' parameter minus 1)"
-
-    @check_user_specified
-    @beartype
-    def __init__(self,
-                 default_variable=None,
-                 rate: Optional[ValidParamSpecType] = None,
-                 noise=None,
-                 offset: Optional[ValidParamSpecType] = None,
-                 starting_point=None,
-                 # threshold=None,
-                 time_step_size=None,
-                 dimension=None,
-                 initializer=None,
-                 angle_function=None,
-                 seed=None,
-                 params: Optional[Mapping] = None,
-                 owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
-                 **kwargs):
-
-        # Assign here as default, for use in initialization of function
-        super().__init__(
-            default_variable=default_variable,
-            rate=rate,
-            time_step_size=time_step_size,
-            starting_point=starting_point,
-            initializer=initializer,
-            angle_function=angle_function,
-            # threshold=threshold,
-            noise=noise,
-            offset=offset,
-            dimension=dimension,
-            seed=seed,
-            params=params,
-            owner=owner,
-            prefs=prefs,
-        )
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        # FIX: THIS SEEMS DUPLICATIVE OF Parameters._validate_initializer (THOUGHT THIS GETS CAUGHT EARLIER)
-        if INITIALIZER in request_set and request_set[INITIALIZER] is not None:
-            initializer = np.array(request_set[INITIALIZER])
-            initializer_len = self.parameters.dimension.default_value - 1
-            if (self.parameters.initializer._user_specified
-                    and (initializer.ndim != 1 or len(initializer) != initializer_len)):
-                raise FunctionError(f"'initializer' must be a list or 1d array of length {initializer_len} "
-                                    f"(the value of the \'dimension\' parameter minus 1)")
-
-        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+        def _validate_initializers(self, default_variable, context=None):
+            return
 
     def _validate_noise(self, noise):
-        if isinstance(noise, list):
-            noise = np.array(noise)
-        if noise is not None:
-            if (not isinstance(noise, float)
-                    and not (isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
-                raise FunctionError(
-                    f"Invalid noise parameter for {self.name}: {type(noise)}. "
-                    f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
-            if isinstance(noise, np.ndarray):
-                initializer_len = self.parameters.dimension.default_value - 1
-                if noise.ndim > 1 or (noise.ndim == 1 and len(noise) != initializer_len):
-                    owner_str = f"'of '{self.owner.name}" if self.owner else ""
-                    raise FunctionError(f"'noise' parameter for {self.name}{owner_str} must be a list or 1d array of "
-                                        f"length {initializer_len} (the value of the \'dimension\' parameter minus 1)")
+        return
 
     def _validate_initializers(self, default_variable, context=None):
-        """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
-        pass
+        return
 
-    def _parse_angle_function_variable(self, variable):
-        return np.ones(self.parameters.dimension.default_value - 1)
+    # --- Construction ---
+    @check_user_specified
+    @beartype
+    def __init__(self, dimension=None, initializer=None, default_variable=None, noise=None, **kwargs):
+        dim = None
+
+        if dimension is not None:
+            dim = int(dimension)
+            if dim < 2:
+                raise FunctionError("dimension must be >= 2")
+
+        # Infer from initializer (Cartesian, length d)
+        if initializer is not None and dim is None:
+            arr = np.asarray(initializer, float)
+            if arr.ndim != 1:
+                raise FunctionError("'initializer' must be a 1D array.")
+            dim = arr.size
+
+        # Infer from noise (tangent, length d-1)
+        if noise is not None and dim is None and np.ndim(noise) == 1:
+            arr = np.asarray(noise, float)
+            dim = arr.size + 1
+
+        # Infer from default_variable (tangent, length d-1)
+        if dim is None and default_variable is not None:
+            dv = np.asarray(default_variable, float)
+            if dv.ndim != 1:
+                raise FunctionError("'default_variable' must be a 1D array.")
+            dim = dv.size + 1
+
+        if dim is None:
+            dim = 3
+
+        # default_variable is tangent coords → length d-1
+        input_space = kwargs.get("input_space", "auto")
+
+        if default_variable is None:
+            # If target mode → default_variable must be length d (target template)
+            if input_space == "target":
+                default_variable = np.zeros(dim, float)
+            else:
+                # Tangent input template
+                default_variable = np.zeros(dim - 1, float)
+        else:
+            dv = np.asarray(default_variable, float)
+            if dv.ndim != 1:
+                raise FunctionError("'default_variable' must be a 1D array.")
+
+            if initializer is None and dimension is None:
+                # legacy inference path: interpret as tangent template (kept)
+                if dv.size != dim - 1:
+                    raise FunctionError(
+                        f"'default_variable' must be length {dim - 1} when used to infer dimension."
+                    )
+
+            else:
+                # dimension and/or initializer given explicitly:
+                # allow either tangent (d-1) or target (d) template
+                if dv.size not in (dim - 1, dim):
+                    raise FunctionError(
+                        f"'default_variable' must be length {dim - 1} (tangent template) "
+                        f"or {dim} (target template). Got {dv.size}."
+                    )
+
+
+        # initializer is Cartesian on the sphere → length d
+        if initializer is None:
+            init = np.zeros(dim, float)
+            init[0] = 1.0
+        else:
+            arr = np.asarray(initializer, float)
+            if arr.ndim != 1 or arr.size != dim:
+                raise FunctionError(
+                    f"'initializer' must be a list or 1d array of length {dim} "
+                    f"(the value of the 'dimension' parameter)."
+                )
+            init = arr
+
+        nrm = np.linalg.norm(init)
+        if nrm == 0:
+            raise FunctionError("'initializer' must not be the zero vector.")
+        init = init / nrm
+
+        # noise: scalar or (d-1,)
+        if noise is None:
+            noise = 0.0
+        elif np.ndim(noise) == 0:
+            noise = float(noise)
+        else:
+            arr = np.asarray(noise, float)
+            if arr.ndim != 1 or arr.size != dim - 1:
+                raise FunctionError(
+                    f"must be a list or 1d array of length {dim - 1} "
+                    f"(the value of the 'dimension' parameter minus 1)"
+                )
+            noise = arr
+
+        kwargs.pop("noise", None)
+
+        super().__init__(
+            default_variable=default_variable,
+            initializer=init,
+            dimension=dim,
+            noise=noise,
+            **kwargs
+        )
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
+        d = self.parameters.dimension._get(context)
 
-        if not self.parameters.initializer._user_specified:
-            expected_initializer_dim = self.parameters.dimension._get(context) - 1
-            initializer = np.random.random(expected_initializer_dim)
-            self._initialize_previous_value(initializer, context)
-
-        # Remove initializer from self.initializers to manage mismatch in dimensionality of initializer vs. variable
-        initializers = list(self.initializers)
-        initializers.remove('initializer')
-        self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
-
-        from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
-        angle_function = self.parameters.angle_function.default_value or Angle
-        dimension = self.parameters.dimension.default_value
-
-        if isinstance(angle_function, type):
-            self.parameters.angle_function._set_default_value(angle_function(np.ones(dimension - 1)))
+        init = self.parameters.initializer._get(context)
+        if init is None:
+            x0 = np.random.normal(size=d)
+            x0 /= np.linalg.norm(x0)
         else:
-            angle_function.defaults.variable = np.ones(dimension - 1)
-            angle_function._instantiate_value(context)
+            arr = np.asarray(init, float)
+            x0 = self._hyperspherical_to_cartesian(arr) if arr.size == d - 1 else arr / np.linalg.norm(arr)
 
-    # FIX: IS THIS STILL NECESSARY?
-    # FIX: FROM MemoryFunctions -- USE AS TEMPLATE TO ABSORB MUCH OF THE ABOVE?
-    #                              (e.g., CAN BE USED TO OVERRIDE VALIDATION OF INITIALIZER??)
-    def _validate(self, context=None):
-        """Validate angle_function"""
+        self._initialize_previous_value(x0, context)
 
-        angle_function = self.parameters.angle_function.default_value
-        dimension = self.parameters.dimension.default_value
+        ddir = self.parameters.drift_dir._get(context)
+        if ddir is None:
+            v = np.random.normal(size=d)
+            v = self._proj_tangent(x0, v)
+            v /= np.linalg.norm(v)
+            self.parameters.drift_dir._set(v, context)
 
-        if self.get_previous_value(context) is not None:
-            test_var = self.get_previous_value(context)
-        else:
-            test_var = self.defaults.variable
+        init_names = [n for n in self.initializers if n not in ('initializer', 'drift_dir')]
+        self._instantiate_stateful_attributes(self.stateful_attributes, init_names, context)
 
-        if isinstance(angle_function, type):
-            fct_msg = 'Function type'
-        else:
-            fct_msg = 'Function'
+        noise = self.parameters.noise._get(context)
+        if isinstance(noise, list):
+            noise = np.asarray(noise, float)
+        if isinstance(noise, np.ndarray) and noise.ndim == 1 and noise.size != d - 1:
+            raise FunctionError(f"'noise' must be length {d - 1}.")
 
-        try:
-            angle_result = angle_function(test_var)
-            if angle_result.ndim != 1 and len(angle_result) != dimension:
-                raise FunctionError(f"{fct_msg} specified for 'angle_function' arg of "
-                                    f"{self.__class__.__name__} ({angle_function}) must accept a list or 1d array "
-                                    f"of length {dimension - 1} and return a 1d array of length {dimension}.")
-        except:
-            raise FunctionError(f"Problem with {fct_msg} specified for 'angle_function' arg of "
-                                f"{self.__class__.__name__} ({angle_function}).")
-
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    # --- Integration step ---
+    def _function(self, variable=None, context=None, params=None):
         """
+                Compute one integration step on the unit sphere.
 
-        Arguments
-        ---------
+                The state evolves from the current position :math:`x` by computing a drift term and a diffusion term
+                in the tangent space :math:`T_x S^{dimension-1}`, then mapping the result back to the sphere using
+                the exponential map.
 
-        variable : number, list or 1d array : default class_defaults.variable
-           value used as drift;  if it is a number, then used for all coordinates;  if it is  list or array its
-           length must equal `dimension <DriftOnASphereIntegrator.dimension>` - 1, and is applied Hadamard to
-           each coordinate.
+                Arguments
+                ---------
+                variable : float or 1d array
+                    Drift input. If a **scalar** is provided, it scales the persistent tangent drift direction
+                    (`drift_dir`). If a **1d array** of length ``dimension`` is provided, it is projected
+                    into the tangent space and used directly as the drift direction.
 
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
+                params : Dict[param keyword: param value]
+                    Parameter override dictionary. Values in `params` temporarily replace current parameter values
+                    for this call only.
 
-        Returns
-        -------
+                Returns
+                -------
+                1d array
+                    The updated position on the sphere :math:`S^{dimension-1}`. The returned vector is guaranteed
+                    to have unit norm.
+                """
+        x = self.parameters.previous_value._get(context)  # shape (d,)
+        ddir = self.parameters.drift_dir._get(context)
+        rate = float(self._get_current_parameter_value("rate", context))
+        noise = self._get_current_parameter_value("noise", context)
+        dt = float(self._get_current_parameter_value("time_step_size", context))
+        rng = self._get_current_parameter_value("random_state", context)
 
-        updated coordinates : 1d array
+
+        input_space = self.parameters.input_space._get(context)
+        # --- Drift input ---
+        if variable is None:
+            drift_tan = np.zeros_like(x)
+
+        else:
+            var = np.asarray(variable, float).reshape(-1)
+
+            # scalar → along persistent drift_dir (unchanged)
+            if var.size == 1:
+                drift_tan = rate * ddir * float(var[0])
+
+            else:
+                d = x.size
+                if input_space == "tangent":
+                    if var.size != d - 1:
+                        raise FunctionError(f"In tangent mode, 'variable' must have length {d - 1}. Got {var.size}.")
+                    B = self._tangent_basis(x)
+                    drift_tan = rate * (B @ var)
+
+                elif input_space == "target":
+                    if var.size != d:
+                        raise FunctionError(f"In target mode, 'variable' must have length {d}. Got {var.size}.")
+
+                    y_to_target = self._logmap_sphere(x, var)
+                    drift_tan = rate * y_to_target
+
+                else:  # "auto"
+                    if var.size == d - 1:
+                        B = self._tangent_basis(x)
+                        drift_tan = rate * (B @ var)
+                    elif var.size == d:
+                        if not DriftOnASphereIntegrator._warned_auto_target_once:
+                            warnings.warn(
+                                "DriftOnASphereIntegrator: interpreting variable (length d) as a TARGET point on the sphere. "
+                                "Set input_space='target' to silence this message.",
+                                RuntimeWarning
+                            )
+                            DriftOnASphereIntegrator._warned_auto_target_once = True
+                        y_to_target = self._logmap_sphere(x, var)
+                        drift_tan = rate * y_to_target
+                    else:
+                        raise FunctionError(
+                            f"'variable' length must be 1, {d - 1} (tangent), or {d} (target). Got {var.size}."
+                        )
+
+        if noise is None:
+            noise_tan = np.zeros_like(x)
+
+        # Vector anisotropic noise in tangent coords (length d-1)
+        elif np.ndim(noise) == 1:
+            noise = np.asarray(noise, dtype=float)
+            eps = rng.normal(size=noise.size)
+            B = self._tangent_basis(x)
+            z = B @ (noise * eps)  # Convert to Cartesian tangent
+            noise_tan = np.sqrt(dt) * z
+
+        # Scalar isotropic noise
+        else:
+            noise = float(noise)
+            B = self._tangent_basis(x)
+            eps = rng.normal(size=B.shape[1])
+            z = B @ eps
+            noise_tan = np.sqrt(dt) * (noise * z)
+
+        y = dt * (drift_tan + noise_tan)
+        x_new = self._expmap_sphere(x, y)
+        d_new = self._parallel_transport_exact(x, y, ddir)
+        d_new /= np.linalg.norm(d_new)
+
+        self.parameters.previous_value._set(x_new, context)
+        self.parameters.drift_dir._set(d_new, context)
+        new_t = self.parameters.previous_time._get(context) + dt
+        self.parameters.previous_time._set(np.array(new_t, dtype=float), context)
+
+        return x_new
+
+    def reset(self, *args, context=None, **kwargs):
         """
+        Reset previous_value to initializer and return reset state
+        consistent with PNL integrator reset protocol.
+        """
+        # Ensure internal state is reset the usual way
+        super().reset(*args, context=context, **kwargs)
 
-        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
-        noise = self._get_current_parameter_value(NOISE, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        # threshold = self._get_current_parameter_value(THRESHOLD, context)
-        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
-        random_state = self._get_current_parameter_value("random_state", context)
+        x0 = self.parameters.initializer.get(context)
+        d = x0.size
 
-        angle_function = self.parameters.angle_function.default_value
-        dimension = self.parameters.dimension.get()
-
-        previous_value = self.parameters.previous_value._get(context)
-
-        try:
-            variable = variable.flatten()
-            drift = variable if len(variable) == dimension - 1 else np.full(dimension - 1, variable)
-
-        except ValueError:
-            owner_str = f"'of '{self.owner.name}" if self.owner else ""
-            raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
-                                # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
-                                f"1 or {dimension - 1} (one less than its 'dimension' parameter: {dimension}).")
-
-        random_draw = np.array([random_state.normal() for i in range(dimension - 1)])
-        value = previous_value + rate * drift * time_step_size \
-                + np.sqrt(time_step_size * noise) * random_draw
-
-        # adjusted_value = np.clip(value + offset, -threshold, threshold)
-        adjusted_value = value + offset
-
-        # If this NOT an initialization run, update the old value and time
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        previous_time = self._get_current_parameter_value('previous_time', context)
-        if not self.is_initializing:
-            value = adjusted_value
-            previous_time = previous_time + time_step_size
-            self.parameters.previous_time._set(previous_time, context)
-
-        self.parameters.previous_value._set(value, context)
-
-        return angle_function(value)
-
-    def reset(self, previous_value=None, previous_time=None, context=None):
-        return super().reset(
-            previous_value=previous_value,
-            previous_time=previous_time,
-            context=context
-        )
+        # Construct return value: first row = initializer, rest zeros
+        result = np.zeros((1, d), dtype=float)
+        result[0] = x0
+        return result
 
 
 class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
@@ -3469,24 +3531,23 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             else:
                 return initializer
 
-
     @check_user_specified
     @beartype
     def __init__(
-        self,
-        default_variable=None,
-        rate: Optional[ValidParamSpecType] = None,
-        decay=None,
-        noise=None,
-        offset: Optional[ValidParamSpecType] = None,
-        non_decision_time=None,
-        time_step_size=None,
-        starting_value=None,
-        params: Optional[Mapping] = None,
-        seed=None,
-        owner=None,
-        prefs:  Optional[ValidPrefSet] = None,
-        **kwargs
+            self,
+            default_variable=None,
+            rate: Optional[ValidParamSpecType] = None,
+            decay=None,
+            noise=None,
+            offset: Optional[ValidParamSpecType] = None,
+            non_decision_time=None,
+            time_step_size=None,
+            starting_value=None,
+            params: Optional[Mapping] = None,
+            seed=None,
+            owner=None,
+            prefs: Optional[ValidPrefSet] = None,
+            **kwargs
     ):
 
         super().__init__(
@@ -3517,10 +3578,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -3779,7 +3840,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
@@ -3799,10 +3860,10 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         )
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ):
         """
 
         Arguments
@@ -3887,7 +3948,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         return f'previous_value + (-rate * previous_value + {MODEL_SPEC_ID_MDF_VARIABLE}) * time_step_size + noise * (time_step_size ** 0.5)'
 
 
-class FitzHughNagumoIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
+class FitzHughNagumoIntegrator(
+    IntegratorFunction):  # ----------------------------------------------------------------------------
     """
     FitzHughNagumoIntegrator(                      \
         default_variable=1.0,           \
@@ -4419,7 +4481,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                     :default value: 0.0
                     :type: ``float``
         """
-        variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([1.0]), read_only=True, pnl_internal=True,
+                             constructor_argument='default_variable')
         time_step_size = Parameter(0.05, modulable=True)
         a_v = Parameter(-1.0 / 3, modulable=True)
         b_v = Parameter(0.0, modulable=True)
@@ -4485,15 +4548,15 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  integration_method=None,
                  params: Optional[Mapping] = None,
                  owner=None,
-                 prefs:  Optional[ValidPrefSet] = None,
+                 prefs: Optional[ValidPrefSet] = None,
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo
         unsupported_args = {NOISE, INITIALIZER, RATE, OFFSET}
         if any(k in unsupported_args for k in kwargs):
-            s = 's' if len(kwargs)>1 else ''
+            s = 's' if len(kwargs) > 1 else ''
             warnings.warn("{} arg{} not supported in {}".
-                          format(repr(", ".join(list(kwargs.keys()))),s, self.__class__.__name__))
+                          format(repr(", ".join(list(kwargs.keys()))), s, self.__class__.__name__))
             for k in unsupported_args:
                 if k in kwargs:
                     del kwargs[k]
@@ -4533,10 +4596,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                                 format(self.integration_method, self.name))
 
     def _euler_FitzHughNagumo(
-        self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
-        a_v,
-        threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
-        time_constant_w, context=None
+            self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
+            a_v,
+            threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
+            time_constant_w, context=None
     ):
 
         slope_v_approx = slope_v(
@@ -4575,10 +4638,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         return new_v, new_w
 
     def _runge_kutta_4_FitzHughNagumo(
-        self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w,
-        time_step_size,
-        a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
-        uncorrelated_activity, time_constant_w, context=None
+            self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w,
+            time_step_size,
+            a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
+            uncorrelated_activity, time_constant_w, context=None
     ):
 
         # First approximation
@@ -4717,10 +4780,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         new_v = previous_value_v \
                 + (time_step_size / 6) * (
-        slope_v_approx_1 + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+                        slope_v_approx_1 + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_w = previous_value_w \
                 + (time_step_size / 6) * (
-        slope_w_approx_1 + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
+                        slope_w_approx_1 + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
 
         return new_v, new_w
 
@@ -4753,10 +4816,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         return val
 
     def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ) -> (np.ndarray, np.ndarray, np.ndarray):
+                  variable=None,
+                  context=None,
+                  params=None,
+                  ) -> (np.ndarray, np.ndarray, np.ndarray):
         """
 
         Arguments
@@ -4877,7 +4940,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             context=context
         )
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags: frozenset):
         zero_i32 = ctx.int32_ty(0)
 
         # Get rid of 2d array. When part of a Mechanism the input,
@@ -4902,6 +4965,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         def _load_param(x):
             ptr = ctx.get_param_or_state_ptr(builder, self, x, param_struct_ptr=params)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
+
         param_vals = {p: _load_param(p) for p in self.llvm_param_ids}
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
@@ -4928,7 +4992,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             builder.store(builder.load(sptr), dptr)
         return builder
 
-    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
+    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr,
+                            previous_w_ptr, previous_time_ptr):
         var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
 
         previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
@@ -5013,7 +5078,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         new_w = builder.fadd(new_w, previous_w)
         builder.store(new_w, out_w_ptr)
 
-    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr, previous_w_ptr, previous_time_ptr):
+    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, out_time, param_vals, previous_v_ptr,
+                              previous_w_ptr, previous_time_ptr):
 
         var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
         previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
@@ -5114,9 +5180,9 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         args = self._mdf_model_nonstateful_parameters[self._model_spec_id_parameters]
 
         slope_v_expression = (
-            '(a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2)'
-            + ' + (-threshold) * c_v * v + d_v + e_v * w'
-            + f' + f_v * {input_id}) / time_constant_v'
+                '(a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2)'
+                + ' + (-threshold) * c_v * v + d_v + e_v * w'
+                + f' + f_v * {input_id}) / time_constant_v'
         )
         slope_w_expression = (
             '(mode * a_w * v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w'

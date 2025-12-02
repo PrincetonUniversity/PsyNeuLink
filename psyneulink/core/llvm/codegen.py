@@ -31,12 +31,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.arg_out = arg_out
 
         #setup default functions
-        self.register = {
+        self.known_names = {
             "sum": self.call_builtin_horizontal_sum,
             "len": self.call_builtin_len,
-            "float": ctx.float_ty,
-            "int": ctx.int32_ty,
             "max": self.call_builtin_max,
+            "bool": self.call_builtin_convert_bool,
+            "float": self.call_builtin_convert_float,
+            "int": self.call_builtin_convert_int,
         }
 
         # Numpy function calls
@@ -51,8 +52,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
             return np_cmp
 
-        # setup numpy
+        # setup attributes of numpy (np) module
         numpy_handlers = {
+            # numpy functions should be consumed by a call node
             'tanh': self.call_builtin_np_tanh,
             'exp': self.call_builtin_np_exp,
             'sqrt': self.call_builtin_np_sqrt,
@@ -62,12 +64,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             'less_equal': get_np_cmp("<="),
             'greater': get_np_cmp(">"),
             'greater_equal': get_np_cmp(">="),
-            "max": self.call_builtin_np_max,
+            'max': self.call_builtin_np_max,
+            'argmax': self.call_builtin_np_argmax,
+
+            # value attributes can be returned directly
+            'nan':self.ctx.float_ty(float("nan"))
         }
 
         for k, v in func_globals.items():
             if v is np:
-                self.register[k] = numpy_handlers
+                self.known_names[k] = numpy_handlers
 
         super().__init__()
 
@@ -87,8 +93,8 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         args = node.args
         variable = args[0]
 
-        # update register
-        self.register[variable.arg] = self.arg_in
+        # update known names
+        self.known_names[variable.arg] = self.arg_in
         parameters = args[1:]
         for param in parameters:
             assert param.arg not in ["self", "owner"], f"Unable to reference {param.arg} in a compiled UserDefinedFunction!"
@@ -98,7 +104,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 # Since contexts are implicit in the structs in compiled mode, we do not compile it.
                 pass
             else:
-                self.register[param.arg] = self.func_params[param.arg]
+                self.known_names[param.arg] = self.func_params[param.arg]
 
     def visit_FunctionDef(self, node:ast.AST):
         # the current position will be used to create temp space
@@ -201,12 +207,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _not
 
     def visit_Name(self, node):
-        return self.register.get(node.id, None)
+        return self.known_names.get(node.id, None)
 
     def visit_Attribute(self, node:ast.AST):
         val = self.visit(node.value)
 
         self._update_debug_metadata(self.builder, node)
+
         # special case numpy attributes
         if node.attr == "shape":
             shape = helpers.get_array_shape(val)
@@ -225,16 +232,17 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 flat = ir.ArrayType(res[0].type, len(res))(ir.Undefined)
                 for i, v in enumerate(res):
                     flat = self.builder.insert_value(flat, v, i)
+
                 return flat
 
             return flatten
 
         elif node.attr == "astype":
             val = self.get_rval(val)
-            def astype(builder, ty):
-                def _convert(builder, x):
-                    return helpers.convert_type(builder, x, ty)
-                return self._do_unary_op(builder, val, _convert)
+
+            # Python type KW is converted to the cast function in known_names
+            def astype(builder, conversion_func):
+                return self._do_unary_op(builder, val, conversion_func)
 
             return astype
 
@@ -253,7 +261,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             if target is None: # Allocate space for new variable
                 self._update_debug_metadata(self.var_builder, node)
                 target = self.var_builder.alloca(value.type, name=str(t.id) + '_local_variable')
-                self.register[t.id] = target
+                self.known_names[t.id] = target
 
             assert self.is_lval(target)
             self.builder.store(value, target)
@@ -290,6 +298,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # scalar is the base case
         if helpers.is_scalar(x):
             return scalar_op(self.builder, x)
+
         operands = (builder.extract_value(x, i) for i in range(len(x.type)))
         results = [self._do_unary_op(builder, opx, scalar_op) for opx in operands]
 
@@ -377,11 +386,14 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         elements = list(self.visit(element) for element in node.elts)
 
         self._update_debug_metadata(self.builder, node)
-        element_values = [self.get_rval(e) for e in elements]
 
+        element_values = [self.get_rval(e) for e in elements]
         element_types = [element.type for element in element_values]
-        assert all(e_type == element_types[0] for e_type in element_types), f"Unable to convert {node} into a list! (Elements differ in type!)"
-        result = ir.ArrayType(element_types[0], len(element_types))(ir.Undefined)
+
+        if all(e_type == element_types[0] for e_type in element_types):
+            result = ir.ArrayType(element_types[0], len(element_types))(ir.Undefined)
+        else:
+            result = ir.LiteralStructType(element_types)(ir.Undefined)
 
         for i, val in enumerate(element_values):
             result = self.builder.insert_value(result, val, i)
@@ -429,7 +441,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             result = self._do_bin_op(self.builder, result, val, op)
         return result
 
-    def visit_If(self, node:ast.AST):
+    def visit_Iflike(self, node:ast.AST, *, return_value:bool):
         cond = self.visit(node.test)
 
         self._update_debug_metadata(self.builder, node)
@@ -438,11 +450,38 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         predicate = helpers.convert_type(self.builder, cond_val, self.ctx.bool_ty)
         with self.builder.if_else(predicate) as (then, otherwise):
             with then:
-                for child in node.body:
-                    self.visit(child)
+                if return_value:
+                    true_value = self.visit(node.body)
+                    true_block = self.builder.block
+                else:
+                    for child in node.body:
+                        self.visit(child)
             with otherwise:
-                for child in node.orelse:
-                    self.visit(child)
+                if return_value:
+                    false_value = self.visit(node.orelse)
+                    false_block = self.builder.block
+                else:
+                    for child in node.orelse:
+                        self.visit(child)
+
+        # create PHI node for returned values
+        if return_value:
+            assert true_value.type == false_value.type, \
+                "Type mismatch in IfExpression: {} vs. {}".format(true_value.type, false_value.type)
+
+            final = self.builder.phi(true_value.type)
+            final.add_incoming(true_value, true_block)
+            final.add_incoming(false_value, false_block)
+
+            return final
+
+        return None
+
+    def visit_If(self, node:ast.AST):
+        self.visit_Iflike(node, return_value=False)
+
+    def visit_IfExp(self, node:ast.AST):
+        return self.visit_Iflike(node, return_value=True)
 
     def visit_Return(self, node:ast.AST):
         ret_val = self.visit(node.value)
@@ -516,6 +555,18 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             x_ty = x_ty.pointee
         return self.ctx.float_ty(len(x_ty))
 
+    def call_builtin_convert_bool(self, builder, x):
+        arg = builder.load(x) if helpers.is_pointer(x) else x
+        return helpers.convert_type(builder, arg, self.ctx.bool_ty)
+
+    def call_builtin_convert_float(self, builder, x):
+        arg = builder.load(x) if helpers.is_pointer(x) else x
+        return helpers.convert_type(builder, arg, self.ctx.float_ty)
+
+    def call_builtin_convert_int(self, builder, x):
+        arg = builder.load(x) if helpers.is_pointer(x) else x
+        return helpers.convert_type(builder, arg, self.ctx.int32_ty)
+
     def call_builtin_max(self, builder, *args):
         # Python max takes 1 iterable (array in our case),
         # or a set of multiple arguments.
@@ -550,29 +601,45 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         x = self.get_rval(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.sqrt(self.ctx, builder, x))
 
-    def call_builtin_np_max(self, builder, x):
-        # numpy max searches for the largest scalar and propagates NaNs be default.
+    def call_builtin_np_maxlike(self, builder, x):
+        # numpy max searches for the largest scalar and propagates NaNs by default.
         # Only the default behaviour is supported atm
         # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
 
         x = self.get_rval(x)
         if helpers.is_scalar(x):
-            return x
+            return self.ctx.int32_ty(0)
 
         res = self.ctx.float_ty(float("-Inf"))
+        idx = self.ctx.int32_ty(0)
+        best_idx = self.ctx.int32_ty(0)
 
-        def find_max(builder, x):
+        def find_argmax(builder, x):
             nonlocal res
+            nonlocal idx
+            nonlocal best_idx
+
             # to propagate NaNs we use unordered >,
             # but only update if the current result is not NaN
             not_nan = builder.fcmp_ordered('ord', res, res)
             greater = builder.fcmp_unordered('>', x, res)
             cond = builder.and_(not_nan, greater)
+
             res = builder.select(cond, x, res)
+            best_idx = builder.select(cond, idx, best_idx)
+            idx = builder.add(idx, idx.type(1))
+
             return res
 
-        self._do_unary_op(builder, x, find_max)
-        return res
+        self._do_unary_op(builder, x, find_argmax)
+        return res, helpers.convert_type(builder, best_idx, self.ctx.float_ty)
+
+
+    def call_builtin_np_max(self, builder, x):
+        return self.call_builtin_np_maxlike(builder, x)[0]
+
+    def call_builtin_np_argmax(self, builder, x):
+        return self.call_builtin_np_maxlike(builder, x)[1]
 
 
 def gen_node_assembly(ctx, composition, node, *, tags:frozenset):
