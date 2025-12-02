@@ -28,6 +28,7 @@ else:
 import warnings
 from enum import Enum, auto
 from typing import TYPE_CHECKING
+from collections import defaultdict
 
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -97,6 +98,10 @@ class DataTypeEnum(Enum):
     TARGETS = auto()
     LOSSES = auto()
 
+def pytorch_mechanism_wrapper_type(mech_type):
+    return defaultdict(lambda: PytorchMechanismWrapper,
+                       {LossMechanism: PytorchLossMechanismWrapper}
+                       )[mech_type]
 
 def _get_pytorch_function(obj, device, context):
     pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
@@ -444,12 +449,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism # BREADCRUMB:  REPLACE WITH METHOD ON Mechanism THAT SPECIFIES ITS pytorch_mechanism_wrapper_type
             else:
-                if isinstance(node, LossMechanism):
-                    pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
-                else:
-                    pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
+                # if isinstance(node, LossMechanism):
+                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
+                # else:
+                #     pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
                 pytorch_node_wrapper = (
-                    pytorch_mechanism_wrapper_type(
+                    pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
                         composition=composition,
                         component_idx=self.composition._get_node_index(node),
@@ -2335,8 +2340,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
             If False, compute function for each item in variable and return results in a list
             """
             from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+            # items of variable should be treated as separate arguments
             if fct_has_mult_args:
                 res = function(*variable)
+
             # variable is ragged
             elif isinstance(variable, list):
                 res = []
@@ -2350,18 +2358,12 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 seq_size = res[0].shape[1]
                 res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
-            # elif isinstance(self.mechanism, LossMechanism):
-            #     sample = variable[:,:,0,...]
-            #     target = variable[:,:,1,...].detach()
-            #     res = function(sample, target)
-            #
             else:
                 # Functions handle batch dimensions, just run the
                 # function with the variable and get back a tensor.
                 res = function(variable)
 
-            # TransformFunction can reduce output to single item from
-            # multi-item input
+            # TransformFunction can reduce output to single item from multi-item input
             if isinstance(function._pnl_function, TransformFunction):
                 res = res.unsqueeze(2)
 
@@ -2525,9 +2527,9 @@ class PytorchMechanismWrapper(torch.nn.Module):
     def __repr__(self):
         return "PytorchWrapper for: " +self.mechanism.__repr__()
 
+
 class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
-    """Subclass of PytorchMechanismWrapper that override self.function.execute to detach() tensor from TARGET input.
-    """
+    """Subclass that override self.function.execute to detach() tensor from TARGET input"""
     def __init__(self, *args, **kwargs):
         super(PytorchLossMechanismWrapper, self).__init__(*args, **kwargs)
 
