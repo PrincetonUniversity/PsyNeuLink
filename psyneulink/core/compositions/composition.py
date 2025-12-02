@@ -10351,10 +10351,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                SINCE COMPOSITION SHOULDN'T KNOW ABOUT PYTORCH STUFF
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            if validate_targets(list(self.outputs_to_targets_map.values())):
+            if validate_targets(list(self.target_nodes_for_outputs.values())):
                 target_values_for_target_nodes = targets
             else:
-                target_values_for_target_nodes = {self.outputs_to_targets_map[target]: value
+                target_values_for_target_nodes = {self.target_nodes_for_outputs[target]: value
                                                   for target, value in targets.items()}
 
         else:

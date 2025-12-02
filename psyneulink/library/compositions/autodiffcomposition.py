@@ -1203,10 +1203,6 @@ class AutodiffComposition(Composition):
           PUT TARGET Nodes in self.target_nodes ATTRIBUTE
           CHANGE TESTS/SCRIPTS THAT USE learning_components TO IDENTIFY TARGET Nodes TO USE self.target_nodes
 
-          DEAL WITH outputs_to_targets_map; REPLACE WITH loss_mechs_map
-          OLD:
-            self.outputs_to_targets_map = {output: target
-                                           for target, output in self.target_nodes_for_outputs.items()}
           ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
 
         If **targets** arg of AutodiffComposition constructor:
@@ -1798,7 +1794,7 @@ class AutodiffComposition(Composition):
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target in self.target_nodes_for_outputs:
+        for target in self.target_nodes_for_outputs.values():
             target_values[target] = get_target_value(target)
         return target_values
 

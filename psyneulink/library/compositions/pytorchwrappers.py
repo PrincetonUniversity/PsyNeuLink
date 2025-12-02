@@ -1892,13 +1892,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
 
-                    if node.is_loss:
-                        # TEACHER_TARGET BREADCRUMB: POSSIBLY DETACH TARGET INPUT HERE
-                        # If node is a loss node, its output is not used in forward pass,
-                        #  so just cache for later use during backpropagation
-                        self._loss_nodes_outputs[node] = variable
-                        continue
-
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
                         # if node.exclude_from_gradient_calc in {AFTER, LAST}:
