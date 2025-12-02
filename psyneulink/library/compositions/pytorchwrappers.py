@@ -442,16 +442,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              device=device,
                                                                              outer_creator=self,
                                                                              context=context)
-            # Wrap Mechanism
+            # Wrap Mechanism # BREADCRUMB:  REPLACE WITH METHOD ON Mechanism THAT SPECIFIES ITS pytorch_mechanism_wrapper_type
             else:
-                # # TEACHER_TARGET BREADCRUMB:  USE IF PytorchLossMechanismWrapper IS USED
-                # if isinstance(node, LossMechanism):
-                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
-                # else:
-                #     pytorch_mechanism_wrapper_type self.composition.pytorch_mechanism_wrapper_type
+                if isinstance(node, LossMechanism):
+                    pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
+                else:
+                    pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
                 pytorch_node_wrapper = (
-                    self.composition.pytorch_mechanism_wrapper_type(
-                    # pytorch_mechanism_wrapper_type(
+                    pytorch_mechanism_wrapper_type(
                         mechanism=node,
                         composition=composition,
                         component_idx=self.composition._get_node_index(node),
@@ -2352,11 +2350,11 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 seq_size = res[0].shape[1]
                 res = [[[inp[b, s, ...] for inp in res] for s in range(seq_size)] for b in range(batch_size)]
 
-            elif isinstance(self.mechanism, LossMechanism):
-                sample = variable[:,:,0,...]
-                target = variable[:,:,1,...].detach()
-                res = function(sample, target)
-
+            # elif isinstance(self.mechanism, LossMechanism):
+            #     sample = variable[:,:,0,...]
+            #     target = variable[:,:,1,...].detach()
+            #     res = function(sample, target)
+            #
             else:
                 # Functions handle batch dimensions, just run the
                 # function with the variable and get back a tensor.
@@ -2527,7 +2525,6 @@ class PytorchMechanismWrapper(torch.nn.Module):
     def __repr__(self):
         return "PytorchWrapper for: " +self.mechanism.__repr__()
 
-# TEACHER_TARGET BREADCRUMB: UNCOMMENT CODE IN _instantiate_pytorch_mechanism_wrappers IF THIS IS USED
 class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
     """Subclass of PytorchMechanismWrapper that override self.function.execute to detach() tensor from TARGET input.
     """
