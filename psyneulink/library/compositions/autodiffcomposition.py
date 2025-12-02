@@ -1530,7 +1530,21 @@ class AutodiffComposition(Composition):
                                                        synch_with_pnl_options=synch_with_pnl_options,
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
+        # TEACHER_TARGET NEW
+        # BREADCRUMB: CONSIDER REINSTATING CODE BELOW TO GET DYNAMIC/RUN_TIME TARGETS (SPECIFIED IN learn())
+        curr_tensors_for_targets = {}
+        for component, target in targets.items():
+            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
+            else:
+                # It's  a list, of lists, of torch tensors because it is ragged
+                num_outputs = len(target[0][0])
+                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+
+
         # TEACHER_TARGET OLD:
+        # BREADCRUMB: KEEP / REINSTATE FOR SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
+        #                    SPECIFIED IN learn(targets={sample/student:target/teacher})
         # # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         # curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
         #                                     if k in self.outputs_to_targets_map}
@@ -1619,17 +1633,8 @@ class AutodiffComposition(Composition):
         #     all_output_values += [output]
 
         # TEACHER_TARGET NEW
-        curr_tensors_for_targets = {}
-        for component, target in targets.items():
-            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
-            else:
-                # It's  a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(target[0][0])
-                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
-
         trial_loss = 0
-        # TEACHER_TARGET BREADCRUMB: NEED TO GET NODES THAT ARE PytorchLossMechanismWrappers
+        # BREADCRUMB: NEED TO GET NODES THAT ARE PytorchLossMechanismWrappers
         for loss_node in self.loss_mechs_map:
             comp_loss = loss_node.value
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
