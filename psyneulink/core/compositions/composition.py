@@ -4839,8 +4839,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism))] or None
 
     def get_nested_output_nodes_at_all_levels(self)->list or None:
-        """Return all Nodes from nested Compositions that send output directly to outermost Composition."""
+        """Return all Nodes in Composition and nested ones that send output directly to outermost Composition."""
+        # Get all OUPUT Nodes of Composition and of any nested within it
         output_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.OUTPUT)
+        # Return only those that project directly to output_CIM of (outermost) Composition (self)
         return [output_node for output_node in output_nodes
                 if not all(proj.receiver.owner._get_destination_info_for_output_CIM(proj.receiver)
                            for output_port in output_node.output_ports for proj in output_port.efferents
@@ -6052,7 +6054,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # Check for any errant / residual output_CIM.input_ports
+        # Identify any errant / residual output_CIM.input_ports
         #  (these can result from order of construction and/or selective outputs from nodes within a nested Composition)
         # Do this by checking if the sender of the projection to each output_CIM.input_port has any other efferents;
         #  if it does, and the following are true:
@@ -6095,7 +6097,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       NodeRole.FEEDBACK_RECEIVER,
                                                       NodeRole.CONTROLLER_OBJECTIVE,
                                                       NodeRole.CONTROL_OBJECTIVE,
-                                                      NodeRole.LEARNING}
+                                                      NodeRole.LEARNING,
+                                                      NodeRole.LEARNING_OBJECTIVE}
                                              for role in self.get_roles_by_node(p.receiver.owner))
                                  and not isinstance(p, AutoAssociativeProjection))])):
                 defunct_input_ports.add(input_port)
