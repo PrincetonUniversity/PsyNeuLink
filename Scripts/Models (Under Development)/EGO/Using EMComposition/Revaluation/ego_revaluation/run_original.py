@@ -49,6 +49,7 @@ def run(
         'estimated_reward_state_2_reward_reval': [],
         'estimated_reward_state_1_transition_reval': [],
         'estimated_reward_state_2_transition_reval': [],
+
     }
     # initialize revaluation scores
     revaluation_scores = np.zeros((num_participants, 3))
