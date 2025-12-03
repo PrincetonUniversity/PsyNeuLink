@@ -14224,7 +14224,7 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
-    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
     return comp
 
 

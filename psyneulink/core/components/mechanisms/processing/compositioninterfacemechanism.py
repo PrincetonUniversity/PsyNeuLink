@@ -383,6 +383,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
                 assert comp.is_nested
                 receiver_comp = get_composition_for_node(receiver.owner)
+                if receiver_comp is None:
+                    continue
                 receivers_info.append((efferent.receiver, efferent.receiver.owner, receiver_comp))
             else:
                 receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,

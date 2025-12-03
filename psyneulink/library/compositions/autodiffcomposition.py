@@ -1224,11 +1224,13 @@ class AutodiffComposition(Composition):
         Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
         Add loss_mechs and any constructed TARGET Nodes to self.learning_components
         """
+        # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
             # LossMechanism and/or sample:target tuples specified by user in self.targets
             loss_mech_specs = self.targets
             target_mechs = [loss_mech.target if isinstance(loss_mech, LossMechanism) else loss_mech[1]
                             for loss_mech in loss_mech_specs]
+            self.add_nodes(target_mechs, context=context)
 
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
@@ -1247,6 +1249,7 @@ class AutodiffComposition(Composition):
                                                                              in self.loss_mechs_map.values())]
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
+            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
 
         # Validate LossMechanism specs
         for loss_mech in list(loss_mech_specs):
@@ -1265,7 +1268,7 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-        # Construct LossMechanisms (and their  MappingProjections)
+        # Construct LossMechanisms (and their MappingProjections)
         loss_projections = []
         for i, item in enumerate(loss_mech_specs):
             # Constructe LossMechanism
@@ -1276,20 +1279,17 @@ class AutodiffComposition(Composition):
                                           target=target,
                                           function=None,
                                           loss=self.loss_spec)
+                # TEACHER_TARGET BREADCRUMB:
+                #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
             self.loss_mechs_map[loss_mech] = (sample, target)
             loss_projections.extend(loss_mech.path_afferents)
-            target_mechs.append(loss_mech.target)
         loss_mechs = list(self.loss_mechs_map.keys())
 
-        # Add LossMechanisms, MappingProjections and any TARGET Nodes to AutodiffComposition
+        # Add LossMechanisms and any TARGET Nodes to AutodiffComposition, with required NodeRoles
         context = Context(source=ContextFlags.METHOD)
         self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
-                                                            NodeRole.LEARNING,
-                                                            NodeRole.LEARNING_OBJECTIVE],
-                       context=context)
-        self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
-        # TEACHER_TARGET BREADCRUMB: ??NEEDED?
-        self.add_projections(loss_projections, context=context)
+                                                   NodeRole.LEARNING_OBJECTIVE], context=context)
+
         self.learning_components.append(loss_mechs + target_mechs)
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
@@ -1508,6 +1508,8 @@ class AutodiffComposition(Composition):
         Losses are then accumulated, error is backpropagated by compositionrunner.run_learning()
           before the next time it calls run(), in a call to backward() by do_gradient_optimization()
           in _batch_inputs() or _batch_function_inputs(),
+
+        Returns values of all OUTPUT Nodes of pytorch_representation
         """
         assert execution_mode is pnlvm.ExecutionMode.PyTorch
         pytorch_rep = self.parameters.pytorch_representation._get(context)
@@ -1636,25 +1638,34 @@ class AutodiffComposition(Composition):
         trial_loss = 0
         # BREADCRUMB: NEED TO GET NODES THAT ARE PytorchLossMechanismWrappers
         for loss_node in self.loss_mechs_map:
-            comp_loss = loss_node.value
+            # comp_loss = loss_node.value
+            comp_loss = pytorch_rep.nodes_map[loss_node].output
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
         # TEACHER_TARGET END
 
-        # Turn into a numpy array, possibly ragged
-        all_output_values = convert_to_np_array(all_output_values)
+        def convert_node_outputs_to_log_format(values):
+            values = [val.detach().cpu().numpy().copy().tolist() for val in values]
+            # Turn into a numpy array, possibly ragged
+            values = convert_to_np_array(values)
+            # Swap the first two dimensions (output_port, batch) to (batch, output_port)
+            return values.swapaxes(0, 1)
 
-        # Swap the first two dimensions (output_port, batch) to (batch, output_port)
-        all_output_values = all_output_values.swapaxes(0, 1)
+        # Get value of all OUTPUT Nodes of network
+        all_output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
+        pytorch_rep.all_output_values = convert_node_outputs_to_log_format(all_output_values)
 
-        pytorch_rep.all_output_values = all_output_values
+        # Get value of all SAMPLE (student) Nodes:
+        # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
+        sample_values = [node.output for node in pytorch_rep.sample_nodes]
+        pytorch_rep.sample_values = sample_values
+        # pytorch_rep.all_sample_values = convert_node_outputs_to_log_format(all_sample_values)
 
         # Get values of TARGET nodes
-        # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE LossMechs (IF curr_tensors_for_targets IS NOT SUPPORTED)
-        target_values = [value[0].detach().cpu().numpy().copy().tolist()
-                         for value in list(curr_tensors_for_targets.values())]
+        # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
+        target_values = [node.output for node in pytorch_rep.target_nodes]
         pytorch_rep.target_values = target_values
 
         # Synchronize outcomes after every trial if specified
@@ -1663,13 +1674,13 @@ class AutodiffComposition(Composition):
                                           [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
                                           context,
                                           [NODE_VARIABLES, NODE_VALUES])
-        # TEACHER_TARGET BREADCRUMB: REFACDTOR TO USE LossMechs (IF trained_output_values IS NOT SUPPORTED)
-        pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: trained_output_values,
+
+        pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: sample_values,
                                            TARGETS: target_values},
                                           retain_in_pnl_options,
                                           context)
 
-        return trained_output_values, all_output_values
+        return all_output_values
 
     def clear_losses(self, context=None):
         self.losses = []
@@ -2168,15 +2179,14 @@ class AutodiffComposition(Composition):
                     self._build_pytorch_representation(optimizer_params=optimizer_params,
                                                        learning_rate=self.parameters.learning_rate.get(context),
                                                        context=context, base_context=base_context)
-                    trained_output_values, all_output_values = \
-                                                    self.autodiff_forward(inputs=autodiff_inputs,
-                                                                          targets=autodiff_targets,
-                                                                          optimization_num=optimization_num,
-                                                                          synch_with_pnl_options=synch_with_pnl_options,
-                                                                          retain_in_pnl_options=retain_in_pnl_options,
-                                                                          execution_mode=execution_mode,
-                                                                          scheduler=scheduler,
-                                                                          context=context)
+                    all_output_values = self.autodiff_forward(inputs=autodiff_inputs,
+                                                              targets=autodiff_targets,
+                                                              optimization_num=optimization_num,
+                                                              synch_with_pnl_options=synch_with_pnl_options,
+                                                              retain_in_pnl_options=retain_in_pnl_options,
+                                                              execution_mode=execution_mode,
+                                                              scheduler=scheduler,
+                                                              context=context)
                     execution_phase = context.execution_phase
                     context.execution_phase = ContextFlags.PROCESSING
                     context.execution_phase = execution_phase
@@ -2688,6 +2698,13 @@ class AutodiffComposition(Composition):
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
         return self._show_graph.show_graph(*args, **kwargs)
+
+    @property
+    def sample_nodes(self):
+        return [loss_mech.sample for loss_mech in self.loss_mechs_map]
+
+    def target_nodes(self):
+        return [loss_mech.target for loss_mech in self.loss_mechs_map]
 
     @property
     def torch_parameters(self):

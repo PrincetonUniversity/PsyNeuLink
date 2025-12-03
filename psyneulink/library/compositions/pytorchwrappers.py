@@ -8,6 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
+from commonmark.blocks import lists_match
 from h5py.h5f import namedtuple
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
@@ -101,7 +102,7 @@ class DataTypeEnum(Enum):
 def pytorch_mechanism_wrapper_type(mech_type):
     return defaultdict(lambda: PytorchMechanismWrapper,
                        {LossMechanism: PytorchLossMechanismWrapper}
-                       )[mech_type]
+                       )[mech_type.__class__]
 
 def _get_pytorch_function(obj, device, context):
     pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
@@ -324,8 +325,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node in nodes_to_remove:
             self._remove_node_from_nodes_map(node)
 
-        self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
-
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
 
@@ -335,7 +334,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._validate_and_parse_additional_optimizations(
                 self.composition.execute_in_additional_optimizations,
                 self.composition.optimizations_per_minibatch,
-                source=CONSTRUCTOR,
+                source=CONSTRUCTOR
             )
         )
 
@@ -801,6 +800,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
         return flattened_execution_sets, execution_context
+
+    @property
+    def output_nodes(self):
+        return self.composition.get_nested_output_nodes_at_all_levels()
+
+    @property
+    def sample_nodes(self):
+        return [node_wrapper.afferents[0].sender_wrapper
+                for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+
+    @property
+    def target_nodes(self):
+        return [node_wrapper.afferents[1].sender_wrapper
+                for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
