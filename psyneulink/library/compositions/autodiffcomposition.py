@@ -1533,7 +1533,6 @@ class AutodiffComposition(Composition):
                                                        full_sequence_mode=self.full_sequence_mode, context=context)
 
         # TEACHER_TARGET NEW
-        # BREADCRUMB: CONSIDER REINSTATING CODE BELOW TO GET DYNAMIC/RUN_TIME TARGETS (SPECIFIED IN learn())
         curr_tensors_for_targets = {}
         for component, target in targets.items():
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
@@ -1545,7 +1544,7 @@ class AutodiffComposition(Composition):
 
 
         # TEACHER_TARGET OLD:
-        # BREADCRUMB: KEEP / REINSTATE FOR SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
+        # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
         #                    SPECIFIED IN learn(targets={sample/student:target/teacher})
         # # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         # curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
