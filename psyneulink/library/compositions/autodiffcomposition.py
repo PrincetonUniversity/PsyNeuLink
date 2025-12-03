@@ -1655,7 +1655,8 @@ class AutodiffComposition(Composition):
 
         # Get value of all OUTPUT Nodes of network
         all_output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
-        pytorch_rep.all_output_values = convert_node_outputs_to_log_format(all_output_values)
+        all_output_values = convert_node_outputs_to_log_format(all_output_values)
+        pytorch_rep.all_output_values = all_output_values
 
         # Get value of all SAMPLE (student) Nodes:
         # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
