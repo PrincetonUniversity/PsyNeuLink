@@ -1526,12 +1526,6 @@ class AutodiffComposition(Composition):
             else:
                 curr_tensors_for_inputs[component] = inputs[component]
 
-        # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs,
-                                                       optimization_num=optimization_num,
-                                                       synch_with_pnl_options=synch_with_pnl_options,
-                                                       full_sequence_mode=self.full_sequence_mode, context=context)
-
         # TEACHER_TARGET NEW
         curr_tensors_for_targets = {}
         for component, target in targets.items():
@@ -1541,6 +1535,17 @@ class AutodiffComposition(Composition):
                 # It's  a list, of lists, of torch tensors because it is ragged
                 num_outputs = len(target[0][0])
                 curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+
+        curr_tensors_inputs_and_targets = {}
+        curr_tensors_inputs_and_targets.update(curr_tensors_for_inputs)
+        curr_tensors_inputs_and_targets.update(curr_tensors_for_targets)
+
+        # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
+                                                       optimization_num=optimization_num,
+                                                       synch_with_pnl_options=synch_with_pnl_options,
+                                                       full_sequence_mode=self.full_sequence_mode, context=context)
+
 
 
         # TEACHER_TARGET OLD:
