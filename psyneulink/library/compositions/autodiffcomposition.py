@@ -1249,7 +1249,7 @@ class AutodiffComposition(Composition):
                                                                              in self.loss_mechs_map.values())]
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
-            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.LEARNING], context=context)
+            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         # Validate LossMechanism specs
         for loss_mech in list(loss_mech_specs):
