@@ -1241,12 +1241,23 @@ class AutodiffComposition(Composition):
             pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
             identified_output_nodes = self._identify_output_nodes(context)
             sample_mechs_for_learning = [node for node in identified_output_nodes if node in pathway_terminal_nodes]
+            # MODIFIED TEACHER_TARGET OLD:
             target_mechs = [ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                              for value in mech.value],
                                                                             dtype=object),
                                                 name= 'TARGET for ' + mech.name)
-                            for mech in sample_mechs_for_learning if not any(mech is target.owner for sample, target
-                                                                             in self.loss_mechs_map.values())]
+                            for mech in sample_mechs_for_learning
+                            if not any(dmech is target.owner for sample, target in self.loss_mechs_map.values())]
+            # # MODIFIED TEACHER_TARGET NEW:
+            # target_mechs = []
+            # for mech in sample_mechs_for_learning:
+            #     existing_samples = [sample for sample, target in  self.loss_mechs_map.values()]
+            #     if mech not in existing_samples:
+            #         target_mechs.append(ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+            #                                                                              for value in mech.value],
+            #                                                                             dtype=object),
+            #                                                 name= 'TARGET for ' + mech.name))
+            # MODIFIED TEACHER_TARGET END
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)

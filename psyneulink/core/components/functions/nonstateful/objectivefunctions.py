@@ -1458,7 +1458,7 @@ class LossFunction(ObjectiveFunction):
         if normalize:
             result /= len(sample)
 
-        # BREADCRUMB: SUPPORT scale AND offset AS MODULABLE PARAMETERS
+        # TEACHER_TARGET BREADCRUMB: SUPPORT scale AND offset AS MODULABLE PARAMETERS
         # if isinstance(scale, numbers.Number):
         #     # scalar scale
         #     product = combination * scale
