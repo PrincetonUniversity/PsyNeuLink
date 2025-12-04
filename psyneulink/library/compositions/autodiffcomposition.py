@@ -1279,15 +1279,21 @@ class AutodiffComposition(Composition):
             # Constructe LossMechanism
             if isinstance(item, tuple):
                 sample, target = item
-                loss_mech = LossMechanism(name=f"LOSS for {sample.name}",
-                                          sample=sample,
-                                          target=target,
-                                          function=None,
-                                          loss=self.loss_spec)
-                # TEACHER_TARGET BREADCRUMB:
-                #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
-            self.loss_mechs_map[loss_mech] = (sample, target)
-            loss_projections.extend(loss_mech.path_afferents)
+                if not any(sample in sample_and_target for sample_and_target in self.loss_mechs_map.values()):
+                    # If there is no loss_mech for the current sample, instantiate one
+                    # IMPLEMENTATION NOTE:
+                    #        Don't allow multiple LossMechanisms to train the same SAMPLE Node
+                    #        But it IS OK to have multiple LossMechanisms use the same TARGET Node
+                    #        (i.e., to train multiple SAMPLES)
+                    loss_mech = LossMechanism(name=f"LOSS for {sample.name}",
+                                              sample=sample,
+                                              target=target,
+                                              function=None,
+                                              loss=self.loss_spec)
+                    # TEACHER_TARGET BREADCRUMB:
+                    #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
+                    self.loss_mechs_map[loss_mech] = (sample, target)
+                    loss_projections.extend(loss_mech.path_afferents)
         loss_mechs = list(self.loss_mechs_map.keys())
 
         # Add LossMechanisms and any TARGET Nodes to AutodiffComposition, with required NodeRoles
@@ -1376,6 +1382,12 @@ class AutodiffComposition(Composition):
             self.scheduler = Scheduler(graph=self.graph_processing)
 
         # Construct a new pytorch_representation if none exists or new is specified
+
+        # MODIFIED TEACHER_TARGET NEW:
+        from psyneulink.core.llvm import ExecutionMode
+        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch)
+        # MODIFIED TEACHER_TARGET END
+
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
