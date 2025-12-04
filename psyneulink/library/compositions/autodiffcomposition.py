@@ -1290,7 +1290,10 @@ class AutodiffComposition(Composition):
         self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
                                                    NodeRole.LEARNING_OBJECTIVE], context=context)
 
-        self.learning_components.append(loss_mechs + target_mechs)
+        # TEACHER_TARGET BREADCRUMB:
+        #                  THIS DOESN'T WORK SINCE THERE IS A PROPERTY ON COMPOSITION THAT OVERRIDES IT
+        #                  NEED TO DECIDE WHAT SHOULD BE ASSIGNED TO THAT AND ADJUST TESTS ACCORDINGLY.
+        # self.learning_components.append(loss_mechs + target_mechs)
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:

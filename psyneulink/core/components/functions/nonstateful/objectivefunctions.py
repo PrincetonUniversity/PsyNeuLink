@@ -1451,6 +1451,8 @@ class LossFunction(ObjectiveFunction):
             result = np.sum(sample_softmax *
                              np.where(both_zero, 0.0, np.log(target_softmax, where=np.logical_not(both_zero))))
         else:
+            if self.is_initializing:
+                return [0]
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
         
         if normalize:
