@@ -8,6 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
+from commonmark.blocks import lists_match
 from h5py.h5f import namedtuple
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
@@ -28,6 +29,7 @@ else:
 import warnings
 from enum import Enum, auto
 from typing import TYPE_CHECKING
+from collections import defaultdict
 
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -37,6 +39,7 @@ from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss, CROSS_ENTROPYLoss
@@ -96,6 +99,10 @@ class DataTypeEnum(Enum):
     TARGETS = auto()
     LOSSES = auto()
 
+def pytorch_mechanism_wrapper_type(mech_type):
+    return defaultdict(lambda: PytorchMechanismWrapper,
+                       {LossMechanism: PytorchLossMechanismWrapper}
+                       )[mech_type.__class__]
 
 def _get_pytorch_function(obj, device, context):
     pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
@@ -318,8 +325,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         for node in nodes_to_remove:
             self._remove_node_from_nodes_map(node)
 
-        self.output_nodes = self.composition.get_nested_output_nodes_at_all_levels()
-
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
 
@@ -329,7 +334,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._validate_and_parse_additional_optimizations(
                 self.composition.execute_in_additional_optimizations,
                 self.composition.optimizations_per_minibatch,
-                source=CONSTRUCTOR,
+                source=CONSTRUCTOR
             )
         )
 
@@ -441,17 +446,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              device=device,
                                                                              outer_creator=self,
                                                                              context=context)
-            # Wrap Mechanism
+            # Wrap Mechanism # BREADCRUMB:  REPLACE WITH METHOD ON Mechanism THAT SPECIFIES ITS pytorch_mechanism_wrapper_type
             else:
-                pytorch_node_wrapper = \
-                    self.composition.pytorch_mechanism_wrapper_type(
+                # if isinstance(node, LossMechanism):
+                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
+                # else:
+                #     pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
+                pytorch_node_wrapper = (
+                    pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
                         composition=composition,
                         component_idx=self.composition._get_node_index(node),
                         use=[LEARNING, SYNCH, SHOW_PYTORCH],
                         dtype=self.torch_dtype,
                         device=device,
-                        context=context)
+                        context=context))
                 # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
                 #                             for input_port in node.input_ports)
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
@@ -791,6 +800,22 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
         return flattened_execution_sets, execution_context
+
+    @property
+    def output_nodes(self):
+        return self.composition.get_nested_output_nodes_at_all_levels()
+
+    @property
+    def sample_nodes(self):
+        return [node_wrapper.afferents[0].sender_wrapper
+                for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+
+    @property
+    def target_nodes(self):
+        return [node_wrapper.afferents[1].sender_wrapper
+                for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
@@ -2220,7 +2245,15 @@ class PytorchMechanismWrapper(torch.nn.Module):
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
+        # TEACHER_TARGET BREADCRUMB: FILTER UNUSED AFFERENTS (E.G., TO output_CIM.input_ports) BEFORE TESTING
+        # assert len(self.afferents) == len(self.input_ports), \
+        #     (f"PROGRAM ERROR: The number of afferents ({len(self.afferents)}) "
+        #      f"in the pytorch Node for '{self.mechanism.name}' "
+        #      f" does not equal the number of input_ports ({len(self.mechanism.input_ports)}) "
+        #      f"for that Mechanism.")
+
         for proj_wrapper in self.afferents:
+            # TEACHER_TARGET BREADCRUMB:  AUGMENT TO SUPPORT LossMechanism FOR WHICH AFFERENTS SHOULD BE DETACHED
             curr_val = proj_wrapper.sender_wrapper.output
             if curr_val is not None:
                 if type(curr_val) == torch.Tensor:
@@ -2324,13 +2357,16 @@ class PytorchMechanismWrapper(torch.nn.Module):
         Enforce result to be 2d, and assign to self.output
         """
         def execute_function(function, variable, fct_has_mult_args=False):
-            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it
+            """Execute _gen_pytorch_fct on variable, enforce result to be 2d, and return it.
             If fct_has_mult_args is True, treat each item in variable as an arg to the function
             If False, compute function for each item in variable and return results in a list
             """
             from psyneulink.core.components.functions.nonstateful.transformfunctions import TransformFunction
+
+            # items of variable should be treated as separate arguments
             if fct_has_mult_args:
                 res = function(*variable)
+
             # variable is ragged
             elif isinstance(variable, list):
                 res = []
@@ -2349,8 +2385,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
                 # function with the variable and get back a tensor.
                 res = function(variable)
 
-            # TransformFunction can reduce output to single item from
-            # multi-item input
+            # TransformFunction can reduce output to single item from multi-item input
             if isinstance(function._pnl_function, TransformFunction):
                 res = res.unsqueeze(2)
 
@@ -2513,6 +2548,21 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
     def __repr__(self):
         return "PytorchWrapper for: " +self.mechanism.__repr__()
+
+
+class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
+    """Subclass that override self.function.execute to detach() tensor from TARGET input"""
+    def __init__(self, *args, **kwargs):
+        super(PytorchLossMechanismWrapper, self).__init__(*args, **kwargs)
+
+    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+        self.input = variable
+
+        sample = variable[:,:,0,...]
+        target = variable[:,:,1,...].detach()
+        self.output = self.function(sample, target)
+
+        return self.output
 
 
 class PytorchProjectionWrapper():

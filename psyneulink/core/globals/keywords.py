@@ -85,7 +85,9 @@ __all__ = [
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
     'LEARNING_SIGNALS', 'LESS_THAN', 'LESS_THAN_OR_EQUAL',
     'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_TIMER_FUNCTION',
-    'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'Loss', 'LOSSES', 'LOW', 'LVOC_CONTROL_MECHANISM',
+    'LOG_ENTRIES', 'LOGISTIC_FUNCTION',
+    'Loss', 'LOSSES', 'LOSS_FUNCTION', 'LOSS_MECHANISM',
+    'LOW', 'LVOC_CONTROL_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS',
     'MatrixKeywords', 'MATRIX_TRANSFORM_FUNCTION',  'MATRIX_WEIGHTS',
@@ -349,7 +351,7 @@ class Loss(Enum):
     or in the `learning pathway methods <Composition_Learning_Methods>` used to construct `learning pathways
     <Composition_Learning_Pathway>` in a `Composition`. Each keyword specifies a loss function used
     for learning, and the comparable `loss functions <https://pytorch.org/docs/stable/nn.html#loss-functions>`_
-    used by `PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
+    used by `AutodiffComposition_PyTorch` when an AutodiffComposition is executed in `ExecutionMode.PyTorch` mode.
     COMMENT:
     Get latex for remaining equations from https://blmoistawinde.github.io/ml_equations_latex/#cross-entropy
     COMMENT
@@ -701,6 +703,7 @@ LVOC_CONTROL_MECHANISM = 'LVOCControlMechanism'
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
+LOSS_MECHANISM = "LossMechanism"
 PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 
 # ProcessingMechanisms:
@@ -805,6 +808,7 @@ DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 # ObjectiveFunctions
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
+LOSS_FUNCTION = 'Loss Function'
 
 # Interface Functions:
 PORT_MAP_FUNCTION = 'Port Map Function'

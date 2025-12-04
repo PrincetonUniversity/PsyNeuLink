@@ -238,7 +238,7 @@ automatically created when a `learning pathway <Composition_Learning_Pathway>` i
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
-<Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified.  This allows a
+<Projection_Base.sender>` and `receiver <Projection_Base.receiver>` have been fully specified. This allows a
 Projection to be created before its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` have
 been created (e.g., before them in a script), by calling its constructor without specifying its **sender** or
 **receiver** arguments. However, for the Projection to be operational, initialization must be completed by calling
@@ -515,11 +515,11 @@ class DuplicateProjectionError(Exception):
 
 class Projection_Base(Projection):
     """
-    Projection_Base(           \
-        sender=None,           \
+    Projection_Base(              \
+        sender=None,              \
         function=MatrixTransform, \
-        receiver=None,         \
-        feedback=None          \
+        receiver=None,            \
+        feedback=None             \
         )
 
     Abstract base class for all Projections.

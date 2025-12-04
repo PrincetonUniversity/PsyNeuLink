@@ -360,12 +360,13 @@ agent_comp = AutodiffComposition([state_to_em_agent_x,
                                   em_to_mlp_pway],
                                  name='KEYS AND DOORS COMPOSITION')
 
+assert True
 # print("Calling show_graph for pytorch...")
 # agent_comp.show_graph(show_pytorch=True)
-print(f"\nLearnable projections in {agent_comp.name} with their learning rates:")
-for p in agent_comp.projections:
-    if p.learnable:
-      print(f"\t{p.name}: {p.learning_rate}")
+# print(f"\nLearnable projections in {agent_comp.name} with their learning rates:")
+# for p in agent_comp.projections:
+#     if p.learnable:
+#       print(f"\t{p.name}: {p.learning_rate}")
 
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************

@@ -824,7 +824,7 @@ class TestStructural:
             'too_many_targets',
         ])
         @pytest.mark.pytorch
-        def test_infer_target_nodes(self, target_specs, comp_type):
+        def test_map_external_target_values_to_target_nodes(self, target_specs, comp_type):
             """Test for checks on the validity of the inputs and targets args of the learn() method"""
             input_mech = pnl.ProcessingMechanism(name='INPUT MECH')
             output_mech_A = pnl.ProcessingMechanism(name='OUTPUT MECH A')

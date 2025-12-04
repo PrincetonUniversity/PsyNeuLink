@@ -1465,8 +1465,8 @@ class LinearCombination(
             both_zero = np.logical_and(v1 == 0, v2 == 0)
             combination = v1 * np.where(both_zero, 0.0, np.log(v2, where=np.logical_not(both_zero)))
         else:
-            raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
-                                format(operation.self.Operation.SUM))
+            raise FunctionError(f"Unrecognized operation ({operation}) for LinearCombination function.")
+
         if isinstance(scale, numbers.Number):
             # scalar scale
             product = combination * scale
