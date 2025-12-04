@@ -1384,6 +1384,9 @@ class AutodiffComposition(Composition):
         # Construct a new pytorch_representation if none exists or new is specified
 
         # MODIFIED TEACHER_TARGET NEW:
+        # BREADCRUMB: THIS IS A HACK TO INSURE THAT _instantiate_loss_components() IS CALLED
+        #             BEFORE THE pytorch_representation IS CONSTRUCTED;
+        #             NOT SURE IF THAT IS OK IN GENERAL
         from psyneulink.core.llvm import ExecutionMode
         self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch)
         # MODIFIED TEACHER_TARGET END
