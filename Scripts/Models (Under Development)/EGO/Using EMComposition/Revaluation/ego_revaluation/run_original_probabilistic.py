@@ -1,227 +1,205 @@
+import numpy as np
 from random import random
 
 from .src import gen_trials
-
 from .model_python import gen_memories, estimate_reward_from_starting_state
-
 from .config import defaults
 
-import numpy as np
+
+def drift(p, sigma=0.125, lo=0.25, hi=0.75):
+    """Gaussian random walk for reward probabilities, clipped."""
+    p = p + np.random.normal(0, sigma)
+    return float(np.clip(p, lo, hi))
+
+
+def gen_trials_base(
+        n=200,
+        common_prob=0.7,
+):
+    """
+    - First-stage states: 1, 2  (rockets)
+    - Second-stage states: 3, 4 (planets)
+    - Third-stage states: 5, 6, 7, 8 (aliens/reward)
+    - Reward depends on second-stage state:
+        p3(t), p4(t) drift independently over trials.
+    """
+
+    # one-hot state vectors
+    states = {
+        1: np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        2: np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
+        3: np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),  # second-stage A
+        4: np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),  # second-stage B
+        5: np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),  # reward marker for 3
+        6: np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),  # reward marker for 4
+        7: np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),  # no-reward marker for 3
+        8: np.array([0, 0, 0, 0, 0, 0, 0, 0, 1]),  # no-reward marker for 4
+    }
+
+    # independent drifting reward probabilities for the 2 second-stage states
+    p3 = np.random.uniform(0.25, 0.75)
+    p4 = np.random.uniform(0.25, 0.75)
+
+    visited_states = []
+    rewards = []
+    trial_log = []
+
+    for trial in range(n):
+
+        # -----------------------------
+        # 1. First-stage choice (rocket)
+        # -----------------------------
+        start_id = 1 if random() < 0.5 else 2
+        start_state = states[start_id]
+
+        # -----------------------------
+        # 2. Common vs rare transition
+        #    and second-stage state
+        # -----------------------------
+        if start_id == 1:
+            # state 1: common->3, rare->4
+            if random() < common_prob:
+                transition = "common"
+                second_id = 3
+            else:
+                transition = "rare"
+                second_id = 4
+        else:
+            # state 2: common->4, rare->3
+            if random() < common_prob:
+                transition = "common"
+                second_id = 4
+            else:
+                transition = "rare"
+                second_id = 3
+
+        second_state = states[second_id]
+
+        # -----------------------------
+        # 3. Reward depends on second_id
+        # -----------------------------
+        if second_id == 3:
+            reward_prob = p3
+        else:  # second_id == 4
+            reward_prob = p4
+
+        reward = 1 if random() < reward_prob else 0
+
+        # terminal state is just a marker for reward/no reward
+        if second_id == 3:
+            terminal_id = 5 if reward == 1 else 7
+        else:  # second_id == 4
+            terminal_id = 6 if reward == 1 else 8
+
+        terminal_state = states[terminal_id]
+
+        # append full 3-step sequence for memory
+        visited_states.extend([start_state, second_state, terminal_state])
+        rewards.extend([0, 0, reward])
+
+        # -----------------------------
+        # 4. Drift reward probabilities
+        # -----------------------------
+        p3 = drift(p3)
+        p4 = drift(p4)
+
+        # -----------------------------
+        # 5. Log trial info
+        # (value estimates filled in later)
+        # -----------------------------
+        trial_log.append({
+            "trial": trial,
+            "start_state": start_id,
+            "second_state": second_id,
+            "transition": transition,  # "common" or "rare"
+            "reward": reward,  # 0/1
+            "estimate_state_1": None,
+            "estimate_state_2": None,
+            "pred_next_state": None,  # 1 or 2 based on estimates
+            "stay": None,  # 0/1 w.r.t. previous start_state
+        })
+
+    # one time-step per event (3 events per trial)
+    times = gen_trials.get_time_sequence(n * 3)
+
+    return np.array(visited_states), np.array(rewards), times, trial_log
 
 
 def get_reward_estimates(
         states, rewards, times,
-        state_1=np.array([0, 1, 0, 0, 0, 0, 0]),
-        state_2=np.array([0, 0, 1, 0, 0, 0, 0]),
+        state_1=np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        state_2=np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
         metric=defaults.METRIC,
         model_based_ness=defaults.MODEL_BASED_NESS,
+        state_integration_rate=defaults.STATE_INTEGRATION_RATE,
+        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
 ):
     memories = gen_memories(
         states=states,
         rewards=rewards,
-        times=times
+        times=times,
+        state_integration_rate=state_integration_rate,
     )
 
-    # query one memory
-    reward_estimate_state_1 = estimate_reward_from_starting_state(
-        memories, state_1, times[-1], metric=metric, model_based_ness=model_based_ness,
+    r1 = estimate_reward_from_starting_state(
+        memories, state_1, times[-1],
+        metric=metric,
+        model_based_ness=model_based_ness,
         state_d=9,
         context_d=9,
+        time_retrieval_weight=time_retrieval_weight,
     )
-    reward_estimate_state_2 = estimate_reward_from_starting_state(
-        memories, state_2, times[-1], metric=metric, model_based_ness=model_based_ness,
+    r2 = estimate_reward_from_starting_state(
+        memories, state_2, times[-1],
+        metric=metric,
+        model_based_ness=model_based_ness,
         state_d=9,
         context_d=9,
+        time_retrieval_weight=time_retrieval_weight,
     )
-    return reward_estimate_state_1, reward_estimate_state_2
-
-
-def gen_trials_base(
-        n=20,
-        common_prob=.8):
-    state_1 = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0])
-    state_2 = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0])
-
-    state_3 = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0])
-    state_4 = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0])
-
-    state_5 = np.array([0, 0, 0, 0, 0, 1, 0, 0, 0])
-    state_6 = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0])
-
-    state_7 = np.array([0, 0, 0, 0, 0, 0, 0, 1, 0])
-    state_8 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
-
-    common_seqs = {}
-    rare_seqs = {}
-
-    # state_1 -> state_3 is common
-    common_seqs['0_reward'] = [state_1, state_3, state_5]  # rewarded
-    common_seqs['0_no_reward'] = [state_1, state_3, state_7]  # no reward
-
-    # state_1 -> state_4 is rare
-    rare_seqs['0_reward'] = [state_1, state_4, state_6]  # rewarded
-    rare_seqs['0_no_reward'] = [state_1, state_4, state_8]  # no reward
-
-    # state_2 -> state_4 is common
-    common_seqs['1_reward'] = [state_2, state_4, state_6]  # rewarded
-    common_seqs['1_no_reward'] = [state_2, state_4, state_6]  # no reward
-
-    # state_2 -> state_3 is rare
-    rare_seqs['1_reward'] = [state_2, state_3, state_5]  # rewarded
-    rare_seqs['1_no_reward'] = [state_2, state_3, state_7]  # no rewarded
-
-    visited_states = []
-    rewards = []
-
-    for seq in range(n):
-        seq = 0
-        if random() < .5:
-            seq = 1
-        is_reward = 'reward'
-        if random() < .5:
-            is_reward = 'no_reward'
-
-        if random() < common_prob:  # common
-            chosen_seq = common_seqs[f'{seq}_{is_reward}']
-        else:
-            chosen_seq = rare_seqs[f'{seq}_{is_reward}']
-
-        for idx, sq in enumerate(chosen_seq):
-            visited_states.append(sq)
-            if idx == 2:
-                if is_reward == 'reward':
-                    rewards.append(1)
-                else:
-                    rewards.append(0)
-            else:
-                rewards.append(0)
-
-    times = gen_trials.get_time_sequence(n*3+ 3)
-
-    return np.array(visited_states), np.array(rewards), times
-
+    return r1, r2
 
 
 def run(
-        num_participants: int = defaults.N_PARTICIPANTS,
         metric='dot_product',
         model_based_ness=defaults.MODEL_BASED_NESS,
-
+        state_integration_rate=defaults.STATE_INTEGRATION_RATE,
+        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
+        n_base_trials=200,
+        common_prob=0.7,
 ):
-    vs_bl, rw_bl, t = gen_trials_base(20)
-
-    t_bl = t[:-3]
+    vs, rw, t, trial_log = gen_trials_base(
+        n=n_base_trials,
+        common_prob=common_prob,
+    )
 
     state_1 = np.array([0, 1, 0, 0, 0, 0, 0, 0, 0])
     state_2 = np.array([0, 0, 1, 0, 0, 0, 0, 0, 0])
 
-    state_3 = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0])
-    state_4 = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0])
 
-    state_5 = np.array([0, 0, 0, 0, 0, 1, 0, 0, 0])
-    state_6 = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0])
+    for i, tr in enumerate(trial_log):
+        # use memory up to and including this trial
+        end = (i + 1) * 3  # 3 events per trial
+        r1, r2 = get_reward_estimates(
+            states=vs[:end],
+            rewards=rw[:end],
+            times=t[:end],
+            state_1=state_1,
+            state_2=state_2,
+            metric=metric,
+            model_based_ness=model_based_ness,
+            state_integration_rate=state_integration_rate,
+            time_retrieval_weight=time_retrieval_weight,
+        )
 
-    state_7 = np.array([0, 0, 0, 0, 0, 0, 0, 1, 0])
-    state_8 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+        tr["estimate_state_1"] = r1
+        tr["estimate_state_2"] = r2
 
-    estimate_bl = get_reward_estimates(vs_bl, rw_bl, t_bl, state_1, state_2)
+        # “policy”: pick start state with higher estimated reward
+        pred_next = 1 if r1 > r2 else 2
+        tr["pred_next_state"] = pred_next
 
-    # add a common rewarded state: Expectation: estimated_reward_state_1 goes up
-    vs_cr = np.vstack([vs_bl, state_1, state_3, state_5])
+        # "stay" = would the model repeat the current first-stage state on the next trial?
+        tr["stay"] = int(pred_next == tr["start_state"])
 
-    rw_cr = np.concatenate([rw_bl, [0, 0, 1]])
-
-    estimate_common_rewarded = get_reward_estimates(vs_cr, rw_cr, t, state_1, state_2)
-
-    print('Baseline', estimate_bl)
-    print('Common reward', estimate_common_rewarded)
-
-
-
-
-
-
-
-    # print(vs_bl)
-    # print(rw_bl)
-    # print(t_bl)
-
-
-
-
-
-
-
-
-
-   # print(estimate_1)
-
-
-# data = {
-#         'reval_scores_reward': [],
-#         'reval_scores_transition': [],
-#         'estimated_reward_state_1_baseline': [],
-#         'estimated_reward_state_2_baseline': [],
-#         'estimated_reward_state_1_reward_reval': [],
-#         'estimated_reward_state_2_reward_reval': [],
-#         'estimated_reward_state_1_transition_reval': [],
-#         'estimated_reward_state_2_transition_reval': [],
-#     }
-#     # initialize revaluation scores
-#     revaluation_scores = np.zeros((num_participants, 3))
-#     for participant_idx in range(num_participants):
-#         # ** GENERATE TRIALS ** #
-#
-#         # reward_reval
-#         exp_rr = gen_trials.gen_experiment_reward_reval()
-#         exp_tr = gen_trials.gen_experiment_transition_reval()
-#
-#         estimate_rr_baseline_state_1, estimate_rr_baseline_state_2 = get_reward_estimates(
-#             exp_rr.states_baseline, exp_rr.rewards_baseline, exp_rr.times_baseline,
-#             metric=metric, model_based_ness=model_based_ness
-#         )
-#
-#         estimate_rr_state_1, estimate_rr_state_2 = get_reward_estimates(
-#             exp_rr.states, exp_rr.rewards, exp_rr.times,
-#             metric=metric, model_based_ness=model_based_ness
-#         )
-#
-#         # exp_tr = gen_trials.gen_experiment_transition_reval()
-#
-#         estimate_tr_baseline_state_1, estimate_tr_baseline_state_2 = get_reward_estimates(
-#             exp_tr.states_baseline, exp_tr.rewards_baseline, exp_tr.times_baseline,
-#             metric=metric, model_based_ness=model_based_ness
-#         )
-#
-#         estimate_tr_state_1, estimate_tr_state_2 = get_reward_estimates(
-#             exp_tr.states, exp_tr.rewards, exp_tr.times,
-#             metric=metric, model_based_ness=model_based_ness
-#         )
-#
-#         estimated_reward_state_1_baseline = (
-#                 (estimate_rr_baseline_state_1 + estimate_tr_baseline_state_1) / 2)
-#         estimated_reward_state_2_baseline = (
-#                 (estimate_rr_baseline_state_2 + estimate_tr_baseline_state_2) / 2
-#         )
-#
-#         state_one_preference_baseline_rr = estimate_rr_baseline_state_1 - estimate_rr_baseline_state_2
-#         state_one_preference_rr = estimate_rr_state_1 - estimate_rr_state_2
-#
-#         state_one_preference_baseline_tr = estimate_tr_baseline_state_1 - estimate_tr_baseline_state_2
-#         state_one_preference_tr = estimate_tr_state_1 - estimate_tr_state_2
-#
-#         reward_reval_reward = state_one_preference_baseline_rr - state_one_preference_rr
-#         reward_transition_reval = state_one_preference_baseline_tr - state_one_preference_tr
-#         revaluation_scores[participant_idx, 2] = (
-#                 (state_one_preference_baseline_rr + state_one_preference_baseline_tr) / 2)
-#
-#         data['reval_scores_reward'].append(reward_reval_reward)
-#         data['reval_scores_transition'].append(reward_transition_reval)
-#         data['estimated_reward_state_1_baseline'].append(estimated_reward_state_1_baseline)
-#         data['estimated_reward_state_2_baseline'].append(estimated_reward_state_2_baseline)
-#         data['estimated_reward_state_1_reward_reval'].append(estimate_rr_state_1)
-#         data['estimated_reward_state_2_reward_reval'].append(estimate_rr_state_2)
-#         data['estimated_reward_state_1_transition_reval'].append(estimate_tr_state_1)
-#         data['estimated_reward_state_2_transition_reval'].append(estimate_tr_state_2)
-#
-#     return data
+    return trial_log

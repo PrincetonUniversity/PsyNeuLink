@@ -12,13 +12,13 @@ TASK_SIZE = 1  # (only used in PNL version)
 # Used to simulate time: the higher noise, the less 2 subsequent time points are correlated
 TIME_SIZE = 25  # length of the time vector (arbitrary choice, the more dimensions, the less likely `wrap-around`)
 TIME_DRIFT_RATE = 0.  # constant drift in one "direction"
-TIME_DRIFT_NOISE = .1 # Brownian motion noise on the sphere
+TIME_DRIFT_NOISE = .2  # Brownian motion noise on the sphere
 
 # === MODEL === #
 # time retrieval weight (influences how fast to relearn)
 TIME_RETRIEVAL_WEIGHT = .3
 # state integration rate (how fast working memory is updated)
-STATE_INTEGRATION_RATE = 1. #.6
+STATE_INTEGRATION_RATE = 1.  # .6
 
 TEMPERATURE = .05  # temperature of the softmax used during memory retrieval (smaller means more argmax-like)
 MEMORY_INIT = .001
@@ -36,6 +36,8 @@ MODEL_BASED_NESS = CONTEXT_RETRIEVE_IN_SIM  # Alias used in python version
 METRIC = 'dot_product'
 # Metric to use for sample mode (only in python version) In pnl: softmax
 SAMPLE_MODE = 'softmax'
+# Strategy to combine retrieval matches: Multiplicative (AND) or Additive (OR)
+RETRIEVAL_STRATEGY = 'multiplicative'
 
 # === EXPERIMENT === #
 N_BASELINE_TRIALS = 20  # number of baseline trials per participant (one sequence = one trial of each stimulus sequence)

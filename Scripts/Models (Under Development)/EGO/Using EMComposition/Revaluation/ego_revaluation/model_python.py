@@ -95,7 +95,9 @@ def sample_memory(memories,
                   temperature=defaults.TEMPERATURE,
                   softmax_threshold=defaults.SOFTMAX_THRESHOLD,
                   metric=defaults.METRIC,
-                  mode='sample'):
+                  mode='sample',
+                  retrieval_strategy=defaults.RETRIVAL_STRATEGY,
+                  ):
     """
     Retrieve from memory based on a query and retrieval weights.
 
@@ -113,9 +115,14 @@ def sample_memory(memories,
     context_match = match(context, context_memories, metric=metric)
     time_match = match(time, time_memories, metric=metric)
 
-    total_match = (state_retrieval_weight * state_match +
-                   context_retrieval_weight * context_match +
-                   time_retrieval_weight * time_match) / temperature
+    if retrieval_strategy == 'multiplicative':
+        total_match = ((state_retrieval_weight * state_match + 1.) *
+                       (context_retrieval_weight * context_match + 1.) *
+                       (time_retrieval_weight * time_match + 1.) - 1.) / temperature
+    else:
+        total_match = (state_retrieval_weight * state_match +
+                       context_retrieval_weight * context_match +
+                       time_retrieval_weight * time_match) / temperature
 
     total_match = utils.safe_softmax(total_match, softmax_threshold)
 
@@ -165,6 +172,7 @@ def sample_memory_sequential(memories,
                              time_d=defaults.TIME_SIZE,
                              metric=defaults.METRIC,
                              mode=defaults.SAMPLE_MODE,
+                             retrieval_strategy=defaults.RETRIEVAL_STRATEGY,
                              ):
     # Unpack memories and query
     state_memories, context_memories, time_memories, reward_memories = memories
@@ -190,7 +198,10 @@ def sample_memory_sequential(memories,
             memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
 
             context_retrieval_weight_sim = 0.
-            state_retrieval_weight_sim = 1. - time_retrieval_weight
+            if retrieval_strategy == 'multiplicative':
+                state_retrieval_weight_sim = 1. / time_retrieval_weight if time_retrieval_weight > 0 else 1.
+            else:
+                state_retrieval_weight_sim = 1 - time_retrieval_weight
 
             queries = (state_sim, context_sim, time_sim, 0)
 
@@ -215,7 +226,10 @@ def sample_memory_sequential(memories,
             )
 
             state_retrieval_weight_sim = 0.
-            context_retrieval_weight_sim = 1. - time_retrieval_weight
+            if retrieval_strategy == 'multiplicative':
+                context_retrieval_weight_sim = 1. / time_retrieval_weight if time_retrieval_weight > 0 else 1.
+            else:
+                context_retrieval_weight_sim = 1 - time_retrieval_weight
 
             queries = (retrieved_state, context_sim, time_sim, 0)
 
