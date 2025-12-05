@@ -141,7 +141,9 @@ def get_time_sequence(
 def gen_experiment(
         baseline_phase: PhaseConfig,
         reval_phase: PhaseConfig,
+        time_drift_noise: float = defaults.TIME_DRIFT_NOISE,
         counterbalance=False,
+
 ) -> ExperimentTrials:
     baseline = gen_trials(baseline_phase, counterbalance)
     reval = gen_trials(reval_phase, counterbalance)
@@ -150,7 +152,7 @@ def gen_experiment(
     n_r = reval.states.shape[0]
     memory_capacity = n_b + n_r
 
-    times = get_time_sequence(memory_capacity)
+    times = get_time_sequence(memory_capacity, noise=time_drift_noise)
     times_baseline = times[:n_b]
     times_reval = times[n_b:]
 
