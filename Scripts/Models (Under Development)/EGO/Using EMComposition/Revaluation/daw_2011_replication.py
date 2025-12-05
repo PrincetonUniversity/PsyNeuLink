@@ -1,3 +1,5 @@
+"replicating Daw, 2011"
+
 import numpy as np
 import matplotlib.pyplot as plt
 import os
