@@ -277,7 +277,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                  base_context=Context(execution_id=None),
                  ):
 
+
         super(PytorchCompositionWrapper, self).__init__()
+
+        self.outer_creator = outer_creator
 
         if subclass_components is None:
             self._early_init(composition, device)
@@ -322,10 +325,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if k not in self.composition._optimizer_constructor_params:
                         self.composition._optimizer_constructor_params[k] = v
 
-        # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
-        nodes_to_remove = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
-        for node in nodes_to_remove:
-            self._remove_node_from_nodes_map(node)
+        # # Purge nodes_map of entries for nested Compositions (their nodes are now in self.nodes_map)
+        nested_comps = [k for k, v in self.nodes_map.items() if isinstance(v, PytorchCompositionWrapper)]
+        for comp in nested_comps:
+            self._remove_node_from_nodes_map(comp)
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
@@ -427,8 +430,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
-        # Remove all learning-specific nodes
-        nodes = list(set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)))
+        # Remove all PNL learning-specific components
+        nodes = set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING))
+        # Remove LossMechanisms and any TARGET Nodes if this is for a nested Composition
+        #   (those are constructed for the outermost Composition and only those are used)
+        if self.is_nested:
+            nodes = nodes - set(node for node in nodes
+                                if (isinstance(node, LossMechanism)
+                                    or node in composition.get_nodes_by_role(NodeRole.TARGET)))
 
         # Remove nested nodes from nodes list (put there in flattening by infer_backpropagation_learning_pathways)
         #   so that they don't interfere with construction of execution_sets by scheduler
@@ -802,6 +811,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
         return flattened_execution_sets, execution_context
+
+    @property
+    def is_nested(self):
+        return self.outer_creator
 
     @property
     def output_nodes(self):
@@ -1769,6 +1782,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         def get_nodes_to_execute_for_optimization(opt_num: int, exec_set: set) -> set:
             # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
             addition_opts_dict = self._execute_in_additional_optimizations
+            # TEACHER_TARGET BREADCRUMB: REMOVE THIS COMMENTED CODE
             # nodes_to_execute = {node for node in addition_opts_dict
             #                     # BREADCRUMB:
             #                     # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}

@@ -706,12 +706,12 @@ class TestAutodiffLearningRateArgs:
         assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == .13
 
         param_to_proj_dict = pytorch_rep.torch_params_to_projections()
-        assert len(param_to_proj_dict) == 3
+        assert len(param_to_proj_dict) == 5 # (Includes Loss Projections)
         assert all(isinstance(param, torch.nn.Parameter) for param in param_to_proj_dict.keys())
         assert all(isinstance(proj, MappingProjection) for proj in param_to_proj_dict.values())
 
         proj_to_param_dict = pytorch_rep.projections_to_torch_params()
-        assert len(proj_to_param_dict) == 3
+        assert len(proj_to_param_dict) == 5 # (Includes Loss Projections)
         assert all(isinstance(proj, MappingProjection) for proj in proj_to_param_dict.keys())
         assert all(isinstance(param, torch.nn.Parameter) for param in proj_to_param_dict.values())
 
@@ -3961,7 +3961,7 @@ class TestMiscTrainingFunctionality:
         outer_comp.learn(inputs=inputs, targets=targets)
         if condition == 'both':
             # Should return to defaults specified in constructor (even though specified in previous call to learning)
-            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 3
+            assert len(outer_comp_pytorch_rep.optimizer.param_groups) == 4 # Includes Loss projections (in one group)
             assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == constructor_lr_input_proj or self.default_lr
             assert outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(hidden_proj) == 0.001
             assert (outer_comp_pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == constructor_lr_output_proj or self.default_lr)

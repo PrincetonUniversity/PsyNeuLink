@@ -442,6 +442,7 @@ from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1225,9 +1226,14 @@ class AutodiffComposition(Composition):
         Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
         Add loss_mechs and any constructed TARGET Nodes to self.learning_components
         """
+        # TEACHER_TARGET BREADCRUMB: REFACTOR TO ACCOMODATE SPECIFICATION AS Port
+
+        # TEACHER_TARGET BREADCRUMB:  CHECK THAT ANY SPECIFIED LossMechanisms ARE NOT FOR A NESTED COMP;
+        #                             IF SO, DEAL WITH IT OR RAISE ERROR
+
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
-            # LossMechanism and/or sample:target tuples specified by user in self.targets
+            # targets specified by user in self.targets (as LossMechanism and/or sample:target tuples):
             loss_mech_specs = self.targets
             target_mechs = [loss_mech.target if isinstance(loss_mech, LossMechanism) else loss_mech[1]
                             for loss_mech in loss_mech_specs]
@@ -1243,16 +1249,28 @@ class AutodiffComposition(Composition):
             identified_output_nodes = self._identify_output_nodes(context)
             sample_mechs_for_learning = [node for node in identified_output_nodes if node in pathway_terminal_nodes]
             target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
-            # TEACHER_TARGET BREADCRUMB: REFACTOR TO ACCOMODATE SPECIFICATION AS Port
-            for mech in sample_mechs_for_learning:
+            for sample_mech in sample_mechs_for_learning:
                 # Check for existing TARGET Nodes
-                existing_samples = [sample for sample, target in  self.loss_mechs_map.values()]
-                if mech not in existing_samples:
-                    # Construct new TARGET Node if one doesn't yet exist for SAMPLE
-                    target_mechs.append(ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
-                                                                                         for value in mech.value],
-                                                                                        dtype=object),
-                                                            name= 'TARGET for ' + mech.name))
+                existing_sample_mechs = [sample for sample, target in  self.loss_mechs_map.values()]
+               # Get or construct TARGET Node if none exists for SAMPLE Node
+                if sample_mech not in existing_sample_mechs:
+                    # Check that TARGET Node doesn't already exist for SAMPLE Node
+                    #    (may have been created for PNL in call to add_backpropagation_learning_pathway)
+                    existing_comparators = [mech for mech in self.nodes if
+                                            isinstance(mech, ComparatorMechanism) and
+                                            NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(mech)]
+                    comparators = [mech for mech in existing_comparators
+                                   if mech.input_ports['SAMPLE'].path_afferents[0].sender.owner is sample_mech]
+                    assert len(comparators) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
+                                                   f"for '{sample_mech.name}' in {self.name}'.")
+                    if comparators:
+                        target_mech = comparators[0].input_ports['TARGET'].path_afferents[0].sender.owner
+                    else:
+                        target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                                       for value in sample_mech.value],
+                                                                                      dtype=object),
+                                                          name= 'TARGET for ' + sample_mech.name)
+                    target_mechs.append(target_mech)
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
@@ -2167,14 +2185,14 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                all_output_values = self.autodiff_forward(inputs=autodiff_inputs,
-                                                          targets=autodiff_targets,
-                                                          optimization_num=optimization_num,
-                                                          synch_with_pnl_options=synch_with_pnl_options,
-                                                          retain_in_pnl_options=retain_in_pnl_options,
-                                                          execution_mode=execution_mode,
-                                                          scheduler=scheduler,
-                                                          context=context)
+                output_values = self.autodiff_forward(inputs=autodiff_inputs,
+                                                      targets=autodiff_targets,
+                                                      optimization_num=optimization_num,
+                                                      synch_with_pnl_options=synch_with_pnl_options,
+                                                      retain_in_pnl_options=retain_in_pnl_options,
+                                                      execution_mode=execution_mode,
+                                                      scheduler=scheduler,
+                                                      context=context)
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase
@@ -2191,7 +2209,7 @@ class AutodiffComposition(Composition):
                 scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
                 self.most_recent_context = context
-                return all_output_values
+                return output_values
 
 
         # Call Composition execute in Python mode
