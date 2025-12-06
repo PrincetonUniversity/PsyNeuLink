@@ -1552,7 +1552,6 @@ class AutodiffComposition(Composition):
             else:
                 curr_tensors_for_inputs[component] = inputs[component]
 
-        # TEACHER_TARGET NEW
         curr_tensors_for_targets = {}
         for component, target in targets.items():
             if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
@@ -1567,14 +1566,15 @@ class AutodiffComposition(Composition):
         curr_tensors_inputs_and_targets.update(curr_tensors_for_targets)
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
-                            optimization_num=optimization_num,
-                            synch_with_pnl_options=synch_with_pnl_options,
-                            full_sequence_mode=self.full_sequence_mode,
-                            sequence_lengths=(
-                                None if not hasattr(pytorch_rep, '_batch_seq_lengths')
-                                else pytorch_rep._batch_seq_lengths),
-                            context=context)
+        output_values = pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
+                                            optimization_num=optimization_num,
+                                            synch_with_pnl_options=synch_with_pnl_options,
+                                            retain_in_pnl_options=retain_in_pnl_options,
+                                            full_sequence_mode=self.full_sequence_mode,
+                                            sequence_lengths=(
+                                                None if not hasattr(pytorch_rep, '_batch_seq_lengths')
+                                                else pytorch_rep._batch_seq_lengths),
+                                            context=context)
 
         # TEACHER_TARGET OLD:
         # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
@@ -1668,55 +1668,20 @@ class AutodiffComposition(Composition):
 
         # TEACHER_TARGET NEW
         trial_loss = 0
-        # BREADCRUMB: NEED TO GET NODES THAT ARE PytorchLossMechanismWrappers
+        # Get output (loss) for each LossMechanism and sum as loss for trial (minibatch)
         for loss_node in self.loss_mechs_map:
-            # comp_loss = loss_node.value
+            # Get output of LossMechanism
             comp_loss = pytorch_rep.nodes_map[loss_node].output
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
             pytorch_rep.minibatch_loss += trial_loss
         pytorch_rep.minibatch_loss_count += 1
-        # TEACHER_TARGET END
 
-        def convert_node_outputs_to_log_format(values):
-            values = [val.detach().cpu().numpy().copy().tolist() for val in values]
-            # Turn into a numpy array, possibly ragged
-            values = convert_to_np_array(values)
-            # Swap the first two dimensions (output_port, batch) to (batch, output_port)
-            values = values.swapaxes(0, 1)
-            return values
-
-        # Get value of all OUTPUT Nodes of network
-        output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
-        output_values = convert_node_outputs_to_log_format(output_values)
-        pytorch_rep.all_output_values = output_values
-
-        # Get value of all SAMPLE (student) Nodes:
-        # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
-        sample_values = [node.output for node in pytorch_rep.sample_nodes]
-        pytorch_rep.sample_values = sample_values
-        # pytorch_rep.all_sample_values = convert_node_outputs_to_log_format(all_sample_values)
-
-        # Get values of TARGET nodes
-        # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
-        target_values = [node.output for node in pytorch_rep.target_nodes]
-        pytorch_rep.target_values = target_values
-
-        # Synchronize outcomes after every trial if specified
-        # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in call to autodiff._update_results()
-        pytorch_rep.synch_with_psyneulink(synch_with_pnl_options,
-                                          [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
-                                          context,
-                                          [NODE_VARIABLES, NODE_VALUES])
-
-        pytorch_rep.retain_for_psyneulink({TRAINED_OUTPUTS: sample_values,
-                                           TARGETS: target_values},
-                                          retain_in_pnl_options,
-                                          context)
-
+        # Make sure value returned from pytorch_representation.forward() has all 5 dimensions
         assert output_values.ndim == 5, (f"PROGRAM ERROR: expected output_values from pytorch_rep for '{self.name}' "
                                          f"to have 5 dimensions, but it has {output_values.ndim}.")
-        # Get rid of batch, sequence and trial dimensions pytorch_rep, to return 2d array for Composition.results
+        # Get rid of batch, sequence and trial dimensions in pytorch_rep, to return just 2d array
+        #   (node and port dimensions) of values to be stored for this trial in Composition.results
         output_values = output_values.reshape(output_values.shape[0], -1)
         return output_values
 

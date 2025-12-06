@@ -61,7 +61,9 @@ from psyneulink.core.globals.keywords import (
     RESULTS,
     SHOW_PYTORCH,
     SYNCH,
+    TARGETS,
     TARGET_MECHANISM,
+    TRAINED_OUTPUTS,
     Loss,
 )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -1757,8 +1759,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
-    # def forward(self, inputs, optimization_rep, context=None) -> dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
+                full_sequence_mode, sequence_lengths, context=None)->dict:
+        # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
         """
@@ -1958,8 +1961,38 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.log_weights()
         context.source = old_source
 
-        # Return outputs of the outermost Composition
-        return outputs
+        # FORMAT AND STORE RESULTS
+
+        # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
+        output_values = [self.nodes_map[node].output for node in self.output_nodes]
+        output_values = [val.detach().cpu().numpy().copy().tolist() for val in output_values]
+        # Turn into a numpy array, possibly ragged
+        output_values = convert_to_np_array(output_values)
+        # Swap the first two dimensions (output_port, batch) to (batch, output_port)
+        output_values = output_values.swapaxes(0, 1)
+        self.all_output_values = output_values
+
+        # Get value of all SAMPLE (student) Nodes:
+        sample_values = [node.output for node in self.sample_nodes]
+        self.sample_values = sample_values
+
+        # Get values of TARGET (teacher) nodes
+        target_values = [node.output for node in self.target_nodes]
+        self.target_values = target_values
+
+        # Synchronize outcomes after every trial if specified
+        # IMPLEMENTATION NOTE: RESULTS is not included here as it is handled in call to autodiff._update_results()
+        self.synch_with_psyneulink(synch_with_pnl_options,
+                                          [LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL],
+                                          context,
+                                          [NODE_VARIABLES, NODE_VALUES])
+
+        self.retain_for_psyneulink({TRAINED_OUTPUTS: sample_values,
+                                           TARGETS: target_values},
+                                          retain_in_pnl_options,
+                                          context)
+
+        return output_values
 
     def synch_with_psyneulink(self,
                               synch_with_pnl_options:dict,
