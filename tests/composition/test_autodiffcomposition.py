@@ -4048,7 +4048,7 @@ class TestMiscTrainingFunctionality:
         # Check outer_comp assignments from constructor
         # BREADCRUMB
         outer_pytorch_rep = outer_comp._build_pytorch_representation()
-        outer_proj = outer_comp.nodes[-1].afferents[0]
+        outer_proj = outer_comp.nodes[-3].afferents[0]
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_1) == expected_proj_1_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(inner_proj_2) == expected_proj_2_inner
         assert outer_pytorch_rep.get_torch_learning_rate_for_projection(outer_proj) == outer_comp_lr or self.default
