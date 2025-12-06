@@ -12,7 +12,10 @@
 import numpy as np
 import graph_scheduler
 import torch
+
 from typing import Union, Optional, Literal, Tuple
+
+from torch import nn
 
 from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -326,7 +329,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
@@ -341,7 +344,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         inputs = inputs[self.composition.input_node]
 
         # Execute GRU Node
-        output = self.gru_pytorch_node.execute(inputs, optimization_num, synch_with_pnl_options, context)
+        output = self.gru_pytorch_node.execute(variable=inputs,
+                                               optimization_num=optimization_num,
+                                               synch_with_pnl_options=synch_with_pnl_options,
+                                               sequence_lengths=sequence_lengths,
+                                               context=context)
 
         # Set GRUComposition's OUTPUT Node of output of GRU Node
         self.composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
@@ -475,7 +482,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self.input_ports = [PytorchFunctionWrapper(input_port.function, device, context)
                             for input_port in mechanism.input_ports]
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
         """Execute GRU Node with input variable and return output value.
         Override to set GRU Node's synch_with_pnl option if GRUComposition is a nested Composition
         This is called directly if GRUComposition is in a nested Composition, rather than its forward method.
@@ -507,13 +514,20 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         batched_hidden_state = self.hidden_state.expand(-1, input_for_gru.shape[0], -1)
 
-        self.output, output_hidden_state = self.function(input_for_gru, batched_hidden_state)
+        if sequence_lengths is not None:
+            input_for_gru = nn.utils.rnn.pack_padded_sequence(input_for_gru, sequence_lengths, batch_first=True, enforce_sorted=False)
 
-        # Restore the input port dimension (a singleton now) to the output
-        self.output = self.output.unsqueeze(2)
+        # self.output, output_hidden_state = self.function(input_for_gru, batched_hidden_state)
+        _, output_hidden_state = self.function(input_for_gru, batched_hidden_state)
 
-        # Take the final output but keep the sequence dimension intact
-        self.output = self.output[:, -1, ...].unsqueeze(1)
+        # Restore the input port dimension (flattened above) and the sequence dimension to the output
+        self.output = output_hidden_state[-1][:, None, None, :]
+
+        # # Restore the input port dimension (a singleton now) to the output
+        # self.output = self.output.unsqueeze(2)
+        #
+        # # Take the final output but keep the sequence dimension intact
+        # self.output = self.output[:, -1, ...].unsqueeze(1)
 
         self.hidden_state = output_hidden_state
 
