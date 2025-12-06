@@ -1573,9 +1573,8 @@ class AutodiffComposition(Composition):
                                                        full_sequence_mode=self.full_sequence_mode,
                                                        sequence_lengths=(
                                                            None if not hasattr(pytorch_rep, '_batch_seq_lengths')
-                                                           else pytorch_rep._batch_seq_lengths, context=context))
-
-
+                                                           else pytorch_rep._batch_seq_lengths),
+                                                       context=context)
 
         # TEACHER_TARGET OLD:
         # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
@@ -2202,15 +2201,14 @@ class AutodiffComposition(Composition):
                        content='trial_start',
                        context=context)
 
-                trained_output_values, all_output_values = \
-                    self.autodiff_forward(inputs=autodiff_inputs,
-                                          targets=autodiff_targets,
-                                          optimization_num=optimization_num,
-                                          synch_with_pnl_options=synch_with_pnl_options,
-                                          retain_in_pnl_options=retain_in_pnl_options,
-                                          execution_mode=execution_mode,
-                                          scheduler=scheduler,
-                                          context=context)
+                all_output_values = self.autodiff_forward(inputs=autodiff_inputs,
+                                                          targets=autodiff_targets,
+                                                          optimization_num=optimization_num,
+                                                          synch_with_pnl_options=synch_with_pnl_options,
+                                                          retain_in_pnl_options=retain_in_pnl_options,
+                                                          execution_mode=execution_mode,
+                                                          scheduler=scheduler,
+                                                          context=context)
                 execution_phase = context.execution_phase
                 context.execution_phase = ContextFlags.PROCESSING
                 context.execution_phase = execution_phase

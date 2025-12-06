@@ -2564,7 +2564,7 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
     def __init__(self, *args, **kwargs):
         super(PytorchLossMechanismWrapper, self).__init__(*args, **kwargs)
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
         self.input = variable
 
         sample = variable[:,:,0,...]
