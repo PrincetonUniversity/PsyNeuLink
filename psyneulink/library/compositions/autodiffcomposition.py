@@ -1681,7 +1681,11 @@ class AutodiffComposition(Composition):
             # Turn into a numpy array, possibly ragged
             values = convert_to_np_array(values)
             # Swap the first two dimensions (output_port, batch) to (batch, output_port)
-            return values.swapaxes(0, 1)
+            values = values.swapaxes(0, 1)
+            if values.ndim > 2:
+                # Get rid of batch and sequence dimensions
+                values = values.reshape(values.shape[0], -1)
+            return values
 
         # Get value of all OUTPUT Nodes of network
         all_output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
