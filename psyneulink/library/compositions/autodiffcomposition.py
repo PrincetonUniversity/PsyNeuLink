@@ -1567,14 +1567,14 @@ class AutodiffComposition(Composition):
         curr_tensors_inputs_and_targets.update(curr_tensors_for_targets)
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
-                                                       optimization_num=optimization_num,
-                                                       synch_with_pnl_options=synch_with_pnl_options,
-                                                       full_sequence_mode=self.full_sequence_mode,
-                                                       sequence_lengths=(
-                                                           None if not hasattr(pytorch_rep, '_batch_seq_lengths')
-                                                           else pytorch_rep._batch_seq_lengths),
-                                                       context=context)
+        pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
+                            optimization_num=optimization_num,
+                            synch_with_pnl_options=synch_with_pnl_options,
+                            full_sequence_mode=self.full_sequence_mode,
+                            sequence_lengths=(
+                                None if not hasattr(pytorch_rep, '_batch_seq_lengths')
+                                else pytorch_rep._batch_seq_lengths),
+                            context=context)
 
         # TEACHER_TARGET OLD:
         # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
@@ -1684,15 +1684,12 @@ class AutodiffComposition(Composition):
             values = convert_to_np_array(values)
             # Swap the first two dimensions (output_port, batch) to (batch, output_port)
             values = values.swapaxes(0, 1)
-            # if values.ndim > 2:
-            #     # Get rid of batch and sequence dimensions
-            #     values = values.reshape(values.shape[0], -1)
             return values
 
         # Get value of all OUTPUT Nodes of network
-        all_output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
-        all_output_values = convert_node_outputs_to_log_format(all_output_values)
-        pytorch_rep.all_output_values = all_output_values
+        output_values = [pytorch_rep.nodes_map[node].output for node in pytorch_rep.output_nodes]
+        output_values = convert_node_outputs_to_log_format(output_values)
+        pytorch_rep.all_output_values = output_values
 
         # Get value of all SAMPLE (student) Nodes:
         # TEACHER_TARGET BREADCRUMB:  DO THESE NEED TO BE CONVERTED? CHECK AGAINST OLD WAY
@@ -1717,7 +1714,11 @@ class AutodiffComposition(Composition):
                                           retain_in_pnl_options,
                                           context)
 
-        return all_output_values
+        assert output_values.ndim == 5, (f"PROGRAM ERROR: expected output_values from pytorch_rep for '{self.name}' "
+                                         f"to have 5 dimensions, but it has {output_values.ndim}.")
+        # Get rid of batch, sequence and trial dimensions pytorch_rep, to return 2d array for Composition.results
+        output_values = output_values.reshape(output_values.shape[0], -1)
+        return output_values
 
     def clear_losses(self, context=None):
         self.losses = []
