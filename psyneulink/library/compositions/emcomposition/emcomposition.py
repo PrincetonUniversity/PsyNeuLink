@@ -2934,7 +2934,7 @@ class EMComposition(AutodiffComposition):
             execution_mode = ExecutionMode.PyTorch
         return execution_mode
 
-    def _identify_target_nodes(self, context)->list:
+    def _identify_output_nodes(self, context)->list:
         """Identify retrieval_nodes specified by **target_field_weights** as TARGET nodes"""
         target_fields = self.target_fields
         if target_fields is False:
@@ -2949,7 +2949,7 @@ class EMComposition(AutodiffComposition):
         else:
             assert False, (f"PROGRAM ERROR: target_fields arg for {self.name}: {target_fields} "
                            f"is neither True, False nor a list of bools as it should be.")
-        super()._identify_target_nodes(context)
+        super()._identify_output_nodes(context)
         return target_nodes
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None):

@@ -1137,8 +1137,7 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.targets_from_outputs_map = {target_mech: self.gru_mech}
-        self.outputs_to_targets_map = {self.gru_mech: target_mech}
+        self.target_nodes_for_outputs = {target_mech: self.gru_mech}
 
         return [target_mech]
 
@@ -1238,7 +1237,7 @@ class GRUComposition(AutodiffComposition):
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, self))
 
-    def _identify_target_nodes(self, context):
+    def _identify_output_nodes(self, context):
         return [self.gru_mech]
 
     def add_node(self, node, required_roles=None, context=None):

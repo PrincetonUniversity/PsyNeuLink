@@ -326,11 +326,12 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         return self._get_source_of_modulation_for_parameter_CIM(sender, sender.owner.composition)
 
     def _get_source_info_from_output_CIM(self, port, comp=None)->tuple:
-        """Return Port, Node and Composition for "original" source of projection from **port**.
-        **port** InputPort or OutputPort of the output_CIM from which the projection of interest projects;
+        """Return Port, Node and Composition for "original" source of projection to **port**.
+        **port** InputPort or OutputPort of the output_CIM to/from which the projection of interest projects;
                  used to find source (key) in output_CIM's port_map.
         **comp** Composition at which to begin the search (or continue it when called recursively);
                  assumes the current CompositionInterfaceMechanism's Composition by default.
+        Return (Port, Node, Composition) of source of projection to **port**.
         """
         # Ensure method is being called on an output_CIM
         assert self == self.composition.output_CIM, f"_get_source_info_from_output_CIM called on {self.name} " \
@@ -383,6 +384,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             if not isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
                 assert comp.is_nested
                 receiver_comp = get_composition_for_node(receiver.owner)
+                if receiver_comp is None:
+                    continue
                 receivers_info.append((efferent.receiver, efferent.receiver.owner, receiver_comp))
             else:
                 receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,

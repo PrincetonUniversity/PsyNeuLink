@@ -162,7 +162,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
-    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, Loss, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX,
     MODEL_SPEC_ID_MDF_VARIABLE, MatrixKeywordLiteral, ZEROS_MATRIX
 )
 from psyneulink.core.globals.mdf import _get_variable_parameter_name
@@ -1000,7 +1000,7 @@ class Function_Base(Function):
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
-        if isinstance(val, (str, type(None))):
+        if isinstance(val, (str, Loss, type(None))):
             return val
         elif np.isscalar(np.array(val)):
             return float(val)
