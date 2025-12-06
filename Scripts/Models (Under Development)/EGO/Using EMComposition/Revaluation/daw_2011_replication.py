@@ -234,9 +234,9 @@ if __name__ == "__main__":
 
     parameter_sweep(
         save_dir=save_dir,
-        integration_rates=[.6],
-        time_weights=[0, 0.1, 1.6],
+        integration_rates=[.3], # .6 in multiplicative
+        time_weights=[0, 0.2, .6], # .1, .6 in multiplicative
         model_based_ness_list=[0.0],
         n_base_trials=200,
-        n_participants=50
+        n_participants=20
     )

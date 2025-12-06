@@ -96,7 +96,7 @@ def sample_memory(memories,
                   softmax_threshold=defaults.SOFTMAX_THRESHOLD,
                   metric=defaults.METRIC,
                   mode='sample',
-                  retrieval_strategy=defaults.RETRIVAL_STRATEGY,
+                  retrieval_strategy=defaults.RETRIEVAL_STRATEGY,
                   ):
     """
     Retrieve from memory based on a query and retrieval weights.
