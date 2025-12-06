@@ -440,6 +440,7 @@ else:
 
 from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
+from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -1263,9 +1264,9 @@ class AutodiffComposition(Composition):
                 (f"PROGRAM ERROR: item in self.targets is neither LossMechanism nor 2-item tuple: {loss_mech};"
                  f"should have been caught in targets Parameter validation.")
             if isinstance(loss_mech, tuple):
-                assert len(loss_mech) == 2 and all(isinstance(item, ProcessingMechanism) for item in loss_mech), \
+                assert len(loss_mech) == 2 and all(isinstance(item, Mechanism) for item in loss_mech), \
                     (f"PROGRAM ERROR: tuple in self.targets either doesn't have two items "
-                     f"or one is not a ProcessingMechanisms: {loss_mech}; "
+                     f"or one is not a Mechanisms: {loss_mech}; "
                      f"should have been caught in targets Parameter validation.")
                 sample_spec = loss_mech[0]
                 target_spec = loss_mech[1]
