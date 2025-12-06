@@ -1294,6 +1294,8 @@ class AutodiffComposition(Composition):
                     # TEACHER_TARGET BREADCRUMB:
                     #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
                     self.loss_mechs_map[loss_mech] = (sample, target)
+                    for proj in loss_mech.path_afferents:
+                        proj.learnable= False
                     loss_projections.extend(loss_mech.path_afferents)
         loss_mechs = list(self.loss_mechs_map.keys())
 
