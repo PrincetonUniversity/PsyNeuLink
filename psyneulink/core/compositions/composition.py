@@ -14057,10 +14057,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        # # MODIFIED TEACHER_TARGET OLD:
-        # return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
-        # MODIFIED TEACHER_TARGET NEW:
-        return [node for node in self.nodes if NodeRole.TARGET in self.nodes_to_roles[node]]
+        # MODIFIED TEACHER_TARGET OLD:
+        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
+        # # MODIFIED TEACHER_TARGET NEW:
+        # return [node for node in self.nodes if NodeRole.TARGET in self.nodes_to_roles[node]]
         # MODIFIED TEACHER_TARGET END
 
     @property
