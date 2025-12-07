@@ -788,7 +788,7 @@ class AutodiffComposition(Composition):
         device = None
 
         def _validate_loss_spec(self, spec):
-            if spec and not isinstance(spec, Loss):
+            if spec and not isinstance(spec, (Loss, torch.nn.modules.loss._Loss)):
                 return f"must be a member of the Loss enum or a PyTorch loss function."
 
         def _validate_targets(self, spec):

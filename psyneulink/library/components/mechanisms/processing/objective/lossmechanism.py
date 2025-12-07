@@ -247,7 +247,7 @@ class LossMechanism(ComparatorMechanism):
                  # TEACHER_TARGET BREADCRUMB: INSTANTIATE TYPE CHECKING BELOW:
                  # function: Optional[Union[torch.nn]] = None,
                  function = None,
-                 loss: Optional[Loss] = None,
+                 loss = None,
                  output_ports:Optional[Union[str, Iterable]] = None,
                  params=None,
                  name=None,

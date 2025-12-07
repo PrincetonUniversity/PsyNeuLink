@@ -1000,7 +1000,7 @@ class Function_Base(Function):
         val = self._get_current_parameter_value(param_name, context=context)
         if val is None:
             val = getattr(self.defaults, param_name)
-        if isinstance(val, (str, Loss, type(None))):
+        if isinstance(val, (str, Loss, torch.nn.modules.loss._Loss, type(None))):
             return val
         elif np.isscalar(np.array(val)):
             return float(val)

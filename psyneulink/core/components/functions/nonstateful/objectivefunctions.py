@@ -25,6 +25,11 @@ import functools
 import numpy as np
 from beartype import beartype
 
+try:
+    torch_available = True
+except ImportError:
+    torch_available = False
+
 from psyneulink._typing import Optional, Callable
 
 from psyneulink.core import llvm as pnlvm
@@ -34,7 +39,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import S
 from psyneulink.core.globals.keywords import \
     ALL, CORRELATION, COSINE, COSINE_SIMILARITY, CROSS_ENTROPY, \
     DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DOT_PRODUCT, \
-    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, Loss, LOSS_FUNCTION, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
+    ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, Loss, LOSS, LOSS_FUNCTION, MATRIX, MAX_ABS_DIFF, NORMALIZE, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, INPUT_SHAPES, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
@@ -1347,7 +1352,7 @@ class LossFunction(ObjectiveFunction):
     @beartype
     def __init__(self,
                  default_variable=None,
-                 loss: Optional[Loss] = None,
+                 loss = None,
                  normalize: Optional[bool] = None,
                  params=None,
                  owner=None,
@@ -1394,6 +1399,13 @@ class LossFunction(ObjectiveFunction):
         except TypeError:
             if is_iterable(variable[0]) ^ is_iterable(variable[1]):
                 raise err_unequal_length
+
+        if LOSS in request_set:
+            import torch
+            loss = request_set[LOSS]
+            if not isinstance(loss, (Loss, torch.nn.modules.loss._Loss)):
+                raise FunctionError(f"Specified loss for {self.name} ({loss}) "
+                                    f"must be a member of the Loss enum or a PyTorch loss function.")
 
     def _function(self,
                  variable=None,
@@ -1457,6 +1469,10 @@ class LossFunction(ObjectiveFunction):
                              np.where(both_zero, 0.0, np.log(target_softmax, where=np.logical_not(both_zero))))
         else:
             if self.is_initializing:
+                if torch_available:
+                    import torch
+                    if isinstance(loss, torch.nn.modules.loss._Loss):
+                        return np.array(0)
                 return [0]
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
         
@@ -1509,6 +1525,8 @@ class LossFunction(ObjectiveFunction):
             fct =  torch.nn.PoissonNLLLoss(reduction='sum')
         elif loss == Loss.KL_DIV:
             fct =  torch.nn.KLDivLoss(reduction='sum')
+        elif isinstance(loss, torch.nn.modules.loss._Loss):
+            fct = loss
         else:
             raise FunctionError(f"The 'loss' parameter of {self.componentName} ({loss.name}) is not supported.")
 
