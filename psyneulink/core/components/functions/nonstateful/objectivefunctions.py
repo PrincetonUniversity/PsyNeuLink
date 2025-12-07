@@ -1353,6 +1353,9 @@ class LossFunction(ObjectiveFunction):
                  owner=None,
                  prefs:  Optional[ValidPrefSet] = None):
 
+        if loss == Loss.CROSS_ENTROPY:
+            self.softmax = SoftMax(output=ALL)
+
         super().__init__(
             default_variable=default_variable,
             loss=loss,
@@ -1369,9 +1372,6 @@ class LossFunction(ObjectiveFunction):
         #     self.loss_function = Distance(metric=EUCLIDEAN, normalize=normalize)
         # elif loss == Loss.CROSS_ENTROPY:
         #     self.loss_function = Distance(metric=CROSS_ENTROPY, normalize=normalize)
-
-        if loss == Loss.CROSS_ENTROPY:
-            self.softmax = SoftMax(output=ALL)
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable has two items of equal length
@@ -1394,9 +1394,6 @@ class LossFunction(ObjectiveFunction):
         except TypeError:
             if is_iterable(variable[0]) ^ is_iterable(variable[1]):
                 raise err_unequal_length
-
-    def _gen_pytorch_function_body(self):
-        pass
 
     def _function(self,
                  variable=None,
@@ -1423,7 +1420,9 @@ class LossFunction(ObjectiveFunction):
 
         if loss == Loss.L0:
             result = np.sum(sample - target)
-        if loss == Loss.SSE:
+        elif loss == Loss.L1:
+            result = np.sum(abs(sample - target))
+        elif loss == Loss.SSE:
             result = np.sum((sample - target)**2)
         elif loss == Loss.MSE:
             result = np.mean((sample - target)**2)
@@ -1481,12 +1480,12 @@ class LossFunction(ObjectiveFunction):
         normalize = self._get_pytorch_fct_param_value('normalize', device, context)
 
         if loss == Loss.L1:
-            return torch.nn.L1Loss(reduction='sum')
+            fct = torch.nn.L1Loss(reduction='sum')
         elif loss == Loss.SSE:
             fct =  torch.nn.MSELoss(reduction='sum')
         elif loss == Loss.MSE:
             fct =  torch.nn.MSELoss(reduction='mean')
-        elif loss == CROSS_ENTROPY:
+        elif loss == Loss.CROSS_ENTROPY:
             from packaging import version
             if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
                 fct =  torch.nn.CrossEntropyLoss()
