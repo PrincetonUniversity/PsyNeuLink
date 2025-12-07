@@ -2154,8 +2154,7 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import NodeRole
         composition = self.composition
 
-        # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
-        #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
+        # Get learning_components (to show in learning_color)
         learning_components = [node for node in composition.learning_components]
         # learning_components.extend([node for node in composition.nodes if
         #                             NodeRole.AUTOASSOCIATIVE_LEARNING in

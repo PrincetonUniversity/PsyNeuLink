@@ -15,9 +15,10 @@ from psyneulink._typing import Optional, Union, Literal
 from psyneulink.core.compositions import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SHOW_PYTORCH, PNL
+from psyneulink.core.globals.keywords import SAMPLE, SHOW_PYTORCH, TARGET, PNL
 
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
@@ -90,9 +91,15 @@ class PytorchShowGraph(ShowGraph):
                             dependencies.add(proj.sender.owner)
                 processing_graph[node] = dependencies
 
-            # Add TARGET nodes
-            for node in self.composition.learning_components:
-                processing_graph[node] = set([afferent.sender.owner for afferent in node.path_afferents])
+            # If a node projects to a LossMechanism as its SAMPLE, add LossMechanism as dependency
+            #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
+            loss_mechs = [n for n in processing_graph if isinstance(n, LossMechanism)]
+            if loss_mechs:
+                for node in [n for n in processing_graph if node not in composition.get_nodes_by_role(NodeRole.TARGET)]:
+                    for loss_mech in loss_mechs:
+                        if node is loss_mech.input_ports[SAMPLE].path_afferents[0].sender.owner:
+                            processing_graph[node].add(loss_mech)
+
             return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
 
         else:
@@ -164,6 +171,15 @@ class PytorchShowGraph(ShowGraph):
             if rcvr in self.pytorch_rep.nodes_map and self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
                 kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
+            # # BREADCRUMB: REPLACE BELOW WITH THIS WHEN AUTODIFF_LEARNING_COMPONENTS IS IMPLEMENTED
+            # elif rcvr in self.composition.autodiff_learning_components:
+            elif isinstance(rcvr, LossMechanism):
+                kwargs['color'] = self.learning_color
+                # kwargs['style'] = self.exclude_from_gradient_calc_line_style
+            elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET):
+                kwargs['color'] = self.learning_color
+                kwargs['penwidth'] = str(self.bold_width)
+
             elif rcvr not in self.composition.nodes:
                 #  Assign style to nodes of nested Compositions that are INPUT or OUTPUT nodes of Pytorch graph
                 #  (since they are not in the outermost Composition and are therefore ignored when it is flattened)
@@ -202,6 +218,16 @@ class PytorchShowGraph(ShowGraph):
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
                 elif modulatory_node and modulatory_node.exclude_from_gradient_calc:
+                    kwargs['color'] = self.exclude_from_gradient_calc_color
+                    kwargs['style'] = self.exclude_from_gradient_calc_line_style
+
+                # Projection from any (non-TARGET) node to a LossMechanism's TARGET InputPort is detached(),
+                #   and therefore should be shown as excluded from the gradient calc;
+                # No need to show for TARGET Node -> LossMechanism since that Projection is never learnable and
+                #    nothing projects to TARGET node (since it is an INPUT Node by construction)
+                elif (isinstance(proj.receiver.owner, LossMechanism)
+                      and proj.receiver is proj.receiver.owner.input_ports[TARGET]
+                      and proj.sender.owner not in self.composition.get_nodes_by_role(NodeRole.TARGET)):
                     kwargs['color'] = self.exclude_from_gradient_calc_color
                     kwargs['style'] = self.exclude_from_gradient_calc_line_style
 
