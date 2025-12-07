@@ -1426,6 +1426,12 @@ class LossFunction(ObjectiveFunction):
             result = np.sum((sample - target)**2)
         elif loss == Loss.MSE:
             result = np.mean((sample - target)**2)
+        elif loss == Loss.POISSON_NLL:
+            # Poisson NLL: mean(-target * log(sample) + sample)
+            # sample represents the predicted rate parameter (lambda)
+            # target represents the observed counts
+            epsilon = 1e-9
+            result = np.mean(-target * np.log(sample + epsilon) + sample)
         elif loss == Loss.CROSS_ENTROPY:
             """Computes the categorical cross-entropy loss"""
             # BREADCRUMB: - ALIGN THIS WITH (OR USE Distance FUNCTION)
