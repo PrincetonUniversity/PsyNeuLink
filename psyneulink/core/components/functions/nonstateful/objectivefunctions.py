@@ -1501,7 +1501,9 @@ class LossFunction(ObjectiveFunction):
         loss = self._get_pytorch_fct_param_value('loss', device, context)
         normalize = self._get_pytorch_fct_param_value('normalize', device, context)
 
-        if loss == Loss.L1:
+        if isinstance(loss, torch.nn.modules.loss._Loss):
+            fct = loss
+        elif loss == Loss.L1:
             fct = torch.nn.L1Loss(reduction='sum')
         elif loss == Loss.SSE:
             fct =  torch.nn.MSELoss(reduction='sum')
@@ -1525,8 +1527,6 @@ class LossFunction(ObjectiveFunction):
             fct =  torch.nn.PoissonNLLLoss(reduction='sum')
         elif loss == Loss.KL_DIV:
             fct =  torch.nn.KLDivLoss(reduction='sum')
-        elif isinstance(loss, torch.nn.modules.loss._Loss):
-            fct = loss
         else:
             raise FunctionError(f"The 'loss' parameter of {self.componentName} ({loss.name}) is not supported.")
 
