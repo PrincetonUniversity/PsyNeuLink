@@ -421,7 +421,8 @@ class TestAutodiffLearningRateArgs:
             nested_proj.learning_rate = .7
 
         # Test learning
-        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        targets = outer_comp.get_target_nodes()
         pytorch_result = outer_comp.learn(
             inputs={outer_mech_in:input_stims, targets[0]: target_vals},
             num_trials=num_trials,
@@ -4971,7 +4972,8 @@ class TestACLogging:
                                              pathways=[outer_mech_in, inner_comp, outer_mech_out],
                                              # Note: no need to specify synch_node_values_with_torch, since default=RUN
                                              synch_node_variables_with_torch=pnl.RUN)
-        targets = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        targets = outer_comp.get_target(nodes)
         result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
                                           targets[0]: [[1,1,1,1,1]]},
                                   execution_mode=pnl.ExecutionMode.PyTorch)
