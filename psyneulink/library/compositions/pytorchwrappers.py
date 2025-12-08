@@ -1732,7 +1732,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return optimizer
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
     # def forward(self, inputs, optimization_rep, context=None) -> dict:
         """Forward method of the model for PyTorch and LLVM modes
         Return a dictionary {output_node:value} of output values for the model
@@ -1762,6 +1762,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Store the batch_size we are currently using
         inp = inputs[list(inputs.keys())[0]]
+        if sequence_lengths is not None:
+            sequence_lengths = sequence_lengths[list(inputs.keys())[0]]
+
         if type(inp) is torch.Tensor:
             self._batch_size = inp.shape[0]
         elif type(inp) is list:
@@ -1778,7 +1781,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         else:
             seq_indices = [0]
 
-        # Process each sequence element, if not in sequence mode, we will process everythin at once and this loop will
+        # Process each sequence element, if not in sequence mode, we will process everything at once and this loop will
         # only run once.
         for seq_index in seq_indices:
 
@@ -1815,6 +1818,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
                     # Get input(s) to node
                     elif node._is_input or node._is_bias:
+
                         # node is an INPUT to Composition
                         if node.mechanism in inputs_to_run:
                             # external input is specified for the Mechanism (i.e., Mechanism is a key in inputs dict)
@@ -1910,7 +1914,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
-                    node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                    node.execute(variable=variable,
+                                 optimization_num=optimization_num,
+                                 synch_with_pnl_options=synch_with_pnl_options,
+                                 sequence_lengths=sequence_lengths,
+                                 context=context)
+
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
@@ -2319,7 +2328,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         return res
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None)->torch.Tensor:
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None)->torch.Tensor:
         """Execute Mechanism's _gen_pytorch version of function on variable.
         Enforce result to be 2d, and assign to self.output
         """

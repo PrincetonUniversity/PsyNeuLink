@@ -135,6 +135,9 @@ class CompositionRunner():
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
         assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
 
+        pytorch_rep = None
+        input_lengths = {}
+
         if type(minibatch_size) == np.ndarray:
             minibatch_size = minibatch_size.item()
 
@@ -154,7 +157,7 @@ class CompositionRunner():
             from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
             # Now, we need to pad the sequences to the same length
-            packed_inputs = {}
+            padded_inputs = {}
             for k in inputs[0].keys():
 
                 # Get the length of each sequence for each trial for this input
@@ -169,15 +172,22 @@ class CompositionRunner():
 
                 # If all the lengths are the same, just stack them into one tensor, no need to pad
                 if all(length == lengths[0] for length in lengths):
-                    packed_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
+                    padded_inputs[k] = torch.stack([trial_inp[k] for trial_inp in inputs])
 
                 # Otherwise, we will make a packed padded sequence
                 else:
                     padded_input = pad_sequence([trial_inp[k] for trial_inp in inputs], batch_first=True)
-                    packed_inputs[k] = padded_input
-                    # packed_inputs[k] = pack_padded_sequence(padded_input, lengths, batch_first=True, enforce_sorted=False)
+                    padded_inputs[k] = padded_input
 
-            inputs = packed_inputs
+                    # Since we padded the sequences, we need to store the lengths so that we can use them later
+                    # when we pass the inputs to the RNNs.
+                    input_lengths[k] = lengths
+
+            inputs = padded_inputs
+
+        # Need to get pytorch_representation if we are in PyTorch execution_mode
+        if execution_mode is ExecutionMode.PyTorch and pytorch_rep is None:
+            pytorch_rep = self._composition.parameters.pytorch_representation.get(context)
 
         # This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
@@ -195,6 +205,7 @@ class CompositionRunner():
                 indices_of_trials_in_batch = indices_of_all_trials[i:i + minibatch_size]
 
                 inputs_for_minibatch = {}
+                lengths_for_minibatch = {}
                 for k, v in inputs.items():
                     modded_indices = [i % len(v) for i in indices_of_trials_in_batch]
 
@@ -203,11 +214,20 @@ class CompositionRunner():
                     else: # list because ragged
                         inputs_for_minibatch[k] = [v[i] for i in modded_indices]
 
-                self._composition._stim_num = i  # For debugging
+                    # If we are dealing with sequences of different lengths, get the lengths for this minibatch
+                    if len(input_lengths) > 0 and k in input_lengths:
+                        lengths_for_minibatch[k] = input_lengths[k][modded_indices]
+
 
                 # Cycle over optimizations per trial (stimulus)
                 for optimization_num in range(optimizations_per_minibatch):
                     # Return current set of stimuli for minibatch
+
+                    # If lengths is not None, then we are dealing with sequences of different lengths, for now we will
+                    # store a batch of seq lenghts on pytorch_rep
+                    if pytorch_rep is not None and len(lengths_for_minibatch) > 0:
+                        pytorch_rep._batch_seq_lengths = lengths_for_minibatch
+
                     yield copy_parameter_value(inputs_for_minibatch), optimization_num
 
                     # Update weights if in PyTorch execution_mode;
@@ -226,7 +246,11 @@ class CompositionRunner():
                                                  and optimization_num
                                                  in pytorch_rep._execute_in_additional_optimizations[node])):
                                     continue
-                                node.execute(variable, optimization_num, synch_with_pnl_options, context)
+                                node.execute(variable=variable,
+                                             optimization_num=optimization_num,
+                                             synch_with_pnl_options=synch_with_pnl_options,
+                                             sequence_lengths=lengths_for_minibatch,
+                                             context=context)
 
                         # Synchronize after every optimization step for a given stimulus (i.e., trial) if specified
                         pytorch_rep.synch_with_psyneulink(synch_with_pnl_options, LearningScale.OPTIMIZATION_STEP, context,

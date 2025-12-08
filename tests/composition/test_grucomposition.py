@@ -367,19 +367,21 @@ if torch_available:
 
             torch.set_default_dtype(entry_torch_dtype)
 
-        def test_gru_with_sequences(self):
+        @pytest.mark.parametrize('varying_lengths', [False, True], ids=['fixed_length','varying_length'])
+        def test_gru_with_sequences(self, varying_lengths):
 
             import torch
 
             from torch import nn
-            from torch.utils.data import DataLoader, TensorDataset
+            from torch.utils.data import TensorDataset
+            from torch.nn.utils.rnn import pad_sequence
 
             # Hyperparameters
             num_sequences = 30    # Total number of sequences
             batch_size = 8
             input_size = 3          # Number of features per time step
             hidden_size = 5
-            sequence_length = 10  # Length of each sequence
+            max_sequence_length = 10  # Maximum length of any sequence
             output_size = 1
             num_epochs = 3
             learning_rate = 0.01
@@ -389,15 +391,19 @@ if torch_available:
 
             torch.set_default_dtype(torch_dtype)
 
-            # Generate random training sequences
+            # Generate random training sequences with varying lengths
             torch.manual_seed(42)
-            train_sequences = torch.rand((num_sequences, sequence_length, input_size)) * 10
-            train_labels = (train_sequences.sum(dim=(1, 2)) > threshold).double()
-            train_dataset = TensorDataset(train_sequences, train_labels)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
-            # Define a simple GRU model
-            # Define the GRU-based model
+            if varying_lengths:
+                lengths = torch.randint(1, max_sequence_length + 1, (num_sequences,)).tolist()
+            else:
+                lengths = [max_sequence_length] * num_sequences
+
+            train_sequences = [torch.rand((L, input_size)) * 10 for L in lengths]
+            train_labels = [(s.sum() > threshold).double() for s in train_sequences]
+            train_labels = torch.tensor(train_labels)
+
+            # Define a simple GRU model that can handle padded & packed sequences
             class SimpleGRUClassifier(nn.Module):
                 def __init__(self, input_size, hidden_size, output_size):
                     super(SimpleGRUClassifier, self).__init__()
@@ -407,10 +413,16 @@ if torch_available:
                     self.output = nn.Linear(hidden_size, output_size, bias=False)
                     self.sigmoid = nn.Sigmoid()
 
-                def forward(self, x):
-                    x_after_in = self.input(x)  # Apply the input layer
-                    _, h = self.gru(x_after_in)  # Only use the final hidden state
-                    out = self.output(h[-1])  # Pass the final hidden state through the fully connected layer
+                def forward(self, x, lengths=None):
+                    # x is expected to be padded to shape (batch, seq_len, input_size) when lengths provided
+                    x_after_in = self.input(x)
+                    if lengths is not None:
+                        # pack padded sequence so GRU ignores padding
+                        packed = nn.utils.rnn.pack_padded_sequence(x_after_in, lengths, batch_first=True, enforce_sorted=False)
+                        _, h = self.gru(packed)
+                    else:
+                        _, h = self.gru(x_after_in)
+                    out = self.output(h[-1])
                     return self.sigmoid(out)
 
             # Initialize the model, loss function, and optimizer
@@ -419,19 +431,23 @@ if torch_available:
             optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
             # Get initial weights (to initialize autodiff below with same initial conditions)
-            # Get initial weights (to initialize autodiff below with same initial conditions)
             torch_input_initial_weights = model.state_dict()['input.weight'].T.detach().cpu().numpy().copy()
             torch_gru_initial_weights = pnl.PytorchGRUCompositionWrapper.get_parameters_from_torch_gru(model.gru)
             torch_output_initial_weights = model.state_dict()['output.weight'].T.detach().cpu().numpy().copy()
 
-            # # Training loop
+            # Training loop (manual batching because sequences have variable lengths)
             torch_losses = []
             for epoch in range(num_epochs):
                 model.train()
-                total_loss = 0
-                for sequences, labels in train_loader:
-                    outputs = model(sequences)
-                    labels = labels.unsqueeze(1)  # Reshape labels to match output shape
+                for i in range(0, num_sequences, batch_size):
+                    batch_seqs = train_sequences[i:i + batch_size]
+                    batch_labels = train_labels[i:i + batch_size]
+                    batch_lengths = [s.size(0) for s in batch_seqs]
+                    # pad sequences to the max length in the batch
+                    padded = pad_sequence(batch_seqs, batch_first=True)
+
+                    outputs = model(padded, lengths=batch_lengths)
+                    labels = batch_labels.unsqueeze(1)  # Reshape labels to match output shape
                     loss = criterion(outputs, labels)
 
                     optimizer.zero_grad()
@@ -439,7 +455,6 @@ if torch_available:
                     optimizer.step()
 
                     torch_losses.append(loss.item())
-                    total_loss += loss.item()
 
             # Set up and run PNL Autodiff model
             input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=input_size)
@@ -457,11 +472,10 @@ if torch_available:
             autodiff_comp.set_weights(autodiff_comp.projections[1], torch_output_initial_weights)
             target_mechs = autodiff_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
 
-            # Construct the inputs as a list of dictionaries
-            # inputs = {"inputs": inputs, "targets": {target_node[0]: targets}}
+            # Construct the inputs as a list of dictionaries (one entry per sequence) -- sequences can be different lengths
             inputs = [{input_mech: seq, target_mechs[0]: torch.atleast_2d(target)} for seq, target in zip(train_sequences, train_labels)]
 
-            # Train the model
+            # Train the PNL model using minibatches (AutodiffComposition should handle variable-length sequences internally)
             autodiff_comp.learn(inputs=inputs,
                                 epochs=num_epochs,
                                 minibatch_size=batch_size,
@@ -469,7 +483,9 @@ if torch_available:
                                 )
             results = autodiff_comp.results
 
+            # Compare recorded losses: lengths/order of minibatches should match between torch training loop above and PNL
             np.testing.assert_allclose(torch_losses, autodiff_comp.torch_losses.squeeze())
+
 
         constructor_expected = [[ 0.23619161, 0.18558876, 0.16821693, 0.27253839, -0.18351431]]
         learn_method_expected = [[0.32697333, 0.22005074, 0.28091698, 0.4033476, -0.10994711]]
@@ -743,7 +759,7 @@ if torch_available:
 
             # Execute model without learning
             hidden_init = torch.tensor([[0.,0.,0.,0.,0.]])
-            torch_result_before_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_init)
+            torch_result_before_learning, hn = torch_model(torch.tensor(np.array(inputs)), hidden_init)
 
             # Compute loss and update weights
             torch_optimizer.zero_grad()
@@ -752,7 +768,7 @@ if torch_available:
             torch_optimizer.step()
 
             # Get output after learning
-            torch_result_after_learning, hidden_state = torch_model(torch.tensor(np.array(inputs)), hidden_state)
+            torch_result_after_learning, hn = torch_model(torch.tensor(np.array(inputs)),hn)
 
             # Set up and run PNL Autodiff model ------------------------------------------------------------
 

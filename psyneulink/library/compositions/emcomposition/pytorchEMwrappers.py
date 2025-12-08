@@ -84,7 +84,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 class PytorchEMMechanismWrapper(PytorchMechanismWrapper):
     """Wrapper for EMStorageMechanism as a Pytorch Module"""
 
-    def execute(self, variable, optimization_num, synch_with_pnl_options, context=None):
+    def execute(self, variable, optimization_num, synch_with_pnl_options, sequence_lengths, context=None):
         """Override to handle storage of entry to memory_matrix by EMStorage Function"""
         if self.mechanism is self.composition.storage_node:
             # 8/20/25 BREADCRUMB: REFACTOR TO USE execution_in_additional_optimizations
