@@ -147,7 +147,7 @@ def gen_teacher_student_model(
             pw_student_outputs,
             pw_inputs_teacher,
         ],
-        targets=[(teacher, student)],
+        targets=[(student, teacher)],
         learning_rate=LEARNING_RATE,
     )
     return comp, inputs
@@ -222,12 +222,28 @@ def run(seed=None):
         orig_teacher_matrix = model_pnl.projections['inputs_teacher'].matrix.base.copy()
 
         if SHOW_PNL:
-            model_pnl.show_graph(show_learning=True)
+            model_pnl.show_graph(show_pytorch=True)
 
+        pytorch_rep = model_pnl._build_pytorch_representation()
+        # pytorch_rep = model_pnl.infer_backpropagation_pathways()
+
+        n = 0
         for t in train:
-            model_pnl.learn(inputs={
-                inputs: np.array([t])
-            })
+            n+=1
+            result = model_pnl.learn(inputs={inputs: np.array([t])},
+                            execution_mode = pnl.ExecutionMode.PyTorch
+                            )
+            pytorch_rep = model_pnl.pytorch_representation
+            student_proj = model_pnl.projections['inputs_student']
+            teacher_proj = model_pnl.projections['inputs_teacher']
+            student_torch_param = pytorch_rep.get_torch_param_for_projection(student_proj)
+            teacher_torch_param = pytorch_rep.get_torch_param_for_projection(teacher_proj)
+            print(f'\n\nTrial {n}:------------------\n')
+            print(f'\t{t}: {result}')
+            params = pytorch_rep.optimizer.param_groups[0]['params'][0]
+            print(f'torch params[0] (only one with lr!=False: {params}')
+            print(f'\nSTUDENT param: {student_torch_param}')
+            print(f'\nTEACHER param: {teacher_torch_param}')
         # Test matrices that shouldn't change
         after_student_matrix = model_pnl.projections['inputs_student'].matrix.base.copy()
 

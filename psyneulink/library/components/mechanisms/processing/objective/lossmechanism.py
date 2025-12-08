@@ -96,9 +96,12 @@ from beartype import beartype
 from psyneulink._typing import Optional, Union
 
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
-from psyneulink.core.components.functions.nonstateful.objectivefunctions import LossFunction
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningType
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.projections.projection import _add_projection_from, _add_projection_to
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import LossFunction
 from psyneulink.core.globals.keywords import (
     Loss, LOSS_MECHANISM, NAME, PREFERENCE_SET_NAME, PROJECTION, SAMPLE, TARGET)
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -113,7 +116,9 @@ class LossMechanismError(MechanismError):
     pass
 
 
-class LossMechanism(ComparatorMechanism):
+class LossMechanism(#ModulatoryMechanism_Base,
+                    #LearningMechanism,
+                    ComparatorMechanism):
     """
     LossMechanism(                      \
         sample,                         \
@@ -203,6 +208,7 @@ class LossMechanism(ComparatorMechanism):
         PREFERENCE_SET_NAME: 'LossCustomClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+
     class Parameters(ComparatorMechanism.Parameters):
         """
             Attributes
@@ -215,6 +221,9 @@ class LossMechanism(ComparatorMechanism):
                     :type: `Loss`
         """
         loss = Parameter(Loss.MSE, stateful=False, loggable=False)
+        # covariates_sources = Parameter(None, stateful=False, structural=True, read_only=True)
+        # error_sources = Parameter(None, stateful=False, structural=True, read_only=True)
+        # learning_type = LearningType.PYTORCH_SUPERVISED
 
         def _validate_loss(self, function):
 
@@ -263,6 +272,7 @@ class LossMechanism(ComparatorMechanism):
         else:
             function = LossFunction(loss=loss)
 
+        # Comparator.__init__(self,
         super().__init__(default_variable=default_variable,
                          sample=sample,
                          target=target,
@@ -276,4 +286,13 @@ class LossMechanism(ComparatorMechanism):
         self.parameters.sample._set(sample, context)
         self.parameters.target._set(target, context)
 
+        from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
+        self.loss_projection = LossProjection(sender=self, receiver=self.sample)
 
+# def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
+#     """Override Comparator and LearningMechanism to instantiate enforced SAMPLE and TARGET InputPorts"""
+#     # Call ComparatorMechanism's _instantiate_input_ports, skipping LearningMechanism
+#     ComparatorMechanism._instantiate_input_ports(self,
+#                                                  input_ports=input_ports,
+#                                                  reference_value=reference_value,
+#                                                  context=context)

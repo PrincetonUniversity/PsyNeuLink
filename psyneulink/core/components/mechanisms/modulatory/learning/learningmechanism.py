@@ -640,10 +640,14 @@ class LearningType(Enum):
     SUPERVISED
         does not implement a *ERROR_SIGNAL* InputPort.
 
+    PYTORCH_SUPERVISED
+        implemented via Pytorch autograd; requires torch to be installed
+        (reserved for use by LossMechanism if that is subclassed to LearningMechanism)
+
     """
     UNSUPERVISED = 0
     SUPERVISED = 1
-
+    PYTORCH_SUPERVISED = 2
 
 class LearningTiming(Enum):
     """
@@ -1273,7 +1277,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                            context=context)
                 else:
                     pass
-
 
     def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
         """Instantiate COVARIATES InputPorts if there are any covariate_sources"""

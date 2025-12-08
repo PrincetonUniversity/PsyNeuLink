@@ -37,6 +37,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -59,6 +60,7 @@ from psyneulink.core.globals.keywords import (
     NODE_VALUES,
     NODE_VARIABLES,
     RESULTS,
+    SAMPLE,
     SHOW_PYTORCH,
     SYNCH,
     TARGETS,
@@ -549,6 +551,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                          composition)
             self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
                                                         projection.name: projection_param_name_comp_tuple})
+
+        # # Create ProjectionWrappers for LossMechanism -> SAMPLE for display in show_graph(pytorch=True)
+        # for loss_mech in [node for node in self.composition.nodes if isinstance(node, LossMechanism)]:
+        #     sample = loss_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
+        #     pytorch_proj_wrapper = PytorchProjectionWrapper(projection=loss_mech.loss_projection,
+        #                                                     pnl_proj=loss_mech.loss_projection,
+        #                                                     component_idx=None,
+        #                                                     sender_port_idx=0,
+        #                                                     use=[SHOW_PYTORCH],
+        #                                                     device=device,
+        #                                                     sender_wrapper=self.nodes_map[loss_mech],
+        #                                                     receiver_wrapper=self.nodes_map[sample],
+        #                                                     composition=composition,
+        #                                                     context=context)
+        # #     self.nodes_map[projection.sender.owner].add_efferent(pytorch_proj_wrapper)
+        # #     self.nodes_map[projection.receiver.owner].add_afferent(pytorch_proj_wrapper)
+        # #     proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
 
         return proj_wrappers_pairs
 
@@ -2615,6 +2634,8 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         self.input = variable
 
         sample = variable[:,:,0,...]
+        # Prevent propagation of error along projection from TARGET
+        #  (since it might be from an internal Node that receives other projections)
         target = variable[:,:,1,...].detach()
         self.output = self.function(sample, target)
 
