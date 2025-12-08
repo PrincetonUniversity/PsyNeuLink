@@ -54,7 +54,7 @@ DIM = 3
 
 # Testable Params
 LEARNING_RATE = .01
-TRAINING_EXAMPLES = 1_000
+TRAINING_EXAMPLES = 10_000
 
 # Script Control
 RUN_TORCH = True
@@ -103,7 +103,7 @@ class LearnRotationsTorch(nn.Module):
         l1 = self.learn_net_1(x)
         l2 = self.learn_net_2(x)
 
-        l_sum = .5 * l1 + .5 * l2
+        l_sum = l1 + l2
 
         # Learned student mapping (this is the one that should learn the teacher rotation)
         student = self.student(l_sum)
@@ -132,54 +132,42 @@ def gen_learn_rotation_psyneulink(
     # ** Student Branch ** #
     learn_net_1 = pnl.ProcessingMechanism(name='LEARN NET 1', input_shapes=DIM)
     learn_net_2 = pnl.ProcessingMechanism(name='LEARN NET 2', input_shapes=DIM)
-    out_learn = pnl.ProcessingMechanism(name='OUT LEARN', input_shapes=DIM)
     student = pnl.ProcessingMechanism(name='STUDENT', input_shapes=DIM)
 
-    # Learn Net
-    pw_learn_net_1_out_learn = [
-        learn_net_1,
-        pnl.MappingProjection(
-            learn_net_1, out_learn,
-            matrix=pnl.IDENTITY_MATRIX, learnable=False,
-        ),
-        out_learn
-    ]
-    pw_learn_net_2_out_learn = [
-        learn_net_2,
-        pnl.MappingProjection(
-            learn_net_2, out_learn,
-            matrix=pnl.IDENTITY_MATRIX, learnable=False,
-        ),
-        out_learn
-    ]
-
-    learn_net = pnl.AutodiffComposition(pathways=[pw_learn_net_1_out_learn, pw_learn_net_2_out_learn], name='LEARN NET')
-
     # * Pathways * #
-    # inputs -> learn_net (identity, not learnable)
+    # inputs -> learn_net (identity, learnable should resemble rot after learning)
     pw_inputs_learn_net_1 = [
         inputs,
         pnl.MappingProjection(
             inputs, learn_net_1,
-            matrix=pnl.IDENTITY_MATRIX, learnable=True
+            matrix=pnl.IDENTITY_MATRIX, learnable=True, learning_rate=LEARNING_RATE,
         ),
-        learn_net
+        learn_net_1
     ]
     pw_inputs_learn_net_2 = [
         inputs,
         pnl.MappingProjection(
             inputs, learn_net_2,
-            matrix=pnl.IDENTITY_MATRIX, learnable=True
+            matrix=pnl.IDENTITY_MATRIX, learnable=True, learning_rate=LEARNING_RATE,
         ),
-        learn_net
+        learn_net_2
     ]
 
-    # learn_net -> student (identity, learnable should resemble rot after learning)
-    pw_learn_net_student = [
-        learn_net,
+    # learn_net -> student (identity, not learnable)
+    pw_learn_net_1_student = [
+        learn_net_1,
         pnl.MappingProjection(
-            out_learn, student,
-            matrix=pnl.IDENTITY_MATRIX, learnable=True, learning_rate=LEARNING_RATE
+            student,
+            matrix=pnl.IDENTITY_MATRIX, learnable=False
+        ),
+        student
+    ]
+
+    pw_learn_net_2_student = [
+        learn_net_2,
+        pnl.MappingProjection(
+            student,
+            matrix=pnl.IDENTITY_MATRIX, learnable=False
         ),
         student
     ]
@@ -199,7 +187,6 @@ def gen_learn_rotation_psyneulink(
     teacher = pnl.ProcessingMechanism(name='TEACHER', input_shapes=DIM)
 
     # * Pathways * #
-
     pw_inputs_teacher_hidden = [
         inputs,
         pnl.MappingProjection(
@@ -222,7 +209,8 @@ def gen_learn_rotation_psyneulink(
         pathways=[
             pw_inputs_learn_net_1,
             pw_inputs_learn_net_2,
-            pw_learn_net_student,
+            pw_learn_net_1_student,
+            pw_learn_net_2_student,
             pw_student_outputs,
             pw_inputs_teacher_hidden,
             pw_teach_hidden_teacher,

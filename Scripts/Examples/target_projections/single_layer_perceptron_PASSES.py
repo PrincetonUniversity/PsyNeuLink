@@ -54,6 +54,7 @@ def gen_single_layer_mlp_psyneulink():
         inputs,
         pnl.MappingProjection(
             inputs, outputs,
+            name='io',
             matrix=pnl.IDENTITY_MATRIX, learnable=True, learning_rate=LEARNING_RATE,
         ),
         outputs,
