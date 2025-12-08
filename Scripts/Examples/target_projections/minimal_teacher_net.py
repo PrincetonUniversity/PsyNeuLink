@@ -142,6 +142,7 @@ def gen_teacher_student_model(
 
     # ** Composition ** #
     comp = pnl.AutodiffComposition(
+        name='model_pnl',
         pathways=[
             pw_inputs_student,
             pw_student_outputs,
@@ -236,14 +237,18 @@ def run(seed=None):
             pytorch_rep = model_pnl.pytorch_representation
             student_proj = model_pnl.projections['inputs_student']
             teacher_proj = model_pnl.projections['inputs_teacher']
+            student_matrix = student_proj.parameters.matrix.get('model_pnl')
+            teacher_matrix = teacher_proj.parameters.matrix.get('model_pnl')
             student_torch_param = pytorch_rep.get_torch_param_for_projection(student_proj)
             teacher_torch_param = pytorch_rep.get_torch_param_for_projection(teacher_proj)
             print(f'\n\nTrial {n}:------------------\n')
             print(f'\t{t}: {result}')
             params = pytorch_rep.optimizer.param_groups[0]['params'][0]
             print(f'torch params[0] (only one with lr!=False: {params}')
-            print(f'\nSTUDENT param: {student_torch_param}')
-            print(f'\nTEACHER param: {teacher_torch_param}')
+            print(f'\nSTUDENT torch param: {student_torch_param}')
+            print(f'\nSTUDENT PNL matrix: \n{student_matrix}')
+            print(f'\nTEACHER torch param: {teacher_torch_param}')
+            print(f'\nTEACHER PNL matrix: \n{teacher_matrix}')
         # Test matrices that shouldn't change
         after_student_matrix = model_pnl.projections['inputs_student'].matrix.base.copy()
 
