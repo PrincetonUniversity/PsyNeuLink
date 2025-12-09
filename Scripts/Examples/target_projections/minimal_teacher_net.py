@@ -142,7 +142,6 @@ def gen_teacher_student_model(
 
     # ** Composition ** #
     comp = pnl.AutodiffComposition(
-        name='model_pnl',
         pathways=[
             pw_inputs_student,
             pw_student_outputs,
@@ -218,74 +217,95 @@ def run(seed=None):
         torch.manual_seed(seed)
         model_pnl, inputs = gen_teacher_student_model(teacher_matrix=teacher_matrix)
 
-        orig_student_matrix = model_pnl.projections['inputs_student'].matrix.base.copy()
-        orig_outputs_matrix = model_pnl.projections['student_outputs'].matrix.base.copy()
-        orig_teacher_matrix = model_pnl.projections['inputs_teacher'].matrix.base.copy()
+        # orig_student_matrix = model_pnl.projections['inputs_student'].matrix.base.copy()
+        # orig_outputs_matrix = model_pnl.projections['student_outputs'].matrix.base.copy()
+        # orig_teacher_matrix = model_pnl.projections['inputs_teacher'].matrix.base.copy()
 
         if SHOW_PNL:
             model_pnl.show_graph(show_pytorch=True)
 
         pytorch_rep = model_pnl._build_pytorch_representation()
         # pytorch_rep = model_pnl.infer_backpropagation_pathways()
+        pytorch_rep = model_pnl.pytorch_representation
+        student_proj = model_pnl.projections['inputs_student']
+        outputs_proj = model_pnl.projections['student_outputs']
+        teacher_proj = model_pnl.projections['inputs_teacher']
+        student_torch_param_before = pytorch_rep.get_torch_param_for_projection(student_proj).detach().numpy()
+        outputs_torch_param_before = pytorch_rep.get_torch_param_for_projection(outputs_proj).detach().numpy()
+        teacher_torch_param_before = pytorch_rep.get_torch_param_for_projection(teacher_proj).detach().numpy()
+
 
         n = 0
         for t in train:
             n+=1
-            result = model_pnl.learn(inputs={inputs: np.array([t])},
+            model_pnl.learn(inputs={inputs: np.array([t])},
                             execution_mode = pnl.ExecutionMode.PyTorch
                             )
-            pytorch_rep = model_pnl.pytorch_representation
-            student_proj = model_pnl.projections['inputs_student']
-            teacher_proj = model_pnl.projections['inputs_teacher']
-            student_matrix = student_proj.parameters.matrix.get('model_pnl')
-            teacher_matrix = teacher_proj.parameters.matrix.get('model_pnl')
-            student_torch_param = pytorch_rep.get_torch_param_for_projection(student_proj)
-            teacher_torch_param = pytorch_rep.get_torch_param_for_projection(teacher_proj)
-            print(f'\n\nTrial {n}:------------------\n')
-            print(f'\t{t}: {result}')
-            params = pytorch_rep.optimizer.param_groups[0]['params'][0]
-            print(f'torch params[0] (only one with lr!=False: {params}')
-            print(f'\nSTUDENT torch param: {student_torch_param}')
-            print(f'\nSTUDENT PNL matrix: \n{student_matrix}')
-            print(f'\nTEACHER torch param: {teacher_torch_param}')
-            print(f'\nTEACHER PNL matrix: \n{teacher_matrix}')
-        # Test matrices that shouldn't change
-        after_student_matrix = model_pnl.projections['inputs_student'].matrix.base.copy()
+            # pytorch_rep = model_pnl.pytorch_representation
+            # student_proj = model_pnl.projections['inputs_student']
+            # teacher_proj = model_pnl.projections['inputs_teacher']
+            # student_torch_param = pytorch_rep.get_torch_param_for_projection(student_proj)
+            # teacher_torch_param = pytorch_rep.get_torch_param_for_projection(teacher_proj)
+            # # print(f'\n\nTrial {n}:------------------\n')
+            # # print(f'\t{t}: {result}')
+            # params = pytorch_rep.optimizer.param_groups[0]['params'][0]
+            # # print(f'torch params[0] (only one with lr!=False: {params}')
+            # # print(f'\nSTUDENT param: {student_torch_param}')
+            # # print(f'\nTEACHER original: {orig_student_matrix}')
+            # # print(f'\nTEACHER param: {teacher_torch_param}')
 
-        after_outputs_matrix = model_pnl.projections['student_outputs'].matrix.base.copy()
-        after_teacher_matrix = model_pnl.projections['inputs_teacher'].matrix.base.copy()
+        pytorch_rep = model_pnl.pytorch_representation
+        student_proj = model_pnl.projections['inputs_student']
+        outputs_proj = model_pnl.projections['student_outputs']
+        teacher_proj = model_pnl.projections['inputs_teacher']
+        student_torch_param_after = pytorch_rep.get_torch_param_for_projection(student_proj).detach().numpy()
+        outputs_torch_param_after = pytorch_rep.get_torch_param_for_projection(outputs_proj).detach().numpy()
+        teacher_torch_param_after = pytorch_rep.get_torch_param_for_projection(teacher_proj).detach().numpy()
+
+
+        # Test matrices that shouldn't change
+        print(f'Student (before, should be identity):\n{student_torch_param_before}')
+        print(f'Student (after, should not be identity):\n{student_torch_param_after}')
+        print(f'Teacher (before):\n{teacher_torch_param_before}')
+        print(f'Teacher (after, should be same as before):\n{teacher_torch_param_after}')
+        print(f'Outputs (before, should be identity):\n{outputs_torch_param_before}')
+        print(f'Outputs (after, should not be identity):\n{outputs_torch_param_after}')
 
         # (1) Teacher projection must NOT change
         assert np.allclose(
-            after_teacher_matrix,
-            orig_teacher_matrix
+            teacher_torch_param_after,
+            teacher_torch_param_before,
         ), "Teacher projection matrix changed!"
 
         # (2) Student → outputs projection must NOT change
         assert np.allclose(
-            after_outputs_matrix,
-            orig_outputs_matrix
+            outputs_torch_param_after,
+            outputs_torch_param_before,
         ), "student -> outputs projection matrix changed!"
 
         # (3) Student input projection MUST change (sanity check)
         if LEARNING_RATE > 0:
             assert not np.allclose(
-                after_student_matrix,
-                orig_student_matrix
+                student_torch_param_after,
+                student_torch_param_before
             ), "Student projection matrix did not change!"
+
+
 
         model_pnl.run(inputs={inputs: test_targets})
         out_pnl = [r[0] for r in model_pnl.results[-5:]]
 
     if out_torch is not None and out_pnl is not None:
+        torch_learned_matrix = model_t.student.weight.detach().numpy()
+        assert np.allclose(student_torch_param_after,
+                           torch_learned_matrix,
+                           ), f'{student_torch_param_after} (pnl) != {torch_learned_matrix} (torch)'
         for res in zip(out_torch, out_pnl):
             tr = np.array(res[0].detach(), dtype=float)
             pl = np.array(res[1], dtype=float)
 
             assert np.allclose(tr, pl), \
-                (f"Not close enough {tr}, {pl}\n"
-                 f"learned matrices:\n"
-                 f"{model_t.student.weight}, {after_student_matrix}")
+                (f"Not close enough {tr}, {pl}\n")
 
     print('ALL CLOSE')
 
