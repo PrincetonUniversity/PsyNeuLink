@@ -1231,6 +1231,8 @@ class AutodiffComposition(Composition):
         # TEACHER_TARGET BREADCRUMB:  CHECK THAT ANY SPECIFIED LossMechanisms ARE NOT FOR A NESTED COMP;
         #                             IF SO, DEAL WITH IT OR RAISE ERROR
 
+        context = Context(source=ContextFlags.METHOD)
+
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
             # targets specified by user in self.targets (as LossMechanism and/or sample:target tuples):
@@ -1318,7 +1320,6 @@ class AutodiffComposition(Composition):
         loss_mechs = list(self.loss_mechs_map.keys())
 
         # Add LossMechanisms and any TARGET Nodes to AutodiffComposition, with required NodeRoles
-        context = Context(source=ContextFlags.METHOD)
         self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
                                                    NodeRole.LEARNING_OBJECTIVE], context=context)
 
