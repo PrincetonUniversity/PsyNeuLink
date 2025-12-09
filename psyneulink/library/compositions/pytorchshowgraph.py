@@ -12,10 +12,11 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
 
-from psyneulink.core.compositions import NodeRole
+from psyneulink.core.compositions import Composition, NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
+from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SAMPLE, SHOW_PYTORCH, TARGET, PNL
@@ -39,7 +40,6 @@ class PytorchShowGraph(ShowGraph):
 
     show_pytorch : keyword : default 'PYTORCH'
         specifies that the PyTorch version of the graph should be shown.
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -69,6 +69,31 @@ class PytorchShowGraph(ShowGraph):
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
 
+    def _make_additional_assignments(self, g, processing_graph, composition, *args):
+        """Override to add Loss components to graph
+        Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE)
+        """
+        assert isinstance(args[13], Context), \
+            f"PROGRAM ERROR: arguments to _make_additional_assignments must have changed"
+        context = args[13]
+
+        # If a node projects to a LossMechanism as its SAMPLE, add LossMechanism as dependency
+        #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
+        loss_mechs = [n for n in composition.nodes if isinstance(n, LossMechanism)]
+        if loss_mechs:
+            for node in [n for n in processing_graph if n not in composition.get_nodes_by_role(NodeRole.TARGET)]:
+                for loss_mech in loss_mechs:
+                    if node is loss_mech.sample:
+                        processing_graph[node].add(loss_mech)
+                        self._implement_graph_edge(g,
+                                                   loss_mech.loss_projection,
+                                                   context,
+                                                   loss_mech.name,
+                                                   loss_mech.sample.name,
+                                                   color=self.exclude_from_gradient_calc_color,
+                                                   penwidth=self.default_width,
+                                                   style=self.exclude_from_gradient_calc_color)
+
     def _get_processing_graph(self, composition, context):
         """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode"""
         if self.show_pytorch:
@@ -90,16 +115,6 @@ class PytorchShowGraph(ShowGraph):
                         for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
                             dependencies.add(proj.sender.owner)
                 processing_graph[node] = dependencies
-
-            # If a node projects to a LossMechanism as its SAMPLE, add LossMechanism as dependency
-            #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
-            loss_mechs = [n for n in processing_graph if isinstance(n, LossMechanism)]
-            if loss_mechs:
-                for node in [n for n in processing_graph if node not in composition.get_nodes_by_role(NodeRole.TARGET)]:
-                    for loss_mech in loss_mechs:
-                        if node is loss_mech.input_ports[SAMPLE].path_afferents[0].sender.owner:
-                            processing_graph[node].add(loss_mech)
-
             return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
 
         else:
@@ -175,7 +190,6 @@ class PytorchShowGraph(ShowGraph):
             # elif rcvr in self.composition.autodiff_learning_components:
             elif isinstance(rcvr, LossMechanism):
                 kwargs['color'] = self.learning_color
-                # kwargs['style'] = self.exclude_from_gradient_calc_line_style
             elif rcvr in self.composition.get_nodes_by_role(NodeRole.TARGET):
                 kwargs['color'] = self.learning_color
                 kwargs['penwidth'] = str(self.bold_width)
@@ -197,10 +211,17 @@ class PytorchShowGraph(ShowGraph):
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)
 
     def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
-        """Override to assign custom attributes to edges"""
+        """Override to assign pytroch-specific custom attributes to edges"""
 
         if self.show_pytorch:
             kwargs['color'] = self.default_node_color
+
+            if isinstance(proj, LossProjection):
+                kwargs['color'] = self.exclude_from_gradient_calc_color
+                kwargs['style'] = self.exclude_from_gradient_calc_line_style
+                kwargs['penwidth'] = str(self.default_width)
+                graph.edge(*args, **kwargs)
+                return
 
             modulatory_node = None
 
@@ -218,16 +239,6 @@ class PytorchShowGraph(ShowGraph):
 
                 # If Projection is from a ModulatoryMechanism that is excluded from gradient calculations, assign that style
                 elif modulatory_node and modulatory_node.exclude_from_gradient_calc:
-                    kwargs['color'] = self.exclude_from_gradient_calc_color
-                    kwargs['style'] = self.exclude_from_gradient_calc_line_style
-
-                # Projection from any (non-TARGET) node to a LossMechanism's TARGET InputPort is detached(),
-                #   and therefore should be shown as excluded from the gradient calc;
-                # No need to show for TARGET Node -> LossMechanism since that Projection is never learnable and
-                #    nothing projects to TARGET node (since it is an INPUT Node by construction)
-                elif (isinstance(proj.receiver.owner, LossMechanism)
-                      and proj.receiver is proj.receiver.owner.input_ports[TARGET]
-                      and proj.sender.owner not in self.composition.get_nodes_by_role(NodeRole.TARGET)):
                     kwargs['color'] = self.exclude_from_gradient_calc_color
                     kwargs['style'] = self.exclude_from_gradient_calc_line_style
 
