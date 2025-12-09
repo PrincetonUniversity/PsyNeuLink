@@ -464,13 +464,8 @@ class LCAMechanism(RecurrentTransferMechanism):
                                    {NAME:MAX_VS_AVG,
                                     FUNCTION:max_vs_avg},
                                   {NAME:DECISION_INDEX,
-                                   # MODIFIED 9/13/25 OLD:
-                                   # VARIABLE: OWNER_VALUE,
-                                   # FUNCTION: lambda x: np.array([np.argmax(x)])},
-                                   # MODIFIED 9/13/25 NEW: RETURNS NONE UNLESS IS_FINISHED_FLAG IS TRUE
-                                   VARIABLE: [OWNER_VALUE, IS_FINISHED_FLAG],
-                                   FUNCTION: lambda x: np.array([np.argmax(x[0])]) if x[1] else np.nan},
-                                   # MODIFIED 9/13/25 END
+                                   VARIABLE: OWNER_VALUE,
+                                   FUNCTION: lambda x: np.array([np.argmax(x)])},
                                   {NAME: DECISION_STEPS,
                                    VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED},
                                   {NAME: DECISION_TIME,

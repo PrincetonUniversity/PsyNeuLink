@@ -2594,8 +2594,8 @@ class Mechanism_Base(Mechanism):
 
                 self.parameters.value._set(value, context=context)
 
-            # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
+            # # UPDATE OUTPUTPORT(S)
+            # self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
@@ -2606,14 +2606,17 @@ class Mechanism_Base(Mechanism):
             if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
+                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
 
             if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
+                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
 
             self.parameters.is_finished_flag._set(False, context)
             if not self.parameters.execute_until_finished._get(context):
+                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
 
         # REPORT EXECUTION

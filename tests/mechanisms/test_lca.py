@@ -291,25 +291,41 @@ class TestLCA:
             time_step_size=0.01,
             execute_until_finished=True,
             reset_stateful_function_when=pnl.AtTrialStart(),
-            output_ports = [pnl.RESULT, pnl.DECISION_INDEX, pnl.DECISION_STEPS, pnl.DECISION_TIME]
+            output_ports = [pnl.RESULT,
+                            pnl.DECISION_INDEX,
+                            pnl.DECISION_STEPS,
+                            pnl.DECISION_TIME
+                            ]
         )
         comp = pnl.Composition(lca)
-        comp.run([[1, 0]])
+        lca.execute_until_finished = True
+
+        lca.parameters.time_step_size.set(.01, comp.name)
+        comp.run([[1, 0]],
+                 # execution_mode=pnl.ExecutionMode.LLVMRun
+                 )
         assert lca.output_ports[pnl.DECISION_INDEX].value == 0
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 13
-        assert lca.output_ports[pnl.DECISION_TIME].value == .13
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 14
+        assert lca.output_ports[pnl.DECISION_TIME].value == .14
+
         lca.parameters.time_step_size.set(.001, comp.name)
         comp.run([[0, 1]])
         assert lca.output_ports[pnl.DECISION_INDEX].value == 1
         assert lca.output_ports[pnl.DECISION_STEPS].value == 55
         assert lca.output_ports[pnl.DECISION_TIME].value == .055
+
+        lca.parameters.time_step_size.set(.001, comp.name)
         lca.execute_until_finished = False
         comp.run([[1, 0]])
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 1
+        assert lca.output_ports[pnl.DECISION_TIME].value == .001
         comp.run([[1, 0]])
-        comp.run([[1, 0]])
-        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
         assert lca.output_ports[pnl.DECISION_STEPS].value == 2
         assert lca.output_ports[pnl.DECISION_TIME].value == .002
+        comp.run([[1, 0]])
+        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
+        assert lca.output_ports[pnl.DECISION_STEPS].value == 3
+        assert lca.output_ports[pnl.DECISION_TIME].value == .003
 
 
 class TestLCAReset:
