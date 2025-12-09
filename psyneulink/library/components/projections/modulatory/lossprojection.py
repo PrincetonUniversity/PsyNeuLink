@@ -136,3 +136,5 @@ class LossProjection(ModulatoryProjection_Base):
         name = f'LOSS PROJECTION for {receiver.name}'
         self.sender = sender
         self.receiver = receiver
+        self.learnable = False
+        self.matrix = None

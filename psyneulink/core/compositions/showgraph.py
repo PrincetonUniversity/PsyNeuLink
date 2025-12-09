@@ -942,6 +942,24 @@ class ShowGraph():
                                              show_projections_not_in_composition,
                                              context)
 
+        self._make_additional_assignments(G,
+                                          processing_graph,
+                                          composition,
+                                          enclosing_comp,
+                                          comp_hierarchy,
+                                          nesting_level,
+                                          active_items,
+                                          show_nested,
+                                          show_cim,
+                                          show_learning,
+                                          show_types,
+                                          show_dimensions,
+                                          show_node_structure,
+                                          node_struct_args,
+                                          show_projection_labels,
+                                          show_projections_not_in_composition,
+                                          context)
+
         return self._generate_output(G,
                                      enclosing_comp,
                                      active_items,
@@ -2310,6 +2328,10 @@ class ShowGraph():
                                            color=learning_proj_color,
                                            penwidth=learning_proj_width)
         return True
+
+    def _make_additional_assignments(self, *args):
+        """Allow override by subclasses to make modifications / additions to graph"""
+        pass
 
     @beartype
     def _assign_incoming_edges(self,
