@@ -1801,14 +1801,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         def get_nodes_to_execute_for_optimization(opt_num: int, exec_set: set) -> set:
             # Return exec_set filtered for nodes specified in _execute_in_additional_optimizations
             addition_opts_dict = self._execute_in_additional_optimizations
-            # TEACHER_TARGET BREADCRUMB: REMOVE THIS COMMENTED CODE
-            # nodes_to_execute = {node for node in addition_opts_dict
-            #                     # BREADCRUMB:
-            #                     # if (node is not NUM_OPTIMIZATIONS and opt_num in addition_opts_dict[node])}
-            #                     if (isinstance(addition_opts_dict[node],list) and opt_num in addition_opts_dict[node])}
-            # for node in exec_set:
-            #     if (node in nodes_to_execute):
-            #         exec_set -= {torch_node}
             nodes_to_exclude = {
                 node
                 for node in addition_opts_dict
