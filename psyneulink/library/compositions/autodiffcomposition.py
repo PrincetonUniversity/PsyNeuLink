@@ -888,7 +888,7 @@ class AutodiffComposition(Composition):
                  pathways=None,
                  optimizer_type: str = 'sgd',
                  loss_spec: Loss = Loss.MSE, # default is Loss.MSE set in Parameters
-                 targets: Union[LossMechanism, list, dict] = None,
+                 targets: Union[LossMechanism, tuple, list, dict] = None,
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning: bool = True,
