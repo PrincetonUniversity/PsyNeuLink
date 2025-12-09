@@ -10403,14 +10403,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             """
             Recursively calls update on dictionaries, which prevents deletion of keys
             """
-            # # MODIFIED TEACHER_TARGET OLD:
-            # for key, val in u.items():
-            #     if isinstance(val, collections.abc.Mapping):
-            #         d[key] = _recursive_update(d.get(key, {}), val)
-            #     else:
-            #         d[key] = val
-            # return d
-            # MODIFIED TEACHER_TARGET NEW:
             for key, val in u.copy().items():
                 if isinstance(val, collections.abc.Mapping):
                     d[key] = _recursive_update(d.get(key, {}), val)
@@ -10419,18 +10411,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Remove entry from targets dict to avoid duplicate target warnings
                 u.pop(key)
             return d
-            # MODIFIED TEACHER_TARGET END
+
+        duplicate_targets = sorted([item.name for item in inputs if targets and item in targets])
+        if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
+            warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
+                          f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
+                          f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
+            self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         if targets is not None:
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
-
-            duplicate_targets = sorted([item.name for item in inputs if item in targets])
-            if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
-                warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
-                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
-                              f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
-                self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
