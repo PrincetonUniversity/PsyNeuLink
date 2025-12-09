@@ -1404,6 +1404,7 @@ class LossFunction(ObjectiveFunction):
             import torch
             loss = request_set[LOSS]
             if not isinstance(loss, (Loss, torch.nn.modules.loss._Loss)):
+            # if not isinstance(loss) or loss not in dir(torch.nn.modules.loss):
                 raise FunctionError(f"Specified loss for {self.name} ({loss}) "
                                     f"must be a member of the Loss enum or a PyTorch loss function.")
 
