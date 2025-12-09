@@ -10411,17 +10411,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #         d[key] = val
             # return d
             # MODIFIED TEACHER_TARGET NEW:
-            def _recursive_update(d, u):
-                """
-                Recursively calls update on dictionaries, which prevents deletion of keys
-                """
-                for key, val in u.copy().items():
-                    if isinstance(val, collections.abc.Mapping):
-                        d[key] = _recursive_update(d.get(key, {}), val)
-                    else:
-                        d[key] = val
-                    # Remove entry from targets dict to avoid duplicate target warnings
-                    u.pop(key)
+            for key, val in u.copy().items():
+                if isinstance(val, collections.abc.Mapping):
+                    d[key] = _recursive_update(d.get(key, {}), val)
+                else:
+                    d[key] = val
+                # Remove entry from targets dict to avoid duplicate target warnings
+                u.pop(key)
             return d
             # MODIFIED TEACHER_TARGET END
 
