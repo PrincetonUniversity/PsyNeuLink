@@ -465,7 +465,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                                     FUNCTION:max_vs_avg},
                                   {NAME:DECISION_INDEX,
                                    VARIABLE: OWNER_VALUE,
-                                   FUNCTION: lambda x: np.array([np.argmax(x)])},
+                                   FUNCTION: lambda x: np.argmax(x)},
                                   {NAME: DECISION_STEPS,
                                    VARIABLE: NUM_EXECUTIONS_BEFORE_FINISHED},
                                   {NAME: DECISION_TIME,

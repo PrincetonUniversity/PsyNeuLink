@@ -302,7 +302,7 @@ class TestLCA:
 
         lca.parameters.time_step_size.set(.01, comp.name)
         comp.run([[1, 0]],
-                 # execution_mode=pnl.ExecutionMode.LLVMRun
+                 execution_mode=pnl.ExecutionMode.LLVMRun
                  )
         assert lca.output_ports[pnl.DECISION_INDEX].value == 0
         assert lca.output_ports[pnl.DECISION_STEPS].value == 14
