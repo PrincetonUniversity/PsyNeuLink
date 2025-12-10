@@ -1246,21 +1246,23 @@ class AutodiffComposition(Composition):
                     if isinstance(loss_mech_spec[1], ProcessingMechanism):
                         target_mech = loss_mech_spec[1]
                     elif loss_mech_spec[1] == TARGET:
+                        if any(node.name == 'TARGET for ' + loss_mech_spec[0].name for node in self.nodes):
+                            continue
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
                                                                                        in loss_mech_spec[0].value],
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + loss_mech_spec[0].name)
+                        self.target_nodes_for_outputs.update({loss_mech_spec[0]: target_mech})
                     else:
                         assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                        f"({loss_mech_spec[1]} for '{self.name}'.")
                 target_mechs.append(target_mech)
                 loss_mech_specs.append((loss_mech_spec[0], target_mech))
 
-            self.add_nodes(target_mechs, context=context)
+            # self.add_nodes(target_mechs, context=context)
             # # TEACHER_TARGET BREADCRUMB:
             # loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
-            # self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
-            # self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
@@ -1354,6 +1356,7 @@ class AutodiffComposition(Composition):
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
+        assert True
     # MODIFIED TEACHER_TARGET END
 
     def _add_dependency(self,
@@ -1862,15 +1865,24 @@ class AutodiffComposition(Composition):
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
 
-        # TEACHER_TARGET BREADCRUMB: HANDLE "INPUT" KEYWORD IN **targets** ARG OF CONSTRUCTOR HERE
-        if targets and self.targets:
-            # targets is from learn() and self.targets is from **targets** arg of AutodiffComposition constructor
-            target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
-            target_error_msg = (f"The output(s) of the following node(s) were specified as targets "
-                                f"for learning in the constructor for '{self.name}', so none need to "
-                                f"(or should be) specified in the 'inputs' argument of the call to its "
-                                f"learn() method: {', '.join(target_node_names)}.")
-            raise AutodiffCompositionError(target_error_msg)
+        # self.targets is from **targets** arg of AutodiffComposition constructor and targets is from learn()
+        if self.targets and targets:
+            # Check whether any samples with nodes specified as targets in the constructor
+            #    also appear in the targets dict of learn(): this should not happen,
+            #    as they get their target value from the node specified in the constructor
+            uncessary_sample_specs_in_learn = []
+            for learn_sample in targets:
+                for constructor_sample, constructor_target in [spec for spec in self.targets]:
+                    if learn_sample is constructor_sample and constructor_target is not TARGET:
+                        uncessary_sample_specs_in_learn.append(f"'{learn_sample.name}'")
+                # target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
+                if uncessary_sample_specs_in_learn:
+                    target_error_msg = (f"The following node(s) were specified in the `targets` argument of the "
+                                        f"constructor for '{self.name}' as samples that receive their target "
+                                        f"values from another node, so they should not be included in the "
+                                        f"dict specified in the 'targets' argument of the learn() method: "
+                                        f"{', '.join(uncessary_sample_specs_in_learn)}.")
+                    raise AutodiffCompositionError(target_error_msg)
 
         stim_input, num_input_trials = super()._parse_learning_spec(inputs, targets, execution_mode, context)
 
