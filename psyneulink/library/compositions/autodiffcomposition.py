@@ -791,6 +791,13 @@ class AutodiffComposition(Composition):
             if spec and not isinstance(spec, (Loss, torch.nn.modules.loss._Loss)):
                 return f"must be a member of the Loss enum or a PyTorch loss function."
 
+        def _parse_targets(self, spec):
+            """Parse targets argument to standardize into list of LossMechanisms or tuples specifying them.
+            """
+            if isinstance(spec, (LossMechanism, tuple, dict)):
+                spec = convert_to_list(spec)
+            return spec
+
         def _validate_targets(self, spec):
             if spec is None:
                 return None
@@ -798,21 +805,15 @@ class AutodiffComposition(Composition):
                 for item in spec:
                     if not isinstance(item, (LossMechanism, tuple)):
                         return (f"must be a list of LossMechanisms or a collection of student, teacher node pairs .")
-                    for elem in item:
-                        if not isinstance(elem, ProcessingMechanism):
-                            return (f"both items in a tuple or dict entry of student, teacher pairs "
-                                    f"must be ProcessingMechanisms.")
+                    if not isinstance(item[0], ProcessingMechanism):
+                        return (f"the first item of a tuple or key of a dict entry must be ProcessingMechanism.")
+                    if not (isinstance(item[1], ProcessingMechanism) or item[1] == TARGET):
+                        return (f"the second item of a tuple or value of a dict entry must be "
+                                f"a ProcessingMechanism or the keyword 'TARGET'.")
                     return None
             else:
                 return (f"must be a LossMechanism, list of them, "
                         f"or a tuple or dict containing pairs of student, teacher nodes.")
-
-        def _parse_targets(self, spec):
-            """Parse targets argument to standardize into list of LossMechanisms or tuples specifying them.
-            """
-            if isinstance(spec, (LossMechanism, tuple, dict)):
-                spec = convert_to_list(spec)
-            return spec
 
         def _parse_LearningScale_param(self, value):
             try:
@@ -869,9 +870,7 @@ class AutodiffComposition(Composition):
             return self._validate_LearningScale_param(spec)
 
         def _validate_synch_results_with_torch(self, spec):
-            return self._validate_LearningScale_param(
-                spec, {LearningScale.OPTIMIZATION_STEP}
-            )
+            return self._validate_LearningScale_param(spec, {LearningScale.OPTIMIZATION_STEP})
 
         def _validate_retain_torch_trained_outputs(self, spec):
             return self._validate_LearningScale_param(spec)
@@ -1235,11 +1234,33 @@ class AutodiffComposition(Composition):
 
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
-            # targets specified by user in self.targets (as LossMechanism and/or sample:target tuples):
-            loss_mech_specs = self.targets
-            target_mechs = [loss_mech.target if isinstance(loss_mech, LossMechanism) else loss_mech[1]
-                            for loss_mech in loss_mech_specs]
+            # targets specified by user in self.targets (as LossMechanism and/or list of sample:target tuples):
+            self.targets
+            # get nodes specified as TARGETs
+            loss_mech_specs = []
+            target_mechs = []
+            for loss_mech_spec in self.targets:
+                if isinstance(loss_mech_spec, LossMechanism):
+                    target_mech = loss_mech_spec.target
+                else:
+                    if isinstance(loss_mech_spec[1], ProcessingMechanism):
+                        target_mech = loss_mech_spec[1]
+                    elif loss_mech_spec[1] == TARGET:
+                        target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
+                                                                                       in loss_mech_spec[0].value],
+                                                                                      dtype=object),
+                                                          name= 'TARGET for ' + loss_mech_spec[0].name)
+                    else:
+                        assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
+                                       f"({loss_mech_spec[1]} for '{self.name}'.")
+                target_mechs.append(target_mech)
+                loss_mech_specs.append((loss_mech_spec[0], target_mech))
+
             self.add_nodes(target_mechs, context=context)
+            # # TEACHER_TARGET BREADCRUMB:
+            # loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
+            # self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
+            # self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
