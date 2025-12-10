@@ -1876,12 +1876,12 @@ class AutodiffComposition(Composition):
     def _identify_output_nodes(self, context)->list:
         """Recursively call all nested AutodiffCompositions to assign TARGET nodes for learning"""
         # Default is to use OUTPUT
-        target_nodes = [node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
-                        if not isinstance(node, Composition)]
+        output_nodes = set(node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+                           if not isinstance(node, Composition))
         for node in self.nodes:
             if isinstance(node, AutodiffComposition):
-                target_nodes.extend(node._identify_output_nodes(context))
-        return target_nodes
+                output_nodes = output_nodes.union(node._identify_output_nodes(context))
+        return output_nodes
 
     def _get_valid_weights_shape(self, projection):
         pnl_wt_matrix = projection.defaults.matrix

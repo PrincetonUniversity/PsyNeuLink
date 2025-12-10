@@ -73,6 +73,9 @@ class PytorchShowGraph(ShowGraph):
         """Override to add Loss components to graph
         Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE)
         """
+        if not self.show_pytorch:
+            return super()._make_additional_assignments(*args)
+
         assert isinstance(args[13], Context), \
             f"PROGRAM ERROR: arguments to _make_additional_assignments must have changed"
         context = args[13]
