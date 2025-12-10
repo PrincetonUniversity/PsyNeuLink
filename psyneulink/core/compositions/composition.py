@@ -10415,11 +10415,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             """
             Recursively calls update on dictionaries, which prevents deletion of keys
             """
-            for key, val in u.items():
+            for key, val in u.copy().items():
                 if isinstance(val, collections.abc.Mapping):
                     d[key] = _recursive_update(d.get(key, {}), val)
                 else:
                     d[key] = val
+
+                u.pop(key)
             return d
 
         if targets is not None:
