@@ -95,7 +95,7 @@ class PytorchShowGraph(ShowGraph):
                                                    loss_mech.sample.name,
                                                    color=self.exclude_from_gradient_calc_color,
                                                    penwidth=self.default_width,
-                                                   style=self.exclude_from_gradient_calc_color)
+                                                   style=self.exclude_from_gradient_calc_line_style)
 
     def _get_processing_graph(self, composition, context):
         """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode"""
@@ -187,8 +187,8 @@ class PytorchShowGraph(ShowGraph):
                 # Exclude PsyNeuLink Nodes in AutodiffComposition marked for exclusion from Pytorch graph
                 return
             if rcvr in self.pytorch_rep.nodes_map and self.pytorch_rep.nodes_map[rcvr].exclude_from_gradient_calc:
-                kwargs['style'] = self.exclude_from_gradient_calc_line_style
                 kwargs['color'] = self.exclude_from_gradient_calc_color
+                kwargs['style'] = self.exclude_from_gradient_calc_line_style
             # # BREADCRUMB: REPLACE BELOW WITH THIS WHEN AUTODIFF_LEARNING_COMPONENTS IS IMPLEMENTED
             # elif rcvr in self.composition.autodiff_learning_components:
             elif isinstance(rcvr, LossMechanism):
