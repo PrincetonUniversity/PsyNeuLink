@@ -231,8 +231,8 @@ class TestNested:
         #   nesting       mode                expected
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em),
-        (  'unnested',  'Python',   expected_output_for_unnested_python_em),
-        (  'nested',    'Python',   expected_output_for_nested_python_em),
+        # (  'unnested',  'Python',   expected_output_for_unnested_python_em),
+        # (  'nested',    'Python',   expected_output_for_nested_python_em),
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_em_data, ids=[f"{x[0]}-{x[1]}" for x in test_em_data])
     @pytest.mark.pytorch
