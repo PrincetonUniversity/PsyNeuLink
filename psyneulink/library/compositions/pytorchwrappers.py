@@ -1990,9 +1990,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
         output_values = [self.nodes_map[node].output for node in self.output_nodes]
-        output_values = [val.detach().cpu().numpy().copy().tolist() for val in output_values]
+        output_values = [val.detach().cpu().tolist() for val in output_values]
         # Turn into a numpy array, possibly ragged
         output_values = convert_to_np_array(output_values)
+
+        # If the sequence dimension is singleton, remove it
+        if output_values.shape[2] == 1:
+            output_values = output_values.squeeze(2)
+
+        # Squeeze out the singleton output port dimension
+        output_values = output_values.squeeze(-2)
+
         # Swap the first two dimensions (output_port, batch) to (batch, output_port)
         output_values = output_values.swapaxes(0, 1)
         self.all_output_values = output_values
