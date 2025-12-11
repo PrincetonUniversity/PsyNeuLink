@@ -1929,9 +1929,6 @@ class AutodiffComposition(Composition):
 
         return target_values_for_target_nodes
 
-
-
-
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
 
         # self.targets is from **targets** arg of AutodiffComposition constructor and targets is from learn()
