@@ -1921,11 +1921,10 @@ class AutodiffComposition(Composition):
         # Validate keys of targets dict specified in learn()
         validate_targets(targets)
 
-        # Replace keys in targets that are samples with TARGET Node
+        # Assign target values specified in learn() to TARGET Nodes
         for node, value in targets.copy().items():
-            if node not in target_mechs:
-                targets.pop(node)
-                targets[self.target_nodes_for_samples[node]] = value
+            if node in self.target_nodes_for_samples:
+                target_values_for_target_nodes[self.target_nodes_for_samples[node]] = value
 
         return target_values_for_target_nodes
 
