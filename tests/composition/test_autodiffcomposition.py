@@ -4204,10 +4204,11 @@ class TestMiscTrainingFunctionality:
         outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
         nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
         outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
-        target_mechs = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        target_mechs = outer_comp.get_target_nodes()
 
         # Execute autodiff with learning (but not weight updates yet)
-        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
+        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim,
+                                                                   target_mechs[0]: target_stim},
                                                            execution_mode=pnl.ExecutionMode.PyTorch,
                                                            )
         # Get results after learning (with weight updates)
