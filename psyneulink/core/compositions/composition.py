@@ -10325,7 +10325,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def validate_targets(target_mechs:list)->bool:
             """Validate targets dict specification:
             - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
-            - warn if any targets are target_mechs (OK, but OUTPUT_MECHANISMs are preferred
+            - warn if any targets are target_mechs (OK, but OUTPUT Node Mechanisms are preferred
             """
             num_target_mechs_in_comp = len(target_mechs)
             num_specified_targets = len(targets)
@@ -10350,38 +10350,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._warned_about_target_mechs_in_targets_arg = True
             return True
 
-        # TEACHER_TARGET BREADCRUMB:
-        #                  RE-WRITE THIS AS OVERRIDE BY AUTODIFF
-        #                SINCE COMPOSITION SHOULDN'T KNOW ABOUT PYTORCH STUFF
-        if execution_mode is pnlvm.ExecutionMode.PyTorch:
-            # Reassign target inputs from output Nodes to target mechanisms constructed for PyTorch execution
-            if validate_targets(list(self.target_nodes_for_outputs.values())):
-                target_values_for_target_nodes = targets
+        validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
+        for node, values in targets.items():
+            if (NodeRole.TARGET not in self.get_roles_by_node(node)
+                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
+                comparators = [x for x in node_efferent_mechanisms
+                               if (isinstance(x, ComparatorMechanism)
+                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+                target_nodes = [t for t in comparator_afferent_mechanisms
+                                if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+                if len(target_nodes) != 1:
+                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
+
+                target_values_for_target_nodes[target_nodes[0]] = values
             else:
-                target_values_for_target_nodes = {self.target_nodes_for_outputs[target]: value
-                                                  for target, value in targets.items()}
-
-        else:
-            validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
-            for node, values in targets.items():
-                if (NodeRole.TARGET not in self.get_roles_by_node(node)
-                        and NodeRole.LEARNING not in self.get_roles_by_node(node)):
-                    node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                    comparators = [x for x in node_efferent_mechanisms
-                                   if (isinstance(x, ComparatorMechanism)
-                                       and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                    comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                    target_nodes = [t for t in comparator_afferent_mechanisms
-                                    if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                        and NodeRole.LEARNING in self.get_roles_by_node(t))]
-
-                    if len(target_nodes) != 1:
-                        # Invalid specification: no valid target nodes or ambiguity in which target node to choose
-                        raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
-
-                    target_values_for_target_nodes[target_nodes[0]] = values
-                else:
-                    target_values_for_target_nodes[node] = values
+                target_values_for_target_nodes[node] = values
 
         return target_values_for_target_nodes
 
@@ -10415,11 +10403,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             """
             Recursively calls update on dictionaries, which prevents deletion of keys
             """
-            for key, val in u.items():
+            for key, val in u.copy().items():
                 if isinstance(val, collections.abc.Mapping):
                     d[key] = _recursive_update(d.get(key, {}), val)
                 else:
                     d[key] = val
+
+                u.pop(key)
             return d
 
         if targets is not None:

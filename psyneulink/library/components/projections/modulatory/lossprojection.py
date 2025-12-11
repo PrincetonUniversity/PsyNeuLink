@@ -37,14 +37,14 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
-from psyneulink.core.globals.keywords import INPUT_PORT, LOSS_PROJECTION, OUTPUT_PORT
+from psyneulink.core.globals.keywords import DEFAULT, INPUT_PORT, LOSS_PROJECTION, OUTPUT_PORT
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = [
     'LossProjection',
@@ -100,6 +100,32 @@ class LossProjection(ModulatoryProjection_Base):
         sender=[OUTPUT_PORT]
         receiver=[INPUT_PORT]
 
+    class Parameters(ModulatoryProjection_Base.Parameters):
+            """
+                Attributes
+                ----------
+
+                    exponent
+                        see `exponent <Projection_Base.exponent>`
+
+                        :default value: None
+                        :type:
+
+                    function
+                        see `function <Projection_Base.function>`
+
+                        :default value: `MatrixTransform`
+                        :type: `Function`
+
+                    weight
+                        see `weight <Projection_Base.weight>`
+
+                        :default value: None
+                        :type:
+            """
+            has_initializers = Parameter(None, pnl_internal=True, fallback_value=DEFAULT)
+
+
     @beartype
     def __init__(self,
                  sender: LossMechanism = None,
@@ -110,11 +136,5 @@ class LossProjection(ModulatoryProjection_Base):
         name = f'LOSS PROJECTION for {receiver.name}'
         self.sender = sender
         self.receiver = receiver
-        #
-        # super().__init__(sender=sender,
-        #                  receiver=receiver,
-        #                  function=Identity,
-        #                  name=name,
-        #                  prefs=prefs)
-
-
+        self.learnable = False
+        self.matrix = None
