@@ -1241,21 +1241,27 @@ class AutodiffComposition(Composition):
             target_mechs = []
             for loss_mech_spec in self.targets:
                 if isinstance(loss_mech_spec, LossMechanism):
+                    # specification is a LossMechanism
                     target_mech = loss_mech_spec.target
                 else:
-                    if isinstance(loss_mech_spec[1], ProcessingMechanism):
-                        target_mech = loss_mech_spec[1]
-                    elif loss_mech_spec[1] == TARGET:
-                        if any(node.name == 'TARGET for ' + loss_mech_spec[0].name for node in self.nodes):
+                    # specification is a (sample:target) tuple
+                    sample = loss_mech_spec[0]
+                    target_spec = loss_mech_spec[1]
+                    if isinstance(target_spec, ProcessingMechanism):
+                        target_mech = target_spec
+                    elif target_spec == TARGET:
+                        target_name = 'TARGET for ' + sample.name
+                        if target_name not in self.nodes.names:
+                            target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                                           for value in sample.value],
+                                                                                          dtype=object),
+                                                              name= target_name)
+                            self.target_nodes_for_outputs.update({sample: target_mech})
+                        else:
                             continue
-                        target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
-                                                                                       in loss_mech_spec[0].value],
-                                                                                      dtype=object),
-                                                          name= 'TARGET for ' + loss_mech_spec[0].name)
-                        self.target_nodes_for_outputs.update({loss_mech_spec[0]: target_mech})
                     else:
-                        assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
-                                       f"({loss_mech_spec[1]} for '{self.name}'.")
+                        assert False, (f"PROGRAM_ERROR: unrecognized target specification ({target_spec} for "
+                                       f"for '{sample.name}' in targets argument of constructor for '{self.name}'.")
                 target_mechs.append(target_mech)
                 loss_mech_specs.append((loss_mech_spec[0], target_mech))
 
@@ -1346,17 +1352,11 @@ class AutodiffComposition(Composition):
         self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
                                                    NodeRole.LEARNING_OBJECTIVE], context=context)
 
-        # TEACHER_TARGET BREADCRUMB:
-        #                  THIS DOESN'T WORK SINCE THERE IS A PROPERTY ON COMPOSITION THAT OVERRIDES IT
-        #                  NEED TO DECIDE WHAT SHOULD BE ASSIGNED TO THAT AND ADJUST TESTS ACCORDINGLY.
-        # self.learning_components.append(loss_mechs + target_mechs)
-
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
-        assert True
     # MODIFIED TEACHER_TARGET END
 
     def _add_dependency(self,
