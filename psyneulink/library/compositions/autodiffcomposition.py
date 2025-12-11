@@ -441,7 +441,8 @@ else:
 from psyneulink._typing import Iterable, Mapping, Optional
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import (
+    ProcessingMechanism, ProcessingMechanism_Base)
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -805,9 +806,9 @@ class AutodiffComposition(Composition):
                 for item in spec:
                     if not isinstance(item, (LossMechanism, tuple)):
                         return (f"must be a list of LossMechanisms or a collection of student, teacher node pairs .")
-                    if not isinstance(item[0], ProcessingMechanism):
+                    if not isinstance(item[0], ProcessingMechanism_Base):
                         return (f"the first item of a tuple or key of a dict entry must be ProcessingMechanism.")
-                    if not (isinstance(item[1], ProcessingMechanism) or item[1] == TARGET):
+                    if not (isinstance(item[1], ProcessingMechanism_Base) or item[1] == TARGET):
                         return (f"the second item of a tuple or value of a dict entry must be "
                                 f"a ProcessingMechanism or the keyword 'TARGET'.")
                     return None
@@ -1245,7 +1246,7 @@ class AutodiffComposition(Composition):
                     target_mech = loss_mech_spec.target
                 else:
                     # Internal Node specified as target
-                    if isinstance(loss_mech_spec[1], ProcessingMechanism):
+                    if isinstance(loss_mech_spec[1], ProcessingMechanism_Base):
                         target_mech = loss_mech_spec[1]
                     # External input specified for target, so construct TARGET Node
                     elif loss_mech_spec[1] == TARGET:
@@ -1256,7 +1257,7 @@ class AutodiffComposition(Composition):
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + loss_mech_spec[0].name)
                         self.target_nodes_for_samples.update({loss_mech_spec[0]: target_mech})
-                        self.add_node(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+                        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     else:
                         assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                        f"({loss_mech_spec[1]} for '{self.name}'.")
@@ -1363,9 +1364,9 @@ class AutodiffComposition(Composition):
     # MODIFIED TEACHER_TARGET END
 
     def _add_dependency(self,
-                        sender:ProcessingMechanism,
+                        sender:ProcessingMechanism_Base,
                         projection:MappingProjection,
-                        receiver:ProcessingMechanism,
+                        receiver:ProcessingMechanism_Base,
                         dependency_dict:dict,
                         queue:deque,
                         comp:Composition):
