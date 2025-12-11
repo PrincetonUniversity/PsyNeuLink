@@ -940,7 +940,7 @@ class AutodiffComposition(Composition):
 
         self._built_pathways = False
         self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
-        self.target_nodes_for_outputs = {} # {TARGET Node : OUTPUT Node (for which it is the target)}
+        self.target_nodes_for_samples = {} # {TARGET Node : OUTPUT Node (for which it is the target)}
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
@@ -1252,7 +1252,7 @@ class AutodiffComposition(Composition):
                                                                                        in loss_mech_spec[0].value],
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + loss_mech_spec[0].name)
-                        self.target_nodes_for_outputs.update({loss_mech_spec[0]: target_mech})
+                        self.target_nodes_for_samples.update({loss_mech_spec[0]: target_mech})
                     else:
                         assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                        f"({loss_mech_spec[1]} for '{self.name}'.")
@@ -1267,7 +1267,7 @@ class AutodiffComposition(Composition):
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
             # IMPLEMENTATION NOTE:
-            #    only add target nodes if *not* already present in self.target_nodes_for_outputs.values()
+            #    only add target nodes if *not* already present in self.target_nodes_for_samples.values()
             #    (to avoid duplication in multiple calls, including from command line;
             #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
             pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
@@ -1297,7 +1297,7 @@ class AutodiffComposition(Composition):
                                                           name= 'TARGET for ' + sample_mech.name)
                     target_mechs.append(target_mech)
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
-            self.target_nodes_for_outputs.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
+            self.target_nodes_for_samples.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         # Validate LossMechanism specs
@@ -1705,7 +1705,7 @@ class AutodiffComposition(Composition):
         #         output = output.squeeze(1)
         #
         #     output = output.detach().cpu().numpy().copy().tolist()
-        #     if self.target_nodes_for_outputs.values():
+        #     if self.target_nodes_for_samples.values():
         #         trained_output_values += [output]
         #     all_output_values += [output]
 
@@ -1859,9 +1859,74 @@ class AutodiffComposition(Composition):
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target in self.target_nodes_for_outputs.values():
+        for target in self.target_nodes_for_samples.values():
             target_values[target] = get_target_value(target)
         return target_values
+
+    def _map_external_target_values_to_target_nodes(self, targets: dict, execution_mode)->dict:
+        """Map target values to target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+
+        `dict`:
+            Dict mapping TargetMechanisms -> target values
+        """
+        target_values_for_target_nodes = {}
+        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
+
+        def validate_targets(targets)->bool:
+            """Validate targets dict specification:
+            - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
+            - that keys are either sample or TARGET nodes
+            - warn if keys are  Nodes  (OK, but sample Node specifiations are simpler and clearer
+            """
+            num_target_mechs_in_comp = len(target_mechs)
+            num_specified_targets = len(targets)
+            if num_specified_targets != num_target_mechs_in_comp:
+                raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
+                                       f"`targets` arg of the learn method for '{self.name}' must equal "
+                                       f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
+
+            # Check for TARGET Nodes specified as targets, rather than the nodes (samples) for which they are TARGETS
+            target_mechs_as_targets = [f"'{target.name}'" for target in targets if target in target_mechs]
+            if target_mechs_as_targets and not self._warned_about_target_mechs_in_targets_arg:
+                warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
+                              f"entries that are TARGET Node(s) ({', '.join(target_mechs_as_targets)}); while this is "
+                              f"OK, it might be easier and clearer to simply the names of the Nodes they are being "
+                              f"used to train as the keys of the dict, obviating the need to determine the TARGET "
+                              f"Node(s). Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn "
+                              f"method, along with INPUT nodes, obviating the need to specify the 'targets' arg.")
+                self._warned_about_target_mechs_in_targets_arg = True
+
+            # Check for specification of Nodes for which TARGET Nodes have not been constructed, either:
+            #   - explicitly by specifying TARGET for an entry in the **targets** arg of the constructor, or
+            #   - implicitly, if the **targets** arg of the constructor was not specified, in which case
+            #       TARGET Nodes have been constructed for all OUTPUT Nodes of the AutodiffComposition
+            bad_target_specs = [f"'{sample.name}'" for sample in targets
+                                if sample not in target_mechs and
+                                sample not in self.target_nodes_for_samples]
+            if bad_target_specs:
+                raise AutodiffCompositionError(f"The following Node(s) have been specified to receive target inputs "
+                                               f"in the learn() method of '{self.name}' that are not TARGET Nodes: "
+                                               f"{', '.join(bad_target_specs)}.")
+
+        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+            return super()._map_external_target_values_to_target_nodes(targets, execution_mode)
+
+        # Validate keys of targets dict specified in learn()
+        validate_targets(targets)
+
+        # Replace keys in targets that are samples with TARGET Node
+        for node, value in targets.copy().items():
+            if node not in target_mechs:
+                targets.pop(node)
+                targets[self.target_nodes_for_samples[node]] = value
+
+        return target_values_for_target_nodes
+
+
+
 
     def _parse_learning_spec(self, inputs, targets, execution_mode, context):
 
