@@ -1692,7 +1692,7 @@ class AutodiffComposition(Composition):
             comp_loss = pytorch_rep.nodes_map[loss_node].output
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
-            pytorch_rep.minibatch_loss += trial_loss
+        pytorch_rep.minibatch_loss = trial_loss
         pytorch_rep.minibatch_loss_count += 1
 
         # # Make sure value returned from pytorch_representation.forward() has all 5 dimensions
