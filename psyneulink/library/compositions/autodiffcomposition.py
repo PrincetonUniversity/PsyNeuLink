@@ -1681,15 +1681,6 @@ class AutodiffComposition(Composition):
         pytorch_rep.minibatch_loss = trial_loss
         pytorch_rep.minibatch_loss_count += 1
 
-        # # Make sure value returned from pytorch_representation.forward() has all 5 dimensions
-        # assert output_values.ndim == 5, (f"PROGRAM ERROR: expected output_values from pytorch_rep for '{self.name}' "
-        #                                  f"to have 5 dimensions, but it has {output_values.ndim}.")
-        # # Get rid of batch, sequence and trial dimensions in pytorch_rep, to return just 2d array
-        # #   (node and port dimensions) of values to be stored for this trial in Composition.results
-
-        # Get rid of outer dimensions in output_values array returned by pytorch_rep
-        #   except node and port values (2d array) for this trial to be stored in Composition.results
-        output_values = output_values.reshape(output_values.shape[0], -1)
         return output_values
 
     def clear_losses(self, context=None):
