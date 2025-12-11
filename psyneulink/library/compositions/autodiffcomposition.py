@@ -1240,11 +1240,14 @@ class AutodiffComposition(Composition):
             loss_mech_specs = []
             target_mechs = []
             for loss_mech_spec in self.targets:
+                # Target in LossMechanism specification
                 if isinstance(loss_mech_spec, LossMechanism):
                     target_mech = loss_mech_spec.target
                 else:
+                    # Internal Node specified as target
                     if isinstance(loss_mech_spec[1], ProcessingMechanism):
                         target_mech = loss_mech_spec[1]
+                    # External input specified for target, so construct TARGET Node
                     elif loss_mech_spec[1] == TARGET:
                         if any(node.name == 'TARGET for ' + loss_mech_spec[0].name for node in self.nodes):
                             continue
@@ -1253,6 +1256,7 @@ class AutodiffComposition(Composition):
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + loss_mech_spec[0].name)
                         self.target_nodes_for_samples.update({loss_mech_spec[0]: target_mech})
+                        self.add_node(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     else:
                         assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                        f"({loss_mech_spec[1]} for '{self.name}'.")
@@ -1262,7 +1266,6 @@ class AutodiffComposition(Composition):
             # self.add_nodes(target_mechs, context=context)
             # # TEACHER_TARGET BREADCRUMB:
             # loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
-            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         else:
             # No targets specified by user, so construct TARGET Node for external targets specified in learn():
