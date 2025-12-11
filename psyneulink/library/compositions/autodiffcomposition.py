@@ -1560,31 +1560,17 @@ class AutodiffComposition(Composition):
 
         # --------- Get current values of nodes  -------------------------------------------------
 
-        #   should return 2d values for each component
-
-        # Get value of INPUT nodes for current trial
-        curr_tensors_for_inputs = {}
-        for component in inputs.keys():
-            if not isinstance(inputs[component], torch.Tensor):
-                curr_tensors_for_inputs[component] = torch.tensor(inputs[component], device=self.device).double()
+        # We need to pass both inputs and targets to the forward method in one dict, convert any numpy arrays to torch
+        # tensors
+        inputs_and_targets = {**inputs, **targets}
+        for component, val in list(inputs_and_targets.items()):
+            if isinstance(val, torch.Tensor):
+                inputs_and_targets[component] = val.to(device=self.device, dtype=torch.double)
             else:
-                curr_tensors_for_inputs[component] = inputs[component]
-
-        curr_tensors_for_targets = {}
-        for component, target in targets.items():
-            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
-            else:
-                # It's  a list, of lists, of torch tensors because it is ragged
-                num_outputs = len(target[0][0])
-                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
-
-        curr_tensors_inputs_and_targets = {}
-        curr_tensors_inputs_and_targets.update(curr_tensors_for_inputs)
-        curr_tensors_inputs_and_targets.update(curr_tensors_for_targets)
+                inputs_and_targets[component] = torch.tensor(val, device=self.device, dtype=torch.double)
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        output_values = pytorch_rep.forward(inputs=curr_tensors_inputs_and_targets,
+        output_values = pytorch_rep.forward(inputs=inputs_and_targets,
                                             optimization_num=optimization_num,
                                             synch_with_pnl_options=synch_with_pnl_options,
                                             retain_in_pnl_options=retain_in_pnl_options,
