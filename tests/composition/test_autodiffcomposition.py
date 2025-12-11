@@ -4973,7 +4973,7 @@ class TestACLogging:
                                              # Note: no need to specify synch_node_values_with_torch, since default=RUN
                                              synch_node_variables_with_torch=pnl.RUN)
         outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        targets = outer_comp.get_target(nodes)
+        targets = outer_comp.get_target_nodes()
         result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
                                           targets[0]: [[1,1,1,1,1]]},
                                   execution_mode=pnl.ExecutionMode.PyTorch)
