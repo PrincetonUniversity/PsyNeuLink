@@ -37,7 +37,7 @@ from beartype import beartype
 
 from psyneulink._typing import Optional
 
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -129,7 +129,7 @@ class LossProjection(ModulatoryProjection_Base):
     @beartype
     def __init__(self,
                  sender: LossMechanism = None,
-                 receiver: ProcessingMechanism = None,
+                 receiver: ProcessingMechanism_Base = None,
                  name=None,
                  prefs: Optional[ValidPrefSet] = None):
 
