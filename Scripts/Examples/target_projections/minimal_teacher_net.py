@@ -39,6 +39,16 @@ RUN_TORCH = True
 RUN_PNL = True
 SHOW_PNL = True
 
+torch.set_default_dtype(torch.float64)
+
+
+def set_random_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.mps.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
 
 #######################
 # *** TORCH MODEL *** #
@@ -148,7 +158,8 @@ def gen_teacher_student_model(
             pw_inputs_teacher,
         ],
         targets=[(student, teacher)],
-        learning_rate=LEARNING_RATE,
+        loss_spec=pnl.Loss.MSE
+
     )
     return comp, inputs
 
@@ -172,6 +183,7 @@ def get_pnl_matrices(model):
 ######################
 def run(seed=None):
     # Setup
+    set_random_seed(seed)
 
     # get random DIM x DIM teacher matrix
     teacher_matrix = torch.randn(DIM, DIM)
@@ -216,7 +228,8 @@ def run(seed=None):
     # ** Run the Models ** #
     ########################
     if RUN_TORCH:
-        torch.manual_seed(seed)
+        set_random_seed(seed)
+
         optimizer = torch.optim.SGD(model_t.parameters(), lr=LEARNING_RATE)
         loss_fn = nn.MSELoss()
         for t in train:
@@ -228,41 +241,38 @@ def run(seed=None):
             loss.backward()
             optimizer.step()
 
-        after_student_torch = model_t.student.weight.detach().numpy()
-        after_outputs_torch = model_t.outputs.weight.detach().numpy()
-        after_teacher_torch = model_t.teacher.weight.detach().numpy()
+        after_student_torch = model_t.student.weight.detach().clone().numpy()
+        after_outputs_torch = model_t.outputs.weight.detach().clone().numpy()
+        after_teacher_torch = model_t.teacher.weight.detach().clone().numpy()
 
         # Inputs -> Student should change if Learning rate is > 0.
         if LEARNING_RATE > 0.0:
             assert not np.allclose(
                 after_student_torch,
-                orig_student_torch, ), "[TORCH] Student matrix did not change"
+                orig_student_torch, atol=0.0), "[TORCH] Student matrix did not change"
 
         # Student -> outputs must not change
         assert np.allclose(
             after_outputs_torch,
             orig_outputs_torch,
-            atol=0.0
-        ), "[TORCH] Output matrix changed!"
+            atol=0.0), "[TORCH] Output matrix changed!"
 
         # Inputs -> Teacher must not change
         assert np.allclose(
             after_teacher_torch,
             orig_teacher_torch,
-            atol=0.0
-        ), "[TORCH] Teacher matrix changed!"
+            atol=0.0), "[TORCH] Teacher matrix changed!"
 
         student_, teacher_, out_torch = model_t(test_targets)
 
     if RUN_PNL:
-        torch.manual_seed(seed)
+        set_random_seed(seed)
         if SHOW_PNL:
             model_pnl.show_graph(show_pytorch=True)
 
         n = 0
         for t in train:
-            n += 1
-            model_pnl.learn(inputs={inputs: np.array([t])},
+            model_pnl.learn(inputs={inputs: np.array(t)},
                             execution_mode=pnl.ExecutionMode.PyTorch
                             )
 
