@@ -186,13 +186,16 @@ def run(seed=None):
     set_random_seed(seed)
 
     # get random DIM x DIM teacher matrix
-    teacher_matrix = torch.randn(DIM, DIM)
+    # teacher_matrix = torch.randn(DIM, DIM)
+    teacher_matrix = torch.eye(DIM)
 
     # get random training data
-    train = torch.rand(TRAINING_EXAMPLES, 3)
+    # train = torch.rand(TRAINING_EXAMPLES, 3)
+    train = torch.tensor(np.arange(DIM))
 
     test_targets = torch.rand(5, 3)
-    out_torch = None
+    # test_targets = torch.eye(5,3)
+    # out_torch = None
     out_pnl = None
     ######################################
     # ** Initialization of the Models ** #
@@ -275,6 +278,7 @@ def run(seed=None):
             model_pnl.learn(inputs={inputs: np.array(t)},
                             execution_mode=pnl.ExecutionMode.PyTorch
                             )
+            assert True
 
         after_student_pnl, after_outputs_pnl, after_teacher_pnl = get_pnl_matrices(model_pnl)
         # Test matrices that shouldn't change

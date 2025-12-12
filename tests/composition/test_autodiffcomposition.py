@@ -4204,10 +4204,11 @@ class TestMiscTrainingFunctionality:
         outer_comp.set_weights(outer_comp.projections[0], torch_input_initial_weights)
         nested_comp.set_weights(nested_proj, torch_hidden_initial_weights)
         outer_comp.set_weights(outer_comp.projections[1], torch_output_initial_weights)
-        target_mechs = outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
+        target_mechs = outer_comp.get_target_nodes()
 
         # Execute autodiff with learning (but not weight updates yet)
-        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim, target_mechs[0]: target_stim},
+        autodiff_result_before_learning = outer_comp.learn(inputs={input_mech:input_stim,
+                                                                   target_mechs[0]: target_stim},
                                                            execution_mode=pnl.ExecutionMode.PyTorch,
                                                            )
         # Get results after learning (with weight updates)
@@ -4973,7 +4974,7 @@ class TestACLogging:
                                              # Note: no need to specify synch_node_values_with_torch, since default=RUN
                                              synch_node_variables_with_torch=pnl.RUN)
         outer_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        targets = outer_comp.get_target(nodes)
+        targets = outer_comp.get_target_nodes()
         result = outer_comp.learn(inputs={outer_mech_in:[[1,2,3,4]],
                                           targets[0]: [[1,1,1,1,1]]},
                                   execution_mode=pnl.ExecutionMode.PyTorch)

@@ -459,12 +459,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              device=device,
                                                                              outer_creator=self,
                                                                              context=context)
-            # Wrap Mechanism # BREADCRUMB:  REPLACE WITH METHOD ON Mechanism THAT SPECIFIES ITS pytorch_mechanism_wrapper_type
+            # Wrap Mechanism
             else:
-                # if isinstance(node, LossMechanism):
-                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
-                # else:
-                #     pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
                 pytorch_node_wrapper = (
                     pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
@@ -474,8 +470,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         dtype=self.torch_dtype,
                         device=device,
                         context=context))
-                # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
-                #                             for input_port in node.input_ports)
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
             _node_wrapper_pairs.append((node, pytorch_node_wrapper))
 
@@ -1977,6 +1971,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
+                    # # TEACHER_TARGET BREACRUMB:
+                    print(f"{node.mechanism.name} executed: {node.output}")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
@@ -1990,9 +1986,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
         output_values = [self.nodes_map[node].output for node in self.output_nodes]
-        output_values = [val.detach().cpu().numpy().copy().tolist() for val in output_values]
+        output_values = [val.detach().cpu().tolist() for val in output_values]
         # Turn into a numpy array, possibly ragged
         output_values = convert_to_np_array(output_values)
+
+        # If the sequence dimension is singleton, remove it
+        if output_values.shape[2] == 1:
+            output_values = output_values.squeeze(2)
+
+        # Squeeze out the singleton output port dimension
+        output_values = output_values.squeeze(-2)
+
         # Swap the first two dimensions (output_port, batch) to (batch, output_port)
         output_values = output_values.swapaxes(0, 1)
         self.all_output_values = output_values
