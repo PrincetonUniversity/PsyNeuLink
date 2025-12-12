@@ -1496,6 +1496,11 @@ class LossFunction(ObjectiveFunction):
         #     result = np.sum([product, offset], axis=0)
         return self.convert_output_type(result)
 
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+        # BREADCRUMB:  FOR SAMYAK TO FLESH OUT
+        pass
+
+
     def _gen_pytorch_fct(self, device, context=None):
 
         import torch
