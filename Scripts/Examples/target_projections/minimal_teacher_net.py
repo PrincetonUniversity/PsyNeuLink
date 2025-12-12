@@ -186,12 +186,12 @@ def run(seed=None):
     set_random_seed(seed)
 
     # get random DIM x DIM teacher matrix
-    # teacher_matrix = torch.randn(DIM, DIM)
-    teacher_matrix = torch.eye(DIM)
+    teacher_matrix = torch.randn(DIM, DIM)
+    # teacher_matrix = torch.eye(DIM)
 
     # get random training data
-    # train = torch.rand(TRAINING_EXAMPLES, 3)
-    train = torch.tensor(np.arange(DIM))
+    train = torch.rand(TRAINING_EXAMPLES, 3)
+    # train = torch.tensor(np.arange(DIM))
 
     test_targets = torch.rand(5, 3)
     # test_targets = torch.eye(5,3)
