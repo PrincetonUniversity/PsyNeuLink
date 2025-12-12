@@ -1015,7 +1015,8 @@ class AutodiffComposition(Composition):
         TEACHER_TARGET BREADCRUMB:
         Returns list of any TARGET nodes that need to be referenced in inputs argument of learn()
         """
-
+        context = context or Context()
+        base_context = base_context or Context()
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
         pathways = self._get_pytorch_backprop_pathways(context)
@@ -1571,9 +1572,11 @@ class AutodiffComposition(Composition):
         pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
         return optimizer
 
-    def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch):
+    def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch,
+                         context=None, base_context=None):
         """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
-        self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
+        self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
+                                                     context=context, base_context=base_context)
         return super(AutodiffComposition, self).get_target_nodes()
 
     def autodiff_forward(self,

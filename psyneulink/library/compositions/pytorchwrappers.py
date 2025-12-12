@@ -1972,7 +1972,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
                     # # TEACHER_TARGET BREACRUMB:
-                    # print(f"{node.mechanism.name} executed: {node.output}")
+                    print(f"{node.mechanism.name} executed: {node.output}")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:
