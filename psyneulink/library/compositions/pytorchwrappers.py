@@ -459,12 +459,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              device=device,
                                                                              outer_creator=self,
                                                                              context=context)
-            # Wrap Mechanism # BREADCRUMB:  REPLACE WITH METHOD ON Mechanism THAT SPECIFIES ITS pytorch_mechanism_wrapper_type
+            # Wrap Mechanism
             else:
-                # if isinstance(node, LossMechanism):
-                #     pytorch_mechanism_wrapper_type = PytorchLossMechanismWrapper
-                # else:
-                #     pytorch_mechanism_wrapper_type = self.composition.pytorch_mechanism_wrapper_type
                 pytorch_node_wrapper = (
                     pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
@@ -474,8 +470,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         dtype=self.torch_dtype,
                         device=device,
                         context=context))
-                # pytorch_node._is_bias = all(input_port.default_input == DEFAULT_VARIABLE
-                #                             for input_port in node.input_ports)
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
             _node_wrapper_pairs.append((node, pytorch_node_wrapper))
 
