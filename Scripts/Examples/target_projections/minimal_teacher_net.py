@@ -273,7 +273,6 @@ def run(seed=None):
         if SHOW_PNL:
             model_pnl.show_graph(show_pytorch=True)
 
-        n = 0
         for t in train:
             model_pnl.learn(inputs={inputs: np.array(t)},
                             execution_mode=pnl.ExecutionMode.PyTorch
