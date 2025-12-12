@@ -992,7 +992,7 @@ class AutodiffComposition(Composition):
             self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @handle_external_context()
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None)->list:
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
         """Create backpropagation learning pathways for every Input Node --> Output Node pathway
         Pathways are constructed in _get_pytorch_backprop_pathways()
             Flattens nested compositions:
@@ -1022,7 +1022,7 @@ class AutodiffComposition(Composition):
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
-            self._instantiate_loss_components(pathways, context)
+            self._instantiate_loss_components(pathways, context, base_context)
 
         else:
         # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
@@ -1193,7 +1193,7 @@ class AutodiffComposition(Composition):
         return pathways
 
     # MODIFIED TEACHER_TARGET: NEW
-    def _instantiate_loss_components(self, pathways, context) ->dict:
+    def _instantiate_loss_components(self, pathways, context, base_context) ->dict:
         """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
 
         TEACHER_TARGET BREADCRUMB:
@@ -1256,6 +1256,7 @@ class AutodiffComposition(Composition):
                                                                                        in loss_mech_spec[0].value],
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + loss_mech_spec[0].name)
+                        target_mech._initialize_from_context(context, base_context, override=False)
                         self.target_nodes_for_samples.update({loss_mech_spec[0]: target_mech})
                         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     else:
@@ -1299,6 +1300,7 @@ class AutodiffComposition(Composition):
                                                                                        for value in sample_mech.value],
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + sample_mech.name)
+                        target_mech._initialize_from_context(context, base_context, override=False)
                     target_mechs.append(target_mech)
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_samples.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
@@ -1338,6 +1340,7 @@ class AutodiffComposition(Composition):
                                               target=target,
                                               function=None,
                                               loss=self.loss_spec)
+                    loss_mech._initialize_from_context(context, base_context, override=False)
                     # TEACHER_TARGET BREADCRUMB:
                     #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
                     self.loss_mechs_map[loss_mech] = (sample, target)
@@ -1438,7 +1441,7 @@ class AutodiffComposition(Composition):
         #             BEFORE THE pytorch_representation IS CONSTRUCTED;
         #             NOT SURE IF THAT IS OK IN GENERAL
         from psyneulink.core.llvm import ExecutionMode
-        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch)
+        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch, base_context=base_context)
         # MODIFIED TEACHER_TARGET END
 
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
@@ -2085,7 +2088,7 @@ class AutodiffComposition(Composition):
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
         if self._built_pathways is False:
-            self.infer_backpropagation_learning_pathways(execution_mode, context=context)
+            self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
             self._built_pathways = True
 
         synch_with_pnl_options, retain_in_pnl_options = self.parse_synch_and_retain_args(
