@@ -1231,7 +1231,7 @@ class AutodiffComposition(Composition):
         # TEACHER_TARGET BREADCRUMB:  CHECK THAT ANY SPECIFIED LossMechanisms ARE NOT FOR A NESTED COMP;
         #                             IF SO, DEAL WITH IT OR RAISE ERROR
 
-        context = Context(source=ContextFlags.METHOD)
+        context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
 
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
@@ -1441,7 +1441,9 @@ class AutodiffComposition(Composition):
         #             BEFORE THE pytorch_representation IS CONSTRUCTED;
         #             NOT SURE IF THAT IS OK IN GENERAL
         from psyneulink.core.llvm import ExecutionMode
-        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch, base_context=base_context)
+        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
+                                                     context=context,
+                                                     base_context=base_context)
         # MODIFIED TEACHER_TARGET END
 
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
