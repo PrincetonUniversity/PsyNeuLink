@@ -40,7 +40,7 @@ jobs:
         echo "wheel=$(ls *.whl)" >> $GITHUB_OUTPUT
 
     - name: Upload Python dist files
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: psyneulink-${{ github.ref_name }}-dist
         path: dist/
@@ -129,7 +129,7 @@ jobs:
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.dist }}
         path: tests_out.xml

@@ -108,7 +108,7 @@ jobs:
       run: git tag -d 'v0.0.0.0'
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}
         retention-days: 1
@@ -122,7 +122,7 @@ jobs:
     - name: Upload PR number for other workflows
       # The 'base' variant runs only on pull requests and has only one job
       if: ${{ matrix.pnl-version == 'base' }}
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
           name: pr_number
           path: ./pr_number.txt

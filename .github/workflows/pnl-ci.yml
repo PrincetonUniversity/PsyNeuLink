@@ -196,7 +196,7 @@ jobs:
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n logical --capture=sys -o console_output_style=count ${{ matrix.extra-args }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.version-restrict }}
         path: tests_out.xml
@@ -223,7 +223,7 @@ jobs:
         fi
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: matrix.version-restrict == ''
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}
