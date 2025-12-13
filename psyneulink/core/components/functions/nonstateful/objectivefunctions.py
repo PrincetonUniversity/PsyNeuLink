@@ -1476,7 +1476,7 @@ class LossFunction(ObjectiveFunction):
                         return np.array(0)
                 return [0]
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
-        
+
         if normalize:
             result /= len(sample)
 
@@ -1497,8 +1497,61 @@ class LossFunction(ObjectiveFunction):
         return self.convert_output_type(result)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
-        # BREADCRUMB:  FOR SAMYAK TO FLESH OUT
-        pass
+        # 1. Get pointer to the LOSS parameter state
+        # FIXME: we currently don't have a way to compare strings in llvm, so we can't match on loss type.
+        loss_ty_ptr = ctx.get_param_or_state_ptr(builder, self, "loss", param_struct_ptr=params)
+        normalize_ptr = ctx.get_param_or_state_ptr(builder, self, "normalize", param_struct_ptr=params)
+        metric_ptr = ctx.get_param_or_state_ptr(builder, self, "metric", param_struct_ptr=params)
+
+        # 2. Get pointers to Network Output (Index 0) and Target (Index 1)
+        # arg_in type: [2 x [1 x double]]*
+        # We GEP indices: [dereference pointer, outer array index]
+        zero = ctx.int32_ty(0)
+        one = ctx.int32_ty(1)
+
+        # input_ptr and target_ptr will be of type [1 x double]*
+        input_ptr = builder.gep(arg_in, [zero, zero], name="input_array_ptr")
+        target_ptr = builder.gep(arg_in, [zero, one], name="target_array_ptr")
+
+        # 3. Determine dimensionality from the struct type
+        # arg_in.type.pointee.element is [1 x double]
+        dim_int = input_ptr.type.pointee.count
+        dim = ctx.int32_ty(dim_int)
+
+        # 4. Initialize Sum Accumulator
+        sum_ptr = builder.alloca(ctx.float_ty, name="mse_accumulator")
+        builder.store(ctx.float_ty(0.0), sum_ptr)
+
+        # 5. Loop over dimensions to calculate Sum((Input - Target)^2)
+        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_loop") as (b, idx):
+            # GEP indices: [dereference pointer, array index]
+            val_ptr = b.gep(input_ptr, [zero, idx])
+            tgt_ptr = b.gep(target_ptr, [zero, idx])
+
+            val = b.load(val_ptr)
+            tgt = b.load(tgt_ptr)
+
+            diff = b.fsub(val, tgt)
+            sq_diff = b.fmul(diff, diff)
+
+            # Accumulate
+            current_sum = b.load(sum_ptr)
+            b.store(b.fadd(current_sum, sq_diff), sum_ptr)
+
+        # 6. Calculate MSE: Sum / Dimension
+        total_sum = builder.load(sum_ptr)
+        # Convert integer dimension to float for division
+        dim_float = builder.uitofp(dim, ctx.float_ty)
+        mse_result = builder.fdiv(total_sum, dim_float, name="mse_result")
+
+
+        # 8. Store result in arg_out
+        # arg_out type: [1 x [1 x double]]*
+        # We need to store result at [0, 0, 0]
+        output_storage = builder.gep(arg_out, [zero, zero, zero], name="output_storage")
+        builder.store(mse_result, output_storage)
+        return builder
+
 
 
     def _gen_pytorch_fct(self, device, context=None):
