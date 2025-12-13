@@ -1942,6 +1942,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         # Node is not INPUT to Composition or BIAS, so get all input from its afferents
                         variable = node.collect_afferents(batch_size=self._batch_size, inputs=inputs_to_run)
                     variable = node.execute_input_ports(variable)
+                    # DEBUGGING BREAKPOINT: INPUTS TO NODE
+                    assert True
 
                     # Node is excluded from gradient calculations, so cache for later execution
                     if node.exclude_from_gradient_calc:
@@ -1961,17 +1963,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
+                    # TEACHER_TARGET BREACRUMB:
+                    print(f"\n{node.mechanism.name} input: {variable}")
                     node.execute(variable=variable,
                                  optimization_num=optimization_num,
                                  synch_with_pnl_options=synch_with_pnl_options,
                                  sequence_lengths=sequence_lengths,
                                  context=context)
+                    # DEBUGGING BREAKPOINT: NODE EXECUTED
+                    assert True
 
                     # Add entry to outputs dict for OUTPUT Nodes of pytorch representation
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
-                    # # TEACHER_TARGET BREACRUMB:
+                    # TEACHER_TARGET BREACRUMB:
                     print(f"{node.mechanism.name} executed: {node.output}")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps

@@ -76,6 +76,7 @@ class TeacherStudentNet(nn.Module):
             student_output_matrix = torch.eye(DIM)
 
         with torch.no_grad():
+            print(f"Pytorch STUDENT input weights: {teacher_matrix}")
             self.teacher.weight.copy_(teacher_matrix)
             self.student.weight.copy_(student_matrix)
             self.outputs.weight.copy_(student_output_matrix)
@@ -145,7 +146,7 @@ def gen_teacher_student_model(
         pnl.MappingProjection(
             inputs, teacher,
             name='inputs_teacher',
-            matrix=np.array(teacher_matrix), learnable=False
+            learnable=False,
         ),
         teacher
     ]
@@ -200,6 +201,7 @@ def run(seed=None):
     ######################################
     # ** Initialization of the Models ** #
     ######################################
+
     if RUN_TORCH:
         model_t = TeacherStudentNet(teacher_matrix=teacher_matrix)
 
@@ -209,11 +211,16 @@ def run(seed=None):
 
     if RUN_PNL:
         model_pnl, inputs = gen_teacher_student_model(teacher_matrix=teacher_matrix)
+        torch_teacher_weights = model_t.state_dict()['teacher.weight']
+        pnl_teacher_projection = model_pnl.projections['inputs_teacher']
+        model_pnl.copy_torch_param_to_projection_matrix(pnl_teacher_projection, torch_teacher_weights)
+
         model_pnl._build_pytorch_representation()
 
         orig_student_pnl, orig_outputs_pnl, orig_teacher_pnl = get_pnl_matrices(model_pnl)
 
     if RUN_TORCH and RUN_PNL:
+
         # assert matrices in pnl and torch are the same
         assert np.allclose(
             orig_student_torch,
@@ -224,8 +231,8 @@ def run(seed=None):
             orig_outputs_pnl, atol=1e-24), '[TORCH != PNL] Initial output matrices are not the same'
 
         assert np.allclose(
-            orig_teacher_torch,
-            orig_teacher_pnl, atol=1e-24), '[TORCH != PNL] Initial teacher matrces are not the same'
+            orig_teacher_torch.T,
+            orig_teacher_pnl, atol=1e-24), '[TORCH != PNL] Initial teacher matrices are not the same'
 
     ########################
     # ** Run the Models ** #
@@ -323,14 +330,14 @@ def run(seed=None):
 
         assert np.allclose(
             after_teacher_pnl,
-            after_teacher_torch,
+            after_teacher_torch.T,
         ), f'[TORCH != PNL] Teacher not the same anymore'
         assert np.allclose(
             after_outputs_torch,
             after_outputs_pnl,
         ), f'[TORCH != PNL] Outputs not the same anymore'
         assert np.allclose(after_student_torch,
-                           after_student_pnl,
+                           after_student_pnl.T,
                            ), f'[TORCH != PNL] Student Matrices are not the same\n{after_student_torch} !=\n{after_student_pnl}'
         for res in zip(out_torch, out_pnl):
             tr = np.array(res[0].detach(), dtype=float)
