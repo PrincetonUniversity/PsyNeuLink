@@ -2188,6 +2188,7 @@ def _setup_rand_binomial(ctx, state_ty, gen_float, prefix):
 def get_philox_state_struct(ctx):
     int64_ty = ir.IntType(64)
     int16_ty = ir.IntType(16)
+
     return ir.LiteralStructType([
         ir.ArrayType(int64_ty, 4),  # counter
         ir.ArrayType(int64_ty, 2),  # key
@@ -2195,7 +2196,12 @@ def get_philox_state_struct(ctx):
         ctx.int32_ty,  #  the other half of random 64 bit int
         int16_ty,      #  buffer pos
         int16_ty,      #  has uint buffered
-        int64_ty])     #  seed
+        int64_ty],     #  seed
+
+        # Apply 'packed' if floating point numbers use only 32b/4B. This leads
+        # to most structures having only 4B alignment that might conflict with
+        # int64 types used above.
+        packed=(ctx.float_ty == ir.FloatType()))
 
 
 def setup_philox(ctx):
