@@ -438,7 +438,7 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchshowgraph import PytorchShowGraph
 
-from psyneulink._typing import Iterable, Mapping, Optional
+from psyneulink._typing import Iterable, Mapping, Optional, Literal
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import (
@@ -463,6 +463,7 @@ from psyneulink.core.globals.keywords import (
     AUTODIFF_COMPOSITION,
     DEFAULT,
     DEFAULT_LEARNING_RATE,
+    ERROR,
     EXECUTION_MODE,
     LEARNING_RATE,
     Loss,
@@ -480,9 +481,10 @@ from psyneulink.core.globals.keywords import (
     TARGET,
     TARGETS,
     TRAINED_OUTPUTS,
+    WARNING
 )
 from psyneulink.core.globals.utilities import (
-    is_matrix_keyword, is_numeric_scalar, convert_to_list, convert_to_np_array, deprecation_warning)
+    is_identity_matrix, is_matrix_keyword, is_numeric_scalar, convert_to_list, convert_to_np_array, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -1193,11 +1195,18 @@ class AutodiffComposition(Composition):
 
         return pathways
 
-    # MODIFIED TEACHER_TARGET: NEW
+    def _mech_in_learnable_pathway(self, mech: ProcessingMechanism_Base) -> bool:
+        """Return True if `mech` receives a Project from any pathway that has at least one learnable Projection"""
+        for afferent in mech.path_afferents:
+            if afferent.learnable:
+                return True
+            return self._mech_in_learnable_pathway(afferent.sender.owner)
+        return False
+
     def _instantiate_loss_components(self, pathways, context, base_context) ->dict:
         """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
 
-        TEACHER_TARGET BREADCRUMB:
+        TEACHER_TARGET BREADCRUMB CLEANUP:
           ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
           FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
           IF NOT, WHERE IS IT POPULATED?
@@ -1233,45 +1242,80 @@ class AutodiffComposition(Composition):
         #                             IF SO, DEAL WITH IT OR RAISE ERROR
 
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
+        constructed_target_mechs = []
+
+        def assert_sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
+                                        action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
+            """Take specified action if no afferent pathway for sample has any learnable Projections.
+            If no action is specified, return True or False"""
+            if self._mech_in_learnable_pathway(sample):
+                return True
+            # Construct relevant error/warning message
+            if target:
+                if isinstance(target, LossMechanism):
+                    target_msg = f"LossMechanism ('{loss_mech.name}')"
+                elif target in constructed_target_mechs:
+                    target_msg = "TARGET input"
+                else:
+                    target_msg = f"TARGET node ('{target.name}')"
+                error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
+                             f"learning that is in a pathway without any learnable Projections.")
+            # Take specified action
+            if action is ERROR:
+                raise AutodiffCompositionError(error_msg)
+            elif action is WARNING:
+                warnings.warn(error_msg)
+            return False
 
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
-            # targets specified by user in self.targets (as LossMechanism and/or list of sample:target tuples):
-            self.targets
-            # get nodes specified as TARGETs
+            # targets specified by user in **targets** argument of AutodiffComposition constructor,
+            #   either as LossMechanism, (sample:target) tuple, or list containing either
+            # Get TARGET specs; can be Node or TARGET keyword requiring construction of TARGET Node (below)
             loss_mech_specs = []
             target_mechs = []
             for loss_mech_spec in self.targets:
-                # Target in LossMechanism specification
                 if isinstance(loss_mech_spec, LossMechanism):
+                    sample_mech = loss_mech_spec.sample
                     target_mech = loss_mech_spec.target
-                else:
-                    # Internal Node specified as target
-                    if isinstance(loss_mech_spec[1], ProcessingMechanism_Base):
-                        target_mech = loss_mech_spec[1]
-                    # External input specified for target, so construct TARGET Node
-                    elif loss_mech_spec[1] == TARGET:
-                        if any(node.name == 'TARGET for ' + loss_mech_spec[0].name for node in self.nodes):
+                    # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
+                    #   then raise error, as executing its LossFunction in pytorch will cause a crash
+                    assert_sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech, ERROR)
+                elif isinstance(loss_mech_spec, tuple):
+                    sample_mech, target_spec = loss_mech_spec
+                    # If specified sample Mechanism is not in a pathway with at least one learnable Projection
+                    #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
+                    #   loss in pytorch will cause a crash
+                    assert_sample_is_in_learnable_pathway(sample_mech, target_spec, loss_mech=None, action=ERROR)
+                    # Determine whether target is internal node or TARGET keyword
+                    if isinstance(target_spec, ProcessingMechanism_Base):
+                        # target is internal Node
+                        target_mech = target_spec
+                    elif target_spec == TARGET:
+                        # target is TARGET keyword, so construct TARGET Node
+                        if any(node.name == 'TARGET for ' + sample_mech.name for node in self.nodes):
                             continue
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
-                                                                                       in loss_mech_spec[0].value],
+                                                                                       in sample_mech.value],
                                                                                       dtype=object),
-                                                          name= 'TARGET for ' + loss_mech_spec[0].name)
+                                                          name= 'TARGET for ' + sample_mech.name)
                         target_mech._initialize_from_context(context, base_context, override=False)
-                        self.target_nodes_for_samples.update({loss_mech_spec[0]: target_mech})
+                        self.target_nodes_for_samples.update({sample_mech: target_mech})
                         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+                        constructed_target_mechs.append(target_mech)
                     else:
                         assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
                                        f"({loss_mech_spec[1]} for '{self.name}'.")
+                else:
+                    assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
+                                   f"({loss_mech_spec} for '{self.name}'.")
+
                 target_mechs.append(target_mech)
                 loss_mech_specs.append((loss_mech_spec[0], target_mech))
 
-            # self.add_nodes(target_mechs, context=context)
-            # # TEACHER_TARGET BREADCRUMB:
-            # loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
-
         else:
-            # No targets specified by user, so construct TARGET Node for external targets specified in learn():
+
+            # No targets specified by user, so construct TARGET Node for all OUTPUT Nodes of the AutodiffComposition
             # IMPLEMENTATION NOTE:
             #    only add target nodes if *not* already present in self.target_nodes_for_samples.values()
             #    (to avoid duplication in multiple calls, including from command line;
@@ -1281,15 +1325,21 @@ class AutodiffComposition(Composition):
             sample_mechs_for_learning = [node for node in identified_output_nodes if node in pathway_terminal_nodes]
             target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
             for sample_mech in sample_mechs_for_learning:
+
+                # TEACHER_TARGET BREADCRUMB:  ?? ONLY PASS FOR output_CIMs??
+                if not assert_sample_is_in_learnable_pathway(sample_mech):
+                    continue
                 # Check for existing TARGET Nodes
                 existing_sample_mechs = [sample for sample, target in  self.loss_mechs_map.values()]
                # Get or construct TARGET Node if none exists for SAMPLE Node
                 if sample_mech not in existing_sample_mechs:
                     # Check that TARGET Node doesn't already exist for SAMPLE Node
                     #    (may have been created for PNL in call to add_backpropagation_learning_pathway)
+                    # MODIFIED TEACHER_TARGET OLD:
                     existing_comparators = [mech for mech in self.nodes if
                                             isinstance(mech, ComparatorMechanism) and
                                             NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(mech)]
+                    # MODIFIED TEACHER_TARGET END
                     comparators = [mech for mech in existing_comparators
                                    if mech.input_ports['SAMPLE'].path_afferents[0].sender.owner is sample_mech]
                     assert len(comparators) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
@@ -1302,6 +1352,7 @@ class AutodiffComposition(Composition):
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + sample_mech.name)
                         target_mech._initialize_from_context(context, base_context, override=False)
+                        constructed_target_mechs.append(target_mech)
                     target_mechs.append(target_mech)
             loss_mech_specs = list(zip(sample_mechs_for_learning, target_mechs))
             self.target_nodes_for_samples.update({k:v for k,v in zip(sample_mechs_for_learning, target_mechs)})
@@ -1318,19 +1369,32 @@ class AutodiffComposition(Composition):
                     (f"PROGRAM ERROR: tuple in self.targets either doesn't have two items "
                      f"or one is not a Mechanisms: {loss_mech}; "
                      f"should have been caught in targets Parameter validation.")
-                sample_spec = loss_mech[0]
-                target_spec = loss_mech[1]
-                # Use default LossMechanism for specified sample:target pair
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-        # Construct LossMechanisms (and their MappingProjections)
-        loss_projections = []
+        # Construct and/or add LossMechanisms (and their MappingProjections)
         for i, item in enumerate(loss_mech_specs):
-            # Constructe LossMechanism
-            if isinstance(item, tuple):
+            if isinstance(item, LossMechanism):
+                sample = item.sample
+                target = item.target
+                loss_mech = item
+            elif isinstance(item, tuple):
                 sample, target = item
-                if not any(sample in sample_and_target for sample_and_target in self.loss_mechs_map.values()):
+                # Get loss_mech for sample if it already has one
+                loss_mechs_for_sample = [l for l, sample_and_target in self.loss_mechs_map.items()
+                                          if sample in sample_and_target]
+                if loss_mechs_for_sample:
+                    if len(loss_mechs_for_sample) > 1:
+                        errant_target_names = [f"'{mech.target.name}'" for mech in loss_mechs_for_sample]
+                        raise AutodiffCompositionError(
+                            f"'{sample.name}' is associated with more than one TARGET in '{self.name}: "
+                            f"{' ,'.join(errant_target_names)}.")
+                    else:
+                        loss_mech = loss_mechs_for_sample[0]
+                        continue
+                else:
+                # if not any(sample in sample_and_target for sample_and_target in self.loss_mechs_map.values()):
+                # Construct LossMechanism
                     # If there is no loss_mech for the current sample, instantiate one
                     # IMPLEMENTATION NOTE:
                     #        Don't allow multiple LossMechanisms to train the same SAMPLE Node
@@ -1342,12 +1406,24 @@ class AutodiffComposition(Composition):
                                               function=None,
                                               loss=self.loss_spec)
                     loss_mech._initialize_from_context(context, base_context, override=False)
-                    # TEACHER_TARGET BREADCRUMB:
-                    #                 ENSURE THAT MAPPING PROJECTIONS ALL HAVE IDENTITY MATRICES AND ARE NOT LEARNABLE
-                    self.loss_mechs_map[loss_mech] = (sample, target)
                     for proj in loss_mech.path_afferents:
                         proj.learnable= False
-                    loss_projections.extend(loss_mech.path_afferents)
+            else:
+                assert False, f"PROGRAM ERROR: loss_mech_spec should have been a LossMechanism or tuple by now."
+
+            for proj in loss_mech.path_afferents:
+                # TEACHER_TARGET BREADCRUMB: REVISE BELOW TO ENFORCE THESE ON CONSTRUCTION in LearningMechanism
+                # IMPLEMENTATION NOTE: This is checked here because the Projections are to the LossMechanism
+                #                      are constructed by reference to its afferents (sample and target)
+
+                assert is_identity_matrix(proj.parameters.matrix.get()), \
+                    (f"PROGRAM ERROR: Matrix of projection to LossMechanism "
+                     f"('{proj.name}') is not an identity matrix. ")
+                assert proj.learnable is False, (f"PROGRAM ERROR: The 'learnable' attribute of a projection to a "
+                                                 f"LossMechanism ('{proj.name}') is not False")
+
+            self.loss_mechs_map[loss_mech] = (sample, target)
+
         loss_mechs = list(self.loss_mechs_map.keys())
 
         # Add LossMechanisms and any TARGET Nodes to AutodiffComposition, with required NodeRoles
@@ -1364,8 +1440,6 @@ class AutodiffComposition(Composition):
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
-        assert True
-    # MODIFIED TEACHER_TARGET END
 
     def _add_dependency(self,
                         sender:ProcessingMechanism_Base,
@@ -1560,9 +1634,22 @@ class AutodiffComposition(Composition):
                                            "optimizers (specified as 'sgd' or 'adam').")
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
-        if len(pytorch_rep.state_dict()) == 0: # Use state_dict to avoid expiring params generator
-            assert len(list(params)) == 0, (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
-                                            f"but no entries in its state_dict()")
+        # MODIFIED TEACHER_TARGET OLD:
+        if (len(pytorch_rep.state_dict()) == 0):
+            # avoid expiring params generator
+            assert len(list(params)) == 0, \
+                (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
+                 f"but no learnable Projections or entries in its state_dict()")
+        # MODIFIED TEACHER_TARGET NEW:
+        # if (len(pytorch_rep.state_dict()) == 0
+        #         or not any(any([param.requires_grad, param.grad, param.grad_fn])
+        #                    for param in list(pytorch_rep.state_dict().values()))
+        # ):
+        #     # avoid expiring params generator
+        #     assert len(list(params)) == 0 or not any(p for p in self.projections if p.learnable), \
+        #         (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
+        #          f"but no learnable Projections or entries in its state_dict()")
+        # MODIFIED TEACHER_TARGET END
             warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
             return
         if self.optimizer_type == 'sgd':

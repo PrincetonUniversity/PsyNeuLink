@@ -3195,7 +3195,6 @@ class TestNestedLearning:
                      f"that are not AutodiffCompositions: 'nested'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.PyTorch)
-
         assert error_msg in str(error.value)
 
         # Test for error on learning if nested is AutodiffComposition but execution_mode is Python
@@ -3207,7 +3206,6 @@ class TestNestedLearning:
                      "because it contains one or more nested Compositions: 'nested-1'.")
         with pytest.raises(AutodiffCompositionError) as error:
             autodiff.learn(inputs={input_mech: [[0, 0]]}, execution_mode=pnl.ExecutionMode.Python)
-
         assert error_msg in str(error.value)
 
 

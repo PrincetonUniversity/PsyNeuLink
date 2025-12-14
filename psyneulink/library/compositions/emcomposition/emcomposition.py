@@ -2952,7 +2952,7 @@ class EMComposition(AutodiffComposition):
         super()._identify_output_nodes(context)
         return target_nodes
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None):
+    def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
         if self.concatenate_queries:
             raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
         return super().infer_backpropagation_learning_pathways(execution_mode, context=context)

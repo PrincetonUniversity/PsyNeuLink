@@ -495,6 +495,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 (f"PROGRAM ERROR: {self} has a parameter_CIM which is not should not currently be the case "
                  f"and is not handled by flatterning in {self.__class__.__name__}.")
 
+            # Ensure that Projections to any LossMechanism used to compute loss for learning
+            #    are not themselves learnable
+            if (isinstance(rcvr_mech, LossMechanism)
+                  and rcvr_mech in composition.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)):
+                projection.learnable = False
+
             # Ignore input_CIM and output_CIM within the same Composition (they are not learnable)
             if sndr_mech is composition.input_CIM or rcvr_mech is composition.output_CIM:
                 continue
@@ -736,17 +742,29 @@ class PytorchCompositionWrapper(torch.nn.Module):
             source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
             source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
             try:
+                # # MODIFIED TEACHER_TARGET NEW:
+                # learnable = False if isinstance(projection.receiver.owner, LossMechanism) else projection.learnable
+                # MODIFIED TEACHER_TARGET END
                 direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
                                                      f"to {rcvr_mech.name}",
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
+                                                # MODIFIED TEACHER_TARGET OLD:
                                                 learnable=projection.learnable,
+                                                # # MODIFIED TEACHER_TARGET NEW:
+                                                # learnable=learnable,
+                                                # MODIFIED TEACHER_TARGET END
                                                 learning_rate=projection.parameters.learning_rate.get(context))
 
             except DuplicateProjectionError:
                 direct_proj = [proj for proj in projection.receiver.path_afferents
                                if proj.sender is source_sndr_port][0]
+                # MODIFIED TEACHER_TARGET OLD:
                 pnl_proj.learnable = direct_proj.learnable
+                # # MODIFIED TEACHER_TARGET NEW:
+                # pnl_proj.learnable = (False if isinstance(projection.receiver.owner, LossMechanism)
+                #                       else (projection.learnable))
+                # MODIFIED TEACHER_TARGET END
                 pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
@@ -1205,7 +1223,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 #   - default learning_rate for Composition to which Projection belongs if that is explicitly specified,
                 #   - search up the nesting hierarchy for the first default learning_rate that is explicity specified
                 #   - default learning_rate for outermost Composition
-                # MODIFIED 8/10/25 NEW:
                 specified_learning_rate = (run_time_default_learning_rate if run_time_default_learning_rate is not None
                                            else proj_comp_lr if proj_comp_lr
                                            else self._get_default_composition_learning_rate(proj_composition,
@@ -1963,8 +1980,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # to which it belongs; this is to support override of the execute_node method by subclasses of
                     # PytorchCompositionWrapper (such as EMComposition and GRUComposition).
 
-                    # TEACHER_TARGET BREACRUMB:
-                    print(f"\n{node.mechanism.name} input: {variable}")
+                    # # TEACHER_TARGET BREADCRUMB DEBUGGING PRINT STATEMENT:
+                    # print(f"\n{node.mechanism.name} input: {variable}")
                     node.execute(variable=variable,
                                  optimization_num=optimization_num,
                                  synch_with_pnl_options=synch_with_pnl_options,
@@ -1977,8 +1994,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
-                    # TEACHER_TARGET BREACRUMB:
-                    print(f"{node.mechanism.name} executed: {node.output}")
+                    # # TEACHER_TARGET BREADCRUMB DEBUGGING PRINT STATEMENT:
+                    # print(f"{node.mechanism.name} executed: {node.output}")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:

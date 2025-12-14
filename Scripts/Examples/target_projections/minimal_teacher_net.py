@@ -302,7 +302,7 @@ def run(seed=None):
         print('*** Teacher ***')
         print(f'Before:\n{orig_teacher_pnl}')
         print(f'After (same as before):\n{after_teacher_pnl}')
-        print(f'Should be:\n{teacher_matrix.detach().clone().numpy()}')
+        print(f'Should be:\n{teacher_matrix.detach().clone().numpy().T}')
 
         # Student input projection MUST change (sanity check)
         if LEARNING_RATE > 0:
@@ -332,17 +332,22 @@ def run(seed=None):
             after_teacher_pnl,
             after_teacher_torch.T,
         ), f'[TORCH != PNL] Teacher not the same anymore'
+
         assert np.allclose(
             after_outputs_torch,
             after_outputs_pnl,
         ), f'[TORCH != PNL] Outputs not the same anymore'
-        assert np.allclose(after_student_torch,
-                           after_student_pnl.T,
-                           ), f'[TORCH != PNL] Student Matrices are not the same\n{after_student_torch} !=\n{after_student_pnl}'
+
+        # Check that student input projections are the SAME for torch and PNL
+        assert np.allclose(
+            after_student_torch,
+            after_student_pnl.T,
+        ), f'[TORCH != PNL] Student Matrices are not the same\n{after_student_torch} !=\n{after_student_pnl}'
+
+        # Check that results of post-learning execution are the SAME for torch and PNL
         for res in zip(out_torch, out_pnl):
             tr = np.array(res[0].detach(), dtype=float)
             pl = np.array(res[1], dtype=float)
-
             assert np.allclose(tr, pl), \
                 (f"Not close enough {tr}, {pl}\n")
 
