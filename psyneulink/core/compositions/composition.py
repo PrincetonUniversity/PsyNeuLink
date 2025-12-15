@@ -4061,7 +4061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # suppress repeated warnings
         self.warned_about_run_with_no_inputs = False
-        self._warned_about_target_mechs_in_targets_arg = False
+        self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = False
         self._warned_about_targets_mechs_in_inputs_and_targets = False
 
         self.nodes_to_roles = collections.OrderedDict()
@@ -10322,6 +10322,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         target_values_for_target_nodes = {}
 
+        # TEACHER_TARGET BREADCRUMB: INTEGRATE WITH NEWER VERSION ON AUTODIFF, BUT AVOIDING USE OF LossMechanism
         def validate_targets(target_mechs:list)->bool:
             """Validate targets dict specification:
             - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
@@ -10333,12 +10334,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
                                        f"`targets` arg of the learn method for '{self.name}' must equal "
                                        f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
-            # TEACHER_TARGET BREADCRUMB: MODIFY BELOW TO DEAL WITH LossMechanisms,ETC
             # Check for target_mechs in targets
             target_mechs_as_targets = [target for target in targets.keys() if target in target_mechs]
             if not target_mechs_as_targets:
                 return False
-            if not self._warned_about_target_mechs_in_targets_arg:
+            if not self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn:
                 warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
                               f"has entries that are TARGET_MECHANISM(s) "
                               f"({', '.join(sorted([target.name for target in target_mechs_as_targets]))}); "
@@ -10347,7 +10347,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"to determine the TARGET_MECHANISM(s). Alternatively, TARGET_MECHANISMs "
                               f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
                               f"obviating the need to specify the 'targets' arg.")
-                self._warned_about_target_mechs_in_targets_arg = True
+                self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = True
             return True
 
         validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
@@ -10373,7 +10373,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_values_for_target_nodes
 
-    def _parse_learning_spec(self, inputs, targets, execution_mode, context):
+    def _parse_targets_spec(self, inputs, targets, execution_mode, context):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -10398,7 +10398,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if 'inputs' in inputs:
             inputs = inputs['inputs'].copy()
 
-        # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
+        # 2) Convert output node keys -> target node keys (learning for Composition curently only use external targets)
         def _recursive_update(d, u):
             """
             Recursively calls update on dictionaries, which prevents deletion of keys
@@ -10413,14 +10413,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         if targets is not None:
+
+            # Convert any samples specified as Mechanisms to the corresponding primary OutputPort
+            targets = {k.output_port:v for k, v in targets.items()
+                       if (isinstance(k, Mechanism_Base) and not k in self.get_nodes_by_role(NodeRole.TARGET))}
+
             targets = self._map_external_target_values_to_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
             duplicate_targets = sorted([item.name for item in inputs if item in targets])
             if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
-                warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
+                warnings.warn(f"There are one or more TARGETS specified in both the 'inputs' and 'targets' "
                               f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
-                              f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
+                              f"This is not technically a problem, but it is redundant so thought you should know ;^).")
                 self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         # 3) Resize inputs to be of the form [[[]]],
@@ -11810,7 +11815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
                         # need to call _parse_trial_inputs, as the inputs are already in the correct format
-                        # from the call to _parse_learning_spec
+                        # from the call to _parse_targets_spec
                         if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
                                                     'CompositionRunner._batch_function_inputs' in str(inputs)):
                             execution_stimuli, optimization_num = next(inputs)

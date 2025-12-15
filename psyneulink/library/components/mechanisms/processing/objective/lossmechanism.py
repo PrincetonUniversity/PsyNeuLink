@@ -265,6 +265,9 @@ class LossMechanism(#ModulatoryMechanism_Base,
                  **kwargs
                  ):
 
+        sample = sample.output_port if isinstance(sample, Mechanism_Base) else sample
+        target = target.output_port if isinstance(target, Mechanism_Base) else target
+
         if function:
             if loss is not None:
                 raise LossMechanismError(f"LossMechanism '{self.name}': 'function' and 'loss' arguments "
@@ -288,11 +291,3 @@ class LossMechanism(#ModulatoryMechanism_Base,
 
         from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
         self.loss_projection = LossProjection(sender=self, receiver=self.sample)
-
-# def _instantiate_input_ports(self, input_ports=None, reference_value=None, context=None):
-#     """Override Comparator and LearningMechanism to instantiate enforced SAMPLE and TARGET InputPorts"""
-#     # Call ComparatorMechanism's _instantiate_input_ports, skipping LearningMechanism
-#     ComparatorMechanism._instantiate_input_ports(self,
-#                                                  input_ports=input_ports,
-#                                                  reference_value=reference_value,
-#                                                  context=context)

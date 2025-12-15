@@ -1710,7 +1710,7 @@ class TestTrainingCorrectness:
         # Record results
         torch_sample_after_learning = s.detach().numpy().squeeze()
         torch_target_after_learning = t.detach().numpy().squeeze()
-        torch_out_after_learning =  o.detach().numpy().squeeze()
+        torch_out_after_learning = o.detach().numpy().squeeze()
 
         # PNL MODEL --------------------------------
 
@@ -1748,7 +1748,7 @@ class TestTrainingCorrectness:
         autodiff_comp.learn(inputs={inputs: pnl_stim},
                             execution_mode=pnl.ExecutionMode.PyTorch)
         pnl_sample_wts_after_learning = pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS').detach().numpy()
-        pnl_target_wts_after_learning =  pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy()
+        pnl_target_wts_after_learning = pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy()
         pnl_out_wts_after_learning = pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy()
         # Record loss before executing again
         pnl_loss = autodiff_comp.nodes['LOSS for SAMPLE'].parameters.value.get('autodiff_comp').squeeze()
