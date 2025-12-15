@@ -1207,8 +1207,8 @@ class AutodiffComposition(Composition):
         for afferent in mech.path_afferents:
             if afferent.learnable:
                 return True
-            depth = self._mech_in_learnable_pathway(afferent.sender.owner)
-            if depth:
+            check_afferent_pathway = self._mech_in_learnable_pathway(afferent.sender.owner)
+            if check_afferent_pathway:
                 return True
         return False
 
