@@ -1255,14 +1255,15 @@ class AutodiffComposition(Composition):
 
         def assert_sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
                                         action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
-            """Take specified action if no afferent pathway for sample has any learnable Projections.
-            - target argument is used for error_message;
+            """Take specified action if sample has no afferent pathways with any learnable Projections.
+            - target argument is used to determine for error_message;
             - if no action is specified, return True or False
             """
             if self._mech_in_learnable_pathway(sample):
                 return True
             # Construct relevant error/warning message
             if target:
+                # Target was specified in *targets* arg of constructor
                 if isinstance(target, LossMechanism):
                     target_msg = f"LossMechanism ('{loss_mech.name}')"
                 elif target in constructed_target_mechs:
@@ -1270,10 +1271,15 @@ class AutodiffComposition(Composition):
                 else:
                     target_msg = f"TARGET node ('{target.name}')"
                 error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
-                             f"learning that is in a pathway without any learnable Projections.")
+                             f"learning that has no afferent pathways with any learnable Projections.")
             else:
+                # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
+                if sample in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
+                    # Singletons are caught here because they are identified as OUTPUT Nodes;
+                    #    warning about non-learnability is handled in _instantiate_optimizer()
+                    return False
                 error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
-                             f"but it is not in any pathways with (a) learnable Projection(s).")
+                             f"but that Node has no afferent pathways with any learnable Projections.")
 
             # Take specified action
             if action is ERROR:
@@ -1351,8 +1357,9 @@ class AutodiffComposition(Composition):
             target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
             for output_port_for_learning in output_ports_for_learning:
 
-                # TEACHER_TARGET BREADCRUMB:  ?? ONLY PASS FOR output_CIMs??
                 if not assert_sample_is_in_learnable_pathway(output_port_for_learning.owner, action=ERROR):
+                    # If no error is generated in assert_sample_is_in_learnable_pathway(), sample is a singeton;
+                    #   warning about non-learnability is handled in _instantiate_optimizer()
                     continue
                 # Check for existing TARGET Nodes
                 existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
