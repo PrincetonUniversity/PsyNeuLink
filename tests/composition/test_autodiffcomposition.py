@@ -1654,12 +1654,12 @@ class TestTrainingCorrectness:
 
         np.testing.assert_allclose(output, comparator, rtol=1e-5, atol=1e-8)
 
-    def test_pytorch_equivalence_with_internal_target_assignment():
+    def test_pytorch_equivalence_with_internal_target_assignment(self):
         # inputs ---> sample --> outputs
         #      \         ^
         #       \        '
         #        \ -> target
-
+        import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)
 
