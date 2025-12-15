@@ -1575,7 +1575,9 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # SoftMax:
                      'mask_threshold', 'adapt_scale', 'adapt_base', 'adapt_entropy_weighting',
                      # LCAMechanism
-                     "mask"
+                     "mask",
+                     # LossMechanism
+                     "loss"
                      }
 
         # OneHot:
@@ -1621,6 +1623,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Matrices of learnable projections are stateful
         if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
             blacklist.add('matrix')
+
+        if hasattr(self, 'state'):
+            # blacklist.update(["sample", "target"])
+            blacklist.add("sample")
+            blacklist.add("target")
+
 
         def _is_compilation_param(p):
             return p.name not in blacklist and self._is_compilable_param(p)

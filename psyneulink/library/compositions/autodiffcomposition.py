@@ -1691,7 +1691,7 @@ class AutodiffComposition(Composition):
             if isinstance(val, torch.Tensor):
                 inputs_and_targets[component] = val.to(device=self.device, dtype=torch.double)
             else:
-                inputs_and_targets[component] = torch.tensor(val, device=self.device, dtype=torch.double)
+                 inputs_and_targets[component] = torch.tensor(val, device=self.device, dtype=torch.double)
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
         output_values = pytorch_rep.forward(inputs=inputs_and_targets,
