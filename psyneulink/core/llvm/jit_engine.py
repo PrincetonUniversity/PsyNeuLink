@@ -8,7 +8,10 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
-from llvmlite import binding
+import llvmlite
+import llvmlite.binding as binding
+import packaging.version as version
+import sys
 import time
 import warnings
 
@@ -18,24 +21,35 @@ from .debug import debug_env
 
 try:
     import pycuda
+
     # Do not continue if the version is too old
     if pycuda.VERSION[0] < 2018:
         raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+
     import pycuda.driver
-    # pyCUDA needs to be built against 6+ to enable Linker
-    if pycuda.driver.get_version()[0] < 6:
-        raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+
+    # pyCUDA needs to be built against CUDA SDK 6+ to enable Linker
+    # PTX workaround in ptx jit compiler below requires at least ISA
+    # version 6.0 which was added in CUDA 9.0 [0] and the respective
+    # driver 384.81 [1] (for runtime JIT PTX compilation)
+    # [0] https://docs.nvidia.com/cuda/archive/9.0/parallel-thread-execution/index.html
+    # [1] https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html#id8
+    if pycuda.driver.get_version()[0] < 9:
+        raise UserWarning("CUDA driver too old (need 9+): " + str(pycuda.driver.get_version()))
 
     from pycuda import autoinit as pycuda_default
     import pycuda.compiler
+
     assert pycuda_default.context is not None
     pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
     ptx_enabled = True
     if "cuda-check" in debug_env:
         print("PsyNeuLink: CUDA backend enabled!")
+
 except Exception as e:
     if "cuda-check" in debug_env:
         warnings.warn("Failed to enable CUDA/PTX: {}".format(e))
+
     ptx_enabled = False
 
 
@@ -48,11 +62,22 @@ if ptx_enabled:
 # Compiler binding
 __initialized = False
 
+# llvmlite>=0.44 introduced new pass manager, but it was broken on windows[1].
+# The new pass manager is, however, required starting llvmlite-0.45.0.[2]
+# [1] https://github.com/numba/llvmlite/issues/1078
+# [2] https://github.com/numba/llvmlite/pull/1092
+__required_version_for_new_pass_manager = '0.45.0' if sys.platform == "win32" else '0.44.0'
+__cpu_use_new_pass_manager = version.parse(llvmlite.__version__) >= version.parse(__required_version_for_new_pass_manager)
+__gpu_use_new_pass_manager = version.parse(llvmlite.__version__) >= version.parse('0.44.0')
 
 def _binding_initialize():
     global __initialized
     if not __initialized:
-        binding.initialize()
+        # calling binding.initalize() is not needed in later versions
+        # of llvmlite, and throws exception in >=0.45.0
+        if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
+            binding.initialize()
+
         if not ptx_enabled:
             # native == currently running CPU. ASM printer includes opcode emission
             binding.initialize_native_target()
@@ -64,40 +89,72 @@ def _binding_initialize():
         __initialized = True
 
 
+def _new_pass_builder(target_machine, opt_level, extra_opts = dict()):
+    pto = binding.create_pipeline_tuning_options(speed_level=opt_level)
+    pto.loop_vectorization = opt_level != 0
+    pto.slp_vectorization = opt_level != 0
+
+    assert set(extra_opts.keys()).issubset(dir(pto)), dir(pto)
+
+    for key, value in extra_opts.items():
+        setattr(pto, key, value)
+
+    pass_builder = binding.create_pass_builder(target_machine, pto)
+
+    return pass_builder
+
+def _old_pass_manager(target_machine, opt_level, extra_opts = dict()):
+    pass_manager_builder = binding.PassManagerBuilder()
+    pass_manager_builder.loop_vectorize = opt_level != 0
+    pass_manager_builder.slp_vectorize = opt_level != 0
+    pass_manager_builder.opt_level = opt_level
+
+    assert set(extra_opts.keys()).issubset(dir(pass_manager_builder))
+
+    for key, value in extra_opts.items():
+        setattr(pass_manager_builder, key, value)
+
+    # Create module pass manager and populate it with analysis and opt passes
+    pass_manager = binding.ModulePassManager()
+    target_machine.add_analysis_passes(pass_manager)
+    pass_manager_builder.populate(pass_manager)
+
+    return pass_manager
+
 def _cpu_jit_constructor():
     _binding_initialize()
 
     opt_level = int(debug_env.get('opt', 2))
 
-    # PassManagerBuilder can be shared
-    __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.loop_vectorize = opt_level != 0
-    __pass_manager_builder.slp_vectorize = opt_level != 0
-    __pass_manager_builder.opt_level = opt_level
-
-    __cpu_features = binding.get_host_cpu_features().flatten()
-    __cpu_name = binding.get_host_cpu_name()
-
-    # Create compilation target, use default triple
-    __cpu_target = binding.Target.from_default_triple()
+    # Create compilation target, use triple from current process
     # FIXME: reloc='static' is needed to avoid crashes on win64
     # see: https://github.com/numba/llvmlite/issues/457
-    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=opt_level, reloc='static')
+    cpu_target = binding.Target.from_triple(binding.get_process_triple())
+    cpu_target_machine = cpu_target.create_target_machine(cpu=binding.get_host_cpu_name(),
+                                                          features=binding.get_host_cpu_features().flatten(),
+                                                          opt=opt_level,
+                                                          reloc='static')
 
-    __cpu_pass_manager = binding.ModulePassManager()
-    __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
-    __pass_manager_builder.populate(__cpu_pass_manager)
+    if __cpu_use_new_pass_manager:
+        pass_manager = None
+        pass_builder = _new_pass_builder(cpu_target_machine, opt_level)
+    else:
+        pass_manager = _old_pass_manager(cpu_target_machine, opt_level)
+        pass_builder = None
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
+
+    backing_mod = binding.parse_assembly(str(builtins_module))
+    backing_mod.verify()
+
     if "dump-llvm-gen" in debug_env:
         with open(builtins_module.name + '.generated.ll', 'w') as dump_file:
-            dump_file.write(str(builtins_module))
+            dump_file.write(str(backing_mod))
 
-    __backing_mod = binding.parse_assembly(str(builtins_module))
+    cpu_jit_engine = binding.create_mcjit_compiler(backing_mod, cpu_target_machine)
 
-    __cpu_jit_engine = binding.create_mcjit_compiler(__backing_mod, __cpu_target_machine)
-    return __cpu_jit_engine, __cpu_pass_manager, __cpu_target_machine
+    return cpu_jit_engine, cpu_target_machine, pass_manager, pass_builder
 
 
 def _ptx_jit_constructor():
@@ -105,28 +162,46 @@ def _ptx_jit_constructor():
 
     opt_level = int(debug_env.get('opt', 2))
 
-    # PassManagerBuilder is used only for inlining simple functions
-    __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = 2
-    __pass_manager_builder.size_level = 1
-
-    # The threshold of '64' is empirically selected on GF 3050
-    __pass_manager_builder.inlining_threshold = 64
-
     # Use default device
     # TODO: Add support for multiple devices
-    __compute_capability = pycuda_default.device.compute_capability()
-    __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
+    compute_capability = pycuda_default.device.compute_capability()
+    ptx_sm = "sm_{}{}".format(compute_capability[0], compute_capability[1])
 
     # Create compilation target, use 64bit triple
-    __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=opt_level)
+    ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
 
-    __ptx_pass_manager = binding.ModulePassManager()
-    __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
-    __pass_manager_builder.populate(__ptx_pass_manager)
+    # llvm 20 (and possibly other versions) generates unsupported instructions
+    # for the selected ptx isa version used for older targets (sm_50, sm_60)[0]
+    # Using higher version of ptx isa works around the issue.
+    # There isn't a good way to get supported ptx versions from llvmlite, so just
+    # hardcode ptx_60 (from 'llc -mattr=help -mtriple=nvptx64-nvidia-cuda').
+    # [0] https://github.com/llvm/llvm-project/issues/171709
+    use_ptx = "+ptx60" if binding.llvm_version_info[0] == 20 else ""
 
-    return __ptx_pass_manager, __ptx_target_machine
+    ptx_target_machine = ptx_target.create_target_machine(cpu=ptx_sm, opt=opt_level, features=use_ptx)
+
+    # The threshold of '64' is empirically selected on GF 3050
+    extra_opts = {'size_level' : 1, 'inlining_threshold': 64}
+
+    if __gpu_use_new_pass_manager:
+        # Inlining threshold is not supported until llvmlite-0.45.0
+        # [1] https://github.com/numba/llvmlite/commit/ccfbf78bd838fef886a1ec9fc4a353ec952fa035
+        if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
+            extra_opts.pop('inlining_threshold', None)
+
+        # size_level check is mismatched between Python and C++ until 0.46 [1]
+        # even then size_level is only allowed for opt_level==2
+        # [1] https://github.com/numba/llvmlite/issues/1306
+        if version.parse(llvmlite.__version__) < version.parse('0.46.0') or opt_level != 2:
+            extra_opts.pop('size_level', None)
+
+        ptx_pass_builder = _new_pass_builder(ptx_target_machine, opt_level, extra_opts)
+        ptx_pass_manager = None
+    else:
+        ptx_pass_manager = _old_pass_manager(ptx_target_machine, opt_level, extra_opts)
+        ptx_pass_builder = None
+
+    return ptx_target_machine, ptx_pass_manager, ptx_pass_builder
 
 
 def _try_parse_module(module):
@@ -154,10 +229,12 @@ class jit_engine:
     def __init__(self):
         self._jit_engine = None
         self._jit_pass_manager = None
-        self._target_machine = None
+        self._jit_pass_builder = None
+        self._jit_target_machine = None
         self.__mod = None
+
         # Add an extra reference to make sure it's not destroyed before
-        # instances of jit_engine
+        # all instances of jit_engine
         self.__debug_env = debug_env
 
         self.staged_modules = set()
@@ -177,7 +254,7 @@ class jit_engine:
 
     def opt_and_add_bin_module(self, module):
         start = time.perf_counter()
-        self._pass_manager.run(module)
+        self._pass_manager.run(module, self._pass_builder)
         finish = time.perf_counter()
 
         if "time_stat" in debug_env:
@@ -196,8 +273,10 @@ class jit_engine:
         self._engine.add_module(module)
         self._engine.finalize_object()
         finish = time.perf_counter()
+
         if "time_stat" in debug_env:
             print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
+
         self.__optimized_modules += 1
 
     def _remove_bin_module(self, module):
@@ -232,21 +311,42 @@ class jit_engine:
         return self._jit_engine
 
     @property
+    def _target_machine(self):
+        if self._jit_target_machine is None:
+            self._init()
+
+        return self._jit_target_machine
+
+    @property
     def _pass_manager(self):
+        # use new pass manager
+        if self._pass_builder is not None:
+            return self._pass_builder.getModulePassManager()
+
+        # use old pass manager
         if self._jit_pass_manager is None:
             self._init()
 
         return self._jit_pass_manager
 
+    @property
+    def _pass_builder(self):
+        if self._jit_pass_builder is None and self._jit_pass_manager is None:
+            self._init()
+
+        return self._jit_pass_builder
+
     def stage_compilation(self, modules):
         self.staged_modules |= modules
 
     # Unfortunately, this needs to be done for every jit_engine.
-    # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
-    # so it can't be linked mutliple times (in multiple engines).
+    # Linking step in opt_and_add_bin_module invalidates 'mod_bundle',
+    # so it can't be linked multiple times (in multiple engines).
+    # These modules are still using 'unknown-unknown-unknown' triple
     def compile_staged(self):
         # Parse generated modules and link them
         mod_bundle = binding.parse_assembly("")
+
         while self.staged_modules:
             m = self.staged_modules.pop()
 
@@ -275,9 +375,10 @@ class cpu_jit_engine(jit_engine):
     def _init(self):
         assert self._jit_engine is None
         assert self._jit_pass_manager is None
-        assert self._target_machine is None
+        assert self._jit_pass_builder is None
+        assert self._jit_target_machine is None
 
-        self._jit_engine, self._jit_pass_manager, self._target_machine = _cpu_jit_constructor()
+        self._jit_engine, self._jit_target_machine, self._jit_pass_manager, self._jit_pass_builder = _cpu_jit_constructor()
         if self._object_cache is not None:
             self._jit_engine.set_object_cache(self._object_cache)
 
@@ -353,10 +454,11 @@ class ptx_jit_engine(jit_engine):
     def _init(self):
         assert self._jit_engine is None
         assert self._jit_pass_manager is None
-        assert self._target_machine is None
+        assert self._jit_pass_builder is None
+        assert self._jit_target_machine is None
 
-        self._jit_pass_manager, self._target_machine = _ptx_jit_constructor()
-        self._jit_engine = ptx_jit_engine.cuda_engine(self._target_machine)
+        self._jit_target_machine, self._jit_pass_manager, self._jit_pass_builder = _ptx_jit_constructor()
+        self._jit_engine = ptx_jit_engine.cuda_engine(self._jit_target_machine)
 
     def get_kernel(self, name):
         kernel = self._engine._find_kernel(name + "_cuda_kernel")

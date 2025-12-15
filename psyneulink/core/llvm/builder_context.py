@@ -674,8 +674,8 @@ def _gen_cuda_kernel_wrapper_module(function):
         shared = ir.GlobalVariable(module, ptr.type.pointee,
                                    name=function.name + "_shared_" + name,
                                    addrspace=3)
-        shared.alignment = 128
         shared.linkage = "internal"
+        shared.align = 128
         shared_ptr = b.addrspacecast(shared, shared.type.pointee.as_pointer())
 
         char_ptr_ty = ir.IntType(8).as_pointer()
@@ -724,7 +724,7 @@ def _gen_cuda_kernel_wrapper_module(function):
         builder, args[1] = _upload_to_shared(builder, args[1], one, "state")
         builder, args[4] = _upload_to_shared(builder, args[4], one, "data")
 
-        # TODO: Investigate benefit of uplaoding dynamic RO structures to
+        # TODO: Investigate benefit of uploading dynamic RO structures to
         #       shared memory (e.g. inputs)
 
     # Check global id and exit if we're over
@@ -773,12 +773,11 @@ def _gen_cuda_kernel_wrapper_module(function):
 
 @functools.lru_cache(maxsize=128)
 def _convert_llvm_ir_to_ctype(t: ir.Type):
-    type_t = type(t)
 
-    if type_t is ir.VoidType:
+    if isinstance(t, ir.VoidType):
         return None
 
-    elif type_t is ir.IntType:
+    elif isinstance(t, ir.IntType):
         if t.width == 1:
             return ctypes.c_bool
         elif t.width == 8:
@@ -790,15 +789,15 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         elif t.width == 64:
             return ctypes.c_uint64
         else:
-            assert False, "Unknown integer type: {}".format(type_t)
+            assert False, "Unknown integer type: {}".format(t)
 
-    elif type_t is ir.DoubleType:
+    elif isinstance(t, ir.DoubleType):
         return ctypes.c_double
 
-    elif type_t is ir.FloatType:
+    elif isinstance(t, ir.FloatType):
         return ctypes.c_float
 
-    elif type_t is ir.HalfType:
+    elif isinstance(t, ir.HalfType):
         # There's no half type in ctypes. Use uint16 instead.
         # User will need to do the necessary casting.
         return ctypes.c_uint16
@@ -808,11 +807,11 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
         pointee = _convert_llvm_ir_to_ctype(t.pointee)
         ret_t = ctypes.POINTER(pointee)
 
-    elif type_t is ir.ArrayType:
+    elif isinstance(t, ir.ArrayType):
         element_type = _convert_llvm_ir_to_ctype(t.element)
         ret_t = element_type * len(t)
 
-    elif type_t is ir.LiteralStructType:
+    elif isinstance(t, ir.LiteralStructType):
         global _struct_count
         uniq_name = "struct_" + str(_struct_count)
         _struct_count += 1
@@ -824,6 +823,16 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
             field_list.append((field_uniq_name, _convert_llvm_ir_to_ctype(e)))
 
         ret_t = type(uniq_name, (ctypes.Structure,), {"__init__": ctypes.Structure.__init__})
+
+        # ctypes '_pack_' takes a small non-negative integer to override structure
+        # alignment. Use 1 byte for LLVM packed structures.
+        # This attribute needs to be set before assigning the '_fields_'.
+        # Despite the official documentation, setting _pack_ = 0 is not equivalent
+        # to not setting it at all and numpy complains about the resulting ctypes
+        # structure
+        if t.packed:
+            ret_t._pack_ = 1
+
         ret_t._fields_ = field_list
         assert len(ret_t._fields_) == len(t.elements)
 
@@ -876,7 +885,7 @@ def _convert_llvm_ir_to_dtype(t: ir.Type):
         for i, e in enumerate(t.elements):
             field_list.append(("field_" + str(i), _convert_llvm_ir_to_dtype(e)))
 
-        ret_t = np.dtype(field_list, align=True)
+        ret_t = np.dtype(field_list, align=not t.packed)
     else:
         assert False, "Don't know how to convert LLVM type to dtype: {}".format(t)
 

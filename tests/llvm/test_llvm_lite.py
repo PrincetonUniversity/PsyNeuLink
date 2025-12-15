@@ -3,9 +3,14 @@
 # Short example/demonstrator how to create and compile native code using
 # LLVM MCJIT just-in-time compiler
 
-from llvmlite import binding,ir
 import ctypes
+import llvmlite
+import llvmlite.binding as binding
+import llvmlite.ir as ir
+import packaging.version as version
 import pytest
+
+
 try:
     import pycuda
     from pycuda import autoinit as pycuda_default
@@ -22,6 +27,7 @@ def test_llvm_lite():
 
     # Create an empty module...
     module = ir.Module(name=__file__)
+
     # and declare a function named "fpadd" inside it
     func = ir.Function(module, fnty, name="fpadd")
 
@@ -41,7 +47,10 @@ def test_llvm_lite():
     # print("LLVM IR:")
     # print(module)
 
-    binding.initialize()
+    # calling binding.initalize() is not needed in later versions
+    # of llvmlite, and throws exception in >=0.45.0
+    if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
+        binding.initialize()
 
     # native == currently running CPU
     binding.initialize_native_target()
@@ -85,16 +94,10 @@ def test_llvm_lite():
     b = 3.5
     cfunc = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(func_ptr)
     res = cfunc(10.0, 3.5)
-    assert res == (a + b)
-    if res != (a + b):
-        print("TEST FAILED! {} instead of {}".format(res, a + b))
-    else:
-        print("TEST PASSED! {} == {}".format(res, a + b))
+
+    assert res == (a + b), "got {} instead of {}".format(res, (a + b))
 
     engine.remove_module(mod)
-    # TODO: shutdown cleanly
-    # we need to do something extra before shutdown
-    #binding.shutdown()
 
 
 @pytest.mark.llvm
@@ -129,7 +132,10 @@ def test_llvm_lite_ptx_pycuda():
     # Uncomment to print the module IR. This prints LLVM IR assembly.
 #    print("LLVM IR:\n", module)
 
-    binding.initialize()
+    # calling binding.initalize() is not needed in later versions
+    # of llvmlite, and throws exception in >=0.45.0
+    if version.parse(llvmlite.__version__) < version.parse('0.45.0'):
+        binding.initialize()
 
     binding.initialize_all_targets()
     binding.initialize_all_asmprinters()
@@ -154,6 +160,8 @@ def test_llvm_lite_ptx_pycuda():
     a = np.float64(10.0)
     b = np.float64(3.5)
     res = np.empty(1, dtype=np.float64)
+
     dev_res = pycuda.driver.Out(res)
     cuda_func(a, b, dev_res, block=(1,1,1))
+
     assert res[0] == (a + b)
