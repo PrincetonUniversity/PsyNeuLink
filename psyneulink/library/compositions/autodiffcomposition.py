@@ -1245,11 +1245,6 @@ class AutodiffComposition(Composition):
         Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
         Add loss_mechs and any constructed TARGET Nodes to self.learning_components
         """
-        # TEACHER_TARGET BREADCRUMB: REFACTOR TO ACCOMODATE SPECIFICATION AS Port
-
-        # TEACHER_TARGET BREADCRUMB:  CHECK THAT ANY SPECIFIED LossMechanisms ARE NOT FOR A NESTED COMP;
-        #                             IF SO, DEAL WITH IT OR RAISE ERROR
-
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
 
