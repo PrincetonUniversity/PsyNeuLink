@@ -1504,6 +1504,8 @@ class LossFunction(ObjectiveFunction):
         loss_ty_ptr = ctx.get_param_or_state_ptr(builder, self, "loss", param_struct_ptr=params)
         normalize_ptr = ctx.get_param_or_state_ptr(builder, self, "normalize", param_struct_ptr=params)
         metric_ptr = ctx.get_param_or_state_ptr(builder, self, "metric", param_struct_ptr=params)
+        sample_ptr = ctx.get_param_or_state_ptr(builder, self, "sample", param_struct_ptr=params)
+        target_ptr = ctx.get_param_or_state_ptr(builder, self, "target", param_struct_ptr=params)
 
         # 2. Get pointers to Network Output (Index 0) and Target (Index 1)
         # arg_in type: [2 x [1 x double]]*
