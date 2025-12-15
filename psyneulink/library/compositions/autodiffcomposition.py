@@ -796,7 +796,7 @@ class AutodiffComposition(Composition):
             """
             if specs:
                 if isinstance(specs, (LossMechanism, tuple, dict)):
-                    specs = convert_to_list(spec)
+                    specs = convert_to_list(specs)
                 for i, spec_tuple in enumerate(specs.copy()):
                     sample, target = spec_tuple
                     sample = sample.output_port if isinstance(sample, Mechanism) else sample
@@ -950,7 +950,7 @@ class AutodiffComposition(Composition):
 
         self._built_pathways = False
         self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
-        self.target_ports_for_samples = {} # {TARGET Node : OUTPUT Node (for which it is the target)}
+        self.target_ports_for_samples = {} # {sample OutputPort : TARGET Node OutputPort}
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
@@ -1301,17 +1301,18 @@ class AutodiffComposition(Composition):
                     # Determine whether target is internal node or TARGET keyword
                     if isinstance(target_spec, OutputPort):
                         # target is internal Node
-                        pass
+                        self.target_ports_for_samples.update({sample_port: target_spec})
                     elif target_spec == TARGET:
                         # target is TARGET keyword, so construct TARGET Node
-                        if any(node.name == 'TARGET for ' + sample_mech.name for node in self.nodes):
+                        if sample_port in self.target_ports_for_samples:
+                            # TARGET Node has already been constructed for specified sample Port
                             continue
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
                                                                                        in sample_mech.value],
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + sample_port.full_name)
                         target_mech._initialize_from_context(context, base_context, override=False)
-                        torget_port = target_mech.output_port
+                        target_port = target_mech.output_port
                         self.target_ports_for_samples.update({sample_port: target_port})
                         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                         constructed_target_mechs.append(target_mech)
@@ -1367,19 +1368,21 @@ class AutodiffComposition(Composition):
                         constructed_target_mechs.append(target_mech)
                     target_mechs.append(target_mech)
             loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
-            self.target_ports_for_samples.update({k:v for k,v in zip(output_ports_for_learning, target_mechs)})
+            self.target_ports_for_samples.update({k:v for k,v in zip(output_ports_for_learning,
+                                                                     [t.output_port for t in target_mechs])})
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         # Validate LossMechanism specs
-        for loss_mech in list(loss_mech_specs):
+        for loss_mech_spec in list(loss_mech_specs):
             # Assume that self.targets is a list of LossMechanisms and/or tuples specifying sample:target pairs
-            assert isinstance(loss_mech, (LossMechanism, tuple)), \
-                (f"PROGRAM ERROR: item in self.targets is neither LossMechanism nor 2-item tuple: {loss_mech};"
+            assert isinstance(loss_mech_spec, (LossMechanism, tuple)), \
+                (f"PROGRAM ERROR: item in self.targets is neither LossMechanism nor 2-item tuple: {loss_mech_spec};"
                  f"should have been caught in targets Parameter validation.")
-            if isinstance(loss_mech, tuple):
-                assert len(loss_mech) == 2 and all(isinstance(item, OutputPort) for item in loss_mech), \
+            if isinstance(loss_mech_spec, tuple):
+                assert (len(loss_mech_spec) == 2
+                        and all((isinstance(item, OutputPort) or item==TARGET) for item in loss_mech_spec)), \
                     (f"PROGRAM ERROR: tuple in self.targets either doesn't have two items "
-                     f"or one is not a Mechanisms: {loss_mech}; "
+                     f"or one is not a Mechanisms: {loss_mech_spec}; "
                      f"should have been caught in targets Parameter validation.")
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
@@ -1415,7 +1418,8 @@ class AutodiffComposition(Composition):
                     name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
                     loss_mech = LossMechanism(name=f"LOSS for {name}",
                                               sample=sample,
-                                              target=target,
+                                              # target=target,
+                                              target=self.target_ports_for_samples[sample],
                                               function=None,
                                               loss=self.loss_spec)
                     loss_mech._initialize_from_context(context, base_context, override=False)
@@ -1948,8 +1952,9 @@ class AutodiffComposition(Composition):
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target in self.target_ports_for_samples.values():
-            target_values[target] = get_target_value(target)
+        for target_port in self.target_ports_for_samples.values():
+            # Safe (and cleaner API) to use TARGET Nodes (Mechanisms) here since only one target_port per TARGET Node
+            target_values[target_port.owner] = get_target_value(target_port.owner)
         return target_values
 
     def _map_external_target_values_to_target_nodes(self, target_specs: dict, execution_mode)->dict:
@@ -2009,9 +2014,10 @@ class AutodiffComposition(Composition):
         validate_targets(target_specs)
 
         # Assign target values specified in learn() to TARGET Nodes
-        for node, value in target_specs.copy().items():
-            if node in self.target_ports_for_samples:
-                target_values_for_target_nodes[self.target_ports_for_samples[node]] = value
+        for port, value in target_specs.copy().items():
+            if port in self.target_ports_for_samples:
+                # Use TARGET Node (target_port owner) for key
+                target_values_for_target_nodes[self.target_ports_for_samples[port].owner] = value
 
         return target_values_for_target_nodes
 

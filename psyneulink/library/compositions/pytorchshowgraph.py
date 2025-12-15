@@ -86,13 +86,13 @@ class PytorchShowGraph(ShowGraph):
         if loss_mechs:
             for node in [n for n in processing_graph if n not in composition.get_nodes_by_role(NodeRole.TARGET)]:
                 for loss_mech in loss_mechs:
-                    if node is loss_mech.sample:
+                    if node is loss_mech.sample.owner:
                         processing_graph[node].add(loss_mech)
                         self._implement_graph_edge(g,
                                                    loss_mech.loss_projection,
                                                    context,
                                                    loss_mech.name,
-                                                   loss_mech.sample.name,
+                                                   loss_mech.sample.owner.name,
                                                    color=self.exclude_from_gradient_calc_color,
                                                    penwidth=self.default_width,
                                                    style=self.exclude_from_gradient_calc_line_style)
