@@ -1207,7 +1207,9 @@ class AutodiffComposition(Composition):
         for afferent in mech.path_afferents:
             if afferent.learnable:
                 return True
-            return self._mech_in_learnable_pathway(afferent.sender.owner)
+            depth = self._mech_in_learnable_pathway(afferent.sender.owner)
+            if depth:
+                return True
         return False
 
     def _instantiate_loss_components(self, pathways, context, base_context) ->dict:
@@ -1254,10 +1256,11 @@ class AutodiffComposition(Composition):
         def assert_sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
                                         action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
             """Take specified action if no afferent pathway for sample has any learnable Projections.
-            If no action is specified, return True or False"""
+            - target argument is used for error_message;
+            - if no action is specified, return True or False
+            """
             if self._mech_in_learnable_pathway(sample):
                 return True
-            error_msg = None
             # Construct relevant error/warning message
             if target:
                 if isinstance(target, LossMechanism):
@@ -1268,10 +1271,14 @@ class AutodiffComposition(Composition):
                     target_msg = f"TARGET node ('{target.name}')"
                 error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
                              f"learning that is in a pathway without any learnable Projections.")
+            else:
+                error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
+                             f"but it is not in any pathways with (a) learnable Projection(s).")
+
             # Take specified action
-            if action is ERROR and error_msg:
+            if action is ERROR:
                 raise AutodiffCompositionError(error_msg)
-            elif action is WARNING and error_msg:
+            elif action is WARNING:
                 warnings.warn(error_msg)
             return False
 
@@ -1308,7 +1315,8 @@ class AutodiffComposition(Composition):
                         if sample_port in self.target_ports_for_samples:
                             # TARGET Node has already been constructed for specified sample Port
                             continue
-                        sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
+                        sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
+                                       else sample_port.owner.name)
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
                                                                                        in sample_mech.value],
                                                                                       dtype=object),
