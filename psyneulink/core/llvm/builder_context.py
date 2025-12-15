@@ -502,11 +502,6 @@ class LLVMBuilderContext:
             elif p.name in {'seed', 'function-seed'}:
                 val = float(val)
 
-            # Modulation turns scalars into arrays
-            # TODO: should this be 2d arrays?
-            if np.ndim(val) == 0 and component._is_param_modulated(p):
-                val = [val]
-
             return self.convert_python_struct_to_llvm_ir(val)
 
         elements = map(_param_struct, component._get_compilation_params())
