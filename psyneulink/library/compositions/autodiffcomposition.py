@@ -1257,6 +1257,7 @@ class AutodiffComposition(Composition):
             If no action is specified, return True or False"""
             if self._mech_in_learnable_pathway(sample):
                 return True
+            error_msg = None
             # Construct relevant error/warning message
             if target:
                 if isinstance(target, LossMechanism):
@@ -1268,9 +1269,9 @@ class AutodiffComposition(Composition):
                 error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
                              f"learning that is in a pathway without any learnable Projections.")
             # Take specified action
-            if action is ERROR:
+            if action is ERROR and error_msg:
                 raise AutodiffCompositionError(error_msg)
-            elif action is WARNING:
+            elif action is WARNING and error_msg:
                 warnings.warn(error_msg)
             return False
 
@@ -1307,10 +1308,11 @@ class AutodiffComposition(Composition):
                         if sample_port in self.target_ports_for_samples:
                             # TARGET Node has already been constructed for specified sample Port
                             continue
+                        sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
                                                                                        in sample_mech.value],
                                                                                       dtype=object),
-                                                          name= 'TARGET for ' + sample_port.full_name)
+                                                          name= 'TARGET for ' + sample_name)
                         target_mech._initialize_from_context(context, base_context, override=False)
                         target_port = target_mech.output_port
                         self.target_ports_for_samples.update({sample_port: target_port})
@@ -1342,7 +1344,7 @@ class AutodiffComposition(Composition):
             for output_port_for_learning in output_ports_for_learning:
 
                 # TEACHER_TARGET BREADCRUMB:  ?? ONLY PASS FOR output_CIMs??
-                if not assert_sample_is_in_learnable_pathway(output_port_for_learning.owner):
+                if not assert_sample_is_in_learnable_pathway(output_port_for_learning.owner, action=ERROR):
                     continue
                 # Check for existing TARGET Nodes
                 existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
@@ -1360,10 +1362,12 @@ class AutodiffComposition(Composition):
                     if comparators:
                         target_mech = comparators[0].input_ports['TARGET'].path_afferents[0].sender.owner
                     else:
+                        sample = output_port_for_learning
+                        sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
                         target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
                                                                                        for value in output_port_for_learning.value],
                                                                                       dtype=object),
-                                                          name= 'TARGET for ' + output_port_for_learning.full_name)
+                                                          name= 'TARGET for ' + sample_name)
                         target_mech._initialize_from_context(context, base_context, override=False)
                         constructed_target_mechs.append(target_mech)
                     target_mechs.append(target_mech)
