@@ -1497,6 +1497,8 @@ class LossFunction(ObjectiveFunction):
         return self.convert_output_type(result)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+
+
         # 1. Get pointer to the LOSS parameter state
         # FIXME: we currently don't have a way to compare strings in llvm, so we can't match on loss type.
         loss_ty_ptr = ctx.get_param_or_state_ptr(builder, self, "loss", param_struct_ptr=params)
