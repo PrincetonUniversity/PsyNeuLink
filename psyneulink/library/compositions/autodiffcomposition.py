@@ -1253,7 +1253,7 @@ class AutodiffComposition(Composition):
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
 
-        def assert_sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
+        def sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
                                         action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
             """Take specified action if sample has no afferent pathways with any learnable Projections.
             - target argument is used to determine for error_message;
@@ -1275,9 +1275,12 @@ class AutodiffComposition(Composition):
             else:
                 # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
                 if sample in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
-                    # Singletons are caught here because they are identified as OUTPUT Nodes;
-                    #    warning about non-learnability is handled in _instantiate_optimizer()
+                    # Singletons are caught here because they are identified as OUTPUT Nodes,
+                    #   but are not specified in targets dict of learn() method.
+                    # Technically, they are not erroneous, so allow construction;
+                    #   warning about non-learnability is handled in _instantiate_optimizer()
                     return False
+                # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
                 error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
                              f"but that Node has no afferent pathways with any learnable Projections.")
 
@@ -1303,7 +1306,7 @@ class AutodiffComposition(Composition):
                     target_mech = target_port.owner
                     # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
                     #   then raise error, as executing its LossFunction in pytorch will cause a crash
-                    assert_sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech, ERROR)
+                    sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech, ERROR)
                 elif isinstance(loss_mech_spec, tuple):
                     sample_port, target_spec = loss_mech_spec
                     sample_mech = sample_port.owner
@@ -1311,7 +1314,7 @@ class AutodiffComposition(Composition):
                     # If specified sample Mechanism is not in a pathway with at least one learnable Projection
                     #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
                     #   loss in pytorch will cause a crash
-                    assert_sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech=None, action=ERROR)
+                    sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech=None, action=ERROR)
                     # Determine whether target is internal node or TARGET keyword
                     if isinstance(target_spec, OutputPort):
                         # target is internal Node
@@ -1357,8 +1360,8 @@ class AutodiffComposition(Composition):
             target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
             for output_port_for_learning in output_ports_for_learning:
 
-                if not assert_sample_is_in_learnable_pathway(output_port_for_learning.owner, action=ERROR):
-                    # If no error is generated in assert_sample_is_in_learnable_pathway(), sample is a singeton;
+                if not sample_is_in_learnable_pathway(output_port_for_learning.owner, action=ERROR):
+                    # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
                     #   warning about non-learnability is handled in _instantiate_optimizer()
                     continue
                 # Check for existing TARGET Nodes
