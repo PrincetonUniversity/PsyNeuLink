@@ -1443,7 +1443,6 @@ class AutodiffComposition(Composition):
                     name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
                     loss_mech = LossMechanism(name=f"LOSS for {name}",
                                               sample=sample,
-                                              # target=target,
                                               target=self.target_ports_for_samples[sample],
                                               function=None,
                                               loss=self.loss_spec)

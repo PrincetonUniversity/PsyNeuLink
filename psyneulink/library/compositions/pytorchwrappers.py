@@ -63,6 +63,7 @@ from psyneulink.core.globals.keywords import (
     SAMPLE,
     SHOW_PYTORCH,
     SYNCH,
+    TARGET,
     TARGETS,
     TARGET_MECHANISM,
     TRAINED_OUTPUTS,
@@ -292,6 +293,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context, base_context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
             self.execution_sets, execution_context = self._get_execution_sets(composition, context)
+            # x = self.sample_nodes
+            # y = self.target_nodes
 
         else:
             # Construct node_wrappers, projection_wrappers, and execution_sets from subclass components passed in
@@ -853,15 +856,35 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     @property
     def sample_nodes(self):
-        return [node_wrapper.afferents[0].sender_wrapper
-                for node_wrapper in self.node_wrappers
-                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        # MODIFIED TEACHER_TARGET OLD:
+        # return [node_wrapper.afferents[0].sender_wrapper
+        #         for node_wrapper in self.node_wrappers
+        #         if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        # MODIFIED TEACHER_TARGET NEW:
+        loss_mech_nodes = [node_wrapper for node_wrapper in self.node_wrappers
+                           if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        if loss_mech_nodes:
+            sample_idx = (
+                loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[SAMPLE]))
+            return [node_wrapper.afferents[sample_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
+        return None
+        # MODIFIED TEACHER_TARGET END
 
     @property
     def target_nodes(self):
-        return [node_wrapper.afferents[1].sender_wrapper
-                for node_wrapper in self.node_wrappers
-                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        # # MODIFIED TEACHER_TARGET OLD:
+        # return [node_wrapper.afferents[1].sender_wrapper
+        #         for node_wrapper in self.node_wrappers
+        #         if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        # MODIFIED TEACHER_TARGET NEW:
+        loss_mech_nodes = [node_wrapper for node_wrapper in self.node_wrappers
+                           if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
+        if loss_mech_nodes:
+            target_idx = (
+                loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[TARGET]))
+            return [node_wrapper.afferents[target_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
+        return None
+        # MODIFIED TEACHER_TARGET END
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
