@@ -363,7 +363,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self.composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
-        return {self.composition.gru_mech: output}
+        # MODIFIED TEACHER_TARGET OLD:
+        # return {self.composition.gru_mech: output}
+        # MODIFIED TEACHER_TARGET NEW:
+        return output.detach().cpu().numpy()
+        # MODIFIED TEACHER_TARGET END
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
