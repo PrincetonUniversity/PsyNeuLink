@@ -23,6 +23,7 @@ from psyneulink.core.components.projections.projection import Projection, Duplic
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -55,7 +56,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _pytorch_mechanism_wrapper_type(self, mech):
         return defaultdict(lambda: PytorchMechanismWrapper,
-                           {ProcessingMechanism: PytorchGRUMechanismWrapper}
+                           {LossMechanism: PytorchLossMechanismWrapper,
+                            ProcessingMechanism: PytorchGRUMechanismWrapper}
                            )[mech.__class__]
 
     def __init__(self,
@@ -69,7 +71,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                  ):
 
         self._early_init(composition, device)
-        self.mechanism_wrapper_types.update({EMStorageMechanism: PytorchEMMechanismWrapper})
 
         _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
         gru_pytorch_node = _node_wrapper_pairs[0][1]
@@ -336,7 +337,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
+                full_sequence_mode, sequence_lengths, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
