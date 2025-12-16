@@ -23,6 +23,7 @@ from psyneulink.core.components.projections.projection import Projection, Duplic
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -52,6 +53,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
     and the Pytorch GRU Module's parameters, and return its output value.
     """
+
+    def _pytorch_mechanism_wrapper_type(self, mech):
+        return defaultdict(lambda: PytorchMechanismWrapper,
+                           {LossMechanism: PytorchLossMechanismWrapper,
+                            ProcessingMechanism: PytorchGRUMechanismWrapper}
+                           )[mech.__class__]
+
     def __init__(self,
                  composition,
                  device,
@@ -329,7 +337,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     @handle_external_context()
-    def forward(self, inputs, optimization_num, synch_with_pnl_options, full_sequence_mode, sequence_lengths, context=None)->dict:
+    def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
+                full_sequence_mode, sequence_lengths, context=None)->dict:
         """Forward method of the model for PyTorch modes
 
         This is called only when GRUComposition is run as a standalone Composition.
@@ -354,7 +363,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.composition.output_node.parameters.value._set(output.detach().cpu().numpy(), context)
         self.composition.gru_mech.parameters.value._set(output.detach().cpu().numpy(), context)
 
-        return {self.composition.gru_mech: output}
+        # MODIFIED TEACHER_TARGET OLD:
+        # return {self.composition.gru_mech: output}
+        # MODIFIED TEACHER_TARGET NEW:
+        return output.detach().cpu().numpy()
+        # MODIFIED TEACHER_TARGET END
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):

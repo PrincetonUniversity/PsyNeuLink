@@ -1474,7 +1474,7 @@ class LossFunction(ObjectiveFunction):
                     import torch
                     if isinstance(loss, torch.nn.modules.loss._Loss):
                         return np.array(0)
-                return [0]
+                return np.array([0])
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
 
         if normalize:
@@ -1497,11 +1497,15 @@ class LossFunction(ObjectiveFunction):
         return self.convert_output_type(result)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+
+
         # 1. Get pointer to the LOSS parameter state
         # FIXME: we currently don't have a way to compare strings in llvm, so we can't match on loss type.
         loss_ty_ptr = ctx.get_param_or_state_ptr(builder, self, "loss", param_struct_ptr=params)
         normalize_ptr = ctx.get_param_or_state_ptr(builder, self, "normalize", param_struct_ptr=params)
         metric_ptr = ctx.get_param_or_state_ptr(builder, self, "metric", param_struct_ptr=params)
+        sample_ptr = ctx.get_param_or_state_ptr(builder, self, "sample", param_struct_ptr=params)
+        target_ptr = ctx.get_param_or_state_ptr(builder, self, "target", param_struct_ptr=params)
 
         # 2. Get pointers to Network Output (Index 0) and Target (Index 1)
         # arg_in type: [2 x [1 x double]]*
@@ -1551,8 +1555,6 @@ class LossFunction(ObjectiveFunction):
         output_storage = builder.gep(arg_out, [zero, zero, zero], name="output_storage")
         builder.store(mse_result, output_storage)
         return builder
-
-
 
     def _gen_pytorch_fct(self, device, context=None):
 

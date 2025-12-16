@@ -2952,6 +2952,14 @@ class EMComposition(AutodiffComposition):
         super()._identify_output_nodes(context)
         return target_nodes
 
+    def _sample_is_in_learnable_pathway(self, *args, **kwargs):
+        """Override to suppress error for no learnable pathways if it is for sample in EM Composition
+        More informative error is generated in PytorchCompositionWrapper._assign_learning_rates()
+        """
+        if kwargs['sample']:
+            kwargs['action']=None
+        return super()._sample_is_in_learnable_pathway(*args, **kwargs)
+
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
         if self.concatenate_queries:
             raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
