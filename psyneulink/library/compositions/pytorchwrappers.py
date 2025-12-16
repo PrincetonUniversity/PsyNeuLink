@@ -103,11 +103,6 @@ class DataTypeEnum(Enum):
     TARGETS = auto()
     LOSSES = auto()
 
-def pytorch_mechanism_wrapper_type(mech_type):
-    return defaultdict(lambda: PytorchMechanismWrapper,
-                       {LossMechanism: PytorchLossMechanismWrapper}
-                       )[mech_type.__class__]
-
 def _get_pytorch_function(obj, device, context):
     pytorch_fct = getattr(obj, '_gen_pytorch_fct', None)
     if pytorch_fct is None:
@@ -268,6 +263,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
     """
 
     torch_dtype = torch.float64
+
+    def _pytorch_mechanism_wrapper_type(self, mech):
+        return defaultdict(lambda: PytorchMechanismWrapper,
+                           {LossMechanism: PytorchLossMechanismWrapper}
+                           )[mech.__class__]
 
     def __init__(self,
                  composition,
@@ -462,7 +462,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Wrap Mechanism
             else:
                 pytorch_node_wrapper = (
-                    pytorch_mechanism_wrapper_type(node)(
+                    self._pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
                         composition=composition,
                         component_idx=self.composition._get_node_index(node),
