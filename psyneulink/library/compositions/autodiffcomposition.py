@@ -1212,6 +1212,45 @@ class AutodiffComposition(Composition):
                 return True
         return False
 
+    def _sample_is_in_learnable_pathway(self, sample, target=None, loss_mech=None,
+                                        constructed_target_mechs=None,
+                                        action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
+        """Take specified action if sample has no afferent pathways with any learnable Projections.
+        - target argument is used to determine for error_message;
+        - if no action is specified, return True or False
+        """
+        if self._mech_in_learnable_pathway(sample):
+            return True
+        # Construct relevant error/warning message
+        if target:
+            # Target was specified in *targets* arg of constructor
+            if isinstance(target, LossMechanism):
+                target_msg = f"LossMechanism ('{loss_mech.name}')"
+            elif target in constructed_target_mechs:
+                target_msg = "TARGET input"
+            else:
+                target_msg = f"TARGET node ('{target.name}')"
+            error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
+                         f"learning that has no afferent pathways with any learnable Projections.")
+        else:
+            # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
+            if sample in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
+                # Singletons are caught here because they are identified as OUTPUT Nodes,
+                #   but are not specified in targets dict of learn() method.
+                # Technically, they are not erroneous, so allow construction;
+                #   warning about non-learnability is handled in _instantiate_optimizer()
+                return False
+            # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
+            error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
+                         f"but that Node has no afferent pathways with any learnable Projections.")
+
+        # Take specified action
+        if action is ERROR:
+            raise AutodiffCompositionError(error_msg)
+        elif action is WARNING:
+            warnings.warn(error_msg)
+        return False
+
     def _instantiate_loss_components(self, pathways, context, base_context) ->dict:
         """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
 
@@ -1248,44 +1287,6 @@ class AutodiffComposition(Composition):
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
 
-        def sample_is_in_learnable_pathway(sample, target=None, loss_mech=None,
-                                        action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
-            """Take specified action if sample has no afferent pathways with any learnable Projections.
-            - target argument is used to determine for error_message;
-            - if no action is specified, return True or False
-            """
-            if self._mech_in_learnable_pathway(sample):
-                return True
-            # Construct relevant error/warning message
-            if target:
-                # Target was specified in *targets* arg of constructor
-                if isinstance(target, LossMechanism):
-                    target_msg = f"LossMechanism ('{loss_mech.name}')"
-                elif target in constructed_target_mechs:
-                    target_msg = "TARGET input"
-                else:
-                    target_msg = f"TARGET node ('{target.name}')"
-                error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
-                             f"learning that has no afferent pathways with any learnable Projections.")
-            else:
-                # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-                if sample in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
-                    # Singletons are caught here because they are identified as OUTPUT Nodes,
-                    #   but are not specified in targets dict of learn() method.
-                    # Technically, they are not erroneous, so allow construction;
-                    #   warning about non-learnability is handled in _instantiate_optimizer()
-                    return False
-                # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-                error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
-                             f"but that Node has no afferent pathways with any learnable Projections.")
-
-            # Take specified action
-            if action is ERROR:
-                raise AutodiffCompositionError(error_msg)
-            elif action is WARNING:
-                warnings.warn(error_msg)
-            return False
-
         # Determine whether targets were specified by user or OUTPUT Nodes should be used to construct TARGET Nodes
         if self.targets:
             # targets specified by user in **targets** argument of AutodiffComposition constructor,
@@ -1301,7 +1302,9 @@ class AutodiffComposition(Composition):
                     target_mech = target_port.owner
                     # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
                     #   then raise error, as executing its LossFunction in pytorch will cause a crash
-                    sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech, ERROR)
+                    self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=loss_mech,
+                                                         constructed_target_mechs=constructed_target_mechs,
+                                                         action=ERROR)
                 elif isinstance(loss_mech_spec, tuple):
                     sample_port, target_spec = loss_mech_spec
                     sample_mech = sample_port.owner
@@ -1309,7 +1312,9 @@ class AutodiffComposition(Composition):
                     # If specified sample Mechanism is not in a pathway with at least one learnable Projection
                     #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
                     #   loss in pytorch will cause a crash
-                    sample_is_in_learnable_pathway(sample_mech, target_mech, loss_mech=None, action=ERROR)
+                    self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=None,
+                                                         constructed_target_mechs=constructed_target_mech,
+                                                         action=ERROR)
                     # Determine whether target is internal node or TARGET keyword
                     if isinstance(target_spec, OutputPort):
                         # target is internal Node
@@ -1355,7 +1360,10 @@ class AutodiffComposition(Composition):
             target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
             for output_port_for_learning in output_ports_for_learning:
 
-                if not sample_is_in_learnable_pathway(output_port_for_learning.owner, action=ERROR):
+                if not self._sample_is_in_learnable_pathway(sample=output_port_for_learning.owner, target=None,
+                                                            loss_mech=None,
+                                                            constructed_target_mechs=constructed_target_mechs,
+                                                            action=ERROR):
                     # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
                     #   warning about non-learnability is handled in _instantiate_optimizer()
                     continue
@@ -2945,6 +2953,13 @@ class AutodiffComposition(Composition):
 
     def target_nodes(self):
         return [loss_mech.target for loss_mech in self.loss_mechs_map]
+
+    @property
+    def learning_components(self):
+        # MODIFIED TEACHER_TARGET NEW:
+        pytorch_learning_components = (self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)
+                                       + self.get_nodes_by_role(NodeRole.TARGET))
+        return pytorch_learning_components or super().learning_components
 
     @property
     def torch_parameters(self):

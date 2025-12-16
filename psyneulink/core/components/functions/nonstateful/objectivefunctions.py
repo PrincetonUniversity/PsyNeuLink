@@ -1474,7 +1474,7 @@ class LossFunction(ObjectiveFunction):
                     import torch
                     if isinstance(loss, torch.nn.modules.loss._Loss):
                         return np.array(0)
-                return [0]
+                return np.array([0])
             raise FunctionError(f"Specified loss ({loss}) not currently supported for learning in Python mode.")
 
         if normalize:
@@ -1555,8 +1555,6 @@ class LossFunction(ObjectiveFunction):
         output_storage = builder.gep(arg_out, [zero, zero, zero], name="output_storage")
         builder.store(mse_result, output_storage)
         return builder
-
-
 
     def _gen_pytorch_fct(self, device, context=None):
 
