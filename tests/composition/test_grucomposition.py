@@ -508,7 +508,7 @@ if torch_available:
                                  ids=[f"{x[0]}_{x[1]}" for x in test_specs])
         def test_learning_rate_assignments(self, condition, gru_proj, expected):
             input_mech = pnl.ProcessingMechanism(input_shapes=3)
-            output_mech = pnl.ProcessingMechanism(input_shapesd=5)
+            output_mech = pnl.ProcessingMechanism(input_shapes=5)
             gru = pnl.GRUComposition(input_size=3, hidden_size=5, bias=False,
                                      learning_rate={gru_proj: 0.3} if condition=='specs_to_nested' else None
                                      )
