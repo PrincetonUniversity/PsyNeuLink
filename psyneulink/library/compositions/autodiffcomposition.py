@@ -2538,10 +2538,6 @@ class AutodiffComposition(Composition):
         """Track results at specified frequency during learning"""
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
 
-            # Drop the sequence dimension if its singleton
-
-
-
             # Check if the trial_output is atleast 3D
             is_output_3d = trial_output.ndim >= 3 or (trial_output.ndim == 2 and len(trial_output) > 0 and
                                                       isinstance(trial_output[0, 0], (np.ndarray, list)))

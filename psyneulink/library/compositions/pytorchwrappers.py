@@ -2028,23 +2028,40 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.log_weights()
         context.source = old_source
 
-        # FORMAT AND STORE RESULTS
-
         # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
-        output_values = [self.nodes_map[node].output for node in self.output_nodes]
-        output_values = [val.detach().cpu().tolist() for val in output_values]
+        output_cim = self.composition.output_CIM
+        source_infos = (output_cim._get_source_info_from_output_CIM(port) for port in output_cim.input_ports)
+        outputs_idx_port_node_comp = [
+            (info[1].output_ports.index(info[0]), *info)
+            for info in source_infos
+        ]
+
+        # Assign values to  all_output_values
+        output_values = []
+        for idx, port, node, comp in outputs_idx_port_node_comp:
+
+            outputs = self.nodes_map[node].output
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, :, idx, ...]
+            else:
+                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+
+            # If the sequence dimension is singleton, squeeze it away
+            if output.shape[1] == 1:
+                output = output.squeeze(1)
+            else:
+                raise ValueError("Currently, outputs with sequence length > 1 are not supported.")
+
+            output = output.detach().cpu().tolist()
+
+            output_values += [output]
+
         # Turn into a numpy array, possibly ragged
         output_values = convert_to_np_array(output_values)
 
-        # If the sequence dimension is singleton, remove it
-        if output_values.shape[2] == 1:
-            output_values = output_values.squeeze(2)
-
-        # Squeeze out the singleton output port dimension
-        output_values = output_values.squeeze(-2)
-
         # Swap the first two dimensions (output_port, batch) to (batch, output_port)
         output_values = output_values.swapaxes(0, 1)
+
         self.all_output_values = output_values
 
         # Get value of all SAMPLE (student) Nodes:
