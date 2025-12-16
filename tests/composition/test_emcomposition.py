@@ -1103,16 +1103,27 @@ class TestExecution:
                                        context_learning_pathway],
                                       name='EGO',
                                       learning_rate=.5,
+                                      # TEACHER_TARGET BREADCRUMB: MAKE CONDITIONAL ON TEST OF THIS NEW API
+                                      # targets={prediction_layer: state_input_layer},
+                                      targets=(prediction_layer, state_input_layer),
                                       loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
                                       device=pnl.CPU)
 
         learning_components = EGO.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        assert len(learning_components) == 2
+        # MODIFIED TEACHER_TARGET OLD:
+        # assert len(learning_components) == 2
+        # assert learning_components[0].name == 'LOSS for PREDICTION'
+        # assert learning_components[1].name == 'TARGET for PREDICTION'
+        # MODIFIED TEACHER_TARGET NEW:
+        assert len(learning_components) == 1
         assert learning_components[0].name == 'LOSS for PREDICTION'
-        assert learning_components[1].name == 'TARGET for PREDICTION'
-        EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
-                                                 receiver=learning_components[0],
-                                                 learnable=False))
+        # MODIFIED TEACHER_TARGET END
+        # # TEACHER_TARGET BREADCRUMB: OLD,BUT KEEP FOR TESTING
+        # #                            configuration in which another node is assigned a projection to a TARGET Node
+        # #                            instead of assigning that node as a target in the *targets* arg of the constructor
+        # EGO.add_projection(pnl.MappingProjection(sender=state_input_layer,
+        #                                          receiver=learning_components[1],
+        #                                          learnable=False))
 
         EGO.scheduler.add_condition(em, pnl.BeforeNodes(previous_state_layer, context_layer))
 

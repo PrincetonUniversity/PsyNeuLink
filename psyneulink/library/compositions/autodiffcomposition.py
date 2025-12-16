@@ -1313,7 +1313,7 @@ class AutodiffComposition(Composition):
                     #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
                     #   loss in pytorch will cause a crash
                     self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=None,
-                                                         constructed_target_mechs=constructed_target_mech,
+                                                         constructed_target_mechs=None,
                                                          action=ERROR)
                     # Determine whether target is internal node or TARGET keyword
                     if isinstance(target_spec, OutputPort):
