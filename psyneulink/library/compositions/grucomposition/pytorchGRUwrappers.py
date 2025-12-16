@@ -470,6 +470,10 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          subclass_specifies_function=True,
                          context=context)
 
+        # TEACHER_TARGET BREADCRUMB: CHECK WHETHER EFFEERNT OF mechanism INCLUDES A LOSS FUNCTION AND,
+        #                            IF SO, ADD IT'S WRAPPER TO THIS NODE'S EFFERENTS LIST
+        #                            AND THIS NODE'S WRAPPER TOTHE LOSS NODE'S SAMPLE AFFERENT LIST
+
         self._assign_GRU_pytorch_function(mechanism, device, context)
 
         self.synch_with_pnl = False
