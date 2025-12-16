@@ -18,7 +18,9 @@ except (ImportError, ModuleNotFoundError):
 from typing import Optional
 from collections import defaultdict
 
-from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper
+from psyneulink.library.compositions.pytorchwrappers import (
+    PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchLossMechanismWrapper)
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.globals.keywords import AFTER, ALL, FIRST, LAST
 
@@ -29,7 +31,9 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
     def _pytorch_mechanism_wrapper_type(self, mech):
         return defaultdict(lambda: PytorchMechanismWrapper,
-                           {EMStorageMechanism: PytorchEMMechanismWrapper}
+                           # return defaultdict(lambda: super(PytorchCompositionWrapper)._pytorch_mechanism_wrapper_type(mech),
+                           {LossMechanism: PytorchLossMechanismWrapper,
+                            EMStorageMechanism: PytorchEMMechanismWrapper}
                            )[mech.__class__]
 
     def __init__(self, *args, **kwargs):

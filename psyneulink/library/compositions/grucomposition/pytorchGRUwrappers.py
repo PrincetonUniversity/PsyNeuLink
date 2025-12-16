@@ -69,6 +69,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                  ):
 
         self._early_init(composition, device)
+        self.mechanism_wrapper_types.update({EMStorageMechanism: PytorchEMMechanismWrapper})
 
         _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
         gru_pytorch_node = _node_wrapper_pairs[0][1]
