@@ -120,8 +120,8 @@ jobs:
         python -m pip --version
         echo "pip_cache_dir=$(python -m pip cache dir)" | tee -a $GITHUB_OUTPUT
 
-    - name: Wheels cache
-      uses: actions/cache@v5
+    - name: Restore wheels cache
+      uses: actions/cache/restore@v5
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
@@ -140,6 +140,13 @@ jobs:
       id: install
       with:
         features: 'dev'
+
+    - name: Save wheels cache
+      uses: actions/cache/save@v5
+      if: always()
+      with:
+        path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels-${{ hashFiles('requirements.txt', 'dev_requirements.txt') }}-${{ github.sha }}
 
     - name: Lint with flake8
       shell: bash
