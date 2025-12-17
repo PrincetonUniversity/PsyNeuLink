@@ -499,23 +499,25 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                 if sample_mech is mechanism:
                     proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
                     outer_comp._pytorch_projections.append(proj)
+                    outer_comp_pytorch_rep.composition_orphaned_projections.append(proj)
+                    outer_comp_pytorch_rep.nodes_map[mechanism] = self
                     # component_idx = list(outer_comp._inner_projections).index(proj)
-                    sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sample_mech]
-                    rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[loss_mech]
-                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
-                    proj_wrapper = PytorchProjectionWrapper(projection=proj,
-                                                            pnl_proj=proj,
-                                                            # component_idx=component_idx,
-                                                            component_idx=None,
-                                                            sender_port_idx=sender_port_idx,
-                                                            use=[SHOW_PYTORCH],
-                                                            device=self.device,
-                                                            sender_wrapper=sndr_mech_wrapper,
-                                                            receiver_wrapper=rcvr_mech_wrapper,
-                                                            context=context)
-                    outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
-                    outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
-                    outer_comp_pytorch_rep.composition._pytorch_projections.append(proj)
+                    # sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sample_mech]
+                    # rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[loss_mech]
+                    # proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
+                    # proj_wrapper = PytorchProjectionWrapper(projection=proj,
+                    #                                         pnl_proj=proj,
+                    #                                         # component_idx=component_idx,
+                    #                                         component_idx=None,
+                    #                                         sender_port_idx=sender_port_idx,
+                    #                                         use=[SHOW_PYTORCH],
+                    #                                         device=self.device,
+                    #                                         sender_wrapper=sndr_mech_wrapper,
+                    #                                         receiver_wrapper=rcvr_mech_wrapper,
+                    #                                         context=context)
+                    # outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
+                    # outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
+                    # outer_comp_pytorch_rep.composition._pytorch_projections.append(proj)
 
 
 

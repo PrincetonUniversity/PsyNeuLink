@@ -285,6 +285,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.outer_creator = outer_creator
         self.composition_orphaned_projections = []
+        self.nodes_map = {} # maps Node(Mech | nested Comp) -> PytorchMechanismWrapper | PytorchCompositionWrapper
+        self.node_wrappers = []
 
         if subclass_components is None:
             self._early_init(composition, device)
@@ -407,8 +409,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                      f"or PytorchCompositionWrapper object).")
 
     def _construct_node_wrapper_maps(self, _node_wrapper_pairs):
-        self.nodes_map = {} # maps Node(Mech | nested Comp) -> PytorchMechanismWrapper | PytorchCompositionWrapper
-        self.node_wrappers = []
         self._modules_dict = torch.nn.ModuleDict()
         for node, pytorch_node_wrapper in _node_wrapper_pairs:
             self._add_node_to_nodes_map(node, pytorch_node_wrapper)
@@ -490,7 +490,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # MODIFIED TEACHER_TARGET OLD:
         # for projection in composition._inner_projections:
         # MODIFIED TEACHER_TARGET NEW:
-        for projection in self.get_comp_projections(composition):
+        for projection in self._get_composition_projections(composition):
         # MODIFIED TEACHER_TARGET END
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
