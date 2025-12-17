@@ -283,10 +283,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         super(PytorchCompositionWrapper, self).__init__()
 
-        self.outer_creator = outer_creator
-        self.composition_orphaned_projections = []
-        self.nodes_map = {} # maps Node(Mech | nested Comp) -> PytorchMechanismWrapper | PytorchCompositionWrapper
-        self.node_wrappers = []
+        self.outer_creator = outer_creator # AutodiffComposition for which executable pytorch_rep is being constructed
+        self.additional_pytorch_relevant_projections = [] # Needed for cases in which creation of pytorch_representation
+                                                          # fails to include all relevant projections
+        self.nodes_map = {} # { Node <mech or nested Comp> : <PytorchMechanismWrapper or PytorchCompositionWrapper> }
+        self.node_wrappers = [] # [ <PytorchMechanismWrapper or PytorchCompositionWrapper>,... ]
 
         if subclass_components is None:
             self._early_init(composition, device)
@@ -585,7 +586,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     # MODIFIED TEACHER_TARGET NEW:
     def _get_composition_projections(self, composition):
         projections = list(composition._inner_projections)
-        return projections + self.composition_orphaned_projections
+        return projections + self.additional_pytorch_relevant_projections
     # MODIFIED TEACHER_TARGET END
 
     def _handle_nested_comp(
