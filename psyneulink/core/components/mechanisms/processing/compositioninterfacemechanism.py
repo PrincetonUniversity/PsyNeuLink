@@ -228,12 +228,16 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
-    def _get_source_node_for_input_CIM(self, port, start_comp=None)->tuple or None:
+    def _get_source_node_for_input_CIM(self, port, start_comp=None, return_outermost_comp=False)->tuple or None:
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
-        Return None if there is no source Node (i.e., port receives input directly from input to outermost Composition)
-        **port** InputPort or OutputPort of the input_CIM from which the local projection projects;
-        **comp** Composition at which to begin the search (or continue it when called recursively;
+        **port**: InputPort or OutputPort of the input_CIM from which the local projection projects;
+        **comp**: Composition at which to begin the search (or continue it when called recursively;
                  assumes the current CompositionInterfaceMechanism's Composition by default
+        **return_outermost_comp**: determines what is returned if there is no source Node
+                                    (i.e., port receives input directly from input to outermost Composition)
+            if False (default): return None
+            if True: return Outermost comp if return_outer_most_comp
+
         """
         # Ensure method is being called on an output_CIM
         assert self == self.composition.input_CIM
@@ -246,11 +250,15 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
                                    f"in port_map for {port.owner}; found {len(input_port)}."
         if not len(input_port[0].path_afferents):
-            return None
+            if return_outermost_comp:
+                return input_port[0].owner.composition
+            else:
+                return None
+
         sender = input_port[0].path_afferents[0].sender
         if not isinstance(sender.owner, CompositionInterfaceMechanism):
             return sender, sender.owner, comp
-        return self._get_source_node_for_input_CIM(sender, sender.owner.composition)
+        return self._get_source_node_for_input_CIM(sender, sender.owner.composition, return_outermost_comp)
 
     def _get_destination_info_from_input_CIM(self, port, comp=None):
         """Return Port, Node and Composition for "ultimate" destination of projection to **port**.

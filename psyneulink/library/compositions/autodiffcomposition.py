@@ -1101,7 +1101,12 @@ class AutodiffComposition(Composition):
                                f"without detecting OUTPUT NODE at end of pathway")
 
             # End of pathway: OUTPUT Node of outer Composition
-            if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+            # # MODIFIED TEACHER_TARGET OLD:
+            # if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
+            # MODIFIED TEACHER_TARGET NEW ADD LossMech.SAMPLE :
+            if current_comp == self and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
+                                         or not node.efferents):
+            # MODIFIED TEACHER_TARGET END
                 pathways.append(create_pathway(current_comp, node))
                 continue
 
@@ -1109,8 +1114,14 @@ class AutodiffComposition(Composition):
             # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
             efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
             if not efferent_projs:
+                # # MODIFIED TEACHER_TARGET OLD:
+                # efferent_projs = [(p, p.receiver.owner) for p in node.efferents
+                #                   if p in current_comp._pytorch_projections]
+                # MODIFIED TEACHER_TARGET NEW:
                 efferent_projs = [(p, p.receiver.owner) for p in node.efferents
-                                  if p in current_comp._pytorch_projections]
+                                  if (p in current_comp._pytorch_projections
+                                      or isinstance(p.receiver.owner, LossMechanism))]
+                # MODIFIED TEACHER_TARGET END
 
             # Follow efferent Projection to next Node in pathway
             for efferent_proj, rcvr in efferent_projs:
@@ -1398,6 +1409,9 @@ class AutodiffComposition(Composition):
             self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
 
         # Validate LossMechanism specs
+        if not loss_mech_specs:
+            raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
+                                           f"since it does not have any learnable Projections.")
         for loss_mech_spec in list(loss_mech_specs):
             # Assume that self.targets is a list of LossMechanisms and/or tuples specifying sample:target pairs
             assert isinstance(loss_mech_spec, (LossMechanism, tuple)), \
@@ -1441,6 +1455,8 @@ class AutodiffComposition(Composition):
                     #        But it IS OK to have multiple LossMechanisms use the same TARGET Node
                     #        (i.e., to train multiple SAMPLES)
                     name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
+                    # TEACH_TARGET BREADCRUMB: HACK TO SEE IF IT WORKS:
+                    # sample1 = self.nodes[0].nodes['OUTPUT'].output_port
                     loss_mech = LossMechanism(name=f"LOSS for {name}",
                                               sample=sample,
                                               target=self.target_ports_for_samples[sample],

@@ -27,9 +27,8 @@ from psyneulink.library.components.mechanisms.processing.objective.lossmechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import (
-    ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING, NODE_VALUES, SHOW_PYTORCH, SYNCH, SYNCH_WITH_PNL_OPTIONS,
-)
+from psyneulink.core.globals.keywords import (ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING,
+                                              NODE_VALUES, SAMPLE, SHOW_PYTORCH, SYNCH,SYNCH_WITH_PNL_OPTIONS)
 from psyneulink.core.globals.log import LogCondition
 
 __all__ = ['PytorchGRUCompositionWrapper',
@@ -72,7 +71,8 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         self._early_init(composition, device)
 
-        _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, device, context)
+        _node_wrapper_pairs = self._instantiate_GRU_pytorch_mechanism_wrappers(composition, outer_creator,
+                                                                               device, context)
         gru_pytorch_node = _node_wrapper_pairs[0][1]
         torch_gru = gru_pytorch_node.function.function
         _projection_wrapper_pairs = self._instantiate_GRU_pytorch_projection_wrappers(torch_gru, device, context)
@@ -138,12 +138,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                                       f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
                                       f"use 'HIDDEN_TO_HIDDEN' to set learning rate for all such weights.")
 
-    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, device, context):
+    def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, outer_creator, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
         gru_mech = gru_comp.gru_mech
         pytorch_node = PytorchGRUMechanismWrapper(mechanism=gru_mech,
-                                                  composition=gru_comp,
+                                                  gru_composition=gru_comp,
                                                   component_idx=0,
+                                                  outer_creator=outer_creator,
                                                   use=[LEARNING, SHOW_PYTORCH],
                                                   dtype=self.torch_dtype,
                                                   device=device,
@@ -454,15 +455,16 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
     def __init__(self,
                  mechanism,
-                 composition,
+                 gru_composition,
                  component_idx,
-                 use,
-                 dtype,
-                 device,
-                 context):
+                 outer_creator=None,
+                 use=None,
+                 dtype=None,
+                 device=None,
+                 context=None):
 
         super().__init__(mechanism=mechanism,
-                         composition=composition,
+                         composition=gru_composition,
                          component_idx=component_idx,
                          use=use,
                          dtype=dtype,
@@ -470,13 +472,58 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          subclass_specifies_function=True,
                          context=context)
 
-        # TEACHER_TARGET BREADCRUMB: CHECK WHETHER EFFEERNT OF mechanism INCLUDES A LOSS FUNCTION AND,
-        #                            IF SO, ADD IT'S WRAPPER TO THIS NODE'S EFFERENTS LIST
-        #                            AND THIS NODE'S WRAPPER TOTHE LOSS NODE'S SAMPLE AFFERENT LIST
+        # # TEACHER_TARGET BREADCRUMB: CHECK WHETHER EFFEERNT OF mechanism INCLUDES A LOSS MECHANISM AND,
+        # #                            IF SO, ADD IT'S WRAPPER TO THIS NODE'S EFFERENTS LIST
+        # #                            AND THIS NODE'S WRAPPER TOTHE LOSS NODE'S SAMPLE AFFERENT LIST
+        # loss_mechs = [efferent.receiver.owner for efferent in mechanism.efferents
+        #               if isinstance(efferent.receiver.owner, LossMechanism)]
 
         self._assign_GRU_pytorch_function(mechanism, device, context)
 
         self.synch_with_pnl = False
+
+        # MODIFIED TEACHER_TARGET NEW:
+        # For any LossMechanisms missing a sample afferent:
+        #   add PytorchProjectionWrapper for PYTORCH GRU NODE -> LossMechanism.sample
+        #    (happens if GRU is a sample and is the only node of a nested Composition,
+        #     since the actual sample is the PYTORDCH GRU NODE, which is not picked up
+        #     in generating the backprop pathways for the PytorchCompositionWrapper of the outer composition)
+        if self.composition.is_nested:
+            # _, outer_comp = self.composition._get_outer_compositions()
+            outer_comp = context.composition
+            outer_comp_pytorch_rep = outer_creator
+            assert outer_comp == outer_creator.composition
+
+            for loss_mech in [mech for mech in outer_comp.nodes if isinstance(mech, LossMechanism)]:
+                sample_mech = loss_mech.sample.owner
+                if sample_mech is mechanism:
+                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
+                    outer_comp._pytorch_projections.append(proj)
+                    # component_idx = list(outer_comp._inner_projections).index(proj)
+                    sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sample_mech]
+                    rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[loss_mech]
+                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
+                    proj_wrapper = PytorchProjectionWrapper(projection=proj,
+                                                            pnl_proj=proj,
+                                                            # component_idx=component_idx,
+                                                            component_idx=None,
+                                                            sender_port_idx=sender_port_idx,
+                                                            use=[SHOW_PYTORCH],
+                                                            device=self.device,
+                                                            sender_wrapper=sndr_mech_wrapper,
+                                                            receiver_wrapper=rcvr_mech_wrapper,
+                                                            context=context)
+                    outer_comp_pytorch_rep.projection_wrappers.append(proj_wrapper)
+                    outer_comp_pytorch_rep.projections_map[direct_proj] = proj_wrapper
+                    outer_comp_pytorch_rep.composition._pytorch_projections.append(proj)
+
+
+
+
+
+        # MODIFIED TEACHER_TARGET END
+
+
 
     def _assign_GRU_pytorch_function(self, mechanism, device, context):
         # Assign PytorchFunctionWrapper of Pytorch GRU module as function of GRU Node

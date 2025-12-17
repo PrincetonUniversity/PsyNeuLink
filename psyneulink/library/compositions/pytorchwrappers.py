@@ -284,6 +284,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         super(PytorchCompositionWrapper, self).__init__()
 
         self.outer_creator = outer_creator
+        self.composition_orphaned_projections = []
 
         if subclass_components is None:
             self._early_init(composition, device)
@@ -293,8 +294,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context, base_context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
             self.execution_sets, execution_context = self._get_execution_sets(composition, context)
-            # x = self.sample_nodes
-            # y = self.target_nodes
 
         else:
             # Construct node_wrappers, projection_wrappers, and execution_sets from subclass components passed in
@@ -487,8 +486,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """
 
         proj_wrappers_pairs = []
-        # Instantiate PyTorch ProjectionWrappers (ignoring any from/to CIMs in the same composition)
-        for projection in composition._inner_projections:
+        # Instantiate PyTorch ProjectionWrappers, ignoring any from/to CIMs in the same composition)
+        # MODIFIED TEACHER_TARGET OLD:
+        # for projection in composition._inner_projections:
+        # MODIFIED TEACHER_TARGET NEW:
+        for projection in self.get_comp_projections(composition):
+        # MODIFIED TEACHER_TARGET END
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
 
@@ -527,7 +530,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            component_idx = list(self.composition._inner_projections).index(projection)
+            # # MODIFIED TEACHER_TARGET OLD:
+            # component_idx = list(self.composition._inner_projections).index(projection)
+            # MODIFIED TEACHER_TARGET NEW:
+            component_idx = self._get_composition_projections(composition).index(projection)
+            # MODIFIED TEACHER_TARGET END
+
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
@@ -555,7 +563,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
                                                         projection.name: projection_param_name_comp_tuple})
 
-        # # Create ProjectionWrappers for LossMechanism -> SAMPLE for display in show_graph(pytorch=True)
+        # # Create ProjectionWrappers for PYTORCH_GRU_Node -> LossMechanism
         # for loss_mech in [node for node in self.composition.nodes if isinstance(node, LossMechanism)]:
         #     sample = loss_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
         #     pytorch_proj_wrapper = PytorchProjectionWrapper(projection=loss_mech.loss_projection,
@@ -573,6 +581,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # #     proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
 
         return proj_wrappers_pairs
+
+    # MODIFIED TEACHER_TARGET NEW:
+    def _get_composition_projections(self, composition):
+        projections = list(composition._inner_projections)
+        return projections + self.composition_orphaned_projections
+    # MODIFIED TEACHER_TARGET END
 
     def _handle_nested_comp(
         self,
@@ -867,7 +881,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             sample_idx = (
                 loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[SAMPLE]))
             return [node_wrapper.afferents[sample_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
-        return None
+        return []
         # MODIFIED TEACHER_TARGET END
 
     @property
@@ -883,7 +897,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             target_idx = (
                 loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[TARGET]))
             return [node_wrapper.afferents[target_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
-        return None
+        return []
         # MODIFIED TEACHER_TARGET END
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:

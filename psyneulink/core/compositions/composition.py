@@ -5018,17 +5018,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
-    def _get_outer_compositions(self, outer_composition)->list:
+    def _get_outer_compositions(self, outer_composition=None)->list:
         """Return list of outer Compositions within which self is nested, from innermost to outermost
         *outer_composition* specifies Composition at which to start the search; self must be nested within it.
         Return list of Compositions, starting with self and ending with outer_composition, or self if it is not nested.
         """
         if not self.is_nested:
             return [self]
+        if not outer_composition:
+            for input_port in self.input_CIM.input_ports:
+                source = self.input_CIM._get_source_node_for_input_CIM(input_port, None, True)
+                if isinstance(source, Composition):
+                    outer_composition = source
         nested_comps = outer_composition._get_nested_compositions()
         if self not in nested_comps:
             raise CompositionError(f"'{self.name}._get_outer_compositions_for_nested()' called with"
                                    f" '{outer_composition.name}' but it is not nested within that.")
+
         def dfs(current, path):
             if current is self:
                 return path + [current]
