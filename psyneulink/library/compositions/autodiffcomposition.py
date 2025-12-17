@@ -2699,8 +2699,6 @@ class AutodiffComposition(Composition):
             projection.parameters.matrix.set(matrix, context=context, override=True)
             projection.parameter_ports['matrix'].parameters.value.set(matrix, context=context, override=True)
 
-        self._build_pytorch_representation(context=context, new=True)
-
     def _get_state_ids(self):
         return super()._get_state_ids() + ["optimizer"]
 
