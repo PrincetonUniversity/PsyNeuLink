@@ -239,31 +239,35 @@ class TestOutputPorts:
 
             np.testing.assert_allclose(result, expected)
 
-    def test_decision_outcome_integrator(self):
-        ddm = DDM(
-            function=DriftDiffusionIntegrator(rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0),
-            output_ports=[DECISION_OUTCOME],
-            name='DDM'
-        )
+    def test_decision_outcome_integrator(self, mech_mode):
+        ddm = pnl.DDM(function=DriftDiffusionIntegrator(rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0),
+                      output_ports=[DECISION_OUTCOME],
+                      name='DDM')
 
-        np.testing.assert_allclose(ddm.execute([10.0]), [[0.5], [1]])
-        np.testing.assert_allclose(ddm.output_ports[0].value, [1.0])
+        EX = pytest.helpers.get_mech_execution(ddm, mech_mode)
 
-        np.testing.assert_allclose(ddm.execute([-10.0]), [[-0.5], [2]])
-        np.testing.assert_allclose(ddm.output_ports[0].value, [0.0])
+        res = EX([10])
 
-    def test_decision_outcome_analytical(self):
-        ddm = DDM(
-            function=DriftDiffusionAnalytical(drift_rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0001),
-            output_ports=[DECISION_OUTCOME],
-            name='DDM'
-        )
+        np.testing.assert_allclose(res, [[1.0]])
+        np.testing.assert_allclose(ddm.value, [[0.5], [1]])
 
-        ddm.execute([10.0])
-        np.testing.assert_allclose(ddm.output_ports[0].value, [1.0])
+        res = EX([-10])
 
-        ddm.execute([-10.0])
-        np.testing.assert_allclose(ddm.output_ports[0].value, [0.0])
+        np.testing.assert_allclose(res, [[0.0]])
+        np.testing.assert_allclose(ddm.value, [[-0.5], [2]])
+
+    def test_decision_outcome_analytical(self, mech_mode):
+        ddm = pnl.DDM(function=DriftDiffusionAnalytical(drift_rate=0.5, threshold=0.5, non_decision_time=0.0, noise=0.0001),
+                      output_ports=[DECISION_OUTCOME],
+                      name='DDM')
+
+        EX = pytest.helpers.get_mech_execution(ddm, mech_mode)
+
+        res = EX([10.0])
+        np.testing.assert_allclose(res, [[1.0]])
+
+        res = EX([-10.0])
+        np.testing.assert_allclose(res, [[0.0]])
 
 
 # ------------------------------------------------------------------------------------------------
