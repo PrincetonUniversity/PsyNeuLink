@@ -2051,9 +2051,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
             for info in source_infos
         ]
 
+
         # Assign values to  all_output_values
         output_values = []
         for idx, port, node, comp in outputs_idx_port_node_comp:
+
+            # TEACHER_TARGET BREADCRUMB: FROM DEVEL
+            if comp._trained_comp_nodes_to_pytorch_nodes_map:
+                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
 
             outputs = self.nodes_map[node].output
             if type(outputs) is torch.Tensor:
@@ -2708,6 +2713,11 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         self.input = variable
 
         sample = variable[:,:,0,...]
+        # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
+        sample = sample.requires_grad_()
+        assert sample.requires_grad == True, \
+            (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}'"
+             f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")
         # Prevent propagation of error along projection from TARGET
         #  (since it might be from an internal Node that receives other projections)
         target = variable[:,:,1,...].detach()

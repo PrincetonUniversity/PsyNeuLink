@@ -109,16 +109,24 @@ if torch_available:
             assert 'Projections cannot be added to a GRUComposition' in str(error_text.value)
 
         @pytest.mark.parametrize('execution_type', [
-            # 'run',
+            'run',
             'learn'
         ])
-        @pytest.mark.parametrize('outer_enable_learning', [False, True])
+        @pytest.mark.parametrize('outer_enable_learning', [
+            False,
+            True
+        ])
         @pytest.mark.parametrize('gru_enable_learning', [
-            # False,
+            False,
             True])
-        @pytest.mark.parametrize('pathway_type', ['solo', 'gru_as_input', 'gru_as_hidden', 'gru_as_output'])
+        @pytest.mark.parametrize('pathway_type', [
+            'solo',
+            'gru_as_input', 'gru_as_hidden',
+            'gru_as_output'
+        ])
         def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type,
                                                                 outer_enable_learning, gru_enable_learning):
+
             # Test nested GRUComposition in different positions within outer and with different enable_learning settings
             input_mech = pnl.ProcessingMechanism(input_shapes=3)
             output_mech = pnl.ProcessingMechanism(input_shapes=5)
@@ -165,6 +173,7 @@ if torch_available:
                                  f"method for autodiff_composition.") in str(error_text.value))
                 else:
                     outer_comp.learn(inputs=inputs, targets=targets)
+                    assert True
 
     @pytest.mark.pytorch
     @pytest.mark.composition
