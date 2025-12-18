@@ -1596,7 +1596,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             return fallback_value
 
     @handle_external_context()
-    def get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
+    def get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
         """
             Gets the value of this `Parameter` in the context of **context**
             If no context is specified, attributes on the associated `Component` will be used
@@ -1613,14 +1613,14 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `getter` if it exists
         """
-        base_val = self._get(context, fallback_value, **kwargs)
+        base_val = self._get(context, fallback_value=fallback_value, **kwargs)
         if self._scalar_converted:
             base_val = try_extract_0d_array_item(base_val)
         if is_array_like(base_val):
             base_val = copy_parameter_value(base_val)
         return base_val
 
-    def _get(self, context=None, fallback_value=ParameterNoValueError, **kwargs):
+    def _get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
         if not self.stateful:
             execution_id = None
         else:
