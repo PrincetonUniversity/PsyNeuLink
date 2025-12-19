@@ -1163,6 +1163,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
     def __init__(
         self,
         default_value=None,
+        *,
         name=None,
         stateful=True,
         modulable=False,
