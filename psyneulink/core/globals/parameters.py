@@ -1621,18 +1621,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         return base_val
 
     def _get(self, context=None, *, fallback_value=ParameterNoValueError, **kwargs):
-        if not self.stateful:
-            execution_id = None
-        else:
-            try:
-                execution_id = context.execution_id
-            except AttributeError as e:
-                raise ParameterError(
-                    '_get must pass in a Context object as the context '
-                    'argument. To get parameter values using only an '
-                    'execution id, use get.'
-                ) from e
-
+        execution_id = self._get_values_key(context)
         if self.getter is not None:
             value = self._call_getter(context, **kwargs)
             if self.stateful:
@@ -1789,6 +1778,26 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         return value_result
 
+    def _get_values_key(self, context: Context) -> typing.Hashable:
+        if not self.stateful:
+            return None
+        else:
+            try:
+                return context.execution_id
+            except AttributeError as e:
+                try:
+                    priv_method_name = inspect.stack()[1].function
+                except (AttributeError, IndexError):
+                    # exception is unexpected. essentially an assert
+                    raise
+                typ = type(self).__name__
+                pub_method_name = priv_method_name.lstrip('_')
+                raise ParameterError(
+                    f'{typ}.{priv_method_name} must pass in a Context object as the context '
+                    f'argument. To {pub_method_name} parameter values using only an '
+                    f'execution id, use {typ}.{pub_method_name}.'
+                ) from e
+
     def _set(
         self,
         value,
@@ -1799,17 +1808,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         compilation_sync=False,
         **kwargs,
     ):
-        if not self.stateful:
-            execution_id = None
-        else:
-            try:
-                execution_id = context.execution_id
-            except AttributeError as e:
-                raise ParameterError(
-                    '_set must pass in a Context object as the context '
-                    'argument. To set parameter values using only an '
-                    'execution id, use set.'
-                ) from e
+        execution_id = self._get_values_key(context)
 
         if self.setter is not None:
             value = self._call_setter(value, context, compilation_sync, **kwargs)
