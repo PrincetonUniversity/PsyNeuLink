@@ -861,22 +861,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
 
-        # Ensure LossMechanism is not in the same execution set as any Mechanism on which it depends
-        #  (this can arise it the sample is a Node within a nested Composition that is itself
-        #   an OUTPUT Node of the outer Composition, such as the 'PYTORCH GRU NODE' of a GRUComposition)
-        loss_wrappers_to_move = []
-        for i, exec_set in enumerate(flattened_execution_sets):
-            loss_wrappers_to_move.extend([(loss_wrapper, i) for loss_wrapper in exec_set
-                                          if (isinstance(loss_wrapper.mechanism, LossMechanism)
-                                              and any(wrapper.mechanism is loss_wrapper.mechanism.sample.owner
-                                                      for wrapper in exec_set))])
-        for loss_wrapper, idx in loss_wrappers_to_move:
-            flattened_execution_sets[idx].remove(loss_wrapper)
-            try:
-                flattened_execution_sets[idx+1].add(loss_wrapper)
-            except IndexError:
-                flattened_execution_sets.append(set(loss_mech))
-
         return flattened_execution_sets, execution_context
 
     @property

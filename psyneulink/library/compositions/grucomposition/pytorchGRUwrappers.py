@@ -13,6 +13,8 @@ import numpy as np
 import graph_scheduler
 import torch
 
+import psyneulink.core.scheduling.condition as conditions
+
 from typing import Union, Optional, Literal, Tuple
 
 from torch import nn
@@ -476,7 +478,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         self._assign_GRU_pytorch_function(mechanism, device, context)
         
-        # MODIFIED TEACHER_TARGET NEW:
+        # MODIFIED TEACHER_TARGET OLD:
         # Deal with loss LossMechanism with sample afferent that is not given a PytorchProjectionWrapper 
         if self.composition.is_nested:
         #   Add PytorchProjectionWrapper for 'PYTORCH GRU NODE'->LossMechanism.sample
@@ -494,6 +496,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                     outer_comp._pytorch_projections.append(proj)
                     outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
                     outer_comp_pytorch_rep.nodes_map[mechanism] = self
+                    # Spoof outercom to ensure LossMechanism executes after PYTORCH GRU NODE in ExecutionMode.PyTorch
+                    outer_comp.scheduler.add_condition(loss_mech, conditions.AfterNode(gru_composition))
 
         self.synch_with_pnl = False
 
