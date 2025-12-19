@@ -6,21 +6,20 @@ import pytest
 class TestOutputPorts:
 
     @pytest.mark.mechanism
-    def test_output_port_variable_spec(self, mech_mode):
-        # Test specification of OutputPort's variable
+    @pytest.mark.parametrize("spec,expected1,expected2",
+                             [((pnl.OWNER_VALUE, 2), [[3]], [[3]]),
+                              ((pnl.OWNER_VALUE, 1), [[2]], [[2]]),
+                              ((pnl.OWNER_VALUE, 0), [[1]], [[1]]),
+                              ((pnl.OWNER_VALUE), [[[1], [2], [3]]], [[[1], [2], [3]]]),
+                              ([(pnl.OWNER_VALUE, 0), (pnl.OWNER_VALUE, 1)], [[[1], [2]]], [[[1], [2]]]),
+                              ((pnl.OWNER_EXECUTION_COUNT), [[0]], [[4]]),
+                              ], ids=lambda x: str(x) if len(x) != 1 else '')
+    def test_output_port_variable_spec(self, spec, expected1, expected2, mech_mode):
         mech = pnl.ProcessingMechanism(default_variable=[[1.], [2.], [3.]],
                                        name='MyMech',
-                                       output_ports=[
-                                           pnl.OutputPort(name='z', variable=(pnl.OWNER_VALUE, 2)),
-                                           pnl.OutputPort(name='y', variable=(pnl.OWNER_VALUE, 1)),
-                                           pnl.OutputPort(name='x', variable=(pnl.OWNER_VALUE, 0)),
-                                           pnl.OutputPort(name='all', variable=(pnl.OWNER_VALUE)),
-                                           pnl.OutputPort(name='xy', variable=[(pnl.OWNER_VALUE, 0), (pnl.OWNER_VALUE, 1)]),
-                                           pnl.OutputPort(name='execution count', variable=(pnl.OWNER_EXECUTION_COUNT))
-                                       ])
-        expected = [[3.], [2.], [1.], [[1.], [2.], [3.]], [[1.], [2.]], [0]]
-        for i, e in zip(mech.output_values, expected):
-            assert np.array_equal(i, e)
+                                       output_ports=[pnl.OutputPort(variable=spec)])
+
+        np.testing.assert_allclose(mech.output_values, expected1)
 
         EX = pytest.helpers.get_mech_execution(mech, mech_mode)
 
@@ -28,9 +27,8 @@ class TestOutputPorts:
         EX([[1.], [2.], [3.]])
         EX([[1.], [2.], [3.]])
         res = EX([[1.], [2.], [3.]])
-        expected = [[3.], [2.], [1.],[[1.], [2.], [3.]], [[1.], [2.]], [4]]
-        for i, e in zip(res, expected):
-            assert np.array_equal(i, e)
+
+        np.testing.assert_allclose(res, expected2)
 
     @pytest.mark.composition
     @pytest.mark.mechanism
