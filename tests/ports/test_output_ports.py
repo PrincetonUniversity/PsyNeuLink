@@ -32,6 +32,30 @@ class TestOutputPorts:
 
         np.testing.assert_allclose(res, expected2)
 
+    @pytest.mark.mechanism
+    @pytest.mark.parametrize("spec,expected1,expected2",
+                             [([(pnl.PREVIOUS_VALUE, 1, 0), pnl.RATE], [[0, 0.5]], [[1.875, 0.5]]), # From AdaptiveIntegrator
+                              ([pnl.SLOPE, pnl.SCALE], [[1, 1]], [[1, 1]]), # From Linear function
+                              ([pnl.SLOPE, pnl.RATE, (pnl.PREVIOUS_VALUE, 1, 0)], [[1, 0.5, 0]], [[1, 0.5, 1.875]]), # Both
+                              ], ids=['integrator', 'linear', 'linear+integrator'])
+    def test_output_port_variable_spec_transfer_mech(self, spec, expected1, expected2, mech_mode):
+        mech = pnl.TransferMechanism(default_variable=[[1.], [2.], [3.]],
+                                     function=pnl.Linear,
+                                     integrator_function=pnl.AdaptiveIntegrator,
+                                     integrator_mode=True,
+                                     output_ports=[pnl.OutputPort(variable=spec)])
+
+        np.testing.assert_allclose(mech.output_values, expected1)
+
+        EX = pytest.helpers.get_mech_execution(mech, mech_mode)
+
+        EX([[1.], [2.], [3.]])
+        EX([[1.], [2.], [3.]])
+        EX([[1.], [2.], [3.]])
+        res = EX([[1.], [2.], [3.]])
+
+        np.testing.assert_allclose(res, expected2)
+
     @pytest.mark.composition
     @pytest.mark.mechanism
     @pytest.mark.parametrize('spec, expected1, expected2',

@@ -3151,6 +3151,22 @@ class Mechanism_Base(Mechanism):
                                                   param_struct_ptr=func_params,
                                                   state_struct_ptr=func_state)
 
+            elif "integrator_function" in self.llvm_param_ids and (param_name in self.integrator_function.llvm_state_ids or
+                                                                   param_name in self.integrator_function.llvm_param_ids):
+                assert "integrator_function" in self.llvm_param_ids
+
+                integrator_func_params, integrator_func_state = ctx.get_param_or_state_ptr(builder,
+                                                                                           self,
+                                                                                           "integrator_function",
+                                                                                           param_struct_ptr=mech_params,
+                                                                                           state_struct_ptr=mech_state)
+                base = ctx.get_param_or_state_ptr(builder,
+                                                  self.integrator_function,
+                                                  param_name,
+                                                  param_struct_ptr=integrator_func_params,
+                                                  state_struct_ptr=integrator_func_state)
+
+
             else:
                 assert False, "Unsupported variable spec Parameter: {}".format(param_name)
 
