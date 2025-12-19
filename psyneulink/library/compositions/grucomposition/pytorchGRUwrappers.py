@@ -17,7 +17,7 @@ from typing import Union, Optional, Literal, Tuple
 
 from torch import nn
 
-from psyneulink.core.compositions.composition import LearningScale
+from psyneulink.core.compositions.composition import LearningScale, NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -321,7 +321,9 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         if direct_proj:
-            component_idx = list(outer_comp._inner_projections).index(pnl_proj)
+            # component_idx = list(outer_comp._inner_projections).index(pnl_proj)
+            component_idx = outer_comp_pytorch_rep._get_composition_projections(outer_comp).index(pnl_proj)
+
             proj_wrapper = PytorchProjectionWrapper(projection=direct_proj,
                                                     pnl_proj=pnl_proj,
                                                     component_idx=component_idx,
@@ -472,16 +474,16 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          subclass_specifies_function=True,
                          context=context)
 
-
         self._assign_GRU_pytorch_function(mechanism, device, context)
         
         # MODIFIED TEACHER_TARGET NEW:
         # Deal with loss LossMechanism with sample afferent that is not given a PytorchProjectionWrapper 
         if self.composition.is_nested:
-        #   Add PytorchProjectionWrapper for PYTORCH GRU NODE -> LossMechanism.sample
-        #    (this fail to happen if the GRUComposition is the only node of a nested Composition,
-        #     since the actual sample is the PYTORDCH GRU NODE, which is not picked up
-        #     in generating the backprop pathways for the PytorchCompositionWrapper of the outer composition)
+        #   Add PytorchProjectionWrapper for 'PYTORCH GRU NODE'->LossMechanism.sample
+        #    (this fails to happen if the GRUComposition is the last node of a nested Composition,
+        #     since the actual sample is the 'PYTORDCH GRU NODE', is not picked when the
+        #     backprop pathways are generated for the PytorchCompositionWrapper of the outer Composition
+        #     because the LossMechanism is constructed after that, in _instanitate_loss_components)
             outer_comp = context.composition
             outer_comp_pytorch_rep = outer_creator
             assert outer_comp == outer_creator.composition
@@ -492,7 +494,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                     outer_comp._pytorch_projections.append(proj)
                     outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
                     outer_comp_pytorch_rep.nodes_map[mechanism] = self
-        # MODIFIED TEACHER_TARGET END
 
         self.synch_with_pnl = False
 
@@ -557,6 +558,8 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Restore the input port dimension (flattened above) and the sequence dimension to the output
         self.output = output_hidden_state[-1][:, None, None, :]
+        # TEACHER_TARGET BREADCRUMB DEBUGGING PRINT STATEMENT
+        print(f"{self.name} executed: {self.output}")
 
         # # Restore the input port dimension (a singleton now) to the output
         # self.output = self.output.unsqueeze(2)

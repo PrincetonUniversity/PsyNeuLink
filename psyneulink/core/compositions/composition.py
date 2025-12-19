@@ -5032,7 +5032,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     outer_composition = source
         nested_comps = outer_composition._get_nested_compositions()
         if self not in nested_comps:
-            raise CompositionError(f"'{self.name}._get_outer_compositions_for_nested()' called with"
+            raise CompositionError(f"'{self.name}._get_outer_compositions()' called with"
                                    f" '{outer_composition.name}' but it is not nested within that.")
 
         def dfs(current, path):

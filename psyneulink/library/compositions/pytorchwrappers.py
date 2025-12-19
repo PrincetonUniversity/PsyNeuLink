@@ -10,6 +10,7 @@
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
 from commonmark.blocks import lists_match
 from h5py.h5f import namedtuple
+from torchgen.executorch.api.et_cpp import return_type
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
 
@@ -859,6 +860,23 @@ class PytorchCompositionWrapper(torch.nn.Module):
                         nodes_left = True
                 flattened_execution_sets.append(new_exec_set)
                 i += 1
+
+        # Ensure LossMechanism is not in the same execution set as any Mechanism on which it depends
+        #  (this can arise it the sample is a Node within a nested Composition that is itself
+        #   an OUTPUT Node of the outer Composition, such as the 'PYTORCH GRU NODE' of a GRUComposition)
+        loss_wrappers_to_move = []
+        for i, exec_set in enumerate(flattened_execution_sets):
+            loss_wrappers_to_move.extend([(loss_wrapper, i) for loss_wrapper in exec_set
+                                          if (isinstance(loss_wrapper.mechanism, LossMechanism)
+                                              and any(wrapper.mechanism is loss_wrapper.mechanism.sample.owner
+                                                      for wrapper in exec_set))])
+        for loss_wrapper, idx in loss_wrappers_to_move:
+            flattened_execution_sets[idx].remove(loss_wrapper)
+            try:
+                flattened_execution_sets[idx+1].add(loss_wrapper)
+            except IndexError:
+                flattened_execution_sets.append(set(loss_mech))
+
         return flattened_execution_sets, execution_context
 
     @property
@@ -870,36 +888,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return self.composition.get_nested_output_nodes_at_all_levels()
 
     @property
-    def sample_nodes(self):
-        # MODIFIED TEACHER_TARGET OLD:
-        # return [node_wrapper.afferents[0].sender_wrapper
-        #         for node_wrapper in self.node_wrappers
-        #         if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
-        # MODIFIED TEACHER_TARGET NEW:
-        loss_mech_nodes = [node_wrapper for node_wrapper in self.node_wrappers
-                           if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
-        if loss_mech_nodes:
-            sample_idx = (
-                loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[SAMPLE]))
-            return [node_wrapper.afferents[sample_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
-        return []
-        # MODIFIED TEACHER_TARGET END
+    def loss_mech_wrappers(self):
+        return [node_wrapper for node_wrapper in self.node_wrappers
+                if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
 
     @property
-    def target_nodes(self):
-        # # MODIFIED TEACHER_TARGET OLD:
-        # return [node_wrapper.afferents[1].sender_wrapper
-        #         for node_wrapper in self.node_wrappers
-        #         if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
-        # MODIFIED TEACHER_TARGET NEW:
-        loss_mech_nodes = [node_wrapper for node_wrapper in self.node_wrappers
-                           if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
-        if loss_mech_nodes:
-            target_idx = (
-                loss_mech_nodes[0].mechanism.input_ports.index(loss_mech_nodes[0].mechanism.input_ports[TARGET]))
-            return [node_wrapper.afferents[target_idx].sender_wrapper for node_wrapper in loss_mech_nodes]
-        return []
-        # MODIFIED TEACHER_TARGET END
+    def sample_wrappers(self):
+        sample_wrappers = []
+        for loss_mech_wrapper in self.loss_mech_wrappers:
+            sample_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
+                                    if afferent.sender_wrapper.mechanism is loss_mech_wrapper.mechanism.sample.owner])
+        return sample_wrappers
+
+    @property
+    def target_wrappers(self):
+        target_wrappers = []
+        for loss_mech_wrapper in self.loss_mech_wrappers:
+            target_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
+                                    if afferent.sender_wrapper.mechanism is loss_mech_wrapper.mechanism.target.owner])
+        return target_wrappers
 
     def get_all_projection_wrappers(self, start_wrapper=None)->dict:
         """Return dict of {PytorchProjectionWrapper: PytorchCompositionWrapper} in start_comp and any nested in it."""
@@ -2085,11 +2092,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.all_output_values = output_values
 
         # Get value of all SAMPLE (student) Nodes:
-        sample_values = [node.output for node in self.sample_nodes]
+        sample_values = [node.output for node in self.sample_wrappers]
         self.sample_values = sample_values
 
         # Get values of TARGET (teacher) nodes
-        target_values = [node.output for node in self.target_nodes]
+        target_values = [node.output for node in self.target_wrappers]
         self.target_values = target_values
 
         # Synchronize outcomes after every trial if specified
@@ -2714,7 +2721,8 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
 
         sample = variable[:,:,0,...]
         # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
-        sample = sample.requires_grad_()
+        # sample = sample.requires_grad_()
+        assert True
         assert sample.requires_grad == True, \
             (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}'"
              f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")

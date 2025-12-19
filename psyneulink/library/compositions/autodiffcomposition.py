@@ -1178,8 +1178,7 @@ class AutodiffComposition(Composition):
                                     _, rcvr, rcvr_comp = receiver
                                     assert rcvr_comp is not current_comp
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                                rcvr_comp._add_dependency(node, efferent_proj, rcvr,
-                                                          dependency_dict, queue, rcvr_comp)
+                                rcvr_comp._add_dependency(node, efferent_proj, rcvr, dependency_dict, queue, rcvr_comp)
                         else:
                             pathways.append(create_pathway(current_comp, node))
 
