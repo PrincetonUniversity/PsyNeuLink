@@ -1579,6 +1579,7 @@ class AutodiffComposition(Composition):
 
         if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
             # Instantiate pytorch_representation
+            context.composition = self
             self.pytorch_composition_wrapper_type(composition=self,
                                                   device=self.device,
                                                   context=context,
