@@ -479,13 +479,13 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         self._assign_GRU_pytorch_function(mechanism, device, context)
         
         # MODIFIED TEACHER_TARGET OLD:
-        # Deal with loss LossMechanism with sample afferent that is not given a PytorchProjectionWrapper 
         if self.composition.is_nested:
-        #   Add PytorchProjectionWrapper for 'PYTORCH GRU NODE'->LossMechanism.sample
-        #    (this fails to happen if the GRUComposition is the last node of a nested Composition,
-        #     since the actual sample is the 'PYTORDCH GRU NODE', is not picked when the
-        #     backprop pathways are generated for the PytorchCompositionWrapper of the outer Composition
-        #     because the LossMechanism is constructed after that, in _instanitate_loss_components)
+            # Ensure wrapper for LossMechanism gets afferent from 'PYTORCH GRU NODE'
+            # IMPLEMENTATION NOTE:
+            #   Do this by adding PytorchProjectionWrapper for 'PYTORCH GRU NODE'->LossMechanism.sample.owner
+            #   This is needed because the LossMechanism is constructed after _get_pytorch_backprop_pathways
+            #   so that the dependency on 'PYTORCH GRU NODE' is not seen.  This ensures that it *is* seen
+            #   in _instantiate_pytorch_projection_wrappers() in the call to _get_composition_projections()
             outer_comp = context.composition
             outer_comp_pytorch_rep = outer_creator
             assert outer_comp == outer_creator.composition
@@ -496,7 +496,12 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                     outer_comp._pytorch_projections.append(proj)
                     outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
                     outer_comp_pytorch_rep.nodes_map[mechanism] = self
-                    # Spoof outercom to ensure LossMechanism executes after PYTORCH GRU NODE in ExecutionMode.PyTorch
+                    # Ensure that LossMechanism executes after 'PYTORCH GRU NODE'
+                    # IMPLEMENTATION NOTE:
+                    #     this is required because _get_execution_sets() calls Composition.scheduler to generate
+                    #     the order of execution of Pytorch nodes which uses the order the Composition's graph,
+                    #     and there LossMechanism is depdendent on the nested GRUComposition, and not 'PYTORCH GRU NODE'
+                    #     which is only used when executing the PyTorch graph
                     outer_comp.scheduler.add_condition(loss_mech, conditions.AfterNode(gru_composition))
 
         self.synch_with_pnl = False
