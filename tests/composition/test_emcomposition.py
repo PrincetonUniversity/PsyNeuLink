@@ -942,28 +942,28 @@ class TestExecution:
 
     @pytest.mark.composition
     @pytest.mark.parametrize('exec_mode', [
-        # pnl.ExecutionMode.Python,
+        pnl.ExecutionMode.Python,
         pnl.ExecutionMode.PyTorch
     ])
     @pytest.mark.parametrize('concatenate', [
-        # True,
+        True,
         False
     ], ids=[
-        # 'concatenate',
+        'concatenate',
         'no_concatenate'
     ])
     @pytest.mark.parametrize('use_storage_node', [
         True,
-        # False
-    ], ids=[
-        'use_storage_node',
-        # 'no_storage_node'
-    ])
-    @pytest.mark.parametrize('learning', [
-        # True,
         False
     ], ids=[
-        # 'learning',
+        'use_storage_node',
+        'no_storage_node'
+    ])
+    @pytest.mark.parametrize('learning', [
+        True,
+        False
+    ], ids=[
+        'learning',
         'no_learning'
     ])
     def test_multiple_trials_concatenation_and_storage_node(self, exec_mode, concatenate, use_storage_node, learning):
