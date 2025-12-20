@@ -1121,11 +1121,15 @@ class GRUComposition(AutodiffComposition):
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
+        """Override to construct only TARGET Node and LossMechanism for GRUComposition.
+        Return a list containing TARGET Nodes, that needs to be referenced in inputs argument of learn()"""
+
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
 
-        # Create Mechanism the function fo which will be the Pytorch GRU module
+        # MODIFIED TEACHER_TARGET OLD:
+        # Create Mechanism the function of which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
         target_mech = self.target_node
@@ -1140,6 +1144,19 @@ class GRUComposition(AutodiffComposition):
         self.target_nodes_for_samples = {target_mech: self.gru_mech}
 
         return [target_mech]
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # Pathway for GRUComposition consistents of only 'PYTORCH GRU Node'...
+        # pathway = [self.gru_mech]
+        # #   and that is the only pathway
+        # pathways = [pathway]
+        # # Construct TARGET Node and LossMechanism
+        # self._instantiate_loss_components(pathways, context, base_context)
+        # return [target_mech]
+        # MODIFIED TEACHER_TARGET NEWER:
+        # TEACHER_TARGET BREADCRUMB:
+        #      IMPLEMENTATION NOTE: "DUMMY" OVERRIDED TO SUPPRESS ANY CONSTRUCDTION OF LEARNING COMPONENTS...
+        #                           LEARNING IN STANDALONE GRUCOMPOSITION IS HANDLED ENTIRELY IN PYTORCH
+        # MODIFIED TEACHER_TARGET END
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         return [[self.gru_mech]]
@@ -1251,6 +1268,15 @@ class GRUComposition(AutodiffComposition):
         if CONTEXT not in kwargs or kwargs[CONTEXT] is None:
             raise CompositionError(f"Projections cannot be added to a {self.componentCategory}: ('{self.name}'.")
         return super().add_projection(*args, **kwargs)
+
+    def compute_loss(self, targets, pytorch_rep, context):
+        if self.is_nested:
+            return super().compute_loss(context)
+        else:
+            sample = pytorch_rep.node_wrappers[0].output
+            target  = self.get_target_nodes()[0]
+            # COV
+            return loss_function(sample, target)
 
     @property
     def w_ih_learning_rate(self):

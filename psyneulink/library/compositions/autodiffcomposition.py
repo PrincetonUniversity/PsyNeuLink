@@ -1002,7 +1002,7 @@ class AutodiffComposition(Composition):
 
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
-        """Create backpropagation learning pathways for every Input Node --> Output Node pathway
+        """Create backpropagation learning pathways for every INPUT Node --> OUTPUT Node pathway
         Pathways are constructed in _get_pytorch_backprop_pathways()
             Flattens nested compositions:
               - only includes the Projections in outer Composition to/from the CIMs of the nested Composition
@@ -1022,7 +1022,7 @@ class AutodiffComposition(Composition):
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
             - losses to be tracked for logging (as mechs of a Composition)
         TEACHER_TARGET BREADCRUMB:
-        Returns list of any TARGET nodes that need to be referenced in inputs argument of learn()
+        Return a list of any TARGET nodes that need to be referenced in inputs argument of learn()
         """
         context = context or Context()
         base_context = base_context or Context()
@@ -1047,7 +1047,8 @@ class AutodiffComposition(Composition):
 
     @handle_external_context()
     def _get_pytorch_backprop_pathways(self, context)->list:
-
+        """Get backpropagation pathways for all INPUT Nodes of AutodiffComposition
+        Return a list of all pathways"""
         self._analyze_graph()
         return [pathway
                     for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
@@ -1055,10 +1056,10 @@ class AutodiffComposition(Composition):
                     for pathway in self._get_pytorch_backprop_pathway(node, context)]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
-        """Breadth-first search from input_node to find all input -> output pathways
+        """Breadth-first search from input_node to find all input -> <any OUTPUT Node> pathways
         Uses queue(node, composition) to traverse all nodes in the graph
         IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
-        Return a list of all pathways from input_node -> output node
+        Return a list of all pathways from input_node -> any OUTPUT Node
         """
 
         pathways = []  # List of all feedforward pathways from INPUT Node to OUTPUT Node
@@ -1261,7 +1262,7 @@ class AutodiffComposition(Composition):
             warnings.warn(error_msg)
         return False
 
-    def _instantiate_loss_components(self, pathways, context, base_context) ->dict:
+    def _instantiate_loss_components(self, pathways, context, base_context):
         """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
 
         TEACHER_TARGET BREADCRUMB CLEANUP:
@@ -1851,18 +1852,27 @@ class AutodiffComposition(Composition):
         #         trained_output_values += [output]
         #     all_output_values += [output]
 
-        # TEACHER_TARGET NEW
+        pytorch_rep.minibatch_loss = self.compute_loss(targets, pytorch_rep, context)
+        pytorch_rep.minibatch_loss_count += 1
+
+        return output_values
+
+    def compute_loss(self, targets, pytorch_rep, context):
+        """Compute loss after execution of autodiff_forward()
+        Assume that loss is computed using LossMechanism(s) constructed in _instantiate_loss_components.
+        Can be overridden to use direct/dedicated/customized computation of loss by subclasses.
+        # IMPLEMENTATION NOTE:
+        #  targets arg is included for overrides; LossMechanism uses its target input directly
+        """
         trial_loss = 0
-        # Get output (loss) for each LossMechanism and sum as loss for trial (minibatch)
+        assert self.loss_mechs_map, (f"PROGRAM ERROR: compute_loss() called for '{self.name} which does not "
+                                     f"have any LossMechanism(s) or an override to compute loss otherwise.'")
         for loss_node in self.loss_mechs_map:
             # Get output of LossMechanism
             comp_loss = pytorch_rep.nodes_map[loss_node].output
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
-        pytorch_rep.minibatch_loss = trial_loss
-        pytorch_rep.minibatch_loss_count += 1
-
-        return output_values
+        return trial_loss
 
     def clear_losses(self, context=None):
         self.losses = []
