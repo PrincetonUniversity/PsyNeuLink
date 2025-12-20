@@ -2958,6 +2958,7 @@ class Mechanism_Base(Mechanism):
         if len(self.mod_afferents) > 0:
             mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+
         # Prefer an array type if there is no modulation.
         # This is used to keep ctypes inputs as arrays instead of structs.
         elif all(t == input_type_list[0] for t in input_type_list):
@@ -2969,48 +2970,62 @@ class Mechanism_Base(Mechanism):
                         get_output_ptr, get_input_data_ptr,
                         mech_params, mech_state, mech_input):
         group_ports = getattr(self, group)
-        ports_param, ports_state = ctx.get_param_or_state_ptr(builder, self, group, param_struct_ptr=mech_params, state_struct_ptr=mech_state, history=None)
+        ports_param, ports_state = ctx.get_param_or_state_ptr(builder,
+                                                              self,
+                                                              group,
+                                                              param_struct_ptr=mech_params,
+                                                              state_struct_ptr=mech_state,
+                                                              history=None)
 
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
 
-            # Find input and output locations
-            builder, p_input_data = get_input_data_ptr(builder, i)
+            port_idx = group_ports.index(port)
+            p_params = builder.gep(ports_param, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
+            p_state = builder.gep(ports_state, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
+
+            builder, p_input_data_ptr = get_input_data_ptr(builder, i)
             builder, p_output = get_output_ptr(builder, i)
 
+
+            def _maybe_add_dimension(value, expected_type, kind, allowed_ports, allowed_ports2={}):
+                if value.type == expected_type:
+                    return value
+
+                assert port in allowed_ports or port in allowed_ports2, \
+                    "Port {} {} shape mismatch, got: {} vs. expected: {}".format(port, kind, value.type, expected_type)
+
+                warnings.warn("Shape mismatch: Port {} {} shape mismatch, got: {} vs. {}".format(port,
+                                                                                                 kind,
+                                                                                                 value.type,
+                                                                                                 expected_type),
+                              category=pnlvm.PNLCompilerWarning)
+
+                type_with_extra_dimension = pnlvm.ir.ArrayType(value.type.pointee, 1).as_pointer()
+                return builder.bitcast(value, type_with_extra_dimension)
+
+
+            p_output = _maybe_add_dimension(p_output, p_function.args[3].type, "output", self._parameter_ports)
+
+            # Setup input location
             if len(port.mod_afferents) == 0:
                 # There's no modulation so the only input is data
-                if p_input_data.type == p_function.args[2].type:
-                    p_input = p_input_data
-                else:
-                    assert port in self.output_ports, \
-                        "Port {} with input shape mismatch, got: {} vs. expected: {}".format(port, p_input_data.type, p_function.args[2].type)
-
-                    # Ports always take at least 2d input. However, parsing
-                    # the function result can result in a 1d structure or a scalar.
-                    # Casting the pointer is LLVM way of adding dimensions
-                    array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
-                    assert array_1d == p_function.args[2].type.pointee, \
-                        "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
-
-                    # restrict shape matching to casting 1d values to 2d arrays
-                    # for Control/Gating signals
-                    assert len(p_function.args[2].type.pointee) == 1
-                    assert str(port).startswith("(ControlSignal") or str(port).startswith("(GatingSignal")
-                    p_input = builder.bitcast(p_input_data, p_function.args[2].type)
+                p_input = _maybe_add_dimension(p_input_data_ptr,
+                                               p_function.args[2].type,
+                                               "input",
+                                               self._parameter_ports,
+                                               self.output_ports)
 
             else:
                 # Port input structure is: (data, [modulations]),
-                p_input = builder.alloca(p_function.args[2].type.pointee,
-                                         name=group + "_port_" + str(i) + "_input")
+                p_input = builder.alloca(p_function.args[2].type.pointee, name=group + "_port_" + str(i) + "_input")
 
                 # Fill in the data.
-                # FIXME: We can potentially hit the same dimensionality issue
-                #        as above, but it's more difficult to manifest and
-                #        not even new tests that modulate output ports hit it.
-                p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                builder.store(builder.load(p_input_data), p_data)
+                p_data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                p_input_data_ptr = _maybe_add_dimension(p_input_data_ptr, p_data_ptr.type, "input", self._parameter_ports)
+                data = builder.load(p_input_data_ptr)
+                builder.store(data, p_data_ptr)
 
                 # Copy mod_afferent/modulated inputs
                 for idx, p_mod in enumerate(port.mod_afferents):
@@ -3021,10 +3036,6 @@ class Mechanism_Base(Mechanism):
                     mod_out_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(1 + idx)])
                     afferent_val = builder.load(mod_in_ptr)
                     builder.store(afferent_val, mod_out_ptr)
-
-            port_idx = group_ports.index(port)
-            p_params = builder.gep(ports_param, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
-            p_state = builder.gep(ports_state, [ctx.int32_ty(0), ctx.int32_ty(port_idx)])
 
             builder.call(p_function, [p_params, p_state, p_input, p_output])
 
@@ -3127,8 +3138,38 @@ class Mechanism_Base(Mechanism):
 
             if param_name == VALUE:
                 base = value
+
             elif param_name in self.llvm_state_ids:
                 base = ctx.get_param_or_state_ptr(builder, self, param_name, state_struct_ptr=mech_state)
+
+            elif param_name in self.function.llvm_state_ids or param_name in self.function.llvm_param_ids:
+                func_params, func_state = ctx.get_param_or_state_ptr(builder,
+                                                                     self,
+                                                                     "function",
+                                                                     param_struct_ptr=mech_params,
+                                                                     state_struct_ptr=mech_state)
+                base = ctx.get_param_or_state_ptr(builder,
+                                                  self.function,
+                                                  param_name,
+                                                  param_struct_ptr=func_params,
+                                                  state_struct_ptr=func_state)
+
+            elif "integrator_function" in self.llvm_param_ids and (param_name in self.integrator_function.llvm_state_ids or
+                                                                   param_name in self.integrator_function.llvm_param_ids):
+                assert "integrator_function" in self.llvm_param_ids
+
+                integrator_func_params, integrator_func_state = ctx.get_param_or_state_ptr(builder,
+                                                                                           self,
+                                                                                           "integrator_function",
+                                                                                           param_struct_ptr=mech_params,
+                                                                                           state_struct_ptr=mech_state)
+                base = ctx.get_param_or_state_ptr(builder,
+                                                  self.integrator_function,
+                                                  param_name,
+                                                  param_struct_ptr=integrator_func_params,
+                                                  state_struct_ptr=integrator_func_state)
+
+
             else:
                 assert False, "Unsupported variable spec Parameter: {}".format(param_name)
 

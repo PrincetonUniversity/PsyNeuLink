@@ -876,6 +876,14 @@ class TestStructural:
                 assert (f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' args "
                         f"of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
                         f"This isn't technically a problem, but it is redundant so thought you should know ;^)."
+                        in warning[0].message.args[0])
+
+                assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "
+                        f"are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "
+                        f"it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "
+                        f"of the dict, obviating the need to determine the TARGET_MECHANISM(s). Alternatively, "
+                        f"TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                        f"obviating the need to specify the 'targets' arg."
                         in warning[1].message.args[0])
 
             elif target_specs == 'too_many_targets':

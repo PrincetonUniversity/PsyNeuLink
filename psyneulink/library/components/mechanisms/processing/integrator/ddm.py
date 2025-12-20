@@ -1257,7 +1257,8 @@ class DDM(ProcessingMechanism):
                                                             state_struct_ptr=m_state)
 
         # Find the single numeric entry in previous_value.
-        # This exists only if the 'function' is 'integrator'
+        # This exists only if the 'function' is 'integrator' (and therefore has
+        # "previous_value" parameter.
         prev_val_ptr = ctx.get_param_or_state_ptr(builder, self.function, "previous_value", state_struct_ptr=f_state)
         if prev_val_ptr is None:
             return ctx.bool_ty(1)
@@ -1271,8 +1272,13 @@ class DDM(ProcessingMechanism):
         prev_val = builder.call(llvm_fabs, [prev_val])
 
         # Get functions params and apply modulation
-        f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
+        f_params, builder = self._gen_llvm_param_ports_for_obj(self.function,
+                                                               f_base_params,
+                                                               ctx,
+                                                               builder,
+                                                               m_base_params,
+                                                               m_state,
+                                                               m_in)
 
         # Get threshold value
         threshold_ptr = ctx.get_param_or_state_ptr(builder,
@@ -1280,8 +1286,7 @@ class DDM(ProcessingMechanism):
                                                    THRESHOLD,
                                                    param_struct_ptr=f_params)
 
-        threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        threshold = builder.load(threshold_ptr)
+        threshold = pnlvm.helpers.load_extract_scalar_array_one(builder, threshold_ptr)
         is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
 
         return is_prev_greater_or_equal

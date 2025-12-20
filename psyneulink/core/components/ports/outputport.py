@@ -738,7 +738,9 @@ def _parse_output_port_variable(variable_spec, owner, context=None, output_port_
                 }
             }
 
-        parameter = getattr(owner.parameters, attribute_name, None) or getattr(owner.function.parameters, attribute_name, None)
+        parameter = getattr(owner.parameters, attribute_name, None) or \
+                    getattr(owner.function.parameters, attribute_name, None) or \
+                    getattr(owner.integrator_function.parameters, attribute_name, None)
         if parameter is None:
             raise OutputPortError(f"Unknown Parameter ({attribute_name}) in variable spec ({variable_spec}) for "
                                   f"{output_port_name or OutputPort.__name__} of {owner.name}.")
