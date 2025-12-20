@@ -1900,7 +1900,10 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
                 self._tracking_compiled_struct = False
 
     @handle_external_context()
-    def delete(self, context=None):
+    def delete(self, context: Optional[Union[Context, typing.Hashable]] = None):
+        self._delete(context)
+
+    def _delete(self, context: Context):
         try:
             del self.values[context.execution_id]
         except KeyError:
