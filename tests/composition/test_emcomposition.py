@@ -1002,11 +1002,8 @@ class TestExecution:
             elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
                 with pytest.raises(AutodiffCompositionError) as error:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
-                assert (f"There are no learnable Projections in 'EM_Composition' nor any nested under it; "
-                        f"this is because the learning_rates for all of the Projections are set to 'False'. "
-                        f"The learning_rate for at least one Projection must be a non-False value within "
-                        f"a Composition with 'enable_learning' set to 'True' in order to execute "
-                        f"the learn() method for EM_Composition.") in str(error.value)
+                assert (f"Learning cannot be executed for 'EM_Composition' "
+                        f"since it does not have any learnable Projections.") in str(error.value)
 
             else:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)
