@@ -1749,7 +1749,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
         value = self._parse(value, check_scalar=True)
-        value = self._set(value, context, skip_history, skip_log, **kwargs)
+        value = self._set(value, context, skip_history=skip_history, skip_log=skip_log, **kwargs)
         value_result = value
 
         value_self = getattr(value, '__self__', None)
@@ -1802,6 +1802,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         self,
         value,
         context,
+        *,
         skip_history=False,
         skip_log=False,
         skip_delivery=False,
