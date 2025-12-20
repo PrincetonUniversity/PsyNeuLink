@@ -2030,6 +2030,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.log_weights()
         context.source = old_source
 
+        # TEACHER_TARGET BREADCRUMB:  MAKE ALL OF THE BELOW A METHOD,
+        #                             THAT CAN ALSO BE CALLED FROM SUBCLASSES (E.G., pytorchGRUwrappers)
         # Get, reformat, and store values of all OUTPUT Nodes (returned for assignment to Composition.results)
         output_cim = self.composition.output_CIM
         source_infos = (output_cim._get_source_info_from_output_CIM(port) for port in output_cim.input_ports)
@@ -2063,6 +2065,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
             output_values += [output]
 
+        # # TEACHER_TARGET BREADCRUMB:  MAKE THESE A METHOD, THAT CAN ALSO BE CALLED FROM pytorchGRUwrappers.py
+        # self._format_output_values(output_values)
         # Turn into a numpy array, possibly ragged
         output_values = convert_to_np_array(output_values)
 

@@ -1141,8 +1141,7 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.target_nodes_for_samples = {target_mech: self.gru_mech}
-
+        self.target_ports_for_samples = {self.gru_mech.output_port: target_mech.output_port}
         return [target_mech]
         # # MODIFIED TEACHER_TARGET NEW:
         # # Pathway for GRUComposition consistents of only 'PYTORCH GRU Node'...
@@ -1270,12 +1269,18 @@ class GRUComposition(AutodiffComposition):
         return super().add_projection(*args, **kwargs)
 
     def compute_loss(self, targets, pytorch_rep, context):
+        """Override to directly compute loss
+        Invoked when GRUComposition is run as a standalone Composition, in which case:
+           - TARGET Node *is* constructed (and included in GRUComposition) to accept targets specified in learn()
+           - LossMechanism is *not* constructed
+           - loss is computed directly using torch loss function specified by self.loss_spec
+        """
         if self.is_nested:
             return super().compute_loss(context)
         else:
             sample = pytorch_rep.node_wrappers[0].output
-            target  = self.get_target_nodes()[0]
-            # COV
+            target  = targets[self.get_target_nodes()[0]]
+            loss_function = self._get_loss(self.loss_spec)
             return loss_function(sample, target)
 
     @property

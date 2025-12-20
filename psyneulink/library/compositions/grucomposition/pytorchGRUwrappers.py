@@ -27,7 +27,7 @@ from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWr
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING,
                                               NODE_VALUES, SAMPLE, SHOW_PYTORCH, SYNCH,SYNCH_WITH_PNL_OPTIONS)
@@ -371,7 +371,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # MODIFIED TEACHER_TARGET OLD:
         # return {self.composition.gru_mech: output}
         # MODIFIED TEACHER_TARGET NEW:
-        return output.detach().cpu().numpy()
+        # BREADCRUMB: MAKE THIS A METHOD ON pytorchwrappers (AND DO SAME FOR pytorchwrappers.py)
+        output = output.detach().cpu().numpy()
+        output_values = convert_to_np_array(output)
+        output_values = output_values.swapaxes(0, 1)
+        self.all_output_values = output_values
+        return output[0]
         # MODIFIED TEACHER_TARGET END
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
