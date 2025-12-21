@@ -2605,13 +2605,13 @@ class TestNestedLearning:
             return comp.results
         return _execute_learning
 
-    def test_warning_for_no_learning_in_solo_nested_comp(self):
-        with pytest.warns(UserWarning) as warning:
+    def test_error_for_no_learning_in_solo_nested_comp(self):
+        with pytest.raises(AutodiffCompositionError) as error_text:
             inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
             outer = pnl.AutodiffComposition([inner])
             outer._build_pytorch_representation()
-        assert (f"'autodiff_composition-1' contains no Projections, so it has no params for Pytorch to learn."
-                in repr(warning[0].message.args[0]))
+        assert (f"Learning cannot be executed for 'autodiff_composition-1' "
+                f"since it does not have any learnable Projections." in str(error_text.value))
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 1, 1)
