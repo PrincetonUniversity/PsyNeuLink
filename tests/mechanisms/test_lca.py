@@ -350,7 +350,6 @@ class TestLCA:
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
         expected = (0, 3, .003)
         assert_expected_results(actual, expected)
-        # MODIFIED 12/20/25 END
 
 
 class TestLCAReset:
