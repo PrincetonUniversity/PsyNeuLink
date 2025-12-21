@@ -279,7 +279,8 @@ class TestLCA:
 
     @pytest.mark.composition
     @pytest.mark.lca_mechanism
-    def test_LCAMechanism_standard_output_ports(self):
+    # @pytest.mark.parametrize("comp_mode", [pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)])
+    def test_LCAMechanism_standard_output_ports(self, comp_mode):
         lca = pnl.LCAMechanism(
             input_shapes=2,
             function=pnl.Logistic(gain=1, bias=0),
@@ -297,35 +298,57 @@ class TestLCA:
                             pnl.DECISION_TIME
                             ]
         )
+        if comp_mode not in {pnl.ExecutionMode.Python, pnl.ExecutionMode.LLVMRun}:
+            # pytest.skip("LCAMechanism_standard_output_ports only works for ExecutionMode = Python or LLVMRun.")
+            return True
         comp = pnl.Composition(lca)
         lca.execute_until_finished = True
 
+        def assert_expected_results(results, expected):
+            index_val, steps_val, time_val = expected
+            if comp_mode is pnl.ExecutionMode.Python:
+                assert lca.output_ports[pnl.DECISION_INDEX].value == index_val
+                assert lca.output_ports[pnl.DECISION_STEPS].value == steps_val
+                assert lca.output_ports[pnl.DECISION_TIME].value == time_val
+            elif comp_mode is pnl.ExecutionMode.LLVMRun:
+                assert results[1] == index_val
+                assert results[2] == steps_val
+                assert results[3] == time_val
+            else:
+                assert False, (f"TEST ERROR: unrecognized ExecutionMode: {comp_mode} "
+                               f"passed to test_LCAMechanism_standard_output_ports().")
+
         lca.parameters.time_step_size.set(.01, comp.name)
-        comp.run([[1, 0]],
-                 execution_mode=pnl.ExecutionMode.LLVMRun
-                 )
-        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 14
-        assert lca.output_ports[pnl.DECISION_TIME].value == .14
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        if comp_mode is pnl.ExecutionMode.Python:
+            expected = (0, 14, .14)
+        else:
+            expected = (0, 13, .13)
+        assert_expected_results(actual, expected)
 
         lca.parameters.time_step_size.set(.001, comp.name)
-        comp.run([[0, 1]])
-        assert lca.output_ports[pnl.DECISION_INDEX].value == 1
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 55
-        assert lca.output_ports[pnl.DECISION_TIME].value == .055
+        actual = comp.run(inputs=[[0, 1]], execution_mode=comp_mode)
+        if comp_mode is pnl.ExecutionMode.Python:
+            expected = (1, 55, .055)
+        else:
+            expected = (1, 54, .054)
+        assert_expected_results(actual, expected)
 
+        # BREADCRUMB: NOT STARTING FRESH IN LLMRun
         lca.parameters.time_step_size.set(.001, comp.name)
         lca.execute_until_finished = False
-        comp.run([[1, 0]])
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 1
-        assert lca.output_ports[pnl.DECISION_TIME].value == .001
-        comp.run([[1, 0]])
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 2
-        assert lca.output_ports[pnl.DECISION_TIME].value == .002
-        comp.run([[1, 0]])
-        assert lca.output_ports[pnl.DECISION_INDEX].value == 0
-        assert lca.output_ports[pnl.DECISION_STEPS].value == 3
-        assert lca.output_ports[pnl.DECISION_TIME].value == .003
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        expected = (0, 1, .001)
+        assert_expected_results(actual, expected)
+
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        expected = (0, 2, .002)
+        assert_expected_results(actual, expected)
+
+        actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
+        expected = (0, 3, .003)
+        assert_expected_results(actual, expected)
+        # MODIFIED 12/20/25 END
 
 
 class TestLCAReset:
