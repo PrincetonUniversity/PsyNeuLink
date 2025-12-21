@@ -334,7 +334,7 @@ class TestLCA:
             expected = (1, 54, .054)
         assert_expected_results(actual, expected)
 
-        # BREADCRUMB: NOT STARTING FRESH IN LLMRun
+        # BREADCRUMB: FAILS BELOW SINCE NOT STARTING FRESH IN LLMRun
         lca.parameters.time_step_size.set(.001, comp.name)
         lca.execute_until_finished = False
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
