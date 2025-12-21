@@ -321,6 +321,7 @@ class TestLCA:
         lca.parameters.time_step_size.set(.01, comp.name)
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
         if comp_mode is pnl.ExecutionMode.Python:
+            # BREADCRUMB: IN Python mode, reporting after next execution, so +1 off on number reported
             expected = (0, 14, .14)
         else:
             expected = (0, 13, .13)
@@ -329,6 +330,7 @@ class TestLCA:
         lca.parameters.time_step_size.set(.001, comp.name)
         actual = comp.run(inputs=[[0, 1]], execution_mode=comp_mode)
         if comp_mode is pnl.ExecutionMode.Python:
+            # BREADCRUMB: IN Python mode, reporting after next execution, so +1 off on number reported
             expected = (1, 55, .055)
         else:
             expected = (1, 54, .054)
