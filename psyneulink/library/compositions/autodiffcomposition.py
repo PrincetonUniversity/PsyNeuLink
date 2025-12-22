@@ -1357,7 +1357,6 @@ class AutodiffComposition(Composition):
                 loss_mech_specs.append((loss_mech_spec[0], target_spec))
 
         else:
-
             # No targets specified by user, so construct TARGET Node for all OUTPUT Nodes of the AutodiffComposition
             # IMPLEMENTATION NOTE:
             #    only add target nodes if *not* already present in self.target_ports_for_samples.values()
@@ -1393,6 +1392,8 @@ class AutodiffComposition(Composition):
                                                    f"for '{output_port_for_learning.full_name}' in {self.name}'.")
                     if comparators:
                         target_mech = comparators[0].input_ports['TARGET'].path_afferents[0].sender.owner
+                        # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
+                        self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
                     else:
                         sample = output_port_for_learning
                         sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
@@ -1401,6 +1402,7 @@ class AutodiffComposition(Composition):
                                                                                       dtype=object),
                                                           name= 'TARGET for ' + sample_name)
                         target_mech._initialize_from_context(context, base_context, override=False)
+                        # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
                         constructed_target_mechs.append(target_mech)
                     target_mechs.append(target_mech)
             loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
@@ -2064,10 +2066,21 @@ class AutodiffComposition(Composition):
         validate_targets(target_specs)
 
         # Assign target values specified in learn() to TARGET Nodes
+        # MODIFIED TEACHER_TARGET OLD:
+        # # BREADCRUMB: THIS RETURNS EMPTY DICT FOR target_values_for_target_nodes
         for port, value in target_specs.copy().items():
             if port in self.target_ports_for_samples:
                 # Use TARGET Node (target_port owner) for key
                 target_values_for_target_nodes[self.target_ports_for_samples[port].owner] = value
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # BREADCRUMB: WHY BOTHER WITH ALL THIS SINCE VALUES ARE ALREADY ASSIGNED TO TARGET PORTS IN target_specs
+        # for target_port, value in target_specs.copy().items():
+        #     if target_port in self.target_ports_for_samples.values():
+        #         # Get sample to which target is assigned
+        #         sample = next(k for k,v in self.target_ports_for_samples.items() if v is target_port)
+        #         # Use TARGET Node (target_port owner) for key
+        #         target_values_for_target_nodes[self.target_ports_for_samples[sample]] = value
+        # MODIFIED TEACHER_TARGET END
 
         return target_values_for_target_nodes
 

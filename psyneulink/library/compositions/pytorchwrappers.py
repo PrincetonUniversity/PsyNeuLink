@@ -312,6 +312,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             #   so if any nested Compositions are INPUT Nodes of the outermost Composition,
             #   *their* INPUT Nodes are assigned as INPUT Nodes of the outermost Composition
         if not composition.is_nested:
+
+            # TEACHER_TARGET BREADCRUMB: REFACTOR ALL OF THE FOLLOWING INTO METHODS, INCLUDING flatten_maps
+            # Recursively search for and assing _is_input to all INPUT Nodes in nested Compositions
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
@@ -319,6 +322,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     else:
                         _assign_input_nodes(pytorch_node.node_wrappers)
             _assign_input_nodes(self.node_wrappers)
+
+            # Ensure that all PytorchLossMechanismWrappers have at least one SAMPLE and one TARGET afferent
+            def _validate_loss_nodes():
+                for loss_node in [node for node in self.node_wrappers
+                                  if (isinstance(node, PytorchLossMechanismWrapper)
+                                      and len(node.afferents) < 2)]:
+                    if not loss_node.afferents:
+                        sample_or_target_msg = "any SAMPLE or TARGET afferents"
+                    sender = loss_node.afferents[0].sender_wrapper
+                    sample_or_target_msg = (
+                        "a SAMPLE afferent" if sender.mechanism is not loss_node.mechanism.sample.owner
+                        else "a TARGET afferent")
+                    assert False, (f"PROGRAM ERROR: the Loss Node of the pytorch wrapper for '{composition.name}' "
+                                   f"has not been assigned {sample_or_target_msg}.")
+            _validate_loss_nodes()
 
         # Flatten maps
         for node_wrapper in self.node_wrappers:
@@ -496,6 +514,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # MODIFIED TEACHER_TARGET END
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
+            # TEACHER_TARGET BREADCRUMB:
+            assert True
 
             # Rule out that Composition has parameter_CIM,
             #    since autodiff does not (yet) support those and they are not (yet) handled by flattening below
@@ -2390,7 +2410,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
         assert self.afferents,\
             f"PROGRAM ERROR: No afferents found for '{self.mechanism.name}' in AutodiffComposition"
 
-        # TEACHER_TARGET BREADCRUMB: FILTER UNUSED AFFERENTS (E.G., TO output_CIM.input_ports) BEFORE TESTING
+        # # TEACHER_TARGET BREADCRUMB: FILTER UNUSED AFFERENTS (E.G., TO output_CIM.input_ports) BEFORE TESTING
         # assert len(self.afferents) == len(self.input_ports), \
         #     (f"PROGRAM ERROR: The number of afferents ({len(self.afferents)}) "
         #      f"in the pytorch Node for '{self.mechanism.name}' "

@@ -15,7 +15,7 @@ from psyneulink.library.compositions.autodiffcomposition import AutodiffComposit
 # Unit tests for functions of EMComposition class that are new (not in Composition or AutodiffComposition)
 # or override functions in those classes
 #
-# TODO:
+# TODO: EM BREADCRUMB:
 #     FIX: ADD WARNING TESTS
 #     FIX: ADD ERROR TESTS
 #     FIX: ADD TESTS FOR LEARNING COMPONENTS in TestStructure
