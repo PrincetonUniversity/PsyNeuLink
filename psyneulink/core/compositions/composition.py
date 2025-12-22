@@ -10328,35 +10328,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         target_values_for_target_nodes = {}
 
-        # TEACHER_TARGET BREADCRUMB: INTEGRATE WITH NEWER VERSION ON AUTODIFF, BUT AVOIDING USE OF LossMechanism
-        def validate_targets(target_mechs:list)->bool:
-            """Validate targets dict specification:
-            - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
-            - warn if any targets are target_mechs (OK, but OUTPUT Node Mechanisms are preferred
-            """
-            num_target_mechs_in_comp = len(target_mechs)
-            num_specified_targets = len(targets)
-            if num_specified_targets != num_target_mechs_in_comp:
-                raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
-                                       f"the 'targets' arg of the learn() method for '{self.name}' must equal "
-                                       f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
-            # Check for target_mechs in targets arg learn()
-            target_mechs_as_targets = [target for target in targets.keys() if target.owner in target_mechs]
-            if not target_mechs_as_targets:
-                return False
-            if not self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn:
-                warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
-                              f"has entries that are TARGET Nodes "
-                              f"({', '.join(sorted([target.owner.name for target in target_mechs_as_targets]))}); "
-                              f"while this is OK, it might be easier to simply use the OUTPUT Nodes "
-                              f"to which they correspond as they keys of the dict, obviating the need "
-                              f"to determine the TARGET Nodes. Alternatively, TARGET Nodes "
-                              f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
-                              f"obviating the need to specify the 'targets' arg.")
-                self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = True
-            return True
-
-        validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
         for node, values in targets.items():
             node = node.owner
             if (NodeRole.TARGET not in self.get_roles_by_node(node)
@@ -10443,7 +10414,95 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #         if value:
             #             targets[target.output_port] = value
 
-            # TEACHER_TARGET BREADCRUMB: THIS TURNS TARGETS BACK INTO NODES FOR Composition
+        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
+
+
+
+            # MODIFIED TEACHER_TARGET OLD:
+            # BREADCRUMB: COMPOSITION VERSION
+            # TEACHER_TARGET BREADCRUMB: INTEGRATE WITH NEWER VERSION ON AUTODIFF, BUT AVOIDING USE OF LossMechanism
+            def validate_targets(target_mechs:list)->bool:
+                """Validate targets dict specification:
+                - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
+                - warn if any targets are target_mechs (OK, but OUTPUT Node Mechanisms are preferred
+                """
+                num_target_mechs_in_comp = len(target_mechs)
+                num_specified_targets = len(targets)
+                if num_specified_targets != num_target_mechs_in_comp:
+                    raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
+                                           f"the 'targets' arg of the learn() method for '{self.name}' must equal "
+                                           f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
+                # Check for target_mechs in targets arg learn()
+                target_mechs_as_targets = [target for target in targets.keys() if target.owner in target_mechs]
+                if not target_mechs_as_targets:
+                    return False
+                if not self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn:
+                    warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
+                                  f"has entries that are TARGET Nodes "
+                                  f"({', '.join(sorted([target.owner.name for target in target_mechs_as_targets]))}); "
+                                  f"while this is OK, it might be easier to simply use the OUTPUT Nodes "
+                                  f"to which they correspond as they keys of the dict, obviating the need "
+                                  f"to determine the TARGET Nodes. Alternatively, TARGET Nodes "
+                                  f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
+                                  f"obviating the need to specify the 'targets' arg.")
+                    self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = True
+                return True
+
+            validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
+
+            # -----------------------------------
+
+            # BREADCRUMB: AUTODIFF VERISON
+            def validate_targets(target_specs)->bool:
+                """Validate dict specification for samples and targets in learn() method of AutodiffComposition:
+                Ensure that:
+                    - number of entries in dict equals number of TARGET_MECHANISMS in Composition
+                    - keys are either sample port, sample node, or TARGET nodes
+                Warn if keys are TARGET Nodes (OK, but sample Node specifiations are simpler and clearer
+                """
+                num_target_mechs_in_comp = len(target_mechs)
+                num_specified_targets = len(target_specs)
+                if num_specified_targets != num_target_mechs_in_comp:
+                    raise CompositionError(f"The number of items ({num_specified_targets}) specified in the "
+                                           f"`targets` argment of learn() for '{self.name}' must equal the "
+                                           f"number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
+
+                # Check for TARGET Nodes specified in target_specs, rather than samples for which they are TARGETS
+                target_node_as_sample_spec = [f"'{target.name}'" for target in target_specs if target in target_mechs]
+                if target_node_as_sample_spec and not self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn:
+                    warnings.warn(f"The dict specified in the 'targets' argument of learn() for '{self.name}' has entries "
+                                  f"that are TARGET Node(s) ({', '.join(target_node_as_sample_spec)}); while this is OK, "
+                                  f"it might be easier and clearer to use the names of the Nodes being used to train the "
+                                  f"network as the keys of the dict, obviating the need to determine the TARGET Node(s). "
+                                  f"Alternatively, TARGET Nodes can be specified in the 'inputs' argument of the learn() "
+                                  f"method, along with INPUT nodes, obviating the need to use a separate 'targets' arg.")
+                    self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = True
+
+                # Check for specification of Nodes for which TARGET Nodes have not been constructed, either:
+                #   - explicitly by specifying TARGET for an entry in the **target_specs** arg of the constructor, or
+                #   - implicitly, if the **target_specs** arg of the constructor was not specified, in which case
+                #       TARGET Nodes have been constructed for all OUTPUT Nodes of the AutodiffComposition
+                # TEACHER_TARGET BREADCRUMB: NEED TO HANLDE PORT SPECIFICATONS IN target_specs ARG OF learn()
+                bad_target_specs = [f"'{sample.owner.name}'" for sample in target_specs
+                                    if sample.owner not in target_mechs and
+                                    sample not in self.target_ports_for_samples]
+                if bad_target_specs:
+                    raise AutodiffCompositionError(f"The following Node(s) have been specified to receive target inputs "
+                                                   f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
+                                                   f"{', '.join(bad_target_specs)}.")
+
+            if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+                return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
+
+            # Validate keys of target_specs dict specified in learn()
+            validate_targets(target_specs)
+            # MODIFIED TEACHER_TARGET NEW:
+            # MODIFIED TEACHER_TARGET END
+
+
+
+
+
             targets = self._map_external_target_values_to_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
