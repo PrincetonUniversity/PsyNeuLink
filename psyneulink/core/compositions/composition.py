@@ -4061,7 +4061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # suppress repeated warnings
         self.warned_about_run_with_no_inputs = False
-        self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = False
+        self._warned_about_target_nodes_in_target_specs = False
         self._warned_about_targets_mechs_in_inputs_and_targets = False
 
         self.nodes_to_roles = collections.OrderedDict()
@@ -10393,51 +10393,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED TEACHER_TARGET OLD:
         # BREADCRUMB:                               COMPOSITION VERSION
         # TEACHER_TARGET BREADCRUMB: INTEGRATE WITH NEWER VERSION ON AUTODIFF, BUT AVOIDING USE OF LossMechanism
-        def _validate_targets(target_mechs:list)->bool:
-            """Validate targets dict specification:
-            - ensure number of targets specified equals number of actual TARGET_MECHANISMS in Composition
-            - warn if any targets are target_mechs (OK, but OUTPUT Node Mechanisms are preferred
+        def _validate_targets_spec(target_specs:list)->bool:
+            """Validate dict specification for samples and targets in learn() method of AutodiffComposition:
+            Ensure that:
+                - number of entries in dict equals number of TARGET_MECHANISMS in Composition
+                - keys are either sample port, sample node, or TARGET nodes
+            Warn if keys are TARGET Nodes (OK, but sample Node specifiations are simpler and clearer
             """
 
+            # Standardize on use of output_ports for designating targets
+            target_specs_as_ports = {}
+            for target_spec, value in target_specs.items():
+                # convert any targets specified as Mechanisms to its primary OutputPort
+                if isinstance(target_spec, Mechanism_Base):
+                    target_spec = target_spec.output_port
+                assert isinstance(target_spec, OutputPort), \
+                    (f"PROGRAM ERROR: target specification in call to _parse_targets_spec for '{self.name}'"
+                     f"is not a Mechanism or an OutputPort -- shoudl have been caught in _validate_targets")
+                target_specs_as_ports[target_spec] = value
 
-            duplicate_targets = sorted([item.name for item in inputs if item in targets])
+            target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
+            TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
+
+
+            # Check for any target specs in **targets** arg of learn() that are also in **inputs** arg
+            # TEACHER_TARGET BREADCRUMB: WHAT IF inputs has port specifications?  CONVERT THAT TO PORTS TOO?
+            duplicate_targets = sorted([item.name for item in inputs if item in target_specs_as_mechs])
             if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
                 warnings.warn(f"There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' "
                               f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); This "
                               f"is not technically a problem, but it is redundant; one or the other is sufficient.")
                 self._warned_about_targets_mechs_in_inputs_and_targets = True
 
-            # Convert any samples specified as Mechanisms to the corresponding primary OutputPort
-            # MODIFIED TEACHER_TARGET OLD:
-            targets = {k.output_port:v for k, v in targets.items()
-                       # # MODIFIED TEACHER_TARGET OLD:
-                       # if (isinstance(k, Mechanism_Base) and k not in self.get_nodes_by_role(NodeRole.TARGET))}
-                       # MODIFIED TEACHER_TARGET NEW: TARGET ASSIGNMENT
-                       if (isinstance(k, Mechanism_Base) and k in self.get_nodes_by_role(NodeRole.TARGET))}
-                       # MODIFIED TEACHER_TARGET END
-            # # MODIFIED TEACHER_TARGET NEW:
-            # for target in targets.copy():
-            #     if isinstance(target, Mechanism_Base):
-            #         value = targets.pop(target, None)
-            #         if value:
-            #             targets[target.output_port] = value
-
-        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
-
-
-
-
-            num_target_mechs_in_comp = len(target_mechs)
-            num_specified_targets = len(targets)
-            if num_specified_targets != num_target_mechs_in_comp:
+            # Check that the number of target specifications equals the number of TARGET Nodes in the Composition
+            TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
+            num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
+            num_specified_targets = len(target_specs_as_ports)
+            if num_specified_targets != num_TARGET_Nodes_in_comp:
                 raise CompositionError(f"The number of targets ({num_specified_targets}) specified in "
                                        f"the 'targets' arg of the learn() method for '{self.name}' must equal "
-                                       f"the number of TARGET Nodes in the Composition ({num_target_mechs_in_comp}.")
-            # Check for target_mechs in targets arg learn()
-            target_mechs_as_targets = [target for target in targets.keys() if target.owner in target_mechs]
-            if not target_mechs_as_targets:
-                return False
-            if not self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn:
+                                       f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}.")
+
+            # Check for target_mechs that are already constructed TARGET Nodes
+            TARGET_Nodes_in_specs = [target for target in target_specs_as_mechs() if target in target_mechs]
+            if TARGET_Nodes_in_specs and not self._warned_about_target_nodes_in_target_specs:
                 warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' "
                               f"has entries that are TARGET Nodes "
                               f"({', '.join(sorted([target.owner.name for target in target_mechs_as_targets]))}); "
@@ -10446,10 +10445,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"to determine the TARGET Nodes. Alternatively, TARGET Nodes "
                               f"can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
                               f"obviating the need to specify the 'targets' arg.")
-                self._warned_about_target_node_as_sample_spec_in_targets_arg_of_learn = True
+                self._warned_about_target_nodes_in_target_specs = True
+            #------------------------------------------------
+
             return True
 
-        validate_targets(self.get_nodes_by_role(NodeRole.TARGET))
+        _validate_targets_spec(self.get_nodes_by_role(NodeRole.TARGET))
 
         # -----------------------------------
 
