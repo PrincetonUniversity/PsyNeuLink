@@ -2060,12 +2060,13 @@ class AutodiffComposition(Composition):
         #                                        f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
         #                                        f"{', '.join(bad_target_specs)}.")
         #
-        # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
-        #     return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
         #
         # # Validate keys of target_specs dict specified in learn()
         # validate_targets(target_specs)
         # MODIFIED TEACHER_TARGET END
+
+        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+            return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
 
         # Assign target values specified in learn() to TARGET Nodes
         # MODIFIED TEACHER_TARGET OLD:
