@@ -983,8 +983,11 @@ class AutodiffComposition(Composition):
             self.device = device
             self.torch_dtype = None
 
-        # Set to True after first warning about failure to specify execution mode so warning is issued only once
+        # Avoid repeated warnings:
+        # - set to True after first warning about failure to specify execution mode
         self.execution_mode_warned_about_default = False
+        # - set to True after warning about specyfing a target as INPUT in constructor but no value provided in learn()
+        self._warned_about_unspecified_target_in_learn = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
 
@@ -2088,34 +2091,74 @@ class AutodiffComposition(Composition):
         return target_values_for_target_nodes
 
     def _parse_targets_spec(self, inputs, targets, execution_mode, context):
+        """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
+        - constructor: validate entries since Composition does not support **targets** arg in constructor
+        - learn(): entries reauired to match ones assigned INPUT as value in **targets** dict of constructor
+        - flatten inputs dict
+        """
 
-        # TEACHER_TARGET BREADCRUMB: NEED TO HANLDE PORT SPECIFICATONS IN targets ARG OF learn()
-        # self.targets is from **targets** arg of AutodiffComposition constructor and targets is from learn()
-        if self.targets and targets:
+        # **targets** arg is specified both in the constructor (self.targets) and learn(targets)
+        constructor_args = self.targets
+        learn_method_args = targets
+        # TEACHER_TARGET BREADCRUMB: CONFIRM THAT targets ARE ALREADY PORTS, AND CHECK WHETHER SAMPLES ARE
+        # Note: both are {sample: target_mech.output_port}
+
+        if constructor_args and learn_method_args:
+
             # Check whether any samples with nodes specified as targets in the constructor
             #    also appear in the targets dict of learn(): this should not happen,
             #    as they get their target value from the node specified in the constructor
             uncessary_sample_specs_in_learn = []
-            for learn_sample in targets:
-                for constructor_sample, constructor_target in [spec for spec in self.targets]:
+            for learn_sample in learn_method_args:
+                for constructor_sample, constructor_target in [spec for spec in constructor_args]:
                     if learn_sample is constructor_sample and constructor_target is not TARGET:
                         uncessary_sample_specs_in_learn.append(f"'{learn_sample.name}'")
-                # target_node_names = [f"'{node.name}'" for node in self.get_nodes_by_role(NodeRole.TARGET)]
                 if uncessary_sample_specs_in_learn:
-                    target_error_msg = (f"The following node(s) were specified in the `targets` argument of the "
-                                        f"constructor for '{self.name}' as samples that receive their target "
-                                        f"values from another node, so they should not be included in the "
-                                        f"dict specified in the 'targets' argument of the learn() method: "
-                                        f"{', '.join(uncessary_sample_specs_in_learn)}.")
-                    raise AutodiffCompositionError(target_error_msg)
+                    raise AutodiffCompositionError(
+                        f"The following node(s), specified in the /targets' argument of the constructor for "
+                        f"'{self.name}' as samples that receive their target values from another node, should "
+                        f"not be included in the dict specified in the 'targets' argument of the learn() method: "
+                        f"{', '.join(uncessary_sample_specs_in_learn)}.")
+
+            # Check that all entries in constructor with INPUT as the value have entries in learn()
+            INPUT_targets_unspecified_in_learn = []
+            for constructor_sample in [sample for sample, target in constructor_args if target == INPUT]:
+                if constructor_sample not in learn_method_args:
+                    INPUT_targets_unspecified_in_learn.append(f"'{constructor_sample.name}'")
+                value = learn_method_args[constructor_sample]
+                assert is_numeric(value) and np.array(value).shape == construtor_sample.defaults.variable.shape,\
+                    (f"PROGRAM ERROR: Non-numberic argument and/or bad shape for specification of value for "
+                     f"'{constrcutor_sample.name}' in targets arg of learn() method for '{self.name}'.")
+            if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
+                warnings.warn(f"The following node(s), specified in the 'targets' argument of the constructor for "
+                              f"'{self.name}' as samples that that receive external values for their targets, must "
+                              f"be included in the 'targets' argument of the learn() method that specify their "
+                              f"target values during learning: {', '.join(INPUT_targets_unspecified_in_learn)}.")
+                self._warned_about_unspecified_target_in_learn = True
+
+
+        # TEACHER_TARGET BREADCRUMB: WHAT SHOULD BE DONE ABOUT self.targets (CONSTRUCTOR ARG) WRT HAND OFF TO SUPER
+        #                            CHECK WHAT HAPPENS IN test_autodiffcomposition()
+        # target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
+        # TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
+        #
+        # # TEACHER_TARGET BREADCRUMB: THIS SHOULD NOW BE HANDLED ON Composition _parse_targets_spec
+        # TARGET_Nodes_in_specs = [target for target in target_specs_as_mechs if target in TARGET_Nodes_in_comp]
+        # if TARGET_Nodes_in_specs and not self._warned_about_target_nodes_in_target_specs:
+        #     warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
+        #                   f"entries that are TARGET Nodes ({', '.join(sorted(TARGET_Nodes_in_specs))}); while this "
+        #                   f"is OK, it might be easier and clearer to use the names of the Nodes being used to train "
+        #                   f"the network as the keys of the dict, obviating the need to determine the TARGET Nodes. "
+        #                   f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method, "
+        #                   f"along with INPUT nodes, obviating the need to specify the 'targets' arg.")
 
         stim_input, num_input_trials = super()._parse_targets_spec(inputs, targets, execution_mode, context)
 
+        # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
         if not callable(inputs):
             input_ports_for_INPUT_Nodes = self._get_input_receivers()
             nested_inputs = {}
             stim_input_copy = stim_input.copy()
-            # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
             for node in stim_input_copy:
                 # If node is a nested Composition
                 if isinstance(node, Composition):
