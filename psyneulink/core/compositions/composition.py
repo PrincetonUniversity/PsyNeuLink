@@ -10452,9 +10452,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"along with INPUT nodes, obviating the need to specify the 'targets' arg.")
                 self._warned_about_target_nodes_in_target_specs = True
 
+            return target_specs_as_ports
+
         if targets is not None:
-            _validate_targets_spec(targets)
-            targets = self._map_external_target_values_to_target_nodes(targets, execution_mode)
+            target_specs_as_ports = _validate_targets_spec(targets)
+            targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
             inputs = _recursive_update(inputs, targets)
 
         # 3) Resize inputs to be of the form [[[]]],
