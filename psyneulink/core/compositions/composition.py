@@ -10391,7 +10391,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         # MODIFIED TEACHER_TARGET NEW:
-        # BREADCRUMB: BREAK THIS OUT AS ITS OWN METHOD AND OVERRIDED IN AUTODIFF
+        # BREADCRUMB: BREAK THIS OUT AS ITS OWN METHOD AND OVERRIDE IN AUTODIFF
         def _validate_targets_spec(target_specs:list)->bool:
             """Validate dict specification for samples and targets in learn() method of AutodiffComposition:
             Ensure that:
@@ -10433,9 +10433,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}.")
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
-            legal_target_specs = self.get_nodes_by_role(NodeRole.OUTPUT) + TARGET_Nodes_in_comp
+            # # MODIFIED TEACHER_TARGET NEW:
+            # legal_target_specs = self.get_nodes_by_role(NodeRole.OUTPUT) + TARGET_Nodes_in_comp
+            # bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
+            #                     if target_mech not in legal_target_specs]
+            # MODIFIED TEACHER_TARGET NEWER:
+            sample_nodes = [target.efferents[0].receiver.owner.sample.owner for target in TARGET_Nodes_in_comp]
+            legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
+# MODIFIED TEACHER_TARGET END
             if bad_target_specs:
                 raise CompositionError(f"The following Node(s) have been specified to receive target inputs "
                                                f"in the learn() method of '{self.name}' but are not TARGET Nodes: "

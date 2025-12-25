@@ -2136,7 +2136,6 @@ class AutodiffComposition(Composition):
                               f"target values during learning: {', '.join(INPUT_targets_unspecified_in_learn)}.")
                 self._warned_about_unspecified_target_in_learn = True
 
-
         # TEACHER_TARGET BREADCRUMB: WHAT SHOULD BE DONE ABOUT self.targets (CONSTRUCTOR ARG) WRT HAND OFF TO SUPER
         #                            CHECK WHAT HAPPENS IN test_autodiffcomposition()
         # target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
