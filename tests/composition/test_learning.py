@@ -892,8 +892,8 @@ class TestStructural:
                                         comp.nodes[1]: [[1]],
                                         comp.nodes[2]: [[2]]},
                                execution_mode=execution_mode)
-                assert (f"The number of targets (3) specified in `targets` arg of the learn method "
-                        f"for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
+                assert (f"The number of items (3) specified in the the 'targets' arg of the learn() method "
+                        f"for 'TEST COMP' must equal the number of TARGET Nodes in the Composition (2)."
                         in str(error_text.value))
 
 

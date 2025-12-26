@@ -10430,7 +10430,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if num_specified_targets != num_TARGET_Nodes_in_comp:
                 raise CompositionError(f"The number of items ({num_specified_targets}) specified in the "
                                        f"the 'targets' arg of the learn() method for '{self.name}' must equal "
-                                       f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}.")
+                                       f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
             # # MODIFIED TEACHER_TARGET NEW:
@@ -10438,6 +10438,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
             #                     if target_mech not in legal_target_specs]
             # MODIFIED TEACHER_TARGET NEWER:
+            # The only legal specificadtion in the learn() method is to:
+            #   - a sample Mechanism or OutputPort (the value to be trained), which must be an OUTPUT Node of the comp
+            #   - a TARGET Node constructed for the sample
+            # identify samples as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
+            #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
             sample_nodes = [target.efferents[0].receiver.owner.sample.owner for target in TARGET_Nodes_in_comp]
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs

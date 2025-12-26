@@ -25,7 +25,7 @@ Contents
 Overview
 --------
 
-A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
+A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a s and a target), compares
 them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
 *OUTCOME* `OutputPort <ComparatorMechanism.output_port>`.
 
@@ -142,6 +142,8 @@ Class Reference
 from collections.abc import Iterable
 
 import numpy as np
+import warnings
+
 from beartype import beartype
 
 from psyneulink._typing import Optional, Union
@@ -156,7 +158,7 @@ from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.keywords import \
     COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, \
     VARIABLE, PREFERENCE_SET_NAME, Loss, SUM
-from psyneulink.core.globals.parameters import Parameter, check_user_specified
+from psyneulink.core.globals.parameters import Parameter, check_user_specified, ParameterNoValueError
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -164,6 +166,38 @@ from psyneulink.core.globals.utilities import \
 from psyneulink.core.globals.utilities import safe_len
 
 __all__ = ['ComparatorMechanism', 'ComparatorMechanismError']
+
+
+def _sample_getter(owning_component=None, context=None):
+    try:
+        if (owning_component.input_ports
+                and isinstance(owning_component.input_ports[0], InputPort)
+                and owning_component.input_ports[0].path_afferents):
+            if (len (owning_component.input_ports[0].path_afferents) > 1
+                and owning_component._warned_about_more_than_one_sample == False):
+                warnings.warn(f"'{owning_component.name}' has more than one 'SAMPLE'; "
+                              f"therefore, its `sample` Parameter returns a list.")
+                owning_component._warned_about_more_than_one_sample = True
+                return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
+                return None
+            return owning_component.input_ports[0].path_afferents[0].sender
+    except ParameterNoValueError:
+        return None
+
+def _target_getter(owning_component=None, context=None):
+    try:
+        if (owning_component.input_ports
+                and isinstance(owning_component.input_ports[1], InputPort)
+                and owning_component.input_ports[1].path_afferents):
+            if (len (owning_component.input_ports[1].path_afferents) > 1
+                and owning_component._warned_about_more_than_one_target == False):
+                warnings.warn(f"'{owning_component.name}' has more than one 'TARGET'; "
+                              f"therefore, its `sample` Parameter returns a list.")
+                owning_component._warned_about_more_than_one_target = True
+                return [afferent.sender for afferent in owning_component.input_ports[1].path_afferents]
+            return owning_component.input_ports[1].path_afferents[0].sender
+    except ParameterNoValueError:
+        return None
 
 class ComparatorMechanismError(MechanismError):
     pass
@@ -304,8 +338,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         # By default, ComparatorMechanism compares two 1D np.array input_ports
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        sample = None
-        target = None
+        sample = Parameter(None, getter = _sample_getter, stateful=False, structural=True, fallback_value=None)
+        target = Parameter(None, getter = _target_getter, stateful=False, structural=True, fallback_value=None)
 
         output_ports = Parameter(
             [OUTCOME],
@@ -327,6 +361,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                                  )
     standard_output_port_names = ObjectiveMechanism.standard_output_port_names.copy()
     standard_output_port_names.extend([SUM.upper(), Loss.SSE.name, Loss.MSE.name])
+
 
     @check_user_specified
     @beartype
@@ -367,6 +402,9 @@ class ComparatorMechanism(ObjectiveMechanism):
                          prefs=prefs,
                          **kwargs
                          )
+
+        self._warned_about_more_than_one_sample = False
+        self._warned_about_more_than_one_target = False
 
         # Require Projection to TARGET InputPort (already required for SAMPLE as primary InputPort)
         self.input_ports[1].parameters.require_projection_in_composition.set(True, override=True)

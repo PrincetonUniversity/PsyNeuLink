@@ -286,8 +286,5 @@ class LossMechanism(#ModulatoryMechanism_Base,
                          prefs=prefs,
                          **kwargs)
 
-        self.parameters.sample._set(sample, context)
-        self.parameters.target._set(target, context)
-
         from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
         self.loss_projection = LossProjection(sender=self, receiver=self.sample)

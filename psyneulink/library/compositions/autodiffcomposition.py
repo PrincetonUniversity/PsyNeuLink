@@ -985,7 +985,7 @@ class AutodiffComposition(Composition):
 
         # Avoid repeated warnings:
         # - set to True after first warning about failure to specify execution mode
-        self.execution_mode_warned_about_default = False
+        self._warned_about_default_execution_mode = False
         # - set to True after warning about specyfing a target as INPUT in constructor but no value provided in learn()
         self._warned_about_unspecified_target_in_learn = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
@@ -2420,10 +2420,10 @@ class AutodiffComposition(Composition):
         Can be overridden by subclasses to change the permitted and/or default execution mode for learning
         """
         if execution_mode is None:
-            if self.execution_mode_warned_about_default is False:
+            if self._warned_about_default_execution_mode is False:
                 warnings.warn(f"The execution_mode argument was not specified in the learn() method of '{self.name}'; "
                               f"ExecutionMode.PyTorch will be used by default.")
-                self.execution_mode_warned_about_default = True
+                self._warned_about_default_execution_mode = True
             execution_mode = pnlvm.ExecutionMode.PyTorch
 
         return execution_mode
