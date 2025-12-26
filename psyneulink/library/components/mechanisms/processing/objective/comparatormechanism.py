@@ -171,34 +171,78 @@ __all__ = ['ComparatorMechanism', 'ComparatorMechanismError']
 def _sample_getter(owning_component=None, context=None):
     try:
         if (owning_component.input_ports
-                and isinstance(owning_component.input_ports[0], InputPort)
-                and owning_component.input_ports[0].path_afferents):
-            if (len (owning_component.input_ports[0].path_afferents) > 1
-                and owning_component._warned_about_more_than_one_sample == False):
-                warnings.warn(f"'{owning_component.name}' has more than one 'SAMPLE'; "
-                              f"therefore, its `sample` Parameter returns a list.")
-                owning_component._warned_about_more_than_one_sample = True
-                return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
-                return None
-            return owning_component.input_ports[0].path_afferents[0].sender
+                and SAMPLE in owning_component.input_ports
+                # Check that it is already an instantiated InputPort (could still be a dict specification)
+                and isinstance(owning_component.input_ports[SAMPLE], InputPort)
+                # Only both looking for samples if the InputPort already has afferent Projections assigned to it
+                and owning_component.input_ports[SAMPLE].path_afferents):
+            afferents = owning_component.input_ports[SAMPLE].path_afferents
+            # Deal with unusual case of > 1 Projection to SAMPLE
+            if len (afferents) > 1:
+                from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                # Get senders that are not from CIM's
+                mech_senders = [afferent.sender for afferent in afferents
+                                if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Get sources of any afferents that *are* from CIM's
+                sources_for_cim_senders = [afferent.sender.owner._get_source_info_from_output_CIM(afferent.sender)[0]
+                                           for afferent in afferents
+                                           if isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
+                mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
+                if len(mech_senders) > 1:
+                    if owning_component._warned_about_more_than_one_sample == False:
+                        warnings.warn(f"'{owning_component.name}' has more than one 'SAMPLE'; "
+                                      f"therefore, its `sample` Parameter returns a list.")
+                        owning_component._warned_about_more_than_one_sample = True
+                        return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
+                    # Return list of senders of all afferents that are not CIMs
+                    return mech_senders
+                # Return the single unique sender of the afferents
+                return mech_senders[0]
+            # Return the sender of the single afferent
+            return afferents[0].sender
+        else:
+            return None
     except ParameterNoValueError:
         return None
 
 def _target_getter(owning_component=None, context=None):
     try:
         if (owning_component.input_ports
-                and isinstance(owning_component.input_ports[1], InputPort)
-                and owning_component.input_ports[1].path_afferents):
-            if (len (owning_component.input_ports[1].path_afferents) > 1
-                and owning_component._warned_about_more_than_one_target == False):
-                warnings.warn(f"'{owning_component.name}' has more than one 'TARGET'; "
-                              f"therefore, its `sample` Parameter returns a list.")
-                owning_component._warned_about_more_than_one_target = True
-                return [afferent.sender for afferent in owning_component.input_ports[1].path_afferents]
-            return owning_component.input_ports[1].path_afferents[0].sender
+                and TARGET in owning_component.input_ports
+                # Check that it is already an instantiated InputPort (could still be a dict specification)
+                and isinstance(owning_component.input_ports[TARGET], InputPort)
+                # Only both looking for targets if the InputPort already has afferent Projections assigned to it
+                and owning_component.input_ports[TARGET].path_afferents):
+            afferents = owning_component.input_ports[TARGET].path_afferents
+            # Deal with unusual case of > 1 Projection to TARGET
+            if len (afferents) > 1:
+                from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+                # Get senders that are not from CIM's
+                mech_senders = [afferent.sender for afferent in afferents
+                                if not isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Get sources of any afferents that *are* from CIM's
+                sources_for_cim_senders = [afferent.sender.owner._get_source_info_from_output_CIM(afferent.sender)[0]
+                                           for afferent in afferents
+                                           if isinstance(afferent.sender.owner, CompositionInterfaceMechanism)]
+                # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
+                mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
+                if len(mech_senders) > 1:
+                    if owning_component._warned_about_more_than_one_target == False:
+                        warnings.warn(f"'{owning_component.name}' has more than one 'TARGET'; "
+                                      f"therefore, its `target` Parameter returns a list.")
+                        owning_component._warned_about_more_than_one_target = True
+                        return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
+                    # Return list of senders of all afferents that are not CIMs
+                    return mech_senders
+                # Return the single unique sender of the afferents
+                return mech_senders[0]
+            # Return the sender of the single afferent
+            return afferents[0].sender
+        else:
+            return None
     except ParameterNoValueError:
         return None
-
 class ComparatorMechanismError(MechanismError):
     pass
 

@@ -893,11 +893,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     @property
     def loss_mech_wrappers(self):
+        assert self.node_wrappers, \
+            (f"PROGRAM ERROR: no node_wrappers available when loss_mech_wrappers was called "
+             f"in 'target_wrappers' property of pytorch_representation for '{self.name}.")
         return [node_wrapper for node_wrapper in self.node_wrappers
                 if isinstance(node_wrapper, PytorchLossMechanismWrapper)]
 
     @property
     def sample_wrappers(self):
+        assert self.loss_mech_wrappers, \
+            (f"PROGRAM ERROR: no loss_mech_wrappers available when sample_wrappers property of pytorch_representation "
+             f"for '{self.name} was called.")
         sample_wrappers = []
         for loss_mech_wrapper in self.loss_mech_wrappers:
             sample_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
@@ -906,6 +912,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     @property
     def target_wrappers(self):
+        assert self.loss_mech_wrappers, \
+            (f"PROGRAM ERROR: no loss_mech_wrappers available when target_wrappers property of pytorch_representation "
+             f"for '{self.name} was called.")
         target_wrappers = []
         for loss_mech_wrapper in self.loss_mech_wrappers:
             target_wrappers.extend([afferent.sender_wrapper for afferent in loss_mech_wrapper.afferents
