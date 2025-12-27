@@ -121,7 +121,8 @@ if torch_available:
             True])
         @pytest.mark.parametrize('pathway_type', [
             'solo',
-            'gru_as_input', 'gru_as_hidden',
+            'gru_as_input',
+            'gru_as_hidden',
             'gru_as_output'
         ])
         def test_gru_as_solo_input_hidden_output_node_in_nested(self, pathway_type, execution_type,

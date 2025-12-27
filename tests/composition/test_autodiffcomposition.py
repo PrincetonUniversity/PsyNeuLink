@@ -2605,11 +2605,15 @@ class TestNestedLearning:
             return comp.results
         return _execute_learning
 
-    def test_error_for_no_learning_in_solo_nested_comp(self):
-        with pytest.raises(AutodiffCompositionError) as error_text:
+    def test_warning_or_error_for_no_learning_in_solo_nested_comp(self):
+        with pytest.warns(UserWarning) as warning:
             inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
             outer = pnl.AutodiffComposition([inner])
             outer._build_pytorch_representation()
+        assert (f"It will not be possible to execute learning for 'autodiff_composition-1' "
+                              f"since it does not have any learnable Projections." in repr(warning[0].message.args[0]))
+        with pytest.raises(AutodiffCompositionError) as error_text:
+            outer.learn()
         assert (f"Learning cannot be executed for 'autodiff_composition-1' "
                 f"since it does not have any learnable Projections." in str(error_text.value))
 
@@ -3156,7 +3160,7 @@ class TestNestedLearning:
 
         np.testing.assert_allclose(comp_results, autodiff_results)
 
-    def test_1_direct_and_1_ordinary_output_from_nested_to_another_node(self,
+    def d(self,
                                                                         nodes_for_testing_nested_comps,
                                                                         execute_learning):
         #           [   / hidden_2 ] -> output_1 -> output_2

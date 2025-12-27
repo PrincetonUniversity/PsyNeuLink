@@ -28,10 +28,12 @@ else:
     import torch.nn as nn
 
 import warnings
+
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 from collections import defaultdict
 
+import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -75,7 +77,6 @@ from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
-
 
 if TYPE_CHECKING:
     from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg
@@ -314,7 +315,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if not composition.is_nested:
 
             # TEACHER_TARGET BREADCRUMB: REFACTOR ALL OF THE FOLLOWING INTO METHODS, INCLUDING flatten_maps
-            # Recursively search for and assing _is_input to all INPUT Nodes in nested Compositions
+            # Recursively search for and assign _is_input to all INPUT Nodes in nested Compositions
             def _assign_input_nodes(nodes):
                 for pytorch_node in nodes:
                     if isinstance(pytorch_node, PytorchMechanismWrapper):
@@ -487,6 +488,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     self._pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
                         composition=composition,
+                        outer_creator=self.outer_creator,
                         component_idx=self.composition._get_node_index(node),
                         use=[LEARNING, SYNCH, SHOW_PYTORCH],
                         dtype=self.torch_dtype,
@@ -514,8 +516,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # MODIFIED TEACHER_TARGET END
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
-            # TEACHER_TARGET BREADCRUMB:
-            assert True
 
             # Rule out that Composition has parameter_CIM,
             #    since autodiff does not (yet) support those and they are not (yet) handled by flattening below
@@ -584,23 +584,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                          composition)
             self._pnl_refs_to_torch_param_names.update({pnl_proj_name: pnl_proj_param_name_comp_tuple,
                                                         projection.name: projection_param_name_comp_tuple})
-
-        # # Create ProjectionWrappers for PYTORCH_GRU_Node -> LossMechanism
-        # for loss_mech in [node for node in self.composition.nodes if isinstance(node, LossMechanism)]:
-        #     sample = loss_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
-        #     pytorch_proj_wrapper = PytorchProjectionWrapper(projection=loss_mech.loss_projection,
-        #                                                     pnl_proj=loss_mech.loss_projection,
-        #                                                     component_idx=None,
-        #                                                     sender_port_idx=0,
-        #                                                     use=[SHOW_PYTORCH],
-        #                                                     device=device,
-        #                                                     sender_wrapper=self.nodes_map[loss_mech],
-        #                                                     receiver_wrapper=self.nodes_map[sample],
-        #                                                     composition=composition,
-        #                                                     context=context)
-        # #     self.nodes_map[projection.sender.owner].add_efferent(pytorch_proj_wrapper)
-        # #     self.nodes_map[projection.receiver.owner].add_afferent(pytorch_proj_wrapper)
-        # #     proj_wrappers_pairs.append((projection, pytorch_proj_wrapper))
 
         return proj_wrappers_pairs
 
@@ -2339,6 +2322,7 @@ class PytorchMechanismWrapper(torch.nn.Module):
     def __init__(self,
                  mechanism:ProcessingMechanism,                 # Mechanism to be wrapped
                  composition,                                   # one to which mech belongs (for nested executions)
+                 outer_creator:Composition,
                  component_idx:Optional[int],                   # index of the Mechanism in the Composition
                  use:Union[list, Literal[LEARNING, SYNCH, SHOW_PYTORCH]], # learning, synching of values and/or display
                  dtype:torch.dtype,                             # needed for Pytorch
@@ -2379,6 +2363,23 @@ class PytorchMechanismWrapper(torch.nn.Module):
 
         if subclass_specifies_function is False:
             self._assign_pytorch_function(mechanism, device, context)
+
+        if self.composition.is_nested:
+            # Ensure wrapper for LossMechanism gets afferent from 'PYTORCH GRU NODE'
+            # IMPLEMENTATION NOTE:
+            #   Do this by adding PytorchProjectionWrapper for nested sample node->LossMechanism.sample.owner
+            #   This is needed because the LossMechanism is constructed after _get_pytorch_backprop_pathways
+            #   so that the dependency on the nested sample node is not seen.  This ensures that it *is* seen
+            #   in _instantiate_pytorch_projection_wrappers() in the call to _get_composition_projections()
+            outer_comp = context.composition
+            outer_comp_pytorch_rep = outer_creator
+            for loss_mech in [mech for mech in outer_comp.nodes if isinstance(mech, LossMechanism)]:
+                sample_mech = loss_mech.sample.owner
+                if sample_mech is mechanism:
+                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
+                    outer_comp._pytorch_projections.append(proj)
+                    outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
+                    outer_comp_pytorch_rep.nodes_map[mechanism] = self
 
     def _assign_pytorch_function(self, mechanism, device, context):
         self.function = PytorchFunctionWrapper(mechanism.function, device, context)
@@ -2735,7 +2736,6 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         sample = variable[:,:,0,...]
         # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
         # sample = sample.requires_grad_()
-        assert True
         assert sample.requires_grad == True, \
             (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}'"
              f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")

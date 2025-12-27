@@ -13,12 +13,12 @@ import numpy as np
 import graph_scheduler
 import torch
 
-import psyneulink.core.scheduling.condition as conditions
 
 from typing import Union, Optional, Literal, Tuple
 
 from torch import nn
 
+import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.compositions.composition import LearningScale, NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
@@ -475,6 +475,7 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
         super().__init__(mechanism=mechanism,
                          composition=gru_composition,
                          component_idx=component_idx,
+                         outer_creator=outer_creator,
                          use=use,
                          dtype=dtype,
                          device=device,
@@ -482,31 +483,18 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                          context=context)
 
         self._assign_GRU_pytorch_function(mechanism, device, context)
-        
-        # MODIFIED TEACHER_TARGET OLD:
+
         if self.composition.is_nested:
-            # Ensure wrapper for LossMechanism gets afferent from 'PYTORCH GRU NODE'
+            # Ensure that LossMechanism executes after 'PYTORCH GRU NODE'
             # IMPLEMENTATION NOTE:
-            #   Do this by adding PytorchProjectionWrapper for 'PYTORCH GRU NODE'->LossMechanism.sample.owner
-            #   This is needed because the LossMechanism is constructed after _get_pytorch_backprop_pathways
-            #   so that the dependency on 'PYTORCH GRU NODE' is not seen.  This ensures that it *is* seen
-            #   in _instantiate_pytorch_projection_wrappers() in the call to _get_composition_projections()
+            #     this is required because _get_execution_sets() calls Composition.scheduler to generate
+            #     the order of execution of Pytorch nodes which uses the order the Composition's graph,
+            #     and there LossMechanism is depdendent on the nested GRUComposition, and not 'PYTORCH GRU NODE'
+            #     which is only used when executing the PyTorch graph
             outer_comp = context.composition
-            outer_comp_pytorch_rep = outer_creator
-            assert outer_comp == outer_creator.composition
             for loss_mech in [mech for mech in outer_comp.nodes if isinstance(mech, LossMechanism)]:
                 sample_mech = loss_mech.sample.owner
                 if sample_mech is mechanism:
-                    proj = loss_mech.input_ports[SAMPLE].path_afferents[0]
-                    outer_comp._pytorch_projections.append(proj)
-                    outer_comp_pytorch_rep.additional_pytorch_relevant_projections.append(proj)
-                    outer_comp_pytorch_rep.nodes_map[mechanism] = self
-                    # Ensure that LossMechanism executes after 'PYTORCH GRU NODE'
-                    # IMPLEMENTATION NOTE:
-                    #     this is required because _get_execution_sets() calls Composition.scheduler to generate
-                    #     the order of execution of Pytorch nodes which uses the order the Composition's graph,
-                    #     and there LossMechanism is depdendent on the nested GRUComposition, and not 'PYTORCH GRU NODE'
-                    #     which is only used when executing the PyTorch graph
                     outer_comp.scheduler.add_condition(loss_mech, conditions.AfterNode(gru_composition))
 
         self.synch_with_pnl = False
@@ -705,7 +693,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
                                     # set_output_values:bool=None,
                                     # execute_mech:bool=True,
                                     context=None):
-
         if set_variable:
             assert False, \
                 f"PROGRAM ERROR: copying variables to GRUComposition from pytorch execution is not currently supported."

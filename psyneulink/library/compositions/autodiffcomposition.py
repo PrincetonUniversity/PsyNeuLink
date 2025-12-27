@@ -795,8 +795,15 @@ class AutodiffComposition(Composition):
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
             if specs:
-                if isinstance(specs, (LossMechanism, tuple, dict)):
+                # MODIFIED TEACH_TARGET OLD:
+                if isinstance(specs, (LossMechanism, tuple)):
                     specs = convert_to_list(specs)
+                elif isinstance(specs, dict):
+                    specs = [(k,v) for k,v in spec.items()]
+                # # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
+                # if isinstance(specs, (LossMechanism, tuple, dict)):
+                #     specs = convert_to_list(specs)
+                # MODIFIED TEACH_TARGET END
                 for i, spec_tuple in enumerate(specs.copy()):
                     sample, target = spec_tuple
                     sample = sample.output_port if isinstance(sample, Mechanism) else sample
@@ -1415,8 +1422,12 @@ class AutodiffComposition(Composition):
 
         # Validate LossMechanism specs
         if not loss_mech_specs:
-            raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
-                                           f"since it does not have any learnable Projections.")
+            if context.execution_id:
+                raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
+                                               f"since it does not have any learnable Projections.")
+            else:
+                warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
+                              f"since it does not have any learnable Projections.")
         for loss_mech_spec in list(loss_mech_specs):
             # Assume that self.targets is a list of LossMechanisms and/or tuples specifying sample:target pairs
             assert isinstance(loss_mech_spec, (LossMechanism, tuple)), \

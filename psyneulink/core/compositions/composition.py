@@ -8350,7 +8350,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway = pathway.pathway
             # learning_rate specified in call to method takes precedence
             # MODIFIED 11/24/25 NEW:
-            learning_rate = learning_rate or pathway.learning_rate
+            learning_rate = learning_rate or (pathway.learning_rate if isinstance(pathway, Pathway) else None)
             # MODIFIED 11/24/25 END
         else:
             pathway_name = name
