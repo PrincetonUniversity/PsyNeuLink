@@ -990,11 +990,13 @@ class AutodiffComposition(Composition):
             self.device = device
             self.torch_dtype = None
 
-        # Avoid repeated warnings:
-        # - set to True after first warning about failure to specify execution mode
+        # Avoid repeated warnings; flagss are set to True after first warning about:
+        # - failure to specify execution mode
         self._warned_about_default_execution_mode = False
-        # - set to True after warning about specyfing a target as INPUT in constructor but no value provided in learn()
+        # - specyfing a target as INPUT in constructor but no value provided in learn()
         self._warned_about_unspecified_target_in_learn = False
+        # - using show_learning with show_pytorch
+        self._warned_about_unecessary_show_learning_arg_in_call_to_show_graph = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
 
@@ -2990,6 +2992,13 @@ class AutodiffComposition(Composition):
 
     def show_graph(self, *args, **kwargs):
         """Override to use PytorchShowGraph if show_pytorch is True"""
+        from psyneulink.core.compositions.showgraph import SHOW_LEARNING
+        from psyneulink.library.compositions.pytorchshowgraph import SHOW_PYTORCH
+        if (SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING]
+                and any(isinstance(node, Composition) for node in self.nodes)
+                and (not SHOW_PYTORCH in kwargs or not kwargs[SHOW_PYTORCH])):
+            raise AutodiffCompositionError(f"'{self.name}' has a nested Composition, so PyTorch mode must be used "
+                                           f"for learning; use 'show_pytorch=True' in the call to show_graph().")
         return self._show_graph.show_graph(*args, **kwargs)
 
     @property

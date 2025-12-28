@@ -839,7 +839,7 @@ FUNCTIONS = 'functions'
 TRAINING_SET = 'training set'
 TRAINED_OUTPUTS = 'trained_outputs'
 SHOW_GRAPH = 'SHOW_GRAPH'
-SHOW_PYTORCH = 'SHOW_PYTORCH'
+SHOW_PYTORCH = 'show_pytorch'
 
 #endregion
 

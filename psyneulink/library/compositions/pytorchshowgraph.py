@@ -57,6 +57,14 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
+        elif SHOW_LEARNING in kwargs:
+            # Remove SHOW_LEARNING spec from kwargs to prevent double-handling in super().show_graph
+            kwargs.pop(SHOW_LEARNING, None)
+            if self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph is False:
+                import warnings
+                warnings.warn(f"'{SHOW_LEARNING}' argument in call to show_graph() for '{self.composition.name}' "
+                              f"is unnecessary since learning components are shown when '{SHOW_PYTORCH}' is used.")
+                self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph = True
         self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
@@ -69,16 +77,24 @@ class PytorchShowGraph(ShowGraph):
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
 
-    def _make_additional_assignments(self, g, processing_graph, composition, *args):
+    def _make_additional_assignments(self,
+                                     g, processing_graph,
+                                     composition, enclosing_comp, comp_hierarchy, nesting_level, active_items,
+                                     show_nested, show_cim, show_learning, show_types, show_dimensions,
+                                     show_node_structure, node_structure_args,
+                                     show_projection_labels, show_projections_not_in_composition,
+                                     context):
         """Override to add Loss components to graph
         Add LossMechanism to processing_graph, and implement LossProjection (from LossMechanism to SAMPLE)
         """
         if not self.show_pytorch:
-            return super()._make_additional_assignments(*args)
-
-        assert isinstance(args[13], Context), \
-            f"PROGRAM ERROR: arguments to _make_additional_assignments must have changed"
-        context = args[13]
+            return super()._make_additional_assignments(
+                g, processing_graph,
+                composition, enclosing_comp, comp_hierarchy, nesting_level, active_items,
+                show_nested, show_cim, show_learning, show_types, show_dimensions,
+                show_node_structure, node_structure_args,
+                show_projection_labels, show_projections_not_in_composition,
+                context)
 
         # If a node projects to a LossMechanism as its SAMPLE, add LossMechanism as dependency
         #  so that a return exclude_from_gradient_calc arrow can added to show the dependencey for learning
@@ -98,7 +114,11 @@ class PytorchShowGraph(ShowGraph):
                                                    style=self.exclude_from_gradient_calc_line_style)
 
     def _get_processing_graph(self, composition, context):
-        """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode"""
+        """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode
+        IMPLEMENTATION NOTE:
+            learning_components (LossMechanism(s) and TARGET nodes) are included
+            since these are always part of the graph in PyTorch mode
+        """
         if self.show_pytorch:
             processing_graph = {}
             projections = self._get_projections(composition, context)
