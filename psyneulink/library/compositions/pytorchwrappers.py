@@ -1910,6 +1910,11 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #   only execute nodes specified for curent optmization_num
                     current_exec_set = get_nodes_to_execute_for_optimization(optimization_num, current_exec_set.copy())
 
+                # Sort for consistency of reporting in tests
+                current_exec_set = sorted(
+                    current_exec_set,
+                    key=lambda n: getattr(n, "name", getattr(getattr(n, "mechanism", None), "name", "")))
+
                 for node in current_exec_set:
 
                     # If node is nested Composition (wrapped in PytorchCompositionWrapper),
