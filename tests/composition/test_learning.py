@@ -813,7 +813,6 @@ class TestStructural:
                    'contains input specifications of different lengths ({2, 10})' in error_text
             assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
-
         @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
                                  ids=["Composition", "Autodiff"])
         @pytest.mark.parametrize("target_specs", [
@@ -858,13 +857,12 @@ class TestStructural:
                     comp.learn(inputs=inputs_arg,
                                targets=target_mechs,
                                execution_mode=execution_mode)
-                assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "
-                        f"are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "
-                        f"it might be easier to simply use the OUTPUT Nodes to which they correspond as they keys "
-                        f"of the dict, obviating the need to determine the TARGET Nodes. Alternatively, "
-                        f"TARGET Nodes can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "
-                        f"obviating the need to specify the 'targets' arg."
-                        in warning[0].message.args[0])
+                assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries "
+                        f"that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is "
+                        f"OK, it might be easier to clearer to use the OUTPUT Nodes to which they correspond as the "
+                        f"keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, TARGET "
+                        f"Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, "
+                        f"obviating the need to specify the 'targets' arg." in warning[0].message.args[0])
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args

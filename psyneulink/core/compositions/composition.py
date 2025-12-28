@@ -10438,7 +10438,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
             #                     if target_mech not in legal_target_specs]
             # MODIFIED TEACHER_TARGET NEWER:
-            # The only legal specificadtion in the learn() method is to:
+            # The only legal specification of a target in the learn() method is for:
             #   - a sample Mechanism or OutputPort (the value to be trained), which must be an OUTPUT Node of the comp
             #   - a TARGET Node constructed for the sample
             # identify samples as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
@@ -10447,17 +10447,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
-# MODIFIED TEACHER_TARGET END
+    # MODIFIED TEACHER_TARGET END
             if bad_target_specs:
                 raise CompositionError(f"The following Node(s) have been specified to receive target inputs "
-                                               f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
-                                               f"{', '.join(bad_target_specs)}.")
+                                       f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
+                                       f"{', '.join(bad_target_specs)}.")
 
             # Check for target_mechs that are already constructed TARGET Nodes
             TARGET_Nodes_in_specs = [target for target in target_specs_as_mechs if target in TARGET_Nodes_in_comp]
             if TARGET_Nodes_in_specs and not self._warned_about_target_nodes_in_target_specs:
+                target_node_names = sorted([node.name for node in TARGET_Nodes_in_specs])
                 warnings.warn(f"The dict specified for the 'targets' arg of the learn() method for '{self.name}' has "
-                              f"entries that are TARGET Nodes ({', '.join(sorted(TARGET_Nodes_in_specs))}); while "
+                              f"entries that are TARGET Nodes ({', '.join(target_node_names)}); while "
                               f"this is OK, it might be easier to clearer to use the OUTPUT Nodes to which they "
                               f"correspond as the keys of the dict, obviating the need to determine the TARGET Nodes. "
                               f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method, "
