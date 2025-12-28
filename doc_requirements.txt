@@ -1,5 +1,5 @@
 psyneulink-sphinx-theme<1.2.8.0
 sphinx>=5, <8.2.4
-sphinx_autodoc_typehints<3.6.0
+sphinx_autodoc_typehints<3.7.0
 
 standard-imghdr <3.14; python_version >= '3.13'

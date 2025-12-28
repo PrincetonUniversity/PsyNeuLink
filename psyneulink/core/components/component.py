@@ -1642,28 +1642,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def llvm_param_ids(self):
         return self._get_param_ids()
 
-    def _is_param_modulated(self, p):
-        try:
-            if p in self.owner.parameter_ports:
-                return True
-        except AttributeError:
-            pass
-        try:
-            if p in self.parameter_ports:
-                return True
-        except AttributeError:
-            pass
-        try:
-            modulated_params = (
-                getattr(self.parameters, p.sender.modulation).source
-                for p in self.owner.mod_afferents)
-            if p in modulated_params:
-                return True
-        except AttributeError:
-            pass
-
-        return False
-
     def _get_param_initializer(self, context):
         def _convert(x):
             if isinstance(x, Enum):
@@ -1671,8 +1649,10 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             elif isinstance(x, SampleIterator):
                 if isinstance(x.generator, list):
                     return tuple(v for v in x.generator)
+
                 else:
                     return (x.start, x.step, x.num)
+
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
@@ -1680,18 +1660,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # This can't use tupleize and needs to recurse to handle
                 # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
+
             except TypeError:
                 return x if x is not None else tuple()
 
         def _get_values(p):
             param = p.get(context)
-            # Modulated parameters change shape to array
-            if np.ndim(param) == 0 and self._is_param_modulated(p):
-                return (param,)
-            elif p.name == 'num_trials_per_estimate': # Should always be int
+            if p.name == 'num_trials_per_estimate': # Should always be int
                 return 0 if param is None else int(param)
+
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asarray(param, dtype=float).ravel())
+
             return _convert(param)
 
         return tuple(map(_get_values, self._get_compilation_params()))

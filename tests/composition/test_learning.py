@@ -814,18 +814,13 @@ class TestStructural:
             assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
 
-        @pytest.mark.parametrize("comp_type", [
-            pnl.Composition,
-            # pnl.AutodiffComposition
-        ], ids=[
-            "Composition",
-            # "Autodiff"
-        ])
+        @pytest.mark.parametrize("comp_type", [pnl.Composition, pnl.AutodiffComposition],
+                                 ids=["Composition", "Autodiff"])
         @pytest.mark.parametrize("target_specs", [
-            # 'target_mechs_in_inputs',
-            # 'output_mechs_in_targets',
-            # 'target_mechs_in_targets',
-            # 'target_mechs_in_inputs_and_targets',
+            'target_mechs_in_inputs',
+            'output_mechs_in_targets',
+            'target_mechs_in_targets',
+            'target_mechs_in_inputs_and_targets',
             'too_many_targets',
         ])
         @pytest.mark.pytorch

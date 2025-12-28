@@ -8349,7 +8349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_name = name or pathway.name
             pathway = pathway.pathway
             # learning_rate specified in call to method takes precedence
-            # MODIFIED 11/24/25 NEW:
+            # MODIFIED TEACHER_TARGET 11/24/25 NEW:
             learning_rate = learning_rate or (pathway.learning_rate if isinstance(pathway, Pathway) else None)
             # MODIFIED 11/24/25 END
         else:
@@ -10386,7 +10386,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     d[key] = _recursive_update(d.get(key, {}), val)
                 else:
                     d[key] = val
-
+                # Remove entry from targets dict to avoid duplicate target warnings
                 u.pop(key)
             return d
 
@@ -14095,11 +14095,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        # MODIFIED TEACHER_TARGET OLD:
         return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
-        # # MODIFIED TEACHER_TARGET NEW:
-        # return [node for node in self.nodes if NodeRole.TARGET in self.nodes_to_roles[node]]
-        # MODIFIED TEACHER_TARGET END
 
     @property
     def learned_components(self):
@@ -14269,7 +14265,9 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
+    # MODIFIED TEACHER_TARGET OLD:
     # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    # MODIFIED TEACHER_TARGET END
     return comp
 
 

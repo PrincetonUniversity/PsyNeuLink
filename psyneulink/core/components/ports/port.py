@@ -2382,17 +2382,23 @@ class Port_Base(Port):
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder,
-                                                              self.function,
-                                                              f_params, name)
+                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder, self.function, f_params, name)
+
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
                                   getattr(self.function.parameters, name).get(None)),
-                                  pnlvm.PNLCompilerWarning)
+                                  category=pnlvm.PNLCompilerWarning)
+
+                    # The below steps can convert all the way from 2D single element
+                    # arrays, often returned by ParameterPorts, all the way down to
+                    # scalars.
+                    f_mod_ptr = pnlvm.helpers.unwrap_2d_array(builder, f_mod_ptr)
                     param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
+
                 else:
                     param_val = builder.load(f_mod_ptr)
+
                 builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
