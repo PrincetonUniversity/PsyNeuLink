@@ -184,6 +184,7 @@ COMMENT
 
 *AutodiffComposition Target Specification(s)*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Add pointer to learning_rate documentation
 
 # TEACHER_TARGET BREADCRUMB: EDIT
 Mention student:teacher
@@ -204,6 +205,25 @@ Formats:
    - OUTPUT Nodes are used as students
    - TARGET Nodes constructed automatically to receive target inputs specified in **inputs** argument learn()
 - must specify targets either in constructor or learn() method
+
++============+==========================+==========================================================
+|            |          constructor     |         learn()
++============+==========================+==========================================================
+|            |                          |
+|Composition |             N/A          |    all OUTPUT Nodes
+|            |                          |    or none (assigned default_variables as target values)
+|            |                          |
++============+==========================+==========================================================
+|            |
+|            |  Any ProcessingMechanism      All specified as INPUT in constructor
+|            |
+| Autodiff   +------------------------- OR -------------------------------------------------------
+|            |
+|            |  None                         all OUTPUT Nodes
+|            |                               or none (assigned default_variables as target values)
+|            |
+|============+=====================================================================================
+
 
  ----------
  OLD

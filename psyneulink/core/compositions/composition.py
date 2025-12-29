@@ -1329,6 +1329,9 @@ PsyNeuLink model for learning, and can provide the greatest speed-up, but not al
    +--------------------+------------------------------------+------------------------------+---------------------------+
    |*Speed:*            |slow                                |fast                          |fastest                    |
    +--------------------+------------------------------------+------------------------------+---------------------------+
+   |*Configuration:*    |`Composition learning methods       |specify `samples and targets  | same as Composition       |
+   |                    |<Composition_Learning_Methods>`     |<AutodiffComposition_Targets>`|                           |
+   +--------------------+------------------------------------+------------------------------+---------------------------+
    |                    |`BackPropagation`                   |Backpropagation               |Backpropagation            |
    |                    |                                    |                              |                           |
    |                    |`Reinforcement` learning            |                              |                           |
@@ -1337,6 +1340,9 @@ PsyNeuLink model for learning, and can provide the greatest speed-up, but not al
    |                    |                                    |                              |                           |
    |*Supports:*         |`Unspervised learning               |Unsupervised learning         |                           |
    |                    |<Composition_Learning_Unsupervised>`|                              |                           |
+   |                    |                                    |                              |                           |
+   |                    |                                    |`Internal sources of training |                           |
+   |                    |                                    |<AutodiffComposition_Targets>`|                           |
    |                    |                                    |                              |                           |
    |                    |                                    |`Learning of                  |                           |
    |                    |                                    |nested Compositions           |                           |
