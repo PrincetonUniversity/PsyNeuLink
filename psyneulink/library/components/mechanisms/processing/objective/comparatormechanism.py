@@ -191,7 +191,7 @@ def _sample_getter(owning_component=None, context=None):
                 mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
                 if len(mech_senders) > 1:
                     if owning_component._warned_about_more_than_one_sample == False:
-                        warnings.warn(f"'{owning_component.name}' has more than one 'SAMPLE'; "
+                        warnings.warn(f"'{owning_component.name}' has more than one '{SAMPLE}'; "
                                       f"therefore, its `sample` Parameter returns a list.")
                         owning_component._warned_about_more_than_one_sample = True
                         return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]
@@ -229,7 +229,7 @@ def _target_getter(owning_component=None, context=None):
                 mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
                 if len(mech_senders) > 1:
                     if owning_component._warned_about_more_than_one_target == False:
-                        warnings.warn(f"'{owning_component.name}' has more than one 'TARGET'; "
+                        warnings.warn(f"'{owning_component.name}' has more than one '{TARGET}'; "
                                       f"therefore, its `target` Parameter returns a list.")
                         owning_component._warned_about_more_than_one_target = True
                         return [afferent.sender for afferent in owning_component.input_ports[0].path_afferents]

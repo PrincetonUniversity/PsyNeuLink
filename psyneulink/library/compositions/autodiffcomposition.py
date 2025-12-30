@@ -911,11 +911,11 @@ class AutodiffComposition(Composition):
                         return (f"sample specification must be a ProcessingMechanism or the OutputPort of one.")
                     if not isinstance(item[1], (OutputPort, ProcessingMechanism_Base, str)):
                         return (f"target specificadtion must be an OutputPort, ProcessingMechanism "
-                                f"or the keyword 'TARGET'.")
+                                f"or the keyword '{TARGET}'.")
                     if isinstance(item[1], OutputPort) and not isinstance(item[1].owner, ProcessingMechanism_Base):
                         return (f"target specification must be a ProcessingMechanism or the OutputPort of one.")
                     if isinstance(item[1], str) and item[1] != TARGET:
-                        return (f"the only keyword that can be used for the target specification is 'TARGET'.")
+                        return (f"the only keyword that can be used for the target specification is '{TARGET}'.")
                 assert isinstance(item[0], OutputPort), \
                     ("PROGRAM ERROR: 1st item of tuple specification for targets arg should be OutputPort by now.")
                 assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
@@ -1407,119 +1407,148 @@ class AutodiffComposition(Composition):
 
         # TEACHER_TARGET BREADCRUMB: CHECK IF ANY LossMechanisms AND/OR TARGETS ALREADY EXIST FOR ONES SPECIFIED
 
-        # Determine whether targets were specified by user in constructor or TARGET Nodes should be constructed
         if self.targets:
-            self._instantiate_constructor_targets_arg()
-            # targets specified by user in **targets** argument of AutodiffComposition constructor,
-            #   either as LossMechanism, (sample:target) tuple, or list containing either
-            # Get TARGET specs; can be Node or TARGET keyword requiring construction of TARGET Node (below)
-            for loss_mech_spec in self.targets:
-                if isinstance(loss_mech_spec, LossMechanism):
-                    sample_port = loss_mech_spec.sample
-                    sample_mech = sample_port.owner
-                    target_port = loss_mech_spec.target
-                    target_mech = target_port.owner
-                    # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
-                    #   then raise error, as executing its LossFunction in pytorch will cause a crash
-                    self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=loss_mech,
-                                                         constructed_target_mechs=constructed_target_mechs,
-                                                         action=ERROR)
-                elif isinstance(loss_mech_spec, tuple):
-                    sample_port, target_spec = loss_mech_spec
-                    sample_mech = sample_port.owner
-                    target_mech = target_spec.owner if isinstance(target_spec, OutputPort) else target_spec
-                    # If specified sample Mechanism is not in a pathway with at least one learnable Projection
-                    #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
-                    #   loss in pytorch will cause a crash
-                    self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=None,
-                                                         constructed_target_mechs=None,
-                                                         action=ERROR)
-                    # Determine whether target is internal node or TARGET keyword
-                    if isinstance(target_spec, OutputPort):
-                        # target is internal Node
-                        self.target_ports_for_samples.update({sample_port: target_spec})
-                    elif target_spec == TARGET:
-                        # target is TARGET keyword, so construct TARGET Node
-                        if sample_port in self.target_ports_for_samples:
-                            # TARGET Node has already been constructed for specified sample Port
-                            continue
-                        sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
-                                       else sample_port.owner.name)
-                        target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
-                                                                                       in sample_mech.value],
-                                                                                      dtype=object),
-                                                          name= 'TARGET for ' + sample_name)
-                        target_mech._initialize_from_context(context, base_context, override=False)
-                        target_port = target_mech.output_port
-                        self.target_ports_for_samples.update({sample_port: target_port})
-                        self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
-                        constructed_target_mechs.append(target_mech)
-                    else:
-                        assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
-                                       f"({loss_mech_spec[1]} for '{self.name}'.")
-                else:
-                    assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
-                                   f"({loss_mech_spec} for '{self.name}'.")
-
-                target_mechs.append(target_mech)
-                loss_mech_specs.append((loss_mech_spec[0], target_spec))
-
+            # Instantiate any target specifications in **targets** arg of AutodiffComposition constructor
+            loss_mech_specs, target_mechs = self._instantiate_constructor_targets_args(context, base_context)
         else:
-            # No targets specified by user, so construct TARGET Node for all OUTPUT Nodes of the AutodiffComposition
-            # IMPLEMENTATION NOTE:
-            #    only add target nodes if *not* already present in self.target_ports_for_samples.values()
-            #    (to avoid duplication in multiple calls, including from command line;
-            #     see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
-            pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
-            identified_output_nodes = self._identify_output_nodes(context)
-            output_ports_for_learning = []
-            for node in [n for n in identified_output_nodes if n in pathway_terminal_nodes]:
-                output_ports_for_learning.extend(node.output_ports)
-            target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
-            for output_port_for_learning in output_ports_for_learning:
+            # No target specifications in constructor, so instantiate TARGET Nodes for all OUTPUT Nodes
+            loss_mech_specs, target_mechs = self._instantiate_learn_method_targets_args(pathways, context, base_context)
 
-                if not self._sample_is_in_learnable_pathway(sample=output_port_for_learning.owner, target=None,
-                                                            loss_mech=None,
-                                                            constructed_target_mechs=constructed_target_mechs,
-                                                            action=ERROR):
-                    # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
-                    #   warning about non-learnability is handled in _instantiate_optimizer()
-                    continue
-                # Check for existing TARGET Nodes
-                existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
-               # Get or construct TARGET Node if none exists for OUTPUT Node
-                if output_port_for_learning not in existing_output_ports_for_learnings:
-                    # Check that TARGET Node doesn't already exist for OUTPUT Node
-                    #    (may have been created for PNL learning in call to add_backpropagation_learning_pathway)
-                    existing_comparators = [mech for mech in self.nodes if
-                                            isinstance(mech, ComparatorMechanism) and
-                                            NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(mech)]
-                    comparators = [mech for mech in existing_comparators
-                                   if mech.input_ports['SAMPLE'].path_afferents[0].sender is output_port_for_learning]
-                    assert len(comparators) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
-                                                   f"for '{output_port_for_learning.full_name}' in {self.name}'.")
-                    if comparators:
-                        # TEACHER_TARGET BREADCRUMB:  REPLACE 'TARGET' WITH TARGET HERE
-                        target_mech = comparators[0].input_ports['TARGET'].path_afferents[0].sender.owner
-                        # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
-                        self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
-                    else:
-                        sample = output_port_for_learning
-                        sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
-                        target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
-                                                                                       for value in output_port_for_learning.value],
-                                                                                      dtype=object),
-                                                          name= 'TARGET for ' + sample_name)
-                        target_mech._initialize_from_context(context, base_context, override=False)
-                        # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
-                        constructed_target_mechs.append(target_mech)
-                    target_mechs.append(target_mech)
-            loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
-            self.target_ports_for_samples.update({k:v for k,v in zip(output_ports_for_learning,
-                                                                     [t.output_port for t in target_mechs])})
-            self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+        self._validate_loss_mech_specs(loss_mech_specs, context)
 
-        # Validate LossMechanism specs
+        loss_mechs = self._instantiate_loss_mechansisms(loss_mech_specs, context, base_context)
+
+        # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
+        for mech in loss_mechs + target_mechs:
+            self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
+            for output_port in mech.output_ports:
+                output_port.parameters.require_projection_in_composition.set(False, override=True)
+
+    def _instantiate_constructor_targets_args(self, context, base_context):
+        """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
+        These may be in
+        -  target attribute of an explicitly specified LossMechanism
+        -  a (sample:target) tuple
+        -  a list containing tuples and/or LossMechanisms
+        -  or dict of {sample:target} pairs
+        target specs in tuple of dict can be an OutputPort or Mechanism,
+           or the keyword TARGET keyword,  requiring construction of a TARGET Node
+        """
+        loss_mech_specs = []
+        target_mechs = []
+        constructed_target_mechs = []
+
+        for loss_mech_spec in self.targets:
+            if isinstance(loss_mech_spec, LossMechanism):
+                sample_port = loss_mech_spec.sample
+                sample_mech = sample_port.owner
+                target_port = loss_mech_spec.target
+                target_mech = target_port.owner
+                # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
+                #   then raise error, as executing its LossFunction in pytorch will cause a crash
+                self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=loss_mech,
+                                                     constructed_target_mechs=constructed_target_mechs,
+                                                     action=ERROR)
+            elif isinstance(loss_mech_spec, tuple):
+                sample_port, target_spec = loss_mech_spec
+                sample_mech = sample_port.owner
+                target_mech = target_spec.owner if isinstance(target_spec, OutputPort) else target_spec
+                # If specified sample Mechanism is not in a pathway with at least one learnable Projection
+                #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
+                #   loss in pytorch will cause a crash
+                self._sample_is_in_learnable_pathway(sample=sample_mech, target=target_mech, loss_mech=None,
+                                                     constructed_target_mechs=None,
+                                                     action=ERROR)
+                # Determine whether target is internal node or TARGET keyword
+                if isinstance(target_spec, OutputPort):
+                    # target is internal Node
+                    self.target_ports_for_samples.update({sample_port: target_spec})
+                elif target_spec == TARGET:
+                    # target is TARGET keyword, so construct TARGET Node
+                    if sample_port in self.target_ports_for_samples:
+                        # TARGET Node has already been constructed for specified sample Port
+                        continue
+                    sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
+                                   else sample_port.owner.name)
+                    target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
+                                                                                   in sample_mech.value],
+                                                                                  dtype=object),
+                                                      name= 'TARGET for ' + sample_name)
+                    target_mech._initialize_from_context(context, base_context, override=False)
+                    target_port = target_mech.output_port
+                    self.target_ports_for_samples.update({sample_port: target_port})
+                    self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+                    constructed_target_mechs.append(target_mech)
+                else:
+                    assert False, (f"PROGRAM_ERROR: unrecognized value of target specification "
+                                   f"({loss_mech_spec[1]} for '{self.name}'.")
+            else:
+                assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
+                               f"({loss_mech_spec} for '{self.name}'.")
+
+            target_mechs.append(target_mech)
+            loss_mech_specs.append((loss_mech_spec[0], target_spec))
+
+        return loss_mech_specs, target_mechs
+
+    def _instantiate_learn_method_targets_args(self, pathways, context, base_context):
+        """Construct TARGET Node for all OUTPUT Nodes of the AutodiffComposition
+        Only add TARGET Nodes if *not* already present in self.target_ports_for_samples.values(),
+           to avoid duplication in multiple calls, including from command line
+           (see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+        """
+        pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
+        identified_output_nodes = self._identify_output_nodes(context)
+        output_ports_for_learning = []
+        constructed_target_mechs = []
+        for node in [n for n in identified_output_nodes if n in pathway_terminal_nodes]:
+            output_ports_for_learning.extend(node.output_ports)
+        target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
+        for output_port_for_learning in output_ports_for_learning:
+
+            if not self._sample_is_in_learnable_pathway(sample=output_port_for_learning.owner, target=None,
+                                                        loss_mech=None,
+                                                        constructed_target_mechs=constructed_target_mechs,
+                                                        action=ERROR):
+                # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
+                #   warning about non-learnability is handled in _instantiate_optimizer()
+                continue
+            # Check for existing TARGET Nodes
+            existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
+           # Get or construct TARGET Node if none exists for OUTPUT Node
+            if output_port_for_learning not in existing_output_ports_for_learnings:
+                # Check that TARGET Node doesn't already exist for OUTPUT Node
+                #    (may have been created for PNL learning in call to add_backpropagation_learning_pathway)
+                existing_comparators = [mech for mech in self.nodes if
+                                        isinstance(mech, ComparatorMechanism) and
+                                        NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(mech)]
+                comparators = [mech for mech in existing_comparators
+                               if mech.input_ports[SAMPLE].path_afferents[0].sender is output_port_for_learning]
+                assert len(comparators) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
+                                               f"for '{output_port_for_learning.full_name}' in {self.name}'.")
+                if comparators:
+                    target_mech = comparators[0].input_ports[TARGET].path_afferents[0].sender.owner
+                    # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
+                    self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
+                else:
+                    sample = output_port_for_learning
+                    sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
+                    target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value)
+                                                                                   for value in output_port_for_learning.value],
+                                                                                  dtype=object),
+                                                      name= f"{TARGET} for " + sample_name)
+                    target_mech._initialize_from_context(context, base_context, override=False)
+                    # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
+                    constructed_target_mechs.append(target_mech)
+                target_mechs.append(target_mech)
+        loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
+        self.target_ports_for_samples.update({k:v for k,v in zip(output_ports_for_learning,
+                                                                 [t.output_port for t in target_mechs])})
+        self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
+        return loss_mech_specs, target_mechs
+
+    def _validate_loss_mech_specs(self, loss_mech_specs, context):
+        """Validate specifications used to construct LossMechanism in _instantiate_loss_components"""
         if not loss_mech_specs:
             if context.execution_id:
                 raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
@@ -1541,7 +1570,8 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-        # Construct and/or add LossMechanisms (and their MappingProjections)
+    def _instantiate_loss_mechansisms(self, loss_mech_specs, context, base_context):
+        """Construct and/or add LossMechanisms (and their MappingProjections) to AutodiffComposition"""
         for i, loss_mech_spec in enumerate(loss_mech_specs):
             if isinstance(loss_mech_spec, LossMechanism):
                 sample = loss_mech_spec.sample
@@ -1594,17 +1624,11 @@ class AutodiffComposition(Composition):
 
             self.loss_mechs_map[loss_mech] = (sample, target)
 
+        # Add LossMechanisms to AutodiffComposition, with required NodeRoles
         loss_mechs = list(self.loss_mechs_map.keys())
-
-        # Add LossMechanisms and any TARGET Nodes to AutodiffComposition, with required NodeRoles
         self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
                                                    NodeRole.LEARNING_OBJECTIVE], context=context)
-
-        # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
-        for mech in loss_mechs + target_mechs:
-            self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
-            for output_port in mech.output_ports:
-                output_port.parameters.require_projection_in_composition.set(False, override=True)
+        return loss_mechs
 
     def _add_dependency(self,
                         sender:ProcessingMechanism_Base,

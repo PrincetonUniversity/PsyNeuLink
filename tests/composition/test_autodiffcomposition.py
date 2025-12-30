@@ -1717,8 +1717,8 @@ class TestTrainingCorrectness:
         # Construct PNL model
 
         inputs = pnl.ProcessingMechanism(name='INPUTS', input_shapes=DIM)
-        sample = pnl.ProcessingMechanism(name='SAMPLE', input_shapes=DIM)
-        target = pnl.ProcessingMechanism(name='TARGET', input_shapes=DIM)
+        sample = pnl.ProcessingMechanism(name=pnl.SAMPLE, input_shapes=DIM)
+        target = pnl.ProcessingMechanism(name=pnl.TARGET, input_shapes=DIM)
         outputs = pnl.ProcessingMechanism(name='OUTPUTS', input_shapes=DIM)
         pnl_sample_encoding_wts = MappingProjection(name='SAMPLE ENCODING WTS',
                                             sender=inputs, receiver=sample, learning_rate=LEARNING_RATE)
@@ -1756,8 +1756,8 @@ class TestTrainingCorrectness:
         result = autodiff_comp.run(inputs={inputs: pnl_stim},
                                    execution_mode=pnl.ExecutionMode.PyTorch)
         # Record results
-        pnl_sample_after_learning = autodiff_comp.nodes['SAMPLE'].parameters.value.get('autodiff_comp').squeeze()
-        pnl_target_after_learning = autodiff_comp.nodes['TARGET'].parameters.value.get('autodiff_comp').squeeze()
+        pnl_sample_after_learning = autodiff_comp.nodes[pnl.SAMPLE].parameters.value.get('autodiff_comp').squeeze()
+        pnl_target_after_learning = autodiff_comp.nodes[pnl.TARGET].parameters.value.get('autodiff_comp').squeeze()
         pnl_outputs_after_learning = autodiff_comp.nodes['OUTPUTS'].parameters.value.get('autodiff_comp').squeeze()
         # pnl_results_after_learning = autodiff_comp.results[0].squeeze()
         pnl_results_after_learning = autodiff_comp.learning_results[0].squeeze()
