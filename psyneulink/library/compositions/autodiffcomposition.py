@@ -1379,25 +1379,29 @@ class AutodiffComposition(Composition):
 
     def _instantiate_loss_components(self, pathways, context, base_context):
         """Instantiate sample:target pairs, LossMechanisms, and any TARGET Nodes needed
+        1) Process specifications in constructdor (in self.targets) by calling _instantiate_constructor_targets_args():
+            identifies sample-target pairs:
+               - places them in self.target_ports_for_samples
+               - returns them as first item, placed in loss_mech_specs
+            creates TARGET Nodes (that receive external input) for any targets specified using TARGET keyword
+               - returns them as second item, placed in target_mechs
+        2) If there are no constructor specifications, then call _instantiate_learn_method_targets_args():
+            assigns all OUTPUT Nodes of pathways as samples
+               - places them in self.target_ports_for_samples
+               - returns them as first item, placed in loss_mech_specs
+            creates any TARGET Nodes that have not yet been constructed
+               - returns them as second item, placed in target_mechs
+        3) Validate loss_mech_specs
+        4) Use loss_mechs and target_mechs to instantiate LossMechanisms in call to _instantiate_loss_mechanisms()
+        5) Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
 
-
-        TEACHER_TARGET BREADCRUMB CLEANUP:
-          ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
-          FOR BACKWARD COMPATIBILITY AND COMPATIBILITY WITH OTHER (E.G., PNL) LEARNING MODES
-          IF NOT, WHERE IS IT POPULATED?
+        -----------------------
 
           DOCUMENT THAT AutoDiff PUTS LOSS AS WELL AS TARGET NODES IN learning_components
           PUT TARGET Nodes in self.target_nodes ATTRIBUTE
           CHANGE TESTS/SCRIPTS THAT USE learning_components TO IDENTIFY TARGET Nodes TO USE self.target_nodes
 
-          ALSO, DEAL WITH NESTED COMPS?  OR ONLY CALL THIS AFTER FLATTENING?
 
-        If **targets** arg of AutodiffComposition constructor:
-        - IS specified:
-          - construct LossMechanisms:
-            {<student Node> : <teacher Node>} ->
-                student Node -> LossMechanism.input_port[SAMPLE]
-                reacher Node -> LossMechanism.input_port[TARGET]
         - is NOT specified:
           - use TERMINAL nodes of pathways to construct TARGET Nodes and LossMechanisms:
               learn(targets = {<OUTPUT Node> : <value>}) -> TARGET Node (in _map_external_target_values_to_target_nodes)
@@ -1410,6 +1414,9 @@ class AutodiffComposition(Composition):
 
         Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
         Add loss_mechs and any constructed TARGET Nodes to self.learning_components
+
+        -----------------
+
         """
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
@@ -1437,13 +1444,17 @@ class AutodiffComposition(Composition):
 
     def _instantiate_constructor_targets_args(self, context, base_context):
         """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
-        These may be in
-        -  target attribute of an explicitly specified LossMechanism
-        -  a (sample:target) tuple
-        -  a list containing tuples and/or LossMechanisms
-        -  or dict of {sample:target} pairs
-        target specs in tuple of dict can be an OutputPort or Mechanism,
-           or the keyword TARGET keyword,  requiring construction of a TARGET Node
+        - These may be in
+            -  target attribute of an explicitly specified LossMechanism
+            -  a (sample:target) tuple
+            -  a list containing tuples and/or LossMechanisms
+            -  or dict of {sample:target} pairs
+          where:
+              sample = OutputPort or ProcessingMechanism,
+              target = OutputPort, ProcessingMechanism, or TARGET keyword
+        - Instantiate TARGET Nodes for any targets specified as TARGET
+        - Update self.target_ports_for_samples with (sample OutputPort, targetOutputPort) tuples
+        Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET Nodes
         """
         loss_mech_specs = []
         target_mechs = []
@@ -1502,11 +1513,14 @@ class AutodiffComposition(Composition):
 
         return loss_mech_specs, target_mechs
 
-    def _instantiate_learn_method_targets_args(self, pathways, context, base_context):
+    def _instantiate_learn_method_targets_args(self, pathways:list, context, base_context)->tuple[list,list]:
         """Construct TARGET Node for all OUTPUT Nodes of the AutodiffComposition
-        Only add TARGET Nodes if *not* already present in self.target_ports_for_samples.values(),
+        - Only add TARGET Nodes if *not* already present in self.target_ports_for_samples.values(),
            to avoid duplication in multiple calls, including from command line
            (see test_xor_training_identicalness_standard_composition_vs_PyTorch_and_LLVM for example)
+        - Update self.target_ports_for_samples with construted TARGET Nodes
+        - Add constructed TARGET Nodes to AutodiffComposition with NodeRole.TARGET and NodeRole.INPUT
+        Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET Nodes
         """
         pathway_terminal_nodes = [mech for mech in [pathway[-1] for pathway in pathways]]
         identified_output_nodes = self._identify_output_nodes(context)
@@ -1558,7 +1572,7 @@ class AutodiffComposition(Composition):
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
 
-    def _validate_loss_mech_specs(self, loss_mech_specs, context):
+    def _validate_loss_mech_specs(self, loss_mech_specs:list, context)->tuple[list, list]:
         """Validate specifications used to construct LossMechanism in _instantiate_loss_components"""
         if not loss_mech_specs:
             if context.execution_id:
@@ -1581,8 +1595,17 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-    def _instantiate_loss_mechanisms(self, loss_mech_specs, context, base_context):
-        """Construct and/or add LossMechanisms (and their MappingProjections) to AutodiffComposition"""
+    def _instantiate_loss_mechanisms(self, loss_mech_specs:list, context, base_context)->list:
+        """Construct and/or add LossMechanisms (and their MappingProjections) to AutodiffComposition
+        - loss_mech_specs is a list with (sample OutputPort, target OutputPort) tuples and/or LossMechanisms
+        - If item is a (sample OutputPort, target OutputPort) tuple construct LossMechanism with:
+             LossMechanism.input_port[SAMPLE] and LossMechanism.sample = sample OutputPort
+             LossMechanism.input_port[TARGET] and LossMechanism.target = target OutputPort
+             LossMechanism.loss = self.loss_spec
+        - Add LossMechanisms to AutodiffComposition, with NodeRole.LEARNING_OBJECTIVE
+        - Assign self.loss_mechs_map as {<LossMechanism>: (sample OutputPort, target OutputPort)}
+        Return list of constructed LossMechanisms
+        """
         for i, loss_mech_spec in enumerate(loss_mech_specs):
             if isinstance(loss_mech_spec, LossMechanism):
                 sample = loss_mech_spec.sample
@@ -1623,10 +1646,10 @@ class AutodiffComposition(Composition):
                 assert False, f"PROGRAM ERROR: loss_mech_spec should have been a LossMechanism or tuple by now."
 
             for proj in loss_mech.path_afferents:
-                # TEACHER_TARGET BREADCRUMB: REVISE BELOW TO ENFORCE THESE ON CONSTRUCTION in LearningMechanism
-                # IMPLEMENTATION NOTE: This is checked here because the Projections are to the LossMechanism
-                #                      are constructed by reference to its afferents (sample and target)
-
+                # TEACHER_TARGET BREADCRUMB: REVISE BELOW TO ENFORCE THESE ON CONSTRUCTION in LossMechanism
+                # IMPLEMENTATION NOTE:
+                #     This is checked here because the Projections to the LossMechanism
+                #     are constructed by reference to its afferents (sample and target)
                 assert is_identity_matrix(proj.parameters.matrix.get()), \
                     (f"PROGRAM ERROR: Matrix of projection to LossMechanism "
                      f"('{proj.name}') is not an identity matrix. ")
@@ -1637,8 +1660,7 @@ class AutodiffComposition(Composition):
 
         # Add LossMechanisms to AutodiffComposition, with required NodeRoles
         loss_mechs = list(self.loss_mechs_map.keys())
-        self.add_nodes(loss_mechs, required_roles=[#NodeRole.LOSS,
-                                                   NodeRole.LEARNING_OBJECTIVE], context=context)
+        self.add_nodes(loss_mechs, required_roles=[NodeRole.LEARNING_OBJECTIVE], context=context)
         return loss_mechs
 
     def _add_dependency(self,
