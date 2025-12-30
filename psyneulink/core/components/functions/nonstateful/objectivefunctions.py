@@ -1391,8 +1391,8 @@ class LossFunction(ObjectiveFunction):
         except TypeError:
             raise err_two_items
 
-        err_unequal_length = FunctionError(f"The lengths of sample ({len(variable[0])}) and target ({len(variable[1])}) "
-                                    f"in variable for {self.name} must be equal.")
+        err_unequal_length = FunctionError(f"The lengths of sample ({len(variable[0])}) and target "
+                                           f"({len(variable[1])}) in variable for {self.name} must be equal.")
         try:
             if len(variable[0]) != len(variable[1]):
                 raise err_unequal_length

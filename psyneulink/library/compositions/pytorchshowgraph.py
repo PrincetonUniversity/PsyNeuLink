@@ -246,6 +246,10 @@ class PytorchShowGraph(ShowGraph):
                 graph.edge(*args, **kwargs)
                 return
 
+            elif isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                # Exclude any edges from CompositionInterfaceMechanism since those are never relevant in Pytorch graph
+                return
+
             modulatory_node = None
 
             if proj.parameter_ports[0].mod_afferents:

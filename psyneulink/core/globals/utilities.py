@@ -876,9 +876,8 @@ def insert_list(list1, position, list2):
     return list1[:position] + list2 + list1[position:]
 
 def convert_to_list(l):
-    """Convert l to a list if it is not one already
+    """Enclose l in a list if it is not one already
     If it is a single item or tuple, place in list
-    # If it is a set or dict, place items (key-value pairs) in list
     If it is a numpy array of dimension > 0, convert to list
     If it is None, return None
     """
@@ -890,9 +889,6 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
-    # BREADCRUMB: SUPPORT FOR THIS REQUIRES REFACTORING PARSING OF INPUT_PORT specs (=> ERRORS IN test_control TESTS)
-    # elif isinstance(l, dict):
-    #     return list(l.items())
     elif isinstance(l, np.ndarray) and l.ndim > 0:
         return list(l)
     else:

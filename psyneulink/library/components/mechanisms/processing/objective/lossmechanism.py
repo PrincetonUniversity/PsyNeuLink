@@ -286,5 +286,7 @@ class LossMechanism(#ModulatoryMechanism_Base,
                          prefs=prefs,
                          **kwargs)
 
+        self.function.owner = self.name
+
         from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
         self.loss_projection = LossProjection(sender=self, receiver=self.sample)

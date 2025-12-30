@@ -1135,6 +1135,9 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
         ``<MappingProjection>.parameters.learning_rate.get(<context>)``, where *<context>* is the value of the
         **context** argument of the `learn <Composition.learn>` method (the default is the name of the Composition).
 
+  COMMENT:
+  BREADCRUMB - REMOVE THE FOLLOWING NOTES ONCE KATHERINE'S CHANGES HAVE BEEN INCORPORATED
+  COMMENT
   .. _Composition_Learning_Rate_Assignment_After_Construction:
 
   .. note::
@@ -1150,6 +1153,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
      currently this is not possuible for a standard Compositions, but can be done for an AutodiffCompositions
      by assignment to the **learning_rate** argument of its `learn AutodiffComposition.learn` method (see
      `AutodiffComposition_Learning_Rate` for details).
+
 
 .. _Composition_Learning_Rate_Precedence_Hierarchy
 
