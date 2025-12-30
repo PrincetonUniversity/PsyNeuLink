@@ -1409,6 +1409,7 @@ class AutodiffComposition(Composition):
 
         # Determine whether targets were specified by user in constructor or TARGET Nodes should be constructed
         if self.targets:
+            self._instantiate_constructor_targets_arg()
             # targets specified by user in **targets** argument of AutodiffComposition constructor,
             #   either as LossMechanism, (sample:target) tuple, or list containing either
             # Get TARGET specs; can be Node or TARGET keyword requiring construction of TARGET Node (below)
