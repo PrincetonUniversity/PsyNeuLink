@@ -1141,7 +1141,7 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.target_ports_for_samples = {self.gru_mech.output_port: target_mech.output_port}
+        self.sample_port_to_target_port_map = {self.gru_mech.output_port: target_mech.output_port}
         return [target_mech]
         # # MODIFIED TEACHER_TARGET NEW:
         # # Pathway for GRUComposition consistents of only 'PYTORCH GRU Node'...
