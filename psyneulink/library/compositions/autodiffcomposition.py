@@ -45,21 +45,21 @@ Contents
 Overview
 --------
 
-AutodiffComposition is a subclass of `Composition` for constructing and training neural network using `PyTorch
-<https://pytorch.org/>`_ (as well as, in some cases, direct compilation using `LLVM <AutodiffComposition_LLVM>`),
-both of which considerably accelerate training (by  as much as three orders of magnitude) compared to `Python mode
-<Composition_Learning_Standard>` for a standard Composition. An AutodiffComposition is constructed and executed in
-same way as a standard Composition, though it provides substantially greater `functionality
-<Composition_Compilation_Table`, including:
+AutodiffComposition is a subclass of `Composition` for constructing and training neural networks using `PyTorch
+<https://pytorch.org/>`_ and, in some cases, direct compilation using `LLVM <AutodiffComposition_LLVM>`). These
+both considerably accelerate training (by as much as three orders of magnitude) compared to `Python mode
+<Composition_Learning_Standard>` used by a standard Composition. An AutodiffComposition is constructed and executed
+in the same way as a standard Composition, though it provides additional `functionality <Composition_Compilation_Table`,
+including:
 
+  - use of internal target signals for training (see `AutodiffComposition_Targets`);
+  - training of nested Compositions (see `AutodiffComposition_Nesting`).
   - training of recurrent neural networks (RNNs, e.g., `GRUComposition`);
   - training of external (episodic) memory structures (e.g., `EMComposition`);
-  - specifcation of internal sources of training signals (see `AutodiffComposition_Targets`);
-  - training of nested Compositions (see `AutodiffComposition_Nesting`).
 
 In addition to supporting `supervised learning <Composition_Learning_Supervised>` using the `backpropagation learning
 algorithm <https://en.wikipedia.org/wiki/Backpropagation>`_, it also supports some forms of `unsupervised learning
-<Composition_Learning_Unsupervised>` that are supported in PyTorch (e.g., `self-organized maps
+<Composition_Learning_Unsupervised>` that are supported by PyTorch (e.g., `self-organized maps
 <https://github.com/giannisnik/som>`_).
 
 .. _AutodiffComposition_Creation:
@@ -67,14 +67,23 @@ algorithm <https://en.wikipedia.org/wiki/Backpropagation>`_, it also supports so
 Creating an AutodiffComposition
 -------------------------------
 
-An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using
-the standard `Composition methods <Composition_Creation>` for doing so (e.g., `add_node <Composition.add_node>`,
-`add_projection <Composition.add_projections>`,  `add_linear_processing_pathway
-<Composition.add_linear_processing_pathway>`, etc.). The constructor also includes a number of parameters that are
-specific to the AutodiffComposition (see `AutodiffComposition_Class_Reference` for a list of these parameters,
-and `examples <AutodiffComposition_Examples>` below). While an AutodiffComposition can generally be created using the
-same methods as a standard Composition, there are a few restrictions that apply to its construction, that are
-listed at the `end of this section <AutoiffComposition_Restrictions>`.
+An AutodiffComposition is created in the same way as a standard Composition, with the following differences:
+
+- learning pathways are configured by specifing sample (or "student") and target (or "teacher") pairs, each
+  of which is a Mechanism or the OutputPort of one, the values of which are used to compute the loss on each
+  trial of training (see `below <AutodiffComposition_Targets>` for details of specification);
+
+- the constructor includes a number of additional arguments that are specific to the AutodiffComposition (see
+  `AutodiffComposition_Class_Reference` for a list of these parameters, and `examples <AutodiffComposition_Examples>`
+  below);
+
+- there are some restrictions that apply to its construction; see `AutodiffComposition_Restrictions`;
+
+- when an AutodiffComposition is constructed, is gets assigned a `pytorch_representation`
+  that is used to execute it in PyTorch, with each Projection assigned to a `torch parameter
+  <https://docs.pytorch.org/docs/stable/generated/torch.nn.parameter.Parameter.html>`_ (see
+  `AutodiffComposition_Structure` for additional details) and its learning rate assigned to the
+  corersponding parameters (see `AutodiffComposition_Learning_Rates` for specification of learning rates).
 
 
 .. _AutodiffComposition_Learning_Rates:
@@ -226,6 +235,7 @@ for cases in which the matrix of a Project corresponds to only a subpart of the 
 `GRUComposition`). Both methods return the item assigned.
 
 .. _AutodiffComposition_Restrictions:
+
 
 COMMENT:
 TEACHER_TARGET BREADCRUMB: IS THIS STILL TRUE? TEST
@@ -1368,7 +1378,8 @@ class AutodiffComposition(Composition):
         return False
 
     def _instantiate_loss_components(self, pathways, context, base_context):
-        """Instantiate LossMechanisms, and TARGET Nodes if needed, for AutodiffComposition
+        """Instantiate sample:target pairs, LossMechanisms, and any TARGET Nodes needed
+
 
         TEACHER_TARGET BREADCRUMB CLEANUP:
           ?? POPULATE self.learning_components WITH ANY INSTANTATED TARGET Nodes
