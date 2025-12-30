@@ -308,6 +308,11 @@ Targets (internal or TARGET Nodes) (same as Composition)
 LossMechanism with MappingProjections (note: correspond to Comparotor of Composition)
 Pytorch representation (cf. sectioo on flattenting for nested)
 show_graph() - show_pytorch, not show_learning
+
+
+DOCUMENT THAT AutoDiff PUTS LOSS AS WELL AS TARGET NODES IN learning_components
+PUT TARGET Nodes in self.target_nodes ATTRIBUTE
+
 COMMENT
 
 .. _AutodiffComposition_Nesting:
@@ -1379,44 +1384,37 @@ class AutodiffComposition(Composition):
 
     def _instantiate_loss_components(self, pathways, context, base_context):
         """Instantiate sample:target pairs, LossMechanisms, and any TARGET Nodes needed
-        1) Process specifications in constructdor (in self.targets) by calling _instantiate_constructor_targets_args():
-            identifies sample-target pairs:
+
+        Overivew:
+        - Use any specifications in self.targets (from **targets** arg of AutodiffComposition constructor)
+            to identify sample-target pairs, and constuct LossMechanisms and any needed TARGET Nodes
+        - If there are no specifications in self.targets, then use OUTPUT Nodes of pathways as samples
+            and construct TARGET Nodes for each.
+
+        Procedure:
+        1) Handle specifications from constructor (in self.targets) in call to _instantiate_constructor_targets_args():
+            - identifies sample-target pairs:
                - places them in self.target_ports_for_samples
                - returns them as first item, placed in loss_mech_specs
-            creates TARGET Nodes (that receive external input) for any targets specified using TARGET keyword
-               - returns them as second item, placed in target_mechs
+            - creates TARGET Nodes (that receive external input) for any targets specified using TARGET keyword
+              - returns them as second item, placed in target_mechs
         2) If there are no constructor specifications, then call _instantiate_learn_method_targets_args():
-            assigns all OUTPUT Nodes of pathways as samples
-               - places them in self.target_ports_for_samples
-               - returns them as first item, placed in loss_mech_specs
-            creates any TARGET Nodes that have not yet been constructed
-               - returns them as second item, placed in target_mechs
+            - assigns all OUTPUT Nodes of pathways as samples and TARGET Nodes as targets
+                  this allows:
+                    - external targets to be specified in learn() in the same way as for other execution_modes:
+                        learn(targets = {<OUTPUT Node> : <value>}) -> TARGET Node
+                        (mapping is done in _map_external_target_values_to_target_nodes()
+                    - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
+                    - losses to be tracked for logging (as mechs of a Composition)
+              - places them in self.target_ports_for_samples
+              - returns them as first item, placed in loss_mech_specs
+           - creates any TARGET Nodes that have not yet been constructed
+              - returns them as second item, placed in target_mechs
         3) Validate loss_mech_specs
-        4) Use loss_mechs and target_mechs to instantiate LossMechanisms in call to _instantiate_loss_mechanisms()
+        4) Use loss_mechs and target_mechs to instantiate LossMechanisms in call to _instantiate_loss_mechanisms():
+           - constructs self.loss_mechs_map: {<LossMechanism>: (sample OutputPort, target OutputPort)}
+           - adds LossMechanisms to AutodiffComposition
         5) Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
-
-        -----------------------
-
-          DOCUMENT THAT AutoDiff PUTS LOSS AS WELL AS TARGET NODES IN learning_components
-          PUT TARGET Nodes in self.target_nodes ATTRIBUTE
-          CHANGE TESTS/SCRIPTS THAT USE learning_components TO IDENTIFY TARGET Nodes TO USE self.target_nodes
-
-
-        - is NOT specified:
-          - use TERMINAL nodes of pathways to construct TARGET Nodes and LossMechanisms:
-              learn(targets = {<OUTPUT Node> : <value>}) -> TARGET Node (in _map_external_target_values_to_target_nodes)
-              TARGET Node -> LossMechanism.input_port[SAMPLE]
-              OUTPUT Node  -> LossMechanism.input_port[TARGET]
-          - this allows:
-            - external targets to be specified in the same way as for other execution_modes
-            - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
-            - losses to be tracked for logging (as mechs of a Composition)
-
-        Construct self.loss_mechs_map: {<LossMechanism: (student Node, teacher Node)}
-        Add loss_mechs and any constructed TARGET Nodes to self.learning_components
-
-        -----------------
-
         """
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
