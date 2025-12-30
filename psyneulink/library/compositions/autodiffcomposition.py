@@ -1416,12 +1416,14 @@ class AutodiffComposition(Composition):
            - adds LossMechanisms to AutodiffComposition
         5) Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         """
+        # If loss_components have already been instantiated, skip
+        if self.target_ports_for_samples:
+            return
+
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)
         constructed_target_mechs = []
         loss_mech_specs = []
         target_mechs = []
-
-        # TEACHER_TARGET BREADCRUMB: CHECK IF ANY LossMechanisms AND/OR TARGETS ALREADY EXIST FOR ONES SPECIFIED
 
         if self.targets:
             # Instantiate any target specifications in **targets** arg of AutodiffComposition constructor
