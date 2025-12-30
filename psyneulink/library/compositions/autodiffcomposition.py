@@ -1416,7 +1416,7 @@ class AutodiffComposition(Composition):
 
         self._validate_loss_mech_specs(loss_mech_specs, context)
 
-        loss_mechs = self._instantiate_loss_mechansisms(loss_mech_specs, context, base_context)
+        loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:
@@ -1570,7 +1570,7 @@ class AutodiffComposition(Composition):
             else:
                 assert False, (f"PROGRAM ERROR: unrecognized item in self.targets: {item}")
 
-    def _instantiate_loss_mechansisms(self, loss_mech_specs, context, base_context):
+    def _instantiate_loss_mechanisms(self, loss_mech_specs, context, base_context):
         """Construct and/or add LossMechanisms (and their MappingProjections) to AutodiffComposition"""
         for i, loss_mech_spec in enumerate(loss_mech_specs):
             if isinstance(loss_mech_spec, LossMechanism):
