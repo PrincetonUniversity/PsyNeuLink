@@ -134,7 +134,7 @@ class LossMechanism(#ModulatoryMechanism_Base,
     ---------
 
     sample : OutputPort, Mechanism, value, or string
-        specifies the value to for which to compute the `loss <LossMechanism.loss>` with respect to the
+        specifies the value for which to compute the `loss <LossMechanism.loss>` with respect to the
         `target <LossMechanism.target>`.
 
     target :  OutputPort, Mechanism, value, or string
@@ -167,20 +167,20 @@ class LossMechanism(#ModulatoryMechanism_Base,
 
     sample : OutputPort
         determines the value for which the `loss <LossMechanism.loss>` is computed with respect to the
-        `target <LossMechanism.target>`.
+        `target <LossMechanism.target>` (see `AutodiffComposition_Sample` for additional information).
 
     target : OutputPort
         determines the value with respect to which the `loss <LossMechanism.loss>` is computed for the
-        `sample <LossMechanism.sample>`.
+        `sample <LossMechanism.sample>` (see `AutodiffComposition_Target>` for additional information).
 
     input_ports : ContentAddressableList[InputPort, InputPort]
         contains the two InputPorts named, by default, *SAMPLE* and *TARGET*, each of which receives a
         `MappingProjection` from the OutputPorts referenced by the `sample <LossMechanism.sample>` and
         `target <LossMechanims.target>` attributes (see `LossMechanism_Structure` for additional details).
 
-    loss :  Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
-        specifies the `function <Loss.function>` used to compute the loss for `sample <LossMechanism.sample>`
-        with respect to the `target <LossMechanism.target>`.
+    loss : Loss or PyTorch loss function : default torch.nn.MSELoss(reduction='mean')
+        specifies the form of `Loss` or `function <Loss.function>` used to compute the loss for
+        the `sample <LossMechanism.sample>` with respect to the `target <LossMechanism.target>`.
 
     function : function or method
         used to compute the loss for the `sample <LearningMechanism.sample>` with respect to the

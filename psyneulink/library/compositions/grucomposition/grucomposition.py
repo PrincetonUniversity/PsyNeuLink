@@ -32,11 +32,12 @@ The GRUComposition a subclass of `AutodiffComposition` that implements a single-
 which uses a set of `GatingMechanisms <GatingMechanism>` to implement gates that  modulate the flow of information
 through its `hidden_layer_node <GRUComposition.hidden_layer_node>`. This implements the exact same computations as
 a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, which is used to implement
-it when its `learn <GRUComposition.learn>` method is called.  When it is executed in Python model, it functions
-in the same way as a `GRUCell <https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html>`_ module, processing
-its input one stimulus at a time.  However, when used for `learning <GRUComposition_Learning>`, it is executed as
-a PyTorch `GRU <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, so that it can used to
-process an entire sequence of stimuli at once, and learn to predict the next stimulus in the sequence.
+it when its `learn <GRUComposition.learn>` method is called. When it is executed in `Python mode
+<AutodiffComposition_Python>`, it functions in the same way as a `GRUCell
+<https://pytorch.org/docs/stable/generated/torch.nn.GRUCell.html>`_ module, processing its input one stimulus
+at a time.  However, when used for `learning <GRUComposition_Learning>`, it is executed as a PyTorch `GRU
+<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module, so that it can used to process an entire
+sequence of stimuli at once, and learn to predict the next stimulus in the sequence.
 
 .. _GRUComposition_Creation:
 

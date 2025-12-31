@@ -1270,42 +1270,31 @@ determining the learning_rate for a Projection used at execution:
 COMMENT:
     Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
-`AutodiffCompositions <AutodiffComposition>` provide the ability to execute backpropagation learning much more
-efficiently than using a standard Composition.  An AutodiffComposition is constructed in the same way, but there
-is no need to specify any `learning components <Composition_Learning_Components>`>` or use any `learning pathway methods
-<Composition_Learning_Methods>` -- in fact, they *cannot* be specified (see `warning
-<Autodiff_Learning_Components_Warning>`) -- an AutodiffComposition automatically constructs all of the components
-needed for learning. While learning in an AutodiffComposition is currently restricted to the `BackPropagation` learning
-algorithm, its `loss function <Loss>` can be specified (using the **loss_spec** parameter of its constructor),
-which implements different kinds of `supervised learning <Composition_Learning_Supervised>` (for example, `Loss.MSE`
-can be used for regression, or `Loss.CROSS_ENTROPY` for classification).
+`AutodiffCompositions <AutodiffComposition>` provide the ability to execute learning much more efficiently than
+using a standard Composition. An AutodiffComposition is constructed in the same way, but there is no need to
+specify any `learning components <Composition_Learning_Components>`>` or use any `learning pathway methods
+<Composition_Learning_Methods>`, and they will be ignored (see `warning <Autodiff_Learning_Components_Warning>`) --
+an AutodiffComposition automatically constructs all of the components needed for learning. While an AutodiffComposition
+has some `limitations <AutodiffComposition_Restrictions>`, it also has several advantages:  it offers `additional
+functionality <AutodiffComposition_Additional_Functionality>` such as support for learning of `nested Compositions
+<Composition_Nested>` and internally generated training sigals, and it allows a model to be implemented in PsyNeuLink
+while exploiting accelerated execution of learning in PyTorch. This can provide up to three orders
+of magnitude speed-up in training a model. This is done by specifying the **execution_mode** = `ExecutionMode.PyTorch`
+in the `learn() <AutodiffComposition.learn>` method of the AutodiffComposition.
 
-The advantage of using an AutodiffComposition is that it allows a model to be implemented in PsyNeuLink, while
-exploiting the acceleration of optimized execution of learning in PyTorch
-COMMENT:
-. This can be achieved by executing the `learn
-<Composition.learn>` method in one of two modes (specified using its **execution_mode** argument):  using direct
-compilation (**execution_mode** = `ExecutionMode.LLVMRun`); or by automatically translating the model to `PyTorch
-<https://pytorch.org>`_ for training (**execution_mode** = `ExecutionMode.PyTorch`). The advantage of these modes is
-that they
-COMMENT
-which can provide up to three orders of magnitude speed-up in training a model. This is done by specifying
-the **execution_mode** = `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method of the
-AutodiffComposition. Use of the `AutodiffComposition_PyTorch` also supports learning of `nested Compositions <Composition_Nested>`
-(see `AutodiffComposition_Nesting`). However, there are restrictions on the kinds of Compositions that be implemented
-in this way (see `AutodiffComposition_Restrictions`). The table below summarizes the different ways to implement and
-execute learning, and features specific to each; these are described in more detail in `AutodiffComposition`.
-Learning can also be accelerated using `ExecutionMode.LLVM`, which directly `compiles <Composition_Compilation>` a
-PsyNeuLink model for learning, and can provide the greatest speed-up, but not all `Function`\\s are supported.
+The table below summarizes the different ways to implement and execute learning, and features specific to each; these
+are described in more detail in `AutodiffComposition`. Learning can also be accelerated using `ExecutionMode.LLVM`,
+which directly `compiles <Composition_Compilation>` a PsyNeuLink model for learning, and can provide the greatest
+speed-up, but not all `Function`\\s are supported.
 
   .. note::
     * Using `ExecutionMode.Python` in an AutodffComposition is the same as using a standard Composition, allowing
       an AutodffComposition to be run in any mode (e.g., for comparison and/or compatibility purposes).
 
   .. warning::
-    * `ExecutionMode.PyTorch` and `ExecutionMode.LLVMRun` and can be used only in the `learn
-      <AutodiffComposition.learn>` method of an `AutodiffComposition`;  specifying them in the
-      `learn <Composition.learn>`()` method of a standard `Composition` causes an error.
+    * `ExecutionMode.PyTorch` and `ExecutionMode.LLVMRun` and can be used in the `learn
+      <AutodiffComposition.learn>` method only of an `AutodiffComposition`;  specifying them in the
+      `learn() <Composition.learn>` method of a standard `Composition` causes an error.
 
 |
 .. _Composition_Compilation_Table:
@@ -1334,7 +1323,7 @@ PsyNeuLink model for learning, and can provide the greatest speed-up, but not al
    |*Speed:*            |slow                                |fast                          |fastest                    |
    +--------------------+------------------------------------+------------------------------+---------------------------+
    |*Configuration:*    |`Composition learning methods       |specify `samples and targets  | same as Composition       |
-   |                    |<Composition_Learning_Methods>`     |<AutodiffComposition_Targets>`|                           |
+   |                    |<Composition_Learning_Methods>`     |<AutodiffComposition_Target>` |                           |
    +--------------------+------------------------------------+------------------------------+---------------------------+
    |                    |`BackPropagation`                   |Backpropagation               |Backpropagation            |
    |                    |                                    |                              |                           |
@@ -1346,7 +1335,7 @@ PsyNeuLink model for learning, and can provide the greatest speed-up, but not al
    |                    |<Composition_Learning_Unsupervised>`|                              |                           |
    |                    |                                    |                              |                           |
    |                    |                                    |`Internal sources of training |                           |
-   |                    |                                    |<AutodiffComposition_Targets>`|                           |
+   |                    |                                    |<AutodiffComposition_Target >`|                           |
    |                    |                                    |                              |                           |
    |                    |                                    |`Learning of                  |                           |
    |                    |                                    |nested Compositions           |                           |
@@ -2313,9 +2302,9 @@ for more information about the approach taken to compilation.
 .. _Composition_Compiled_Modes:
 
 The **execution_mode** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
-compiled mode and, if so,  which.  If True is specified, an attempt is made to use the most powerful mode (LLVMRun)
+compiled mode and, if so, which. If set to`True`, an attempt is made to use the most powerful mode (LLVMRun)
 and, if that fails, to try progressively less powerful modes (issueing a warning indicating the unsupported feature
-that caused the failure), reverting to the Python interpreter if all compiled modes fail.  If a particular mode is
+that caused the failure), reverting to the Python interpreter if all compiled modes fail. If a particular mode is
 specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
 in order of their power, are:
 
@@ -2323,6 +2312,8 @@ in order of their power, are:
 
     * *True* -- try to use the one that yields the greatest improvement, progressively reverting to less powerful
       but more forgiving modes, trying LLVMRun, _LLVMExec, and Python.
+
+    .. _Composition_ExecutionMode_LLVMRun:
 
     * `ExecutionMode.LLVMRun` - compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful,
       the compiled binary is semantically equivalent to the execution of the `run <Composition.run>` method
@@ -2338,10 +2329,14 @@ in order of their power, are:
       execute each Node and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
       `Conditions <Condition>` that rely on Node `Parameters` are not supported;
 
+    .. _Composition_ExecutionMode_Python:
+
     * `ExecutionMode.Python` (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
+    .. _Composition_ExecutionMode_PyTorch:
+
     * `ExecutionMode.PyTorch` -- used only for `AutodiffComposition`: executes `learn <AutodiffComposition.learn>`
-       using `AutodiffComposition_PyTorch` and `run <AutodiffComposition.run>` using Python interpreter (see `below
+       using `AutodiffComposition_PyTorch` and `run <Composition.run>` using Python interpreter (see `below
        <Composition_Compilation_PyTorch>` for additional details).
 
       .. warning::
@@ -2355,7 +2350,7 @@ in order of their power, are:
 .. _Composition_Compilation_PyTorch:
 
 *PyTorch support.*  When using an `AutodiffComposition`, `ExecutionMode.PyTorch` can be used to execute its
-`learn <AutodiffComposition.learn>` method using Pytorch; however, its `run <AutodiffComposition.run>` method
+`learn <AutodiffComposition.learn>` method using Pytorch; however, its `run <Composition.run>` method
 will execute using the Python interpreter.  See `Composition_Learning_AutodiffComposition` for additional details.
 
 .. _Composition_Compilation_PTX:

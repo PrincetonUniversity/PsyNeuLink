@@ -17,7 +17,6 @@ from psyneulink._typing import Iterable, Literal, Optional, Union
 import graph_scheduler
 import numpy as np
 
-from psyneulink.core.globals.parameters import ParameterNoValueError
 
 # import torch
 try:
@@ -38,8 +37,10 @@ from psyneulink.core.components.functions.stateful import StatefulFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
@@ -75,6 +76,7 @@ from psyneulink.core.globals.keywords import (
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import (
     convert_to_list, convert_to_np_array, get_deepcopy_with_shared, is_numeric_scalar, is_iterable)
+from psyneulink.core.globals.parameters import ParameterNoValueError
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
@@ -251,14 +253,14 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     retained_results : List[ndarray]
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
-        in a call to `run <AutoDiffComposition.run>` or `learn <AutoDiffComposition.learn>`.
+        in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
     retained_sample_values : List[ndarray]
-        values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET`
+        values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET>`
         Node) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
 
     retained_targets : List[ndarray]
-        values of the `TARGET <NodeRole.TARGET` Nodes for each trial executed in a call to `learn
+        values of the `TARGET <NodeRole.TARGET>` Nodes for each trial executed in a call to `learn
         <AutoDiffComposition.learn>`.
 
     retained_losses : List[ndarray]
@@ -484,6 +486,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism
             else:
+                # Warn about and skip ModulatoryProjections
+                if isinstance(node, ModulatoryMechanism_Base):
+                    if not composition._warned_about_modulatory_components:
+                        warnings.warn(f"'{composition.name}' has Modulatory components that will not execute "
+                                      f"when its run() and/or learn() methods are executed in PyTorch mode.")
+                        composition._warned_about_modulatory_components = True
+                    continue
                 pytorch_node_wrapper = (
                     self._pytorch_mechanism_wrapper_type(node)(
                         mechanism=node,
@@ -509,11 +518,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         proj_wrappers_pairs = []
         # Instantiate PyTorch ProjectionWrappers, ignoring any from/to CIMs in the same composition)
-        # MODIFIED TEACHER_TARGET OLD:
-        # for projection in composition._inner_projections:
-        # MODIFIED TEACHER_TARGET NEW:
         for projection in self._get_composition_projections(composition):
-        # MODIFIED TEACHER_TARGET END
+
+            # Warn about and skip ModulatoryProjections
+            if isinstance(projection, ModulatoryProjection_Base):
+                if not composition._warned_about_modulatory_components:
+                    warnings.warn(f"'{composition.name}' has Modulatory components that will not execute when its run() "
+                                  f"and/or learn() methods are executed in PyTorch mode.")
+                    composition._warned_about_modulatory_components = True
+                continue
+
             sndr_mech = projection.sender.owner
             rcvr_mech = projection.receiver.owner
 
