@@ -1481,7 +1481,8 @@ class AutodiffComposition(Composition):
 
         # Issue warning for any pathways that have learnable Projections but do not end in a sample with a LossMechanism
         for pathway in pathways:
-            if any(proj.learnable for mech in pathway for proj in mech.efferents):
+            # if any(proj.learnable for mech in pathway if isinstance(mech, Mechanism) for proj in mech.efferents):
+            if any(proj.learnable for proj in pathway if isinstance(proj, MappingProjection)):
                 terminal_node = pathway[-1]
                 terminal_node_output_ports = terminal_node.output_ports
                 if not any(sample_port in self.sample_port_to_target_port_map
