@@ -613,7 +613,7 @@ from psyneulink.core.globals.keywords import (
     SYNCH_WITH_PNL_OPTIONS,
     TARGET,
     TARGETS,
-    TRAINED_OUTPUTS,
+    SAMPLE_VALUES,
     WARNING
 )
 from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric, is_numeric_scalar,
@@ -637,13 +637,13 @@ EXCLUDE_FROM_GRADIENT_CALC = 'exclude_from_gradient_calc'
 SynchRetainArg = Optional[Union[LearningScale, str]]
 
 
-def _get_torch_trained_outputs(owning_component=None, context=None):
+def _get_torch_sample_values(owning_component=None, context=None):
     if not context.execution_id:
         return None
     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
     if not pytorch_rep:
         return None
-    return np.array(pytorch_rep.retained_trained_outputs)
+    return np.array(pytorch_rep.retained_sample_values)
 
 def _get_torch_targets(owning_component=None, context=None):
     if not context.execution_id:
@@ -683,7 +683,7 @@ class AutodiffComposition(Composition):
         synch_node_variables_with_torch=None,      \
         synch_node_values_with_torch=RUN,          \
         synch_results_with_torch=RUN,              \
-        retain_torch_trained_outputs=MINIBATCH,    \
+        retain_torch_sample_values=MINIBATCH,    \
         retain_torch_targets=MINIBATCH,            \
         retain_torch_losses=MINIBATCH,             \
         device=CPU
@@ -745,20 +745,20 @@ class AutodiffComposition(Composition):
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model
         to the AutodiffComposition's `results <Composition.results>` attribute, which can be overridden by
         specifying the **synch_results_with_torch** argument in the `learn <Composition.learn>` method.
-        Note that this differs from **retain_torch_trained_outputs**, which specifies the frequency at which
+        Note that this differs from **retain_torch_sample_values**, which specifies the frequency at which
         the outputs of the PyTorch model are tracked, all of which are stored in the AutodiffComposition's
-        `torch_trained_outputs <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run
+        `torch_sample_values <AutodiffComposition.torch_sample_values>` attribute at the end of the run
         (see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
         additional details).
 
-    retain_torch_trained_outputs : `LearningScale` : default MINIBATCH
+    retain_torch_sample_values : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for scale at which the outputs of the Pytorch
-        model are tracked, all of which are stored in the AutodiffComposition's `torch_trained_outputs
-        <AutodiffComposition.torch_trained_outputs>` attribute at the end of the run; this can be overridden
-        by specifying the **retain_torch_trained_outputs** argument in the `learn <Composition.learn>` method.
+        model are tracked, all of which are stored in the AutodiffComposition's `torch_sample_values
+        <AutodiffComposition.torch_sample_values>` attribute at the end of the run; this can be overridden
+        by specifying the **retain_torch_sample_values** argument in the `learn <Composition.learn>` method.
         Note that this differs from **synch_results_with_torch**, which specifies the frequency with
-        which values are called to the AutodiffComposition's `results` attribute (see `retain_torch_trained_outputs
-        <AutodiffComposition.retain_torch_trained_outputs>` for additional details).
+        which values are called to the AutodiffComposition's `results` attribute (see `retain_torch_sample_values
+        <AutodiffComposition.retain_torch_sample_values>` for additional details).
 
     retain_torch_targets : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for when to copy the targets used for training the
@@ -838,7 +838,7 @@ class AutodiffComposition(Composition):
         representation more closely synchronized with parameter updates in Pytorch, but slows performance
         (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
 
-    retain_torch_trained_outputs : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
+    retain_torch_sample_values : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in
         the AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not
         specified in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale`
@@ -860,11 +860,11 @@ class AutodiffComposition(Composition):
         list of PyTorch named_parameters() for `pytorch_representation <AutodiffComposition.pytorch_representation>`
         of AutodiffComposition.
 
-    torch_trained_outputs : List[ndarray]
+    torch_sample_values : List[ndarray]
         stores the outputs (converted to np arrays) of the Pytorch model trained during learning, at the frequency
-        specified by `retain_torch_trained_outputs <AutodiffComposition.retain_torch_trained_outputs>` if it is set
-        to *MINIBATCH*, *EPOCH*, or *RUN*; see `retain_torch_trained_outputs
-        <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+        specified by `retain_torch_sample_values <AutodiffComposition.retain_torch_sample_values>` if it is set
+        to *MINIBATCH*, *EPOCH*, or *RUN*; see `retain_torch_sample_values
+        <AutodiffComposition.retain_torch_sample_values>` for additional details.
 
     torch_targets : List[ndarray]
         stores the targets used for training the Pytorch model during learning at the frequency specified by
@@ -873,7 +873,7 @@ class AutodiffComposition(Composition):
 
     torch_losses : list of floats
         stores the average loss after each weight update (i.e. each minibatch) during learning, at the frequency
-        specified by `retain_torch_trained_outputs <AutodiffComposition.retain_torch_trained_outputs>` if it is set to *MINIBATCH*,
+        specified by `retain_torch_sample_values <AutodiffComposition.retain_torch_sample_values>` if it is set to *MINIBATCH*,
         *EPOCH*, or *RUN*; see `retain_torch_losses <AutodiffComposition.retain_torch_losses>` for additonal details.
 
     COMMENT:  FIX: NOT CURRENTLY BEING POPULTED, BUT SEEMS TO BE USED BY _get_total_loss() and early_stopper
@@ -914,10 +914,10 @@ class AutodiffComposition(Composition):
         synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
         synch_node_values_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
         synch_results_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
-        retain_torch_trained_outputs = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
+        retain_torch_sample_values = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
         retain_torch_targets = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
         retain_torch_losses = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
-        torch_trained_outputs = Parameter([], getter=_get_torch_trained_outputs)
+        torch_sample_values = Parameter([], getter=_get_torch_sample_values)
         torch_targets = Parameter([], getter=_get_torch_targets)
         torch_losses = Parameter([], getter=_get_torch_losses)
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
@@ -988,7 +988,7 @@ class AutodiffComposition(Composition):
         _parse_synch_node_variables_with_torch = _parse_LearningScale_param
         _parse_synch_node_values_with_torch = _parse_LearningScale_param
         _parse_synch_results_with_torch = _parse_LearningScale_param
-        _parse_retain_torch_trained_outputs = _parse_LearningScale_param
+        _parse_retain_torch_sample_values = _parse_LearningScale_param
         _parse_retain_torch_targets = _parse_LearningScale_param
         _parse_retain_torch_losses = _parse_LearningScale_param
 
@@ -1034,7 +1034,7 @@ class AutodiffComposition(Composition):
         def _validate_synch_results_with_torch(self, spec):
             return self._validate_LearningScale_param(spec, {LearningScale.OPTIMIZATION_STEP})
 
-        def _validate_retain_torch_trained_outputs(self, spec):
+        def _validate_retain_torch_sample_values(self, spec):
             return self._validate_LearningScale_param(spec)
 
         def _validate_retain_torch_targets(self, spec):
@@ -1059,7 +1059,7 @@ class AutodiffComposition(Composition):
                  synch_node_variables_with_torch: SynchRetainArg = None,
                  synch_node_values_with_torch: SynchRetainArg = LearningScale.RUN,
                  synch_results_with_torch: SynchRetainArg = LearningScale.RUN,
-                 retain_torch_trained_outputs: SynchRetainArg = LearningScale.MINIBATCH,
+                 retain_torch_sample_values: SynchRetainArg = LearningScale.MINIBATCH,
                  retain_torch_targets: SynchRetainArg = LearningScale.MINIBATCH,
                  retain_torch_losses: SynchRetainArg = LearningScale.MINIBATCH,
                  device=None,
@@ -1095,7 +1095,7 @@ class AutodiffComposition(Composition):
             synch_node_variables_with_torch = synch_node_variables_with_torch,
             synch_node_values_with_torch = synch_node_values_with_torch,
             synch_results_with_torch = synch_results_with_torch,
-            retain_torch_trained_outputs = retain_torch_trained_outputs,
+            retain_torch_sample_values = retain_torch_sample_values,
             retain_torch_targets = retain_torch_targets,
             retain_torch_losses = retain_torch_losses,
             **kwargs)
@@ -1981,7 +1981,7 @@ class AutodiffComposition(Composition):
         # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
         #                    SPECIFIED IN learn(targets={sample/student:target/teacher})
         # # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
-        # curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
+        # curr_tensors_for_sample_values = {k:v for k,v in curr_tensors_for_outputs.items()
         #                                     if k in self.outputs_to_targets_map}
         #
         # # Get value of TARGET nodes for current trial
@@ -1995,20 +1995,20 @@ class AutodiffComposition(Composition):
         #         curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
         #
         # # Map value of TARGET nodes to trained OUTPUT nodes
-        # curr_target_tensors_for_trained_outputs = {}
+        # curr_target_tensors_for_sample_values = {}
         # for trained_output, target in self.outputs_to_targets_map.items():
-        #     curr_target_tensors_for_trained_outputs[trained_output] = curr_tensors_for_targets[target]
+        #     curr_target_tensors_for_sample_values[trained_output] = curr_tensors_for_targets[target]
         #
         # # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
         #
         # # Calculate and track the loss over the trained OUTPUT nodes:
-        # #   curr_target_tensors_for_trained_outputs compared against curr_tensors_for_trained_outputs
-        # for component, outputs in curr_tensors_for_trained_outputs.items():
+        # #   curr_target_tensors_for_sample_values compared against curr_tensors_for_sample_values
+        # for component, outputs in curr_tensors_for_sample_values.items():
         #     BREADCRUMB: COMPONENT IS A OUTPUT NODE
         #                 OUTPUTS IS TENSOR FOR OUTPUT Node
         #                 targets IS A TENSOR
         #     trial_loss = 0
-        #     targets = curr_target_tensors_for_trained_outputs[component]
+        #     targets = curr_target_tensors_for_sample_values[component]
 
         #     num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
         #     for i in range(num_outputs):
@@ -2361,7 +2361,7 @@ class AutodiffComposition(Composition):
               synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
               synch_node_values_with_torch: SynchRetainArg = NotImplemented,
               synch_results_with_torch: SynchRetainArg = NotImplemented,
-              retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+              retain_torch_sample_values: SynchRetainArg = NotImplemented,
               retain_torch_targets: SynchRetainArg = NotImplemented,
               retain_torch_losses: SynchRetainArg = NotImplemented,
               context: Context = None,
@@ -2405,9 +2405,9 @@ class AutodiffComposition(Composition):
             overrides specification(s) made in Autodiff constructor; see `synch_results_with_torch
             <AutodiffComposition.synch_results_with_torch>` for additional details.
 
-        retain_torch_trained_outputs : SynchRetainArg : Default NotImplemented
-            overrides specification(s) made in Autodiff constructor; see `retain_torch_trained_outputs
-            <AutodiffComposition.retain_torch_trained_outputs>` for additional details.
+        retain_torch_sample_values : SynchRetainArg : Default NotImplemented
+            overrides specification(s) made in Autodiff constructor; see `retain_torch_sample_values
+            <AutodiffComposition.retain_torch_sample_values>` for additional details.
 
         retain_torch_targets : SynchRetainArg : Default NotImplemented
             overrides specification(s) made in Autodiff constructor; see `retain_torch_targets
@@ -2473,7 +2473,7 @@ class AutodiffComposition(Composition):
             synch_node_variables_with_torch=synch_node_variables_with_torch,
             synch_node_values_with_torch=synch_node_values_with_torch,
             synch_results_with_torch=synch_results_with_torch,
-            retain_torch_trained_outputs=retain_torch_trained_outputs,
+            retain_torch_sample_values=retain_torch_sample_values,
             retain_torch_targets=retain_torch_targets,
             retain_torch_losses=retain_torch_losses,
         )
@@ -2499,7 +2499,7 @@ class AutodiffComposition(Composition):
         synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
         synch_node_values_with_torch: SynchRetainArg = NotImplemented,
         synch_results_with_torch: SynchRetainArg = NotImplemented,
-        retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+        retain_torch_sample_values: SynchRetainArg = NotImplemented,
         retain_torch_targets: SynchRetainArg = NotImplemented,
         retain_torch_losses: SynchRetainArg = NotImplemented,
     ) -> Tuple[Dict, Dict]:
@@ -2509,7 +2509,7 @@ class AutodiffComposition(Composition):
             synch_node_variables_with_torch=synch_node_variables_with_torch,
             synch_node_values_with_torch=synch_node_values_with_torch,
             synch_results_with_torch=synch_results_with_torch,
-            retain_torch_trained_outputs=retain_torch_trained_outputs,
+            retain_torch_sample_values=retain_torch_sample_values,
             retain_torch_targets=retain_torch_targets,
             retain_torch_losses=retain_torch_losses,
         )
@@ -2540,7 +2540,7 @@ class AutodiffComposition(Composition):
             RESULTS: "synch_results_with_torch",
         }
         retain_in_pnl_options = {
-            TRAINED_OUTPUTS: "retain_torch_trained_outputs",
+            SAMPLE_VALUES: "retain_torch_sample_values",
             TARGETS: "retain_torch_targets",
             LOSSES: "retain_torch_losses",
         }
@@ -2551,8 +2551,8 @@ class AutodiffComposition(Composition):
 
         if self.minibatch_size > 1:
             args_str = []
-            if retain_in_pnl_options[TRAINED_OUTPUTS] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
-                args_str.append('retain_torch_trained_outputs')
+            if retain_in_pnl_options[SAMPLE_VALUES] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
+                args_str.append('retain_torch_sample_values')
             if retain_in_pnl_options[LOSSES] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
                 args_str.append('retain_torch_losses')
             if retain_in_pnl_options[TARGETS] in {LearningScale.OPTIMIZATION_STEP, LearningScale.TRIAL}:
@@ -2696,7 +2696,7 @@ class AutodiffComposition(Composition):
             synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
             synch_node_values_with_torch: SynchRetainArg = NotImplemented,
             synch_results_with_torch: SynchRetainArg = NotImplemented,
-            retain_torch_trained_outputs: SynchRetainArg = NotImplemented,
+            retain_torch_sample_values: SynchRetainArg = NotImplemented,
             retain_torch_targets: SynchRetainArg = NotImplemented,
             retain_torch_losses: SynchRetainArg = NotImplemented,
             batched_results:bool=False,
@@ -2730,7 +2730,7 @@ class AutodiffComposition(Composition):
                 synch_node_variables_with_torch=synch_node_variables_with_torch,
                 synch_node_values_with_torch=synch_node_values_with_torch,
                 synch_results_with_torch=synch_results_with_torch,
-                retain_torch_trained_outputs=retain_torch_trained_outputs,
+                retain_torch_sample_values=retain_torch_sample_values,
                 retain_torch_targets=retain_torch_targets,
                 retain_torch_losses=retain_torch_losses,
             )

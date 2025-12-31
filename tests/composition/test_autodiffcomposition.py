@@ -601,29 +601,28 @@ class TestAutodiffLearningRateArgs:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
 
-    # TEACHER_TARGET BREADCRUMB: REMOVE COMMENTS WHEN DONE DEBUGGING
     error_test_args = [
-        # ("comp_lr_spec_str",
-        #  "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-        #  "is not valid; it must be an int, float, bool or None."),
-        # ("comp_lr_spec_proj",
-        #  "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
-        #  "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
-        # ("dict_lr_val_str",
-        #  "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-        #  "is not valid; it must be an int, float, bool or None."),
-        # ("dict_lr_val_proj",
-        #  "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
-        #  "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
-        # ("dict_illegal_key_str",
-        #  "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: 'woa a woa'."),
-        # ("dict_illegal_key_int",
-        #  "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: '23'."),
-        # ("dict_key_bad_proj",
-        #  "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
-        #  "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
+        ("comp_lr_spec_str",
+         "A value ('hello') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
+        ("comp_lr_spec_proj",
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
+        ("dict_lr_val_str",
+         "A value ('goodbye') specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not valid; it must be an int, float, bool or None."),
+        ("dict_lr_val_proj",
+         "A value ('(MappingProjection INPUT PROJECTION)') specified in the 'learning_rate' arg of the learn() method "
+         "for 'Outer Comp' is not valid; it must be an int, float, bool or None."),
+        ("dict_illegal_key_str",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'woa a woa'."),
+        ("dict_illegal_key_int",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: '23'."),
+        ("dict_key_bad_proj",
+         "The following Projection specified in the 'learning_rate' arg of the learn() method for 'Outer Comp' "
+         "is not in that Composition or any nested within it: 'BAD PROJECTION'."),
         ("dict_proj_not_learnable",
          "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
          "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "

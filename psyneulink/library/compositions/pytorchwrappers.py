@@ -69,7 +69,7 @@ from psyneulink.core.globals.keywords import (
     TARGET,
     TARGETS,
     TARGET_MECHANISM,
-    TRAINED_OUTPUTS,
+    SAMPLE_VALUES,
     Loss,
 )
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -102,7 +102,7 @@ ParamNameCompositionTuple = namedtuple('ParamNameCompositionTuple',
 
 class DataTypeEnum(Enum):
 
-    TRAINED_OUTPUTS = 0
+    SAMPLE_VALUES = 0
     TARGETS = auto()
     LOSSES = auto()
 
@@ -188,7 +188,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             (TRAINED_OUTPUT_VALUES, corresponding TARGETS and LOSSES), that are copied to PsyNeuLink
             at the end of a call to learn(); these are specified by the user in the following arguments
             to learn():
-                retain_torch_trained_outputs=MINIBATCH,
+                retain_torch_sample_values=MINIBATCH,
                 retain_torch_targets=MINIBATCH,
                 retain_torch_losses=MINIBATCH,
             and consolidated in the retain_in_pnl_options dict used by retain_for_psyneulink
@@ -253,7 +253,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
         in a call to `run <AutoDiffComposition.run>` or `learn <AutoDiffComposition.learn>`.
 
-    retained_trained_outputs : List[ndarray]
+    retained_sample_values : List[ndarray]
         values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET`
         Node) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
 
@@ -394,7 +394,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Data retained by the wrapper during execution and copied to pnl as specified by retain_for_psyneulink
         self.retained_results = []          # Values of all output NODES
-        self.retained_trained_outputs = []  # Values of trained output NODES (i.e. associated with TARGETS)
+        self.retained_sample_values = []  # Values of trained output NODES (i.e. associated with TARGETS)
         self.retained_targets = []  #       # Values of targets for all trials
         self.retained_losses = []           # Losses per trial or batch accumulated over a run
 
@@ -402,7 +402,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # (this is constructed as a form of hash table for efficiency since that method can be called alot;
         #  it is constructed here to avoid doing so in the retain_for_psyneulink method itself)
         self.retain_method = [None] * len(DataTypeEnum)
-        self.retain_method[DataTypeEnum.TRAINED_OUTPUTS.value] = self.retain_trained_outputs
+        self.retain_method[DataTypeEnum.SAMPLE_VALUES.value] = self.retain_sample_values
         self.retain_method[DataTypeEnum.TARGETS.value] = self.retain_targets
         self.retain_method[DataTypeEnum.LOSSES.value] = self.retain_losses
         self._store_learn_params = None
@@ -2107,7 +2107,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                           context,
                                           [NODE_VARIABLES, NODE_VALUES])
 
-        self.retain_for_psyneulink({TRAINED_OUTPUTS: sample_values,
+        self.retain_for_psyneulink({SAMPLE_VALUES: sample_values,
                                            TARGETS: target_values},
                                           retain_in_pnl_options,
                                           context)
@@ -2237,9 +2237,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if len(results):
             self.retained_results.append(results)
 
-    def retain_trained_outputs(self, trained_outputs:list):
+    def retain_sample_values(self, sample_values:list):
         """Track outputs and copy to AutodiffComposition.pytorch_outputs at end of learn()."""
-        self.retained_trained_outputs.append(trained_outputs)
+        self.retained_sample_values.append(sample_values)
 
     def retain_targets(self, targets:list):
         """Track targets and copy to AutodiffComposition.pytorch_targets at end of learn()."""

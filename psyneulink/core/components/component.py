@@ -1567,8 +1567,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "activation_output", "error_sources", "covariates_sources",
                      "target", "sample", "learning_function",
                      "minibatch_size", "optimizations_per_minibatch", "device",
-                     "retain_torch_trained_outputs", "retain_torch_targets", "retain_torch_losses"
-                     "torch_trained_outputs", "torch_targets", "torch_losses",
+                     "retain_torch_sample_values", "retain_torch_targets", "retain_torch_losses"
+                     "torch_sample_values", "torch_targets", "torch_losses",
                      # "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
                      # "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
                      # should be added to relevant _gen_llvm_function... when aug:
