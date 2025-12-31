@@ -1977,95 +1977,6 @@ class AutodiffComposition(Composition):
                                                 else pytorch_rep._batch_seq_lengths),
                                             context=context)
 
-        # TEACHER_TARGET OLD:
-        # BREADCRUMB: MOVE TO ITS OWN METHOD FOR FUTURE SUPPORT / PARSING OF DYNAMIC, RUN-TIME TARGETS
-        #                    SPECIFIED IN learn(targets={sample/student:target/teacher})
-        # # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
-        # curr_tensors_for_sample_values = {k:v for k,v in curr_tensors_for_outputs.items()
-        #                                     if k in self.outputs_to_targets_map}
-        #
-        # # Get value of TARGET nodes for current trial
-        # curr_tensors_for_targets = {}
-        # for component, target in targets.items():
-        #     if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
-        #         curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
-        #     else:
-        #         # It's  a list, of lists, of torch tensors because it is ragged
-        #         num_outputs = len(target[0][0])
-        #         curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
-        #
-        # # Map value of TARGET nodes to trained OUTPUT nodes
-        # curr_target_tensors_for_sample_values = {}
-        # for trained_output, target in self.outputs_to_targets_map.items():
-        #     curr_target_tensors_for_sample_values[trained_output] = curr_tensors_for_targets[target]
-        #
-        # # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
-        #
-        # # Calculate and track the loss over the trained OUTPUT nodes:
-        # #   curr_target_tensors_for_sample_values compared against curr_tensors_for_sample_values
-        # for component, outputs in curr_tensors_for_sample_values.items():
-        #     BREADCRUMB: COMPONENT IS A OUTPUT NODE
-        #                 OUTPUTS IS TENSOR FOR OUTPUT Node
-        #                 targets IS A TENSOR
-        #     trial_loss = 0
-        #     targets = curr_target_tensors_for_sample_values[component]
-
-        #     num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
-        #     for i in range(num_outputs):
-        #         # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
-        #
-        #         # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
-        #         # need to index
-        #         output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
-        #
-        #         # If the sequence dimension is singleton, it can be dropped
-        #         if len(output.shape) > 1 and output.shape[1] == 1:
-        #             output = output.squeeze(1)
-        #             target = torch.atleast_1d(targets[i].squeeze(1))
-        #
-        #         comp_loss = self.loss_function(
-        #             output,
-        #             target
-        #         )
-        #         comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
-        #         trial_loss += comp_loss
-        #     pytorch_rep.minibatch_loss += trial_loss
-        # pytorch_rep.minibatch_loss_count += 1
-        #
-        # # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
-        #
-        # # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
-        #
-        # # Get output Nodes, their out_ports and corresponding indices
-        # #     in order of outermost AutodiffComposition's output_CIM Ports
-        # outputs_idx_port_node_comp = []
-        # for port in self.output_CIM.input_ports:
-        #     source_info = self.output_CIM._get_source_info_from_output_CIM(port)
-        #     source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
-        #     # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
-        #     outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
-        #
-        # # Assign values to trained_output_values and all_output_values
-        # trained_output_values = []
-        # all_output_values = []
-        # for item in outputs_idx_port_node_comp:
-        #     idx, port, node, comp = item
-        #     if comp._trained_comp_nodes_to_pytorch_nodes_map:
-        #         node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
-        #     outputs = curr_tensors_for_outputs[node]
-        #     if type(outputs) is torch.Tensor:
-        #         output = outputs[:, :, idx, ...]
-        #     else:
-        #         output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
-        #
-        #     # If the sequence dimension is singleton, squeeze it away
-        #     if output.shape[1] == 1:
-        #         output = output.squeeze(1)
-        #
-        #     output = output.detach().cpu().numpy().copy().tolist()
-        #     if self.sample_port_to_target_port_map.values():
-        #         trained_output_values += [output]
-        #     all_output_values += [output]
 
         pytorch_rep.minibatch_loss = self.compute_loss(targets, pytorch_rep, context)
         pytorch_rep.minibatch_loss_count += 1
@@ -2073,11 +1984,16 @@ class AutodiffComposition(Composition):
         return output_values
 
     def compute_loss(self, targets, pytorch_rep, context):
-        """Compute loss after execution of autodiff_forward()
-        Assume that loss is computed using LossMechanism(s) constructed in _instantiate_loss_components.
+        """Compute loss for each trial
         Can be overridden to use direct/dedicated/customized computation of loss by subclasses.
-        # IMPLEMENTATION NOTE:
-        #  targets arg is included for overrides; LossMechanism uses its target input directly
+        IMPLEMENTATION NOTE:
+            targets arg is included for overrides; LossMechanism uses its target input directly
+        """
+        return self.compute_loss_using_loss_mechanisms(targets, pytorch_rep, context)
+
+    def compute_loss_using_loss_mechanisms(self, targets, pytorch_rep, context):
+        """Compute loss after execution of autodiff_forward()
+        Use values of LossMechanism(s) that computed loss for each pathway
         """
         trial_loss = 0
         assert self.loss_mechs_map, (f"PROGRAM ERROR: compute_loss() called for '{self.name} which does not "
@@ -2088,6 +2004,99 @@ class AutodiffComposition(Composition):
             comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
             trial_loss += comp_loss
         return trial_loss
+
+    def _compute_loss_using_values_of_output_nodes(self, targets, pytorch_rep, context):
+        """Compute loss using values of OUTPUT Nodes as samples
+        Loss is computed using a single standalone loss function for all sampe-target pairs
+        IMPLEMENTATION NOTE:
+            this is legacy code that may be restored for use in the future, though would need to be revised/validated
+        """
+        # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
+        curr_tensors_for_sample_values = {k:v for k,v in curr_tensors_for_outputs.items()
+                                            if k in self.outputs_to_targets_map}
+
+        # Get value of TARGET nodes for current trial
+        curr_tensors_for_targets = {}
+        for component, target in targets.items():
+            if isinstance(target, torch.Tensor) or isinstance(target, np.ndarray):
+                curr_tensors_for_targets[component] = [target[:, :, i, ...] for i in range(target.shape[1])]
+            else:
+                # It's  a list, of lists, of torch tensors because it is ragged
+                num_outputs = len(target[0][0])
+                curr_tensors_for_targets[component] = [torch.stack([torch.stack([s[i] for s in b]) for b in target]) for i in range(num_outputs)]
+
+        # Map value of TARGET nodes to trained OUTPUT nodes
+        curr_target_tensors_for_sample_values = {}
+        for trained_output, target in self.outputs_to_targets_map.items():
+            curr_target_tensors_for_sample_values[trained_output] = curr_tensors_for_targets[target]
+
+        # --------- Compute the loss (TARGET-OUTPUT) for each trained OUTPUT node  ---------------------------
+
+        # Calculate and track the loss over the trained OUTPUT nodes:
+        #   curr_target_tensors_for_sample_values compared against curr_tensors_for_sample_values
+        for component, outputs in curr_tensors_for_sample_values.items():
+            trial_loss = 0
+            targets = curr_target_tensors_for_sample_values[component]
+
+            num_outputs = outputs.shape[1] if type(outputs) is torch.Tensor else len(outputs[0][0])
+            for i in range(num_outputs):
+                # loss only accepts 0 or 1d target. reshape assuming pytorch_rep.minibatch_loss dim is correct
+
+                # Get the output, if it's a torch tensor we can slice, if it's a list of list (its ragged) and we
+                # need to index
+                output = outputs[:, :, i, ...] if type(outputs) is torch.Tensor else torch.stack([torch.stack([s[i] for s in b]) for b in outputs])
+
+                # If the sequence dimension is singleton, it can be dropped
+                if len(output.shape) > 1 and output.shape[1] == 1:
+                    output = output.squeeze(1)
+                    target = torch.atleast_1d(targets[i].squeeze(1))
+
+                comp_loss = self.loss_function(
+                    output,
+                    target
+                )
+                comp_loss = comp_loss.reshape_as(pytorch_rep.minibatch_loss)
+                trial_loss += comp_loss
+            pytorch_rep.minibatch_loss += trial_loss
+        pytorch_rep.minibatch_loss_count += 1
+
+        # This may not be needed since it is now taken care of in PytorchCompositionWrapper.forward()
+        # --------- Comput the values of output of trained nodes and all nodes  ---------------------------------------
+
+        # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
+        # Get output Nodes, their out_ports and corresponding indices
+        #     in order of outermost AutodiffComposition's output_CIM Ports
+        outputs_idx_port_node_comp = []
+        for port in self.output_CIM.input_ports:
+            source_info = self.output_CIM._get_source_info_from_output_CIM(port)
+            source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
+            # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
+            outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
+
+        # Assign values to trained_output_values and all_output_values
+        trained_output_values = []
+        all_output_values = []
+        for item in outputs_idx_port_node_comp:
+            idx, port, node, comp = item
+            if comp._trained_comp_nodes_to_pytorch_nodes_map:
+                node = comp._trained_comp_nodes_to_pytorch_nodes_map[node]
+            outputs = curr_tensors_for_outputs[node]
+            if type(outputs) is torch.Tensor:
+                output = outputs[:, :, idx, ...]
+            else:
+                output = torch.stack([torch.stack([s[idx] for s in b]) for b in outputs])
+
+            # If the sequence dimension is singleton, squeeze it away
+            if output.shape[1] == 1:
+                output = output.squeeze(1)
+
+            output = output.detach().cpu().numpy().copy().tolist()
+            if self.sample_port_to_target_port_map.values():
+                trained_output_values += [output]
+            all_output_values += [output]
+
+        return trial_loss
+
 
     def clear_losses(self, context=None):
         self.losses = []
