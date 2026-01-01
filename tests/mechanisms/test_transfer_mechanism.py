@@ -886,11 +886,6 @@ class TestTransferMechanismTimeConstant:
         val = EX([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
-        # FIXME: The code bellow modifies parameter value.
-        #        This is not support in compiled mode.
-        if mech_mode != 'Python':
-            return
-
         T.noise.base = 10
 
         val = EX([1, 2, -3, 0])
