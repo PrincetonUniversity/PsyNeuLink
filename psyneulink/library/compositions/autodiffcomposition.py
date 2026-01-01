@@ -35,6 +35,8 @@ Contents
       - `AutodiffComposition_Nesting`
   * `AutodiffComposition_Execution`
       - `AutodiffComposition_PyTorch`
+          - `AutodiffComposition_Additional_Optimization_Steps`
+          - `AutodiffComposition_Exclusion_From_Gradient_Calculation`
       - `AutodiffComposition_LLVM`
       - `AutodiffComposition_Python`
       - `AutodiffComposition_Logging`
@@ -376,7 +378,6 @@ the corresponding `LossMechanism`. The *TARGET Nodes* for an AutodiffComposition
 *Pytorch Representation*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-BREADCRUMB: DISCUSS WRAPPERS
 An AutodiffComposition uses a `pytorch_representation <AutodiffComposition.pytorch_representation>` to execute
 learning when it's `learn() <AutodiffComposition.learn>` method is called in `Pytorch mode
 <AutodiffComposition_PyTorch>`.  This is comprised of a outer `PytorchCompositionWrapper` for the AutodiffComposition,
@@ -462,15 +463,15 @@ Execution
 An AutodiffComposition's `run <AutodiffComposition.run>` and `learn <AutodiffComposition.learn>` methods are the same
 as for a `Composition`. However, the **execution_mode** argument has different effects than for a standard Composition.
 
-For `run() <AutodiffComposition.run>`, execution occurs in `Python mode <AutodiffComposition_Python>` by default, and if
-either `ExecutionMode.Python` or `ExecutionMode.PyTorch` are specified (see `note <_AutodiffComposition_PyTorch_Note>`
-below); `LLVM compilation <AutodiffComposition_LLVM>` is attempted if an `ExecutionMode.LLVM` mode is specified.
+For `run() <Composition.run>`, execution occurs in `Python mode <AutodiffComposition_Python>` by default and if either
+`ExecutionMode.Python` or `ExecutionMode.PyTorch` are specified explicitly (see `note <AutodiffComposition_PyTorch_Note>` below); `LLVM compilation <AutodiffComposition_LLVM>` is attempted
+if one of the  `ExecutionMode.LLVM` modes is specified.
 
-FOr the `learn() <AutodiffComposition.learn>` method, `PyTorch mode <Autodiff_PyTorch>` is used by default, which
-used the `pytorch_representation <AutodiffComposition.pytorch_representation` for execution.  Python execution and
-LLVM Compilation can be specified explicity (using `ExecutionMode.Python` or `ExecutionMode.LLVMRun`, respectively),
-but restritions apply. Each mode of exeuction is each described in greater detail below, and summarized in this
-`table <Composition_Compilation_Table>` which provides a comparison of the different modes of execution for an
+For `learn() <AutodiffComposition.learn>`, `PyTorch mode <Autodiff_PyTorch>` is used by default, which uses the
+`pytorch_representation <AutodiffComposition.pytorch_representation` for execution. Python execution and LLVM
+Compilation can be specified explicity (using `ExecutionMode.Python` or `ExecutionMode.LLVMRun`, respectively),
+but `restrictions apply. Each mode of exeuction is each described in greater detail below, and summarized in `this
+table <Composition_Compilation_Table>`, which provides a comparison of the different modes of execution for an
 AutodiffComposition and standard `Composition`.
 
 .. _AutodiffComposition_PyTorch:
@@ -478,31 +479,31 @@ AutodiffComposition and standard `Composition`.
 *PyTorch mode*
 ~~~~~~~~~~~~~~
 COMMENT:
-# 7/10/24 - BREADCRUMB:
 .. _AutodiffComposition_PyTorch_LearningScale:
+
+# BREADCRUMB:
    ADD DESCRIPTION OF HOW LearningScale SPECIFICATIONS MAP TO EXECUTION OF pytorch_rep:
       OPTIMIZATION STEP:
       for AutodiffCompositions, this corresponds to a single call to `forward()` and `backward()`
             methods of the Pytorch model
-
-DOCUMENT optmization steps
-DOCUMENT exlude_from_graident_calc and execute_in_additional_optimizations
-
+   DOCUMENT optmization steps
+   DOCUMENT exlude_from_graident_calc and execute_in_additional_optimizations
+   DOCUMENT FORWARD AND BACKWARD PASSES PER PYTORCH PROTOCOL
 COMMENT
-This is the default for an AutodiffComposition, but can also be specified explicitly by setting
-**execution_mode** = `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method
-(see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`). In this mode, the
-AutodiffComposition is automatically translated to a `PyTorch <https://pytorch.org>`_ model for learning,
+
+This is the default mode for learning of an AutodiffComposition, but can also be specified explicitly by setting
+**execution_mode** = `ExecutionMode.PyTorch` in the `learn() <AutodiffComposition.learn>` method
+(see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`). In this mode, the AutodiffComposition's
+`pytorch_representation <AutodiffComposition.pytorch_representation>` is used for learning,
 which is about three orders of magntidue faster than `Python mode <AutodiffComposition_Python>`, and
-provides additional funtionality (see `above <AutodiffComposition_Additional_Functionality>`. Although
+provides additional funtionality (see `above <AutodiffComposition_Additional_Functionality>`). Although
 it is best suited for use with `supervised learning <Composition_Learning_Supervised>`, it can also be
 used for some forms of `unsupervised learning <Composition_Learning_Unsupervised>` that are supported
 in PyTorch (e.g., `self-organized maps <https://github.com/giannisnik/som>`_).
 
     .. _AutodiffComposition_PyTorch_Note:
-
     .. note::
-       While specifying `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>`  method of an
+       While specifying `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method of an
        AutodiffComposition causes it to use PyTorch for training, specifying this in the `run <Composition.run>`
        method causes it to be executed in `Python mode <AutodiffComposition_Python>` (i.e., using the *Python*
        interpreter, and not PyTorch); this is so that any modulation can take effect during execution, which is
@@ -511,6 +512,61 @@ in PyTorch (e.g., `self-organized maps <https://github.com/giannisnik/som>`_).
     .. warning::
       * Specifying `ExecutionMode.LLVMRun` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` raises an error.
+
+The learning behavior in PyTorch mode can be further customized in the following ways:
+
+.. _AutodiffComposition_Additional_Optimization_Steps:
+
+*Additional Optimizations Steps*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+More than one optimization step per `minibatch <LearningScale.MINIBATCH>` can be specified in the
+**optimizations_per_minibatch** argument of an AutodiffComposition's constructor, in which case
+several forward and backward passes are executed for each minibatch  (see `optimizations_per_minibatch
+<Composition.optimizations_per_minibatch>` for additional details).  In that case, the
+**execute_in_additional_optimizations** argument of either the AutodiffComposition's constructor or its `learn()
+<AutodiffCompostion.learn>` method can be used to specify which Nodes are executed in which additional `optimization
+steps <LearningScale.OPTIMIZATION_STEP>` after the first. This is specified as a dict, each key of which is a `Node
+<Composition_Nodes>` in the AutodiffComposition or one `nested <AutodiffComposition_Nesting>` within it, and its value
+is of the following:
+
+  *None* or *True*: execute in all additional optimizations
+  COMMENT:
+  without any modificadtion(s) to its Parameters;
+  COMMENT
+
+  *False* or *EXCLUDE*: exclude from execution during additional optimizations; this is useful
+  primarly when a nested Composition is specified but nodes within it should be excluded;
+
+  *FIRST*, *LAST*, *ALL* or range: include in only the first, last, all, or a specified range of additional
+  optimization steps;
+
+  COMMENT:
+  BREADCRUMB: IS THIS IMPLEMENTED?
+  *(Parameter, value)* or *[(Parameter, value), ...]*: assign specified Parameter values during
+    execution of additional optimizations, restoring to previous value(s) for first optimization
+    of next trial.
+  COMMENT
+
+  .. hint::
+     This can be used to implement the `backprop-to-activation procedure
+     <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
+     learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
+     for a pattern of activation in response to a given input (or set of inputs) that is useful for
+     some downstream purpose (see EGO Model for an example).
+
+If an AutodiffComposition is specified as a key, then all Nodes within that AutodiffComposition and any nested within
+it are included, except for ones explicitly excluded.
+
+.. _AutodiffComposition_Exclusion_From_Gradient_Calculation:
+
+COMMENT:
+BREADCRUMB: ADD DOCUMENTATION AND UNCOMMENT ONCE IMPLEMENTED IN CONSTRUCTOR AND LEARN()
+*Exclusion from Gradient Calculation*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`exclude_from_gradient_calc`
+COMMENT
 
 .. _AutodiffComposition_Python:
 
@@ -751,6 +807,7 @@ class AutodiffComposition(Composition):
         weight_decay=0,                            \
         enable_learning=True,                      \
         learning_rate=0.001,                       \
+        execute_in_additional_optimizations=None   \
         synch_projection_matrices_with_torch=RUN,  \
         synch_node_variables_with_torch=None,      \
         synch_node_values_with_torch=RUN,          \
@@ -791,6 +848,11 @@ class AutodiffComposition(Composition):
         <AutdodiffComposition.learn>` method of the AutodiffComposition; if a dict is used, and it does
         not contain an entry for *DEFAULT_LEARNING_RATE*, the default indicated above is used (see `learning_rate
         (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
+
+    execute_in_additional_optimizations : dict{Node: [<bool | *EXCLUDE* | (Parameter, value)]} (default None)
+        specifies which `Nodes <Composition_Nodes>` of the AutodiffComposition should be included in the forward pass
+        for any additional optimization steps after the first (see `AutodiffComposition_Optimization_Steps`
+        for fuller explanation and additional details of specification).
 
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
@@ -851,7 +913,7 @@ class AutodiffComposition(Composition):
     Attributes
     ----------
 
-    pytorch_representation : PytorchCompositionWrapper : default None
+    pytorch_representation : PytorchCompositionWrapper
         represents the PyTorch model of the AutodiffComposition, which is created when the AutodiffComposition is
         run in `PyTorch mode <AutodiffComposition_PyTorch>`.
 
@@ -873,6 +935,11 @@ class AutodiffComposition(Composition):
         that is applied to all `Projections <Projection>` in the AutodiffComposition that are `learnable
         <MappingProjection.learnable>`, and for which individual rates have not been specified (see
         `AutodiffComposition_Learning_Rates` for additional details).
+
+    execute_in_additional_optimizations : dict{Node:[(Parameter, value)]}
+        determines which `Nodes <Composition_Nodes>` of the AutodiffComposition should be included in the forward
+        pass for any additional optimization steps after the first (see `AutodiffComposition_Optimization_Steps`
+        for additional information).
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
@@ -1125,6 +1192,7 @@ class AutodiffComposition(Composition):
                  weight_decay: float = 0.0,
                  learning_rate: Optional[Union[float,int,bool,dict,]]=.001,
                  enable_learning: bool = True,
+                 execute_in_additional_optimizations=None,
                  force_no_retain_graph: bool = False,
                  refresh_losses: bool = False,
                  synch_projection_matrices_with_torch: SynchRetainArg = LearningScale.RUN,
@@ -1188,6 +1256,7 @@ class AutodiffComposition(Composition):
         self.last_saved_weights = None
         self.last_loaded_weights = None
         self.full_sequence_mode = full_sequence_mode
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -2473,6 +2542,12 @@ class AutodiffComposition(Composition):
             *DEFAULT_LEARNING_RATE* entry, then the default indicated above is used for all MappingProjections
             in the Composition, and MappingProjections in any nested Compositions use their default learning_rate
             (see `AutodiffComposition_Learning_Rate` and `Composition_Learning_Rate` for additional details).
+
+        execute_in_additional_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
+            specifies which `Nodes <Composition_Nodes>` of the AutodiffComposition should be included in the forward
+            pass for any additional optimization steps after the first; this overrides any specifications made in the
+            **execute_in_additional_optimizations** argument of the AutodiffComposition's constructor (see
+            `AutodiffComposition_Optimization_Steps` for fuller explanation and details of specification).
 
         synch_projection_matrices_with_torch : SynchRetainArg : Default NotImplemented
             overrides specification(s) made in Autodiff constructor; see `synch_projection_matrices_with_torch
