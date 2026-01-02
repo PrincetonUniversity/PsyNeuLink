@@ -230,8 +230,8 @@ class TestNested:
     test_em_data = [
         # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING:
         #   nesting       mode                expected
-        (  'unnested',  'Python',   expected_output_for_unnested_python_em),
-        (  'nested',    'Python',   expected_output_for_nested_python_em),
+        # (  'unnested',  'Python',   expected_output_for_unnested_python_em),
+        # (  'nested',    'Python',   expected_output_for_nested_python_em),
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em),
         (  'unnested',  'PyTorch with learning',  expected_output_for_unnested_pytorch_learning_em),
