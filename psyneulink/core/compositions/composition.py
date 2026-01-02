@@ -4777,7 +4777,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         try:
             return self.nodes_to_roles[node]
         except KeyError:
-            raise CompositionError(f"Node {node} not found in {self.nodes_to_roles}.")
+            if node not in self.nodes:
+                raise CompositionError(
+                    f"Node ('{node.name}') for which roles were requested not found in '{self.name}'.")
+            else:
+                raise CompositionError(f"No list of roles found for {node.name} in '{self.name}'.")
 
     def get_nodes_by_role(self, role):
         """
@@ -5708,8 +5712,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
         for node in self.nodes:
             for node, role in self.excluded_node_roles:
-                if role in self.get_roles_by_node(node):
-                    self._remove_node_role(node, role)
+                # # MODIFIED TEACHER_TARGET OLD:
+                # if role in self.get_roles_by_node(node):
+                #     self._remove_node_role(node, role)
+                # MODIFIED TEACHER_TARGET NEW:
+                try:
+                    if role in self.get_roles_by_node(node):
+                        self._remove_node_role(node, role)
+                        self._get_nested_nodes()
+                except CompositionError:
+                    nested_node, nested_comp = next((node_comp_pair for node_comp_pair in self._get_nested_nodes()
+                                                     if node_comp_pair[0] is node), None)
+                    if role in nested_comp.get_roles_by_node(nested_node):
+                        nested_comp._remove_node_role(nested_node, role)
+                # MODIFIED TEACHER_TARGET END
 
         # Manual override to avoid INPUT/OUTPUT setting, which would cause
         # CIMs to be created, which is not correct for controllers

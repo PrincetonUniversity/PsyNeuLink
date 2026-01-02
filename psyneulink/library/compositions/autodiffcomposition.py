@@ -1307,6 +1307,8 @@ class AutodiffComposition(Composition):
         self._warned_about_unecessary_show_learning_arg_in_call_to_show_graph = False
         # - modulatory components that will not execute in run() or learn() in ExecutionMode.PyTorch
         self._warned_about_modulatory_components = False
+        # - target appears before sample in the same pathway
+        self._warned_about_target_before_sample_in_pathway = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
 
@@ -1604,13 +1606,17 @@ class AutodiffComposition(Composition):
             sample_idx = next((i for i, node in enumerate(pathway) if node == sample_owner), None)
             target_idx = next((i for i, node in enumerate(pathway) if node == target_owner), None)
 
-            # If both exist in pathway and target comes before sample, return True
-            if (target_idx is not None and sample_idx is not None
-                    and target_idx < sample_idx
-                    and any(isinstance(p, MappingProjection) and p.learnable for p in pathway[target_idx:sample_idx])):
-                warnings.warn(f"Specified target ({target_owner.name}) appears before sample ({sample_owner.name}) "
-                              f"in a pathway with learnable Projections;  this may not be intended and can cause "
-                              f"instabilities in learning.)")
+            # Warn if target comes before sample in the same pathway, and there is no learnable Projection between them
+            warning_msg = (f"The target ({target_owner.name}) specified for a sample ({sample_owner.name}) "
+                           f"appears before it in the same pathway of '{self.name}'")
+            if (target_idx is not None and sample_idx is not None and target_idx < sample_idx
+                    and not self._warned_about_target_before_sample_in_pathway):
+                if not any(isinstance(p, MappingProjection) and p.learnable for p in pathway[target_idx:sample_idx]):
+                    warnings.warn(warning_msg + f"without a learnable Projection between them; "
+                                                f"this can cause instabilities in learning.)")
+                else:
+                    warnings.warn(warning_msg + '.')
+                self._warned_about_target_before_sample_in_pathway = True
 
     def _instantiate_loss_components(self, pathways, context, base_context):
         """Instantiate sample:target pairs, LossMechanisms, and any TARGET Nodes needed
@@ -1680,10 +1686,10 @@ class AutodiffComposition(Composition):
                 terminal_node_output_ports = terminal_node.output_ports
                 if not any(sample_port in self.sample_port_to_target_port_map
                            for sample_port in terminal_node_output_ports):
-                    warnings.warn(f"The pathway from INPUT Node '{pathway[0].name}' to OUTPUT Node "
-                                  f"'{terminal_node.name}' contains learnable Projections, but no LossMechanism "
-                                  f"is specified for '{terminal_node.name}'.  As a result, the weights of the "
-                                  f"learnable Projections in this pathway will not be updated during learning.")
+                    warnings.warn(f"The pathway from '{pathway[0].name}' to '{terminal_node.name}' "
+                                  f"contains learnable Projections, but no target has been specified for "
+                                  f"'{terminal_node.name}'. As a result, the weights of the learnable Projections "
+                                  f"in this pathway will not be updated during learning.")
 
     def _instantiate_constructor_targets_args(self, pathways, context, base_context):
         """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
@@ -2397,7 +2403,7 @@ class AutodiffComposition(Composition):
             if (mech in self.get_nested_input_nodes_at_all_levels()
                     and mech not in self.get_nodes_by_role(NodeRole.TARGET)):
                 # Pass along inputs to all INPUT Nodes except TARGETS
-                # (those are handled separately in _get_autodiff_targets_values)
+                # (those are handled separately in _get_autodiff_target_node_input_values)
                 if torch_available:
                     # Convert to torch tensor of type expected by PytorchCompositionWrapper
                     # values = torch.tensor(values, dtype=self.torch_dtype, device=self.device)
@@ -2405,16 +2411,12 @@ class AutodiffComposition(Composition):
                 autodiff_input_dict[node] = values
         return autodiff_input_dict
 
-    def _get_autodiff_targets_values(self, input_dict):
+    def _get_autodiff_target_node_input_values(self, input_dict):
         """Return dict with input values for TARGET Nodes
         Get inputs to TARGET Nodes used for computation of loss in autodiff_forward().
-        BREADCRUMB: THE FOLLOWING IS LIMITING;
-                      SHOULD ALLOW USE OF THE TARGET NODE'S VALUE ITSELF,
-                      SO THAT IT CAN BE SET INTERNALLY BY OTHER NODES (E.G., FOR TEACHING/CONSOLIDATION)
-                      MAY NEED TO INSURE THAT TARGET NODE GETS EXECUTED IN FORWARD PASS
         Use input_dict to get input values for TARGET Nodes that are INPUT Nodes of the AutodiffComposition,
-        If a TARGET Node is not an INPUT Node, it is assumed to be the target of a projection from an INPUT Node
-        and the value is determined by searching recursively for the input Node that projects to the TARGET Node.
+        If a TARGET Node is not an INPUT Node, it is assumed to be an internal target as is ignored,
+           as those are assumed to be executed in autodiff_forward()
 
         Returns
         ---------
@@ -2425,13 +2427,15 @@ class AutodiffComposition(Composition):
             if target in self.get_nodes_by_role(NodeRole.INPUT):
                 return input_dict[target]
             if len(target.path_afferents) > 1:
-                raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}')"
+                # TARGET Nodes should only have a single afferent input
+                raise AutodiffCompositionError(f"TARGET Node '{target.name}' (for '{self.name}') "
                                                f"cannot have more than one afferent projection.")
             target = target.path_afferents[0].sender.owner
             return get_target_value(target)
 
-        for target_port in self.sample_port_to_target_port_map.values():
-            # Safe (and cleaner API) to use TARGET Nodes (Mechanisms) here since only one target_port per TARGET Node
+        # Get OutputPorts for TARGET Nodes
+        for target_port in [t for t in self.sample_port_to_target_port_map.values()
+                            if t.owner in self.get_nodes_by_role(NodeRole.TARGET)]:
             target_values[target_port.owner] = get_target_value(target_port.owner)
         return target_values
 
@@ -2853,7 +2857,7 @@ class AutodiffComposition(Composition):
             # TBI: How are we supposed to use base_context and statefulness here?
             if ContextFlags.LEARNING_MODE in context.runmode:
                 autodiff_inputs = self._get_autodiff_inputs_values(inputs)
-                autodiff_targets = self._get_autodiff_targets_values(inputs)
+                autodiff_targets = self._get_autodiff_target_node_input_values(inputs)
 
                 # Begin reporting of learning TRIAL:
                 report(self,

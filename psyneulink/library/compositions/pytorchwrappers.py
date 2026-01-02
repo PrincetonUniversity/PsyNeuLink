@@ -270,6 +270,16 @@ class PytorchCompositionWrapper(torch.nn.Module):
     torch_dtype = torch.float64
 
     def _pytorch_mechanism_wrapper_type(self, mech):
+        # TEACHER_TARGET BREADCRUMB:  TEST THIS IN SCRATCH PAD FOR CONTROL NODE
+        # Warn about and skip ModulatoryProjections
+        if isinstance(mech, ModulatoryMechanism_Base):
+            #                OR PUT BURDEN ON _pytorch_mechanism_wrapper_type TO RECUSE ITSELF??
+            if not self.composition._warned_about_modulatory_components:
+                warnings.warn(f"'{self.composition.name}' has Modulatory components that will not execute "
+                              f"when its learn() method is called in PyTorch mode.")
+                self.composition._warned_about_modulatory_components = True
+            return None
+
         return defaultdict(lambda: PytorchMechanismWrapper,
                            {LossMechanism: PytorchLossMechanismWrapper}
                            )[mech.__class__]
@@ -486,23 +496,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                              context=context)
             # Wrap Mechanism
             else:
-                # Warn about and skip ModulatoryProjections
-                if isinstance(node, ModulatoryMechanism_Base):
-                    if not composition._warned_about_modulatory_components:
-                        warnings.warn(f"'{composition.name}' has Modulatory components that will not execute "
-                                      f"when its learn() method is called in PyTorch mode.")
-                        composition._warned_about_modulatory_components = True
+                mech_wrapper_type = self._pytorch_mechanism_wrapper_type(node)
+                if mech_wrapper_type:
+                    pytorch_node_wrapper = mech_wrapper_type(mechanism=node,
+                                                             composition=composition,
+                                                             outer_creator=self.outer_creator,
+                                                             component_idx=self.composition._get_node_index(node),
+                                                             use=[LEARNING, SYNCH, SHOW_PYTORCH],
+                                                             dtype=self.torch_dtype,
+                                                             device=device,
+                                                             context=context)
+                else:
                     continue
-                pytorch_node_wrapper = (
-                    self._pytorch_mechanism_wrapper_type(node)(
-                        mechanism=node,
-                        composition=composition,
-                        outer_creator=self.outer_creator,
-                        component_idx=self.composition._get_node_index(node),
-                        use=[LEARNING, SYNCH, SHOW_PYTORCH],
-                        dtype=self.torch_dtype,
-                        device=device,
-                        context=context))
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
             _node_wrapper_pairs.append((node, pytorch_node_wrapper))
 
@@ -514,6 +519,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Note: Pytorch representation is "flattened" (i.e., any nested Compositions are replaced by their Nodes)
         so if any nested Compositions have Projections to/from them, they are assigned to the outermost Composition
         See figure in module docstring for explanation of how Projections to/from nested Compositions are handled.
+        TEACHER_TARGET BREADCRUMB:  ADD NOTE ABOUT FILTERING FOR ILLEGAL NODES FOR PYTORCH, SUCH AS MODULATORY ONES
         """
 
         proj_wrappers_pairs = []
@@ -2756,7 +2762,7 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
         # sample = sample.requires_grad_()
         assert sample.requires_grad == True, \
-            (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}'"
+            (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}' "
              f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")
         # Prevent propagation of error along projection from TARGET
         #  (since it might be from an internal Node that receives other projections)
