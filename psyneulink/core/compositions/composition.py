@@ -1102,7 +1102,7 @@ which in belongs, or for the entire Composition.  `LearningMechanisms <LearningM
 <Composition_Learning_Configurations>`, and it is generally simpler to assign learning_rates directly to a
 MappingProjection, learning Pathways, or to the Composition. These can be specified using the **learning_rate**
 argument for any of these in their constructor, and/or that Composition's `learn <Composition.learn>`
-method (their precedence is shown in the `table <Composition_Learning_Rate_Precedence_Hierarchy> below):
+method (their precedence is shown in the `table <Composition_Learning_Rate_Precedence_Hierarchy>` below):
 
 .. _Composition_Learning_Rate_Specification:
 
@@ -1155,7 +1155,7 @@ method (their precedence is shown in the `table <Composition_Learning_Rate_Prece
      `AutodiffComposition_Learning_Rate` for details).
 
 
-.. _Composition_Learning_Rate_Precedence_Hierarchy
+.. _Composition_Learning_Rate_Precedence_Hierarchy:
 
 As noted above, learning_rates can be specified in several places. Precedence of specifications is guided by the
 general heuristics that more local, lower level and immediate specificaitons take precedence over broader,
@@ -3531,7 +3531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     optimizations_per_minibatch : int : default 1
         specifies the default for the Composition for the number of repetitions of each stimulus in the training set
-        is used to compute the `error_signal <LearningMechanism.error_signal>` for a given `minibatch
+        used to compute the `error_signal <LearningMechanism.error_signal>` for a given `minibatch
         <LearningScale.MINIBATCH>`; it can be overridden by specifying the **minibatch_size** argument in the `learn
         <Composition.learn>` method (see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for
         additional details.
@@ -3805,6 +3805,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         MappingProjections for which individual learning_rates have not been specified (see `Composition_Learning_Rate`
         for details of specification).
 
+    num_epochs : int
+        number of epochs run in the most recent execution of `learn() <Composition.learn>`
+
     minibatch_size : int
         determines the number of input stimuli from the training set used to compute the `error_signal
         <LearningMechanism.error_signal>` in one gradient step of learning if this is not specified in the call to
@@ -3812,7 +3815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     optimizations_per_minibatch : int
         determines the number of repetitions of each stimulus in the training set used to compute an `error_signal
-        <LearningMechanism.error_signal>` for single gradient step in learning if this is not specified in the call
+        <LearningMechanism.error_signal>` for a single gradient step in learning if this is not specified in the call
         to `learn <Composition.learn>` (see `minibatch <LearningScale.OPTIMIZATION_STEP>` for additional details).
 
     learning_components : list[list]
@@ -12118,6 +12121,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         from psyneulink.library.compositions import CompositionRunner
         from psyneulink.library.compositions import AutodiffComposition
 
+        self.num_epochs = epochs
+
         if (
             not skip_initialization
             and (
@@ -14256,26 +14261,28 @@ class LearningScale(PNLStrEnum):
 
     OPTIMIZATION_STEP
         a single step of gradient calculation, of which there can be one or more in a `minibatch
-        <LearningScale.MINIBATCH>`, based on a Composition's `mini_batch_size <Composition.mini_batch_size>`
+        <LearningScale.MINIBATCH>`, based on a Composition's `minibatch_size <Composition.minibatch_size>`
         Parameter.
 
     TRIAL
-        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>`= 1; otherwise a warning is raised,
+        identical to MINIBACH when `minibatch_size <Composition.minibatch_size>` = 1; otherwise a warning is raised,
         and unanticipated results can occur.
 
     MINIBATCH
-        a subset of the training set used to calculate an `error_signal <Composition.error_signal>`
-        (i.e. one step along the gradient) used to  and update the weights of a MappingProjection's
+        a subset of the training set used to calculate an `error_signal <Composition.error_signal>` or
+        `Loss` (i.e. one step along the gradient) used to update the weights of a MappingProjection's
         `matrix <MappingProjection.matrix>` Parameter.
 
     EPOCH
-        a complete pass through the training set;  the number of gradient calculations and weight updates that occur
-        in an epoch depends on the `mini_batch_size <Composition.mini_batch_size>` and `optimizations_per_minibatch
+        a complete pass through the training set; the number of gradient calculations and weight updates that occur
+        in an epoch depends on the `minibatch_size <Composition.minibatch_size>` and `optimizations_per_minibatch
         <Composition.optimizations_per_minibatch>` Parameters of the Composition.
 
     RUN
-        a complete execution of the `learn <Composition.learn>` method of the Composition, involving
-        `num_epochs <Composition.num_epochs>` epochs.
+        a complete execution of the `learn <Composition.learn>` method of the Composition, involving the number
+        of epochs specified in the **epochs**  argument of the `learn <Composition.learn>` method (the number
+        for the most recent execution is recorded in the `num_epochs <Composition.num_epochs>` attribute).
+
 
     """
     OPTIMIZATION_STEP = OPTIMIZATION_STEP

@@ -490,7 +490,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 if isinstance(node, ModulatoryMechanism_Base):
                     if not composition._warned_about_modulatory_components:
                         warnings.warn(f"'{composition.name}' has Modulatory components that will not execute "
-                                      f"when its run() and/or learn() methods are executed in PyTorch mode.")
+                                      f"when its learn() method is called in PyTorch mode.")
                         composition._warned_about_modulatory_components = True
                     continue
                 pytorch_node_wrapper = (
@@ -523,8 +523,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Warn about and skip ModulatoryProjections
             if isinstance(projection, ModulatoryProjection_Base):
                 if not composition._warned_about_modulatory_components:
-                    warnings.warn(f"'{composition.name}' has Modulatory components that will not execute when its run() "
-                                  f"and/or learn() methods are executed in PyTorch mode.")
+                    warnings.warn(f"'{composition.name}' has Modulatory components that will not execute when its "
+                                  f"learn() method is called in PyTorch mode.")
                     composition._warned_about_modulatory_components = True
                 continue
 
