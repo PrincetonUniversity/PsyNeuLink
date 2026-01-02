@@ -411,10 +411,7 @@ class TestSharedParameters:
         assert t.integration_rate.modulated == t.integration_rate.base == expected_rate
 
     def test_conflict_warning(self):
-        with pytest.warns(
-            UserWarning,
-            match=shared_parameter_warning_regex('integration_rate', 'rate')
-        ):
+        with pytest.warns(UserWarning, match=shared_parameter_warning_regex('integration_rate', 'rate')):
             pnl.TransferMechanism(
                 integration_rate=.1,
                 integrator_function=pnl.AdaptiveIntegrator(rate=.2)
