@@ -2956,7 +2956,7 @@ class EMComposition(AutodiffComposition):
         """Override to suppress error for no learnable pathways if it is for sample in EM Composition
         More informative error is generated in PytorchCompositionWrapper._assign_learning_rates()
         """
-        if kwargs['sample']:
+        if kwargs['sample_port']:
             kwargs['action']=None
         return super()._check_if_sample_is_in_learnable_pathway(*args, **kwargs)
 

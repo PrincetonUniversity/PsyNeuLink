@@ -227,6 +227,12 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
+    def _get_input_port_for_output_port(self, output_port:OutputPort)->InputPort:
+        return next((ip for ip, op in self.port_map.values() if op is output_port), None)
+
+    def _get_output_port_for_input_port(self, input_port:InputPort)->OutputPort:
+        return next((op for ip, op in self.port_map.values() if ip is input_port), None)
+
     # def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
     def _get_source_node_for_input_CIM(self, port, start_comp=None, return_outermost_comp=False)->tuple or None:
         """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
