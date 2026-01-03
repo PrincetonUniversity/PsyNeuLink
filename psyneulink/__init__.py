@@ -99,6 +99,8 @@ for reg in primary_registries:
 
     process_registry_object_instances(reg, func)
 
+core.globals.registry._register_auto_name_prefix = ""
+
 def System(*args, **kwars):
     show_warning_sys_and_proc_warning()
 
