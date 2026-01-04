@@ -1183,6 +1183,7 @@ class GRUComposition(AutodiffComposition):
                         dependency_dict:dict,
                         queue:deque,
                         comp:AutodiffComposition):
+
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         Add direct_proj_in and direct_proj_out to self._pytorch_projections
         Other projections (including 'INPUT TO UPDATE WEIGHTS') are added in super()._get_pytorch_backprop_pathway()
@@ -1245,11 +1246,22 @@ class GRUComposition(AutodiffComposition):
         # output_node = self.output_CIM.output_port
         output_node = self.output_CIM
 
-        # GRU pathway:
-        dependency_dict[direct_proj_in]=sender
-        dependency_dict[self.gru_mech]=direct_proj_in
-        dependency_dict[direct_proj_out]=self.gru_mech
-        dependency_dict[output_node]=direct_proj_out
+        # # GRU pathway:
+        # # MODIFIED TEACHER_TARGET OLD:
+        # dependency_dict[direct_proj_in]=sender
+        # dependency_dict[self.gru_mech]=direct_proj_in
+        # dependency_dict[direct_proj_out]=self.gru_mech
+        # dependency_dict[output_node]=direct_proj_out
+        # # MODIFIED TEACHER_TARGET NEW:
+        # Use ports for dict entries
+        assert direct_proj_in.receiver.owner == self.gru_mech
+        assert direct_proj_out.receiver.owner == output_node
+        dependency_dict[direct_proj_in]=direct_proj_in.sender
+        dependency_dict[direct_proj_in.receiver]=direct_proj_in
+        dependency_dict[direct_proj_out]=direct_proj_in.receiver
+        dependency_dict[direct_proj_out.receiver]=direct_proj_out
+        # MODIFIED TEACHER_TARGET END
+
 
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, self))
