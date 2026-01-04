@@ -1953,9 +1953,18 @@ class AutodiffComposition(Composition):
         and InputPort of the receiver Mechanisms, which are used in the actual entries of the dict, to prevent
         overwritting of entries that involve different ports of the same Mechanisms.
         """
+        # MODIFIED TEACH_TARGET OLD:
+        # dependency_dict[receiver] = projection
+        # dependency_dict[projection] = sender
+        # queue.append((receiver, comp))
+        # MODIFIED TEACH_TARGET NEW:
+        # BREADCRUMB: IF projection.receiver IS CIM, NEED TO FIND THE CORRESPONDING NODE
+        if isinstance(projection.reciever.owner, CompositionInterfaceMechanism):
+            projection.reciever.owner._get_output_port_for_input_port
         dependency_dict[projection.receiver] = projection
         dependency_dict[projection] = projection.sender
         queue.append((receiver, comp))
+        # MODIFIED TEACH_TARGET END
 
     # BREADCRUMB: move some of what's done in the methods below to a "_validate_params" type of method
     @handle_external_context()
