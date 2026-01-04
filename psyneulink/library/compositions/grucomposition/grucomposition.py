@@ -1080,7 +1080,7 @@ class GRUComposition(AutodiffComposition):
                                             function=MatrixTransform(
                                                 default_variable=np.zeros(input_size),
                                                 matrix=get_matrix(FULL_CONNECTIVITY_MATRIX,input_size, hidden_size)))
-        self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node: self.gru_mech}
+        self._input_comp_nodes_to_pytorch_nodes_map = {self.input_node.input_port: self.gru_mech.input_port}
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
