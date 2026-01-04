@@ -1555,47 +1555,57 @@ class AutodiffComposition(Composition):
 
         return pathways
 
-    def _mech_in_learnable_pathway(self, mech: ProcessingMechanism_Base) -> bool:
+    def _mech_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
         """Return True if `mech` receives a Project from any pathway that has at least one learnable Projection"""
-        for afferent in mech.path_afferents:
+        mech = mech_output_port.owner
+        if isinstance(mech, CompositionInterfaceMechanism):
+            # Restrict search to afferent of input_port paired with mech_output_port
+            afferents = mech._get_input_port_for_output_port(mech_output_port).path_afferents
+        else:
+            afferents = mech.path_afferents
+        for afferent in afferents:
             if afferent.learnable:
                 return True
-            check_afferent_pathway = self._mech_in_learnable_pathway(afferent.sender.owner)
+            check_afferent_pathway = self._mech_in_learnable_pathway(afferent.sender)
             if check_afferent_pathway:
                 return True
         return False
 
-    def _check_if_sample_is_in_learnable_pathway(self, sample, target=None, loss_mech=None,
-                                                 constructed_target_mechs=None,
+    def _check_if_sample_is_in_learnable_pathway(self,
+                                                 sample_port:OutputPort,
+                                                 target_mech:ProcessingMechanism_Base=None,
+                                                 loss_mech:LossMechanism=None,
+                                                 constructed_target_mechs:list=None,
                                                  action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
-        """Take specified action if sample has no afferent pathways with any learnable Projections.
-        - target argument is used to determine error_message;
+        """Take specified action if sample_port's owner has no afferent pathways with any learnable Projections.
+        - target_mech argument is used to determine error_message;
         - if no action is specified, return True or False
         """
-        if self._mech_in_learnable_pathway(sample):
+        if self._mech_in_learnable_pathway(sample_port):
             return True
-        # Construct relevant error/warning message
-        if target:
+        # sample is not in learnable pathway, so construct relevant error/warning message
+        sample_mech = sample_port.owner
+        if target_mech:
             # Target was specified in *targets* arg of constructor
-            if isinstance(target, LossMechanism):
+            if isinstance(target_mech, LossMechanism):
                 target_msg = f"LossMechanism ('{loss_mech.name}')"
-            elif target in constructed_target_mechs:
+            elif constructed_target_mechs and target_mech in constructed_target_mechs:
                 target_msg = "TARGET input"
             else:
-                target_msg = f"TARGET node ('{target.name}')"
-            error_msg = (f"A {target_msg} has been assigned to a node ('{sample.name}') for "
+                target_msg = f"TARGET node ('{target_mech.name}')"
+            error_msg = (f"A {target_msg} has been assigned to a node ('{sample_mech.name}') for "
                          f"learning that has no afferent pathways with any learnable Projections.")
         else:
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-            if sample in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
+            if sample_mech in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
                 #   but are not specified in targets dict of learn() method.
                 # Technically, they are not erroneous, so allow construction;
                 #   warning about non-learnability is handled in _instantiate_optimizer()
                 return False
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-            error_msg = (f"A target value is specified for '{sample.name}' in the learn() method of '{self.name}', "
-                         f"but that Node has no afferent pathways with any learnable Projections.")
+            error_msg = (f"A target value is specified for '{sample_mech.name}' in the learn() method of "
+                         f"'{self.name}', but that Node has no afferent pathways with any learnable Projections.")
 
         # Take specified action
         if action is ERROR:
@@ -1612,20 +1622,20 @@ class AutodiffComposition(Composition):
         """Determine if target appears before the sample in any pathway.
         Returns True if target appears before sample in any pathway, False otherwise.
         """
-        sample_owner = sample_port.owner
-        target_owner = target_port.owner
+        sample_mech = sample_port.owner
+        target_mech = target_port.owner
 
         # Check each pathway for the sample
         for pathway in pathways:
-            if sample_owner not in pathway:
+            if sample_mech not in pathway:
                 continue
 
             # Find positions of sample and target in this pathway
-            sample_idx = next((i for i, node in enumerate(pathway) if node == sample_owner), None)
-            target_idx = next((i for i, node in enumerate(pathway) if node == target_owner), None)
+            sample_idx = next((i for i, node in enumerate(pathway) if node == sample_mech), None)
+            target_idx = next((i for i, node in enumerate(pathway) if node == target_mech), None)
 
             # Warn if target comes before sample in the same pathway, and there is no learnable Projection between them
-            warning_msg = (f"The target ({target_owner.name}) specified for a sample ({sample_owner.name}) "
+            warning_msg = (f"The target ({target_mech.name}) specified for a sample ({sample_mech.name}) "
                            f"appears before it in the same pathway of '{self.name}'")
             if (target_idx is not None and sample_idx is not None and target_idx < sample_idx
                     and not self._warned_about_target_before_sample_in_pathway):
@@ -1735,8 +1745,8 @@ class AutodiffComposition(Composition):
                 target_mech = target_port.owner
                 # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
                 #   then raise error, as executing its LossFunction in pytorch will cause a crash
-                self._check_if_sample_is_in_learnable_pathway(sample=sample_mech,
-                                                              target=target_mech,
+                self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
+                                                              target_mech=target_mech,
                                                               loss_mech=loss_mech,
                                                               constructed_target_mechs=constructed_target_mechs,
                                                               action=ERROR)
@@ -1747,8 +1757,8 @@ class AutodiffComposition(Composition):
                 # If specified sample Mechanism is not in a pathway with at least one learnable Projection
                 #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
                 #   loss in pytorch will cause a crash
-                self._check_if_sample_is_in_learnable_pathway(sample=sample_mech,
-                                                              target=target_mech,
+                self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
+                                                              target_mech=target_mech,
                                                               loss_mech=None,
                                                               constructed_target_mechs=None,
                                                               action=ERROR)
@@ -1764,6 +1774,7 @@ class AutodiffComposition(Composition):
                         continue
                     sample_name = (sample_port.full_name if len(sample_port.owner.output_ports)>1
                                    else sample_port.owner.name)
+                    # TEACHER_TARGET BREADCRUMB: SHOULD THIS BE FOR sample_port NOT sample_mech?
                     target_mech = ProcessingMechanism(default_variable = np.array([np.zeros_like(value) for value
                                                                                    in sample_mech.value],
                                                                                   dtype=object),
@@ -1806,8 +1817,8 @@ class AutodiffComposition(Composition):
         target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
         for output_port_for_learning in output_ports_for_learning:
 
-            if not self._check_if_sample_is_in_learnable_pathway(sample=output_port_for_learning.owner,
-                                                                 target=None,
+            if not self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
+                                                                 target_mech=None,
                                                                  loss_mech=None,
                                                                  constructed_target_mechs=constructed_target_mechs,
                                                                  action=ERROR):
