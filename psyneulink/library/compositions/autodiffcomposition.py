@@ -1381,14 +1381,15 @@ class AutodiffComposition(Composition):
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         """Breadth-first search from input_node to find all input -> <any OUTPUT Node> pathways
-        Uses queue(node, composition) to traverse all nodes in the graph
+        Uses queue((node, afferent Projection, composition) to traverse all nodes in the graph
         IMPLEMENTATION NOTE:  flattens nested Compositions, removing any CIMs in the nested Compositions
         Return a list of all pathways from input_node -> any OUTPUT Node
         """
 
         pathways = []  # List of all feedforward pathways from INPUT Node to OUTPUT Node
         dependency_dict = {}      # Dictionary of previous component for each component in every pathway
-        queue = deque([(input_node, input_node.input_port.path_afferents[0], self)])  # Queue of nodes to visit in breadth-first
+        afferent = input_node.input_port.path_afferents[0] if input_node.input_port.path_afferents else None
+        queue = deque([(input_node, afferent, self)])  # Queue of nodes to visit in breadth-first
         # search
 
         # # MODIFIED TEACHER_TARGET OLD:
@@ -1495,7 +1496,7 @@ class AutodiffComposition(Composition):
                         for _, nested_rcvr, _ in [receivers] if isinstance(receivers, tuple) else receivers:
                             if rcvr_comp._input_comp_nodes_to_pytorch_nodes_map:
                                 # If nested comp has _input_comp_nodes_to_pytorch_nodes_map, get nested_rcvr from it
-                                nested_rcvr = rcvr_comp._input_comp_nodes_to_pytorch_nodes_map[nested_rcvr]
+                                nested_rcvr = rcvr_comp._input_comp_nodes_to_pytorch_nodes_map[nested_rcvr.input_port]
                             else:
                                 # Otherwise, ensure that nested_rcvr is an INPUT Node of rcvr_comp
                                 assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
@@ -1614,9 +1615,11 @@ class AutodiffComposition(Composition):
             if sample_mech in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
                 #   but are not specified in targets dict of learn() method.
-                # Technically, they are not erroneous, so allow construction;
-                #   warning about non-learnability is handled in _instantiate_optimizer()
-                return False
+                # Allow construction, as they could be a Mechanism for a learnable PyTorch module (e.g., GRU),
+                #   and warning about potential non-learnability is handled in _instantiate_optimizer()
+                # return False
+                # TEACHER_TARGET BREADCRUMB: FLAG HERE FOR LATER WARNING??
+                return True
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             error_msg = (f"A target value is specified for '{sample_mech.name}' in the learn() method of "
                          f"'{self.name}', but that Node has no afferent pathways with any learnable Projections.")
@@ -1705,7 +1708,7 @@ class AutodiffComposition(Composition):
 
         if self.targets:
             # Instantiate any sample-target specifications in **targets** arg of AutodiffComposition constructor
-            loss_mech_specs, target_mechs = self._instantiate_constructor_targets_args(pathways, context, base_context)
+            loss_mech_specs, target_mecdhs = self._instantiate_constructor_targets_args(pathways, context, base_context)
         else:
             # No target specifications in constructor, so instantiate default TARGET Node assignments,
             loss_mech_specs, target_mechs = self._instantiate_default_targets(pathways, context, base_context)
@@ -1848,14 +1851,16 @@ class AutodiffComposition(Composition):
                 existing_comparators = [mech for mech in self.nodes if
                                         isinstance(mech, ComparatorMechanism) and
                                         NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(mech)]
-                comparators = [mech for mech in existing_comparators
+                comparators_for_output_port = [mech for mech in existing_comparators
                                if mech.input_ports[SAMPLE].path_afferents[0].sender is output_port_for_learning]
-                assert len(comparators) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
+                assert len(comparators_for_output_port) <= 1, (f"PROGRAM ERROR: multiple ComparatorMechanisms found "
                                                f"for '{output_port_for_learning.full_name}' in {self.name}'.")
-                if comparators:
-                    target_mech = comparators[0].input_ports[TARGET].path_afferents[0].sender.owner
+                if comparators_for_output_port:
+                    target_mech = comparators_for_output_port[0].input_ports[TARGET].path_afferents[0].sender.owner
                     # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
                     self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
+                    # TARGET Node already exists, so no need to construct
+                    continue
                 else:
                     sample = output_port_for_learning
                     sample_name = sample.full_name if len(sample.owner.output_ports)>1 else sample.owner.name
@@ -1868,6 +1873,8 @@ class AutodiffComposition(Composition):
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
+        # assert len(output_ports_for_learning) == len(target_mechs), \
+        #     f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
         self.sample_port_to_target_port_map.update({k:v for k,v in zip(output_ports_for_learning,
                                                                  [t.output_port for t in target_mechs])})
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
@@ -1972,9 +1979,9 @@ class AutodiffComposition(Composition):
                         queue:deque,
                         comp:Composition):
         """Append dependencies to dependency list, and next node to queue used in _get_pytorch_backprop_pathway().
-        This uses the Projection from node to receiver to implement the relevant dependencies for construcing the
-        pathway; however, this can be overridden by a subclass of Autodiff to implement a custom pathway
-        (see example in GRUComposition).
+        This uses the Projection from node (i.e., efferent of node) to receiver to implement the relevant dependencies
+        for construcing the pathway; however, this can be overridden by a subclass of Autodiff to implement a custom
+        pathway (see example in GRUComposition).
 
         **projection** is used to dereference **sender** and **receiver** the afferents/efferents in the relevant port
         which are used in the dependency_dict, to prevent overwritting of entries that involve different ports of

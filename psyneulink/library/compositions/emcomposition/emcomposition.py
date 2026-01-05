@@ -2958,7 +2958,12 @@ class EMComposition(AutodiffComposition):
         """
         if kwargs['sample_port']:
             kwargs['action']=None
-        return super()._check_if_sample_is_in_learnable_pathway(*args, **kwargs)
+        result = super()._check_if_sample_is_in_learnable_pathway(*args, **kwargs)
+        if not result:
+            warnings.warn(f"A pathway of '{self.name}' terminating in '{kwargs['sample_port'].owner.name}' "
+                          f"cannot be trained since it has no learnable Projections; this may be "
+                          f"because the learning_rate for the corresponding field_weight is set to False.")
+        return result
 
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
         if self.concatenate_queries:

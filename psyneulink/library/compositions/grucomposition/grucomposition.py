@@ -1135,7 +1135,7 @@ class GRUComposition(AutodiffComposition):
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
         target_mech = self.target_node
 
-        # Add target Node to GRUComposition
+        # Add target Node to GRUComposition to support learning in standalone or solo nested composition
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING],
                       context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
         self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
@@ -1144,18 +1144,6 @@ class GRUComposition(AutodiffComposition):
             output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.sample_port_to_target_port_map = {self.gru_mech.output_port: target_mech.output_port}
         return [target_mech]
-        # # MODIFIED TEACHER_TARGET NEW:
-        # # Pathway for GRUComposition consistents of only 'PYTORCH GRU Node'...
-        # pathway = [self.gru_mech]
-        # #   and that is the only pathway
-        # pathways = [pathway]
-        # # Construct TARGET Node and LossMechanism
-        # self._instantiate_loss_components(pathways, context, base_context)
-        # return [target_mech]
-        # MODIFIED TEACHER_TARGET NEWER:
-        # TEACHER_TARGET BREADCRUMB:
-        #      IMPLEMENTATION NOTE: "DUMMY" OVERRIDED TO SUPPRESS ANY CONSTRUCDTION OF LEARNING COMPONENTS...
-        #                           LEARNING IN STANDALONE GRUCOMPOSITION IS HANDLED ENTIRELY IN PYTORCH
         # MODIFIED TEACHER_TARGET END
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
@@ -1262,9 +1250,8 @@ class GRUComposition(AutodiffComposition):
         dependency_dict[direct_proj_out.receiver]=direct_proj_out
         # MODIFIED TEACHER_TARGET END
 
-
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
-        queue.append((self.gru_mech, self))
+        queue.append((self.gru_mech, direct_proj_in, self))
 
     def _identify_output_nodes(self, context):
         return [self.gru_mech]
