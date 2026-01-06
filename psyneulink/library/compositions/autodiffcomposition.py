@@ -759,6 +759,7 @@ from psyneulink.core.globals.keywords import (
     RESULTS,
     RETAIN_IN_PNL_OPTIONS,
     SAMPLE,
+    SINGLETON,
     SOFT_CLAMP,
     SYNCH_WITH_PNL_OPTIONS,
     TARGET,
@@ -1619,7 +1620,7 @@ class AutodiffComposition(Composition):
                 #   and warning about potential non-learnability is handled in _instantiate_optimizer()
                 # return False
                 # TEACHER_TARGET BREADCRUMB: FLAG HERE FOR LATER WARNING??
-                return True
+                return SINGLETON
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             error_msg = (f"A target value is specified for '{sample_mech.name}' in the learn() method of "
                          f"'{self.name}', but that Node has no afferent pathways with any learnable Projections.")
@@ -1774,11 +1775,11 @@ class AutodiffComposition(Composition):
                 # If specified sample Mechanism is not in a pathway with at least one learnable Projection
                 #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
                 #   loss in pytorch will cause a crash
-                self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
-                                                              target_mech=target_mech,
-                                                              loss_mech=None,
-                                                              constructed_target_mechs=None,
-                                                              action=ERROR)
+                _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
+                                                                           target_mech=target_mech,
+                                                                           loss_mech=None,
+                                                                           constructed_target_mechs=None,
+                                                                           action=ERROR)
                 # Determine whether target is internal node or TARGET keyword
                 if isinstance(target_spec, OutputPort):
                     # target is internal Node
@@ -1833,14 +1834,14 @@ class AutodiffComposition(Composition):
             output_ports_for_learning.extend(node.output_ports)
         target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
         for output_port_for_learning in output_ports_for_learning:
-
-            if not self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
-                                                                 target_mech=None,
-                                                                 loss_mech=None,
-                                                                 constructed_target_mechs=constructed_target_mechs,
-                                                                 action=ERROR):
-                # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
-                #   warning about non-learnability is handled in _instantiate_optimizer()
+            _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
+                                                                       target_mech=None,
+                                                                       loss_mech=None,
+                                                                       constructed_target_mechs=constructed_target_mechs,
+                                                                       action=ERROR)
+            # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
+            #   warning about non-learnability is handled in _instantiate_optimizer()
+            if _learnable is SINGLETON or _learnable is False:
                 continue
             # Check for existing TARGET Nodes
             existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
@@ -1884,9 +1885,11 @@ class AutodiffComposition(Composition):
         """Validate specifications used to construct LossMechanism in _instantiate_loss_components"""
         if not loss_mech_specs:
             if context.execution_id:
+                # Raise error on attempt to learn without any learnable Projections
                 raise AutodiffCompositionError(f"Learning cannot be executed for '{self.name}' "
                                                f"since it does not have any learnable Projections.")
             else:
+                # Raise warning on attempt to construct without any learnable Projections
                 warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
                               f"since it does not have any learnable Projections.")
         for loss_mech_spec in list(loss_mech_specs):
