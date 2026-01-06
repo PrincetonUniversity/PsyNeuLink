@@ -267,8 +267,16 @@ class TestNested:
                 gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
             assert (f"'show_learning' argument in call to show_graph() for 'EM COMP' is unnecessary since "
                     f"learning components are shown when 'show_pytorch' is used.") in str(warning[0].message)
+            assert (f"A pathway of 'EM COMP' terminating in 'KEY [RETRIEVED]' cannot be trained "
+                    f"since it has no learnable Projections; this may be because the learning_rate for "
+                    f"the corresponding field_weight is set to False.") in str(warning[1].message)
+            assert (f"A pathway of 'EM COMP' terminating in 'VALUE [RETRIEVED]' cannot be trained "
+                    f"since it has no learnable Projections; this may be because the learning_rate for "
+                    f"the corresponding field_weight is set to False.") in str(warning[2].message)
             assert (f"It will not be possible to execute learning for 'EM COMP' "
-                    f"since it does not have any learnable Projections.") in str(warning[1].message)
+                    f"since it does not have any learnable Projections.") in str(warning[6].message)
+            assert (f"It will not be possible to execute learning for 'EM COMP' "
+                    f"since it does not have any learnable Projections.") in str(warning[6].message)
         elif show_pytorch and show_learning:
             with pytest.warns(UserWarning) as warning:
                 gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')

@@ -1654,11 +1654,14 @@ class TestTrainingCorrectness:
 
         np.testing.assert_allclose(output, comparator, rtol=1e-5, atol=1e-8)
 
-    def test_pytorch_equivalence_with_internal_target_assignment(self):
-        # inputs ---> sample --> outputs
-        #      \         ^
-        #       \        '
-        #        \ -> target
+    def test_pytorch_equivalence_with_constructor_target_assignment(self):
+        # inputs -------> sample -------> outputs
+        #     \             \  ^                  \
+        #      \             \  \                   \----> results
+        #       \             \  \............      /
+        #        \             LossMechanism .`    /
+        #         --> target -/                   /
+        #                     \------------------/
         import torch
         entry_torch_dtype = torch.get_default_dtype()
         torch.set_default_dtype(torch.float64)
@@ -1767,7 +1770,7 @@ class TestTrainingCorrectness:
         np.testing.assert_allclose(pnl_sample_after_learning, torch_sample_after_learning)
         np.testing.assert_allclose(pnl_target_after_learning, torch_target_after_learning)
         np.testing.assert_allclose(pnl_outputs_after_learning, torch_out_after_learning)
-        np.testing.assert_allclose(pnl_results_after_learning, torch_out_after_learning)
+        np.testing.assert_allclose(pnl_results_after_learning[0], torch_out_after_learning)
         np.testing.assert_allclose(pnl_sample_wts_after_learning, torch_sample_wts_after_learning.T)
         np.testing.assert_allclose(pnl_target_wts_after_learning, torch_target_wts_after_learning.T)
         np.testing.assert_allclose(pnl_out_wts_after_learning, torch_out_wts_after_learning.T)
@@ -2606,9 +2609,9 @@ class TestNestedLearning:
         return _execute_learning
 
     def test_warning_or_error_for_no_learning_in_solo_nested_comp(self):
+        inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
+        outer = pnl.AutodiffComposition([inner])
         with pytest.warns(UserWarning) as warning:
-            inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
-            outer = pnl.AutodiffComposition([inner])
             outer._build_pytorch_representation()
         assert (f"It will not be possible to execute learning for 'autodiff_composition-1' "
                               f"since it does not have any learnable Projections." in repr(warning[0].message.args[0]))
