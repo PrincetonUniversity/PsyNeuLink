@@ -1583,7 +1583,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      # LCAMechanism
                      "mask",
                      # LossMechanism
-                     "loss"
+                     "loss", "metric",
                      }
 
         # OneHot:
