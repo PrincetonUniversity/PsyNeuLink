@@ -1009,11 +1009,6 @@ class TestExecution:
                                    f"trained since it has no learnable Projections; this may be because the "
                                    f"learning_rate for the corresponding field_weight is set to False.")
                     assert warning_msg in str(warning[x].message)
-                # assert ((f"There are no learnable Projections in 'EM_Composition' nor any nested under it; this is "
-                #         f"because the learning_rates for all of the Projections are set to 'False'. The learning_rate "
-                #         f"for at least one Projection must be a non-False value within a Composition with "
-                #         f"'enable_learning' set to 'True' in order to execute the learn() method for EM_Composition.")
-                #         in str(error.value))
                 assert (f"Learning cannot be executed for 'EM_Composition' since it does not have any learnable "
                         f"Projections." in str(error.value))
 

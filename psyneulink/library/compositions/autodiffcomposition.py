@@ -1833,7 +1833,7 @@ class AutodiffComposition(Composition):
         for node in [n for n in identified_output_nodes if n in pathway_terminal_nodes]:
             output_ports_for_learning.extend(node.output_ports)
         target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
-        for output_port_for_learning in output_ports_for_learning:
+        for output_port_for_learning in output_ports_for_learning.copy():
             _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
                                                                        target_mech=None,
                                                                        loss_mech=None,
@@ -1842,6 +1842,8 @@ class AutodiffComposition(Composition):
             # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
             #   warning about non-learnability is handled in _instantiate_optimizer()
             if _learnable is SINGLETON or _learnable is False:
+                # TEACHER_TARGET BREADCRUMB: REMOVE output_port_for_learning
+                output_ports_for_learning.remove(output_port_for_learning)
                 continue
             # Check for existing TARGET Nodes
             existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
@@ -1874,8 +1876,9 @@ class AutodiffComposition(Composition):
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
-        # assert len(output_ports_for_learning) == len(target_mechs), \
-        #     f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
+        # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
+        assert len(output_ports_for_learning) == len(target_mechs), \
+            f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
         self.sample_port_to_target_port_map.update({k:v for k,v in zip(output_ports_for_learning,
                                                                  [t.output_port for t in target_mechs])})
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
