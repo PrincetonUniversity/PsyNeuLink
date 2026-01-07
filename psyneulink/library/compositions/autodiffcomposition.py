@@ -1346,8 +1346,7 @@ class AutodiffComposition(Composition):
           - the above allow:
             - trial-by-trial losses to be kept aligned with inputs in batch / minibatch construction
             - losses to be tracked for logging (as mechs of a Composition)
-        TEACHER_TARGET BREADCRUMB:
-        Return a list of any TARGET nodes that need to be referenced in inputs argument of learn()
+        Return list of LossMechanisms and TARGET Nodes
         """
         context = context or Context()
         base_context = base_context or Context()
