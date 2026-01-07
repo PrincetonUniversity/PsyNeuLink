@@ -3115,7 +3115,7 @@ class Mechanism_Base(Mechanism):
         return params_out, builder
 
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, mech_params, mech_state, value, port):
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, mech_in, mech_params, mech_state, value, port):
         """Create output port variable based on the variable specification."""
         port_spec = port._variable_spec
 
@@ -3133,8 +3133,15 @@ class Mechanism_Base(Mechanism):
         for spec in canonical_port_spec:
             param_name, indices = spec
 
+            # "value" is not always stored in mechanism parameters,
+            # use the location of the freshly calculated result instead
             if param_name == VALUE:
                 base = value
+
+            # "input_port_variables" is not used in compilation,
+            # but it should match the mechanism input
+            elif param_name == "input_port_variables":
+                base = mech_in
 
             elif param_name in self.llvm_state_ids:
                 base = ctx.get_param_or_state_ptr(builder, self, param_name, state_struct_ptr=mech_state)
@@ -3212,6 +3219,7 @@ class Mechanism_Base(Mechanism):
         def _get_output_port_variable_ptr(b, i):
             ptr = self._gen_llvm_output_port_parse_variable(ctx,
                                                             b,
+                                                            mech_in,
                                                             mech_params,
                                                             mech_state,
                                                             value,
