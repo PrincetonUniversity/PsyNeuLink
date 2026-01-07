@@ -5712,10 +5712,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Finally, remove any NodeRole assignments specified in excluded_node_roles
         for node in self.nodes:
             for node, role in self.excluded_node_roles:
-                # # MODIFIED TEACHER_TARGET OLD:
-                # if role in self.get_roles_by_node(node):
-                #     self._remove_node_role(node, role)
-                # MODIFIED TEACHER_TARGET NEW:
                 try:
                     if role in self.get_roles_by_node(node):
                         self._remove_node_role(node, role)
@@ -5725,7 +5721,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      if node_comp_pair[0] is node), None)
                     if role in nested_comp.get_roles_by_node(nested_node):
                         nested_comp._remove_node_role(nested_node, role)
-                # MODIFIED TEACHER_TARGET END
 
         # Manual override to avoid INPUT/OUTPUT setting, which would cause
         # CIMs to be created, which is not correct for controllers
@@ -10455,11 +10450,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
-            # # MODIFIED TEACHER_TARGET NEW:
-            # legal_target_specs = self.get_nodes_by_role(NodeRole.OUTPUT) + TARGET_Nodes_in_comp
-            # bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
-            #                     if target_mech not in legal_target_specs]
-            # MODIFIED TEACHER_TARGET NEWER:
             # The only legal specification of a target in the learn() method is for:
             #   - a sample Mechanism or OutputPort (the value to be trained), which must be an OUTPUT Node of the comp
             #   - a TARGET Node constructed for the sample
@@ -10469,7 +10459,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
-    # MODIFIED TEACHER_TARGET END
             if bad_target_specs:
                 raise CompositionError(f"The following Node(s) have been specified to receive target inputs "
                                        f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
@@ -14260,9 +14249,6 @@ def get_composition_for_node(node):
         return receiver
 
     comp = search_for_output_CIM(node)
-    # MODIFIED TEACHER_TARGET OLD:
-    # assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
-    # MODIFIED TEACHER_TARGET END
     return comp
 
 

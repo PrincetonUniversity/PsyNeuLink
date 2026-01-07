@@ -1129,7 +1129,6 @@ class GRUComposition(AutodiffComposition):
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
                                       f"is not supported for {execution_mode.name}.")
 
-        # MODIFIED TEACHER_TARGET OLD:
         # Create Mechanism the function of which will be the Pytorch GRU module
         # Note:  function is a placeholder, to induce proper variable and value dimensions;
         #        will be replaced by PyTorch GRU function in PytorchGRUMechanismWrapper
@@ -1144,7 +1143,6 @@ class GRUComposition(AutodiffComposition):
             output_port.parameters.require_projection_in_composition.set(False, override=True)
         self.sample_port_to_target_port_map = {self.gru_mech.output_port: target_mech.output_port}
         return [target_mech]
-        # MODIFIED TEACHER_TARGET END
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
         return [[self.gru_mech]]
@@ -1236,12 +1234,6 @@ class GRUComposition(AutodiffComposition):
         output_node = self.output_CIM
 
         # # GRU pathway:
-        # # MODIFIED TEACHER_TARGET OLD:
-        # dependency_dict[direct_proj_in]=sender
-        # dependency_dict[self.gru_mech]=direct_proj_in
-        # dependency_dict[direct_proj_out]=self.gru_mech
-        # dependency_dict[output_node]=direct_proj_out
-        # # MODIFIED TEACHER_TARGET NEW:
         # Use ports for dict entries
         assert direct_proj_in.receiver.owner == self.gru_mech
         assert direct_proj_out.receiver.owner == output_node
@@ -1249,7 +1241,6 @@ class GRUComposition(AutodiffComposition):
         dependency_dict[direct_proj_in.receiver]=direct_proj_in
         dependency_dict[direct_proj_out]=direct_proj_in.receiver
         dependency_dict[direct_proj_out.receiver]=direct_proj_out
-        # MODIFIED TEACHER_TARGET END
 
         # BREADCRUMB: ADD ALL EFFERENTS OF OUTPUT NODE HERE:
         queue.append((self.gru_mech, direct_proj_in, self))

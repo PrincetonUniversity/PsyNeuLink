@@ -572,12 +572,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            # # MODIFIED TEACHER_TARGET OLD:
-            # component_idx = list(self.composition._inner_projections).index(projection)
-            # MODIFIED TEACHER_TARGET NEW:
             component_idx = self._get_composition_projections(composition).index(projection)
-            # MODIFIED TEACHER_TARGET END
-
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
@@ -607,11 +602,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return proj_wrappers_pairs
 
-    # MODIFIED TEACHER_TARGET NEW:
     def _get_composition_projections(self, composition):
         projections = list(composition._inner_projections)
         return projections + self.additional_pytorch_relevant_projections
-    # MODIFIED TEACHER_TARGET END
 
     def _handle_nested_comp(
         self,
@@ -784,29 +777,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
             source_sndr_port = sndr_mech._get_source_info_from_output_CIM(projection.sender)[0]
             source_sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
             try:
-                # # MODIFIED TEACHER_TARGET NEW:
-                # learnable = False if isinstance(projection.receiver.owner, LossMechanism) else projection.learnable
-                # MODIFIED TEACHER_TARGET END
                 direct_proj = MappingProjection(name=f"Direct Projection from {source_sndr_mech.name} "
                                                      f"to {rcvr_mech.name}",
                                                 sender=source_sndr_port,
                                                 receiver=projection.receiver,
-                                                # MODIFIED TEACHER_TARGET OLD:
                                                 learnable=projection.learnable,
-                                                # # MODIFIED TEACHER_TARGET NEW:
-                                                # learnable=learnable,
-                                                # MODIFIED TEACHER_TARGET END
                                                 learning_rate=projection.parameters.learning_rate.get(context))
 
             except DuplicateProjectionError:
                 direct_proj = [proj for proj in projection.receiver.path_afferents
                                if proj.sender is source_sndr_port][0]
-                # MODIFIED TEACHER_TARGET OLD:
                 pnl_proj.learnable = direct_proj.learnable
-                # # MODIFIED TEACHER_TARGET NEW:
-                # pnl_proj.learnable = (False if isinstance(projection.receiver.owner, LossMechanism)
-                #                       else (projection.learnable))
-                # MODIFIED TEACHER_TARGET END
                 pnl_proj.parameters.learning_rate.set(direct_proj.parameters.learning_rate.get(context), context)
             else:
                 direct_proj._initialize_from_context(context, base_context)
@@ -2056,8 +2037,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     #  note: these may be different than for actual Composition, as they are flattened
                     if node._is_output or node.mechanism in self.output_nodes:
                         outputs[node.mechanism] = node.output
-                    # # TEACHER_TARGET BREADCRUMB DEBUGGING PRINT STATEMENT:
-                    # print(f"{node.mechanism.name} executed: {node.output}")
 
         # NOTE: Context source needs to be set to COMMAND_LINE to force logs to update independently of timesteps
         # if not self.composition.is_nested:

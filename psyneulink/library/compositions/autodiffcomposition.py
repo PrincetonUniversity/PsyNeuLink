@@ -1391,25 +1391,7 @@ class AutodiffComposition(Composition):
         dependency_dict = {}      # Dictionary of previous component for each component in every pathway
         afferent = input_node.input_port.path_afferents[0] if input_node.input_port.path_afferents else None
         queue = deque([(input_node, afferent, self)])  # Queue of nodes to visit in breadth-first
-        # search
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # def create_pathway(current_comp, node)->list:
-        #     """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
-        #     pathway = []
-        #     entry = node
-        #     while entry in dependency_dict:
-        #         # Prevent cycle from recurrent pathway
-        #         if entry in pathway:
-        #             break
-        #         pathway.insert(0, entry)
-        #         entry = dependency_dict[entry]
-        #     pathway.insert(0, entry)
-        #     # Only allow odd number of components since there must be one fewer Projections than Mechanisms
-        #     assert len(pathway) % 2, \
-        #         f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
-        #     return pathway
-        # MODIFIED TEACHER_TARGET NEW:
         def create_pathway(current_comp, node:ProcessingMechanism_Base, afferent_proj:MappingProjection)->list:
             """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
             pathway = []
@@ -1432,7 +1414,6 @@ class AutodiffComposition(Composition):
                 f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
             # Replace (port,index) tuples with nodes for actual pathway
             return [e if isinstance(e, MappingProjection) else e[0].owner for e in pathway]
-        # MODIFIED TEACHER_TARGET END
 
         # breadth-first search starting with input node
         while len(queue) > 0:
@@ -1454,13 +1435,8 @@ class AutodiffComposition(Composition):
                                f"without detecting OUTPUT NODE at end of pathway")
 
             # End of pathway: OUTPUT Node of outer Composition
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if current_comp == self and node in current_comp.get_nodes_by_role(NodeRole.OUTPUT):
-            # MODIFIED TEACHER_TARGET NEW ADD LossMech.SAMPLE :
             if current_comp == self and (node in current_comp.get_nodes_by_role(NodeRole.OUTPUT)
                                          or not node.efferents):
-            # MODIFIED TEACHER_TARGET END
-                # BREADCRUMB: NEED TO PASS afferent Projection to node here
                 pathways.append(create_pathway(current_comp, node, afferent_proj))
                 continue
 
@@ -1468,14 +1444,9 @@ class AutodiffComposition(Composition):
             # #   including direct projections out of a nested Composition implemented in PyTorchCompositionWrapper
             efferent_projs = [(p, p.receiver.owner) for p in node.efferents if p in current_comp.projections]
             if not efferent_projs:
-                # # MODIFIED TEACHER_TARGET OLD:
-                # efferent_projs = [(p, p.receiver.owner) for p in node.efferents
-                #                   if p in current_comp._pytorch_projections]
-                # MODIFIED TEACHER_TARGET NEW:
                 efferent_projs = [(p, p.receiver.owner) for p in node.efferents
                                   if (p in current_comp._pytorch_projections
                                       or isinstance(p.receiver.owner, LossMechanism))]
-                # MODIFIED TEACHER_TARGET END
 
             # Follow efferent Projection to next Node in pathway
             for efferent_proj, rcvr_mech in efferent_projs:
@@ -1544,7 +1515,6 @@ class AutodiffComposition(Composition):
                         # Assign node that projects to current node as OUTPUT Node for pathway
                         node_output_port = efferent_proj.sender
                         _, sender, _ = node._get_source_info_from_output_CIM(node_output_port)
-                        # BREADCRUMB: NEED TO PASS afferent Projection to node here
                         pathway = create_pathway(current_comp, node, afferent_proj)
                         if pathway:
                             queue.popleft()
@@ -1619,7 +1589,6 @@ class AutodiffComposition(Composition):
                 # Allow construction, as they could be a Mechanism for a learnable PyTorch module (e.g., GRU),
                 #   and warning about potential non-learnability is handled in _instantiate_optimizer()
                 # return False
-                # TEACHER_TARGET BREADCRUMB: FLAG HERE FOR LATER WARNING??
                 return SINGLETON
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             error_msg = (f"A target value is specified for '{sample_mech.name}' in the learn() method of "
@@ -1842,7 +1811,6 @@ class AutodiffComposition(Composition):
             # If no error is generated in sample_is_in_learnable_pathway(), sample is a singeton;
             #   warning about non-learnability is handled in _instantiate_optimizer()
             if _learnable is SINGLETON or _learnable is False:
-                # TEACHER_TARGET BREADCRUMB: REMOVE output_port_for_learning
                 output_ports_for_learning.remove(output_port_for_learning)
                 continue
             # Check for existing TARGET Nodes
@@ -1876,7 +1844,6 @@ class AutodiffComposition(Composition):
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
-        # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
         assert len(output_ports_for_learning) == len(target_mechs), \
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
         self.sample_port_to_target_port_map.update({k:v for k,v in zip(output_ports_for_learning,
@@ -1994,65 +1961,16 @@ class AutodiffComposition(Composition):
         which are used in the dependency_dict, to prevent overwritting of entries that involve different ports of
         the same Mechanisms.
 
-        # MODIFIED NEW:
-        # dependency_dict = {projection: (sender_output_port, idx)
-        #                    receiver_output_port, idx) : projection
-        MODIFIED NEWER:
         add to dependency_dict = {projection: (sender_input_port, idx)
                                   receiver_input_port, idx) : projection
         """
-        # MODIFIED TEACH_TARGET OLD:
-        # dependency_dict[receiver] = projection
-        # dependency_dict[projection] = sender
-        # queue.append((receiver, comp))
-
-        # # MODIFIED TEACH_TARGET NEW:
-        # if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
-        #     # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
-        #     assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
-        # # BREADCRUMB: STILL NEED TO DEAL WITH PROJECTIONS TO/FROM SAME PORT OVERWRITTING EACH OTHER IN dependency_dict
-        #
-        # # Dereference OutputPort of sender and index of efferent
-        # if isinstance(projection.sender.owner, CompositionInterfaceMechanism):
-        #     cim_input_port = projection.sender.owner._get_input_port_for_output_port(projection.sender)
-        #     sender_proj = cim_input_port.path_afferents[0]
-        #     sender_port = sender_proj.sender
-        #     sender_idx = sender_port.efferents.index(sender_proj)
-        # else:
-        #     sender_port = projection.sender
-        #     sender_idx = sender_port.efferents.index(projection)
-        #
-        # # Dereference InputPort of receiver and index of afferent
-        # if isinstance(projection.receiver.owner, CompositionInterfaceMechanism):
-        #     cim_output_port = projection.receiver.owner._get_output_port_for_input_port(projection.receiver)
-        #     receiver_proj = cim_output_port.efferents[0]
-        #     receiver_port = receiver_proj.receiver
-        #     receiver_idx = receiver_port.path_afferents.index(receiver_proj)
-        # else:
-        #     receiver_port = projection.receiver
-        #     receiver_idx = receiver_port.path_afferents.index(projection)
-        #
-        # dependency_dict[(receiver_port, receiver_idx)] = projection
-        # dependency_dict[projection] = (sender_port, sender_idx)
-        #
-        # queue.append((receiver_port.owner, projection, comp))
-        #
-        # MODIFIED TEACH_TARGET NEWER:
-        if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
-            # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
-            assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
-        # BREADCRUMB: STILL NEED TO DEAL WITH PROJECTIONS TO/FROM SAME PORT OVERWRITTING EACH OTHER IN dependency_dict
-
-        # Dereference InputPort of node and index of afferent
-        # if isinstance(afferent.sender.owner, CompositionInterfaceMechanism):
-        #     cim_input_port = projection.sender.owner._get_input_port_for_output_port(projection.sender)
-        #     sender_proj = cim_input_port.path_afferents[0]
-        #     sender_port = sender_proj.sender
-        #     sender_idx = sender_port.efferents.index(sender_proj)
-        # else:
 
         if afferent_proj is None:
             return
+
+        if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
+            # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
+            assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
 
         # Dereference InputPort of sender and index of its afferent
         sender_port = afferent_proj.receiver
@@ -2072,7 +1990,6 @@ class AutodiffComposition(Composition):
         dependency_dict[projection] = (sender_port, sender_idx)
 
         queue.append((receiver_port.owner, projection, comp))
-        # MODIFIED TEACH_TARGET END
 
     # BREADCRUMB: move some of what's done in the methods below to a "_validate_params" type of method
     @handle_external_context()
@@ -2252,22 +2169,11 @@ class AutodiffComposition(Composition):
                                            "optimizers (specified as 'sgd' or 'adam').")
         pytorch_rep = self.parameters.pytorch_representation._get(context)
         params = pytorch_rep.parameters()
-        # MODIFIED TEACHER_TARGET OLD:
         if (len(pytorch_rep.state_dict()) == 0):
             # avoid expiring params generator
             assert len(list(params)) == 0, \
                 (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
                  f"but no learnable Projections or entries in its state_dict()")
-        # MODIFIED TEACHER_TARGET NEW:
-        # if (len(pytorch_rep.state_dict()) == 0
-        #         or not any(any([param.requires_grad, param.grad, param.grad_fn])
-        #                    for param in list(pytorch_rep.state_dict().values()))
-        # ):
-        #     # avoid expiring params generator
-        #     assert len(list(params)) == 0 or not any(p for p in self.projections if p.learnable), \
-        #         (f"PROGRAM ERROR: '{self.name}'.pytorch_representation has parameters "
-        #          f"but no learnable Projections or entries in its state_dict()")
-        # MODIFIED TEACHER_TARGET END
             warnings.warn(f"'{self.name}' contains no Projections, so it has no params for Pytorch to learn.")
             return
         if self.optimizer_type == 'sgd':
@@ -2593,21 +2499,10 @@ class AutodiffComposition(Composition):
             return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
 
         # Assign target values specified in learn() to TARGET Nodes
-        # MODIFIED TEACHER_TARGET OLD:
-        # # BREADCRUMB: THIS RETURNS EMPTY DICT FOR target_values_for_target_nodes
         for port, value in target_specs.copy().items():
             if port in self.sample_port_to_target_port_map:
                 # Use TARGET Node (target_port owner) for key
                 target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
-        # # MODIFIED TEACHER_TARGET NEW:
-        # # BREADCRUMB: WHY BOTHER WITH ALL THIS SINCE VALUES ARE ALREADY ASSIGNED TO TARGET PORTS IN target_specs
-        # for target_port, value in target_specs.copy().items():
-        #     if target_port in self.sample_port_to_target_port_map.values():
-        #         # Get sample to which target is assigned
-        #         sample = next(k for k,v in self.sample_port_to_target_port_map.items() if v is target_port)
-        #         # Use TARGET Node (target_port owner) for key
-        #         target_values_for_target_nodes[self.sample_port_to_target_port_map[sample]] = value
-        # MODIFIED TEACHER_TARGET END
 
         return target_values_for_target_nodes
 
@@ -3556,7 +3451,6 @@ class AutodiffComposition(Composition):
 
     @property
     def learning_components(self):
-        # MODIFIED TEACHER_TARGET NEW:
         pytorch_learning_components = (self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)
                                        + self.get_nodes_by_role(NodeRole.TARGET))
         return pytorch_learning_components or super().learning_components
