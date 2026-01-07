@@ -1165,6 +1165,7 @@ class GRUComposition(AutodiffComposition):
         return execution_mode
 
     def _add_dependency(self,
+                        afferent_proj:ProcessingMechanism,
                         sender:ProcessingMechanism,
                         projection:MappingProjection,
                         receiver:ProcessingMechanism,

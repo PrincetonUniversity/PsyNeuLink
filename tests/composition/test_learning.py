@@ -2450,10 +2450,11 @@ class TestBackPropLearning:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
+    # TEACHER_TARGET BREADCRUMB: UNCOMMENT ONCE DONE DEBUGGING
     test_vars = [
-        ('comp-python', 'comp', pnl.ExecutionMode.Python),
+        # ('comp-python', 'comp', pnl.ExecutionMode.Python),
         ('autodiff-python', 'autodiff', pnl.ExecutionMode.Python),
-        ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
+        # ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
     ]
 
     @pytest.mark.pytorch

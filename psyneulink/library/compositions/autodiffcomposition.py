@@ -1503,7 +1503,7 @@ class AutodiffComposition(Composition):
                                 assert nested_rcvr in rcvr_comp.get_nodes_by_role(NodeRole.INPUT), \
                                     f"PROGRAM ERROR: '{nested_rcvr.name}' is not an INPUT Node of '{rcvr_comp.name}'"
                                 # Assign efferent_proj (Projection to input_CIM) since it should be learned in PyTorch mode
-                            rcvr_comp._add_dependency(node, efferent_proj, nested_rcvr,
+                            rcvr_comp._add_dependency(afferent_proj, node, efferent_proj, nested_rcvr,
                                                       dependency_dict, queue, rcvr_comp)
 
                     # rcvr_mech is Nested Composition output_CIM:
@@ -1532,7 +1532,7 @@ class AutodiffComposition(Composition):
                                     _, rcvr_mech, rcvr_comp = receiver
                                     assert rcvr_comp is not current_comp
                                 efferent_proj = output_CIM_output_port.efferents[efferent_idx]
-                                rcvr_comp._add_dependency(node, efferent_proj, rcvr_mech,
+                                rcvr_comp._add_dependency(afferent_proj, node, efferent_proj, rcvr_mech,
                                                           dependency_dict, queue, rcvr_comp)
                         else:
                             # BREADCRUMB: NEED TO PASS afferent Projection to node here
@@ -1556,13 +1556,13 @@ class AutodiffComposition(Composition):
                 else:
                     if rcvr_mech in current_comp.nodes:
                         # rcvr_mech is still in nested Composition, so keep traversing that
-                        current_comp._add_dependency(node, efferent_proj, rcvr_mech,
+                        current_comp._add_dependency(afferent_proj, node, efferent_proj, rcvr_mech,
                                                      dependency_dict, queue, current_comp)
                         current_comp._pytorch_projections.append(efferent_proj)
                         continue
                     elif rcvr_mech in self.nodes:
                         # rcvr_mech is in outer Composition (presumably a direct Pytorch Projection out of nested comp)
-                        self._add_dependency(node, efferent_proj, rcvr_mech,
+                        self._add_dependency(afferent_proj, node, efferent_proj, rcvr_mech,
                                              dependency_dict, queue, self)
                         continue
                     else:
@@ -1978,6 +1978,7 @@ class AutodiffComposition(Composition):
         return loss_mechs
 
     def _add_dependency(self,
+                        afferent_proj:MappingProjection,
                         sender:ProcessingMechanism_Base,
                         projection:MappingProjection,
                         receiver:ProcessingMechanism_Base,
@@ -1989,31 +1990,75 @@ class AutodiffComposition(Composition):
         for construcing the pathway; however, this can be overridden by a subclass of Autodiff to implement a custom
         pathway (see example in GRUComposition).
 
-        **projection** is used to dereference **sender** and **receiver** the afferents/efferents in the relevant port
+        **projection** is used to dereference **sender** and **receiver** afferents/efferents in the relevant port
         which are used in the dependency_dict, to prevent overwritting of entries that involve different ports of
         the same Mechanisms.
+
+        # MODIFIED NEW:
+        # dependency_dict = {projection: (sender_output_port, idx)
+        #                    receiver_output_port, idx) : projection
+        MODIFIED NEWER:
+        add to dependency_dict = {projection: (sender_input_port, idx)
+                                  receiver_input_port, idx) : projection
         """
         # MODIFIED TEACH_TARGET OLD:
         # dependency_dict[receiver] = projection
         # dependency_dict[projection] = sender
         # queue.append((receiver, comp))
-        # MODIFIED TEACH_TARGET NEW:
+
+        # # MODIFIED TEACH_TARGET NEW:
+        # if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
+        #     # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
+        #     assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
+        # # BREADCRUMB: STILL NEED TO DEAL WITH PROJECTIONS TO/FROM SAME PORT OVERWRITTING EACH OTHER IN dependency_dict
+        #
+        # # Dereference OutputPort of sender and index of efferent
+        # if isinstance(projection.sender.owner, CompositionInterfaceMechanism):
+        #     cim_input_port = projection.sender.owner._get_input_port_for_output_port(projection.sender)
+        #     sender_proj = cim_input_port.path_afferents[0]
+        #     sender_port = sender_proj.sender
+        #     sender_idx = sender_port.efferents.index(sender_proj)
+        # else:
+        #     sender_port = projection.sender
+        #     sender_idx = sender_port.efferents.index(projection)
+        #
+        # # Dereference InputPort of receiver and index of afferent
+        # if isinstance(projection.receiver.owner, CompositionInterfaceMechanism):
+        #     cim_output_port = projection.receiver.owner._get_output_port_for_input_port(projection.receiver)
+        #     receiver_proj = cim_output_port.efferents[0]
+        #     receiver_port = receiver_proj.receiver
+        #     receiver_idx = receiver_port.path_afferents.index(receiver_proj)
+        # else:
+        #     receiver_port = projection.receiver
+        #     receiver_idx = receiver_port.path_afferents.index(projection)
+        #
+        # dependency_dict[(receiver_port, receiver_idx)] = projection
+        # dependency_dict[projection] = (sender_port, sender_idx)
+        #
+        # queue.append((receiver_port.owner, projection, comp))
+        #
+        # MODIFIED TEACH_TARGET NEWER:
         if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
             # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
             assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
         # BREADCRUMB: STILL NEED TO DEAL WITH PROJECTIONS TO/FROM SAME PORT OVERWRITTING EACH OTHER IN dependency_dict
 
-        # Dereference OutputPort of sender and index of efferent
-        if isinstance(projection.sender.owner, CompositionInterfaceMechanism):
-            cim_input_port = projection.sender.owner._get_input_port_for_output_port(projection.sender)
-            sender_proj = cim_input_port.path_afferents[0]
-            sender_port = sender_proj.sender
-            sender_idx = sender_port.efferents.index(sender_proj)
-        else:
-            sender_port = projection.sender
-            sender_idx = sender_port.efferents.index(projection)
+        # Dereference InputPort of node and index of afferent
+        # if isinstance(afferent.sender.owner, CompositionInterfaceMechanism):
+        #     cim_input_port = projection.sender.owner._get_input_port_for_output_port(projection.sender)
+        #     sender_proj = cim_input_port.path_afferents[0]
+        #     sender_port = sender_proj.sender
+        #     sender_idx = sender_port.efferents.index(sender_proj)
+        # else:
 
-        # Dereference InputPort of receiver and index of afferent
+        if afferent_proj is None:
+            return
+
+        # Dereference InputPort of sender and index of its afferent
+        sender_port = afferent_proj.receiver
+        sender_idx = sender_port.path_afferents.index(afferent_proj)
+
+        # Dereference InputPort of receiver and index of its afferent
         if isinstance(projection.receiver.owner, CompositionInterfaceMechanism):
             cim_output_port = projection.receiver.owner._get_output_port_for_input_port(projection.receiver)
             receiver_proj = cim_output_port.efferents[0]
@@ -2025,6 +2070,7 @@ class AutodiffComposition(Composition):
 
         dependency_dict[(receiver_port, receiver_idx)] = projection
         dependency_dict[projection] = (sender_port, sender_idx)
+
         queue.append((receiver_port.owner, projection, comp))
         # MODIFIED TEACH_TARGET END
 
