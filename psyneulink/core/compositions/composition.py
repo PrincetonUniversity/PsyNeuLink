@@ -4844,8 +4844,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns all roles for specified node in the Composition specified by **comp** or any nested within it.
         """
         # TEACHER_TARGET BREADCRUMB:
-        nodes = self._get_nested_nodes()
-        return roles
+        node, comp = next((node, comp) for item in self._get_nested_nodes() if item[0] is node)
+        return comp.get_roles_by_node(node)
 
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
