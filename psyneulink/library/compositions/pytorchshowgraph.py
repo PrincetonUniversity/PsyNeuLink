@@ -185,7 +185,8 @@ class PytorchShowGraph(ShowGraph):
         """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
         if self.show_pytorch:
             try:
-                return composition.get_roles_by_node(node)
+                return composition.get_roles_by_node_at_any_level(node)
+                # TEACHER_TARGET BREADCRUMB:  CHECK NESTED COMPS?
             except:
                 return [NodeRole.INTERNAL]
         if self.show_pytorch and node not in self.composition.nodes:

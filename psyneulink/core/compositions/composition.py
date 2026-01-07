@@ -4839,6 +4839,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.append(node)
         return nested_nodes if any(nested_nodes) else []
 
+    def get_roles_by_node_at_any_level(self, comp, node)->list:
+        """Return all roles for the specified node that can be at any level of nesting.
+        Returns all roles for specified node in the Composition specified by **comp** or any nested within it.
+        """
+        # TEACHER_TARGET BREADCRUMB:
+        nodes = self._get_nested_nodes()
+        return roles
+
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
@@ -4974,7 +4982,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
                           root_composition=NotImplemented,
-                          visited_compositions=NotImplemented):
+                          visited_compositions=NotImplemented)->tuple:
         """Recursively search and return all nodes of all nested Compositions
            in a tuple with Composition in which they are nested.
         :return
@@ -10451,11 +10459,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
             # The only legal specification of a target in the learn() method is for:
-            #   - a sample Mechanism or OutputPort (the value to be trained), which must be an OUTPUT Node of the comp
+            #   - a sample Mechanism or OutputPort (for value to be trained), which must be an OUTPUT Node of the comp
             #   - a TARGET Node constructed for the sample
             # identify samples as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
-            sample_nodes = [target.efferents[0].receiver.owner.sample.owner for target in TARGET_Nodes_in_comp]
+            # # MODIFIED TEACHER_TARGET OLD:
+            # sample_nodes = [target.efferents[0].receiver.owner.sample.owner for target in TARGET_Nodes_in_comp]
+            # MODIFIED TEACHER_TARGET NEW:
+            sample_nodes = []
+            for target in TARGET_Nodes_in_comp:
+                sample_node = target.efferents[0].receiver.owner.sample.owner
+                if isinstance(sample_node, CompositionInterfaceMechanism):
+                    _, sample_node, _ = sample_node._get_source_info_from_output_CIM(target.efferents[0].receiver.owner.sample)
+                sample_nodes.append(sample_node)
+            # MODIFIED TEACHER_TARGET NEWER:
+            # # TEACHER_TARGET BREADCRUMB: SHOULD REPLACE THIS WITH USE OF NodeRole.SAMPLE ONCE ADDED:
+            # sample_nodes = self.all_nodes(self.get_nodes_by_role(NodeRole.SAMPLE))
+            # MODIFIED TEACHER_TARGET END
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
