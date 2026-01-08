@@ -12810,6 +12810,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         next_execution_set,
                         key=lambda n: execution_scheduler.consideration_queue_indices[n]
                     )
+                else:
+                    # Sort alphabetically for consistency of reporting
+                    next_execution_set = sorted(next_execution_set)
 
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
