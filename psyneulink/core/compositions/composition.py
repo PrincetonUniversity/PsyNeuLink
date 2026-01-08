@@ -4839,14 +4839,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_nodes.append(node)
         return nested_nodes if any(nested_nodes) else []
 
-    def get_roles_by_node_at_any_level(self, comp, node)->list:
-        """Return all roles for the specified node that can be at any level of nesting.
-        Returns all roles for specified node in the Composition specified by **comp** or any nested within it.
-        """
-        # TEACHER_TARGET BREADCRUMB:
-        node, comp = next((node, comp) for item in self._get_nested_nodes() if item[0] is node)
-        return comp.get_roles_by_node(node)
-
     def get_nested_input_nodes_at_all_levels(self)->list or None:
         """Return all Nodes from nested Compositions that receive input directly from input to outermost Composition."""
         input_nodes = self.get_nested_nodes_by_roles_at_any_level(self, include_roles=NodeRole.INPUT)
