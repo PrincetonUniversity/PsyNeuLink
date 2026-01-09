@@ -1119,8 +1119,9 @@ class ShowGraph():
             condition = None
 
         # INPUT and OUTPUT Node
-        if rcvr in composition.get_nodes_by_role(NodeRole.INPUT) and \
-                rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
+        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_nodes_by_role
+        if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
+                and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_and_output_color
@@ -1133,7 +1134,7 @@ class ShowGraph():
                 rcvr_penwidth = str(self.bold_width)
 
         # INPUT Node
-        elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
+        elif rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_color
@@ -1147,7 +1148,7 @@ class ShowGraph():
             rcvr_rank = self.input_rank
 
         # PROBE Node
-        elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+        elif rcvr in self._get_nodes_by_role(composition, NodeRole.PROBE, context):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.probe_color
@@ -1161,7 +1162,7 @@ class ShowGraph():
             rcvr_rank = self.output_rank
 
         # OUTPUT Node
-        elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
+        elif rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.output_color
@@ -1633,7 +1634,7 @@ class ShowGraph():
                                 proj_color=self.inactive_projection_color
                         else:
                             port, node, comp = cim._get_source_info_from_output_CIM(proj.receiver)
-                            if (node in comp.get_nodes_by_role(NodeRole.PROBE)
+                            if (node in self._get_nodes_by_role(composition, NodeRole.PROBE, context)
                                     and not composition.include_probes_in_output):
                                 proj_color=self.probe_color
 

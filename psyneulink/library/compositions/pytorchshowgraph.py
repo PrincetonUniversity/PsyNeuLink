@@ -19,7 +19,7 @@ from psyneulink.library.components.mechanisms.processing.objective.lossmechanism
 from psyneulink.library.components.projections.modulatory.lossprojection import LossProjection
 from psyneulink.core.llvm import ExecutionMode
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SAMPLE, SHOW_PYTORCH, TARGET, PNL
+from psyneulink.core.globals.keywords import ALL, SAMPLE, SHOW_PYTORCH, TARGET, PNL
 
 EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE = 'exclude_from_gradient_calc_line_style'
 EXCLUDE_FROM_GRADIENT_CALC_COLOR = 'exclude_from_gradient_calc_color'
@@ -73,6 +73,14 @@ class PytorchShowGraph(ShowGraph):
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
                     new=False))
+            composition = self.composition
+            # # # MODIFIED TEACHER_TARGET OLD:
+            # processing_graph = self._get_processing_graph(composition, context=context)
+            # # MODIFIED TEACHER_TARGET NEW:
+            # composition._determine_node_roles(processing_graph=processing_graph, context=context)
+            # MODIFIED TEACHER_TARGET END
+            assert True
+
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
@@ -138,7 +146,12 @@ class PytorchShowGraph(ShowGraph):
                         for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
                             dependencies.add(proj.sender.owner)
                 processing_graph[node] = dependencies
-            return {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+            # Sort for consistency of reporting and display
+            processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+            # MODIFIED TEACHER_TARGET NEW:
+            composition._determine_node_roles(processing_graph=processing_graph, context=context)
+            # MODIFIED TEACHER_TARGET END
+            return processing_graph
 
         else:
             return super()._get_processing_graph(composition, context)
@@ -184,21 +197,27 @@ class PytorchShowGraph(ShowGraph):
     def _get_roles_by_node(self, composition, node, context):
         """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
         if self.show_pytorch:
-            try:
-                return composition.get_roles_by_node(node)
-                # assert True
-                # return composition.get_roles_by_node_at_any_level(node)
-            except:
-                return [NodeRole.INTERNAL]
-        if self.show_pytorch and node not in self.composition.nodes:
-            return [NodeRole.INTERNAL]
+        #     try:
+        #         return composition.get_roles_by_node(node, scope=ALL)
+        #         # assert True
+        #         # return composition.get_roles_by_node_at_any_level(node)
+        #     except:
+        #         return [NodeRole.INTERNAL]
+        # if self.show_pytorch and node not in self.composition.nodes:
+        #     return [NodeRole.INTERNAL]
+            return composition.all_nodes_to_roles[node]
         else:
             return super()._get_roles_by_node(composition, node, context)
 
     def _get_nodes_by_role(self, composition, role, context):
         """Override in Pytorch mode to return all nodes in nested compositions as INTERNAL"""
-        if self.show_pytorch and composition is not self.composition:
-            return None
+        # # MODIFIED TEACHER_TARGET OLD:
+        # if self.show_pytorch and composition is not self.composition:
+        #     return None
+        # MODIFIED TEACHER_TARGET NEW:
+        if self.show_pytorch:
+            return composition.get_nodes_by_role(role, scope=ALL)
+        # MODIFIED TEACHER_TARGET END
         else:
             return super()._get_nodes_by_role(composition, role, context)
 
