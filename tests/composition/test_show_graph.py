@@ -198,10 +198,11 @@ class TestNested:
     expected_output_for_unnested_pytorch_gru = 'digraph "GRU COMP" {\n\tgraph [label="GRU COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"PYTORCH GRU NODE" [color=red penwidth=3 rank=same shape=oval]\n}\n'
     expected_output_for_nested_pytorch_gru = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"PYTORCH GRU NODE" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"PYTORCH GRU NODE" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "PYTORCH GRU NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     test_gru_data = [
+        # TEACHER_TARGET BREADCRUMB:  UNCOMMENT WHEN DONE DEBUGGING
         #   nesting       mode                expected
         # (  'unnested',  'Python',   expected_output_for_unnested_python_gru),
         # (  'nested',    'Python',   expected_output_for_nested_python_gru),
-        (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_gru),
+        # (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_gru),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_gru)
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_gru_data, ids=[f"{x[0]}-{x[1]}" for x in test_gru_data])

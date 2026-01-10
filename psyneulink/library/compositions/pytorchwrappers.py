@@ -866,7 +866,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return flattened_execution_sets, execution_context
 
-    def _get_processing_graph(self, context):
+    def _get_processing_graph(self, context)->dict:
         """Creates graph (dependencies) for nodes of AutodiffComposition used by PytorchShowGraph in PyTorch mode
         IMPLEMENTATION NOTE:
             learning_components (LossMechanism(s) and TARGET nodes) are included
@@ -894,8 +894,32 @@ class PytorchCompositionWrapper(torch.nn.Module):
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        # composition._determine_node_roles(processing_graph=processing_graph, context=context)
+        self._determine_node_roles(processing_graph=processing_graph, context=context)
         return processing_graph
+
+    def _determine_node_roles(self, processing_graph:dict, context:Context)->dict:
+        """Override to deal with Nodes that may be specific to pytorch_reprentation (i.e., not in PNL Composition)
+        Their roles will be handled in override of _get_roles_by_node (see below)
+        """
+
+        # Remove nodes not in composition from procesing_graph passed to Composition._determine_node_roles()
+        pg = processing_graph.copy()
+        comp_nodes = self.composition._get_all_nodes()
+        nodes_not_in_comp = set()
+        # Identify any nodes not in comp
+        for rcvr, senders in processing_graph.items():
+            senders_not_in_comp = set(s for s in senders if s not in comp_nodes)
+            pg[rcvr] = pg[rcvr].copy() - senders_not_in_comp
+            nodes_not_in_comp.union(senders_not_in_comp)
+            if rcvr not in comp_nodes:
+                pg.pop(rcvr, None)
+                # nodes_not_in_comp.add(rcvr)
+        # Send filtered graph to Composition to determine node roles
+        self.composition._determine_node_roles(pg, context)
+        #
+        # # Now assign roles to the Nodes removed
+        # for node in nodes_not_in_comp:
+        #     assert True
 
     def _get_roles_by_node(self, node, context):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
