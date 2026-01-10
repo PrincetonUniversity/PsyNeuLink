@@ -342,13 +342,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
     def _get_processing_graph(self, context):
-        """Override to use 'PYTORCH GRU' Node instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
+        """Override to use 'PYTORCH GRU NODE' instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
         processing_graph = {self.composition.gru_mech:set()}
-        # self.composition._determine_node_roles(processing_graph=processing_graph, context=context)
         return processing_graph
 
-    def all_nodes_to_roles(self):
-        """Override to allow subclasses to handle different nodes for pytorch_representation"""
+    def _get_roles_by_node(self, node, context):
+        """Override to return NodeRole for 'PYTORCH GRU NODE'"""
         return {self.composition.gru_mech:[NodeRole.INTERNAL]}
 
     @handle_external_context()

@@ -81,8 +81,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm
 
 if TYPE_CHECKING:
-    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg
-
+    from psyneulink.library.compositions.autodiffcomposition import SynchRetainArg, AutodiffCompositionError
 
 __all__ = ['PytorchCompositionWrapper', 'PytorchMechanismWrapper', 'PytorchProjectionWrapper',
            'ENTER_NESTED', 'EXIT_NESTED', 'ParamNameCompositionTuple']
@@ -898,9 +897,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # composition._determine_node_roles(processing_graph=processing_graph, context=context)
         return processing_graph
 
-    def all_nodes_to_roles(self):
+    def _get_roles_by_node(self, node, context):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
-        return self.composition.all_nodes_to_roles
+        try:
+            return self.composition.all_nodes_to_roles[node]
+        except KeyError:
+            # Recursively check any nested PytorchCompositionWrappers for node
+            for nested_wrapper in [wrapper for wrapper in self.node_wrappers
+                                   if isinstance(wrapper, PytorchCompositionWrapper)]:
+                return nested_wrapper._get_roles_by_node(node, context)[node]
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError
+            raise AutodiffCompositionError(f"Role requested for '{node.name}' that can't be found in the "
+                                       f"pytorch_representation for '{self.composition.name}'")
 
     @property
     def is_nested(self):

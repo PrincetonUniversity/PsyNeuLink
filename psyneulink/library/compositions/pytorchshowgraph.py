@@ -201,19 +201,9 @@ class PytorchShowGraph(ShowGraph):
     def _get_roles_by_node(self, composition, node, context):
         """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
         if self.show_pytorch:
-        #     try:
-        #         return composition.get_roles_by_node(node, scope=ALL)
-        #         # assert True
-        #         # return composition.get_roles_by_node_at_any_level(node)
-        #     except:
-        #         return [NodeRole.INTERNAL]
-        # if self.show_pytorch and node not in self.composition.nodes:
-        #     return [NodeRole.INTERNAL]
-        #     # MODIFIED TEACHER_TARGET OLD:
-        #     return composition.all_nodes_to_roles[node]
-            # MODIFIED TEACHER_TARGET NEW:
-            return composition.pytorch_representation.all_nodes_to_roles()[node]
-            # MODIFIED TEACHER_TARGET END
+            # In PyTorch mode, allow PytorchCompositionWrapper to identify roles for nodes
+            # return composition.pytorch_representation.all_nodes_to_roles()[node]
+            return composition.pytorch_representation._get_roles_by_node(node, context)
         else:
             return super()._get_roles_by_node(composition, node, context)
 
