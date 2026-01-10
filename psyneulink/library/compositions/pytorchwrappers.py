@@ -895,8 +895,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        composition._determine_node_roles(processing_graph=processing_graph, context=context)
+        # composition._determine_node_roles(processing_graph=processing_graph, context=context)
         return processing_graph
+
+    def all_nodes_to_roles(self):
+        """Override to allow subclasses to handle different nodes for pytorch_representation"""
+        return self.composition.all_nodes_to_roles
 
     @property
     def is_nested(self):

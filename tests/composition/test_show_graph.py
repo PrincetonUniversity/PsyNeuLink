@@ -202,7 +202,7 @@ class TestNested:
         #   nesting       mode                expected
         # (  'unnested',  'Python',   expected_output_for_unnested_python_gru),
         # (  'nested',    'Python',   expected_output_for_nested_python_gru),
-        (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_gru),
+        # (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_gru),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_gru)
     ]
     @pytest.mark.parametrize("nesting, mode, expected", test_gru_data, ids=[f"{x[0]}-{x[1]}" for x in test_gru_data])

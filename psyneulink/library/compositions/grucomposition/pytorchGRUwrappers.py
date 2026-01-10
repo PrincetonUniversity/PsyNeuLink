@@ -341,6 +341,16 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
         return pnl_proj, sndr_mech_wrapper, rcvr_mech_wrapper, use
 
+    def _get_processing_graph(self, context):
+        """Override to use 'PYTORCH GRU' Node instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
+        processing_graph = {self.composition.gru_mech:set()}
+        # self.composition._determine_node_roles(processing_graph=processing_graph, context=context)
+        return processing_graph
+
+    def all_nodes_to_roles(self):
+        """Override to allow subclasses to handle different nodes for pytorch_representation"""
+        return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
                 full_sequence_mode, sequence_lengths, context=None)->dict:
@@ -378,12 +388,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.all_output_values = output_values
         return output[0]
         # MODIFIED TEACHER_TARGET END
-
-    def _get_processing_graph(self, context):
-        """Override to use 'PYTORCH GRU' Node instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
-        processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        composition._determine_node_roles(processing_graph=processing_graph, context=context)
-        return processing_graph
 
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
