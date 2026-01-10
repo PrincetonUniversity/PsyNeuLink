@@ -127,31 +127,36 @@ class PytorchShowGraph(ShowGraph):
             learning_components (LossMechanism(s) and TARGET nodes) are included
             since these are always part of the graph in PyTorch mode
         """
+        # TEAACHER_TARGET BREADCRUMB: IS THIS NEEDED, SINCE IT SHOULD ONLY BE CALLED IN THIS CONTEXT?
         if self.show_pytorch:
-            processing_graph = {}
-            projections = self._get_projections(composition, context)
-            nodes = self._get_nodes(composition, context)
-            for node in nodes:
-                dependencies = set()
-                for projection in projections:
-                    sender = projection.sender.owner
-                    receiver = projection.receiver.owner
-                    if node is receiver:
-                        dependencies.add(sender)
-                    # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-                    elif (isinstance(receiver, CompositionInterfaceMechanism) and
-                          receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
-                        dependencies.add(sender)
-                    else:
-                        for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
-                            dependencies.add(proj.sender.owner)
-                processing_graph[node] = dependencies
-            # Sort for consistency of reporting and display
-            processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+            # # MODIFIED TEACHER_TARGET OLD:  MOVED TO PytorchCompositionWrapper
+            # processing_graph = {}
+            # projections = self._get_projections(composition, context)
+            # nodes = self._get_nodes(composition, context)
+            # for node in nodes:
+            #     dependencies = set()
+            #     for projection in projections:
+            #         sender = projection.sender.owner
+            #         receiver = projection.receiver.owner
+            #         if node is receiver:
+            #             dependencies.add(sender)
+            #         # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
+            #         elif (isinstance(receiver, CompositionInterfaceMechanism) and
+            #               receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
+            #             dependencies.add(sender)
+            #         else:
+            #             for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
+            #                 dependencies.add(proj.sender.owner)
+            #     processing_graph[node] = dependencies
+            # # Sort for consistency of reporting and display
+            # processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+            # # MODIFIED TEACHER_TARGET NEW:
+            # composition._determine_node_roles(processing_graph=processing_graph, context=context)
+            # # MODIFIED TEACHER_TARGET END
+            # return processing_graph
             # MODIFIED TEACHER_TARGET NEW:
-            composition._determine_node_roles(processing_graph=processing_graph, context=context)
+            return composition.pytorch_representation._get_processing_graph(context)
             # MODIFIED TEACHER_TARGET END
-            return processing_graph
 
         else:
             return super()._get_processing_graph(composition, context)

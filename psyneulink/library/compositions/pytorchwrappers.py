@@ -867,6 +867,37 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return flattened_execution_sets, execution_context
 
+    def _get_processing_graph(self, context):
+        """Creates graph (dependencies) for nodes of AutodiffComposition used by PytorchShowGraph in PyTorch mode
+        IMPLEMENTATION NOTE:
+            learning_components (LossMechanism(s) and TARGET nodes) are included
+            since these are always part of the graph in PyTorch mode
+        """
+        composition = self.composition
+        show_graph = composition._show_graph
+        processing_graph = {}
+        projections = show_graph._get_projections(composition, context)
+        nodes = show_graph._get_nodes(composition, context)
+        for node in nodes:
+            dependencies = set()
+            for projection in projections:
+                sender = projection.sender.owner
+                receiver = projection.receiver.owner
+                if node is receiver:
+                    dependencies.add(sender)
+                # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
+                elif (isinstance(receiver, CompositionInterfaceMechanism) and
+                      receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
+                    dependencies.add(sender)
+                else:
+                    for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
+                        dependencies.add(proj.sender.owner)
+            processing_graph[node] = dependencies
+        # Sort for consistency of reporting and display
+        processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+        composition._determine_node_roles(processing_graph=processing_graph, context=context)
+        return processing_graph
+
     @property
     def is_nested(self):
         return self.outer_creator

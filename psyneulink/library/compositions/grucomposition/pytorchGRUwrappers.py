@@ -379,6 +379,12 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         return output[0]
         # MODIFIED TEACHER_TARGET END
 
+    def _get_processing_graph(self, context):
+        """Override to use 'PYTORCH GRU' Node instead of PNL nodes for PytorchShowGraph of standalone GRUComposition"""
+        processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+        composition._determine_node_roles(processing_graph=processing_graph, context=context)
+        return processing_graph
+
     def _set_synch_with_pnl(self, mech_wrapper, synch_with_pnl_options):
         if (NODE_VALUES in synch_with_pnl_options and synch_with_pnl_options[NODE_VALUES] == LearningScale.RUN):
             mech_wrapper.synch_with_pnl = True
