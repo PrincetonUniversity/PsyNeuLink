@@ -6412,7 +6412,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
                                   node_port: Union[InputPort, OutputPort],
-                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT]):
+                                  role: Literal[NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT])->tuple:
         """Check for node in nested Composition
         Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
         Return relevant port of relevant CIM if found and nested Composition in which it was found; else None's
