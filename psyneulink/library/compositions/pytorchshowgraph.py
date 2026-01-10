@@ -73,13 +73,13 @@ class PytorchShowGraph(ShowGraph):
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
                     new=False))
-            composition = self.composition
+            # composition = self.composition
             # # # MODIFIED TEACHER_TARGET OLD:
             # processing_graph = self._get_processing_graph(composition, context=context)
             # # MODIFIED TEACHER_TARGET NEW:
             # composition._determine_node_roles(processing_graph=processing_graph, context=context)
-            # MODIFIED TEACHER_TARGET END
-            assert True
+            # # MODIFIED TEACHER_TARGET END
+            # assert True
 
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
@@ -127,7 +127,6 @@ class PytorchShowGraph(ShowGraph):
             learning_components (LossMechanism(s) and TARGET nodes) are included
             since these are always part of the graph in PyTorch mode
         """
-        # TEAACHER_TARGET BREADCRUMB: IS THIS NEEDED, SINCE IT SHOULD ONLY BE CALLED IN THIS CONTEXT?
         if self.show_pytorch:
             # # MODIFIED TEACHER_TARGET OLD:  MOVED TO PytorchCompositionWrapper
             # processing_graph = {}
@@ -210,7 +209,11 @@ class PytorchShowGraph(ShowGraph):
         #         return [NodeRole.INTERNAL]
         # if self.show_pytorch and node not in self.composition.nodes:
         #     return [NodeRole.INTERNAL]
-            return composition.all_nodes_to_roles[node]
+        #     # MODIFIED TEACHER_TARGET OLD:
+        #     return composition.all_nodes_to_roles[node]
+            # MODIFIED TEACHER_TARGET NEW:
+            return composition.pytorch_representation.all_nodes_to_roles()[node]
+            # MODIFIED TEACHER_TARGET END
         else:
             return super()._get_roles_by_node(composition, node, context)
 
