@@ -5525,11 +5525,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
-        # With graph structure conditions, the scheduler graph may be
-        # different than the composition graph.
-        comp_graph_dependencies = (processing_graph if processing_graph
+        comp_graph_dependencies = (processing_graph if flatten
+                                   # If using the composition graph structure with conditions,
+                                   # the scheduler graph may be different than the composition graph itself.
+                                   # BREADCRUMB: WHICH SHOULD NodeRle assignments reflect?
                                    else self.graph_processing.prune_feedback_edges()[0])
-
         #region INPUT
 
         # Start with all nodes from processing graph with no incoming edges
@@ -5538,7 +5538,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # an entire cycle that has no node with any incoming edge other
         # than from other nodes in the cycle is treated as INPUT
         # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
-        if self.graph_processing.cycle_vertices:
+        # IMPLEMENTATION NOTE:
+        #      Processing of cycles not currently supported for flattened processing_graph
+        if not flatten and self.graph_processing.cycle_vertices:
             for cycle in self.graph_processing.cycle_vertices:
                 for i, node in enumerate(cycle):
                     prev = cycle[(i - 1) % len(cycle)]
@@ -5563,7 +5565,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If an inner composition is not ORIGIN because of this
                 # condition, add it as INPUT anyway.
                 if isinstance(node, ControlMechanism):
+                    # # MODIFIED TEACHER_TARGET OLD:
+                    # for child in self.graph_processing.comp_to_vertex[node].children:
+                    # MODIFIED TEACHER_TARGET NEW: XXXX
                     for child in self.graph_processing.comp_to_vertex[node].children:
+                    # MODIFIED TEACHER_TARGET END
                         for parent in child.parents:
                             # MappingProjections from non-ControlMechanisms
                             # always obey standard scheduling behavior
@@ -5609,17 +5615,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #endregion BIAS
 
         #region CYCLE
-        for cycle in self.graph_processing.cycle_vertices:
-            for node in cycle:
-                self._add_node_role(node, NodeRole.CYCLE, scope)
+        if not flatten:
+        # IMPLEMENTATION NOTE:
+        #      Processing of CYCLE and FEEDBACK not currently supported for flattened processing_graph
+
+            for cycle in self.graph_processing.cycle_vertices:
+                for node in cycle:
+                    self._add_node_role(node, NodeRole.CYCLE, scope)
         #endregion CYCLE
 
         #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
-        for receiver in self.graph_processing.vertices:
-            for sender, typ in receiver.source_types.items():
-                if typ is EdgeType.FEEDBACK:
-                    self._add_node_role(sender.component, NodeRole.FEEDBACK_SENDER, scope)
-                    self._add_node_role(receiver.component, NodeRole.FEEDBACK_RECEIVER, scope)
+            for receiver in self.graph_processing.vertices:
+                for sender, typ in receiver.source_types.items():
+                    if typ is EdgeType.FEEDBACK:
+                        self._add_node_role(sender.component, NodeRole.FEEDBACK_SENDER, scope)
+                        self._add_node_role(receiver.component, NodeRole.FEEDBACK_RECEIVER, scope)
         #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
 
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
