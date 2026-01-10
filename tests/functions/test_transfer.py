@@ -387,31 +387,19 @@ derivative_test_data = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected",
                          derivative_test_data,
-                         ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE,
-                                                                                                        None))
+                         ids=lambda x: getattr(x, 'name', None) or getattr(x, 'get', lambda p, q: None)(kw.OUTPUT_TYPE, None))
 def test_transfer_derivative(func, variable, params, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
 
     f = func(default_variable=variable, **params)
+    EX = pytest.helpers.get_func_execution(f, func_mode, tags=frozenset({"derivative"}), member='derivative')
 
-    if func_mode == 'Python':
-        ex = f.derivative
-
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
-
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
-
-    else:
-        assert False, "unknown function mode: {}".format(func_mode)
-
-    res = benchmark(ex, variable)
+    res = benchmark(EX, variable)
 
     # Tanh and Logistic need reduced accuracy in single precision mode
-    if func_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32' and func in {pnl.Tanh,
-                                                                                                   pnl.Logistic}:
+    if func_mode != 'Python' and pytest.helpers.llvm_current_fp_precision() == 'fp32' and func in {pnl.Tanh, pnl.Logistic}:
         tolerance = {'rtol': 5e-7, 'atol': 1e-8}
+
     else:
         tolerance = {}
 
@@ -430,8 +418,7 @@ derivative_out_test_data = [
      [[-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
        -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513],
       [-0.010680386821751537, -0.011118109698906909, -0.01082040340318878, -0.010670257514724047, -0.010362498859374309,
-       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892,
-       -0.010262384043848513]]),
+       -0.010933660158663306, -0.010397412260182806, -0.011602329078808718, 0.09684744183944892, -0.010262384043848513]]),
 ]
 
 
@@ -462,8 +449,9 @@ def test_transfer_derivative_out(func, variable, params, expected, benchmark, fu
     res = benchmark(ex, variable)
 
     # Logistic needs reduced accuracy in single precision mode because it uses exp()
-    if func_mode != 'Python' and func is pnl.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32' and func is pnl.Logistic:
+    if func_mode != 'Python' and func is pnl.Logistic and pytest.helpers.llvm_current_fp_precision() == 'fp32':
         tolerance = {'rtol': 1e-7, 'atol': 1e-8}
+
     else:
         tolerance = {}
 
@@ -585,6 +573,7 @@ def test_transfer_with_costs_toggle():
     np.testing.assert_allclose(f.adjustment_cost, 2)
     np.testing.assert_allclose(f.duration_cost, 5)
     np.testing.assert_allclose(f.combined_costs, 155.413159102576603)
+
     result = f(1)
     np.testing.assert_allclose(result, 1)
     np.testing.assert_allclose(f.intensity_cost, 2.718281828459045)

@@ -1,6 +1,6 @@
 import contextlib
-import re
 import numpy as np
+import re
 import pytest
 
 import psyneulink as pnl
@@ -89,8 +89,9 @@ class TestControlSpecification:
         expected_warning = "The controller of 'Composition-0' has been specified to project to 'DDM-0', but 'DDM-0' " \
                            "is not in 'Composition-0' or any of its nested Compositions. This projection will be " \
                            "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
-        with pytest.warns(UserWarning, match=expected_warning):
+        with pytest.warns(UserWarning, match=re.escape(expected_warning)):
             comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
@@ -109,9 +110,10 @@ class TestControlSpecification:
         expected_warning = "The controller of 'Composition-0' has been specified to project to 'DDM-0', but 'DDM-0' " \
                            "is not in 'Composition-0' or any of its nested Compositions. This projection will be " \
                            "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
-        with pytest.warns(UserWarning, match=expected_warning):
+        with pytest.warns(UserWarning, match=re.escape(expected_warning)):
             comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
                                                                                     control_spec:('drift_rate', ddm)}))
+
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
@@ -120,9 +122,8 @@ class TestControlSpecification:
     # def test_missing_mech_referenced_by_controller_warning(self):
     #     mech = pnl.ProcessingMechanism()
     #     warning_msg_1 = ''
-    #     with pytest.warns(UserWarning) as warning:
+    #     with pytest.warns(UserWarning, match=re.escape(warning_msg_1)):
     #         comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
-    #     assert repr(warning[1].message.args[0]) == warning_msg_1
 
     def test_bad_objective_mechanism_spec(self):
         mech = pnl.ProcessingMechanism()
@@ -226,7 +227,7 @@ class TestControlSpecification:
         else:
             assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
-        with pytest.warns(UserWarning) as warning:
+        with pytest.warns(UserWarning, match=re.escape(expected_warning)):
             # add the controller to the Composition before adding the relevant Mechanisms
             if 'default_none' in state_features_arg:
                 comp.add_controller(controller=pnl.OptimizationControlMechanism(
@@ -248,7 +249,7 @@ class TestControlSpecification:
             else:
                 comp.add_controller(controller=pnl.OptimizationControlMechanism(
                     agent_rep=comp,
-                    state_features = state_features,
+                    state_features=state_features,
                     state_feature_default=state_feature_default,
                     state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                     objective_mechanism=pnl.ObjectiveMechanism(
@@ -262,7 +263,6 @@ class TestControlSpecification:
                                      {control_spec: ("threshold", Decision),
                                       ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                 )
-        assert any(expected_warning in repr(w.message) for w in warning.list)
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
         deferred_Input_input_port = _deferred_state_feature_spec_msg('Input[InputPort-0]', 'evc')
@@ -725,9 +725,8 @@ class TestControlSpecification:
         ctlr_2 = pnl.ControlMechanism()
         expected_warning = "The existing controller for 'Composition-0' ('ControlMechanism-0') " \
                            "is being replaced by 'ControlMechanism-1'."
-        with pytest.warns(UserWarning) as warning:
+        with pytest.warns(UserWarning, match=re.escape(expected_warning)):
             comp.add_controller(ctlr_2)
-        assert expected_warning in repr(warning[0].message.args[0])
 
     def test_controller_has_no_input(self):
         mech = pnl.ProcessingMechanism()
@@ -735,10 +734,9 @@ class TestControlSpecification:
         comp = pnl.Composition()
         comp.add_node(mech)
         expected_warning = 'ControlMechanism-0 for Composition-0 is enabled but has no inputs.'
-        with pytest.warns(UserWarning) as warning:
+        with pytest.warns(UserWarning, match=re.escape(expected_warning)):
             comp.enable_controller = True
             comp.add_controller(ctlr)
-        assert expected_warning in repr(warning[0].message.args[0])
 
     def test_agent_rep_assignment_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
@@ -1366,36 +1364,31 @@ class TestControlMechanisms:
                 np.testing.assert_allclose(expected, actual)
 
         elif exception_type is UserWarning:
-            # These also produce errors, tested below
-            if test_condition in {'too_many_inputs_warning',
-                                  'too_many_w_node_not_in_composition_warning',
-                                  'bad_dict_spec_warning'}:
-                with pytest.warns(UserWarning) as warning:
-                    ocomp.add_controller(ocm)
-                    assert error_or_warning_message in [warning[i].message.args[0] for i in range(len(warning))]
-            else:
-                with pytest.warns(UserWarning) as warning:
-                    ocomp.add_controller(ocm)
-                    ocomp.run()
-                    if test_condition == 'partial_legal_list_spec':
-                        assert len(ocm.state_input_ports) == 3
-                        assert ocm.state_input_ports.names == [ia_node, shadowed_oa_node, shadowed_ob_node]
-                        # Note: oa is assigned to icomp due to ordering:
-                        assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
-                                                      'OA[InputPort-0]': 'OA[InputPort-0]',
-                                                      'OB[InputPort-0]': 'OB[InputPort-0]'}
-                        for expected, actual in zip(
-                            list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
-                        ):
-                            np.testing.assert_allclose(expected, actual)
+            with pytest.warns(UserWarning, match=re.escape(error_or_warning_message)):
+                ocomp.add_controller(ocm)
 
-                assert error_or_warning_message in [warning[i].message.args[0] for i in range(len(warning))]
+            # These also produce errors, tested below, so don't call run()
+            if test_condition not in {'too_many_inputs_warning',
+                                      'too_many_w_node_not_in_composition_warning',
+                                      'bad_dict_spec_warning'}:
+                ocomp.run()
+                if test_condition == 'partial_legal_list_spec':
+                    assert len(ocm.state_input_ports) == 3
+                    assert ocm.state_input_ports.names == [ia_node, shadowed_oa_node, shadowed_ob_node]
+                    # Note: oa is assigned to icomp due to ordering:
+                    assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
+                                                  'OA[InputPort-0]': 'OA[InputPort-0]',
+                                                  'OB[InputPort-0]': 'OB[InputPort-0]'}
+                    for expected, actual in zip(
+                        list(ocm.state_feature_values.values()), [[0.], [0.], [0, 0, 0]]
+                    ):
+                        np.testing.assert_allclose(expected, actual)
+
 
         else:
-            with pytest.raises(exception_type) as error:
+            with pytest.raises(exception_type, match=re.escape(error_or_warning_message)):
                 ocomp.add_controller(ocm)
                 ocomp.run()
-            assert error_or_warning_message in str(error.value)
 
     state_features_arg = [
         'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
@@ -2407,20 +2400,22 @@ class TestControlMechanisms:
     def test_add_node_with_controller_spec_and_control_mech_but_not_a_controller(self):
         mech = pnl.ProcessingMechanism(name='MECH', function=pnl.Linear(slope=(2, pnl.CONTROL)))
         ctl = pnl.ControlMechanism(name='CONTROL MECHANISM')
-        warning_msg_1 = '"OutputPort (\'ControlSignal-0\') of \'CONTROL MECHANISM\' doesn\'t have any efferent ' \
-                        'Projections in \'COMPOSITION\'."'
-        warning_msg_2 = '"The \'slope\' parameter of \'MECH\' is specified for control, but the Composition it is in ' \
-                        '(\'COMPOSITION\') does not have a controller; if a controller is not added to COMPOSITION ' \
-                        'the control specification will be ignored."'
-        warning_msg_3 = '"\\nThe following Projections were specified but are not being used by Nodes in ' \
-                        '\'COMPOSITION\':\\n\\tControlProjection for MECH[slope]"'
-        with pytest.warns(UserWarning) as warning:
+
+        warning_msg_1 = "OutputPort ('ControlSignal-0') of 'CONTROL MECHANISM' doesn't have any efferent " \
+                        "Projections in 'COMPOSITION'."
+        warning_msg_2 = "The 'slope' parameter of 'MECH' is specified for control, but the Composition it is in " \
+                        "('COMPOSITION') does not have a controller; if a controller is not added to COMPOSITION " \
+                        "the control specification will be ignored."
+        warning_msg_3 = "\nThe following Projections were specified but are not being used by Nodes in " \
+                        "'COMPOSITION':\n\tControlProjection for MECH[slope]"
+
+        with pytest.warns(UserWarning, match=re.escape(warning_msg_1)), \
+             pytest.warns(UserWarning, match=re.escape(warning_msg_2)), \
+             pytest.warns(UserWarning, match=re.escape(warning_msg_3)):
             comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
             comp.add_node(mech)
             comp.verbosePref = pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
             comp.run()
-        assert all(msg in [repr(w.message.args[0]) for w in warning]
-                   for msg in {warning_msg_1, warning_msg_2, warning_msg_3})
 
     @pytest.mark.control
     @pytest.mark.composition
