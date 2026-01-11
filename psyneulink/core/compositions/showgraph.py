@@ -1634,7 +1634,6 @@ class ShowGraph():
                                 proj_color=self.inactive_projection_color
                         else:
                             port, node, comp = cim._get_source_info_from_output_CIM(proj.receiver)
-                            test = comp.get_nodes_by_role(NodeRole.PROBE)
                             if (node in self._get_nodes_by_role(comp, NodeRole.PROBE, context)
                                     and not composition.include_probes_in_output):
                                 proj_color=self.probe_color
