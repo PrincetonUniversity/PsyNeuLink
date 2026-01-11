@@ -902,7 +902,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         Their roles will be handled in override of _get_roles_by_node (see below)
         """
         composition = self.composition
-        # Remove nodes not in composition from procesing_graph passed to Composition._determine_node_roles()
+        # Filter Nodes not in Composition from procesing_graph passed to Composition._determine_node_roles()
         pg = processing_graph.copy()
         comp_nodes = composition._get_all_nodes()
         nodes_not_in_comp = set()
@@ -915,7 +915,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 pg.pop(rcvr, None)
                 # nodes_not_in_comp.add(rcvr)
 
-        # Prevent role disruptions from removed nodes
+        # Prevent role disruptions from filtering of Nodes
         for node in pg:
             # Check for any removals that led to no dependencies for Node, which would induce NodeRole.INPUT
             if len(processing_graph[node]) and not len(pg[node]):
