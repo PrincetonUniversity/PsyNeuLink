@@ -901,25 +901,31 @@ class PytorchCompositionWrapper(torch.nn.Module):
         """Override to deal with Nodes that may be specific to pytorch_reprentation (i.e., not in PNL Composition)
         Their roles will be handled in override of _get_roles_by_node (see below)
         """
-
+        composition = self.composition
         # Remove nodes not in composition from procesing_graph passed to Composition._determine_node_roles()
         pg = processing_graph.copy()
-        comp_nodes = self.composition._get_all_nodes()
+        comp_nodes = composition._get_all_nodes()
         nodes_not_in_comp = set()
         # Identify any nodes not in comp
         for rcvr, senders in processing_graph.items():
             senders_not_in_comp = set(s for s in senders if s not in comp_nodes)
             pg[rcvr] = pg[rcvr].copy() - senders_not_in_comp
-            nodes_not_in_comp.union(senders_not_in_comp)
+            nodes_not_in_comp.update(senders_not_in_comp)
             if rcvr not in comp_nodes:
                 pg.pop(rcvr, None)
                 # nodes_not_in_comp.add(rcvr)
+
+        # Prevent role disruptions from removed nodes
+        for node in pg:
+            # Check for any removals that led to no dependencies for Node, which would induce NodeRole.INPUT
+            if len(processing_graph[node]) and not len(pg[node]):
+                composition.exclude_node_roles(node, NodeRole.INPUT)
+            # Check for any removals that led to no dependents on Node, which would induce NodeRole.OUTPUT
+            # TEACHER_TARGET BREADCRUMB: DEAL WITH ORPHANED NODE AS OUTPUT
+            #     composition.exclude_node_roles(node, NodeRole.OUTPUT)
+
         # Send filtered graph to Composition to determine node roles
-        self.composition._determine_node_roles(pg, context)
-        #
-        # # Now assign roles to the Nodes removed
-        # for node in nodes_not_in_comp:
-        #     assert True
+        composition._determine_node_roles(pg, context)
 
     def _get_roles_by_node(self, node, context):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
