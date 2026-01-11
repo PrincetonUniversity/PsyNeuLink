@@ -5781,8 +5781,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # MODIFIED TEACHER_TARGET NEW:
             if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON, scope)
-            if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-                self._add_node_role(node, NodeRole.INTERNAL, scope)
+            # if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            #     self._add_node_role(node, NodeRole.INTERNAL, scope)
+            if not any(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+                self._add_node_role(node, NodeRole.INTERNAL, scope=scope)
             # MODIFIED TEACHER_TARGET END
         #endregion Assign SINGLETON and INTERNAL nodes
 
