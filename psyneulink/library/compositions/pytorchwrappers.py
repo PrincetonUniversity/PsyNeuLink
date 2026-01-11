@@ -920,9 +920,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
             # Check for any removals that led to no dependencies for Node, which would induce NodeRole.INPUT
             if len(processing_graph[node]) and not len(pg[node]):
                 composition.exclude_node_roles(node, NodeRole.INPUT)
-            # Check for any removals that led to no dependents on Node, which would induce NodeRole.OUTPUT
-            # TEACHER_TARGET BREADCRUMB: DEAL WITH ORPHANED NODE AS OUTPUT
-            #     composition.exclude_node_roles(node, NodeRole.OUTPUT)
+            # Check for any removals that led to no dependency on Node, which would induce NodeRole.OUTPUT
+            if node in processing_graph.values() and node not in pg.values():
+                composition.exclude_node_roles(node, NodeRole.OUTPUT)
 
         # Send filtered graph to Composition to determine node roles
         composition._determine_node_roles(pg, context)
