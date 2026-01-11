@@ -4,6 +4,7 @@ import psyneulink as pnl
 
 import numpy as np
 import pytest
+import re
 
 from psyneulink import DEFAULT_LEARNING_RATE
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
@@ -833,9 +834,11 @@ class TestStructural:
                 comp.add_backpropagation_learning_pathway([input_mech, output_mech_A])
                 comp.add_backpropagation_learning_pathway([input_mech, output_mech_B])
                 execution_mode = pnl.ExecutionMode.Python
+
             else:
                 comp = comp_type([input_mech,{output_mech_A, output_mech_B}], name='TEST COMP')
                 execution_mode = pnl.ExecutionMode.PyTorch
+
             targets = comp.get_target_nodes()
             inputs_arg = {'INPUT MECH': [[1]]}
             target_mechs = {targets[0]: [[1]],
@@ -853,33 +856,39 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_targets':
                 # Test for warning about TARGET_MECHANISMS in targets arg
-                with pytest.warns(UserWarning) as warning:
-                    comp.learn(inputs=inputs_arg,
-                               targets=target_mechs,
-                               execution_mode=execution_mode)
-                assert (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries "
-                        f"that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is "
-                        f"OK, it might be easier to clearer to use the OUTPUT Nodes to which they correspond as the "
-                        f"keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, TARGET "
-                        f"Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, "
-                        f"obviating the need to specify the 'targets' arg." in warning[0].message.args[0])
+                warning = "The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "\
+                          "are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "\
+                          "it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "\
+                          "of the dict, obviating the need to determine the TARGET_MECHANISM(s). Alternatively, "\
+                          "TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "\
+                          "obviating the need to specify the 'targets' arg."
+
+                with pytest.warns(UserWarning, match=re.escape(warning)):
+                    comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'target_mechs_in_inputs_and_targets':
                 # Test warning for TARGET_MECHANISM(s) specified in both inputs and targets args
-                with pytest.warns(UserWarning) as warning:
-                    inputs_arg.update(target_mechs)
-                    comp.learn(inputs=inputs_arg,
-                               targets=target_mechs,
-                               execution_mode=execution_mode)
-                    assert True
-                assert (f"There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' args "
-                        f"of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "
-                        f"This is not technically a problem, but it is redundant; one or the other is sufficient."
-                        in warning[0].message.args[0])
+                warning1 = "There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' args "\
+                           "of the learn() method for TEST COMP (TARGET for OUTPUT MECH A ,TARGET for OUTPUT MECH B); "\
+                           "This isn't technically a problem, but it is redundant so thought you should know ;^)."
+
+                warning2 = "The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries that "\
+                           "are TARGET_MECHANISM(s) (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is OK, "\
+                           "it might be easier to simply use the OUTPUT_MECHANISM(s) to which they correspond as they keys "\
+                           "of the dict, obviating the need to determine the TARGET_MECHANISM(s). Alternatively, "\
+                           "TARGET_MECHANISMs can be specified in the 'inputs' arg of learn method, along with INPUT nodes, "\
+                           "obviating the need to specify the 'targets' arg."
+
+                inputs_arg.update(target_mechs)
+                with pytest.warns(UserWarning, match=re.escape(warning1)), \
+                     pytest.warns(UserWarning, match=re.escape(warning2)):
+                    comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg
-                with pytest.raises(CompositionError) as error_text:
+                error = "The number of targets (3) specified in `targets` arg of the learn method "\
+                        "for 'TEST COMP' must equal the number of OUTPUT Nodes in the Composition (2)."
+                with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,
                                targets={comp.nodes[0]: [[1]],
                                         comp.nodes[1]: [[1]],
@@ -2450,11 +2459,10 @@ class TestBackPropLearning:
         #     else:
         #         print(node.name, " EMPTY LOG!")
 
-    # TEACHER_TARGET BREADCRUMB: UNCOMMENT ONCE DONE DEBUGGING
     test_vars = [
-        # ('comp-python', 'comp', pnl.ExecutionMode.Python),
+        ('comp-python', 'comp', pnl.ExecutionMode.Python),
         ('autodiff-python', 'autodiff', pnl.ExecutionMode.Python),
-        # ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
+        ('autodiff-pytorch', 'autodiff', pnl.ExecutionMode.PyTorch)
     ]
 
     @pytest.mark.pytorch

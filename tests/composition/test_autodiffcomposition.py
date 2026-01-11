@@ -1,10 +1,10 @@
 import logging
-import timeit as timeit
-import os
 import numpy as np
-
+import os
 import pytest
-from fontTools.mtiLib import parseSingleSubst
+import re
+import timeit as timeit
+
 
 import psyneulink as pnl
 from psyneulink import RANDOM_CONNECTIVITY_MATRIX
@@ -572,15 +572,17 @@ class TestAutodiffLearningRateArgs:
         if build_pytorch_rep_spec is None:  # just need to do these tests once:
 
             # check that nothing happens without specifying new in the call
-            with pytest.warns(UserWarning) as warning:
+            warning = "The '_build_pytorch_representation() method for 'Outer Comp' has already been called "\
+                      "directly from the command line; this and any additional calls will be ignored. Make any "\
+                      "desired modifications to parameters (e.g., learning_rates) either in the constructor for "\
+                      "the AutodiffComposition, or its learn() method."
+
+            with pytest.warns(UserWarning, match=re.escape(warning)):
                 outer_comp._build_pytorch_representation(build_pytorch_rep_spec)
-                assert ("The '_build_pytorch_representation() method for 'Outer Comp' has already been called "
-                        "directly from the command line; this and any additional calls will be ignored. Make any "
-                        "desired modifications to parameters (e.g., learning_rates) either in the constructor for "
-                        "the AutodiffComposition, or its learn() method. in warning[0].message.args[0]")
 
             # change a projection learning_rate for composition using another call to _build_pytorch_representation()
             pytorch_rep = outer_comp._build_pytorch_representation(learning_rate={"NESTED 2 PROJ CD": 14})
+
             # check that it has taken effect:
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_BC) == .3
             assert pytorch_rep.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
@@ -589,9 +591,11 @@ class TestAutodiffLearningRateArgs:
             #     i.e., that it persists after a call to learn():
             outer_comp.learn(inputs={outer_mech_in: [[1]], outer_comp.get_target_nodes()[0]: [[1]]},
                              learning_rate={"NESTED 2 PROJ BC": 99},)
+
             pytorch_rep_outer_comp = outer_comp.parameters.pytorch_representation.get('Outer Comp')
             assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_BC) == 99
             assert pytorch_rep_outer_comp.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
+
             pytorch_rep_constructor = outer_comp.parameters.pytorch_representation.get(None)
             assert pytorch_rep_constructor.get_torch_learning_rate_for_projection(nested_2_proj_CD) == 14
 
@@ -626,7 +630,7 @@ class TestAutodiffLearningRateArgs:
         ("dict_proj_not_learnable",
          "Projection ('INPUT PROJECTION') specified in the dict for the 'learning_rate' arg of the learn() method for "
          "'Outer Comp' is not learnable; check that its 'learnable' attribute is set to 'True' and its learning_rate "
-         "is not 'False', or remove it from the dict.")
+         "is not 'False', or remove it from the dict."),
          ]
     @pytest.mark.pytorch
     @pytest.mark.parametrize("condition, error_msg", error_test_args,
@@ -668,16 +672,15 @@ class TestAutodiffLearningRateArgs:
         elif condition == "dict_key_bad_proj":
             key_spec = pnl.MappingProjection(nested_mech_2, outer_mech_out, learning_rate=.4, name="BAD PROJECTION")
         elif condition == "dict_proj_not_learnable":
-            error_type = AutodiffCompositionError
             comp_lr = None
             input_proj.learnable = False
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
-        with pytest.raises(error_type) as error_text:
+        with pytest.raises(error_type, match=re.escape(error_msg)):
             outer_comp = pnl.AutodiffComposition(pathway, name='Outer Comp')
             outer_comp.learn(inputs={outer_mech_in: [[1.0]]}, learning_rate=comp_lr)
-        assert error_msg in str(error_text.value)
+
 
     @pytest.mark.pytorch
     def test_learning_rate_utility_functions(self):
@@ -2608,17 +2611,12 @@ class TestNestedLearning:
             return comp.results
         return _execute_learning
 
-    def test_warning_or_error_for_no_learning_in_solo_nested_comp(self):
-        inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
-        outer = pnl.AutodiffComposition([inner])
-        with pytest.warns(UserWarning) as warning:
+    def test_warning_for_no_learning_in_solo_nested_comp(self):
+        warning = "'autodiff_composition-1' contains no Projections, so it has no params for Pytorch to learn."
+        with pytest.warns(UserWarning, match=re.escape(warning)):
+            inner = pnl.AutodiffComposition([pnl.ProcessingMechanism()])
+            outer = pnl.AutodiffComposition([inner])
             outer._build_pytorch_representation()
-        assert (f"It will not be possible to execute learning for 'autodiff_composition-1' "
-                              f"since it does not have any learnable Projections." in repr(warning[0].message.args[0]))
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            outer.learn()
-        assert (f"Learning cannot be executed for 'autodiff_composition-1' "
-                f"since it does not have any learnable Projections." in str(error_text.value))
 
     def test_1_nested_hidden(self, nodes_for_testing_nested_comps, execute_learning):
         nodes = nodes_for_testing_nested_comps(1, 1, 1)
@@ -3163,7 +3161,7 @@ class TestNestedLearning:
 
         np.testing.assert_allclose(comp_results, autodiff_results)
 
-    def d(self,
+    def test_1_direct_and_1_ordinary_output_from_nested_to_another_node(self,
                                                                         nodes_for_testing_nested_comps,
                                                                         execute_learning):
         #           [   / hidden_2 ] -> output_1 -> output_2

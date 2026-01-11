@@ -1790,8 +1790,5 @@ class TestGraphStructureConditions:
         comp = Composition(pathways=[[A], [B]])
         comp.scheduler.add_condition(A, pnl.AfterNode(B))
 
-        with pytest.warns(
-            UserWarning,
-            match='In exact time mode, graph structure conditions will have no effect'
-        ):
+        with pytest.warns(UserWarning, match='In exact time mode, graph structure conditions will have no effect'):
             comp.run(scheduling_mode=pnl.SchedulingMode.EXACT_TIME)

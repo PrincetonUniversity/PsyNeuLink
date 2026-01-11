@@ -1,6 +1,7 @@
 import contextlib
 import numpy as np
 import pytest
+import re
 
 import psyneulink as pnl
 from psyneulink.core.components.component import ComponentError
@@ -93,49 +94,26 @@ class TestTransferMechanismInputs:
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_variable_none_size_none(self):
 
-        T = TransferMechanism(
-            name='T'
-        )
+        T = TransferMechanism(name='T')
         assert len(T.defaults.variable) == 1 and T.defaults.variable[0] == 0
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_inputs_list_of_strings(self):
-        with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                integrator_mode=True
-            )
-            T.execute(["one", "two", "three", "four"])
-        assert 'Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
-               'with its corresponding InputPort (T[InputPort-0]): ' in str(error_text.value)
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_inputs_mismatched_with_default_longer(self):
-        with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                integrator_mode=True
-            )
-            T.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) "
-                "for input to InputPort 'InputPort-0' of T.") in str(error_text.value)
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_inputs_mismatched_with_default_shorter(self):
-        with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0, 0, 0],
-                integrator_mode=True
-            )
-            T.execute([1, 2, 3, 4, 5])
-        assert ("Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((6,)) "
-                "for input to InputPort 'InputPort-0' of T.") in str(error_text.value)
+    @pytest.mark.parametrize("variable,error",[
+        pytest.param(["one", "two", "three", "four"],
+                     "Input to 'T' (['one' 'two' 'three' 'four']) is incompatible with its corresponding InputPort (T[InputPort-0]):",
+                     id="strings"),
+        pytest.param([1, 2, 3, 4, 5],
+                     "Shape ((5,)) of input ([1 2 3 4 5]) does not match required shape ((4,)) for input to InputPort 'InputPort-0' of T.",
+                     id="long"),
+        pytest.param([1, 2, 3],
+                     "Shape ((3,)) of input ([1 2 3]) does not match required shape ((4,)) for input to InputPort 'InputPort-0' of T.",
+                     id="short"),
+    ])
+    def test_transfer_mech_incompatible_inputs(self, variable, error):
+        T = TransferMechanism(name='T', default_variable=[0, 0, 0, 0], integrator_mode=True)
+        with pytest.raises(MechanismError, match=re.escape(error)):
+            T.execute(variable)
 
 
 class TestTransferMechanismNoise:
@@ -217,35 +195,21 @@ class TestTransferMechanismNoise:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_mismatched_shape_noise(self):
-        with pytest.raises(MechanismError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0],
-                function=Linear(),
-                noise=[5.0, 5.0, 5.0],
-                integration_rate=0.1,
-                integrator_mode=True
-            )
-            T.execute()
-        assert 'Noise parameter' in str(error_text.value)
-        assert "does not match default variable" in str(error_text.value)
+    @pytest.mark.parametrize("noise", [[5.0, 5.0, 5.0, 5.0], [5.0, 5.0]], ids=["long", "short"])
+    def test_transfer_mech_mismatched_shape_noise(self, noise):
 
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_mismatched_shape_noise_2(self):
-        with pytest.raises(MechanismError) as error_text:
+        error = re.escape("Noise parameter (") + ".*" + re.escape(") for 'T' does not match default variable ([[0 0 0]]);"
+                " it must be specified as a float, a function, or an array of the appropriate shape ((1, 3)).")
 
+        with pytest.raises(MechanismError, match=error):
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0],
                 function=Linear(),
-                noise=[5.0, 5.0],
+                noise=noise,
                 integration_rate=0.1,
                 integrator_mode=True
             )
-            T.execute()
-        assert 'Noise parameter' in str(error_text.value) and "does not match default variable" in str(error_text.value)
 
 
 class TestDistributionFunctions:
@@ -268,8 +232,9 @@ class TestDistributionFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_noise_standard_deviation_error(self):
+        standard_deviation = -2.0
+
         with pytest.raises(FunctionError) as error_text:
-            standard_deviation = -2.0
             T = TransferMechanism(
                 name="T",
                 default_variable=[0, 0, 0, 0],
@@ -428,59 +393,16 @@ class TestTransferMechanismFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_normal_fun(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=NormalDist(),
-                integration_rate=1.0,
-                integrator_mode=True
-            )
-            T.execute([0, 0, 0, 0])
-        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
+    @pytest.mark.parametrize("func_class", [pnl.NormalDist, pnl.Reinforcement, pnl.AccumulatorIntegrator, pnl.Reduce])
+    def test_transfer_mech_incompatible_func(self, func_class):
+        error = f"Function specified as 'function' param of 'T' ({func_class.__name__}) must be a TransferFunction or SelectionFunction."
 
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_reinforcement_fun(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Reinforcement(),
-                integration_rate=1.0,
-                integrator_mode=True
-            )
-            T.execute([0, 0, 0, 0])
-        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_integrator_fun(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=AccumulatorIntegrator(),
-                integration_rate=1.0,
-                integrator_mode=True
-            )
-            T.execute([0, 0, 0, 0])
-        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
-
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_reduce_fun(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Reduce(),
-                integration_rate=1.0,
-                integrator_mode=True
-            )
-            T.execute([0, 0, 0, 0])
-        assert "must be a TransferFunction or SelectionFunction" in str(error_text.value)
+        with pytest.raises(TransferError, match=re.escape(error)):
+            pnl.TransferMechanism(name='T',
+                                  default_variable=[0, 0, 0, 0],
+                                  function=func_class(),
+                                  integration_rate=1.0,
+                                  integrator_mode=True)
 
 
 class TestTransferMechanismIntegratorFunctionParams:
@@ -534,51 +456,51 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_over_mech_rate(self, benchmark, mech_mode):
+        warning = 'Specification of the "integration_rate" parameter ([0.  0.1 0.2 0.3]) for (TransferMechanism T) '\
+                  'conflicts with specification of its shared parameter "rate" ([0.   0.05 0.1  0.15]) for its '\
+                  'integrator_function ((AdaptiveIntegrator AdaptiveIntegrator Function-0)). The value specified on '\
+                  '(AdaptiveIntegrator AdaptiveIntegrator Function-0) will be used.'
 
-        with pytest.warns(UserWarning) as warnings:
-            T = TransferMechanism(
-                    name='T',
-                    default_variable=[0 for i in range(VECTOR_SIZE)],
-                    integrator_mode=True,
-                    integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
-                    integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
-            )
-            assert any(str(w.message).startswith('Specification of the "integration_rate" parameter')
-                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
+        with pytest.warns(UserWarning, match=re.escape(warning)):
+            T = TransferMechanism(name='T',
+                                  default_variable=[0 for i in range(VECTOR_SIZE)],
+                                  integrator_mode=True,
+                                  integrator_function=AdaptiveIntegrator(rate=[i / 20 for i in range(VECTOR_SIZE)]),
+                                  integration_rate=[i / 10 for i in range(VECTOR_SIZE)]
+                                 )
+
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
-
         var = [1 for i in range(VECTOR_SIZE)]
+
         EX(var)
         val = benchmark(EX, var)
         np.testing.assert_allclose(val, [[0., 0.0975, 0.19, 0.2775]], rtol=1e-5, atol=1e-8)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
-        with pytest.raises(TransferError) as error_text:
+        error = "'integration_rate' arg for T ([0.  0.1 0.2 0.3 0.4]) must be either an int or float, "\
+                "or have the same shape as its variable ([[0 0 0 0]])."
+
+        with pytest.raises(TransferError, match=re.escape(error)):
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
                     integration_rate=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
-        assert (
-            "integration_rate' arg for" in str(error_text.value)
-            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
-        )
 
     def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
 
-        with pytest.raises(FunctionError) as error_text:
+        error="AdaptiveIntegrator Function-0 (owned by T): The following parameters with len>1 specified "\
+              "for AdaptiveIntegrator Function-0 don't have the same length as its 'default_variable' (4): ['rate']."
+
+        with pytest.raises(FunctionError, match=re.escape(error)):
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
                     integrator_function=AdaptiveIntegrator(rate=[i / 10 for i in range(VECTOR_SIZE + 1)])
             )
-        assert (
-            "The following parameters with len>1 specified" in str(error_text.value)
-            and "don't have the same length as its 'default_variable' (4): ['rate']." in str(error_text.value)
-        )
 
     # INITIAL_VALUE / INITALIZER TESTS -------------------------------------------------------
 
@@ -625,19 +547,20 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     def test_transfer_mech_array_assignments_fct_initlzr_over_mech_init_val(self, benchmark, mech_mode):
-        with pytest.warns(UserWarning) as warnings:
+        warning = 'Specification of the "initial_value" parameter ([[0.  0.1 0.2 0.3]]) for (TransferMechanism T) '\
+                  'conflicts with specification of its shared parameter "initializer" ([0.   0.05 0.1  0.15]) for '\
+                  'its integrator_function ((AdaptiveIntegrator AdaptiveIntegrator Function-0)). The value specified '\
+                  'on (AdaptiveIntegrator AdaptiveIntegrator Function-0) will be used.'
+
+        with pytest.warns(UserWarning, match=re.escape(warning)):
             T = TransferMechanism(
                 name='T',
                 default_variable=[0 for i in range(VECTOR_SIZE)],
                 integrator_mode=True,
-                integrator_function=AdaptiveIntegrator(
-                        default_variable=[0 for i in range(VECTOR_SIZE)],
-                        initializer=[i / 20 for i in range(VECTOR_SIZE)]
-                ),
+                integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE)],
+                                                       initializer=[i / 20 for i in range(VECTOR_SIZE)]),
                 initial_value=[i / 10 for i in range(VECTOR_SIZE)]
             )
-            assert any(str(w.message).startswith('Specification of the "initial_value" parameter')
-                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
 
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
@@ -763,17 +686,18 @@ class TestTransferMechanismIntegratorFunctionParams:
     @pytest.mark.benchmark(group="TransferMechanism Parameter Array Assignments")
     # FIXME: Incorrect T.integrator_function.defaults.variable reported
     def test_transfer_mech_array_assignments_fct_over_mech_noise(self, benchmark, mech_mode):
+        warning = 'Specification of the "noise" parameter ([0.  0.1 0.2 0.3]) for (TransferMechanism T) '\
+                  'conflicts with specification of its shared parameter "noise" ([0.   0.05 0.1  0.15]) '\
+                  'for its integrator_function ((AdaptiveIntegrator AdaptiveIntegrator Function-0)). The '\
+                  'value specified on (AdaptiveIntegrator AdaptiveIntegrator Function-0) will be used.'
 
-        with pytest.warns(UserWarning) as warnings:
-            T = TransferMechanism(
-                    name='T',
-                    default_variable=[0 for i in range(VECTOR_SIZE)],
-                    integrator_mode=True,
-                    integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
-                    noise=[i / 10 for i in range(VECTOR_SIZE)]
-            )
-            assert any(str(w.message).startswith('Specification of the "noise" parameter')
-                       for w in warnings), "Warnings: {}".format([str(w.message) for w in warnings])
+        with pytest.warns(UserWarning, match=re.escape(warning)):
+            T = TransferMechanism(name='T',
+                                  default_variable=[0 for i in range(VECTOR_SIZE)],
+                                  integrator_mode=True,
+                                  integrator_function=AdaptiveIntegrator(noise=[i / 20 for i in range(VECTOR_SIZE)]),
+                                  noise=[i / 10 for i in range(VECTOR_SIZE)]
+                                 )
 
         EX = pytest.helpers.get_mech_execution(T, mech_mode)
         var = [1 for i in range(VECTOR_SIZE)]
@@ -885,11 +809,6 @@ class TestTransferMechanismTimeConstant:
 
         val = EX([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[0.9, 0.9, 0.9, 0.9]])
-
-        # FIXME: The code bellow modifies parameter value.
-        #        This is not support in compiled mode.
-        if mech_mode != 'Python':
-            return
 
         T.noise.base = 10
 
