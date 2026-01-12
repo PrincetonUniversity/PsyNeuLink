@@ -1084,9 +1084,9 @@ class GRUComposition(AutodiffComposition):
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
         # MODIFIED TEACHER_TARGET NEW:
-        # self._proxy_for = [self.nodes['INPUT'], self.nodes['OUTPUT']]
-        setattr(self.gru_mech, PROXY_FOR, self)
-        # self.gru_mech._proxy_for = self.nodes['OUTPUT']
+        # setattr(self.gru_mech, PROXY_FOR, self)
+        setattr(self.gru_mech, PROXY_FOR, self.output_node)
+        setattr(self.output_node, PROXY_FOR, self.gru_mech)
         # # MODIFIED TEACHER_TARGET END
 
     def get_weights(self, context=None):
@@ -1230,7 +1230,7 @@ class GRUComposition(AutodiffComposition):
         # #             TO BE SHOWN IN show_graph() (i.e., show_pytorch=False) AND USED TO SUPPRESS WARNING.
         # self._get_outer_compositions()[1].nodes
         # # MODIFIED TEACHER_TARGET END
-        return [self.gru_mech]
+        return [self.gru_mech, self.output_node]
 
     def add_node(self, node, required_roles=None, context=None):
         """Override if called from command line to disallow modification of GRUComposition"""

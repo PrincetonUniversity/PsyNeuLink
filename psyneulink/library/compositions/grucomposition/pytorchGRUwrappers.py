@@ -569,14 +569,6 @@ class PytorchGRUMechanismWrapper(PytorchMechanismWrapper):
 
         # Restore the input port dimension (flattened above) and the sequence dimension to the output
         self.output = output_hidden_state[-1][:, None, None, :]
-        # TEACHER_TARGET BREADCRUMB DEBUGGING PRINT STATEMENT
-        print(f"{self.name} executed: {self.output}")
-
-        # # Restore the input port dimension (a singleton now) to the output
-        # self.output = self.output.unsqueeze(2)
-        #
-        # # Take the final output but keep the sequence dimension intact
-        # self.output = self.output[:, -1, ...].unsqueeze(1)
 
         self.hidden_state = output_hidden_state
 

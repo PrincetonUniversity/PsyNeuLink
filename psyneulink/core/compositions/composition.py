@@ -5565,11 +5565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # If an inner composition is not ORIGIN because of this
                 # condition, add it as INPUT anyway.
                 if isinstance(node, ControlMechanism):
-                    # # MODIFIED TEACHER_TARGET OLD:
-                    # for child in self.graph_processing.comp_to_vertex[node].children:
-                    # MODIFIED TEACHER_TARGET NEW: XXXX
                     for child in self.graph_processing.comp_to_vertex[node].children:
-                    # MODIFIED TEACHER_TARGET END
                         for parent in child.parents:
                             # MappingProjections from non-ControlMechanisms
                             # always obey standard scheduling behavior
@@ -10202,12 +10198,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = proj.receiver.owner
                 errant_node_msg = None
 
+                # MODIFIED TEACHER_TARGET NEW:
                 # Skip warning if node is a proxy for a node in self
                 if all([sender in self.nodes
-                        or (hasattr(sender, PROXY_FOR) and getattr(sender, PROXY_FOR) in self.nodes),
+                        or (hasattr(sender, PROXY_FOR) and getattr(sender, PROXY_FOR) in self._get_all_nodes()),
                         receiver in self.nodes
-                        or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self.nodes)]):
+                        or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self._get_all_nodes)]):
                     continue
+                # MODIFIED TEACHER_TARGET END
 
                 if node is sender:
                     errant_node_name = receiver.name

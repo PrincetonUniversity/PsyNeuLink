@@ -218,6 +218,7 @@ Class Reference
 import pathlib
 import site
 import warnings
+
 from psyneulink._typing import Union
 
 import numpy as np
@@ -236,7 +237,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, PROXY_FOR
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -974,7 +975,19 @@ class ShowGraph():
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
         Sorts graph by node name for consistency in display
         """
-        return composition.graph_processing.dependency_dict
+        # # MODIFIED TEACHER_TARGET OLD:
+        # return composition.graph_processing.dependency_dict
+        # MODIFIED TEACHER_TARGET NEW:
+        dependency_dict = composition.graph_processing.dependency_dict.copy()
+        for node, dependents in dependency_dict.items():
+            from psyneulink.core.compositions.composition import Composition
+            afferents = node.output_CIM.path_afferents if isinstance(node, Composition) else node.path_afferents
+            for sender in [afferent.sender.owner for afferent in afferents]:
+                if (sender not in dependents
+                        and hasattr(sender, PROXY_FOR)
+                        and getattr(sender, PROXY_FOR) in self.composition._get_all_nodes()):
+                    dependency_dict[node].add(getattr(sender, PROXY_FOR))
+        return dependency_dict
 
     def _get_nodes(self, composition ,context):
         """Helper method that allows override by subclass to filter nodes used for graph"""
