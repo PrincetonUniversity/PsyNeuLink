@@ -317,7 +317,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmecha
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, PROXY_FOR
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import (
@@ -1083,6 +1083,11 @@ class GRUComposition(AutodiffComposition):
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
+        # MODIFIED TEACHER_TARGET NEW:
+        # self._proxy_for = [self.nodes['INPUT'], self.nodes['OUTPUT']]
+        setattr(self.gru_mech, PROXY_FOR, self)
+        # self.gru_mech._proxy_for = self.nodes['OUTPUT']
+        # # MODIFIED TEACHER_TARGET END
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
@@ -1220,6 +1225,11 @@ class GRUComposition(AutodiffComposition):
         queue.append((self.gru_mech, direct_proj_in, self))
 
     def _identify_output_nodes(self, context):
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # BREADCRUMB: GET LossMechanism AND ADD PROJECTION ASSIGNED AS PROXY FROM OUTPUT NODE TO LOSS.SAMPLE
+        # #             TO BE SHOWN IN show_graph() (i.e., show_pytorch=False) AND USED TO SUPPRESS WARNING.
+        # self._get_outer_compositions()[1].nodes
+        # # MODIFIED TEACHER_TARGET END
         return [self.gru_mech]
 
     def add_node(self, node, required_roles=None, context=None):

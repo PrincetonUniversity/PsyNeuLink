@@ -5283,7 +5283,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return invalid_aux_components
 
-    def _get_invalid_aux_components(self, node):
+    def _get_invalid_aux_components(self, node)->list:
         """
         Return any Components in aux_components for a node that references items not (yet) in this Composition
         """
@@ -5294,9 +5294,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - nodes in Composition
         # - nodes in any nested Compositions
         # - controller and associated objective_mechanism
-        valid_nodes = [node for node in self.nodes.data] + \
-                      [node for node, composition in self._get_nested_nodes()] + \
-                      [self]
+        valid_nodes =list(self.nodes) + \
+                     [node for node, composition in self._get_nested_nodes()] + \
+                     [self]
         if self.controller:
             valid_nodes.append(self.controller)
             if hasattr(self.controller,'objective_mechanism'):
@@ -10201,6 +10201,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender = proj.sender.owner
                 receiver = proj.receiver.owner
                 errant_node_msg = None
+
+                # Skip warning if node is a proxy for a node in self
+                if all([sender in self.nodes
+                        or (hasattr(sender, PROXY_FOR) and getattr(sender, PROXY_FOR) in self.nodes),
+                        receiver in self.nodes
+                        or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self.nodes)]):
+                    continue
+
                 if node is sender:
                     errant_node_name = receiver.name
                     errant_node_msg = "send a projection to " + errant_node_name
