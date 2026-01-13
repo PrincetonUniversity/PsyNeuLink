@@ -1133,7 +1133,8 @@ class ShowGraph():
             condition = None
 
         # INPUT and OUTPUT Node
-        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_nodes_by_role
+        # TEACHER_TARGET BREADCRUMB: REPLACE get_nodes_by_role WITH self._get_roles_by_node
+        #                            (WHICH USES OVERRIDE IN pytorchshowgraph TO ASSIGN SPECIAL ROLES (SUCH AS GRU)
         if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
                 and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
             if rcvr in active_items:

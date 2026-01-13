@@ -927,6 +927,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Send filtered graph to Composition to determine node roles
         composition._determine_node_roles(pg, context)
 
+        # TEACHER_TARGET BREADCRUMB:  TRY TO DETERMINE NodeRoles FOR EXCLUDED NODES? (e.g. PYTORCH GRUN NODE)
+
     def _get_roles_by_node(self, node, context):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
         try:

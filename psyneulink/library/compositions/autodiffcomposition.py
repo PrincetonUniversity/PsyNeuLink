@@ -1098,7 +1098,7 @@ class AutodiffComposition(Composition):
                 if isinstance(specs, (LossMechanism, tuple)):
                     specs = convert_to_list(specs)
                 elif isinstance(specs, dict):
-                    specs = [(k,v) for k,v in spec.items()]
+                    specs = [(k,v) for k,v in specs.items()]
                 # # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
                 # if isinstance(specs, (LossMechanism, tuple, dict)):
                 #     specs = convert_to_list(specs)

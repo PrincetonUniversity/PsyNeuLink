@@ -348,7 +348,20 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _get_roles_by_node(self, node, context):
         """Override to return NodeRole for 'PYTORCH GRU NODE'"""
-        return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        # # MODIFIED TEACHER_TARGET OLD:
+        # return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        # # MODIFIED TEACHER_TARGET NEW:
+        # if self.outer_creator:
+        #     # processing_graph = self.outer_creator._get_processing_graph(context)
+        #     # self._determine_node_roles(processing_graph, context)
+        #     # return {self.composition.gru_mech: list(self.outer_creator._get_roles_by_node(self.composition, context))}
+        #     assert True
+        # else:
+        #     node_roles = {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        # return node_roles
+        # # MODIFIED TEACHER_TARGET NEWER:
+        return {self.composition.gru_mech:[NodeRole.SINGLETON, NodeRole.INPUT, NodeRole.OUTPUT]}
+        # MODIFIED TEACHER_TARGET END
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
