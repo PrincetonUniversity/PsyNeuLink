@@ -573,10 +573,11 @@ def test_udf_in_mechanism(mech_mode, benchmark):
     pytest.param([-1, 2, 3, 4], 4, [[7]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, (pnl.OWNER_VALUE, 0, 0)], pnl.FUNCTION: lambda x: sum(x[0][0]) + x[1]}], id="aggregate_variable"),
     pytest.param([-1, 2, 3, 4], 4, [[9]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, "is_finished_flag"], pnl.FUNCTION: lambda x: sum(x[0][0]) + x[1]}], id="is_finished"),
     pytest.param([-1, 2, 4, 3], 4, [[2]], [{pnl.VARIABLE: [pnl.OWNER_VALUE, "is_finished_flag"], pnl.FUNCTION: lambda x: np.argmax(x[0]) if x[1] else np.nan}], id="decision_index"),
+    pytest.param([-1, 2, 4, 3], 4, [[-1, 2, 4, 3]], [{pnl.VARIABLE: [pnl.PREVIOUS_VALUE, pnl.RATE], pnl.FUNCTION: lambda x: x[0][0] * x[1]}], id="function parameters"),
 ])
 def test_udf_in_output_port(variable, shapes, expected, ports, mech_mode, benchmark):
 
-    myMech = ProcessingMechanism(input_shapes=shapes, output_ports=ports)
+    myMech = pnl.ProcessingMechanism(function=pnl.SimpleIntegrator, input_shapes=shapes, output_ports=ports)
 
     e = pytest.helpers.get_mech_execution(myMech, mech_mode)
 

@@ -68,8 +68,12 @@ class RegistryError(Exception):
         return repr(self.error_value)
 
 
-_register_auto_name_prefix = ""
+_PNL_INHERENT_PREFIX = "__pnl_inherent_"
+_register_auto_name_prefix = _PNL_INHERENT_PREFIX
 
+# Use indirection to retrieve the current prefix.
+# Importing _register_auto_name_prefix variable directly would keep the value
+# it had at import time.
 def _get_auto_name_prefix():
     return _register_auto_name_prefix
 

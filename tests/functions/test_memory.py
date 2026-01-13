@@ -1,7 +1,9 @@
 from itertools import combinations
 
+import contextlib
 import numpy as np
 import pytest
+import re
 
 import psyneulink.core.components.functions.stateful.memoryfunctions as Functions
 from psyneulink import *
@@ -204,21 +206,18 @@ class TestDictionaryMemory:
                    'F': [[10,10,30],[40,50,60]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=3,
-                function = DictionaryMemory(
-                        seed=2,
-                        initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM)
-        )
+        f = DictionaryMemory(seed=2,
+                             initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+                             duplicate_keys=True,
+                             equidistant_keys_select=RANDOM)
+        em = EpisodicMemoryMechanism(content_size=3, assoc_size=3, function=f)
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = em.execute(stimuli[key])
             retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
+
         assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
@@ -228,6 +227,7 @@ class TestDictionaryMemory:
             retrieved = em.execute(stimuli[key])
             retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
+
         assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
@@ -245,8 +245,8 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
-        with pytest.warns(UserWarning, match=text):
+        text = 'More than one item matched key ([1. 2. 3.]) in memory for DictionaryMemory'
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = em.execute(stimuli[stim])
 
         retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
@@ -264,21 +264,18 @@ class TestDictionaryMemory:
                    'F': [[10,10,30],[40,50,60,70]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=4,
-                function = DictionaryMemory(
-                        initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM,
-                        seed=module_seed)
-        )
+        f = DictionaryMemory(initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+                             duplicate_keys=True,
+                             equidistant_keys_select=RANDOM,
+                             seed=module_seed)
+        em = EpisodicMemoryMechanism(content_size=3, assoc_size=4, function=f)
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             print(key)
             retrieved = [i for i in em.execute(stimuli[key])]
             retrieved_keys.append(TestDictionaryMemory._get_retrieved_key(stimuli, retrieved))
+
         assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
@@ -294,8 +291,8 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
-        with pytest.warns(UserWarning, match=text):
+        text = 'More than one item matched key ([1. 2. 3.]) in memory for DictionaryMemory'
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = em.execute(stimuli[stim])
 
         retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
@@ -333,20 +330,15 @@ class TestDictionaryMemory:
                    'F': [[10,10,30],[40,50,60]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=3,
-                function = DictionaryMemory(
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM,
-                        seed=module_seed)
-        )
+        f = DictionaryMemory(duplicate_keys=True, equidistant_keys_select=RANDOM, seed=module_seed)
+        em = EpisodicMemoryMechanism(content_size=3, assoc_size=3, function=f)
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
             retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
             retrieved_keys.append(retrieved_key)
+
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
@@ -364,8 +356,8 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
-        with pytest.warns(UserWarning, match=text):
+        text = 'More than one item matched key ([1. 2. 3.]) in memory for DictionaryMemory'
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = em.execute(stimuli[stim])
 
         retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
@@ -383,19 +375,14 @@ class TestDictionaryMemory:
                    'F': [[10,10,30],[40,50,60,70]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=4,
-                function = DictionaryMemory(
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM,
-                        seed=module_seed)
-        )
+        f = DictionaryMemory(duplicate_keys=True, equidistant_keys_select=RANDOM, seed=module_seed)
+        em = EpisodicMemoryMechanism(content_size=3, assoc_size=4, function=f)
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
             retrieved_keys.append(TestDictionaryMemory._get_retrieved_key(stimuli, retrieved))
+
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
@@ -411,8 +398,8 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
-        with pytest.warns(UserWarning, match=text):
+        text = 'More than one item matched key ([1. 2. 3.]) in memory for DictionaryMemory'
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = em.execute(stimuli[stim])
 
         retrieved_key = [k for k, v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
@@ -430,17 +417,12 @@ class TestDictionaryMemory:
                    'F': [[10,10,30]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                name='EPISODIC MEMORY MECH',
-                content_size=3,
-                function = DictionaryMemory(
-                        # initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM,
-                        retrieval_prob = 1.0,
-                        seed=module_seed,
-                )
-        )
+        f = DictionaryMemory(# initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+                             duplicate_keys=True,
+                             equidistant_keys_select=RANDOM,
+                             retrieval_prob=1.0,
+                             seed=module_seed)
+        em = EpisodicMemoryMechanism(name='EPISODIC MEMORY MECH', content_size=3, function=f)
 
         for key in sorted(stimuli.keys()):
             print(f'\nCurrent memory: \n{em.memory}\n')
@@ -459,21 +441,15 @@ class TestDictionaryMemory:
 
     def test_DictionaryMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of DictionaryMemory with an entry \(\[\[1 2 3\]'
-        with pytest.warns(UserWarning, match=regexp):
-            em = EpisodicMemoryMechanism(
-                    name='EPISODIC MEMORY MECH',
-                    content_size=3,
-                    assoc_size=3,
-                    function = DictionaryMemory(
-                            initializer=np.array([[[1,2,3], [4,5,6]],
-                                                  [[1,2,3], [7,8,9]]]),
-                            duplicate_keys=False,
-                            equidistant_keys_select=RANDOM,
-                            retrieval_prob = 1.0,
-                            seed=module_seed,
-                    )
-            )
+        text = 'Attempt to initialize memory of DictionaryMemory with an entry ([[1 2 3]'
+        with pytest.warns(UserWarning, match=re.escape(text)):
+            f = DictionaryMemory(initializer=np.array([[[1, 2, 3], [4, 5, 6]], [[1, 2, 3], [7, 8, 9]]]),
+                                 duplicate_keys=False,
+                                 equidistant_keys_select=RANDOM,
+                                 retrieval_prob=1.0,
+                                 seed=module_seed)
+            em = EpisodicMemoryMechanism(name='EPISODIC MEMORY MECH', content_size=3, assoc_size=3, function=f)
+
         np.testing.assert_allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
     def test_DictionaryMemory_add_and_delete_from_memory(self):
@@ -664,11 +640,9 @@ class TestContentAddressableMemory:
 
     @pytest.mark.parametrize('initializer, expected_memory, warning_msg', test_vars)
     def test_ContentAddressableMemory_allowable_initializer_shapes(self, initializer, expected_memory, warning_msg):
-        if warning_msg:
-            with pytest.warns(UserWarning) as warning:
-                c = ContentAddressableMemory(initializer=initializer)
-            assert warning_msg in str(warning[0].message)
-        else:
+
+        expectation = pytest.warns(UserWarning, match=re.escape(warning_msg)) if warning_msg is not None else contextlib.nullcontext()
+        with expectation:
             c = ContentAddressableMemory(initializer=initializer)
 
         # Some test cases return dtype=object for rugged arrays.
@@ -877,8 +851,9 @@ class TestContentAddressableMemory:
         c.duplicate_entries_allowed = False
         stim = 'A'
         text = "More than one entry matched cue"
-        with pytest.warns(UserWarning, match=text):
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = c(stimuli[stim])
+
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         np.testing.assert_equal(retrieved, [[0, 0, 0], [0, 0, 0]])
@@ -926,8 +901,8 @@ class TestContentAddressableMemory:
         c.duplicate_entries_allowed = False
         stim = 'A'
 
-        text = r'More than one entry matched cue'
-        with pytest.warns(UserWarning, match=text):
+        text = 'More than one entry matched cue'
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = c(stimuli[stim])
 
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
@@ -984,7 +959,7 @@ class TestContentAddressableMemory:
         stim = 'A'
 
         text = "More than one entry matched cue"
-        with pytest.warns(UserWarning, match=text):
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = c.execute(stimuli[stim])
 
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
@@ -1032,7 +1007,7 @@ class TestContentAddressableMemory:
         stim = 'A'
 
         text = "More than one entry matched cue"
-        with pytest.warns(UserWarning, match=text):
+        with pytest.warns(UserWarning, match=re.escape(text)):
             retrieved = c(stimuli[stim])
 
         retrieved_label = retrieve_label_helper(retrieved, stimuli)
@@ -1049,17 +1024,18 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
-        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \(\[\[1 2 3\]'
-        with pytest.warns(UserWarning, match=regexp):
+        regexp = 'Attempt to initialize memory of ContentAddressableMemory with an entry ([[1 2 3]'
+        with pytest.warns(UserWarning, match=re.escape(regexp)):
             c = ContentAddressableMemory(
-                initializer=np.array([[[1,2,3], [4,5,6]],
-                                      [[1,2,3], [7,8,9]]]),
+                initializer=np.array([[[1, 2, 3], [4, 5, 6]],
+                                      [[1, 2, 3], [7, 8, 9]]]),
                 duplicate_entries_allowed=False,
-                distance_field_weights=[1,0],
+                distance_field_weights=[1, 0],
                 equidistant_entries_select=RANDOM,
-                retrieval_prob = 1.0,
+                retrieval_prob=1.0,
                 seed=module_seed,
             )
+
         np.testing.assert_allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
@@ -1264,60 +1240,61 @@ class TestContentAddressableMemory:
 
         # Test constructor warnings and errors
 
-        text = "angle of scalars is not defined."
-        with pytest.warns(UserWarning, match=text):
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(
-                default_variable=np.array([[0],[1,2]],dtype=object),
-                distance_function=Distance(metric=COSINE),
-                seed=module_seed,
-            )
+        clear_registry(FunctionRegistry)
+        text = "angle of scalars is not defined)."
+        with pytest.warns(UserWarning, match=re.escape(text)):
+            c = ContentAddressableMemory(default_variable=np.array([[0], [1, 2]], dtype=object),
+                                         distance_function=Distance(metric=COSINE),
+                                         seed=module_seed)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(retrieval_prob=32)
+            ContentAddressableMemory(retrieval_prob=32)
+
         assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
                'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'must be a float in the interval [0,1].' in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(storage_prob=-1)
+            ContentAddressableMemory(storage_prob=-1)
+
         assert 'Value (-1) assigned to parameter \'storage_prob\' of (ContentAddressableMemory ' \
                'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'must be a float in the interval [0,1].' in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(initializer=[[1,1]],
-                                         distance_field_weights=[[1]])
+            ContentAddressableMemory(initializer=[[1, 1]], distance_field_weights=[[1]])
+
         assert 'Value ([[1]]) assigned to parameter \'distance_field_weights\' of (ContentAddressableMemory ' \
                'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'must be a scalar or list or 1d array of scalars' in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(initializer=[[1,1]],
-                                         distance_field_weights=[1,2])
+            ContentAddressableMemory(initializer=[[1, 1]], distance_field_weights=[1, 2])
+
         assert 'Value ([1 2]) assigned to parameter \'distance_field_weights\' of (ContentAddressableMemory ' \
                'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'length (2) must be same as number of fields in entries of initializer (1)' in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(equidistant_entries_select='HELLO')
-        assert "parameters is not valid: must be random or oldest or newest."\
-               in str(error_text.value)
+            ContentAddressableMemory(equidistant_entries_select='HELLO')
 
+        assert "parameters is not valid: must be random or oldest or newest." in str(error_text.value)
+
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(duplicate_entries_allowed='HELLO')
-        assert "parameters is not valid: must be a bool or 'OVERWRITE'."\
-               in str(error_text.value)
+            ContentAddressableMemory(duplicate_entries_allowed='HELLO')
 
+        assert "parameters is not valid: must be a bool or 'OVERWRITE'." in str(error_text.value)
+
+        clear_registry(FunctionRegistry)
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(distance_function=LinearCombination)
+            ContentAddressableMemory(distance_function=LinearCombination)
+
         assert "Value returned by 'distance_function' (LinearCombination) specified for ContentAddressableMemory " \
                "must return a scalar if 'distance_field_weights' is not specified or is homogenous " \
                "(i.e., all elements are the same." in str(error_text.value)
@@ -1325,98 +1302,103 @@ class TestContentAddressableMemory:
         # Test parameter assignment Parameter errors and warnings
 
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
             c.parameters.retrieval_prob = 2
+
         assert "Value (2) assigned to parameter 'retrieval_prob' of (ContentAddressableMemory " \
                "ContentAddressableMemory Function-0).parameters is not valid: " \
                "must be a float in the interval [0,1]." in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(retrieval_prob=32)
+            ContentAddressableMemory(retrieval_prob=32)
+
         assert "Value (32) assigned to parameter 'retrieval_prob' of (ContentAddressableMemory " \
                "ContentAddressableMemory Function-0).parameters is not valid: " \
                "must be a float in the interval [0,1]." in str(error_text.value)
 
+        clear_registry(FunctionRegistry)
         with pytest.raises(ParameterError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(storage_prob=-1)
+            ContentAddressableMemory(storage_prob=-1)
+
         assert f"Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
                f"ContentAddressableMemory Function-0).parameters is not valid: " \
                f"must be a float in the interval [0,1]." in str(error_text.value)
 
-        text = ("All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 are "
-                "set to '0', no retrieval will occur (equivalent to setting 'retrieval_prob=0.0'.")
-        with pytest.warns(UserWarning) as warning:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(initializer=[[1,2],[1,2]],
-                                         distance_field_weights=[0,0])
-            assert any(text in item.message.args[0] for item in warning.list)
+        clear_registry(FunctionRegistry)
+        text = "All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 are "\
+                "set to '0', no retrieval will occur (equivalent to setting 'retrieval_prob=0.0'."
+        with pytest.warns(UserWarning, match=re.escape(text)):
+            ContentAddressableMemory(initializer=[[1, 2], [1, 2]], distance_field_weights=[0, 0])
 
         # Test storage and retrieval Function errors
+        clear_registry(FunctionRegistry)
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(initializer=[[1,1],[2,2]])
-            c([1,1])
+            c = ContentAddressableMemory(initializer=[[1, 1], [2, 2]])
+            c([1, 1])
+
         assert 'Attempt to store and/or retrieve entry in ContentAddressableMemory ([[1 1]]) ' \
                'that has an incorrect number of fields (1; should be 2).' in str(error_text.value)
 
         clear_registry(FunctionRegistry)
         c = ContentAddressableMemory()
-        c([[1,2,3],[4,5,6]])
+        c([[1, 2, 3], [4, 5, 6]])
 
         with pytest.raises(FunctionError) as error_text:
-            c([[[1,2,3],[4,5,6]]])
+            c([[[1, 2, 3], [4, 5, 6]]])
+
         assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory ([[[1 2 3]\n  [4 5 6]]]) that ' \
                'has more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            c([[1,2,3],[4,5],[6,7]])
+            c([[1, 2, 3], [4, 5], [6, 7]])
+
         assert ('Attempt to store and/or retrieve entry in ContentAddressableMemory' in str(error_text.value)
                 and 'that has an incorrect number of fields' in str(error_text.value))
 
         with pytest.raises(FunctionError) as error_text:
-            c([[1,2,3],[4,5,6,7]])
+            c([[1, 2, 3], [4, 5, 6, 7]])
+
         assert "Field 1 of entry ([array([1, 2, 3]) array([4, 5, 6, 7])]) has incorrect shape ((4,)) for memory of " \
                "'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
             c.duplicate_entries_allowed = True
-            c([[1,2,3],[4,5,6]])
+            c([[1, 2, 3], [4, 5, 6]])
             c.duplicate_entries_allowed = OVERWRITE
-            c([[1,2,3],[4,5,6]])
+            c([[1, 2, 3], [4, 5, 6]])
+
         assert "Attempt to store item ([[1. 2. 3.]\n [4. 5. 6.]]) in ContentAddressableMemory Function-0 with " \
                "'duplicate_entries_allowed'='OVERWRITE' when there is more than one matching entry in its memory; " \
                "'duplicate_entries_allowed' may have previously been set to 'True'" in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
-            c.add_to_memory([[[1,2,3],[4,5,6]],
-                             [[8,9,10],[11,12,13,14]]])
+            c.add_to_memory([[[1, 2, 3], [4, 5, 6]], [[8, 9, 10], [11, 12, 13, 14]]])
+
         assert ("has incorrect shape ((2, 3)) for memory of 'ContentAddressableMemory Function-0';  should be: (3,)."
                 in str(error_text.value))
 
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
-            c.add_to_memory([1,2,3])
+            c.add_to_memory([1, 2, 3])
+
         assert 'Attempt to store and/or retrieve entry in ContentAddressableMemory ([1 2 3]) ' \
                'that has an incorrect number of fields (3; should be 2).' in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
             c.add_to_memory([[[1]]])
+
         assert 'Attempt to store and/or retrieve entry in ContentAddressableMemory ([[1]]) ' \
                'that has an incorrect number of fields (1; should be 2).' in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
             c.add_to_memory(1)
+
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was scalar)." in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            clear_registry(FunctionRegistry)
-            c.add_to_memory([[[[1,2]]]])
+            c.add_to_memory([[[[1, 2]]]])
+
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was 4d)." in str(error_text.value)
 
@@ -1424,13 +1406,13 @@ class TestContentAddressableMemory:
                 f"more than one item (3) while 'duplicate_entries_allowed'==True. If a weighted sum of entries is intended, "
                 f"set 'duplicate_entries_allowed'==False and use a selection function that returns a weighted sum "
                 f"(e.g., SoftMax with 'output='ALL').")
-        with pytest.warns(UserWarning) as warning:
-            clear_registry(FunctionRegistry)
-            c = ContentAddressableMemory(initializer=[[1,2],[1,2,3]],
-                                         distance_field_weights=[1,0],
-                                         duplicate_entries_allowed=True,
-                                         selection_function=SoftMax)
-            assert any(text in item.message.args[0] for item in warning.list)
+
+        clear_registry(FunctionRegistry)
+        with pytest.warns(UserWarning, match=re.escape(text)):
+            ContentAddressableMemory(initializer=[[1, 2], [1, 2, 3]],
+                                     distance_field_weights=[1, 0],
+                                     duplicate_entries_allowed=True,
+                                     selection_function=SoftMax)
 
 
     @pytest.mark.parametrize(
