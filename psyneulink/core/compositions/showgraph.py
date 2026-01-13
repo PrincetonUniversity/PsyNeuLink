@@ -973,19 +973,15 @@ class ShowGraph():
 
     def _get_processing_graph(self, composition, context):
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
-        Sorts graph by node name for consistency in display
+        Sort graph by node name for consistency in display
+        Add nodes marked as _proxy_for to dependency_dict
         """
-        # # MODIFIED TEACHER_TARGET OLD:
-        # return composition.graph_processing.dependency_dict
-        # MODIFIED TEACHER_TARGET NEW:
         dependency_dict = composition.graph_processing.dependency_dict.copy()
         for node, dependents in dependency_dict.items():
             from psyneulink.core.compositions.composition import Composition
             afferents = node.output_CIM.path_afferents if isinstance(node, Composition) else node.path_afferents
             for sender in [afferent.sender.owner for afferent in afferents]:
-                if (sender not in dependents
-                        and hasattr(sender, PROXY_FOR)
-                        and getattr(sender, PROXY_FOR) in self.composition._get_all_nodes()):
+                if (sender not in dependents and self._sender_is_proxy_in_composition(sender)):
                     dependency_dict[node].add(getattr(sender, PROXY_FOR))
         return dependency_dict
 
@@ -1000,6 +996,11 @@ class ShowGraph():
     def _proj_in_composition(self, proj, composition_projections, context):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return proj in composition_projections
+
+    def _sender_is_proxy_in_composition(self, proxy):
+        """Check whether proxy or node for which it is a proxy is in composition"""
+        return hasattr(proxy, PROXY_FOR) and (getattr(proxy, PROXY_FOR) in self.composition._get_all_nodes()
+                                              or proxy in self.composition._get_all_nodes())
 
     def _get_roles_by_node(self, composition, node, context):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
@@ -2418,9 +2419,8 @@ class ShowGraph():
 
             # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
             if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                    or (isinstance(rcvr, Composition)
-                        and proj.receiver.owner in {rcvr.input_CIM,
-                                                    rcvr.parameter_CIM})):
+                    or (isinstance(rcvr, Composition) and proj.receiver.owner in {rcvr.input_CIM, rcvr.parameter_CIM})
+                    or self._sender_is_proxy_in_composition(sndr)):
                 if show_node_structure and isinstance(sndr, Mechanism):
                     # If proj is a ControlProjection that comes from a parameter_CIM, get the port for the sender
                     if (isinstance(proj, ControlProjection) and
@@ -2559,7 +2559,13 @@ class ShowGraph():
                     proj_arrowhead = proj_arrow_default
 
                     if not self._proj_in_composition(proj, composition_projections, context):
-                        if show_projections_not_in_composition:
+                        if (show_projections_not_in_composition
+                                # MODIFIED TEACHER_TARGET NEW:
+                                or hasattr(proj.sender.owner, PROXY_FOR)
+                                and (getattr(proj.sender.owner, PROXY_FOR) in composition._get_all_nodes()
+                                     or proj.sender.owner in composition._get_all_nodes())
+                                # MODIFIED TEACHER_TARGET END
+                        ):
                             proj_color=self.inactive_projection_color
                         else:
                             continue

@@ -733,7 +733,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, PROXY_FOR
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -1919,6 +1919,15 @@ class AutodiffComposition(Composition):
                                               target=self.sample_port_to_target_port_map[sample],
                                               function=None,
                                               loss=self.loss_spec)
+                    # # MODIFIED TEACHER_TARGET NEW:
+                    # if hasattr(sample.owner, PROXY_FOR):
+                    #     sender = getattr(sample.owner, PROXY_FOR)
+                    #     output_to_loss_proj = MappingProjection(sender=sender,
+                    #                                             receiver=loss_mech.input_ports[SAMPLE])
+                    #     output_to_loss_proj._proxy_for = sender
+                    #     # self.add_projection(output_to_loss_proj)
+                    # assert True
+                    # MODIFIED TEACHER_TARGET END
                     loss_mech._initialize_from_context(context, base_context, override=False)
                     for proj in loss_mech.path_afferents:
                         proj.learnable= False
