@@ -351,16 +351,29 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # # MODIFIED TEACHER_TARGET OLD:
         # return {self.composition.gru_mech:[NodeRole.INTERNAL]}
         # # MODIFIED TEACHER_TARGET NEW:
-        # if self.outer_creator:
-        #     # processing_graph = self.outer_creator._get_processing_graph(context)
-        #     # self._determine_node_roles(processing_graph, context)
-        #     # return {self.composition.gru_mech: list(self.outer_creator._get_roles_by_node(self.composition, context))}
-        #     assert True
-        # else:
+        # outer_comp = self.outer_creator.composition if self.outer_creator else None
+        # if (outer_comp and any(node for node in outer_comp.nodes
+        #                        if node is not self.composition
+        #                           and NodeRole.TARGET not in outer_comp.get_roles_by_node(node)
+        #                           and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(node))):
         #     node_roles = {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        # else:
+        #     node_roles = {self.composition.gru_mech:[NodeRole.INPUT, NodeRole.OUTPUT]}
         # return node_roles
-        # # MODIFIED TEACHER_TARGET NEWER:
-        return {self.composition.gru_mech:[NodeRole.SINGLETON, NodeRole.INPUT, NodeRole.OUTPUT]}
+        # MODIFIED TEACHER_TARGET NEWER:
+        outer_comp = self.outer_creator.composition if self.outer_creator else None
+        gru_comp = self.composition
+        if outer_comp:
+            non_GRU_related_nodes = [n for n in outer_comp.nodes if n is not gru_comp
+                                     and NodeRole.TARGET not in outer_comp.get_roles_by_node(n)
+                                     and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(n)]
+            if non_GRU_related_nodes:
+            # if all(n for n in non_GRU_related_nodes ARE AFTER GRU NODE, MAKE IT AN INPUT
+            #     return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+            # if ALL non_GRU_related_nodes ARE BEORE GRU NODE, MAKE IT AN OUTPUT
+                assert True
+                return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        return {self.composition.gru_mech:[NodeRole.INPUT, NodeRole.OUTPUT]}
         # MODIFIED TEACHER_TARGET END
 
     @handle_external_context()
