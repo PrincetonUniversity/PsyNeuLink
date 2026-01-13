@@ -1133,9 +1133,14 @@ class ShowGraph():
             condition = None
 
         # INPUT and OUTPUT Node
-        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_nodes_by_role
-        if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
-                and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
+        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_roles_by_node
+        # # MODIFIED TEACHER_TARGET OLD:
+        # if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
+        #         and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
+        # MODIFIED TEACHER_TARGET NEW:
+        if all(role in self._get_roles_by_node(composition, rcvr, context)
+               for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_and_output_color
@@ -1148,7 +1153,11 @@ class ShowGraph():
                 rcvr_penwidth = str(self.bold_width)
 
         # INPUT Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context):
+        # # MODIFIED TEACHER_TARGET OLD:
+        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context):
+        # MODIFIED TEACHER_TARGET NEW:
+        elif NodeRole.INPUT in self._get_roles_by_node(composition, rcvr, context):
+        # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_color
@@ -1162,7 +1171,11 @@ class ShowGraph():
             rcvr_rank = self.input_rank
 
         # PROBE Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.PROBE, context):
+        # # MODIFIED TEACHER_TARGET OLD:
+        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.PROBE, context):
+        # MODIFIED TEACHER_TARGET NEW:
+        elif NodeRole.PROBE in self._get_roles_by_node(composition, rcvr, context):
+        # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.probe_color
@@ -1176,7 +1189,12 @@ class ShowGraph():
             rcvr_rank = self.output_rank
 
         # OUTPUT Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context):
+        # # MODIFIED TEACHER_TARGET OLD:
+        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context):
+        # MODIFIED TEACHER_TARGET NEW:
+        elif NodeRole.OUTPUT in self._get_roles_by_node(composition, rcvr, context):
+        # MODIFIED TEACHER_TARGET END
+
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.output_color
