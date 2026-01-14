@@ -895,6 +895,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
         self._determine_node_roles(processing_graph=processing_graph, context=context)
+        self._processing_graph = processing_graph
         return processing_graph
 
     def _determine_node_roles(self, processing_graph:dict, context:Context)->dict:

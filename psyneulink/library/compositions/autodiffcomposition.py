@@ -1094,14 +1094,14 @@ class AutodiffComposition(Composition):
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
             if specs:
-                # MODIFIED TEACH_TARGET OLD:
-                if isinstance(specs, (LossMechanism, tuple)):
-                    specs = convert_to_list(specs)
-                elif isinstance(specs, dict):
-                    specs = [(k,v) for k,v in specs.items()]
-                # # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
-                # if isinstance(specs, (LossMechanism, tuple, dict)):
+                # # MODIFIED TEACH_TARGET OLD:
+                # if isinstance(specs, (LossMechanism, tuple)):
                 #     specs = convert_to_list(specs)
+                # elif isinstance(specs, dict):
+                #     specs = [(k,v) for k,v in specs.items()]
+                # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
+                if isinstance(specs, (LossMechanism, tuple, dict)):
+                    specs = convert_to_list(specs)
                 # MODIFIED TEACH_TARGET END
                 for i, spec_tuple in enumerate(specs.copy()):
                     sample, target = spec_tuple

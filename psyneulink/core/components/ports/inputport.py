@@ -1613,7 +1613,7 @@ def _parse_shadow_inputs(owner, input_ports):
     Return InputPort specification dict for any shadowing InputPorts, and unmodified spec for any others.
     """
 
-    # input_ports = input_ports if isinstance(input_ports, dict) else convert_to_list(input_ports)
+    input_ports = [input_ports] if isinstance(input_ports, dict) else convert_to_list(input_ports)
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):
         # If {SHADOW_INPUTS:[InputPort or Mechanism,...]} is found:

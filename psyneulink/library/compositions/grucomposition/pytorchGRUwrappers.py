@@ -362,18 +362,38 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         # return node_roles
         # MODIFIED TEACHER_TARGET NEWER:
         outer_comp = self.outer_creator.composition if self.outer_creator else None
+        processing_graph = self.outer_creator._processing_graph
         gru_comp = self.composition
+        PYTORCH_GRU_NODE = self.composition.gru_mech
         if outer_comp:
+            # GRU-related nodes are LossMechanism and TARGET Node for PYTORCH GRU NODE.
             non_GRU_related_nodes = [n for n in outer_comp.nodes if n is not gru_comp
                                      and NodeRole.TARGET not in outer_comp.get_roles_by_node(n)
                                      and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(n)]
             if non_GRU_related_nodes:
-            # if all(n for n in non_GRU_related_nodes ARE AFTER GRU NODE, MAKE IT AN INPUT
-            #     return {self.composition.gru_mech:[NodeRole.INTERNAL]}
-            # if ALL non_GRU_related_nodes ARE BEORE GRU NODE, MAKE IT AN OUTPUT
-                assert True
-                return {self.composition.gru_mech:[NodeRole.INTERNAL]}
-        return {self.composition.gru_mech:[NodeRole.INPUT, NodeRole.OUTPUT]}
+            # If GRUComposition is nested and there are any other Nodes in the OUTER Compostion,
+            #    determine whether GRU is an INPUT, OUTPUT or INTERNAL Node;
+            #    otherwise, drop down to return as SINGTEON
+
+            #     other_inputs = any(n for n in non_GRU_related_nodes
+            #                        if n in outer_comp.get_nodes_by_role(NodeRole.INPUT))
+            #     other_outputs = any(n for n in outer_comp.get_nodes_by_role(NodeRole.OUTPUT)
+            #                         if n not in {self.composition, self.composition.PYTORCH_GRU_NODE})
+
+                # PYTORCH_GRU_NODE is not an INPUT Node if it depends on any others
+                preceding_inputs = any(n for n in non_GRU_related_nodes if n in processing_graph[PYTORCH_GRU_NODE])
+                # PYTORCH_GRU_NODE is not an OUTPUT Node if any others depend on it
+                succeding_outputs = any(PYTORCH_GRU_NODE in v for k,v in processing_graph.items()
+                                        if k in non_GRU_related_nodes)
+
+                if preceding_inputs and succeding_outputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.INTERNAL]}
+                elif preceding_inputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.OUTPUT]}
+                elif succeding_outputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.INPUT]}
+        # If GRUComposition is standalone, treat PYTORCH_GRU_NODE as SINGLETON
+        return {PYTORCH_GRU_NODE:[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON]}
         # MODIFIED TEACHER_TARGET END
 
     @handle_external_context()
