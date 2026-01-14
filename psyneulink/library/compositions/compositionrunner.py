@@ -8,7 +8,7 @@
 
 # ********************************************* AutodiffComposition *************************************************
 
-from typing import Generator
+from typing import Generator, Hashable, Union
 
 import numpy as np
 
@@ -367,7 +367,8 @@ class CompositionRunner():
                      retain_in_pnl_options:Optional[Mapping] = None,
                      call_before_minibatch = None,
                      call_after_minibatch = None,
-                     context=None,
+                     context: Union[Context, Hashable] = None,
+                     base_context: Context = Context(execution_id=None),
                      execution_mode:ExecutionMode = ExecutionMode.Python,
                      skip_initialization=False,
                      **kwargs)->np.ndarray:
@@ -501,6 +502,7 @@ class CompositionRunner():
                                   retain_in_pnl_options=retain_in_pnl_options,
                                   execution_mode=execution_mode,
                                   context=context,
+                                  base_context=base_context,
                                   **kwargs)
             skip_initialization = True
 

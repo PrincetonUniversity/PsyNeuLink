@@ -336,13 +336,13 @@ class Context():
     _deepcopy_shared_keys = {'owner', 'composition', '_composition'}
 
     def __init__(self,
+                 execution_id=NotImplemented,
                  owner=None,
                  composition=None,
                  flags=None,
                  execution_phase=ContextFlags.IDLE,
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
-                 execution_id=NotImplemented,
                  string:str='',
                  time=None,
                  rpc_pipeline:Queue=None):
