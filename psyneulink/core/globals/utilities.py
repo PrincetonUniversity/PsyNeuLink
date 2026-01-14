@@ -879,6 +879,7 @@ def convert_to_list(l):
     """Enclose l in a list if it is not one already
     If it is a single item or tuple, place in list
     If it is a numpy array of dimension > 0, convert to list
+    # If it is a dict, convert to list of tuples
     If it is None, return None
     """
     if l is None:
@@ -889,6 +890,8 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
+    # elif isinstance(l, dict):
+    #     return [(k,v) for k,v in l.items()]
     elif isinstance(l, np.ndarray) and l.ndim > 0:
         return list(l)
     else:
