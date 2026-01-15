@@ -18,9 +18,9 @@ COSINE_SIMILARITY = 'cosine_similarity'
 metric = COSINE_SIMILARITY
 model_based_ness = 0.
 
-TIME_DRIFT_NOISE = .05
-STATE_INTEGRATION_RATE = 1.  # "original": .6
-TIME_RETRIEVAL_WEIGHT = .2  # "original": .2
+TIME_DRIFT_NOISE = .2 # "original": .05
+STATE_INTEGRATION_RATE = .6 # 1.  # "original": .6
+TIME_RETRIEVAL_WEIGHT = .2 #.2  # "original": .2
 
 data = run_original.run(
     500,

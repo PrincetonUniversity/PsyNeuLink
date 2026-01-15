@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 # your model
 from ego_revaluation.run_original_probabilistic import run
+from ego_revaluation.run_original_probabilistic import run2
 
 
 # ============================================================
@@ -68,8 +69,10 @@ def simulate_participants(
     """Run M simulated participants and return Nx4 matrix of stay stats."""
     all_stats = []
 
+    trialLog=[]
     for _ in range(n_participants):
-        trial_log = run(
+        # trial_log = run(
+        trial_log=run2(
             state_integration_rate=state_integration_rate,
             time_retrieval_weight=time_retrieval_weight,
             model_based_ness=model_based_ness,
@@ -78,8 +81,9 @@ def simulate_participants(
             common_prob=common_prob,
         )
         all_stats.append(compute_stay_stats(trial_log))
+        trialLog.append(trial_log)
 
-    return np.array(all_stats)   # shape = (participants, 4)
+    return np.array(all_stats), trialLog   # shape = (participants, 4)
 
 
 # ============================================================
@@ -122,9 +126,9 @@ def plot_daw_style(mean_stats, sem_stats, title):
 # ============================================================
 def parameter_sweep(
     save_dir,
-    integration_rates=[0.6, 1.0],
-    time_weights=[0.0, 0.2],
-    model_based_ness_list=[0.0, 1.0],
+    integration_rates=[0.6],
+    time_weights=[0.0, 0.1, 1.6],
+    model_based_ness_list=[0.0],
     n_base_trials=200,
     n_participants=50
 ):
@@ -158,7 +162,7 @@ def parameter_sweep(
                 for mb in model_based_ness_list:
 
                     # --- Simulate participants ---
-                    stats = simulate_participants(
+                    stats, trialLog = simulate_participants(
                         n_participants=n_participants,
                         n_base_trials=n_base_trials,
                         state_integration_rate=ir,
@@ -234,8 +238,8 @@ if __name__ == "__main__":
 
     parameter_sweep(
         save_dir=save_dir,
-        integration_rates=[.3], # .6 in multiplicative
-        time_weights=[0, 0.2, .6], # .1, .6 in multiplicative
+        integration_rates=[0.6], # .6 in multiplicative
+        time_weights=[0, 0.2, 1.6], # .1, .6 in multiplicative
         model_based_ness_list=[0.0],
         n_base_trials=200,
         n_participants=20
