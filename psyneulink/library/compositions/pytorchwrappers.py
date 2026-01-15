@@ -8,9 +8,7 @@
 # ********************************************* PytorchComponent *************************************************
 
 """PyTorch wrappers for Composition, Mechanism, Projection, and Functions for use in AutodiffComposition"""
-from commonmark.blocks import lists_match
-from h5py.h5f import namedtuple
-from torchgen.executorch.api.et_cpp import return_type
+from collections import namedtuple
 
 from psyneulink._typing import Iterable, Literal, Optional, Union
 
