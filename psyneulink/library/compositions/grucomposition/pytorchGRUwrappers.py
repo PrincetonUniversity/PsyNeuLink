@@ -111,6 +111,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         self.torch_dtype = dtype or torch.float64
         self.numpy_dtype = torch.tensor([10], dtype=self.torch_dtype).numpy().dtype
 
+        # since stateful objects are being created within a run call
+        # (after context was initialized), need to initialize manually here
+        for dummy_proj, _ in _projection_wrapper_pairs:
+            dummy_proj._initialize_from_context(context, base_context)
+
     def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, source:str, context, nested=False):
         """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
         from psyneulink.library.compositions.grucomposition.grucomposition import (
@@ -845,7 +850,7 @@ class DummyProjection(Projection):
     name = ""
 
     class Parameters(Projection.Parameters):
-        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
+        learning_rate = Parameter(None, stateful=True)
 
     @check_user_specified
     def __init__(self, name):

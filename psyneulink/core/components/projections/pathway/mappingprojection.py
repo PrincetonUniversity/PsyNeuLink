@@ -474,7 +474,7 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
 
         """
-        learning_rate = Parameter(None, stateful=True, fallback_value=DEFAULT)
+        learning_rate = Parameter(None, stateful=True)
         function = Parameter(MatrixTransform, stateful=False, loggable=False)
         matrix = FunctionParameter(DEFAULT_MATRIX,
                                    setter=_mapping_projection_matrix_setter)

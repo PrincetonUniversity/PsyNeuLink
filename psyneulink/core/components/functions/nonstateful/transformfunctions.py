@@ -1821,7 +1821,7 @@ class MatrixTransform(TransformFunction):  # -----------------------------------
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
         matrix = Parameter(None, modulable=True, mdf_name='B')
         operation = Parameter(DOT_PRODUCT, stateful=False)
-        normalize = Parameter(False, fallback_value=DEFAULT)
+        normalize = Parameter(False)
 
     @check_user_specified
     @beartype
