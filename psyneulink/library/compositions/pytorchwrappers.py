@@ -884,13 +884,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 receiver = projection.receiver.owner
                 if node is receiver:
                     dependencies.add(sender)
-                # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                 elif (isinstance(receiver, CompositionInterfaceMechanism) and
+                      # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
                       receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
                     dependencies.add(sender)
                 else:
-                    for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
+                    #
+                    for proj in [p for p in node.afferents if p.sender.owner in nodes]:
+                        # Add any other depenencies of node on afferents from other nodes in the full set of nodes
                         dependencies.add(proj.sender.owner)
+                # composition.exclude_node_roles(sender, NodeRole.OUTPUT)
+                # composition.exclude_node_roles(receiver, NodeRole.INPUT)
+                # TEACHER_TARGET BREADCRUMB:
+                #     DO SAME HERE TO DETERMINE INPUT AND OUTPUT NODES AS IN _get_roles_by_node FOR GRUComposition
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}

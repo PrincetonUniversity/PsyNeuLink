@@ -4694,6 +4694,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 `NodeRole`\\(s) to assign to **node**.
 
         """
+        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
         roles = convert_to_list(roles)
         for role in roles:
             self._add_required_node_role(node, role, context)
@@ -4718,6 +4719,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         roles = convert_to_list(roles)
+        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
 
         for role in roles:
             if role not in NodeRole:
@@ -5836,6 +5838,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return aggregated_map
 
     def _remove_node_role(self, node, role):
+        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
         try:

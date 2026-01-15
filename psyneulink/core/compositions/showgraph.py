@@ -2579,7 +2579,7 @@ class ShowGraph():
                     if not self._proj_in_composition(proj, composition_projections, context):
                         if (show_projections_not_in_composition
                                 # MODIFIED TEACHER_TARGET NEW:
-                                or hasattr(proj.sender.owner, PROXY_FOR)
+                                or self.show_pytorch is False and hasattr(proj.sender.owner, PROXY_FOR)
                                 and (getattr(proj.sender.owner, PROXY_FOR) in composition._get_all_nodes()
                                      or proj.sender.owner in composition._get_all_nodes())
                                 # MODIFIED TEACHER_TARGET END
