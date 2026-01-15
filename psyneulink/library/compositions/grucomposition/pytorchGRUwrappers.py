@@ -353,8 +353,11 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
 
     def _get_roles_by_node(self, node, context):
         """Override to return NodeRole for 'PYTORCH GRU NODE'"""
-        outer_comp = self.outer_creator.composition if self.outer_creator else None
-        processing_graph = self.outer_creator._processing_graph
+        if self.outer_creator:
+            outer_comp = self.outer_creator.composition
+            processing_graph = self.outer_creator._processing_graph
+        else:
+            outer_comp = procesing_graph = None
         gru_comp = self.composition
         PYTORCH_GRU_NODE = self.composition.gru_mech
         if outer_comp:

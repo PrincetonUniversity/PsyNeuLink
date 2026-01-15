@@ -932,6 +932,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # Send filtered graph to Composition to determine node roles
         composition._determine_node_roles(pg, context)
+        # TEACHER_TARGET BREADCRUMB: THIS PRODUCES THE CORRECT RESULT FOR 'Inner Mech 1'
+        #                             WHERE self IS PytorchCompositionWrapper
+        inner_mech_1_roles = self._get_roles_by_node(comp_nodes[0], context)
+        assert True
 
         # TEACHER_TARGET BREADCRUMB:  TRY TO DETERMINE NodeRoles FOR EXCLUDED NODES? (e.g. PYTORCH GRUN NODE)
 
