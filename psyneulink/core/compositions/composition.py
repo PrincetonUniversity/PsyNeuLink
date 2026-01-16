@@ -4647,7 +4647,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            for p in node.input_ports):
                         # Was an INPUT Node with Projections from input_CIM,
                         #   so exclude as INPUT which should remove its afferent Projections
-                        self.exclude_node_roles(node, NodeRole.INPUT, context)
+                        self.exclude_node_roles(node, NodeRole.INPUT, context=context)
                         self._analyze_graph(context=context)
                     else:
                         # Had afferent Projections other than from input_CIM
@@ -4658,8 +4658,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     input_port.internal_only = True
                 # BIAS Node should *never* be considered as an INPUT Node;  *can* be an OUTPUT Node
                 #   if it is in an inner Composition and projects to an outer one (handed in _determine_node_roles)
-                self.exclude_node_roles(node, NodeRole.INPUT, context)
-                self.exclude_node_roles(node, NodeRole.OUTPUT, context)
+                self.exclude_node_roles(node, NodeRole.INPUT)
+                self.exclude_node_roles(node, NodeRole.OUTPUT)
                 self.required_node_roles.append((node, NodeRole.BIAS))
 
             elif role is NodeRole.INPUT:
@@ -4700,7 +4700,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_required_node_role(node, role, context)
 
     @handle_external_context()
-    def exclude_node_roles(self, node, roles, context):
+    def exclude_node_roles(self,
+                           node:Mechanism_Base,
+                           roles:list,
+                           scope:Optional[Literal[ALL, NESTED]]=None,
+                           context=None)->list:
         """
             Excludes the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
 
@@ -4732,10 +4736,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Attempt to exclude {role} (from {node} of {self.name})"
                                        f"that cannot be modified by user.")
             node_role_pair = (node, role)
-            self.excluded_node_roles.append(node_role_pair)
-            if node_role_pair in self.required_node_roles:
-                self.required_node_roles.remove(node_role_pair)
-            self._remove_node_role(node, role)
+            comps = [self]
+            if scope:
+                comps += self._get_nested_compositions()
+            for comp in [c for c in comps if node in c.nodes]:
+                if node_role_pair not in comp.excluded_node_roles:
+                    comp.excluded_node_roles.append(node_role_pair)
+                if node_role_pair in comp.required_node_roles:
+                    comp.required_node_roles.remove(node_role_pair)
+                comp._remove_node_role(node, role)
 
     def get_required_roles_by_node(self, node):
         """
