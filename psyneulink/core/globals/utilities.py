@@ -890,8 +890,8 @@ def convert_to_list(l):
         return list(l)
     elif isinstance(l, set):
         return list(l)
-    # elif isinstance(l, dict):
-    #     return [(k,v) for k,v in l.items()]
+    elif isinstance(l, dict):
+        return [(k,v) for k,v in l.items()]
     elif isinstance(l, np.ndarray) and l.ndim > 0:
         return list(l)
     else:
