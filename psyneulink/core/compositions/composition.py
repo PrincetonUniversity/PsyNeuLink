@@ -7652,7 +7652,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Possibilities 0, 3 or 4 (single NODE, set of NODESs tuple, dict or Pathway specified, so convert to list
         if _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
-            pathways = convert_to_list(pathways)
+            pathways = [pathways] if isinstance(pathways, dict) else convert_to_list(pathways)
 
         # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
         elif isinstance(pathways, set):

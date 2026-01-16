@@ -1337,7 +1337,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                     f"have been specified for {self.name}. "
                                                     f"These are synonyms, but only one should be used to avoid "
                                                     f"creating unnecessary and/or duplicated Components.")
-                    control = convert_to_list(args)
+                    control = [args] if isinstance(args, dict) else convert_to_list(args)
+
+
             if 'default_control_allocation' in kwargs:
                 raise ControlMechanismError(f"'default_allocation' should be used in place of "
                                             f"'default_control_allocation'.")
