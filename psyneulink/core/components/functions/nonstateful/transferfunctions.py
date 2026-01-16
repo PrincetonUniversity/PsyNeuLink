@@ -2895,6 +2895,11 @@ class SoftMax(TransferFunction):
         specifies the format of array returned by `function <SoftMax._function>`
         (see `output <SoftMax.output>` for details).
 
+    .. note::
+       When executing in PyTorch mode (e.g., an AutodiffComposition or a Composition run with
+       ``execution_mode=ExecutionMode.PyTorch``), the SoftMax ``output`` options are honored with parity to the
+       Python path, including *ARG_MAX*, *ARG_MAX_INDICATOR*, *MAX_VAL*, *MAX_INDICATOR*, and *PROB*/*PROB_INDICATOR*.
+
     per_item : boolean : default True
         for 2d variables, determines whether the SoftMax function will be applied to the entire variable (per_item =
         False), or applied to each item in the variable separately (per_item = True).
@@ -3492,9 +3497,47 @@ class SoftMax(TransferFunction):
     def _gen_pytorch_fct(self, device, context=None):
         gain = self._get_pytorch_fct_param_value('gain', device, context)
         mask_threshold = self._get_pytorch_fct_param_value('mask_threshold', device, context)
+        output_type = self._get_pytorch_fct_param_value('output', device, context)
+
+        def apply_output_type(sm: torch.Tensor, raw_input: torch.Tensor) -> torch.Tensor:
+            if output_type in {None, ALL}:
+                return sm
+            if output_type in {ARG_MAX, ARG_MAX_INDICATOR}:
+                max_vals, max_indices = torch.max(sm, dim=-1, keepdim=True)
+                out = torch.zeros_like(sm)
+                if output_type == ARG_MAX:
+                    return out.scatter(-1, max_indices, max_vals)
+                return out.scatter(-1, max_indices, torch.ones_like(max_vals))
+            if output_type in {MAX_VAL, MAX_INDICATOR}:
+                max_vals = torch.max(sm, dim=-1, keepdim=True).values
+                mask = sm == max_vals
+                if output_type == MAX_VAL:
+                    return torch.where(mask, max_vals, torch.zeros_like(sm))
+                return torch.where(mask, torch.ones_like(sm), torch.zeros_like(sm))
+            if output_type in {PROB, PROB_INDICATOR}:
+                flat = sm.reshape(-1, sm.shape[-1])
+                raw_flat = raw_input.reshape(-1, raw_input.shape[-1])
+                zero_rows = torch.sum(flat, dim=-1) == 0
+                flat_safe = flat.clone()
+                if torch.any(zero_rows):
+                    flat_safe[zero_rows] = 1.0
+                indices = torch.multinomial(flat_safe, 1)
+                out = torch.zeros_like(flat)
+                if output_type == PROB:
+                    chosen = raw_flat.gather(-1, indices)
+                    out.scatter_(-1, indices, chosen)
+                else:
+                    out.scatter_(-1, indices, torch.ones_like(indices, dtype=out.dtype))
+                if torch.any(zero_rows):
+                    out[zero_rows] = raw_flat[zero_rows]
+                return out.reshape_as(sm)
+            return sm
 
         if isinstance(gain, str) and gain == ADAPTIVE:
-            return lambda x: (torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, -1))
+            def adaptive_softmax(x: torch.Tensor) -> torch.Tensor:
+                sm = torch.softmax(self._gen_pytorch_adapt_gain_fct(device, context)(x) * x, -1)
+                return apply_output_type(sm, x)
+            return adaptive_softmax
 
         elif mask_threshold is not None:
             def pytorch_thresholded_softmax(_input: torch.Tensor) -> torch.Tensor:
@@ -3514,7 +3557,8 @@ class SoftMax(TransferFunction):
 
                 # Handle case where all values are masked (return tensor with gradient support)
                 if torch.all(~mask):
-                    return torch.full_like(v, 0.0, requires_grad=True)
+                    sm = torch.full_like(v, 0.0, requires_grad=True)
+                    return apply_output_type(sm, _input)
 
                 # Make numerically stable by shifting max value
                 max_v = torch.max(v[mask])  # Avoid computing max over -inf
@@ -3524,13 +3568,13 @@ class SoftMax(TransferFunction):
                 exp_v = torch.exp(v)
                 sm = exp_v / torch.sum(exp_v, dim=-1, keepdim=True)
 
-                return sm
+                return apply_output_type(sm, _input)
 
             # Return the function
             return pytorch_thresholded_softmax
 
         else:
-            return lambda x: (torch.softmax(gain * x, -1))
+            return lambda x: apply_output_type(torch.softmax(gain * x, -1), x)
 
     def _gen_pytorch_adapt_gain_fct(self, device, context=None):
         scale = self._get_pytorch_fct_param_value('adapt_scale', device, context)

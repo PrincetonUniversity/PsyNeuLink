@@ -410,8 +410,9 @@ that is propagated through the EMComposition.
 
   .. technical_note::
      The *WEIGHTED_AVG* option is passed as *ALL* to the **output** argument of the `SoftMax` Function, *ARG_MAX* is
-     passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*; the other SoftMax options are
-     not currently supported.
+     passed as *ARG_MAX_INDICATOR*; and *PROBALISTIC* is passed as *PROB_INDICATOR*. This mapping is honored for both
+     Python execution and the PyTorch execution path (e.g., ``execution_mode=ExecutionMode.PyTorch``); other SoftMax
+     output types are not used by EMComposition.
 
 .. _EMComposition_Memory_Decay_Rate:
 
