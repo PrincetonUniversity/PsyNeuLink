@@ -139,6 +139,9 @@ class TestNested:
         outer_mech_2 = ProcessingMechanism(name='Outer Mech 2', input_shapes=3)
         inner_comp = AutodiffComposition(name='Inner Comp', pathways=[inner_mech_1, inner_mech_2])
         outer_comp = AutodiffComposition(name='Outer Comp', pathways=[outer_mech_1,inner_comp,outer_mech_2])
+        # TEACHER_TARGET BREADCRUMB:
+        # outer_comp.show_graph(show_pytorch=True)
+        # outer_comp.show_graph(show_pytorch=True)
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff
 

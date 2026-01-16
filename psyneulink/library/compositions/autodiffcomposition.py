@@ -1688,7 +1688,7 @@ class AutodiffComposition(Composition):
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:
-            self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
+            self.exclude_node_roles(mech, NodeRole.OUTPUT, context=context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
 
@@ -1828,7 +1828,7 @@ class AutodiffComposition(Composition):
                 if comparators_for_output_port:
                     target_mech = comparators_for_output_port[0].input_ports[TARGET].path_afferents[0].sender.owner
                     # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
-                    self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
+                    self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context=context)
                     # TARGET Node already exists, so no need to construct
                     continue
                 else:

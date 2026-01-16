@@ -892,10 +892,21 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     for proj in [p for p in node.afferents if p.sender.owner in nodes]:
                         # Add any other depenencies of node on afferents from other nodes in the full set of nodes
                         dependencies.add(proj.sender.owner)
-                # composition.exclude_node_roles(sender, NodeRole.OUTPUT)
-                # composition.exclude_node_roles(receiver, NodeRole.INPUT)
-                # TEACHER_TARGET BREADCRUMB:
-                #     DO SAME HERE TO DETERMINE INPUT AND OUTPUT NODES AS IN _get_roles_by_node FOR GRUComposition
+
+                # # TEACHER_TARGET BREADCRUMB:  NEED TO RESTORE excluded_node_roles LISTS OR REFACTOR TO USE
+                # #                              ._determine_node_roles BELOW SO THAT ASSIGNMENTS DO NOT PERSIST
+                # #                              FOR CALLS TO Composition._determine_node_roles
+                # # Ignore LossMechanism since projecting to that does not preclude NodeRole.OUTPUT
+                # # IMPLEMENTATION NOTE:
+                # #   Don't need to worry about ControlMechanisms, LearningMechanisms or associated ObjectiveMechanisms
+                # #   here as they are not allowed in processing_graph of pytorch_representation (vs. Composition)
+                # if not isinstance(receiver, LossMechanism):
+                #     composition.exclude_node_roles(sender, NodeRole.OUTPUT, scope=ALL)
+                # composition.exclude_node_roles(receiver, NodeRole.INPUT, scope=ALL)
+                # # roles_all = composition.all_nodes_to_roles[node]
+                # # roles_inner = composition.nodes[1].nodes_to_roles[node]
+
+
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
@@ -931,11 +942,26 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 composition.exclude_node_roles(node, NodeRole.OUTPUT)
 
         # Send filtered graph to Composition to determine node roles
+
+        # TEACHER_TARGET BREADCRUMB:  NEED TO RESTORE excluded_node_roles LISTS OR REFACTOR TO USE
+        #                              ._determine_node_roles BELOW SO THAT ASSIGNMENTS DO NOT PERSIST
+        #                              FOR CALLS TO Composition._determine_node_roles
+        # Ignore LossMechanism since projecting to that does not preclude NodeRole.OUTPUT
+        # IMPLEMENTATION NOTE:
+        #   Don't need to worry about ControlMechanisms, LearningMechanisms or associated ObjectiveMechanisms
+        #   here as they are not allowed in processing_graph of pytorch_representation (vs. Composition)
+        # if not isinstance(receiver, LossMechanism):
+        #     composition.exclude_node_roles(sender, NodeRole.OUTPUT, scope=ALL)
+        # composition.exclude_node_roles(receiver, NodeRole.INPUT, scope=ALL)
+        # roles_all = composition.all_nodes_to_roles[node]
+        # roles_inner = composition.nodes[1].nodes_to_roles[node]
+
+
         composition._determine_node_roles(pg, context)
         # TEACHER_TARGET BREADCRUMB: THIS PRODUCES THE CORRECT RESULT FOR 'Inner Mech 1'
         #                             WHERE self IS PytorchCompositionWrapper
-        inner_mech_1_roles = self._get_roles_by_node(comp_nodes[0], context)
-        assert True
+        # inner_mech_1_roles = self._get_roles_by_node(comp_nodes[0], context)
+        # assert True
 
         # TEACHER_TARGET BREADCRUMB:  TRY TO DETERMINE NodeRoles FOR EXCLUDED NODES? (e.g. PYTORCH GRUN NODE)
 
