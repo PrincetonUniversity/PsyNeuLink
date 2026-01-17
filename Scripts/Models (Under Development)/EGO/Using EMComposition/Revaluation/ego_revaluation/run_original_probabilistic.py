@@ -8,6 +8,9 @@ from .config import defaults
 
 def drift(p, sigma=0.125, lo=0.25, hi=0.75):
     """Gaussian random walk for reward probabilities, clipped."""
+
+    sigma = 0.0
+
     p = p + np.random.normal(0, sigma)
     return float(np.clip(p, lo, hi))
 
@@ -37,10 +40,15 @@ def gen_trials_base(
     }
 
     # independent drifting reward probabilities for the 2 second-stage states
-    p1 = np.random.uniform(0.25, 0.75)
-    p2 = np.random.uniform(0.25, 0.75)
-    p3 = np.random.uniform(0.25, 0.75)
-    p4 = np.random.uniform(0.25, 0.75)
+    # p1 = np.random.uniform(0.25, 0.75)
+    # p2 = np.random.uniform(0.25, 0.75)
+    # p3 = np.random.uniform(0.25, 0.75)
+    # p4 = np.random.uniform(0.25, 0.75)
+
+    p1 = 0.75
+    p2 = 0.75
+    p3 = 0.25
+    p4 = 0.25
 
     visited_states = []
     rewards = []
@@ -54,7 +62,8 @@ def gen_trials_base(
         if trial == 0:
             start_id = 1 if random() < 0.5 else 2
         else:
-            start_id = 1 if random() < max(p1,p2)/(max(p1,p2)+max(p3,p4)) else 2
+            # start_id = 1 if random() < max(p1,p2)/(max(p1,p2)+max(p3,p4)) else 2
+            start_id = 1 if random() < 0.5 else 2
         start_state = states[start_id]
 
         # -----------------------------
@@ -133,7 +142,8 @@ def gen_trials_base(
         })
 
     # one time-step per event (3 events per trial | n is number of trials)
-    times = gen_trials.get_time_sequence(n * 3)
+    # times = gen_trials.get_time_sequence(n * 3)
+    times = gen_trials.get_time_sequence_event(n,3)
 
     return np.array(visited_states), np.array(rewards), times, trial_log
 
@@ -234,31 +244,32 @@ def get_state_one_hot(state_id):
 # softmax value-to-choice rule with perseveration bias from Daw et al, 2011
 # simply replace Q-value with the value retrieved from Episodic Memory
 def val_to_choice(
-        candstate1: int, # candidate state 1
-        candstate2: int, # candidate state 2
-        val1: float, # value retrieved from memory for candidate choice "1"
-        val2: float, # value retrieved from memory for candidate choice "2"
-        prev_choice = np.array([]), # np.array, identity of previous 1st stage choice
-        temp: float = 1, # temperature for softmax
+        r1: float, # value/reward retrieved from memory for candidate choice "1"
+        r2: float, # value/reward retrieved from memory for candidate choice "2"
+        prev_choice: int, # np.array, identity of previous 1st stage choice
+        temp: float = 2, # temperature for softmax
         bias: float = 0, # perseveration bias, only for 1st stage ('rocket') choice
         first_stage_choice: bool = True):
 
     # determine if choice in question is repetition from previous trial
-    if prev_choice.size == 0: # if first trial, no previous choice
-        repeat1 = 0; repeat2 = 0
-    else:
-        repeat1 = all(get_state_one_hot(candstate1) == prev_choice)
-        repeat2 = all(get_state_one_hot(candstate2) == prev_choice)
+    repeat1 = int(prev_choice == 1)
+    repeat2 = int(prev_choice == 2)
 
     # numerator of softmax for each candidate choice
-    choice1 = np.exp(temp*(val1 + bias*repeat1))
-    choice2 = np.exp(temp*(val2 + bias*repeat2))
+    choice1 = np.exp(temp*(r1 + bias*repeat1))
+    choice2 = np.exp(temp*(r2 + bias*repeat2))
 
     # calculate softmax probability for each candidate choice
     p_choice1 = choice1 / (choice1 + choice2)
     p_choice2 = choice2 / (choice1 + choice2)
 
     return p_choice1, p_choice2
+
+def val_to_choice2(r1, r2, prev_choice = np.array([]), bias: int = 0):
+    # “policy”: pick start state with higher estimated reward
+    pred_next = 1 if r1 > r2 else 2
+
+    return pred_next
 
 def run2(
         metric='dot_product',
@@ -296,13 +307,13 @@ def run2(
         tr["estimate_state_2"] = r2
 
         # get previous choice, only valid for 2nd trial onwards
-        prev_choice = np.array([]) if i == 0 else get_state_one_hot(trial_log[i-1]["start_state"])
+        prev_choice = tr["start_state"]
         # get softmax choice probabilities
-        candstate1 = 1; candstate2 = 2
-        p_choice1, p_choice2 = val_to_choice(candstate1, candstate2, r1, r2, prev_choice)
-
+        p_choice1, p_choice2 = val_to_choice(r1, r2, prev_choice)
         # “policy”: pick start state with higher estimated reward
         pred_next = 1 if random() < p_choice1 else 2
+
+        # pred_next = val_to_choice2(r1, r2)
         tr["pred_next_state"] = pred_next
 
         # "stay" = would the model repeat the current first-stage state on the next trial?

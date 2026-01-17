@@ -239,7 +239,8 @@ if __name__ == "__main__":
     parameter_sweep(
         save_dir=save_dir,
         integration_rates=[0.6], # .6 in multiplicative
-        time_weights=[0, 0.2, 1.6], # .1, .6 in multiplicative
+        time_weights=[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
+        # time_weights=[0.25],  # .1, .6 in multiplicative
         model_based_ness_list=[0.0],
         n_base_trials=200,
         n_participants=20

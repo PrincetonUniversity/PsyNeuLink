@@ -119,7 +119,7 @@ get_transition_reval_trials = partial(gen_trials, phase=defaults.TRANSITION_REVA
 # ---------------------------------------------------------
 
 def get_time_sequence(
-        num_trials: int,
+        num_states: int,
         time_drift_rate: float = defaults.TIME_DRIFT_RATE,
         noise: float = defaults.TIME_DRIFT_NOISE,
 ) -> np.ndarray:
@@ -131,7 +131,28 @@ def get_time_sequence(
         noise=noise,
         dimension=defaults.TIME_SIZE,
     )
-    return np.array([time_fct(time_drift_rate) for _ in range(num_trials)])
+    return np.array([time_fct(time_drift_rate) for _ in range(num_states)])
+
+def get_time_sequence_event(
+        num_trials: int,
+        num_states_per_trial: int,
+        time_drift_rate: float = defaults.TIME_DRIFT_RATE,
+        noise: float = defaults.TIME_DRIFT_NOISE,
+) -> np.ndarray:
+    """
+    Generate time sequence as drift on a sphere.
+    """
+    time_fct = pnl.DriftOnASphereIntegrator(
+        initializer=np.random.random(defaults.TIME_SIZE),
+        noise=noise,
+        dimension=defaults.TIME_SIZE,
+    )
+
+    ts = np.array([time_fct(time_drift_rate) for _ in range(num_trials)])
+    timestamps = []
+    for t in ts:
+        timestamps.extend([t]*num_states_per_trial)
+    return np.array(timestamps)
 
 
 # ---------------------------------------------------------
