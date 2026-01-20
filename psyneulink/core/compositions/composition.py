@@ -4706,9 +4706,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            scope:Optional[Literal[ALL, NESTED]]=None,
                            context=None)->list:
         """
-            Excludes the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
+            Exclude the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
 
-            Removes specified roles if they had been previous assigned either by default as a `required_node_role
+            Remove specified roles if they had previously been assigned either by default as a `required_node_role
             <Composition_Node_Role_Assignment>` or using the `required_node_roles <Composition.required_node_roles>`
             method.
 
@@ -4720,11 +4720,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             roles : `NodeRole` or list[`NodeRole`]
                 `NodeRole`\\(s) to remove and/or exclude from **node**.
-
         """
         roles = convert_to_list(roles)
-        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
-
         for role in roles:
             if role not in NodeRole:
                 raise CompositionError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
@@ -5388,7 +5385,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if changed:
             self.needs_update_graph_processing = True
 
-    def _determine_node_roles(self, processing_graph:dict=None, context=None):
+    def _determine_node_roles(self, processing_graph:dict=None, node_roles_map:dict=None, context:Context=None):
         """Assign NodeRoles to Nodes in Composition
 
         .. note::
@@ -5508,10 +5505,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        processing_graph : dict
-           If provided, this is used for dependencies that determine roles in place of self.graph_processing
+        processing_graph : dict : default self.graph_processing
+           if provided, it is used for dependencies that determine roles in place of self.graph_processing
            (used to construct externally-used representations, such as AutodiffComposition.pytorch_representation)
 
+        node_roles_map : dict : default self.nodes_to_roles
+           if provided, it is where role assignments are stored
+           (used to construct externally-used role assignments, such as AutodiffComposition.pytorch_representation)
        """
 
         # IMPLEMENTATION NOTE:
@@ -5523,7 +5523,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scope = ALL if flatten else None # Used for calls to get_roles_by_node, get_nodes_by_role, and _add_node_role
 
         # Clear old roles
-        self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
+        node_roles_map = node_roles_map or self.nodes_to_roles
+        node_roles_map.update({k: set() for k in node_roles_map})
         if flatten:
             for nested_comp in self._get_nested_compositions():
                 nested_comp.nodes_to_roles.update({k: set() for k in nested_comp.nodes_to_roles})
@@ -5541,6 +5542,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    # the scheduler graph may be different than the composition graph itself.
                                    # BREADCRUMB: WHICH SHOULD NodeRle assignments reflect?
                                    else self.graph_processing.prune_feedback_edges()[0])
+
         #region INPUT
 
         # Start with all nodes from processing graph with no incoming edges
@@ -5781,9 +5783,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #region Assign SINGLETON and INTERNAL nodes
         for node in nodes:
             # # MODIFIED TEACHER_TARGET OLD:
-            # if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            # if all(n in node_roles_map[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
             #     self._add_node_role(node, NodeRole.SINGLETON)
-            # if not any(n in self.nodes_to_roles[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            # if not any(n in node_roles_map[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
             #     self._add_node_role(node, NodeRole.INTERNAL)
             # MODIFIED TEACHER_TARGET NEW:
             if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
@@ -5811,7 +5813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Manual override to avoid INPUT/OUTPUT setting, which would cause
         # CIMs to be created, which is not correct for controllers
         if self.controller is not None:
-            self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
+            node_roles_map[self.controller] = {NodeRole.CONTROLLER}
 
         self.needs_determine_node_roles = False
 
