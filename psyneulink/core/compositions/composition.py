@@ -5385,7 +5385,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if changed:
             self.needs_update_graph_processing = True
 
-    def _determine_node_roles(self, processing_graph:dict=None, node_roles_map:dict=None, context:Context=None):
+    def _determine_node_roles(self, processing_graph:dict=None, node_roles_map:dict=NotImplemented,
+                              context:Context=None):
         """Assign NodeRoles to Nodes in Composition
 
         .. note::
@@ -5523,7 +5524,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         scope = ALL if flatten else None # Used for calls to get_roles_by_node, get_nodes_by_role, and _add_node_role
 
         # Clear old roles
-        node_roles_map = node_roles_map or self.nodes_to_roles
+        node_roles_map = self.nodes_to_roles if node_roles_map is NotImplemented else node_roles_map
         node_roles_map.update({k: set() for k in node_roles_map})
         if flatten:
             for nested_comp in self._get_nested_compositions():

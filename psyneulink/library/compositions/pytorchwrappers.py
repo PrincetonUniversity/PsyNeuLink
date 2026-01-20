@@ -1034,7 +1034,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def all_nodes_to_roles(self):
         assert False, f"PROGRAM ERROR: PytorchCompositionWrapper doesn't support 'all_nodes_to_roles (not needed)"
 
-
     @property
     def is_nested(self):
         return self.outer_creator
