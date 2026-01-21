@@ -3946,7 +3946,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: ``list``
         """
         enable_learning = Parameter(True, structural=True)
-        learning_rate = Parameter(.05, fallback_value=DEFAULT)
+        learning_rate = Parameter(.05)
         learning_rates_dict = Parameter({}, stateful=True, pnl_internal=True, modulable=False, loggable=False)
         minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
         optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
