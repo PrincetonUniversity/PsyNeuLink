@@ -322,6 +322,7 @@ def get_reward_estimates(
         model_based_ness=defaults.MODEL_BASED_NESS,
         state_integration_rate=defaults.STATE_INTEGRATION_RATE,
         time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
+        n_steps = 3 # number of states for rollout
 ):
     memories = gen_memories(
         states=states,
@@ -332,6 +333,7 @@ def get_reward_estimates(
 
     r1 = estimate_reward_from_starting_state(
         memories, state_1, times[-1],
+        n_steps = n_steps,
         metric=metric,
         model_based_ness=model_based_ness,
         state_d=9,
@@ -340,12 +342,14 @@ def get_reward_estimates(
     )
     r2 = estimate_reward_from_starting_state(
         memories, state_2, times[-1],
+        n_steps = n_steps,
         metric=metric,
         model_based_ness=model_based_ness,
         state_d=9,
         context_d=9,
         time_retrieval_weight=time_retrieval_weight,
     )
+
     return r1, r2
 
 
@@ -416,7 +420,7 @@ def val_to_choice(
         prev_choice: int, # np.array, identity of previous 1st stage choice
         temp: float = 2, # temperature for softmax
         bias: float = 0.5, # perseveration bias, only for 1st stage ('rocket') choice
-        first_stage_choice: bool = True):
+        ):
 
     # determine if choice in question is repetition from previous trial
     repeat1 = int(prev_choice == 1)
@@ -463,6 +467,7 @@ def run2(
             states=vs[:end],
             rewards=rw[:end],
             times=t[:end],
+            n_steps = 3,
             state_1=state_1,
             state_2=state_2,
             metric=metric,
@@ -486,5 +491,201 @@ def run2(
 
         # "stay" = would the model repeat the current first-stage state on the next trial?
         tr["stay"] = int(pred_next == tr["start_state"])
+
+    return trial_log
+
+def common_v_rare_transition(start_id, common_prob):
+    if start_id == 1:
+        # state 1: common->3, rare->4
+        if random() < common_prob:
+            transition = "common"
+            second_id = 3
+        else:
+            transition = "rare"
+            second_id = 4
+    else:
+        # state 2: common->4, rare->3
+        if random() < common_prob:
+            transition = "common"
+            second_id = 4
+        else:
+            transition = "rare"
+            second_id = 3
+    return second_id, transition
+
+def initial_reward_probabilities(is_random = True):
+    return {5:np.random.uniform(0.25, 0.75) if is_random else 0.75,
+                6:np.random.uniform(0.25, 0.75) if is_random else 0.25,
+                7: np.random.uniform(0.25, 0.75) if is_random else 0.75,
+                8: np.random.uniform(0.25, 0.75) if is_random else 0.25}
+
+
+def run3(
+        metric='dot_product',
+        model_based_ness=defaults.MODEL_BASED_NESS,
+        state_integration_rate=defaults.STATE_INTEGRATION_RATE,
+        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
+        n_base_trials=200,
+        common_prob=0.7,
+        is_random_init_rew_prob = True
+):
+    # generate timestamps for each trial for EM
+    times = gen_trials.get_time_sequence_event(n_base_trials, 3)
+    # generate initial reward probabilities
+    rew_probs = initial_reward_probabilities(is_random_init_rew_prob)
+
+    # -----------------------------
+    # 1. First-stage choice (rocket)
+    # -----------------------------
+    start_id = 1 if random() < 0.5 else 2
+    # -----------------------------
+    # 2. Second-stage state (planet)
+    # -----------------------------
+    second_id, transition = common_v_rare_transition(start_id, common_prob)
+    # -----------------------------
+    # 3a. Terminal-stage state (alien)
+    # -----------------------------
+    if second_id == 3:
+        reward_prob, terminal_id = (rew_probs[5], 5) if random() < 0.5 else (rew_probs[7], 7)
+    else:  # second_id == 4
+        reward_prob, terminal_id = (rew_probs[6], 6) if random() < 0.5 else (rew_probs[8], 8)
+    # -----------------------------
+    # 3b. Terminal-stage state (reward)
+    # -----------------------------
+    reward = 1 if random() < reward_prob else 0
+    # -----------------------------
+    # Create trial log
+    # -----------------------------
+    visited_states = [get_state_one_hot(start_id),get_state_one_hot(second_id),get_state_one_hot(terminal_id)]
+    rewards = [0,0,reward]
+    first_trial = {
+            "trial": 0,
+            "start_id": start_id, "second_id": second_id, "terminal_id": terminal_id,
+            "transition": transition,  # "common" or "rare"
+            "reward": reward,  # 0/1
+            "estimate_rew_state1": None, "estimate_rew_state2": None,
+            "estimate_rew_alien5": None, "estimate_rew_alien6": None,
+            "estimate_rew_alien7": None, "estimate_rew_alien8": None,
+            "pred_next_rocket": None,  # 1 or 2 based on estimates
+            "pred_next_alien": None,
+            "stay": None,  # 0/1 w.r.t. previous start_state
+            "rew_prob_alien5": rew_probs[5], "rew_prob_alien6": rew_probs[6],
+            "rew_prob_alien7": rew_probs[7], "rew_prob_alien8": rew_probs[8],
+    }
+
+
+    trial_log = [first_trial]
+    # -----------------------------
+    # Drift reward probabilities
+    # -----------------------------
+    rew_probs[5] = drift(rew_probs[5])
+    rew_probs[6] = drift(rew_probs[6])
+    rew_probs[7] = drift(rew_probs[7])
+    rew_probs[8] = drift(rew_probs[8])
+
+    for trial in range(1,n_base_trials):
+        # -----------------------------
+        # 1. First-stage choice (rocket)
+        # -----------------------------
+        end = trial * 3  # 3 events per trial
+        r1, r2 = get_reward_estimates(
+            states=np.array(visited_states),
+            rewards=rewards,
+            times=times[:end],
+            n_steps=3, #rollout of 3 for starting state
+            state_1=get_state_one_hot(1),
+            state_2=get_state_one_hot(2),
+            metric=metric,
+            model_based_ness=model_based_ness,
+            state_integration_rate=state_integration_rate,
+            time_retrieval_weight=time_retrieval_weight,
+        )
+
+        # get previous choice, only valid for 2nd trial onwards
+        prev_rocket = trial_log[-1]["start_id"]
+        # get softmax choice probabilities
+        p_choice1, p_choice2 = val_to_choice(r1, r2, prev_rocket)
+        # “policy”: pick start state with higher estimated reward
+        pred_next_rocket = 1 if random() < p_choice1 else 2
+        # make a choice
+        start_id = pred_next_rocket
+
+        # -----------------------------
+        # 2. Second-stage state (planet)
+        # -----------------------------
+        second_id, transition = common_v_rare_transition(start_id, common_prob)
+
+        # -----------------------------
+        # 3a. Terminal-stage state (alien)
+        # -----------------------------
+        if second_id == 3:
+            alien_states = [5, 7]
+
+        else:
+            alien_states = [6, 8]
+
+
+        r_alien1, r_alien2 = get_reward_estimates(
+            states=np.array(visited_states),
+            rewards=rewards,
+            times=times[:end],
+            n_steps=1,  # "rollout" of 1 for terminal state
+            state_1=get_state_one_hot(alien_states[0]),
+            state_2=get_state_one_hot(alien_states[1]),
+            metric=metric,
+            model_based_ness=model_based_ness,
+            state_integration_rate=state_integration_rate,
+            time_retrieval_weight=time_retrieval_weight,
+        )
+
+        if second_id == 3:
+            estimate_rew_alien5 = r_alien1
+            estimate_rew_alien7 = r_alien2
+            estimate_rew_alien6 = None
+            estimate_rew_alien8 = None
+        else:
+            estimate_rew_alien6 = r_alien1
+            estimate_rew_alien8 = r_alien2
+            estimate_rew_alien5 = None
+            estimate_rew_alien7 = None
+
+        p_choice_alien1, p_choice_alien2 = val_to_choice(r_alien1, r_alien2,prev_choice=0, temp = 2,bias = 0)
+
+        pred_next_alien = alien_states[0] if random() < p_choice_alien1 else alien_states[1]
+        terminal_id = pred_next_alien
+
+        reward_prob = rew_probs[pred_next_alien]
+        reward = 1 if random() < reward_prob else 0
+
+        # -----------------------------
+        # Create trial log
+        # -----------------------------
+        visited_states.extend([get_state_one_hot(start_id), get_state_one_hot(second_id), get_state_one_hot(terminal_id)])
+        rewards.extend([0, 0, reward])
+        trial_= [{
+            "trial": trial,
+            "start_id": start_id, "second_id": second_id, "terminal_id": terminal_id,
+            "transition": transition,  # "common" or "rare"
+            "reward": reward,  # 0/1
+            "estimate_rew_state1": r1, "estimate_rew_state2": r2,
+            "estimate_rew_alien5": estimate_rew_alien5, "estimate_rew_alien6": estimate_rew_alien6,
+            "estimate_rew_alien7": estimate_rew_alien7, "estimate_rew_alien8": estimate_rew_alien8,
+            "pred_next_rocket": pred_next_rocket,  # 1 or 2 based on estimates
+            "pred_next_alien": pred_next_alien,
+            "stay": int(start_id == prev_rocket),  # 0/1 w.r.t. previous start_state
+            "rew_prob_alien5": rew_probs[5], "rew_prob_alien6": rew_probs[6],
+            "rew_prob_alien7": rew_probs[7], "rew_prob_alien8": rew_probs[8],
+        }]
+        trial_log.extend(trial_)
+
+
+
+        # -----------------------------
+        # 4. Drift reward probabilities
+        # -----------------------------
+        rew_probs[5] = drift(rew_probs[5])
+        rew_probs[6] = drift(rew_probs[6])
+        rew_probs[7] = drift(rew_probs[7])
+        rew_probs[8] = drift(rew_probs[8])
 
     return trial_log

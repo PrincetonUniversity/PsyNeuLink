@@ -9,6 +9,7 @@ from tqdm import tqdm
 # your model
 from ego_revaluation.run_original_probabilistic import run
 from ego_revaluation.run_original_probabilistic import run2
+from ego_revaluation.run_original_probabilistic import run3
 
 
 # ============================================================
@@ -72,7 +73,8 @@ def simulate_participants(
     trialLog=[]
     for _ in range(n_participants):
         # trial_log = run(
-        trial_log=run2(
+        # trial_log=run2(
+        trial_log=run3(
             state_integration_rate=state_integration_rate,
             time_retrieval_weight=time_retrieval_weight,
             model_based_ness=model_based_ness,
