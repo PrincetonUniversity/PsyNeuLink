@@ -175,7 +175,7 @@ class ContextFlags(enum.IntFlag):
     NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | COMPOSITION | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | COMPOSITION | SHOW_GRAPH | NONE
 
     # runmode flags:
     DEFAULT_MODE = enum.auto()
@@ -259,6 +259,7 @@ SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.CONSTRUCTOR,
                 ContextFlags.METHOD,
                 ContextFlags.COMPOSITION,
+                ContextFlags.SHOW_GRAPH,
                 ContextFlags.NONE}
 
 RUN_MODE_FLAGS = {
@@ -349,9 +350,9 @@ class Context():
 
         self.owner = owner
         self.composition = composition
-        self._execution_phase = execution_phase
-        self._source = source
-        self._runmode = runmode
+        self.execution_phase = execution_phase
+        self.source = source
+        self.runmode = runmode
 
         if flags:
             owner_str = f" for {self.owner.name}" if self.owner else ""
