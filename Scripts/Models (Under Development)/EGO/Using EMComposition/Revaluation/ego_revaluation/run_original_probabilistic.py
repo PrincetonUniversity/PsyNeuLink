@@ -9,7 +9,7 @@ from .config import defaults
 def drift(p, sigma=0.025, lo=0.25, hi=0.75):
     """Gaussian random walk for reward probabilities, clipped."""
 
-    # sigma = 0.0
+    sigma = 0.0
 
     p = p + np.random.normal(0, sigma)
     return float(np.clip(p, lo, hi))
@@ -527,7 +527,7 @@ def run3(
         time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
         n_base_trials=200,
         common_prob=0.7,
-        is_random_init_rew_prob = True
+        is_random_init_rew_prob = False
 ):
     # generate timestamps for each trial for EM
     times = gen_trials.get_time_sequence_event(n_base_trials, 3)
