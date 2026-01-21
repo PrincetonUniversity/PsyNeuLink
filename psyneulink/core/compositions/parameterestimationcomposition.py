@@ -961,7 +961,13 @@ class ParameterEstimationComposition(Composition):
         )
 
         # Run the composition as normal
-        results = super(ParameterEstimationComposition, self).run(*args, context=context, **kwargs)
+        # results = super(ParameterEstimationComposition, self).run(*args, context=context, **kwargs)
+
+        context.execution_phase = ContextFlags.PROCESSING
+        self.controller.execute(context=context)
+        context.remove_flag(ContextFlags.PROCESSING)
+
+        results = self.parameters.results._get(context)
 
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, "optimal_control_allocation"):
