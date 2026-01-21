@@ -22,7 +22,7 @@ STATE_INTEGRATION_RATE = 1.  # .6
 
 TEMPERATURE = .05  # temperature of the softmax used during memory retrieval (smaller means more argmax-like)
 MEMORY_INIT = .001
-SOFTMAX_THRESHOLD = .001
+SOFTMAX_THRESHOLD = .01
 N_STEPS = 3  # number of steps per rollout (not used in PNL version, use 3 for equal match)
 
 # how much to retrieve context from memory (instead of simulating it) in rollout.
@@ -37,7 +37,7 @@ METRIC = 'dot_product'
 # Metric to use for sample mode (only in python version) In pnl: softmax
 SAMPLE_MODE = 'softmax'
 # Strategy to combine retrieval matches: Multiplicative (AND) or Additive (OR)
-RETRIEVAL_STRATEGY = 'additive' #'multiplicative'
+RETRIEVAL_STRATEGY = 'multiplicative'
 
 # === EXPERIMENT === #
 N_BASELINE_TRIALS = 20  # number of baseline trials per participant (one sequence = one trial of each stimulus sequence)

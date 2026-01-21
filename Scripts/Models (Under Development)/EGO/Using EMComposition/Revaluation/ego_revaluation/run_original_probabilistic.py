@@ -6,10 +6,10 @@ from .model_python import gen_memories, estimate_reward_from_starting_state
 from .config import defaults
 
 
-def drift(p, sigma=0.125, lo=0.25, hi=0.75):
+def drift(p, sigma=0.025, lo=0.25, hi=0.75):
     """Gaussian random walk for reward probabilities, clipped."""
 
-    sigma = 0.0
+    # sigma = 0.0
 
     p = p + np.random.normal(0, sigma)
     return float(np.clip(p, lo, hi))
@@ -40,15 +40,15 @@ def gen_trials_base(
     }
 
     # independent drifting reward probabilities for the 2 second-stage states
-    # p1 = np.random.uniform(0.25, 0.75)
-    # p2 = np.random.uniform(0.25, 0.75)
-    # p3 = np.random.uniform(0.25, 0.75)
-    # p4 = np.random.uniform(0.25, 0.75)
+    p1 = np.random.uniform(0.25, 0.75)
+    p2 = np.random.uniform(0.25, 0.75)
+    p3 = np.random.uniform(0.25, 0.75)
+    p4 = np.random.uniform(0.25, 0.75)
 
-    p1 = 0.75
-    p2 = 0.75
-    p3 = 0.25
-    p4 = 0.25
+    # p1 = 0.75
+    # p2 = 0.75
+    # p3 = 0.25
+    # p4 = 0.25
 
     visited_states = []
     rewards = []
@@ -150,8 +150,9 @@ def gen_trials_base(
 def gen_trials_base_persevere(
         n=200,
         common_prob=0.7,
-        repeat_bias = 0.2, #0.2,
-        model_free = True,
+        repeat_bias = 0.2,
+        model_free = False,
+        random_alien = True,
 ):
     """
     - First-stage states: 1, 2  (rockets)
@@ -248,12 +249,20 @@ def gen_trials_base_persevere(
         # -----------------------------
         # 3. Reward depends on second_id
         # -----------------------------
-        if second_id == 3:
-            # reward_prob, terminal_id = (p1, 5) if random() < 0.5 else (p2, 7)
-            reward_prob, terminal_id = (p1, 5) if random() < p1/(p1+p2) else (p2, 7)
-        else:  # second_id == 4
-            # reward_prob, terminal_id = (p3, 6) if random() < 0.5 else (p4, 8)
-            reward_prob, terminal_id = (p3, 6) if random() < p3/(p3+p4) else (p4, 8)
+        if not random_alien:
+            if second_id == 3:
+                # reward_prob, terminal_id = (p1, 5) if random() < 0.5 else (p2, 7)
+                reward_prob, terminal_id = (p1, 5) if random() < p1/(p1+p2) else (p2, 7)
+            else:  # second_id == 4
+                # reward_prob, terminal_id = (p3, 6) if random() < 0.5 else (p4, 8)
+                reward_prob, terminal_id = (p3, 6) if random() < p3/(p3+p4) else (p4, 8)
+        else:
+            if second_id == 3:
+                reward_prob, terminal_id = (p1, 5) if random() < 0.5 else (p2, 7)
+            else:  # second_id == 4
+                reward_prob, terminal_id = (p3, 6) if random() < 0.5 else (p4, 8)
+
+
 
         reward = 1 if random() < reward_prob else 0
 
