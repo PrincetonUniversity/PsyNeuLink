@@ -147,6 +147,163 @@ def gen_trials_base(
 
     return np.array(visited_states), np.array(rewards), times, trial_log
 
+def gen_trials_base_persevere(
+        n=200,
+        common_prob=0.7,
+        repeat_bias = 0.2, #0.2,
+        model_free = True,
+):
+    """
+    - First-stage states: 1, 2  (rockets)
+    - Second-stage states: 3, 4 (planets)
+    - Third-stage states: 5, 6, 7, 8 (aliens/reward)
+    - Reward depends on second-stage state:
+        p3(t), p4(t) drift independently over trials.
+    """
+
+    # one-hot state vectors
+    states = {
+        1: np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        2: np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
+        3: np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),  # second-stage A
+        4: np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),  # second-stage B
+        5: np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),  # reward marker for 3
+        6: np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),  # reward marker for 4
+        7: np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),  # no-reward marker for 3
+        8: np.array([0, 0, 0, 0, 0, 0, 0, 0, 1]),  # no-reward marker for 4
+    }
+
+    # independent drifting reward probabilities for the 2 second-stage states
+    # p1 = np.random.uniform(0.25, 0.75)
+    # p2 = np.random.uniform(0.25, 0.75)
+    # p3 = np.random.uniform(0.25, 0.75)
+    # p4 = np.random.uniform(0.25, 0.75)
+
+    p1 = 0.75
+    p2 = 0.75
+    p3 = 0.25
+    p4 = 0.25
+
+    visited_states = []
+    rewards = []
+    trial_log = []
+
+    for trial in range(n):
+
+        # -----------------------------
+        # 1. First-stage choice (rocket)
+        # -----------------------------
+        if model_free:
+            if trial == 0:
+                start_id = 1 if random() < 0.5 else 2
+            else:
+                # start_id = 1 if random() < max(p1,p2)/(max(p1,p2)+max(p3,p4)) else 2
+                # generate start_state "choices" that are biased towards repeating last "choice"
+                prev_start_id =  trial_log[-1]["start_state"]
+                rew = trial_log[-1]["reward"]
+                if prev_start_id == 1 and rew == 1:
+                    start_id = 1 if random() < 0.5 + repeat_bias else 2
+                elif prev_start_id == 1 and rew == 0:
+                    start_id = 1 if random() < 0.5 - repeat_bias else 2
+                elif prev_start_id == 2 and rew == 1:
+                    start_id = 2 if random() < 0.5 + repeat_bias else 1
+                elif prev_start_id == 2 and rew == 0:
+                    start_id = 2 if random() < 0.5 - repeat_bias else 1
+        else:
+            if trial == 0:
+                start_id = 1 if random() < 0.5 else 2
+            else:
+                # start_id = 1 if random() < max(p1,p2)/(max(p1,p2)+max(p3,p4)) else 2
+                # generate start_state "choices" that are biased towards repeating last "choice"
+                prev_start_id =  trial_log[-1]["start_state"]
+                if prev_start_id == 1:
+                    start_id = 1 if random() < 0.5 + repeat_bias else 2
+                else:
+                    start_id = 2 if random() < 0.5 + repeat_bias else 1
+        start_state = states[start_id]
+
+        # -----------------------------
+        # 2. Common vs rare transition
+        #    and second-stage state
+        # -----------------------------
+        if start_id == 1:
+            # state 1: common->3, rare->4
+            if random() < common_prob:
+                transition = "common"
+                second_id = 3
+            else:
+                transition = "rare"
+                second_id = 4
+        else:
+            # state 2: common->4, rare->3
+            if random() < common_prob:
+                transition = "common"
+                second_id = 4
+            else:
+                transition = "rare"
+                second_id = 3
+
+        second_state = states[second_id]
+
+        # -----------------------------
+        # 3. Reward depends on second_id
+        # -----------------------------
+        if second_id == 3:
+            # reward_prob, terminal_id = (p1, 5) if random() < 0.5 else (p2, 7)
+            reward_prob, terminal_id = (p1, 5) if random() < p1/(p1+p2) else (p2, 7)
+        else:  # second_id == 4
+            # reward_prob, terminal_id = (p3, 6) if random() < 0.5 else (p4, 8)
+            reward_prob, terminal_id = (p3, 6) if random() < p3/(p3+p4) else (p4, 8)
+
+        reward = 1 if random() < reward_prob else 0
+
+        # # terminal state is just a marker for reward/no reward
+        # if second_id == 3:
+        #     terminal_id = 5 if reward == 1 else 7
+        # else:  # second_id == 4
+        #     terminal_id = 6 if reward == 1 else 8
+
+        terminal_state = states[terminal_id]
+
+        # append full 3-step sequence for memory
+        visited_states.extend([start_state, second_state, terminal_state])
+        rewards.extend([0, 0, reward])
+
+        # -----------------------------
+        # 4. Drift reward probabilities
+        # -----------------------------
+        p1 = drift(p1)
+        p2 = drift(p2)
+        p3 = drift(p3)
+        p4 = drift(p4)
+
+        # -----------------------------
+        # 5. Log trial info
+        # (value estimates filled in later)
+        # -----------------------------
+        trial_log.append({
+            "trial": trial,
+            "start_state": start_id,
+            "second_state": second_id,
+            "transition": transition,  # "common" or "rare"
+            "reward": reward,  # 0/1
+            "estimate_state_1": None,
+            "estimate_state_2": None,
+            "pred_next_state": None,  # 1 or 2 based on estimates
+            "stay": None,  # 0/1 w.r.t. previous start_state
+            "p1": p1,
+            "p2": p2,
+            "p3": p3,
+            "p4": p4,
+        })
+
+    # one time-step per event (3 events per trial | n is number of trials)
+    # times = gen_trials.get_time_sequence(n * 3)
+    times = gen_trials.get_time_sequence_event(n,3)
+
+    return np.array(visited_states), np.array(rewards), times, trial_log
+
+
 
 def get_reward_estimates(
         states, rewards, times,
@@ -191,7 +348,8 @@ def run(
         n_base_trials=200,
         common_prob=0.7,
 ):
-    vs, rw, t, trial_log = gen_trials_base(
+    # vs, rw, t, trial_log = gen_trials_base(
+    vs, rw, t, trial_log=gen_trials_base_persevere(
         n=n_base_trials,
         common_prob=common_prob,
     )
@@ -248,7 +406,7 @@ def val_to_choice(
         r2: float, # value/reward retrieved from memory for candidate choice "2"
         prev_choice: int, # np.array, identity of previous 1st stage choice
         temp: float = 2, # temperature for softmax
-        bias: float = 0, # perseveration bias, only for 1st stage ('rocket') choice
+        bias: float = 0.5, # perseveration bias, only for 1st stage ('rocket') choice
         first_stage_choice: bool = True):
 
     # determine if choice in question is repetition from previous trial
@@ -279,7 +437,8 @@ def run2(
         n_base_trials=200,
         common_prob=0.7,
 ):
-    vs, rw, t, trial_log = gen_trials_base(
+    # vs, rw, t, trial_log = gen_trials_base(
+    vs, rw, t, trial_log=gen_trials_base_persevere(
         n=n_base_trials,
         common_prob=common_prob,
     )
