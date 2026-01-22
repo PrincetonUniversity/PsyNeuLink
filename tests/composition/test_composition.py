@@ -30,7 +30,8 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
@@ -2954,9 +2955,9 @@ class TestGetMechanismsByRole:
         for mech in mechs:
             comp.add_node(mech)
 
-        comp._add_node_role(mechs[0], NodeRole.ORIGIN)
-        comp._add_node_role(mechs[1], NodeRole.INTERNAL)
-        comp._add_node_role(mechs[2], NodeRole.INTERNAL)
+        comp.node_role_mgr._add_node_role(mechs[0], NodeRole.ORIGIN)
+        comp.node_role_mgr._add_node_role(mechs[1], NodeRole.INTERNAL)
+        comp.node_role_mgr._add_node_role(mechs[2], NodeRole.INTERNAL)
 
         for role in list(NodeRole):
             if role is NodeRole.ORIGIN:

@@ -310,7 +310,8 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError, NodeRole
+from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism

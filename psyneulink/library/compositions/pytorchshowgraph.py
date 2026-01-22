@@ -12,7 +12,8 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
 
-from psyneulink.core.compositions import Composition, NodeRole
+from psyneulink.core.compositions import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism

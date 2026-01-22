@@ -737,7 +737,8 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale, NodeRole)
+from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale)
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -1582,7 +1583,7 @@ class AutodiffComposition(Composition):
                          f"learning that has no afferent pathways with any learnable Projections.")
         else:
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-            if sample_mech in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
+            if sample_mech in self.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
                 #   but are not specified in targets dict of learn() method.
                 # Allow construction, as they could be a Mechanism for a learnable PyTorch module (e.g., GRU),

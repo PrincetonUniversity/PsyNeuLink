@@ -37,13 +37,26 @@ Class Reference
 
 """
 import warnings
-from enum import Enum
+import enum
+from collections import defaultdict, OrderedDict
 
 from psyneulink._typing import Literal
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = [
-    'NodeRole'
+    'NodeRole', 'NodeRoleManager'
 ]
+
+class NodeRoleError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
 
 class NodeRole(enum.Enum):
     """Roles assigned to `Nodes <Composition_Nodes>` of a `Composition`.
@@ -198,13 +211,458 @@ unmodifiable_node_roles = {NodeRole.ORIGIN,
 
 class NodeRoleManager(object):
     """Manage association of nodes with roles
+    IMPLEMENTATION NOTES:
+      - this (the base class) assumes that the owner is a Composition; however, subclasses can modify this
+      - non-underscore methods are meant to be user accessible, and accordingly have "shell" versions on owner
+      - underscore methods are only on NodeRoleManager, and meant only only for internal use
     """
-    def __init___():
-        pass
+    def __init___(self, owner, graph):
+        self.owner = owner
+        self.graph = graph
+        self.nodes = owner.nodes # TEACHER_TARGET BREADCRUMB: CAN'T THIS JUST BE DEFINED BY THE KEYS AND VALUES OF THE GRAPH?
+        self.nodes_to_roles = OrderedDict()
+        self.required_node_roles = []
+        self.excluded_node_roles = []
 
+    def _determine_node_roles(self):
+        """Assign NodeRoles to Nodes of owner
+
+        .. note::
+           Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
+           unless otherwise noted.
+
+        Assignment criteria:
+
+        ORIGIN:
+          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
+          .. note::
+             - this takes account of any Projections designated as feedback by graph_processing
+               (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
+             - these will all be assigned afferent Projections from Composition.input_CIM
+
+        INPUT:
+          - all Nodes excluding BIAS Nodes that have no incoming edges in this composition,
+            or that are in a cycle with no external incoming edges, for
+            which INPUT has not been removed and/or excluded using exclude_node_roles();
+          - all Nodes for which INPUT has been assigned as a required_node_role by user
+            (i.e., in self.required_node_roles[NodeRole.INPUT].
+
+        SINGLETON:
+          - all Nodes that are *both* ORIGIN and TERMINAL
+
+        BIAS:
+          - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
+
+        INTERNAL:
+            A `Node <Composition_Nodes>` that is neither `INPUT` nor
+            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
+            or `SINGLETON`, if it has no `afferent
+            <Mechanism_Base.afferents>` or `efferent
+            <Mechanism_Base.efferents>` Projections or neither,
+            respectively. This role cannot be modified programmatically.
+
+        CYCLE:
+          - all Nodes that identified as being in a cycle by self.graph_processing
+            (i.e., in a cycle in self.graph_processing.cycle_vertices)
+
+        FEEDBACK_SENDER:
+          - all Nodes that send a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
+
+        FEEDBACK_RECEIVER:
+          - all Nodes that receive a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
+
+        CONTROL_OBJECTIVE
+          - ObjectiveMechanism assigned CONTROL_OBJECTIVE as a required_node_role in ControlMechanism's
+            _instantiate_objective_mechanism()
+          .. note::
+             - *not the same as* CONTROLLER_OBJECTIVE
+             - all project to a ControlMechanism
+
+        CONTROLLER_OBJECTIVE
+          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a required_node_role in add_controller()
+          .. note::
+             - also assigned CONTROL_OBJECTIVE
+             - *not the same as* CONTROL_OBJECTIVE
+
+        LEARNING
+          - all Nodes for which LEARNING is assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
+
+        TARGET
+          - all Nodes for which TARGET has been assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
+          .. note::
+             - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
+             - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
+
+        LEARNING_OBJECTIVE
+          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in
+            add_linear_learning_pathway(), _create_non_terminal_backprop_learning_components,
+            or _create_terminal_backprop_learning_components()
+          .. note::
+             - also assigned LEARNING
+             - must project to a LearningMechanism
+
+        OUTPUT:
+          - all Nodes that have no outgoing edges in this compositions
+            *unless* they are to:
+            - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
+            - an ObjectiveMechanisms associated with ModulatoryMechanism (including for Learning)
+          - all Nodes that project only to:
+            - a ModulatoryMechanism
+            - an ObjectiveMechanism designated CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+            ? unless it is the ??TARGET_MECHANISM for a 'learning pathway <Composition_Learning_Pathway>`
+              this is currently the case, but is inconsistent with the analog in Control,
+              where monitored Mechanisms *are* allowed to be OUTPUT;
+              therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
+          - all Nodes for which OUTPUT has been assigned as a required_node_role, including by user
+            (i.e., in self.required_node_roles[NodeRole.OUTPUT]
+
+        TERMINAL:
+          - all Nodes that
+            - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
+            - or have *no* efferent projections OR
+            - or for which any efferent projections are either:
+                - to output_CIM OR
+                - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
+          .. note::
+             - this insures that for cases in which there are nested CYCLES
+               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
+               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
+               is assigned as a TERMINAL Node
+               (i.e., the LearningMechanism responsible for the *first* `learned Projection;
+               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+             - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
+               `controller <Composition.controller>` are executed outside of (either before or after)
+               all of the other Components of the Composition, as managed directly by the scheduler;
+             - `Execution of a `Composition <Composition_Execution>` always ends with a `TERMINAL` Node,
+               although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
+               is shorter than the longest one in the Composition).
+
+        Arguments
+        ---------
+
+        processing_graph : dict : default self.graph_processing
+           if provided, it is used for dependencies that determine roles in place of self.graph_processing
+           (used to construct externally-used representations, such as AutodiffComposition.pytorch_representation)
+
+        node_roles_map : dict : default self.nodes_to_roles
+           if provided, it is where role assignments are stored
+           (used to construct externally-used role assignments, such as AutodiffComposition.pytorch_representation)
+       """
+
+        # TEACHER_TARGET BREADCRUMB: REFACTOR THIS FOR NodeRoleManager IMPLEMENTATION:
+        #                            REPLACE "flatten" WITH TEST OR FLAG FOR COMPOSITION
+        # IMPLEMENTATION NOTE:
+        #   Assume that if a processing graph has been provided, it is a flat representation of the Compsition's graph
+        #   (e.g., as used for construction of AutodiffComposition.pytorch_representation)
+        #   (hence flatten = True) involving all nodes in nested comopositions (hence scope=True)
+        flatten = True if processing_graph else False # Used for clarity of conditional operations,
+                                                      # and potential future direct use with self.graph_processing
+        scope = ALL if flatten else None # Used for calls to get_roles_by_node, get_nodes_by_role, and _add_node_role
+
+        # Clear old roles
+        node_roles_map = self.nodes_to_roles if node_roles_map is NotImplemented else node_roles_map
+        node_roles_map.update({k: set() for k in node_roles_map})
+        if flatten:
+            for nested_comp in self._get_nested_compositions():
+                nested_comp.nodes_to_roles.update({k: set() for k in nested_comp.nodes_to_roles})
+
+        # Assign required_node_roles
+        for node_role_pair in self.required_node_roles:
+            self._add_node_role(node_role_pair[0], node_role_pair[1], scope)
+
+        # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
+        if self.scheduler.consideration_queue:
+            self._determine_origin_and_terminal_nodes_from_consideration_queue()
+
+        comp_graph_dependencies = (processing_graph if flatten
+                                   # If using the composition graph structure with conditions,
+                                   # the scheduler graph may be different than the composition graph itself.
+                                   # BREADCRUMB: WHICH SHOULD NodeRle assignments reflect?
+                                   else self.graph_processing.prune_feedback_edges()[0])
+        # BREADCRUMB ----------------------------------------------------------------------
+
+        #region INPUT
+
+        # Start with all nodes from processing graph with no incoming edges
+        input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
+
+        # an entire cycle that has no node with any incoming edge other
+        # than from other nodes in the cycle is treated as INPUT
+        # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
+        # IMPLEMENTATION NOTE:
+        #      Processing of cycles not currently supported for flattened processing_graph
+        if not flatten and self.graph_processing.cycle_vertices:
+            for cycle in self.graph_processing.cycle_vertices:
+                for i, node in enumerate(cycle):
+                    prev = cycle[(i - 1) % len(cycle)]
+                    if comp_graph_dependencies[node] != {prev}:
+                        break
+                else:
+                    input_nodes = input_nodes.union(cycle)
+
+        nodes = self._get_all_nodes() if flatten else self.nodes
+
+        for node in nodes:
+            # Check all remaining ORIGIN Nodes
+            if node in input_nodes:
+                # Don't allow INTERNAL Nodes to be INPUTS
+                if NodeRole.INTERNAL in self.get_roles_by_node(node, scope):
+                    continue
+                self._add_node_role(node, NodeRole.INPUT, scope)
+
+                # special case, ControlMechanisms create MappingProjections
+                # to inner composition parameter CIMs, which may or may not
+                # create scheduler dependencies (determined by user action).
+                # If an inner composition is not ORIGIN because of this
+                # condition, add it as INPUT anyway.
+                if isinstance(node, ControlMechanism):
+                    for child in self.graph_processing.comp_to_vertex[node].children:
+                        for parent in child.parents:
+                            # MappingProjections from non-ControlMechanisms
+                            # always obey standard scheduling behavior
+                            if (
+                                not isinstance(parent.component, ControlMechanism)
+                                or parent.component not in input_nodes
+                            ):
+                                continue
+
+                            for proj in child.component.get_afferents(parent.component):
+                                if (
+                                    isinstance(proj, PathwayProjection_Base)
+                                    and proj._creates_scheduling_dependency
+                                ):
+                                    self._add_node_role(child.component, NodeRole.INPUT, scope)
+                                    break
+
+            # Node does not receive any path_afferents (except possibly from input_CIM)
+            elif (not isinstance(node, (Composition, ModulatoryMechanism_Base))
+                  and (not node.path_afferents
+                       or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
+                self._add_node_role(node, NodeRole.INPUT, scope)
+
+            if isinstance(node, Composition):
+                if not node.get_nodes_by_role(NodeRole.INPUT):
+                    # If a nested Composition has no INPUTS, remove it as an INPUT of the outer Composition
+                    self._remove_node_role(node, NodeRole.INPUT)
+        #endregion INPUT
+
+        #region BIAS
+        for node in nodes:
+            if (isinstance(node, Mechanism)
+                    and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
+                self._add_node_role(node, NodeRole.BIAS, scope)
+                # BIAS Nodes should never be included as INPUT Nodes:
+                self._remove_node_role(node, NodeRole.INPUT)
+                # BIAS Nodes should not be included as OUTPUT Nodes
+                self._remove_node_role(node, NodeRole.OUTPUT)
+                # FIX: Can above with below once nested BIAS Node is allowed to project to Node in outer Composition
+                # #   *unless* they are in a nested Composition and project to a Node in an outer one
+                # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
+                #     self._remove_node_role(node, NodeRole.OUTPUT)
+        #endregion BIAS
+
+        #region CYCLE
+        if not flatten:
+        # IMPLEMENTATION NOTE:
+        #      Processing of CYCLE and FEEDBACK not currently supported for flattened processing_graph
+
+            for cycle in self.graph_processing.cycle_vertices:
+                for node in cycle:
+                    self._add_node_role(node, NodeRole.CYCLE, scope)
+        #endregion CYCLE
+
+        #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
+            for receiver in self.graph_processing.vertices:
+                for sender, typ in receiver.source_types.items():
+                    if typ is EdgeType.FEEDBACK:
+                        self._add_node_role(sender.component, NodeRole.FEEDBACK_SENDER, scope)
+                        self._add_node_role(receiver.component, NodeRole.FEEDBACK_RECEIVER, scope)
+        #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
+
+        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
+        #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
+        #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
+
+
+        #region OUTPUT
+        # Note: "TERMINAL" referenced below is in respect to the
+        # the composition graph, not the scheduler graph, because OUTPUT
+        # is determined by composition structure, not scheduling order.
+        try:
+            output_nodes = self._get_terminal_nodes(comp_graph_dependencies)
+        except IndexError:
+            output_nodes = []
+
+        for node in nodes:
+            # Assign OUTPUT if node is TERMINAL...
+            if node in output_nodes:
+                # unless it is a ModulatoryMechanism or a BIAS Node in nested Composition that projects to an outer one
+                if (isinstance(node, ModulatoryMechanism_Base)
+                        or (NodeRole.BIAS in self.get_roles_by_node(node, scope)
+                            and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
+                                        for p in node.efferents))):
+                    continue
+                else:
+                    self._add_node_role(node, NodeRole.OUTPUT, scope)
+
+            # Assign OUTPUT to any relevant non-TERMINAL Nodes
+            else:
+
+                # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
+                #     and is not already so designated (needed for user-specified ObjectiveMechanisms
+                if (isinstance(node, ObjectiveMechanism)
+                        and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node, scope)):
+                    ctl_mech = next((p.receiver.owner for p in node.efferents
+                                     if isinstance(p.receiver.owner, ControlMechanism)), None)
+                    if ctl_mech:
+                        node.control_mechanism = ctl_mech
+                        self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
+
+                # IMPLEMENTATION NOTE:
+                #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
+                #   The alternate version below restricts OUTPUT only to RecurrentTransferMechasnism
+                # # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
+                # #     (i.e., it is either a RecurrentTransferMechanism configured for learning
+                # #      or the LEARNING_OBJECTIVE of a `learning pathway <Composition_Learning_Pathway>`
+                # if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism)
+                #        for p in node.efferents):
+                #     self._add_node_role(node, NodeRole.OUTPUT)
+                #     continue
+
+                # Assign OUTPUT if it is a `RecurrentTransferMechanism` configured for learning
+                #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
+                #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
+                #    but can (or already does) project to an output_CIM
+                if all((p.receiver.owner is node # <- recurrence
+                        or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                        or p.receiver.owner is self.output_CIM) # <- already projects to an output_CIM
+                       for p in node.efferents):
+                    self._add_node_role(node, NodeRole.OUTPUT, scope)
+                    continue
+
+                # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria
+                def is_output_node(node, allow_cycle=False):
+                    return all((any(p.receiver.owner in self.get_nodes_by_role(role)
+                                    for role in {NodeRole.CONTROL_OBJECTIVE,
+                                                 NodeRole.CONTROLLER_OBJECTIVE,
+                                                 NodeRole.LEARNING_OBJECTIVE})
+                                # or p.receiver.owner is node
+                                or p.receiver.owner is self.output_CIM
+                                or (isinstance(p.receiver.owner, ControlMechanism)
+                                    and not isinstance(node, ObjectiveMechanism))
+                                or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
+                               for p in node.efferents))
+
+                # Assign OUTPUT only if the node is not:
+                #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                #  - a ModulatoryMechanism
+                # and the node projects only to:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or (already projects) to output_CIM
+                if NodeRole.TARGET in self.get_roles_by_node(node, scope):
+                    continue
+                if isinstance(node, ModulatoryMechanism_Base):
+                    continue
+                if is_output_node(node, allow_cycle=False):
+                    self._add_node_role(node, NodeRole.OUTPUT, scope)
+                # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
+                # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
+                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
+                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
+                    # # Get Nodes in the CYCLE:
+                    cycle_nodes = [node]
+                    queue = collections.deque([node])
+                    i = 0
+                    while queue:
+                        curr_node = queue.popleft()
+                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
+                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
+                            if next_node in cycle_nodes: # Cycle closed
+                                continue
+                            cycle_nodes.append(next_node)
+                            queue.append(next_node)
+                        i += 1
+                        assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
+                    # Ensure they are all satisfy criterial for OUTPUT Node
+                    if (all(is_output_node(cycle_node, allow_cycle=True)
+                            # and cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
+                            and not any(role in self.get_roles_by_node(cycle_node, scope)
+                                        for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
+                            for cycle_node in cycle_nodes)):
+                        for cycle_node in cycle_nodes:
+                            self._add_node_role(cycle_node, NodeRole.OUTPUT, scope)
+
+                # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
+                #     or projections to self.output_CIM, then assign as OUTPUT Node
+                # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
+                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
+                #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
+                elif isinstance(node, Composition):
+                    if any(not port.efferents or
+                           any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
+                           for port in node.output_CIM.output_ports):
+                        self._add_node_role(node, NodeRole.OUTPUT, scope)
+
+                # MODIFIED TEACHER_TARGET NEW: BREADCRUMB UNCOMMENT THIS IF NOT HANDLED IN pytorchshowgraph
+                # Assign OUTPUT if node is not LEARNING_OBJECTIVE and no other nodes are dependent on it
+                elif (processing_graph
+                      and not NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(node, scope)
+                      and not any(node in [n for n in v
+                                           if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k, scope))]
+                                  for k, v in processing_graph.items())):
+                    self._add_node_role(node, NodeRole.OUTPUT, scope)
+                # MODIFIED TEACHER_TARGET END
+        #endregion OUTPUT
+
+        #region Assign SINGLETON and INTERNAL nodes
+        for node in nodes:
+            # # MODIFIED TEACHER_TARGET OLD:
+            # if all(n in node_roles_map[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            #     self._add_node_role(node, NodeRole.SINGLETON)
+            # if not any(n in node_roles_map[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            #     self._add_node_role(node, NodeRole.INTERNAL)
+            # MODIFIED TEACHER_TARGET NEW:
+            if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                self._add_node_role(node, NodeRole.SINGLETON, scope)
+            # if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            #     self._add_node_role(node, NodeRole.INTERNAL, scope)
+            if not any(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+                self._add_node_role(node, NodeRole.INTERNAL, scope=scope)
+            # MODIFIED TEACHER_TARGET END
+        #endregion Assign SINGLETON and INTERNAL nodes
+
+        # Finally, remove any NodeRole assignments specified in excluded_node_roles
+        for node in nodes:
+            for node, role in self.excluded_node_roles:
+                try:
+                    if role in self.get_roles_by_node(node, scope):
+                        self._remove_node_role(node, role)
+                        self._get_nested_nodes()
+                except NodeRoleError:
+                    nested_node, nested_comp = next((node_comp_pair for node_comp_pair in self._get_nested_nodes()
+                                                     if node_comp_pair[0] is node), None)
+                    if role in nested_comp.get_roles_by_node(nested_node, scope):
+                        nested_comp._remove_node_role(nested_node, role)
+
+        # Manual override to avoid INPUT/OUTPUT setting, which would cause
+        # CIMs to be created, which is not correct for controllers
+        if self.controller is not None:
+            node_roles_map[self.controller] = {NodeRole.CONTROLLER}
+
+        self.needs_determine_node_roles = False
+
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
     def _add_node_role(self, node, role, scope:Optional[Literal[ALL]]=None):
         if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+            raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
         # TEACHER_TARGET BREADCRUMB: MAY NEED MORE WORK
         try:
             if scope is ALL and node not in self.nodes:
@@ -214,21 +672,13 @@ class NodeRoleManager(object):
             else:
                 self.nodes_to_roles[node].add(role)
         except KeyError:
-            raise CompositionError(f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.name}.")
+            raise NodeRoleError(f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.name}.")
 
-    def _set_node_roles(self, node, roles):
-        self._clear_node_roles(node)
-        for role in roles:
-            self._add_node_role(role)
-
-    def _clear_node_roles(self, node):
-        if node in self.nodes_to_roles:
-            self.nodes_to_roles[node] = set()
-
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
     def _remove_node_role(self, node, role):
         # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
         if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+            raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
         try:
             self.nodes_to_roles[node].remove(role)
         except KeyError as e:
@@ -240,6 +690,28 @@ class NodeRoleManager(object):
             #                   f"{role} not found for {node} in {self.name}.nodes_to_role."
             # else:
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
+
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
+    @handle_external_context()
+    def require_node_roles(self, node, roles, context=None):
+        """
+            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
+            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
+
+            Arguments
+            _________
+
+            node : `Node <Composition_Nodes>`
+                `Node <Composition_Nodes>` to which **role** should be assigned.
+
+            roles : `NodeRole` or list[`NodeRole`]
+                `NodeRole`\\(s) to assign to **node**.
+
+        """
+        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
+        roles = convert_to_list(roles)
+        for role in roles:
+            self._add_required_node_role(node, role, context)
 
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
@@ -258,7 +730,7 @@ class NodeRoleManager(object):
 
         """
         if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+            raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
         # FIX 4/25/20 [JDC] - CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
@@ -290,7 +762,7 @@ class NodeRoleManager(object):
                         self._analyze_graph(context=context)
                     else:
                         # Had afferent Projections other than from input_CIM
-                        raise CompositionError(f"Attempt to assign 'NodeRole.BIAS' to a node ('{node.name}') "
+                        raise NodeRoleError(f"Attempt to assign 'NodeRole.BIAS' to a node ('{node.name}') "
                                                f"in '{self.name}' that already has input(s) assigned.")
                 for input_port in node.input_ports:
                     input_port.parameters.default_input._set(DEFAULT_VARIABLE, context, override=True)
@@ -303,11 +775,11 @@ class NodeRoleManager(object):
 
             elif role is NodeRole.INPUT:
                 if (node, NodeRole.BIAS) in self.required_node_roles:
-                    raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
+                    raise NodeRoleError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
                                            f"assigned NodeRole.INPUT (since it does not receive any input).")
 
             elif role in unmodifiable_node_roles:
-                raise CompositionError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
+                raise NodeRoleError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
                                        f"assigned NodeRole.INPUT (since it does not receive any input).")
 
         node_role_pair = (node, role)
@@ -317,967 +789,7 @@ class NodeRoleManager(object):
         for item in node_role_pairs:
             self.excluded_node_roles.remove(item)
 
-
-    def _determine_pathway_roles(self, context=None):
-        for pway in self.pathways:
-            pway._assign_roles(self)
-
-    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
-        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
-        or any Composition nested within it, irrespective of their status at other levels of nesting.
-        To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
-            get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
-        Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
-               deeply nested Composition, but that Composition itself may not have the same role in the Composition
-               within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
-               nested Composition may not be an INPUT Node of the Composition in which it is nested).
-        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
-              nodes with that role will be *excluded*.
-        """
-        nested_nodes = []
-        include_roles = [] if include_roles is None else convert_to_list(include_roles)
-        exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
-        if isinstance(comp, Composition):
-            # Get all nested nodes in comp that have include_roles and not exclude_roles:
-            for node in [n for n in comp.nodes
-                         if (any(n in comp.get_nodes_by_role(include)
-                                 for include in include_roles)
-                               and not any(n in comp.get_nodes_by_role(exclude)
-                                           for exclude in exclude_roles))]:
-                if isinstance(node, Composition):
-                    nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
-                else:
-                    nested_nodes.append(node)
-        return nested_nodes if any(nested_nodes) else []
-
-        def _determine_node_roles(self, processing_graph:dict=None, node_roles_map:dict=NotImplemented,
-                              context:Context=None):
-        """Assign NodeRoles to Nodes in Composition
-
-        .. note::
-           Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
-           unless otherwise noted.
-
-        Assignment criteria:
-
-        ORIGIN:
-          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
-          .. note::
-             - this takes account of any Projections designated as feedback by graph_processing
-               (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
-             - these will all be assigined afferent Projections from Composition.input_CIM
-
-        INPUT:
-          - all Nodes excluding BIAS Nodes that have no incoming edges in this composition,
-            or that are in a cycle with no external incoming edges, for
-            which INPUT has not been removed and/or excluded using exclude_node_roles();
-          - all Nodes for which INPUT has been assigned as a required_node_role by user
-            (i.e., in self.required_node_roles[NodeRole.INPUT].
-
-        SINGLETON:
-          - all Nodes that are *both* ORIGIN and TERMINAL
-
-        BIAS:
-          - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
-
-        INTERNAL:
-            A `Node <Composition_Nodes>` that is neither `INPUT` nor
-            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
-            or `SINGLETON`, if it has no `afferent
-            <Mechanism_Base.afferents>` or `efferent
-            <Mechanism_Base.efferents>` Projections or neither,
-            respectively. This role cannot be modified programmatically.
-
-        CYCLE:
-          - all Nodes that identified as being in a cycle by self.graph_processing
-            (i.e., in a cycle in self.graph_processing.cycle_vertices)
-
-        FEEDBACK_SENDER:
-          - all Nodes that send a Projection designated as feedback by self.graph_processing OR
-            specified as feedback by user
-
-        FEEDBACK_RECEIVER:
-          - all Nodes that receive a Projection designated as feedback by self.graph_processing OR
-            specified as feedback by user
-
-        CONTROL_OBJECTIVE
-          - ObjectiveMechanism assigned CONTROL_OBJECTIVE as a required_node_role in ControlMechanism's
-            _instantiate_objective_mechanism()
-          .. note::
-             - *not the same as* CONTROLLER_OBJECTIVE
-             - all project to a ControlMechanism
-
-        CONTROLLER_OBJECTIVE
-          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a required_node_role in add_controller()
-          .. note::
-             - also assigned CONTROL_OBJECTIVE
-             - *not the same as* CONTROL_OBJECTIVE
-
-        LEARNING
-          - all Nodes for which LEARNING is assigned as a required_noded_role in
-            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
-
-        TARGET
-          - all Nodes for which TARGET has been assigned as a required_noded_role in
-            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
-          .. note::
-             - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
-             - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
-
-        LEARNING_OBJECTIVE
-          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in
-            add_linear_learning_pathway(), _create_non_terminal_backprop_learning_components,
-            or _create_terminal_backprop_learning_components()
-          .. note::
-             - also assigned LEARNING
-             - must project to a LearningMechanism
-
-        OUTPUT:
-          - all Nodes that have no outgoing edges in this compositions
-            *unless* they are to:
-            - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
-            - an ObjectiveMechanisms associated with ModulatoryMechanism (including for Learning)
-          - all Nodes that project only to:
-            - a ModulatoryMechanism
-            - an ObjectiveMechanism designated CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-            ? unless it is the ??TARGET_MECHANISM for a 'learning pathway <Composition_Learning_Pathway>`
-              this is currently the case, but is inconsistent with the analog in Control,
-              where monitored Mechanisms *are* allowed to be OUTPUT;
-              therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-          - all Nodes for which OUTPUT has been assigned as a required_node_role, including by user
-            (i.e., in self.required_node_roles[NodeRole.OUTPUT]
-
-        TERMINAL:
-          - all Nodes that
-            - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
-            - or have *no* efferent projections OR
-            - or for which any efferent projections are either:
-                - to output_CIM OR
-                - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
-          .. note::
-             - this insures that for cases in which there are nested CYCLES
-               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
-               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
-               is assigned as a TERMINAL Node
-               (i.e., the LearningMechanism responsible for the *first* `learned Projection;
-               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
-             - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
-               `controller <Composition.controller>` are executed outside of (either before or after)
-               all of the other Components of the Composition, as managed directly by the scheduler;
-             - `Execution of a `Composition <Composition_Execution>` always ends with a `TERMINAL` Node,
-               although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
-               is shorter than the longest one in the Composition).
-
-        Arguments
-        ---------
-
-        processing_graph : dict : default self.graph_processing
-           if provided, it is used for dependencies that determine roles in place of self.graph_processing
-           (used to construct externally-used representations, such as AutodiffComposition.pytorch_representation)
-
-        node_roles_map : dict : default self.nodes_to_roles
-           if provided, it is where role assignments are stored
-           (used to construct externally-used role assignments, such as AutodiffComposition.pytorch_representation)
-       """
-
-        # IMPLEMENTATION NOTE:
-        #   Assume that if a processing graph has been provided, it is a flat representation of the Compsition's graph
-        #   (e.g., as used for construction of AutodiffComposition.pytorch_representation)
-        #   (hence flatten = True) involving all nodes in nested comopositions (hence scope=True)
-        flatten = True if processing_graph else False # Used for clarity of conditional operations,
-                                                      # and potential future direct use with self.graph_processing
-        scope = ALL if flatten else None # Used for calls to get_roles_by_node, get_nodes_by_role, and _add_node_role
-
-        # Clear old roles
-        node_roles_map = self.nodes_to_roles if node_roles_map is NotImplemented else node_roles_map
-        node_roles_map.update({k: set() for k in node_roles_map})
-        if flatten:
-            for nested_comp in self._get_nested_compositions():
-                nested_comp.nodes_to_roles.update({k: set() for k in nested_comp.nodes_to_roles})
-
-        # Assign required_node_roles
-        for node_role_pair in self.required_node_roles:
-            self._add_node_role(node_role_pair[0], node_role_pair[1], scope)
-
-        # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
-        if self.scheduler.consideration_queue:
-            self._determine_origin_and_terminal_nodes_from_consideration_queue()
-
-        comp_graph_dependencies = (processing_graph if flatten
-                                   # If using the composition graph structure with conditions,
-                                   # the scheduler graph may be different than the composition graph itself.
-                                   # BREADCRUMB: WHICH SHOULD NodeRle assignments reflect?
-                                   else self.graph_processing.prune_feedback_edges()[0])
-
-        #region INPUT
-
-        # Start with all nodes from processing graph with no incoming edges
-        input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
-
-        # an entire cycle that has no node with any incoming edge other
-        # than from other nodes in the cycle is treated as INPUT
-        # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
-        # IMPLEMENTATION NOTE:
-        #      Processing of cycles not currently supported for flattened processing_graph
-        if not flatten and self.graph_processing.cycle_vertices:
-            for cycle in self.graph_processing.cycle_vertices:
-                for i, node in enumerate(cycle):
-                    prev = cycle[(i - 1) % len(cycle)]
-                    if comp_graph_dependencies[node] != {prev}:
-                        break
-                else:
-                    input_nodes = input_nodes.union(cycle)
-
-        nodes = self._get_all_nodes() if flatten else self.nodes
-
-        for node in nodes:
-            # Check all remaining ORIGIN Nodes
-            if node in input_nodes:
-                # Don't allow INTERNAL Nodes to be INPUTS
-                if NodeRole.INTERNAL in self.get_roles_by_node(node, scope):
-                    continue
-                self._add_node_role(node, NodeRole.INPUT, scope)
-
-                # special case, ControlMechanisms create MappingProjections
-                # to inner composition parameter CIMs, which may or may not
-                # create scheduler dependencies (determined by user action).
-                # If an inner composition is not ORIGIN because of this
-                # condition, add it as INPUT anyway.
-                if isinstance(node, ControlMechanism):
-                    for child in self.graph_processing.comp_to_vertex[node].children:
-                        for parent in child.parents:
-                            # MappingProjections from non-ControlMechanisms
-                            # always obey standard scheduling behavior
-                            if (
-                                not isinstance(parent.component, ControlMechanism)
-                                or parent.component not in input_nodes
-                            ):
-                                continue
-
-                            for proj in child.component.get_afferents(parent.component):
-                                if (
-                                    isinstance(proj, PathwayProjection_Base)
-                                    and proj._creates_scheduling_dependency
-                                ):
-                                    self._add_node_role(child.component, NodeRole.INPUT, scope)
-                                    break
-
-            # Node does not receive any path_afferents (except possibly from input_CIM)
-            elif (not isinstance(node, (Composition, ModulatoryMechanism_Base))
-                  and (not node.path_afferents
-                       or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
-                self._add_node_role(node, NodeRole.INPUT, scope)
-
-            if isinstance(node, Composition):
-                if not node.get_nodes_by_role(NodeRole.INPUT):
-                    # If a nested Composition has no INPUTS, remove it as an INPUT of the outer Composition
-                    self._remove_node_role(node, NodeRole.INPUT)
-        #endregion INPUT
-
-        #region BIAS
-        for node in nodes:
-            if (isinstance(node, Mechanism)
-                    and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
-                self._add_node_role(node, NodeRole.BIAS, scope)
-                # BIAS Nodes should never be included as INPUT Nodes:
-                self._remove_node_role(node, NodeRole.INPUT)
-                # BIAS Nodes should not be included as OUTPUT Nodes
-                self._remove_node_role(node, NodeRole.OUTPUT)
-                # FIX: Can above with below once nested BIAS Node is allowed to project to Node in outer Composition
-                # #   *unless* they are in a nested Composition and project to a Node in an outer one
-                # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
-                #     self._remove_node_role(node, NodeRole.OUTPUT)
-        #endregion BIAS
-
-        #region CYCLE
-        if not flatten:
-        # IMPLEMENTATION NOTE:
-        #      Processing of CYCLE and FEEDBACK not currently supported for flattened processing_graph
-
-            for cycle in self.graph_processing.cycle_vertices:
-                for node in cycle:
-                    self._add_node_role(node, NodeRole.CYCLE, scope)
-        #endregion CYCLE
-
-        #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
-            for receiver in self.graph_processing.vertices:
-                for sender, typ in receiver.source_types.items():
-                    if typ is EdgeType.FEEDBACK:
-                        self._add_node_role(sender.component, NodeRole.FEEDBACK_SENDER, scope)
-                        self._add_node_role(receiver.component, NodeRole.FEEDBACK_RECEIVER, scope)
-        #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
-
-        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
-        #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
-        #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
-
-
-        #region OUTPUT
-        # Note: "TERMINAL" referenced below is in respect to the
-        # the composition graph, not the scheduler graph, because OUTPUT
-        # is determined by composition structure, not scheduling order.
-        try:
-            output_nodes = self._get_terminal_nodes(comp_graph_dependencies)
-        except IndexError:
-            output_nodes = []
-
-        for node in nodes:
-            # Assign OUTPUT if node is TERMINAL...
-            if node in output_nodes:
-                # unless it is a ModulatoryMechanism or a BIAS Node in nested Composition that projects to an outer one
-                if (isinstance(node, ModulatoryMechanism_Base)
-                        or (NodeRole.BIAS in self.get_roles_by_node(node, scope)
-                            and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
-                                        for p in node.efferents))):
-                    continue
-                else:
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-
-            # Assign OUTPUT to any relevant non-TERMINAL Nodes
-            else:
-
-                # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
-                #     and is not already so designated (needed for user-specified ObjectiveMechanisms
-                if (isinstance(node, ObjectiveMechanism)
-                        and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node, scope)):
-                    ctl_mech = next((p.receiver.owner for p in node.efferents
-                                     if isinstance(p.receiver.owner, ControlMechanism)), None)
-                    if ctl_mech:
-                        node.control_mechanism = ctl_mech
-                        self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
-
-                # IMPLEMENTATION NOTE:
-                #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
-                #   The alternate version below restricts OUTPUT only to RecurrentTransferMechasnism
-                # # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
-                # #     (i.e., it is either a RecurrentTransferMechanism configured for learning
-                # #      or the LEARNING_OBJECTIVE of a `learning pathway <Composition_Learning_Pathway>`
-                # if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism)
-                #        for p in node.efferents):
-                #     self._add_node_role(node, NodeRole.OUTPUT)
-                #     continue
-
-                # Assign OUTPUT if it is a `RecurrentTransferMechanism` configured for learning
-                #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
-                #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
-                #    but can (or already does) project to an output_CIM
-                if all((p.receiver.owner is node # <- recurrence
-                        or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-                        or p.receiver.owner is self.output_CIM) # <- already projects to an output_CIM
-                       for p in node.efferents):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                    continue
-
-                # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
-                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria
-                def is_output_node(node, allow_cycle=False):
-                    return all((any(p.receiver.owner in self.get_nodes_by_role(role)
-                                    for role in {NodeRole.CONTROL_OBJECTIVE,
-                                                 NodeRole.CONTROLLER_OBJECTIVE,
-                                                 NodeRole.LEARNING_OBJECTIVE})
-                                # or p.receiver.owner is node
-                                or p.receiver.owner is self.output_CIM
-                                or (isinstance(p.receiver.owner, ControlMechanism)
-                                    and not isinstance(node, ObjectiveMechanism))
-                                or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
-                               for p in node.efferents))
-
-                # Assign OUTPUT only if the node is not:
-                #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
-                #  - a ModulatoryMechanism
-                # and the node projects only to:
-                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #  - and/or (already projects) to output_CIM
-                if NodeRole.TARGET in self.get_roles_by_node(node, scope):
-                    continue
-                if isinstance(node, ModulatoryMechanism_Base):
-                    continue
-                if is_output_node(node, allow_cycle=False):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
-                # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
-                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
-                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
-                    # # Get Nodes in the CYCLE:
-                    cycle_nodes = [node]
-                    queue = collections.deque([node])
-                    i = 0
-                    while queue:
-                        curr_node = queue.popleft()
-                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
-                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
-                            if next_node in cycle_nodes: # Cycle closed
-                                continue
-                            cycle_nodes.append(next_node)
-                            queue.append(next_node)
-                        i += 1
-                        assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
-                    # Ensure they are all satisfy criterial for OUTPUT Node
-                    if (all(is_output_node(cycle_node, allow_cycle=True)
-                            # and cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
-                            and not any(role in self.get_roles_by_node(cycle_node, scope)
-                                        for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
-                            for cycle_node in cycle_nodes)):
-                        for cycle_node in cycle_nodes:
-                            self._add_node_role(cycle_node, NodeRole.OUTPUT, scope)
-
-                # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
-                #     or projections to self.output_CIM, then assign as OUTPUT Node
-                # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
-                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
-                #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
-                elif isinstance(node, Composition):
-                    if any(not port.efferents or
-                           any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
-                           for port in node.output_CIM.output_ports):
-                        self._add_node_role(node, NodeRole.OUTPUT, scope)
-
-                # MODIFIED TEACHER_TARGET NEW: BREADCRUMB UNCOMMENT THIS IF NOT HANDLED IN pytorchshowgraph
-                # Assign OUTPUT if node is not LEARNING_OBJECTIVE and no other nodes are dependent on it
-                elif (processing_graph
-                      and not NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(node, scope)
-                      and not any(node in [n for n in v
-                                           if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k, scope))]
-                                  for k, v in processing_graph.items())):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                # MODIFIED TEACHER_TARGET END
-        #endregion OUTPUT
-
-        #region Assign SINGLETON and INTERNAL nodes
-        for node in nodes:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if all(n in node_roles_map[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-            #     self._add_node_role(node, NodeRole.SINGLETON)
-            # if not any(n in node_roles_map[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-            #     self._add_node_role(node, NodeRole.INTERNAL)
-            # MODIFIED TEACHER_TARGET NEW:
-            if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                self._add_node_role(node, NodeRole.SINGLETON, scope)
-            # if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-            #     self._add_node_role(node, NodeRole.INTERNAL, scope)
-            if not any(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-                self._add_node_role(node, NodeRole.INTERNAL, scope=scope)
-            # MODIFIED TEACHER_TARGET END
-        #endregion Assign SINGLETON and INTERNAL nodes
-
-        # Finally, remove any NodeRole assignments specified in excluded_node_roles
-        for node in nodes:
-            for node, role in self.excluded_node_roles:
-                try:
-                    if role in self.get_roles_by_node(node, scope):
-                        self._remove_node_role(node, role)
-                        self._get_nested_nodes()
-                except CompositionError:
-                    nested_node, nested_comp = next((node_comp_pair for node_comp_pair in self._get_nested_nodes()
-                                                     if node_comp_pair[0] is node), None)
-                    if role in nested_comp.get_roles_by_node(nested_node, scope):
-                        nested_comp._remove_node_role(nested_node, role)
-
-        # Manual override to avoid INPUT/OUTPUT setting, which would cause
-        # CIMs to be created, which is not correct for controllers
-        if self.controller is not None:
-            node_roles_map[self.controller] = {NodeRole.CONTROLLER}
-
-        self.needs_determine_node_roles = False
-
-
-    def _determine_pathway_roles(self, context=None):
-        for pway in self.pathways:
-            pway._assign_roles(self)
-
-    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
-        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
-        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
-        or any Composition nested within it, irrespective of their status at other levels of nesting.
-        To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
-            get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
-        Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
-               deeply nested Composition, but that Composition itself may not have the same role in the Composition
-               within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
-               nested Composition may not be an INPUT Node of the Composition in which it is nested).
-        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
-              nodes with that role will be *excluded*.
-        """
-        nested_nodes = []
-        include_roles = [] if include_roles is None else convert_to_list(include_roles)
-        exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
-        if isinstance(comp, Composition):
-            # Get all nested nodes in comp that have include_roles and not exclude_roles:
-            for node in [n for n in comp.nodes
-                         if (any(n in comp.get_nodes_by_role(include)
-                                 for include in include_roles)
-                               and not any(n in comp.get_nodes_by_role(exclude)
-                                           for exclude in exclude_roles))]:
-                if isinstance(node, Composition):
-                    nested_nodes.extend(node.get_nested_nodes_by_roles_at_any_level(node, include_roles, exclude_roles))
-                else:
-                    nested_nodes.append(node)
-        return nested_nodes if any(nested_nodes) else []
-
-        def _determine_node_roles(self, processing_graph:dict=None, node_roles_map:dict=NotImplemented,
-                              context:Context=None):
-        """Assign NodeRoles to Nodes in Composition
-
-        .. note::
-           Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
-           unless otherwise noted.
-
-        Assignment criteria:
-
-        ORIGIN:
-          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
-          .. note::
-             - this takes account of any Projections designated as feedback by graph_processing
-               (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
-             - these will all be assigined afferent Projections from Composition.input_CIM
-
-        INPUT:
-          - all Nodes excluding BIAS Nodes that have no incoming edges in this composition,
-            or that are in a cycle with no external incoming edges, for
-            which INPUT has not been removed and/or excluded using exclude_node_roles();
-          - all Nodes for which INPUT has been assigned as a required_node_role by user
-            (i.e., in self.required_node_roles[NodeRole.INPUT].
-
-        SINGLETON:
-          - all Nodes that are *both* ORIGIN and TERMINAL
-
-        BIAS:
-          - all Nodes that have one or more InputPorts for which default_input == DEFAULT_VARIABLE
-
-        INTERNAL:
-            A `Node <Composition_Nodes>` that is neither `INPUT` nor
-            `OUTPUT`.  Note that it *can* also be `ORIGIN`, `TERMINAL`
-            or `SINGLETON`, if it has no `afferent
-            <Mechanism_Base.afferents>` or `efferent
-            <Mechanism_Base.efferents>` Projections or neither,
-            respectively. This role cannot be modified programmatically.
-
-        CYCLE:
-          - all Nodes that identified as being in a cycle by self.graph_processing
-            (i.e., in a cycle in self.graph_processing.cycle_vertices)
-
-        FEEDBACK_SENDER:
-          - all Nodes that send a Projection designated as feedback by self.graph_processing OR
-            specified as feedback by user
-
-        FEEDBACK_RECEIVER:
-          - all Nodes that receive a Projection designated as feedback by self.graph_processing OR
-            specified as feedback by user
-
-        CONTROL_OBJECTIVE
-          - ObjectiveMechanism assigned CONTROL_OBJECTIVE as a required_node_role in ControlMechanism's
-            _instantiate_objective_mechanism()
-          .. note::
-             - *not the same as* CONTROLLER_OBJECTIVE
-             - all project to a ControlMechanism
-
-        CONTROLLER_OBJECTIVE
-          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a required_node_role in add_controller()
-          .. note::
-             - also assigned CONTROL_OBJECTIVE
-             - *not the same as* CONTROL_OBJECTIVE
-
-        LEARNING
-          - all Nodes for which LEARNING is assigned as a required_noded_role in
-            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
-
-        TARGET
-          - all Nodes for which TARGET has been assigned as a required_noded_role in
-            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
-          .. note::
-             - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
-             - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
-
-        LEARNING_OBJECTIVE
-          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in
-            add_linear_learning_pathway(), _create_non_terminal_backprop_learning_components,
-            or _create_terminal_backprop_learning_components()
-          .. note::
-             - also assigned LEARNING
-             - must project to a LearningMechanism
-
-        OUTPUT:
-          - all Nodes that have no outgoing edges in this compositions
-            *unless* they are to:
-            - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
-            - an ObjectiveMechanisms associated with ModulatoryMechanism (including for Learning)
-          - all Nodes that project only to:
-            - a ModulatoryMechanism
-            - an ObjectiveMechanism designated CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-            ? unless it is the ??TARGET_MECHANISM for a 'learning pathway <Composition_Learning_Pathway>`
-              this is currently the case, but is inconsistent with the analog in Control,
-              where monitored Mechanisms *are* allowed to be OUTPUT;
-              therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-          - all Nodes for which OUTPUT has been assigned as a required_node_role, including by user
-            (i.e., in self.required_node_roles[NodeRole.OUTPUT]
-
-        TERMINAL:
-          - all Nodes that
-            - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
-            - or have *no* efferent projections OR
-            - or for which any efferent projections are either:
-                - to output_CIM OR
-                - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
-          .. note::
-             - this insures that for cases in which there are nested CYCLES
-               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
-               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
-               is assigned as a TERMINAL Node
-               (i.e., the LearningMechanism responsible for the *first* `learned Projection;
-               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
-             - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
-               `controller <Composition.controller>` are executed outside of (either before or after)
-               all of the other Components of the Composition, as managed directly by the scheduler;
-             - `Execution of a `Composition <Composition_Execution>` always ends with a `TERMINAL` Node,
-               although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
-               is shorter than the longest one in the Composition).
-
-        Arguments
-        ---------
-
-        processing_graph : dict : default self.graph_processing
-           if provided, it is used for dependencies that determine roles in place of self.graph_processing
-           (used to construct externally-used representations, such as AutodiffComposition.pytorch_representation)
-
-        node_roles_map : dict : default self.nodes_to_roles
-           if provided, it is where role assignments are stored
-           (used to construct externally-used role assignments, such as AutodiffComposition.pytorch_representation)
-       """
-
-        # IMPLEMENTATION NOTE:
-        #   Assume that if a processing graph has been provided, it is a flat representation of the Compsition's graph
-        #   (e.g., as used for construction of AutodiffComposition.pytorch_representation)
-        #   (hence flatten = True) involving all nodes in nested comopositions (hence scope=True)
-        flatten = True if processing_graph else False # Used for clarity of conditional operations,
-                                                      # and potential future direct use with self.graph_processing
-        scope = ALL if flatten else None # Used for calls to get_roles_by_node, get_nodes_by_role, and _add_node_role
-
-        # Clear old roles
-        node_roles_map = self.nodes_to_roles if node_roles_map is NotImplemented else node_roles_map
-        node_roles_map.update({k: set() for k in node_roles_map})
-        if flatten:
-            for nested_comp in self._get_nested_compositions():
-                nested_comp.nodes_to_roles.update({k: set() for k in nested_comp.nodes_to_roles})
-
-        # Assign required_node_roles
-        for node_role_pair in self.required_node_roles:
-            self._add_node_role(node_role_pair[0], node_role_pair[1], scope)
-
-        # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
-        if self.scheduler.consideration_queue:
-            self._determine_origin_and_terminal_nodes_from_consideration_queue()
-
-        comp_graph_dependencies = (processing_graph if flatten
-                                   # If using the composition graph structure with conditions,
-                                   # the scheduler graph may be different than the composition graph itself.
-                                   # BREADCRUMB: WHICH SHOULD NodeRle assignments reflect?
-                                   else self.graph_processing.prune_feedback_edges()[0])
-
-        #region INPUT
-
-        # Start with all nodes from processing graph with no incoming edges
-        input_nodes = {n for n in comp_graph_dependencies if len(comp_graph_dependencies[n]) == 0}
-
-        # an entire cycle that has no node with any incoming edge other
-        # than from other nodes in the cycle is treated as INPUT
-        # ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
-        # IMPLEMENTATION NOTE:
-        #      Processing of cycles not currently supported for flattened processing_graph
-        if not flatten and self.graph_processing.cycle_vertices:
-            for cycle in self.graph_processing.cycle_vertices:
-                for i, node in enumerate(cycle):
-                    prev = cycle[(i - 1) % len(cycle)]
-                    if comp_graph_dependencies[node] != {prev}:
-                        break
-                else:
-                    input_nodes = input_nodes.union(cycle)
-
-        nodes = self._get_all_nodes() if flatten else self.nodes
-
-        for node in nodes:
-            # Check all remaining ORIGIN Nodes
-            if node in input_nodes:
-                # Don't allow INTERNAL Nodes to be INPUTS
-                if NodeRole.INTERNAL in self.get_roles_by_node(node, scope):
-                    continue
-                self._add_node_role(node, NodeRole.INPUT, scope)
-
-                # special case, ControlMechanisms create MappingProjections
-                # to inner composition parameter CIMs, which may or may not
-                # create scheduler dependencies (determined by user action).
-                # If an inner composition is not ORIGIN because of this
-                # condition, add it as INPUT anyway.
-                if isinstance(node, ControlMechanism):
-                    for child in self.graph_processing.comp_to_vertex[node].children:
-                        for parent in child.parents:
-                            # MappingProjections from non-ControlMechanisms
-                            # always obey standard scheduling behavior
-                            if (
-                                not isinstance(parent.component, ControlMechanism)
-                                or parent.component not in input_nodes
-                            ):
-                                continue
-
-                            for proj in child.component.get_afferents(parent.component):
-                                if (
-                                    isinstance(proj, PathwayProjection_Base)
-                                    and proj._creates_scheduling_dependency
-                                ):
-                                    self._add_node_role(child.component, NodeRole.INPUT, scope)
-                                    break
-
-            # Node does not receive any path_afferents (except possibly from input_CIM)
-            elif (not isinstance(node, (Composition, ModulatoryMechanism_Base))
-                  and (not node.path_afferents
-                       or all(p.sender.owner is self.input_CIM for p in node.path_afferents))):
-                self._add_node_role(node, NodeRole.INPUT, scope)
-
-            if isinstance(node, Composition):
-                if not node.get_nodes_by_role(NodeRole.INPUT):
-                    # If a nested Composition has no INPUTS, remove it as an INPUT of the outer Composition
-                    self._remove_node_role(node, NodeRole.INPUT)
-        #endregion INPUT
-
-        #region BIAS
-        for node in nodes:
-            if (isinstance(node, Mechanism)
-                    and all(input_port.default_input == DEFAULT_VARIABLE for input_port in node.input_ports)):
-                self._add_node_role(node, NodeRole.BIAS, scope)
-                # BIAS Nodes should never be included as INPUT Nodes:
-                self._remove_node_role(node, NodeRole.INPUT)
-                # BIAS Nodes should not be included as OUTPUT Nodes
-                self._remove_node_role(node, NodeRole.OUTPUT)
-                # FIX: Can above with below once nested BIAS Node is allowed to project to Node in outer Composition
-                # #   *unless* they are in a nested Composition and project to a Node in an outer one
-                # if not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism) for p in node.efferents):
-                #     self._remove_node_role(node, NodeRole.OUTPUT)
-        #endregion BIAS
-
-        #region CYCLE
-        if not flatten:
-        # IMPLEMENTATION NOTE:
-        #      Processing of CYCLE and FEEDBACK not currently supported for flattened processing_graph
-
-            for cycle in self.graph_processing.cycle_vertices:
-                for node in cycle:
-                    self._add_node_role(node, NodeRole.CYCLE, scope)
-        #endregion CYCLE
-
-        #region FEEDBACK_SENDER and FEEDBACK_RECEIVER
-            for receiver in self.graph_processing.vertices:
-                for sender, typ in receiver.source_types.items():
-                    if typ is EdgeType.FEEDBACK:
-                        self._add_node_role(sender.component, NodeRole.FEEDBACK_SENDER, scope)
-                        self._add_node_role(receiver.component, NodeRole.FEEDBACK_RECEIVER, scope)
-        #endregion FEEDBACK_SENDER and FEEDBACK_RECEIVER
-
-        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
-        #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
-        #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
-
-
-        #region OUTPUT
-        # Note: "TERMINAL" referenced below is in respect to the
-        # the composition graph, not the scheduler graph, because OUTPUT
-        # is determined by composition structure, not scheduling order.
-        try:
-            output_nodes = self._get_terminal_nodes(comp_graph_dependencies)
-        except IndexError:
-            output_nodes = []
-
-        for node in nodes:
-            # Assign OUTPUT if node is TERMINAL...
-            if node in output_nodes:
-                # unless it is a ModulatoryMechanism or a BIAS Node in nested Composition that projects to an outer one
-                if (isinstance(node, ModulatoryMechanism_Base)
-                        or (NodeRole.BIAS in self.get_roles_by_node(node, scope)
-                            and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
-                                        for p in node.efferents))):
-                    continue
-                else:
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-
-            # Assign OUTPUT to any relevant non-TERMINAL Nodes
-            else:
-
-                # Assign CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
-                #     and is not already so designated (needed for user-specified ObjectiveMechanisms
-                if (isinstance(node, ObjectiveMechanism)
-                        and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node, scope)):
-                    ctl_mech = next((p.receiver.owner for p in node.efferents
-                                     if isinstance(p.receiver.owner, ControlMechanism)), None)
-                    if ctl_mech:
-                        node.control_mechanism = ctl_mech
-                        self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
-
-                # IMPLEMENTATION NOTE:
-                #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
-                #   The alternate version below restricts OUTPUT only to RecurrentTransferMechasnism
-                # # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
-                # #     (i.e., it is either a RecurrentTransferMechanism configured for learning
-                # #      or the LEARNING_OBJECTIVE of a `learning pathway <Composition_Learning_Pathway>`
-                # if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism)
-                #        for p in node.efferents):
-                #     self._add_node_role(node, NodeRole.OUTPUT)
-                #     continue
-
-                # Assign OUTPUT if it is a `RecurrentTransferMechanism` configured for learning
-                #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
-                #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
-                #    but can (or already does) project to an output_CIM
-                if all((p.receiver.owner is node # <- recurrence
-                        or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-                        or p.receiver.owner is self.output_CIM) # <- already projects to an output_CIM
-                       for p in node.efferents):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                    continue
-
-                # Assign OUTPUT for all members of a CYCLE if they *all* project only to members of the CYCLE or:
-                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #  - and/or projects to another node in a CYCLE but otherwise meets the above criteria
-                def is_output_node(node, allow_cycle=False):
-                    return all((any(p.receiver.owner in self.get_nodes_by_role(role)
-                                    for role in {NodeRole.CONTROL_OBJECTIVE,
-                                                 NodeRole.CONTROLLER_OBJECTIVE,
-                                                 NodeRole.LEARNING_OBJECTIVE})
-                                # or p.receiver.owner is node
-                                or p.receiver.owner is self.output_CIM
-                                or (isinstance(p.receiver.owner, ControlMechanism)
-                                    and not isinstance(node, ObjectiveMechanism))
-                                or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
-                               for p in node.efferents))
-
-                # Assign OUTPUT only if the node is not:
-                #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
-                #  - a ModulatoryMechanism
-                # and the node projects only to:
-                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #  - and/or (already projects) to output_CIM
-                if NodeRole.TARGET in self.get_roles_by_node(node, scope):
-                    continue
-                if isinstance(node, ModulatoryMechanism_Base):
-                    continue
-                if is_output_node(node, allow_cycle=False):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
-                # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
-                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
-                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
-                    # # Get Nodes in the CYCLE:
-                    cycle_nodes = [node]
-                    queue = collections.deque([node])
-                    i = 0
-                    while queue:
-                        curr_node = queue.popleft()
-                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
-                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
-                            if next_node in cycle_nodes: # Cycle closed
-                                continue
-                            cycle_nodes.append(next_node)
-                            queue.append(next_node)
-                        i += 1
-                        assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
-                    # Ensure they are all satisfy criterial for OUTPUT Node
-                    if (all(is_output_node(cycle_node, allow_cycle=True)
-                            # and cycle_node not in self.get_nodes_by_role(NodeRole.OUTPUT)
-                            and not any(role in self.get_roles_by_node(cycle_node, scope)
-                                        for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
-                            for cycle_node in cycle_nodes)):
-                        for cycle_node in cycle_nodes:
-                            self._add_node_role(cycle_node, NodeRole.OUTPUT, scope)
-
-                # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
-                #     or projections to self.output_CIM, then assign as OUTPUT Node
-                # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
-                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to the outer Composition's
-                #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
-                elif isinstance(node, Composition):
-                    if any(not port.efferents or
-                           any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
-                           for port in node.output_CIM.output_ports):
-                        self._add_node_role(node, NodeRole.OUTPUT, scope)
-
-                # MODIFIED TEACHER_TARGET NEW: BREADCRUMB UNCOMMENT THIS IF NOT HANDLED IN pytorchshowgraph
-                # Assign OUTPUT if node is not LEARNING_OBJECTIVE and no other nodes are dependent on it
-                elif (processing_graph
-                      and not NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(node, scope)
-                      and not any(node in [n for n in v
-                                           if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k, scope))]
-                                  for k, v in processing_graph.items())):
-                    self._add_node_role(node, NodeRole.OUTPUT, scope)
-                # MODIFIED TEACHER_TARGET END
-        #endregion OUTPUT
-
-        #region Assign SINGLETON and INTERNAL nodes
-        for node in nodes:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # if all(n in node_roles_map[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-            #     self._add_node_role(node, NodeRole.SINGLETON)
-            # if not any(n in node_roles_map[node] for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-            #     self._add_node_role(node, NodeRole.INTERNAL)
-            # MODIFIED TEACHER_TARGET NEW:
-            if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                self._add_node_role(node, NodeRole.SINGLETON, scope)
-            # if all(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-            #     self._add_node_role(node, NodeRole.INTERNAL, scope)
-            if not any(n in self.get_roles_by_node(node, scope=scope) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
-                self._add_node_role(node, NodeRole.INTERNAL, scope=scope)
-            # MODIFIED TEACHER_TARGET END
-        #endregion Assign SINGLETON and INTERNAL nodes
-
-        # Finally, remove any NodeRole assignments specified in excluded_node_roles
-        for node in nodes:
-            for node, role in self.excluded_node_roles:
-                try:
-                    if role in self.get_roles_by_node(node, scope):
-                        self._remove_node_role(node, role)
-                        self._get_nested_nodes()
-                except CompositionError:
-                    nested_node, nested_comp = next((node_comp_pair for node_comp_pair in self._get_nested_nodes()
-                                                     if node_comp_pair[0] is node), None)
-                    if role in nested_comp.get_roles_by_node(nested_node, scope):
-                        nested_comp._remove_node_role(nested_node, role)
-
-        # Manual override to avoid INPUT/OUTPUT setting, which would cause
-        # CIMs to be created, which is not correct for controllers
-        if self.controller is not None:
-            node_roles_map[self.controller] = {NodeRole.CONTROLLER}
-
-        self.needs_determine_node_roles = False
-
-
-
-
-    # TEACHER_TARGET BREADCRUMB:
-    #                     THESE ARE USER INTERFACE METHODS
-    #                     ADD SHELLS FOR THEM ON COMPOSITION (??BUT *NOT* PytorchCompositionWrapper)
-    @handle_external_context()
-    def require_node_roles(self, node, roles, context=None):
-        """
-            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
-            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
-
-            Arguments
-            _________
-
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` to which **role** should be assigned.
-
-            roles : `NodeRole` or list[`NodeRole`]
-                `NodeRole`\\(s) to assign to **node**.
-
-        """
-        # TEACHER_TARGET BREADCRUMB: ADD SCOPE FOR NESTED COMPS
-        roles = convert_to_list(roles)
-        for role in roles:
-            self._add_required_node_role(node, role, context)
-
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
     @handle_external_context()
     def exclude_node_roles(self,
                            node:Mechanism_Base,
@@ -1303,13 +815,13 @@ class NodeRoleManager(object):
         roles = convert_to_list(roles)
         for role in roles:
             if role not in NodeRole:
-                raise CompositionError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
+                raise NodeRoleError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
 
             # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
             if (context.source == ContextFlags.COMMAND_LINE and
                     role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
                              NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
-                raise CompositionError(f"Attempt to exclude {role} (from {node} of {self.name})"
+                raise NodeRoleError(f"Attempt to exclude {role} (from {node} of {self.name})"
                                        f"that cannot be modified by user.")
             node_role_pair = (node, role)
             comps = [self]
@@ -1322,36 +834,41 @@ class NodeRoleManager(object):
                     comp.required_node_roles.remove(node_role_pair)
                 comp._remove_node_role(node, role)
 
-    @property
-    def all_nodes_to_roles(self):
-        aggregated_map = self.nodes_to_roles.copy()
-        for nested_comp in self._get_nested_compositions():
-            if nested_comp.nodes_to_roles:
-                aggregated_map.update(nested_comp.nodes_to_roles)
-        return aggregated_map
+    def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->List:
+        """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
+        If **scope** is not specified, searches for and returns only nodes at top level of the Composition.
+        If **scope** is ALL, includes nodes in top level Composition and any nested within it.
 
-    def get_required_roles_by_node(self, node):
+        Arguments
+        _________
+
+        role : `NodeRole`
+            role for which `Nodes <Composition_Nodes>` are desired.
+
+        scope : `ALL` or None
+            specifies whether nodes with the specified `NodeRole` are returned only if they are in the top level
+            Composition, or any nessted within it.
+
+        Returns
+        -------
+
+        list[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
+            list of `Nodes <Composition_Nodes>` assigned the `NodeRole` specified in **role**,
+            which is empty if there are none.
+
         """
-            Return a list of `NodeRoles <NodeRole>` that have been user-assigned to a specified **node**.
-
-            Arguments
-            _________
-
-            node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` for which assigned `NodeRoles <NodeRole>` are desired.
-
-            Returns
-            -------
-
-            List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
-                list of `NodeRoles <NodeRole>` assigned to **node**.
-        """
+        if role is None or role not in NodeRole:
+            raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
 
         try:
-            return [role for n, role in self.required_node_roles if n is node]
-        except KeyError:
-            raise CompositionError(f"Node {node} not found in {self.nodes_to_roles}.")
+            if scope is ALL:
+                return self.get_nested_nodes_by_roles_at_any_level(self, role)
+            return [node for node in self.nodes_to_roles if role in self.nodes_to_roles[node]]
 
+        except KeyError as e:
+            raise NodeRoleError(f'Node missing from {self}.nodes_to_roles: {e}.')
+
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
     def get_roles_by_node(self,
                           node:Union[Mechanism_Base, Composition_Base],
                           scope:Optional[Literal[ALL, NESTED]]=None)->list:
@@ -1403,41 +920,70 @@ class NodeRoleManager(object):
                 return []
             if not scope and node not in self.nodes:
                 # Node note found in outermost Composition
-                raise CompositionError(f"Node ('{node.name}') for which roles were requested is not in '{self.name}'")
+                raise NodeRoleError(f"Node ('{node.name}') for which roles were requested is not in '{self.name}'")
             # Node was not found anywhere
-            raise CompositionError(f"Node ('{node.name}') for which roles were requested is not in '{self.name}' "
+            raise NodeRoleError(f"Node ('{node.name}') for which roles were requested is not in '{self.name}' "
                                    f"or any Compositions nested within it.")
 
-    def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->List:
-        """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
-        If **scope** is not specified, searches for and returns only nodes at top level of the Composition.
-        If **scope** is ALL, includes nodes in top level Composition and any nested within it.
-
-        Arguments
-        _________
-
-        role : `NodeRole`
-            role for which `Nodes <Composition_Nodes>` are desired.
-
-        scope : `ALL` or None
-            specifies whether nodes with the specified `NodeRole` are returned only if they are in the top level
-            Composition, or any nessted within it.
-
-        Returns
-        -------
-
-        list[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
-            list of `Nodes <Composition_Nodes>` assigned the `NodeRole` specified in **role**,
-            which is empty if there are none.
-
+    # TEACHER_TARGET BREADCRUMB: DEAL WITH SCOPE, SINCE IT MAY NOT APPLY TO PYTORCH REPS
+    def get_required_roles_by_node(self, node):
         """
-        if role is None or role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+            Return a list of `NodeRoles <NodeRole>` that have been user-assigned to a specified **node**.
+
+            Arguments
+            _________
+
+            node : `Node <Composition_Nodes>`
+                `Node <Composition_Nodes>` for which assigned `NodeRoles <NodeRole>` are desired.
+
+            Returns
+            -------
+
+            List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
+                list of `NodeRoles <NodeRole>` assigned to **node**.
+        """
 
         try:
-            if scope is ALL:
-                return self.get_nested_nodes_by_roles_at_any_level(self, role)
-            return [node for node in self.nodes_to_roles if role in self.nodes_to_roles[node]]
+            return [role for n, role in self.required_node_roles if n is node]
+        except KeyError:
+            raise NodeRoleError(f"Node {node} not found in {self.nodes_to_roles}.")
 
-        except KeyError as e:
-            raise CompositionError(f'Node missing from {self}.nodes_to_roles: {e}.')
+
+    # TEACHER_TARGET BREADCRUMB: REFACTOR THIS TO DEAL WITH REPS THAT DON'T SUPPORT NESTING?
+    def get_nested_nodes_by_roles_at_any_level(self, comp, include_roles, exclude_roles=None)->list or None:
+        """Return all Nodes from comp or any nested within it that have *include_roles* but not *exclude_roles*.
+        Returns Nodes that have or don't have the specified roles in the Composition specified by **comp**
+        or any Composition nested within it, irrespective of their status at other levels of nesting.
+        To get nodes that are either INPUT or OUTPUT Nodes at *all* levels of nesting, use either
+            get_nested_input_nodes_at_all_levels() or get_nested_output_nodes_at_all_levels()
+        Note:  do this recursively, checking roles on the "way down," as a Node may have a role in a
+               deeply nested Composition, but that Composition itself may not have the same role in the Composition
+               within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
+               nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        Note: exclude_roles takes precedence, so that if a NodeRole is listed in both,
+              nodes with that role will be *excluded*.
+        IMPLEMENTATION NOTE:
+            This method is only support for Compositions.  If the owner of the NodeRoleMgr is not a Composition
+            (e.g, it is the pytorch_representation of an AutodiffComposition), an error is raised when called.
+        """
+        from psyneulink.core.compositions.composition import Composition
+        assert isinstance(comp, Composition), (f"PROGRAM ERROR: get_nested_nodes_by_roles_at_any_level() was called"
+                                               f"for a NodeRoleMgr the owner of which is not a Composition")
+        nested_nodes = []
+        include_roles = [] if include_roles is None else convert_to_list(include_roles)
+        exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)
+        if isinstance(comp, Composition):
+            # Get all nested nodes in comp that have include_roles and not exclude_roles:
+            for node in [n for n in comp.nodes
+                         if (any(n in comp.get_nodes_by_role(include)
+                                 for include in include_roles)
+                               and not any(n in comp.get_nodes_by_role(exclude)
+                                           for exclude in exclude_roles))]:
+                if isinstance(node, Composition):
+                    nested_nodes.extend(node.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(node,
+                                                                                                   include_roles,
+                                                                                                   exclude_roles))
+                else:
+                    nested_nodes.append(node)
+        return nested_nodes if any(nested_nodes) else []
+

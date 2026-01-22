@@ -408,6 +408,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     def _sender_is_probe(self, output_port):
         """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         port, node, comp = self._get_source_info_from_output_CIM(output_port, self.composition)
         return NodeRole.PROBE in comp.get_roles_by_node(node)

@@ -41,7 +41,8 @@ from psyneulink.core.components.projections.projection import Projection, Duplic
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
-from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale, NodeRole
+from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -911,7 +912,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        self._determine_node_roles(processing_graph=processing_graph, context=context)
+        self.node_roles_mgr._determine_node_roles(processing_graph=processing_graph, context=context)
         self._processing_graph = processing_graph
         return processing_graph
 
@@ -971,6 +972,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         # TEACHER_TARGET BREADCRUMB:  TRY TO DETERMINE NodeRoles FOR EXCLUDED NODES? (e.g. PYTORCH GRU NODE)
 
+    # TEACHER_TARGET BREADCRUMB: MOVE THE FOLLOWING TO PytorchCompositionWrapper.node_role_mgr:
     def _add_node_role(self, node, role):
         if role not in NodeRole:
             raise PytorchCompositionWrapper('Invalid NodeRole: {0}'.format(role))

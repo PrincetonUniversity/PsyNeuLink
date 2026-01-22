@@ -19,7 +19,8 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraphError, _gv_executable_not_found_error_msg
 from psyneulink.core.globals.keywords import ALL, GAIN, INSET, INTERCEPT, NESTED, NOISE, SLOPE, TARGET
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism

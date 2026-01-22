@@ -1308,7 +1308,8 @@ class ShowGraph():
                                comp_hierarchy,
                                context):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
         composition_nodes = self._get_nodes(composition, context)
         composition_projections = self._get_projections(composition, context)
@@ -2202,7 +2203,7 @@ class ShowGraph():
                                     context):
         """Assign learning nodes and edges to graph"""
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
 
         # Get learning_components (to show in learning_color)
@@ -2388,7 +2389,8 @@ class ShowGraph():
                                nesting_level=None,
                                context=None):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
         composition_projections = self._get_projections(composition, context)
         if nesting_level not in comp_hierarchy:
@@ -2678,7 +2680,8 @@ class ShowGraph():
                          context
                          ):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         # graphviz is currently only imported within methods
         from graphviz.backend.execute import ExecutableNotFound
 
@@ -2785,7 +2788,7 @@ class ShowGraph():
     def _is_composition_controller(self, mech, context, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
         # return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         if not isinstance(mech, ControlMechanism):
             return False
         for comp in [self.composition, enclosing_comp]:

@@ -19,7 +19,8 @@ from typing import Union, Optional, Literal, Tuple
 from torch import nn
 
 import psyneulink.core.scheduling.condition as conditions
-from psyneulink.core.compositions.composition import LearningScale, NodeRole
+from psyneulink.core.compositions.composition import LearningScale
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
