@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 # your model
 from ego_revaluation.run_original_probabilistic import run
-from ego_revaluation.run_original_probabilistic import run2
-from ego_revaluation.run_original_probabilistic import run3
+from ego_revaluation.run_original_probabilistic import run_random_choices
+from ego_revaluation.run_original_probabilistic import run_model_choices
 
 
 # ============================================================
@@ -59,33 +59,33 @@ def compute_stay_stats(trial_log):
 # ============================================================
 
 def simulate_participants(
-    n_participants,
-    n_base_trials,
-    state_integration_rate,
-    time_retrieval_weight,
-    model_based_ness,
-    metric="cosine_similarity",
-    common_prob=0.7
+        n_participants,
+        n_base_trials,
+        state_integration_rate,
+        time_retrieval_weight,
+        model_based_ness,
+        metric="cosine_similarity",
+        common_prob=0.7
 ):
     """Run M simulated participants and return Nx4 matrix of stay stats."""
     all_stats = []
 
-    trialLog=[]
+    trial_log = []
     for _ in range(n_participants):
-        # trial_log = run(
-        # trial_log=run2(
-        trial_log=run3(
+        trial_log = (
+            run_model_choices(
+            # run_random_choices(
             state_integration_rate=state_integration_rate,
             time_retrieval_weight=time_retrieval_weight,
             model_based_ness=model_based_ness,
             metric=metric,
             n_base_trials=n_base_trials,
             common_prob=common_prob,
-        )
+        ))
         all_stats.append(compute_stay_stats(trial_log))
-        trialLog.append(trial_log)
+        trial_log.append(trial_log)
 
-    return np.array(all_stats), trialLog   # shape = (participants, 4)
+    return np.array(all_stats), trial_log  # shape = (participants, 4)
 
 
 # ============================================================
@@ -100,17 +100,17 @@ def plot_daw_style(mean_stats, sem_stats, title):
     labels = ["Rewarded", "Unrewarded"]
 
     common = [mean_stats[0], mean_stats[2]]
-    rare   = [mean_stats[1], mean_stats[3]]
+    rare = [mean_stats[1], mean_stats[3]]
 
     common_sem = [sem_stats[0], sem_stats[2]]
-    rare_sem   = [sem_stats[1], sem_stats[3]]
+    rare_sem = [sem_stats[1], sem_stats[3]]
 
     x = np.arange(2)
     width = 0.35
 
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.bar(x - width/2, common, width, yerr=common_sem, label="Common", color="royalblue", alpha=0.8)
-    ax.bar(x + width/2, rare, width, yerr=rare_sem, label="Rare", color="darkorange", alpha=0.8)
+    ax.bar(x - width / 2, common, width, yerr=common_sem, label="Common", color="royalblue", alpha=0.8)
+    ax.bar(x + width / 2, rare, width, yerr=rare_sem, label="Rare", color="darkorange", alpha=0.8)
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
@@ -127,12 +127,12 @@ def plot_daw_style(mean_stats, sem_stats, title):
 # Parameter sweep figure (integration × time × MB)
 # ============================================================
 def parameter_sweep(
-    save_dir,
-    integration_rates=[0.6],
-    time_weights=[0.0, 0.1, 1.6],
-    model_based_ness_list=[0.0],
-    n_base_trials=200,
-    n_participants=50
+        save_dir,
+        integration_rates=[0.6],
+        time_weights=[0.0, 0.1, 1.6],
+        model_based_ness_list=[0.0],
+        n_base_trials=200,
+        n_participants=50
 ):
     ensure_dir(save_dir)
 
@@ -162,9 +162,8 @@ def parameter_sweep(
 
             for tw in time_weights:
                 for mb in model_based_ness_list:
-
                     # --- Simulate participants ---
-                    stats, trialLog = simulate_participants(
+                    stats, trial_log = simulate_participants(
                         n_participants=n_participants,
                         n_base_trials=n_base_trials,
                         state_integration_rate=ir,
@@ -197,17 +196,17 @@ def parameter_sweep(
 
                     # Prepare Daw-style bars
                     common = [mean_stats[0], mean_stats[2]]
-                    rare   = [mean_stats[1], mean_stats[3]]
+                    rare = [mean_stats[1], mean_stats[3]]
 
                     common_sem = [sem_stats[0], sem_stats[2]]
-                    rare_sem   = [sem_stats[1], sem_stats[3]]
+                    rare_sem = [sem_stats[1], sem_stats[3]]
 
                     x = np.arange(2)
                     width = 0.35
 
-                    ax.bar(x - width/2, common, width, yerr=common_sem,
+                    ax.bar(x - width / 2, common, width, yerr=common_sem,
                            label="Common", color="royalblue", alpha=0.85)
-                    ax.bar(x + width/2, rare, width, yerr=rare_sem,
+                    ax.bar(x + width / 2, rare, width, yerr=rare_sem,
                            label="Rare", color="darkorange", alpha=0.85)
 
                     ax.set_xticks(x)
@@ -228,8 +227,6 @@ def parameter_sweep(
     print(f"Saved: {fig_path}")
 
 
-
-
 # ============================================================
 # MAIN
 # ============================================================
@@ -240,8 +237,10 @@ if __name__ == "__main__":
 
     parameter_sweep(
         save_dir=save_dir,
-        integration_rates=[.3], #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
-        time_weights=[0,.1, .3, .6], #[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
+        integration_rates=[.2],
+        # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
+        time_weights=[0, .6, 1.2],
+        # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
         # time_weights=[0.25],  # .1, .6 in multiplicative
         model_based_ness_list=[0.0],
         n_base_trials=200,

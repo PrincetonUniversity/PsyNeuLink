@@ -20,7 +20,7 @@ TIME_RETRIEVAL_WEIGHT = .3
 # state integration rate (how fast working memory is updated)
 STATE_INTEGRATION_RATE = 1.  # .6
 
-TEMPERATURE = .05  # temperature of the softmax used during memory retrieval (smaller means more argmax-like)
+TEMPERATURE = .02  # temperature of the softmax used during memory retrieval (smaller means more argmax-like)
 MEMORY_INIT = .001
 SOFTMAX_THRESHOLD = .01
 N_STEPS = 3  # number of steps per rollout (not used in PNL version, use 3 for equal match)
