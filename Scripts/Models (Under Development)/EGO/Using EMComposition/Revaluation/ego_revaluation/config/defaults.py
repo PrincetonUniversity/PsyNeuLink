@@ -37,7 +37,7 @@ METRIC = 'dot_product'
 # Metric to use for sample mode (only in python version) In pnl: softmax
 SAMPLE_MODE = 'softmax'
 # Strategy to combine retrieval matches: Multiplicative (AND) or Additive (OR)
-RETRIEVAL_STRATEGY = 'multiplicative'
+RETRIEVAL_STRATEGY = 'additive'
 
 # === EXPERIMENT === #
 N_BASELINE_TRIALS = 20  # number of baseline trials per participant (one sequence = one trial of each stimulus sequence)

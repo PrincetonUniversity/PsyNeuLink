@@ -29,10 +29,37 @@ def compute_stay_stats(trial_log):
     """Return stay probabilities for the four Daw 2011 conditions."""
     rc, rr, uc, ur = [], [], [], []
 
+    reward_prob_a5, reward_prob_a6, reward_prob_a7, reward_prob_a8 = [], [], [], []
+    estimated_reward_prob_a5, estimated_reward_prob_a6, estimated_reward_prob_a7, estimated_reward_prob_a8 = [], [], [], []
+
+    estimated_reward_r1, estimated_reward_r2 = [], []
+    # "estimate_rew_alien5": None, "estimate_rew_alien6": None,
+    # "estimate_rew_alien7": None, "estimate_rew_alien8": None,
+    # "pred_next_rocket": None,  # 1 or 2 based on estimates
+    # "pred_next_alien": None,
+    # "stay": None,  # 0/1 w.r.t. previous start_state
+    # "reward_prob_a5": rew_probs[5], "reward_prob_a6": rew_probs[6],
+    # "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
+
+
     for tr in trial_log:
         stay = tr["stay"]
         if stay is None:
             continue
+
+        # reward_prob_a5.append(tr["reward_prob_a5"])
+        # reward_prob_a6.append(tr["reward_prob_a6"])
+        # reward_prob_a7.append(tr["reward_prob_a7"])
+        # reward_prob_a8.append(tr["reward_prob_a8"])
+        #
+        # estimated_reward_prob_a5.append(tr["estimate_rew_alien5"])
+        # estimated_reward_prob_a6.append(tr["estimate_rew_alien6"])
+        # estimated_reward_prob_a7.append(tr["estimate_rew_alien7"])
+        # estimated_reward_prob_a8.append(tr["estimate_rew_alien8"])
+
+        # estimated_reward_r1.append(tr["estimate_rew_state1"])
+        # estimated_reward_r2.append(tr["estimate_rew_state2"])
+
 
         reward = tr["reward"]
         transition = tr["transition"]
@@ -46,6 +73,31 @@ def compute_stay_stats(trial_log):
         elif reward == 0 and transition == "rare":
             ur.append(stay)
 
+    # fig, ax = plt.subplots(1,2, figsize = (12,4), sharey=True, sharex=True)
+    #
+    # ax[0].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',marker='.', alpha = 0.25)
+    # ax[0].plot(reward_prob_a5, label="reward_prob_a5", color="red")
+    # ax[0].scatter(range(len(estimated_reward_prob_a5)), estimated_reward_prob_a5, label="estimated_reward_prob_a5",
+    #               color="red", marker=".", alpha=.25)
+
+    # ax[1].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',
+    #               marker='.', alpha=0.25)
+    # ax[1].plot(reward_prob_a6, label="reward_prob_a6", color="blue")
+    # ax[1].scatter(range(len(estimated_reward_prob_a6)), estimated_reward_prob_a6, label="estimated_reward_prob_a6",
+    #               color="blue", marker=".", alpha=.25)
+    #
+    # ax[1].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
+    #               marker='.', alpha=0.25)
+    # ax[2].plot(reward_prob_a7, label="reward_prob_a7", color="green")
+    # ax[2].scatter(range(len(estimated_reward_prob_a7)), estimated_reward_prob_a7, label="estimated_reward_prob_a7",
+    #             color="green", marker=".", alpha=.25)
+
+    # ax[3].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
+    #               marker='.', alpha=0.25)
+    # ax[3].plot(reward_prob_a8, label="reward_prob_a8", color="orange")
+    # ax[3].scatter(range(len(estimated_reward_prob_a8)), estimated_reward_prob_a8, label="estimated_reward_prob_a8", color="orange", marker=".", alpha=.25)
+
+    # plt.savefig('estimate_vs_reward_prob.pdf')
     return np.array([
         np.mean(rc) if rc else np.nan,
         np.mean(rr) if rr else np.nan,
@@ -239,7 +291,7 @@ if __name__ == "__main__":
         save_dir=save_dir,
         integration_rates=[.2],
         # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
-        time_weights=[0, .6, 1.2],
+        time_weights=[0,0.2,.6],
         # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
         # time_weights=[0.25],  # .1, .6 in multiplicative
         model_based_ness_list=[0.0],

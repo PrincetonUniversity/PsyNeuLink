@@ -5,6 +5,16 @@ from .src import gen_trials
 from .model_python import gen_memories, estimate_reward_from_starting_state
 from .config import defaults
 
+STATES = {
+    1: np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
+    2: np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
+    3: np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),  # second-stage A
+    4: np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),  # second-stage B
+    5: np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),  # reward marker for 3
+    6: np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),  # reward marker for 4
+    7: np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),  # no-reward marker for 3
+    8: np.array([0, 0, 0, 0, 0, 0, 0, 0, 1]),  # no-reward marker for 4
+}
 
 def drift(p, sigma=0.025, lo=0.25, hi=0.75):
     """Gaussian random walk for reward probabilities, clipped."""
@@ -155,16 +165,7 @@ def initial_reward_probabilities(is_random=True, low=.25, high=.75):
     }
 
 
-STATES = {
-    1: np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
-    2: np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
-    3: np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),  # second-stage A
-    4: np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),  # second-stage B
-    5: np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),  # reward marker for 3
-    6: np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),  # reward marker for 4
-    7: np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),  # no-reward marker for 3
-    8: np.array([0, 0, 0, 0, 0, 0, 0, 0, 1]),  # no-reward marker for 4
-}
+
 
 
 # softmax value-to-choice rule with perseveration bias from Daw et al, 2011
@@ -243,8 +244,6 @@ def gen_trials_base_persevere(
             if trial == 0:
                 start_id = 1 if random() < 0.5 else 2
             else:
-                # start_id = 1 if random() < max(p1,p2)/(max(p1,p2)+max(p3,p4)) else 2
-                # generate start_state "choices" that are biased towards repeating last "choice"
                 prev_start_id = trial_log[-1]["start_id"]
                 rew = trial_log[-1]["reward"]
 
@@ -285,7 +284,6 @@ def gen_trials_base_persevere(
             if second_id == 3:
                 reward_prob, terminal_id = (p1, 5) if random() < p1 / (p1 + p2) else (p2, 6)
             else:  # second_id == 4
-                # reward_prob, terminal_id = (p3, 6) if random() < 0.5 else (p4, 8)
                 reward_prob, terminal_id = (p3, 7) if random() < p3 / (p3 + p4) else (p4, 8)
         else:
             if second_id == 3:
@@ -452,8 +450,8 @@ def run_random_choices(
             time_retrieval_weight=time_retrieval_weight,
         )
 
-        tr["estimate_reward_state1"] = r1
-        tr["estimate_reward_state2"] = r2
+        tr["estimate_rew_state1"] = r1
+        tr["estimate_rew_state2"] = r2
 
         # get previous choice, only valid for 2nd trial onwards
         prev_choice = tr["start_id"]
@@ -485,7 +483,7 @@ def run_model_choices(
     times = gen_trials.get_time_sequence_event(n_base_trials, 3)
 
     # generate initial reward probabilities
-    rew_probs = initial_reward_probabilities(is_random_initial_probs)
+    rew_probs = initial_reward_probabilities(is_random=is_random_initial_probs)
 
     # -----------------------------
     # 1. First-stage choice (rocket)
@@ -522,8 +520,8 @@ def run_model_choices(
         "pred_next_rocket": None,  # 1 or 2 based on estimates
         "pred_next_alien": None,
         "stay": None,  # 0/1 w.r.t. previous start_state
-        "rew_prob_alien5": rew_probs[5], "rew_prob_alien6": rew_probs[6],
-        "rew_prob_alien7": rew_probs[7], "rew_prob_alien8": rew_probs[8],
+        "reward_prob_a5": rew_probs[5], "reward_prob_a6": rew_probs[6],
+        "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
     }
 
     trial_log = [first_trial]
@@ -557,9 +555,17 @@ def run_model_choices(
         # get softmax choice probabilities
         p_choice1, p_choice2 = val_to_choice(r1, r2, prev_rocket)
         # “policy”: pick start state with higher estimated reward
-        pred_next_rocket = 1 if random() < p_choice1 else 2
+        # pred_next_rocket = 1 if random() < p_choice1 else 2
+        pred_next_rocket_model = 1 if random() < p_choice1 else 2
+
+        pred_next_rocket_random = 1 if random() < .5 else 2
+
+
         # make a choice
-        start_id = pred_next_rocket
+        # start_id = pred_next_rocket_model
+        start_id = pred_next_rocket_random
+
+
 
         # -----------------------------
         # 2. Second-stage state (planet)
@@ -620,11 +626,12 @@ def run_model_choices(
             "estimate_rew_state1": r1, "estimate_rew_state2": r2,
             "estimate_rew_alien5": estimate_rew_alien5, "estimate_rew_alien6": estimate_rew_alien6,
             "estimate_rew_alien7": estimate_rew_alien7, "estimate_rew_alien8": estimate_rew_alien8,
-            "pred_next_rocket": pred_next_rocket,  # 1 or 2 based on estimates
+            "pred_next_rocket": pred_next_rocket_model,  # 1 or 2 based on estimates
             "pred_next_alien": pred_next_alien,
-            "stay": int(start_id == prev_rocket),  # 0/1 w.r.t. previous start_state
-            "rew_prob_alien5": rew_probs[5], "rew_prob_alien6": rew_probs[6],
-            "rew_prob_alien7": rew_probs[7], "rew_prob_alien8": rew_probs[8],
+            # "stay": int(start_id == prev_rocket),  # 0/1 w.r.t. previous start_state
+            "stay": int(pred_next_rocket_model == prev_rocket),  # 0/1 w.r.t. previous start_state
+            "reward_prob_a5": rew_probs[5], "reward_prob_a6": rew_probs[6],
+            "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
         }]
         trial_log.extend(trial_)
 
