@@ -3868,7 +3868,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
-        self.node_roles_mgr = NodeRoleManager(self)
+        self.node_roles_mgr = NodeRoleManager(owner=self, graph=self.graph_processing.prune_feedback_edges()[0])
         # TEACHER_TARGET BREADCRUMB MAKE PROPERTIES THAT ACCESS node_roles_mgr
         self.allow_probes = allow_probes
         self.include_probes_in_output=include_probes_in_output
@@ -5672,7 +5672,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 `NodeRole`\\(s) to assign to **node**.
 
         """
-        self.node_roles_mgr.require_node_roles(node, roles, context)
+        self.node_roles_mgr.require_node_roles(node, roles)
 
     @handle_external_context()
     def exclude_node_roles(self,
