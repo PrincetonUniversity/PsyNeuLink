@@ -4096,8 +4096,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             try:
                 node._analyze_graph(context=context)
-            except AttributeError:
-                pass
+            except AttributeError as e:
+                if e.name == '_analyze_graph':
+                    # Node is not a nested Composition
+                    pass
+                else:
+                    # Some other AttributeError occurred within call to _analyze_graph:
+                    assert False, f"PROGRAM ERROR:  {e.args[0]}"
+
 
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
