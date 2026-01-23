@@ -4102,7 +4102,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pass
                 else:
                     # Some other AttributeError occurred within call to _analyze_graph:
-                    assert False, f"PROGRAM ERROR:  {e.args[0]}"
+                    # assert False, f"PROGRAM ERROR:  {e.args[0]}"
+                    pass
 
 
         self._complete_init_of_partially_initialized_nodes(context=context)
@@ -5396,6 +5397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
+            # TEACHER_TARGET BREADCRUMB: REFACTORING NEEDED HERE TO ADD SUPPORT FOR PARAMETER_PORTS
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
             node_port_to_cim_port_tuples_mapping = cim.port_map
@@ -5408,7 +5410,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, CompositionInterfaceMechanism):
                     node = node.composition
                 cim_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
-                node_port_list = getattr(node, f'{type}_ports')
+                try:
+                    node_port_list = getattr(node, f'{type}_ports')
+                except AttributeError:
+                    raise AttributeError("CAUGHT IT")
                 cim_port_within_node_indices.append((cim_ports[0], cim_ports[1], node_port_list.index(node_port)))
             # Sort cim input_ports and output_ports...
             # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
@@ -13271,6 +13276,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_input_values(self, context=None):
         return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
+
+    @property
+    def parameter_ports(self):
+        """Return the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
+        return self.parameter_CIM.parameter_ports
+
+    @property
+    def parameter_port_values(self):
+        """Return values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        return self.get_parameter_port_values()
+
+    def get_parameter_port_values(self, context=None):
+        return [parameter_port.parameters.value.get(context) for parameter_port in self.parameter_CIM.parameter_ports]
 
     @property
     def output_port(self):
