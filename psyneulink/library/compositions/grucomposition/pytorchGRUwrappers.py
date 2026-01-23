@@ -433,7 +433,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper._copy_pnl_proj_to_torch_gru_parameter(context, self.torch_dtype)
 
-    def get_parameters_from_torch_gru(torch_gru)->Tuple[torch.Tensor]:
+    def get_parameters_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;

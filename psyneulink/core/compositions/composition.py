@@ -3187,7 +3187,7 @@ from beartype import beartype
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.compositions.noderoles import NodeRole, NodeRoleManager
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.core.components.component import Component, ComponentError, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type, Function, RandomMatrix
 from psyneulink.core.components.functions.nonstateful.transformfunctions import \
@@ -3868,7 +3868,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
-        self.node_roles_mgr = NodeRoleManager(owner=self, graph=self.graph_processing.prune_feedback_edges()[0])
+        self.node_roles_mgr = NodeRolesManager(owner=self)
         # TEACHER_TARGET BREADCRUMB MAKE PROPERTIES THAT ACCESS node_roles_mgr
         self.allow_probes = allow_probes
         self.include_probes_in_output=include_probes_in_output
@@ -3923,7 +3923,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._warned_about_target_nodes_in_target_specs = False
         self._warned_about_targets_mechs_in_inputs_and_targets = False
 
-        self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
 
         context = Context(source=ContextFlags.CONSTRUCTOR, execution_id=None)
@@ -4009,7 +4008,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             :getter: Returns the processing graph, and builds the graph if it needs updating since the last access.
         """
-        if self.needs_update_graph_processing or self._graph_processing is None:
+        if (not hasattr(self, 'needs_update_graph_processing')
+                or self.needs_update_graph_processing
+                or self._graph_processing is None):
             self._update_processing_graph()
 
         return self._graph_processing
@@ -4101,7 +4102,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._update_feedback_specifications()
-        self.node_roles_mgr._determine_node_roles(self.graph_processing.prune_feedback_edges()[0])
+        self.node_roles_mgr._determine_node_roles()
         self._determine_pathway_roles()
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
@@ -4207,7 +4208,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
-                self.node_role_mgr._add_required_node_role(node, required_role, context)
+                self.node_roles_mgr._add_required_node_role(node, required_role, context)
 
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
@@ -4534,8 +4535,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
                     context = Context()
-                    self._determine_pathway_roles(context=context)
-                    self._determine_pathway_roles(context)
+                    self._determine_pathway_roles()
                     self._create_CIM_ports(context)
                 _update_cim = False
                 assert len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
@@ -4708,6 +4708,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # TEACHER_TARGET BREADCRUMB: REFACTOR THESE --------------------------------------------------
 
+    # TEACHER_TARGET BREADCRUMB: MOVE THIS FROM COMPOSITION TO NodeRoleManager?
     def _get_terminal_nodes(self, graph, toposorted_graph=None) -> Set[Component]:
         """
         Returns a list of nodes in this composition that are
@@ -4757,6 +4758,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return terminal_nodes
 
+    # TEACHER_TARGET BREADCRUMB: MOVE THIS FROM COMPOSITION TO NodeRoleManager?
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
            to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
@@ -4766,12 +4768,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         queue = self.scheduler.consideration_queue
 
         for node in list(queue)[0]:
-            self.node_role_mgr._add_node_role(node, NodeRole.ORIGIN)
+            self.node_roles_mgr._add_node_role(node, NodeRole.ORIGIN)
 
         for node in self._get_terminal_nodes(self.scheduler.dependency_dict, queue):
-            self.node_role_mgr._add_node_role(node, NodeRole.TERMINAL)
-
-    # TEACHER_TARGET BREADCRUMB -------------------------------------------------------------
+            self.node_roles_mgr._add_node_role(node, NodeRole.TERMINAL)
+    # TEACHER_TARGET BREADCRUMB END -------------------------------------------------------------
 
 
     def _add_node_aux_components(self, node, context=None):
@@ -5559,7 +5560,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.allow_probes is True or ctl_monitored_nodes:
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
-                    comp.node_role_mgr._add_required_node_role(node, NodeRole.PROBE)
+                    comp.node_roles_mgr._add_required_node_role(node, NodeRole.PROBE)
                     # Ignore warning since a Projection to the PROBE will not yet have been instantiated
                     # self._analyze_graph(context=Context(string='IGNORE_NO_AFFERENTS_WARNING'))
                     self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION,
@@ -5672,7 +5673,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 `NodeRole`\\(s) to assign to **node**.
 
         """
-        self.node_roles_mgr.require_node_roles(node, roles)
+        self.node_roles_mgr.require_node_roles(node, roles, context)
 
     @handle_external_context()
     def exclude_node_roles(self,
@@ -5695,9 +5696,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             roles : `NodeRole` or list[`NodeRole`]
                 `NodeRole`\\(s) to remove and/or exclude from **node**.
         """
-        self.node_roles_mgr.exclude_node_roles(node, roles, context=context)
+        self.node_roles_mgr.exclude_node_roles(node, roles, context)
 
-    def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->List:
+    def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->list:
         """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
         If **scope** is not specified, searches for and returns only nodes at top level of the Composition.
         If **scope** is ALL, includes nodes in top level Composition and any nested within it.
@@ -5766,7 +5767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
                 list of `NodeRoles <NodeRole>` assigned to **node**.
         """
-        return sself.node_roles_mgr.get_required_roles_by_node(node)
+        return self.node_roles_mgr.get_required_roles_by_node(node)
 
     # endregion NODES
 
@@ -6470,7 +6471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 shadow_projection.sender.owner.remove_ports(list(ports))
                             else:
                                 shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
-            self.node_role_mgr._determine_node_roles()
+            self.node_roles_mgr._determine_node_roles()
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
@@ -7697,7 +7698,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(n for n in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self.node_role_mgr._add_required_node_role(node, NodeRole.OUTPUT, context)
+                self.node_roles_mgr._add_required_node_role(node, NodeRole.OUTPUT, context)
 
         # Handle BackPropagation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -7723,7 +7724,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
             # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-            self.node_role_mgr._add_required_node_role(output_source, NodeRole.OUTPUT, context)
+            self.node_roles_mgr._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
             learning_pathway = self.add_linear_processing_pathway(pathway=[input_source,
                                                                            learned_projection,
@@ -8418,7 +8419,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self.node_role_mgr._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, context)
+            self.node_roles_mgr._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, context)
 
             sequence_end = path_length - 3
 
@@ -8613,7 +8614,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection)->List[list]:
+        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection)->list[list]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
             activation_input = [input_source_output_port.value]
@@ -9097,7 +9098,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # IMPLEMENTATION NOTE:
         #   Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #      its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
-        #   self.node_role_mgr._add_node_role(controller, NodeRole.CONTROLLER)
+        #   self.node_roles_mgr._add_node_role(controller, NodeRole.CONTROLLER)
 
         # Check aux_components relevant to controller
         invalid_aux_components = self._get_invalid_aux_components(controller)
@@ -13240,6 +13241,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ----------------------------------- PROPERTIES ------------------------------------------------------------
     # ******************************************************************************************************************
 
+    @property
+    def processing_graph(self):
+        return self.graph_processing.prune_feedback_edges()[0]
+
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region
     
@@ -13514,7 +13519,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region
     @property
     def nodes_to_roles(self):
-        return self.node_role_mgr.nodes_to_roles
+        return self.node_roles_mgr.nodes_to_roles
 
     @property
     def all_nodes_to_roles(self):
@@ -13526,11 +13531,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def required_node_roles(self):
-        return self.node_role_mgr.required_node_roles
+        return self.node_roles_mgr.required_node_roles
 
     @property
     def excluded_node_roles(self):
-        return self.node_role_mgr.excluded_node_roles
+        return self.node_roles_mgr.excluded_node_roles
     # endregion NodeRoles
 
     # endregion PROPERTIES

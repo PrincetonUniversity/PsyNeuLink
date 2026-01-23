@@ -115,7 +115,7 @@ class PytorchShowGraph(ShowGraph):
                                                    penwidth=self.default_width,
                                                    style=self.exclude_from_gradient_calc_line_style)
 
-    def _get_processing_graph(self, composition, context):
+    def get_processing_graph(self, composition, context):
         """Helper method that creates dependencies graph for nodes of AutodiffComposition used in PyTorch mode
         IMPLEMENTATION NOTE:
             learning_components (LossMechanism(s) and TARGET nodes) are included

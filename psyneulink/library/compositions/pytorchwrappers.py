@@ -867,7 +867,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return flattened_execution_sets, execution_context
 
-    def _get_processing_graph(self, context)->dict:
+    @property
+    def processing_graph(self)->dict:
         """Creates graph (dependencies) for nodes of AutodiffComposition used by PytorchShowGraph in PyTorch mode
         IMPLEMENTATION NOTE:
             learning_components (LossMechanism(s) and TARGET nodes) are included
@@ -876,8 +877,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         composition = self.composition
         show_graph = composition._show_graph
         processing_graph = {}
-        projections = show_graph._get_projections(composition, context)
-        nodes = show_graph._get_nodes(composition, context)
+        projections = show_graph._get_projections(composition)
+        nodes = show_graph._get_nodes(composition)
         for node in nodes:
             dependencies = set()
             for projection in projections:
@@ -912,7 +913,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             processing_graph[node] = dependencies
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        self.node_roles_mgr._determine_node_roles(processing_graph=processing_graph, context=context)
+        self.node_roles_mgr._determine_node_roles()
         self._processing_graph = processing_graph
         return processing_graph
 

@@ -985,7 +985,7 @@ from psyneulink.core.components.functions.nonstateful.transformfunctions import 
     Concatenate, LinearCombination, MatrixTransform)
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.compositions.composition import CompositionError
-from psyneulink.core.compositions.noderoles import Noderole
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import (AutodiffComposition, torch_available)
 from psyneulink.library.components.mechanisms.modulatory.learning.EMstoragemechanism import EMStorageMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

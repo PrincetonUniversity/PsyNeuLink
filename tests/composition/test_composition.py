@@ -31,6 +31,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.noderoles import NodeRoleError
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
@@ -7480,14 +7481,14 @@ class TestNodeRoles:
                     f"and therefore cannot accept any input.") in str(error_text.value)
 
             # Error assigning NodeRole.BIAS to Node that already has an afferent Projection.
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 MappingProjection(sender=nodes('INPUT'), receiver=nodes('DOUBLE BIAS').input_ports['second'])
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('DOUBLE BIAS'), NodeRole.BIAS)}])
             assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
                     f"that already has input(s) assigned.") in str(error_text.value)
 
             # Error when assigning Node both NodeRole.BIAS and NodeRole.INPUT
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 Composition(pathways=[[nodes('INPUT'), nodes('OUTPUT')],
                                       (nodes('SINGLE BIAS'), [NodeRole.BIAS, NodeRole.INPUT])])
             assert (f"A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "
