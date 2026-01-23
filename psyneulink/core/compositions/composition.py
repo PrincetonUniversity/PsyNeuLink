@@ -5410,10 +5410,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, CompositionInterfaceMechanism):
                     node = node.composition
                 cim_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
-                try:
-                    node_port_list = getattr(node, f'{type}_ports')
-                except AttributeError:
-                    raise AttributeError("CAUGHT IT")
+                # try:
+                node_port_list = getattr(node, f'{type}_ports')
+                # except AttributeError:
+                #     raise AttributeError("CAUGHT IT")
                 cim_port_within_node_indices.append((cim_ports[0], cim_ports[1], node_port_list.index(node_port)))
             # Sort cim input_ports and output_ports...
             # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
