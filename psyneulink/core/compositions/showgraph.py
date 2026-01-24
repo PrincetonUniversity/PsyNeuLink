@@ -985,11 +985,11 @@ class ShowGraph():
                     dependency_dict[node].add(getattr(sender, PROXY_FOR))
         return dependency_dict
 
-    def _get_nodes(self, composition):
+    def _get_nodes(self, composition, context):
         """Helper method that allows override by subclass to filter nodes used for graph"""
         return composition.nodes
 
-    def _get_projections(self, composition):
+    def _get_projections(self, composition, context):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return composition.projections
 
