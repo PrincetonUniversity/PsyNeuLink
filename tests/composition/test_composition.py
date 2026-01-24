@@ -2956,9 +2956,9 @@ class TestGetMechanismsByRole:
         for mech in mechs:
             comp.add_node(mech)
 
-        comp.node_role_mgr._add_node_role(mechs[0], NodeRole.ORIGIN)
-        comp.node_role_mgr._add_node_role(mechs[1], NodeRole.INTERNAL)
-        comp.node_role_mgr._add_node_role(mechs[2], NodeRole.INTERNAL)
+        comp.node_roles_mgr._add_node_role(mechs[0], NodeRole.ORIGIN)
+        comp.node_roles_mgr._add_node_role(mechs[1], NodeRole.INTERNAL)
+        comp.node_roles_mgr._add_node_role(mechs[2], NodeRole.INTERNAL)
 
         for role in list(NodeRole):
             if role is NodeRole.ORIGIN:
@@ -2968,7 +2968,7 @@ class TestGetMechanismsByRole:
             else:
                 assert comp.get_nodes_by_role(role) == []
 
-    @pytest.mark.xfail(raises=CompositionError)
+    @pytest.mark.xfail(raises=NodeRoleError)
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)

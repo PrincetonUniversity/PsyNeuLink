@@ -4713,75 +4713,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nested:
             return any(component in comp._all_nodes for comp in self._get_nested_compositions())
 
-    # TEACHER_TARGET BREADCRUMB: REFACTOR THESE --------------------------------------------------
-
-    # TEACHER_TARGET BREADCRUMB: MOVE THIS FROM COMPOSITION TO NodeRoleManager?
-    def _get_terminal_nodes(self, graph, toposorted_graph=None) -> Set[Component]:
-        """
-        Returns a list of nodes in this composition that are
-        NodeRole.TERMINAL with respect to an acyclic **graph**. The
-        result can change depending on whether the scheduler or
-        composition graph is used. The **graph** of the scheduler graph
-        is the scheduler's consideration_queue.
-
-        Includes all nodes that have no receivers in **graph**. The
-        ObjectiveMechanism of a Composition's controller cannot be
-        NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node
-        with no receivers in **graph**, then that node's senders are
-        assigned NodeRole.TERMINAL instead.
-        """
-        terminal_nodes = set()
-
-        receivers = {n: set() for n in graph}
-        for n in graph:
-            for sender in graph[n]:
-                receivers[sender].add(n)
-
-        nodes_without_receivers = {n for n in graph if len(receivers[n]) == 0}
-
-        # if a node is in a flattened cycle, all others in that cycle
-        # must also have no receivers, or that node cannot be terminal
-        if self.graph_processing.cycle_vertices:
-            for node in copy(nodes_without_receivers):
-                for cycle in self.graph_processing.cycle_vertices:
-                    if (
-                        node in cycle
-                        and any(n not in nodes_without_receivers for n in cycle)
-                    ):
-                        nodes_without_receivers.remove(node)
-
-        for node in nodes_without_receivers:
-            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
-                terminal_nodes.add(node)
-            elif len(nodes_without_receivers) < 2:
-                if toposorted_graph is None:
-                    toposorted_graph = list(toposort.toposort(graph))
-                assert len(toposorted_graph) > 1 and node in toposorted_graph[-1], (
-                    'CONTROLLER_OBJECTIVE node skipped as terminal, but'
-                    ' consideration queue is not suitable for fallback'
-                )
-                for previous_node in toposorted_graph[-2]:
-                    terminal_nodes.add(previous_node)
-
-        return terminal_nodes
-
-    # TEACHER_TARGET BREADCRUMB: MOVE THIS FROM COMPOSITION TO NodeRoleManager?
-    def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
-           to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
-           controller may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry
-           of the consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
-        """
-        queue = self.scheduler.consideration_queue
-
-        for node in list(queue)[0]:
-            self.node_roles_mgr._add_node_role(node, NodeRole.ORIGIN)
-
-        for node in self._get_terminal_nodes(self.scheduler.dependency_dict, queue):
-            self.node_roles_mgr._add_node_role(node, NodeRole.TERMINAL)
-    # TEACHER_TARGET BREADCRUMB END -------------------------------------------------------------
-
-
     def _add_node_aux_components(self, node, context=None):
         """Add aux_components of node to Composition.
 
@@ -5688,6 +5619,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         self.node_roles_mgr.require_node_roles(node, roles, context)
 
+    # TEACHER_TARGET BREADCRUMB: REFACTOR TO USE SCOPE AND SET TO ALL BY DEFAULT
     @handle_external_context()
     def exclude_node_roles(self,
                            node:Mechanism_Base,
