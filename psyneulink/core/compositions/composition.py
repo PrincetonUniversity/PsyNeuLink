@@ -4105,7 +4105,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # assert False, f"PROGRAM ERROR:  {e.args[0]}"
                     pass
 
-
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._update_feedback_specifications()

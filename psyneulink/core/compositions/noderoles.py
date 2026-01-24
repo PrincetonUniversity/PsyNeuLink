@@ -248,7 +248,7 @@ class NodeRolesManager(object):
         self._exclude_roles(self.nodes, composition)
         self._CONTROLLER_Node(composition)
 
-        self.needs_determine_node_roles = False
+        self.owner.needs_determine_node_roles = False
 
     # HELPER METHODS FOR _determine_node_roles
     # region
