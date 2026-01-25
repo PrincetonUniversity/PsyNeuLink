@@ -1308,7 +1308,7 @@ class ShowGraph():
                                comp_hierarchy,
                                context):
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
         composition_nodes = self._get_nodes(composition, context)
