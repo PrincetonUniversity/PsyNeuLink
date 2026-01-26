@@ -974,19 +974,19 @@ class ShowGraph():
     def _get_processing_graph(self, composition, context):
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
         Sort graph by node name for consistency in display
-        Add nodes marked as _proxy_for to dependency_dict
+        Add nodes marked as _proxy_for to graph
         """
-        # # MODIFIED TEACHER_TARGET OLD: BREADCRUMB: MAKE SURE THIS STUFF IS DONE IN node_roles_mgr IMPLEMENTATION
-        # dependency_dict = composition.graph_processing.dependency_dict.copy()
-        #     for node, dependents in dependency_dict.items():
-        #         from psyneulink.core.compositions.composition import Composition
-        #         afferents = node.output_CIM.path_afferents if isinstance(node, Composition) else node.path_afferents
-        #         for sender in [afferent.sender.owner for afferent in afferents]:
-        #             if (sender not in dependents and self._sender_is_proxy_in_composition(sender)):
-        #                 dependency_dict[node].add(getattr(sender, PROXY_FOR))
-        #     return dependency_dict
-        # MODIFIED TEACHER_TARGET NEW:
-        return self.composition.node_roles_mgr.graph
+        # MODIFIED TEACHER_TARGET OLD: BREADCRUMB: MAKE SURE THIS STUFF IS DONE IN node_roles_mgr IMPLEMENTATION
+        graph = composition.graph_processing.dependency_dict.copy()
+        for node, dependents in graph.items():
+            from psyneulink.core.compositions.composition import Composition
+            afferents = node.output_CIM.path_afferents if isinstance(node, Composition) else node.path_afferents
+            for sender in [afferent.sender.owner for afferent in afferents]:
+                if (sender not in dependents and self._sender_is_proxy_in_composition(sender)):
+                    graph[node].add(getattr(sender, PROXY_FOR))
+        return graph
+        # # MODIFIED TEACHER_TARGET NEW:
+        # return self.composition.node_roles_mgr.graph
         # MODIFIED TEACHER_TARGET END
 
     def _get_nodes(self, composition, context=None):
