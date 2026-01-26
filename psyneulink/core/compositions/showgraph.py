@@ -719,7 +719,7 @@ class ShowGraph():
         self.num_nesting_levels = kwargs.pop(NUM_NESTING_LEVELS,None)
 
         enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
-        processing_graph = self.get_processing_graph(composition, context)
+        processing_graph = self._get_processing_graph(composition, context)
 
         # IMPLEMENTATION_NOTE:  Take diff with following to get scheduling edges not in compostion graph:
         # processing_graph = composition.scheduler.dependency_dict
@@ -1007,9 +1007,9 @@ class ShowGraph():
                                               or proxy in self.composition._get_all_nodes())
 
     # TEACHER_TARGET BREADCRUMB:  DELETE THESE (SINCE NOW BELONG ON NodeRolesManager)??
-    def _get_roles_by_node(self, composition, node, context):
+    def _get_roles_by_node(self, node):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
-        return composition.get_roles_by_node(node)
+        return self.composition.get_roles_by_node(node)
 
     def _get_nodes_by_role(self, composition, role, context):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
@@ -1101,11 +1101,7 @@ class ShowGraph():
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        # # MODIFIED TEACHER_TARGET OLD:
-        # if (NodeRole.LEARNING in self._get_roles_by_node(composition, rcvr, context)):
-        # MODIFIED TEACHER_TARGET NEW:
-        if (NodeRole.LEARNING in composition.get_roles_by_node(rcvr, context)):
-        # MODIFIED TEACHER_TARGET END
+        if (NodeRole.LEARNING in self._get_roles_by_node(rcvr)):
             return
 
         # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
@@ -1146,11 +1142,8 @@ class ShowGraph():
         # # MODIFIED TEACHER_TARGET OLD:
         # if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
         #         and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
-        # # MODIFIED TEACHER_TARGET NEW:
-        # if all(role in self._get_roles_by_node(composition, rcvr, context)
-        #        for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
-        # MODIFIED TEACHER_TARGET NEWER:
-        if all(role in composition.get_roles_by_node(rcvr, context)
+        # MODIFIED TEACHER_TARGET NEW:
+        if all(role in self._get_roles_by_node(rcvr)
                for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
         # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
@@ -1165,13 +1158,7 @@ class ShowGraph():
                 rcvr_penwidth = str(self.bold_width)
 
         # INPUT Node
-        # # MODIFIED TEACHER_TARGET OLD:
-        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context):
-        # # MODIFIED TEACHER_TARGET NEW:
-        # elif NodeRole.INPUT in self._get_roles_by_node(composition, rcvr, context):
-        # MODIFIED TEACHER_TARGET NEWER:
-        elif NodeRole.INPUT in composition.get_roles_by_node(rcvr, context):
-        # MODIFIED TEACHER_TARGET END
+        elif NodeRole.INPUT in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_color
@@ -1185,13 +1172,7 @@ class ShowGraph():
             rcvr_rank = self.input_rank
 
         # PROBE Node
-        # # MODIFIED TEACHER_TARGET OLD:
-        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.PROBE, context):
-        # # MODIFIED TEACHER_TARGET NEW:
-        # elif NodeRole.PROBE in self._get_roles_by_node(composition, rcvr, context):
-        # MODIFIED TEACHER_TARGET NEWER:
-        elif NodeRole.PROBE in composition.get_roles_by_node(rcvr, context):
-        # MODIFIED TEACHER_TARGET END
+        elif NodeRole.PROBE in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.probe_color
@@ -1205,14 +1186,7 @@ class ShowGraph():
             rcvr_rank = self.output_rank
 
         # OUTPUT Node
-        # # MODIFIED TEACHER_TARGET OLD:
-        # elif rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context):
-        # # MODIFIED TEACHER_TARGET NEW:
-        # elif NodeRole.OUTPUT in self._get_roles_by_node(composition, rcvr, context):
-        # MODIFIED TEACHER_TARGET NEWER:
-        elif NodeRole.OUTPUT in composition.get_roles_by_node(rcvr, context):
-        # MODIFIED TEACHER_TARGET END
-
+        elif NodeRole.OUTPUT in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.output_color
@@ -1510,9 +1484,9 @@ class ShowGraph():
 
                         # Validate the Projection is to an INPUT node or a node that is shadowing one
                         if ((rcvr_input_node_proj_owner in composition_nodes and NodeRole.INPUT not in
-                                composition.get_roles_by_node(rcvr_input_node_proj_owner, context))
+                                self._get_roles_by_node(rcvr_input_node_proj_owner))
                                 and (proj.receiver.shadow_inputs in composition_nodes and NodeRole.INPUT not in
-                                     composition.get_roles_by_node(proj.receiver.shadow_inputs, context))):
+                                     self._get_roles_by_node(proj.receiver.shadow_inputs))):
                             raise ShowGraphError(f"Projection from input_CIM of {composition.name} to node "
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
@@ -1698,8 +1672,7 @@ class ShowGraph():
                         # Validate the Projection is from an OUTPUT or PROBE node
                         if (sndr_output_node_proj_owner in composition_nodes and
                                 not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE}
-                                        if role in composition.get_roles_by_node(sndr_output_node_proj_owner,
-                                                                           context))):
+                                        if role in self._get_roles_by_node(sndr_output_node_proj_owner))):
                             raise ShowGraphError(f"Projection to output_CIM of {composition.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
@@ -2235,7 +2208,7 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
-            if NodeRole.TARGET in composition.get_roles_by_node(rcvr, context):
+            if NodeRole.TARGET in self._get_roles_by_node(rcvr):
                 rcvr_width = self.bold_width
             else:
                 rcvr_width = self.default_width
@@ -2524,7 +2497,7 @@ class ShowGraph():
                     composition.active_item_rendered = True
 
                 # Projection to or from a LearningMechanism
-                elif (NodeRole.LEARNING in composition.get_roles_by_node(rcvr, context)):
+                elif (NodeRole.LEARNING in self._get_roles_by_node(rcvr)):
                     proj_color = self.learning_color
                     proj_width = str(self.default_width)
 
@@ -2728,7 +2701,7 @@ class ShowGraph():
         for node in nodes:
             if isinstance(node, Composition):
                 continue
-            roles = composition.get_roles_by_node(node, context)
+            roles = self._get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
@@ -2812,7 +2785,7 @@ class ShowGraph():
         for comp in [self.composition, enclosing_comp]:
             if not comp:
                 continue
-            if mech in comp._all_nodes and NodeRole.CONTROLLER in self._get_roles_by_node(comp, mech, context):
+            if mech in comp._all_nodes and NodeRole.CONTROLLER in self._get_roles_by_node(mech):
                 return True
         return False
 
