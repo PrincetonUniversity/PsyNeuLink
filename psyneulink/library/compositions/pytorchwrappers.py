@@ -42,7 +42,7 @@ from psyneulink.core.components.projections.modulatory.modulatoryprojection impo
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import (MappingProjection, PROXY_FOR, PROXY_FOR_ATTRIB)
 from psyneulink.core.compositions.composition import Composition, CompositionError, CompositionInterfaceMechanism, LearningScale
-from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
@@ -301,7 +301,6 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                           # fails to include all relevant projections
         self.nodes_map = {} # { Node <mech or nested Comp> : <PytorchMechanismWrapper or PytorchCompositionWrapper> }
         self.node_wrappers = [] # [ <PytorchMechanismWrapper or PytorchCompositionWrapper>,... ]
-        self.nodes_to_roles = OrderedDict()
 
         if subclass_components is None:
             self._early_init(composition, device)
@@ -371,6 +370,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
+        if not self.composition.is_nested:
+            self.node_roles_mgr = NodeRolesManager(self)
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
@@ -867,171 +868,52 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         return flattened_execution_sets, execution_context
 
+    def _get_all_nodes(self):
+        return self.nodes
+
     @property
     def processing_graph(self)->dict:
-        """Creates graph (dependencies) for nodes of AutodiffComposition used by PytorchShowGraph in PyTorch mode
+        """Creates graph (dependencies) for nodes of AutodiffComposition in PyTorch mode
         IMPLEMENTATION NOTE:
             learning_components (LossMechanism(s) and TARGET nodes) are included
             since these are always part of the graph in PyTorch mode
         """
-        composition = self.composition
-        show_graph = composition._show_graph
-        processing_graph = {}
-        projections = show_graph._get_projections(composition)
-        nodes = show_graph._get_nodes(composition)
+        # TEACHER_TARGET BREADCRUMB:
+        #                   - USE dependency_dict OF pytorchwrappers IF THERE IS ONE
+        #                   - CHECK AGAINST Composition.scheduler execution sets? (USE TESTS TO EVALUATE NEED)
+        #                   - CHECK THAT SINGETONS DON'T HAVE afferents OR efferents IN _determine_node_roles
+        show_graph = self.composition._show_graph
+        nodes = self.nodes
+        processing_graph = {k:set() for k in nodes}
         for node in nodes:
-            dependencies = set()
-            for projection in projections:
-                sender = projection.sender.owner
-                receiver = projection.receiver.owner
-                if node is receiver:
-                    dependencies.add(sender)
-                elif (isinstance(receiver, CompositionInterfaceMechanism) and
-                      # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-                      receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
-                    dependencies.add(sender)
-                else:
-                    #
-                    for proj in [p for p in node.afferents if p.sender.owner in nodes]:
-                        # Add any other depenencies of node on afferents from other nodes in the full set of nodes
-                        dependencies.add(proj.sender.owner)
-
-                # # TEACHER_TARGET BREADCRUMB:  NEED TO RESTORE excluded_node_roles LISTS OR REFACTOR TO USE
-                # #                              ._determine_node_roles BELOW SO THAT ASSIGNMENTS DO NOT PERSIST
-                # #                              FOR CALLS TO Composition._determine_node_roles
-                # # Ignore LossMechanism since projecting to that does not preclude NodeRole.OUTPUT
-                # # IMPLEMENTATION NOTE:
-                # #   Don't need to worry about ControlMechanisms, LearningMechanisms or associated ObjectiveMechanisms
-                # #   here as they are not allowed in processing_graph of pytorch_representation (vs. Composition)
-                # if not isinstance(receiver, LossMechanism):
-                #     composition.exclude_node_roles(sender, NodeRole.OUTPUT, scope=ALL)
-                # composition.exclude_node_roles(receiver, NodeRole.INPUT, scope=ALL)
-                # # roles_all = composition.all_nodes_to_roles[node]
-                # # roles_inner = composition.nodes[1].nodes_to_roles[node]
-
-
-            processing_graph[node] = dependencies
+            for proj in node.afferents:
+                sender = proj.sender.owner
+                if sender in nodes:
+                    processing_graph[node].add(sender)
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-        self.node_roles_mgr._determine_node_roles()
-        self._processing_graph = processing_graph
         return processing_graph
-
-    def _determine_node_roles(self, processing_graph:dict, node_roles_map=None, context:Context=None)->dict:
-        """Override to deal with Nodes that may be specific to pytorch_reprentation (i.e., not in PNL Composition)
-        Their roles will be handled in override of _get_roles_by_node (see below)
-        """
-        assert node_roles_map==None, \
-            ("PROGRAM ERROR: PytorchCompositonWrapper._determine_node_roles() should not be called "
-             "called with 'node_roles_map' argument;  should be allowed to assign self as default.")
-
-        # Filter Nodes not in Composition from procesing_graph passed to Composition._determine_node_roles()
-        pg = processing_graph.copy()
-
-        # TEACHER_TARGET_BREADCRUMB: SHOULD THIS BE THE NODES IN self.node_wrappers??  IF SO, IS THE REST NEEDED?
-        comp_nodes = self.composition._get_all_nodes()
-        nodes_not_in_comp = set()
-        # Identify any nodes not in comp
-        for rcvr, senders in processing_graph.items():
-            senders_not_in_comp = set(s for s in senders if s not in comp_nodes)
-            pg[rcvr] = pg[rcvr].copy() - senders_not_in_comp
-            nodes_not_in_comp.update(senders_not_in_comp)
-            if rcvr not in comp_nodes:
-                pg.pop(rcvr, None)
-                # nodes_not_in_comp.add(rcvr)
-
-        # Prevent role disruptions from filtering of Nodes
-        for node in pg:
-            # Check for any removals that led to no dependencies for Node, which would induce NodeRole.INPUT
-            if len(processing_graph[node]) and not len(pg[node]):
-                self.exclude_node_roles(node, NodeRole.INPUT)
-            # Check for any removals that led to no dependency on Node, which would induce NodeRole.OUTPUT
-            if node in processing_graph.values() and node not in pg.values():
-                self.exclude_node_roles(node, NodeRole.OUTPUT)
-
-        # Send filtered graph to Composition to determine node roles
-
-        # # TEACHER_TARGET BREADCRUMB:  NEED TO RESTORE excluded_node_roles LISTS OR REFACTOR TO USE
-        # #                              ._determine_node_roles BELOW SO THAT ASSIGNMENTS DO NOT PERSIST
-        # #                              FOR CALLS TO Composition._determine_node_roles
-        # # Ignore LossMechanism since projecting to that does not preclude NodeRole.OUTPUT
-        # # IMPLEMENTATION NOTE:
-        # #   Don't need to worry about ControlMechanisms, LearningMechanisms or associated ObjectiveMechanisms
-        # #   here as they are not allowed in processing_graph of pytorch_representation (vs. Composition)
-        # if not isinstance(receiver, LossMechanism):
-        #     self.exclude_node_roles(sender, NodeRole.OUTPUT)
-        # self.exclude_node_roles(receiver, NodeRole.INPUT)
-        # # roles_all = composition.all_nodes_to_roles[node]
-        # # roles_inner = composition.nodes[1].nodes_to_roles[node]
-
-
-        self.composition._determine_node_roles(pg, node_roles_map=self.nodes_to_roles, context=context)
-        assert True
-        # TEACHER_TARGET BREADCRUMB: THIS PRODUCES THE CORRECT RESULT FOR 'Inner Mech 1'
-        #                             WHERE self IS PytorchCompositionWrapper
-        # inner_mech_1_roles = self._get_roles_by_node(comp_nodes[0], context)
-
-        # TEACHER_TARGET BREADCRUMB:  TRY TO DETERMINE NodeRoles FOR EXCLUDED NODES? (e.g. PYTORCH GRU NODE)
 
     # TEACHER_TARGET BREADCRUMB: MOVE THE FOLLOWING TO PytorchCompositionWrapper.node_role_mgr:
     def _add_node_role(self, node, role):
-        if role not in NodeRole:
-            raise PytorchCompositionWrapper('Invalid NodeRole: {0}'.format(role))
-        # TEACHER_TARGET BREADCRUMB: MAY NEED MORE WORK
-        try:
-            self.nodes_to_roles[node].add(role)
-        except KeyError:
-            assert False, f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.name}."
+        self.node_roles_mgr._add_node_role(node, role)
 
     def _remove_node_role(self, node, role):
-        assert role in NodeRole, f"Invalid NodeRole: {role} assigned for PytorchCompositionWrapper"
-        try:
-            self.nodes_to_roles[node].remove(role)
-        except KeyError as e:
-            assert False, f"Attempt to remove {role} from '{node.name}' that is not a Node in {self.name}."
+        self.node_roles_mgr._remove_node_role(node, role)
 
     def _add_required_node_role(self, node, role, context=None):
-        assert role in NodeRole, f"Attempt to add invalid NodeRole {role} to {node.name} in PytorchCompositionWrapper."
+        self.node_roles_mgr._add_required_node_role(node, role, context)
 
-        node_role_pair = (node, role)
-        if node_role_pair not in self.required_node_roles:
-            self.required_node_roles.append(node_role_pair)
-        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1] is role]
-        for item in node_role_pairs:
-            self.excluded_node_roles.remove(item)
-
-    def exclude_node_roles(self,
-                           node:Mechanism_Base,
-                           roles:list,
-                           context=None)->list:
-        roles = convert_to_list(roles)
-        for role in roles:
-            assert role in NodeRole, \
-                f"Attempt to remove invalid NodeRole {role} from {node.name} in PytorchCompositionWrapper."
-            node_role_pair = (node, role)
-            if node_role_pair not in self.excluded_node_roles:
-                self.excluded_node_roles.append(node_role_pair)
-            if node_role_pair in self.required_node_roles:
-                self.required_node_roles.remove(node_role_pair)
-            self._remove_node_role(node, role)
+    def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
+        self.node_roles_mgr.exclude_node_roles(node, role, context)
 
     def _get_roles_by_node(self, node, context):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
-        # # MODIFIED TEACHER_TARGET OLD:
-        # assert self.nodes_to_roles, f"PROGRAM ERROR: 'nodes_to_roles' not yet assigned for `{self.name}."
-        # # MODIFIED TEACHER_TARGET NEW:
-        if not self.nodes_to_roles:
-            self._determine_node_roles(self._processing_graph, context=context)
-        # MODIFIED TEACHER_TARGET END
-        try:
-            # # MODIFIED TEACHER_TARGET OLD:
-            # return self.composition.all_nodes_to_roles[node]
-            # MODIFIED TEACHER_TARGET NEW:
-            return self.nodes_to_roles[node]
-            # MODIFIED TEACHER_TARGET END
-        except KeyError:
-            raise PytorchCompositionWrapper(f"Role requested for '{node.name}' that can't be found in the "
-                                            f"pytorch_representation for '{self.composition.name}'")
+        self.node_roles_mgr.get_roles_by_node(node)
+
+    @property
+    def nodes(self):
+        return list(self.nodes_map.keys())
 
     @property
     def all_nodes_to_roles(self):

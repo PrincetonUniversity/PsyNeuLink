@@ -122,11 +122,11 @@ class PytorchShowGraph(ShowGraph):
             since these are always part of the graph in PyTorch mode
         """
         if self.show_pytorch:
-            return composition.pytorch_representation._get_processing_graph(context)
+            return self.composition.pytorch_representation.node_roles_mgr.graph
         else:
             return super()._get_processing_graph(composition, context)
 
-    def _get_nodes(self, composition, context):
+    def _get_nodes(self, composition, context=None):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
             nodes = sorted([node for node in self.pytorch_rep.nodes_map
@@ -135,7 +135,7 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_nodes(composition, context)
 
-    def _get_projections(self, composition, context):
+    def _get_projections(self, composition, context=None):
         """Override to return nodes of PyTorch graph"""
         if self.show_pytorch:
             projections = self.pytorch_rep.composition._pytorch_projections

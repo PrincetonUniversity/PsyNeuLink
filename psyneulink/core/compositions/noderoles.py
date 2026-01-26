@@ -226,10 +226,12 @@ class NodeRolesManager(object):
     """
     def __init__(self, owner):
         self.owner = owner
+        self.name = f"NodeRolesManager for {owner.name}"
         self.nodes = owner.nodes # TEACHER_TARGET BREADCRUMB: CAN'T THIS JUST BE DEFINED BY THE KEYS AND VALUES OF THE GRAPH?
         self.nodes_to_roles = OrderedDict()
         self.required_node_roles = []
         self.excluded_node_roles = []
+        self.graph = self.owner.processing_graph
 
     def _determine_node_roles(self):
         from psyneulink.core.compositions.composition import Composition
@@ -862,7 +864,7 @@ class NodeRolesManager(object):
                 raise KeyError()
 
         except KeyError:
-            if node in self._get_all_nodes():
+            if node in self.owner._get_all_nodes():
                 # Node not found in self.nodes_to_roles[node] of Composition and, if scope, any nested within it
                 return []
             if not scope and node not in self.nodes:
