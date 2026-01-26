@@ -164,13 +164,13 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._proj_in_composition(proj, composition_projections, context)
 
-    def _get_roles_by_node(self, composition, node, context):
+    def _get_roles_by_node(self, node):
         """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
         if self.show_pytorch:
             # allow PytorchCompositionWrapper to identify roles for nodes
-            return composition.pytorch_representation._get_roles_by_node(node, context)
+            return self.composition.pytorch_representation._get_roles_by_node(node)
         else:
-            return super()._get_roles_by_node(composition, node, context)
+            return super()._get_roles_by_node(node)
 
     def _get_nodes_by_role(self, composition, role, context):
         """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""

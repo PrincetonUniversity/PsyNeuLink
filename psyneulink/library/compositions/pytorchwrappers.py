@@ -907,7 +907,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
     def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
         self.node_roles_mgr.exclude_node_roles(node, role, context)
 
-    def _get_roles_by_node(self, node, context):
+    def _get_roles_by_node(self, node):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
         self.node_roles_mgr.get_roles_by_node(node)
 

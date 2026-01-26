@@ -2785,7 +2785,7 @@ class ShowGraph():
         for comp in [self.composition, enclosing_comp]:
             if not comp:
                 continue
-            if mech in comp._all_nodes and NodeRole.CONTROLLER in self._get_roles_by_node(mech):
+            if mech in comp._all_nodes and NodeRole.CONTROLLER in comp.get_roles_by_node(mech):
                 return True
         return False
 
