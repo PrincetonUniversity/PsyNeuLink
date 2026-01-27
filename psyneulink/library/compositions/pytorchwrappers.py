@@ -372,6 +372,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.projection_wrappers = list(self.projections_map.values())
         if not self.composition.is_nested:
             self.node_roles_mgr = NodeRolesManager(self)
+            self.node_roles_mgr.required_node_roles = self.composition.node_roles_mgr.required_node_roles
+            self.node_roles_mgr.excluded_node_roles = self.composition.node_roles_mgr.excluded_node_roles
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
@@ -892,6 +894,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     processing_graph[node].add(sender)
         # Sort for consistency of reporting and display
         processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
+        # self._processing_graph = processing_graph
         return processing_graph
 
     # TEACHER_TARGET BREADCRUMB: MOVE THE FOLLOWING TO PytorchCompositionWrapper.node_role_mgr:
@@ -909,7 +912,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
     def _get_roles_by_node(self, node):
         """Override to allow subclasses to handle different nodes for pytorch_representation"""
-        self.node_roles_mgr.get_roles_by_node(node)
+        return self.node_roles_mgr.get_roles_by_node(node)
 
     @property
     def nodes(self):

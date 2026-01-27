@@ -74,7 +74,7 @@ class PytorchShowGraph(ShowGraph):
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
                     new=False))
-
+            self.pytorch_rep.node_roles_mgr._determine_node_roles()
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
@@ -168,7 +168,7 @@ class PytorchShowGraph(ShowGraph):
         """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
         if self.show_pytorch:
             # allow PytorchCompositionWrapper to identify roles for nodes
-            return self.composition.pytorch_representation._get_roles_by_node(node)
+            return self.pytorch_rep._get_roles_by_node(node)
         else:
             return super()._get_roles_by_node(node)
 

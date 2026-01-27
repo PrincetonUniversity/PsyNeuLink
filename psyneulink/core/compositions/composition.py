@@ -3868,7 +3868,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
+        # MODIFIED TEACHER_TARGET OLD:
         self.node_roles_mgr = NodeRolesManager(owner=self)
+        # # MODIFIED TEACHER_TARGET END
         # TEACHER_TARGET BREADCRUMB MAKE PROPERTIES THAT ACCESS node_roles_mgr
         self.allow_probes = allow_probes
         self.include_probes_in_output=include_probes_in_output
@@ -3995,6 +3997,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if termination_processing is not None:
             self.termination_processing = termination_processing
+
+        # # MODIFIED TEACHER_TARGET NEW:
+        # self.node_roles_mgr = NodeRolesManager(owner=self)
+        # MODIFIED TEACHER_TARGET END
+
 
     def assign_ShowGraph(self, show_graph_attributes):
         """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
@@ -4196,7 +4203,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.graph.add_component(node)  # Set incoming edge list of node to empty
             self.nodes.append(node)
             self.node_ordering.append(node)
-            self.nodes_to_roles[node] = set()
+            # MODIFIED TEACHER_TARGET OLD:
+            # self.nodes_to_roles[node] = set()
+            # MODIFIED TEACHER_TARGET END
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
