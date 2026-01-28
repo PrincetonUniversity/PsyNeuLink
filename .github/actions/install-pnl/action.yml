@@ -53,16 +53,18 @@ runs:
       shell: bash
       id: new_package
       run: |
-        # The branch name pattern is: "dependabot/pip/$TARGET/$PACKAGE{-gt-$MINVERSION,,}{-lt-$MAXVERSION,}{-$VERSION,}
+        # The branch name pattern is: "dependabot/pip/$TARGET/$PACKAGE{-gt-$MINVERSION,}{-lt-$MAXVERSION,}{-$VERSION,}
         # The expression below extracts just the $PACKAGE part
         export NEW_PACKAGE=$(echo '${{ github.head_ref }}' | cut -f 4 -d/ | sed 's/-gt.*//' | sed 's/-lt.*//' | sed 's/-[0-9\.]*$//' )
         if grep "$NEW_PACKAGE" *requirements.txt; then 
           echo "new_package=$NEW_PACKAGE" >> $GITHUB_OUTPUT
+
           # save a list of all installed packages (including pip, wheel; it's never empty)
           pip freeze --all > orig
           pip install "$(echo $NEW_PACKAGE | sed 's/[-_]/./g' | xargs grep *requirements.txt -h -e | head -n1)" -c broken_trans_deps.txt
           pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
-          # uninstall new packages but skip those from previous steps (pywinpty, terminado on windows x86)
+
+          # uninstall new package and its dependencies but skip those from previous steps
           # the 'orig' list is not empty (includes at least pip, wheel)
           pip uninstall -y $(pip freeze -r orig | sed '1,/## /d')
         else
@@ -89,6 +91,7 @@ runs:
         # Note that the MS Visual C equivalent option needs to start with an extra
         # space otherwise the argument gets interpreted as a file location.
         CXXFLAGS: ${{ startsWith(runner.os, 'windows') && ' /FI cstdint' || '-include cstdint' }}
+
         # Setting TEMP works around broken onnx-1.17.0 build on windows where
         # too long paths in default TEMP directory don't work with msbuild.
         # This should be removed once onnx wheels for Python 3.13 are available.
