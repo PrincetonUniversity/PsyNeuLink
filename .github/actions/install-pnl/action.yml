@@ -109,7 +109,7 @@ runs:
         done
 
     - name: Check updated package
-      if: ${{ startsWith(github.head_ref, 'dependabot/pip') && matrix.pnl-version != 'base' && steps.new_package.outputs.new_package != '' }}
+      if: ${{ steps.new_package.conclusion == 'success' && steps.new_package.outputs.new_package != '' }}
       shell: bash
       run: |
         if [ $(pip list | grep -o ${{ steps.new_package.outputs.new_package }} | wc -l) != "0" ] ; then
