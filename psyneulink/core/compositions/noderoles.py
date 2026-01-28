@@ -386,8 +386,6 @@ class NodeRolesManager(object):
         """Assign NodeRole.CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
         Assign only if not already so designated;  this is needed for user-specified ObjectiveMechanisms
         """
-        if NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node):
-            return True
         if (isinstance(node, ObjectiveMechanism)
                 and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node)):
             ctl_mech = next((p.receiver.owner for p in node.efferents
@@ -395,8 +393,6 @@ class NodeRolesManager(object):
             if ctl_mech:
                 node.control_mechanism = ctl_mech
                 self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
-                return True
-        return False
 
     def _SINGLETON_and_INTERNAL_Nodes(self, nodes):
         for node in self.nodes:
@@ -500,8 +496,7 @@ class NodeRolesManager(object):
             # Assign OUTPUT to any other relevant non-TERMINAL Nodes
             else:
                 # Identify CONTROL_OBJECTIVE Nodes; needed for determinations of status as OUTPUT Node below
-                if self._CONTROL_OBJECTIVE_Node(node):
-                    continue
+                self._CONTROL_OBJECTIVE_Node(node)
 
                 # Assign any RecurrentTransferMechanisms that qualify as OUTPUT Nodes
                 if self._RECURRENT_MECHANISM_as_OUTPUT(node, composition):
@@ -558,16 +553,17 @@ class NodeRolesManager(object):
                            for port in node.output_CIM.output_ports):
                         self._add_node_role(node, NodeRole.OUTPUT)
 
-                # # MODIFIED TEACHER_TARGET NEW: BREADCRUMB UNCOMMENT THIS IF NOT HANDLED IN pytorchshowgraph
                 # Assign as OUTPUT if:
-                #    - node is not LEARNING_OBJECTIVE (e.g., LossMechanism)
+                #    - node is not CONTROL_OBJECTIVE or LEARNING_OBJECTIVE (e.g., LossMechanism)
                 #    - no other nodes are dependent on it
-                elif (not NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(node)
+                elif (not any(mod_objective in self.get_roles_by_node(node)
+                              for mod_objective in {NodeRole.CONTROL_OBJECTIVE,
+                                                    NodeRole.CONTROLLER_OBJECTIVE,
+                                                    NodeRole.LEARNING_OBJECTIVE})
                       and not any(node in [n for n in v
                                            if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k))]
                                   for k, v in self.graph.items())):
                     self._add_node_role(node, NodeRole.OUTPUT)
-                # MODIFIED TEACHER_TARGET END
 
     def _RECURRENT_MECHANISM_as_OUTPUT(self, node, composition)->bool:
         """Assign NodeRole.OUTPUT to RecurrentTransferMechanism
