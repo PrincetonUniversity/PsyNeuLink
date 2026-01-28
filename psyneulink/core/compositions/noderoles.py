@@ -382,10 +382,12 @@ class NodeRolesManager(object):
                     and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
                                 for p in node.efferents)))
 
-    def _CONTROL_OBJECTIVE_Node(self, node):
+    def _CONTROL_OBJECTIVE_Node(self, node)->bool:
         """Assign NodeRole.CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
         Assign only if not already so designated;  this is needed for user-specified ObjectiveMechanisms
         """
+        if NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node):
+            return True
         if (isinstance(node, ObjectiveMechanism)
                 and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node)):
             ctl_mech = next((p.receiver.owner for p in node.efferents
@@ -393,6 +395,8 @@ class NodeRolesManager(object):
             if ctl_mech:
                 node.control_mechanism = ctl_mech
                 self._add_required_node_role(node, NodeRole.CONTROL_OBJECTIVE)
+                return True
+        return False
 
     def _SINGLETON_and_INTERNAL_Nodes(self, nodes):
         for node in self.nodes:
@@ -496,7 +500,8 @@ class NodeRolesManager(object):
             # Assign OUTPUT to any other relevant non-TERMINAL Nodes
             else:
                 # Identify CONTROL_OBJECTIVE Nodes; needed for determinations of status as OUTPUT Node below
-                self._CONTROL_OBJECTIVE_Node(node)
+                if self._CONTROL_OBJECTIVE_Node(node):
+                    continue
 
                 # Assign any RecurrentTransferMechanisms that qualify as OUTPUT Nodes
                 if self._RECURRENT_MECHANISM_as_OUTPUT(node, composition):
