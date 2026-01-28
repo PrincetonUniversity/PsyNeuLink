@@ -267,8 +267,14 @@ class NodeRolesManager(object):
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.graph})
         # Assign required_node_roles
+        # MODIFIED TEACHER_TARGET OLD:
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
+        # # MODIFIED TEACHER_TARGET NEW 1/28/26:
+        # for node, role in self.required_node_roles:
+        #     if node in self.graph:
+        #         self._add_node_role(node, role)
+        # MODIFIED TEACHER_TARGET END
 
     def _INPUT_Nodes(self, nodes, composition=None):
         """Assign NodeRole.INPUT to qualifying Nodes"""

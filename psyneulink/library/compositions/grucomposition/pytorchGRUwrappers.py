@@ -352,7 +352,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         processing_graph = {self.composition.gru_mech:set()}
         return processing_graph
 
-    def _get_roles_by_node(self, node, context):
+    def _get_roles_by_node(self, node):
         """Override to return NodeRole for 'PYTORCH GRU NODE'"""
         if self.outer_creator:
             outer_comp = self.outer_creator.composition

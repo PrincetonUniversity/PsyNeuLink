@@ -372,8 +372,17 @@ class PytorchCompositionWrapper(torch.nn.Module):
         self.projection_wrappers = list(self.projections_map.values())
         if not self.composition.is_nested:
             self.node_roles_mgr = NodeRolesManager(self)
-            self.node_roles_mgr.required_node_roles = self.composition.node_roles_mgr.required_node_roles
-            self.node_roles_mgr.excluded_node_roles = self.composition.node_roles_mgr.excluded_node_roles
+            # # MODIFIED TEACHER_TARGET OLD:
+            # self.node_roles_mgr.required_node_roles = self.composition.node_roles_mgr.required_node_roles
+            # self.node_roles_mgr.excluded_node_roles = self.composition.node_roles_mgr.excluded_node_roles
+            # MODIFIED TEACHER_TARGET NEW 1/28/26:
+            self.node_roles_mgr.required_node_roles = \
+                [(node, role) for node, role in self.composition.node_roles_mgr.required_node_roles
+                 if node in self.node_roles_mgr.nodes]
+            self.node_roles_mgr.required_node_roles = \
+                [(node, role) for node, role in self.composition.node_roles_mgr.excluded_node_roles
+                 if node in self.node_roles_mgr.nodes]
+            # MODIFIED TEACHER_TARGET END
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
