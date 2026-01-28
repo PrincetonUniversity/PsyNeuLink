@@ -49,6 +49,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.core.globals.keywords import ALL, DEFAULT_VARIABLE, NESTED, OBJECTIVE_MECHANISM
@@ -268,8 +269,8 @@ class NodeRolesManager(object):
         self.nodes_to_roles.update({k: set() for k in self.graph})
         # Assign required_node_roles
         # MODIFIED TEACHER_TARGET OLD:
-        for node_role_pair in self.required_node_roles:
-            self._add_node_role(node_role_pair[0], node_role_pair[1])
+        for node, role in self.required_node_roles:
+            self._add_node_role(node, role)
         # # MODIFIED TEACHER_TARGET NEW 1/28/26:
         # for node, role in self.required_node_roles:
         #     if node in self.graph:
@@ -425,12 +426,29 @@ class NodeRolesManager(object):
         """
         terminal_nodes = set()
 
-        receivers = {n: set() for n in graph}
-        for n in graph:
-            for sender in graph[n]:
-                receivers[sender].add(n)
-
-        nodes_without_receivers = {n for n in graph if len(receivers[n]) == 0}
+        # # MODIFIED TEACHER_TARGET OLD:
+        # senders = {n: set() for n in graph}
+        # for receiver in graph:
+        #     # graph is {receiver:{senders}
+        #     # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
+        #     for sender in graph[receiver]:
+        #         senders[sender].add(receiver)
+        # nodes_without_receivers = {sender for sender in graph if len(senders[sender]) == 0}
+        # # MODIFIED TEACHER_TARGET NEW
+        senders = {n: set() for n in graph}
+        nodes_without_receivers = []
+        for receiver in graph:
+            # graph is {receiver:{senders}
+            # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
+            for sender in graph[receiver]:
+                senders[sender].add(receiver)
+        for sender in senders:
+            if len(senders[sender]) == 0:
+                nodes_without_receivers.append(sender)
+            elif all(isinstance(efferent.sender.owner, (CompositionInterfaceMechanism, LossMechanism))
+                     for efferent in sender.efferents):
+                nodes_without_receivers.append(sender)
+        # MODIFIED TEACHER_TARGET END
 
         # if a node is in a flattened cycle, all others in that cycle
         # must also have no receivers, or that node cannot be terminal
@@ -446,6 +464,7 @@ class NodeRolesManager(object):
         for node in nodes_without_receivers:
             if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
                 terminal_nodes.add(node)
+            # If CONTROLLER_OBJECTIVE node is only one without receivers, get its senders as TERMINAL Nodes
             elif len(nodes_without_receivers) < 2:
                 if toposorted_graph is None:
                     toposorted_graph = list(toposort.toposort(graph))

@@ -204,8 +204,8 @@ class TestNested:
     test_gru_data = [
         #   nesting       mode                expected
         # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING:
-        # (  'unnested',  'Python',   expected_output_for_unnested_python_gru),
-        # (  'nested',    'Python',   expected_output_for_nested_python_gru),
+        (  'unnested',  'Python',   expected_output_for_unnested_python_gru),
+        (  'nested',    'Python',   expected_output_for_nested_python_gru),
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_gru),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_gru)
     ]
@@ -235,9 +235,9 @@ class TestNested:
     test_em_data = [
         #   nesting       mode                expected
         # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING:
-        # (  'unnested',  'Python',   expected_output_for_unnested_python_em),
-        # (  'nested',    'Python',   expected_output_for_nested_python_em),
-        # (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
+        (  'unnested',  'Python',   expected_output_for_unnested_python_em),
+        (  'nested',    'Python',   expected_output_for_nested_python_em),
+        (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
         (  'nested',    'PyTorch',  expected_output_for_nested_pytorch_em),
         (  'unnested',  'PyTorch with learning',  expected_output_for_unnested_pytorch_learning_em),
         (  'nested',    'PyTorch with learning',  expected_output_for_nested_pytorch_learning_em)
