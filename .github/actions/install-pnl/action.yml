@@ -65,8 +65,12 @@ runs:
           pip show "$NEW_PACKAGE" | grep 'Version' | tee new_version.deps
 
           # uninstall new package and its dependencies but skip those from previous steps
-          # the 'orig' list is not empty (includes at least pip, wheel)
-          pip uninstall -y $(pip freeze -r orig | sed '1,/## /d')
+          # the 'orig' list is not empty (includes at least pip, wheel),
+          # but it can include the checked package.
+          export INSTALLED_PACKAGES="$(pip freeze -r orig | sed '1,/## /d')"
+          if [ "$INSTALLED_PACKAGES" != "" ]; then
+            pip uninstall -y $(pip freeze -r orig | sed '1,/## /d')
+          fi
         else
           echo "new_package=''" >> $GITHUB_OUTPUT
         fi
