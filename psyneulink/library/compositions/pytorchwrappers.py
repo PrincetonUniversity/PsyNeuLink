@@ -379,7 +379,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.node_roles_mgr.required_node_roles = \
                 [(node, role) for node, role in self.composition.node_roles_mgr.required_node_roles
                  if node in self.node_roles_mgr.nodes]
-            self.node_roles_mgr.required_node_roles = \
+            self.node_roles_mgr.excluded_node_roles = \
                 [(node, role) for node, role in self.composition.node_roles_mgr.excluded_node_roles
                  if node in self.node_roles_mgr.nodes]
             # MODIFIED TEACHER_TARGET END

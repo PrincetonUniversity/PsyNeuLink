@@ -590,12 +590,12 @@ class NodeRolesManager(object):
                                   for k, v in self.graph.items())):
                     self._add_node_role(node, NodeRole.OUTPUT)
 
+                # Assign as OUTPUT if it only projects to LossMechanisms or output_CIM
                 elif all((isinstance(receiver, LossMechanism) and receiver.sample.owner is node)
                          or (isinstance(receiver, CompositionInterfaceMechanism)
                              and receiver is receiver.composition.output_CIM)
                          for receiver in [efferent.receiver.owner for efferent in node.efferents]):
                     self._add_node_role(node, NodeRole.OUTPUT)
-
 
     def _RECURRENT_MECHANISM_as_OUTPUT(self, node, composition)->bool:
         """Assign NodeRole.OUTPUT to RecurrentTransferMechanism
