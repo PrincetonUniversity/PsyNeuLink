@@ -263,6 +263,9 @@ class TestControlSpecification:
                                      {control_spec: ("threshold", Decision),
                                       ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                 )
+            drift_control_signal = comp.controller.control_signals['Decision[drift_rate] ControlSignal']
+            drift_previous_value = drift_control_signal.function.duration_cost_fct.previous_value
+            np.testing.assert_array_equal(drift_previous_value, [0])
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
         deferred_Input_input_port = _deferred_state_feature_spec_msg('Input[InputPort-0]', 'evc')
@@ -313,7 +316,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
             assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
-            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[0.825], [1.65]])
             assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
         elif state_features_arg == 'dict':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
@@ -357,7 +360,7 @@ class TestControlSpecification:
             assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
             assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
                                                       'Input[InputPort-0]': [2.2]}
-            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            np.testing.assert_allclose(list(comp.controller.state_feature_values.values()), [[1.03125], [2.0625]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
         elif state_features_arg in {'list_reversed', 'dict_reversed'}:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
@@ -417,17 +420,17 @@ class TestControlSpecification:
                 [[0.], [0.], [0.], [4.45], [0.5]]]
         elif state_features_arg == 'list_numeric':
             expected_sim_results_array = [
-                [[1.09785156], [1.09785156], [0.], [0.48989747], [0.5438015]],
-                [[1.09946289], [1.09946289], [0.], [1.06483807], [0.66899791]],
-                [[1.09986572], [1.09986572], [0.], [2.19475384], [0.77414214]],
-                [[1.09996643], [1.09996643], [0.], [3.66103375], [0.85320293]],
-                [[1.09999161], [1.09999161], [0.], [0.48842594], [0.66907284]],
-                [[1.0999979], [1.0999979], [0.], [0.85321354], [0.94353405]],
-                [[1.09999948], [1.09999948], [0.], [1.23401798], [0.99281107]],
-                [[1.09999987], [1.09999987], [0.], [1.58437432], [0.99912464]],
-                [[1.09999997], [1.09999997], [0.], [0.48560629], [0.77416842]],
-                [[1.09999999], [1.09999999], [0.], [0.70600576], [0.99281108]],
-                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
+                [[1.09570312], [1.09570312], [0.], [0.48989787], [0.54371622]],
+                [[1.09892578], [1.09892578], [0.], [1.06486149], [0.66892179]],
+                [[1.09973145], [1.09973145], [0.], [2.1947995], [0.77411584]],
+                [[1.09993286], [1.09993286], [0.], [3.66107059], [0.85319621]],
+                [[1.09998322], [1.09998322], [0.], [0.48842596], [0.66907165]],
+                [[1.0999958], [1.0999958], [0.], [0.85321405], [0.94353376]],
+                [[1.09999895], [1.09999895], [0.], [1.23401833], [0.99281105]],
+                [[1.09999974], [1.09999974], [0.], [1.58437445], [0.99912464]],
+                [[1.09999993], [1.09999993], [0.], [0.48560629], [0.77416842]],
+                [[1.09999998], [1.09999998], [0.], [0.70600576], [0.99281108]],
+                [[1.1], [1.1], [0.], [0.90438209], [0.99982029]],
                 [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
                 [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
                 [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
@@ -448,7 +451,8 @@ class TestControlSpecification:
                 [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
                 [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
                 [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
-                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
+                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]],
+            ]
         elif state_features_arg in {'list_reversed', 'dict_reversed'}:
             expected_sim_results_array = [
                 [[0.25], [0.25], [0.], [0.4879949], [0.68997448]],
@@ -2424,7 +2428,7 @@ class TestControlMechanisms:
         (pnl.CostFunctions.INTENSITY, 3, [0.2817181715409549, -3.3890560989306495, -15.085536923187664, -48.59815003314423, -141.41315910257657]),
         (pnl.CostFunctions.ADJUSTMENT, 3, [3, 3, 3, 3, 3] ),
         (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [0.2817181715409549, -4.389056098930649, -17.085536923187664, -51.59815003314423, -145.41315910257657]),
-        (pnl.CostFunctions.DURATION, 3, [-7, -8, -9, -10, -11]),
+        (pnl.CostFunctions.DURATION, 3, [-1, -2, -3, -4, -5]),
         (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, None ,None),
         (pnl.CostFunctions.ALL, None, None),
         pytest.param(pnl.CostFunctions.DEFAULTS, 7, [3, 4, 5, 6, 7], id="CostFunctions.DEFAULT")],
