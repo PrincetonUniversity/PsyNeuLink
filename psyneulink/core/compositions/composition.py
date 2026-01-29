@@ -13396,6 +13396,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
+        self.node_roles_mgr._determine_node_roles()
         return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
 
     @property
