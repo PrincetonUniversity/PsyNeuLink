@@ -426,28 +426,28 @@ class NodeRolesManager(object):
         """
         terminal_nodes = set()
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # senders = {n: set() for n in graph}
-        # for receiver in graph:
-        #     # graph is {receiver:{senders}
-        #     # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
-        #     for sender in graph[receiver]:
-        #         senders[sender].add(receiver)
-        # nodes_without_receivers = {sender for sender in graph if len(senders[sender]) == 0}
-        # # MODIFIED TEACHER_TARGET NEW
+        # MODIFIED TEACHER_TARGET OLD:
         senders = {n: set() for n in graph}
-        nodes_without_receivers = []
         for receiver in graph:
             # graph is {receiver:{senders}
             # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
             for sender in graph[receiver]:
                 senders[sender].add(receiver)
-        for sender in senders:
-            if len(senders[sender]) == 0:
-                nodes_without_receivers.append(sender)
-            elif all(isinstance(efferent.sender.owner, (CompositionInterfaceMechanism, LossMechanism))
-                     for efferent in sender.efferents):
-                nodes_without_receivers.append(sender)
+        nodes_without_receivers = {sender for sender in graph if len(senders[sender]) == 0}
+        # # MODIFIED TEACHER_TARGET NEW
+        # senders = {n: set() for n in graph}
+        # nodes_without_receivers = []
+        # for receiver in graph:
+        #     # graph is {receiver:{senders}
+        #     # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
+        #     for sender in graph[receiver]:
+        #         senders[sender].add(receiver)
+        # for sender in senders:
+        #     if len(senders[sender]) == 0:
+        #         nodes_without_receivers.append(sender)
+        #     # elif all(isinstance(efferent.receiver.owner, (CompositionInterfaceMechanism, LossMechanism))
+        #     #          for efferent in sender.efferents):
+        #     #     nodes_without_receivers.append(sender)
         # MODIFIED TEACHER_TARGET END
 
         # if a node is in a flattened cycle, all others in that cycle
@@ -589,6 +589,13 @@ class NodeRolesManager(object):
                                            if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k))]
                                   for k, v in self.graph.items())):
                     self._add_node_role(node, NodeRole.OUTPUT)
+
+                elif all((isinstance(receiver, LossMechanism) and receiver.sample.owner is node)
+                         or (isinstance(receiver, CompositionInterfaceMechanism)
+                             and receiver is receiver.composition.output_CIM)
+                         for receiver in [efferent.receiver.owner for efferent in node.efferents]):
+                    self._add_node_role(node, NodeRole.OUTPUT)
+
 
     def _RECURRENT_MECHANISM_as_OUTPUT(self, node, composition)->bool:
         """Assign NodeRole.OUTPUT to RecurrentTransferMechanism
