@@ -3917,7 +3917,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
         self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
-        self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
 
         # suppress repeated warnings
@@ -4240,7 +4239,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._handle_allow_probes_for_control(node)
 
         self._need_check_for_unused_projections = True
-        self.needs_determine_node_roles = True
+        self._need_determine_node_roles = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -4532,7 +4531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_items = []
         _update_cim = False
 
-        if comp.needs_determine_node_roles:
+        if comp.node_roles_mgr._need_determine_node_roles:
             comp.node_roles_mgr._determine_node_roles()
             _update_cim = True
 
@@ -4549,9 +4548,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Ensure correct number of InputPorts have been identified
                 #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
-                    context = Context()
                     self._determine_pathway_roles()
-                    self._create_CIM_ports(context)
+                    self._create_CIM_ports(Context())
                 _update_cim = False
                 assert len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
                                                 if not input_port.internal_only])
@@ -6079,7 +6077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     self.feedback_senders.add(sender_mechanism)
         #     self.feedback_receivers.add(receiver_mechanism)
 
-        self.needs_determine_node_roles = True
+        self.node_roles_mgr._need_determine_node_roles = True
         return projection
 
     def _add_projection(self, projection):
@@ -13396,7 +13394,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        self.node_roles_mgr._determine_node_roles()
         return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
 
     @property
@@ -13486,7 +13483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region
     @property
     def nodes_to_roles(self):
-        return self.node_roles_mgr.nodes_to_roles
+        return self.node_roles_mgr._get_nodes_to_roles()
 
     @property
     def all_nodes_to_roles(self):
