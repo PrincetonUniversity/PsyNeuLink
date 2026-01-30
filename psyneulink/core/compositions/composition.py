@@ -4547,12 +4547,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 or afferent_is_via_internal_only_cim_input_port(input_port))])
                 # Ensure correct number of InputPorts have been identified
                 #    (i.e., number of InputPorts on comp's input_CIM)
-                if _update_cim:
+                if _update_cim or not (len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
+                                                                if not input_port.internal_only])):
                     self._determine_pathway_roles()
                     self._create_CIM_ports(Context())
-                _update_cim = False
                 assert len(input_items) == len([input_port for input_port in comp.input_CIM.input_ports
                                                 if not input_port.internal_only])
+                _update_cim = False
         else:
             # Return all INPUT Nodes
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
