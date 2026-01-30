@@ -70,7 +70,7 @@ class PytorchEMCompositionWrapper(PytorchCompositionWrapper):
 
         # IMPLEMENTATION NOTE:
         #    This is needed for access by subcomponents to the PytorchEMCompositionWrapper when EMComposition is nested,
-        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itelf;
+        #    and so _build_pytorch_representation is called on the outer Composition but not EMComposition itself;
         #    access must be provided via EMComposition's pytorch_representation, rather than directly assigning
         #    PytorchEMCompositionWrapper as an attribute on the subcomponents, since doing the latter introduces a
         #    recursion when torch.nn.module.state_dict() is called on any wrapper in the hiearchay.

@@ -30,7 +30,9 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.noderoles import NodeRoleError
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
@@ -2948,25 +2950,31 @@ class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
 
-        comp = Composition()
         mechs = [TransferMechanism() for x in range(4)]
+        comp = Composition([mechs])
 
-        for mech in mechs:
-            comp.add_node(mech)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[0], NodeRole.ORIGIN)
+        assert ("Attempt to assign 'TransferMechanism-0' the NodeRole.ORIGIN which is not allowed."
+                in str(error_text.value))
 
-        comp._add_node_role(mechs[0], NodeRole.ORIGIN)
-        comp._add_node_role(mechs[1], NodeRole.INTERNAL)
-        comp._add_node_role(mechs[2], NodeRole.INTERNAL)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[1], NodeRole.INTERNAL)
+        assert ("Attempt to assign 'TransferMechanism-1' the NodeRole.INTERNAL which is not allowed."
+                in str(error_text.value))
 
-        for role in list(NodeRole):
-            if role is NodeRole.ORIGIN:
-                assert comp.get_nodes_by_role(role) == [mechs[0]]
-            elif role is NodeRole.INTERNAL:
-                assert comp.get_nodes_by_role(role) == [mechs[1], mechs[2]]
-            else:
-                assert comp.get_nodes_by_role(role) == []
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.TERMINAL)
+        assert ("Attempt to assign 'TransferMechanism-2' the NodeRole.TERMINAL which is not allowed."
+                in str(error_text.value))
 
-    @pytest.mark.xfail(raises=CompositionError)
+        comp.require_node_roles(mechs[1], NodeRole.INPUT)
+        assert NodeRole.INPUT in comp.get_roles_by_node(mechs[1])
+
+        comp.require_node_roles(mechs[2], NodeRole.OUTPUT)
+        assert NodeRole.OUTPUT in comp.get_roles_by_node(mechs[2])
+
+    @pytest.mark.xfail(raises=NodeRoleError)
     def test_nonexistent_role(self):
         comp = Composition()
         comp.get_nodes_by_role(None)
@@ -7479,14 +7487,14 @@ class TestNodeRoles:
                     f"and therefore cannot accept any input.") in str(error_text.value)
 
             # Error assigning NodeRole.BIAS to Node that already has an afferent Projection.
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 MappingProjection(sender=nodes('INPUT'), receiver=nodes('DOUBLE BIAS').input_ports['second'])
                 Composition(pathways=[nodes('INPUT'), {nodes('OUTPUT'), (nodes('DOUBLE BIAS'), NodeRole.BIAS)}])
             assert (f"Attempt to assign 'NodeRole.BIAS' to a node ('DOUBLE BIAS') in 'Composition-3' "
                     f"that already has input(s) assigned.") in str(error_text.value)
 
             # Error when assigning Node both NodeRole.BIAS and NodeRole.INPUT
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(NodeRoleError) as error_text:
                 Composition(pathways=[[nodes('INPUT'), nodes('OUTPUT')],
                                       (nodes('SINGLE BIAS'), [NodeRole.BIAS, NodeRole.INPUT])])
             assert (f"A Node assigned NodeRole.BIAS ('SINGLE BIAS') cannot also be assigned NodeRole.INPUT "

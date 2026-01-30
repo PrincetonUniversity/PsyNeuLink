@@ -12,7 +12,8 @@ from beartype import beartype
 
 from psyneulink._typing import Optional, Union, Literal
 
-from psyneulink.core.compositions import Composition, NodeRole
+from psyneulink.core.compositions import Composition
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.showgraph import ShowGraph, SHOW_JUST_LEARNING_PROJECTIONS, SHOW_LEARNING
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -73,14 +74,7 @@ class PytorchShowGraph(ShowGraph):
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),
                     new=False))
-            # composition = self.composition
-            # # # MODIFIED TEACHER_TARGET OLD:
-            # processing_graph = self._get_processing_graph(composition, context=context)
-            # # MODIFIED TEACHER_TARGET NEW:
-            # composition._determine_node_roles(processing_graph=processing_graph, context=context)
-            # # MODIFIED TEACHER_TARGET END
-            # assert True
-
+            self.pytorch_rep.node_roles_mgr._determine_node_roles()
         self.exclude_from_gradient_calc_line_style = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_LINE_STYLE, 'dotted')
         self.exclude_from_gradient_calc_color = kwargs.pop(EXCLUDE_FROM_GRADIENT_CALC_COLOR, 'brown')
         return super().show_graph(*args, **kwargs)
@@ -128,39 +122,11 @@ class PytorchShowGraph(ShowGraph):
             since these are always part of the graph in PyTorch mode
         """
         if self.show_pytorch:
-            # # MODIFIED TEACHER_TARGET OLD:  MOVED TO PytorchCompositionWrapper
-            # processing_graph = {}
-            # projections = self._get_projections(composition, context)
-            # nodes = self._get_nodes(composition, context)
-            # for node in nodes:
-            #     dependencies = set()
-            #     for projection in projections:
-            #         sender = projection.sender.owner
-            #         receiver = projection.receiver.owner
-            #         if node is receiver:
-            #             dependencies.add(sender)
-            #         # Add dependency of INPUT node of nested graph on node in outer graph that projects to it
-            #         elif (isinstance(receiver, CompositionInterfaceMechanism) and
-            #               receiver._get_source_info_from_output_CIM(projection.receiver)[1] is node):
-            #             dependencies.add(sender)
-            #         else:
-            #             for proj in [proj for proj in node.afferents if proj.sender.owner in nodes]:
-            #                 dependencies.add(proj.sender.owner)
-            #     processing_graph[node] = dependencies
-            # # Sort for consistency of reporting and display
-            # processing_graph = {k: processing_graph[k] for k in sorted(processing_graph.keys())}
-            # # MODIFIED TEACHER_TARGET NEW:
-            # composition._determine_node_roles(processing_graph=processing_graph, context=context)
-            # # MODIFIED TEACHER_TARGET END
-            # return processing_graph
-            # MODIFIED TEACHER_TARGET NEW:
-            return composition.pytorch_representation._get_processing_graph(context)
-            # MODIFIED TEACHER_TARGET END
-
+            return self.composition.pytorch_representation.node_roles_mgr.graph
         else:
             return super()._get_processing_graph(composition, context)
 
-    def _get_nodes(self, composition, context):
+    def _get_nodes(self, composition, context=None):
         """Override to return nodes of PytorchCompositionWrapper rather than autodiffcomposition"""
         if self.show_pytorch:
             nodes = sorted([node for node in self.pytorch_rep.nodes_map
@@ -169,8 +135,8 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._get_nodes(composition, context)
 
-    def _get_projections(self, composition, context):
-        """Override to return nodes of Pytorch graph"""
+    def _get_projections(self, composition, context=None):
+        """Override to return nodes of PyTorch graph"""
         if self.show_pytorch:
             projections = self.pytorch_rep.composition._pytorch_projections
             # Add any Projections to TARGET nodes
@@ -183,7 +149,7 @@ class PytorchShowGraph(ShowGraph):
             return super()._get_projections(composition, context)
 
     def _proj_in_composition(self, proj, composition_projections, context)->bool:
-        """Override to include direct Projections from outer to nested comps in Pytorch mode"""
+        """Override to include direct Projections from outer to nested comps in PyTorch mode"""
         sndr = proj.sender.owner
         rcvr = proj.receiver.owner
         if self.show_pytorch:
@@ -198,24 +164,18 @@ class PytorchShowGraph(ShowGraph):
         else:
             return super()._proj_in_composition(proj, composition_projections, context)
 
-    def _get_roles_by_node(self, composition, node, context):
-        """Override in Pytorch mode to return NodeRole.INTERNAL for all nodes in nested compositions"""
+    def _get_roles_by_node(self, node):
+        """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
         if self.show_pytorch:
-            # In PyTorch mode, allow PytorchCompositionWrapper to identify roles for nodes
-            # return composition.pytorch_representation.all_nodes_to_roles()[node]
-            return composition.pytorch_representation._get_roles_by_node(node, context)
+            # allow PytorchCompositionWrapper to identify roles for nodes
+            return self.pytorch_rep._get_roles_by_node(node)
         else:
-            return super()._get_roles_by_node(composition, node, context)
+            return super()._get_roles_by_node(node)
 
     def _get_nodes_by_role(self, composition, role, context):
-        """Override in Pytorch mode to return all nodes in nested compositions as INTERNAL"""
-        # # MODIFIED TEACHER_TARGET OLD:
-        # if self.show_pytorch and composition is not self.composition:
-        #     return None
-        # MODIFIED TEACHER_TARGET NEW:
+        """Override in Pytorch mode to use pytorch_representation for determining NodeRoles"""
         if self.show_pytorch:
             return composition.get_nodes_by_role(role, scope=ALL)
-        # MODIFIED TEACHER_TARGET END
         else:
             return super()._get_nodes_by_role(composition, role, context)
 
@@ -253,7 +213,7 @@ class PytorchShowGraph(ShowGraph):
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)
 
     def _implement_graph_edge(self, graph, proj, context, *args, **kwargs):
-        """Override to assign pytroch-specific custom attributes to edges"""
+        """Override to assign PyTorch-specific custom attributes to edges"""
 
         if self.show_pytorch:
             kwargs['color'] = self.default_node_color

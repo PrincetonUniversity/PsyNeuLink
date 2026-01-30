@@ -974,26 +974,30 @@ class ShowGraph():
     def _get_processing_graph(self, composition, context):
         """Helper method that allows override by subclass to filter nodes and their dependencies used for graph
         Sort graph by node name for consistency in display
-        Add nodes marked as _proxy_for to dependency_dict
+        Add nodes marked as _proxy_for to graph
         """
-        dependency_dict = composition.graph_processing.dependency_dict.copy()
-        for node, dependents in dependency_dict.items():
+        # MODIFIED TEACHER_TARGET OLD: BREADCRUMB: MAKE SURE THIS STUFF IS DONE IN node_roles_mgr IMPLEMENTATION
+        graph = composition.graph_processing.dependency_dict.copy()
+        for node, dependents in graph.items():
             from psyneulink.core.compositions.composition import Composition
             afferents = node.output_CIM.path_afferents if isinstance(node, Composition) else node.path_afferents
             for sender in [afferent.sender.owner for afferent in afferents]:
                 if (sender not in dependents and self._sender_is_proxy_in_composition(sender)):
-                    dependency_dict[node].add(getattr(sender, PROXY_FOR))
-        return dependency_dict
+                    graph[node].add(getattr(sender, PROXY_FOR))
+        return graph
+        # # MODIFIED TEACHER_TARGET NEW:
+        # return self.composition.node_roles_mgr.graph
+        # MODIFIED TEACHER_TARGET END
 
-    def _get_nodes(self, composition ,context):
+    def _get_nodes(self, composition, context=None):
         """Helper method that allows override by subclass to filter nodes used for graph"""
         return composition.nodes
 
-    def _get_projections(self, composition, context):
+    def _get_projections(self, composition, context=None):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return composition.projections
 
-    def _proj_in_composition(self, proj, composition_projections, context):
+    def _proj_in_composition(self, proj, composition_projections, context=None):
         """Helper method that allows override by subclass to filter projections used for graph"""
         return proj in composition_projections
 
@@ -1002,9 +1006,10 @@ class ShowGraph():
         return hasattr(proxy, PROXY_FOR) and (getattr(proxy, PROXY_FOR) in self.composition._get_all_nodes()
                                               or proxy in self.composition._get_all_nodes())
 
-    def _get_roles_by_node(self, composition, node, context):
+    # TEACHER_TARGET BREADCRUMB:  DELETE THESE (SINCE NOW BELONG ON NodeRolesManager)??
+    def _get_roles_by_node(self, node):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
-        return composition.get_roles_by_node(node)
+        return self.composition.get_roles_by_node(node)
 
     def _get_nodes_by_role(self, composition, role, context):
         """Helper method that allows override by subclass to filter NodeRoles used for graph"""
@@ -1069,9 +1074,9 @@ class ShowGraph():
                 #     nested_comp_graph.attr(color=feedback_color)
                 # nested_comp_attributes = {"label":rcvr_label}
                 nested_comp_attributes = {}
-                input_nodes = self._get_nodes_by_role(composition, NodeRole.INPUT, context)
-                output_nodes = self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)
-                probe_nodes = self._get_nodes_by_role(composition, NodeRole.PROBE, context)
+                input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+                output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
+                probe_nodes = composition.get_nodes_by_role(NodeRole.PROBE)
                 if rcvr in input_nodes and output_nodes:
                     nested_comp_attributes.update({"color": self.input_and_output_color})
                 elif rcvr in input_nodes:
@@ -1096,7 +1101,7 @@ class ShowGraph():
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        if (NodeRole.LEARNING in self._get_roles_by_node(composition, rcvr, context)):
+        if (NodeRole.LEARNING in self._get_roles_by_node(rcvr)):
             return
 
         # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
@@ -1116,9 +1121,9 @@ class ShowGraph():
         # Cycle or Feedback Node
         if isinstance(rcvr, Composition):
             node_shape = self.composition_shape
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.FEEDBACK_SENDER, context):
+        elif rcvr in composition.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
             node_shape = self.feedback_shape
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.CYCLE, context):
+        elif rcvr in composition.get_nodes_by_role(NodeRole.CYCLE):
             node_shape = self.cycle_shape
         else:
             node_shape = self.mechanism_shape
@@ -1133,9 +1138,14 @@ class ShowGraph():
             condition = None
 
         # INPUT and OUTPUT Node
-        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_nodes_by_role
-        if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
-                and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
+        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_roles_by_node
+        # # MODIFIED TEACHER_TARGET OLD:
+        # if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
+        #         and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
+        # MODIFIED TEACHER_TARGET NEW:
+        if all(role in self._get_roles_by_node(rcvr)
+               for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
+        # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_and_output_color
@@ -1148,7 +1158,7 @@ class ShowGraph():
                 rcvr_penwidth = str(self.bold_width)
 
         # INPUT Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context):
+        elif NodeRole.INPUT in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_color
@@ -1162,7 +1172,7 @@ class ShowGraph():
             rcvr_rank = self.input_rank
 
         # PROBE Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.PROBE, context):
+        elif NodeRole.PROBE in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.probe_color
@@ -1176,7 +1186,7 @@ class ShowGraph():
             rcvr_rank = self.output_rank
 
         # OUTPUT Node
-        elif rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context):
+        elif NodeRole.OUTPUT in self._get_roles_by_node(rcvr):
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.output_color
@@ -1290,7 +1300,8 @@ class ShowGraph():
                                comp_hierarchy,
                                context):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
         composition_nodes = self._get_nodes(composition, context)
         composition_projections = self._get_projections(composition, context)
@@ -1473,9 +1484,9 @@ class ShowGraph():
 
                         # Validate the Projection is to an INPUT node or a node that is shadowing one
                         if ((rcvr_input_node_proj_owner in composition_nodes and NodeRole.INPUT not in
-                                self._get_roles_by_node(composition, rcvr_input_node_proj_owner, context))
+                                self._get_roles_by_node(rcvr_input_node_proj_owner))
                                 and (proj.receiver.shadow_inputs in composition_nodes and NodeRole.INPUT not in
-                                     self._get_roles_by_node(composition, proj.receiver.shadow_inputs, context))):
+                                     self._get_roles_by_node(proj.receiver.shadow_inputs))):
                             raise ShowGraphError(f"Projection from input_CIM of {composition.name} to node "
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
@@ -1661,8 +1672,7 @@ class ShowGraph():
                         # Validate the Projection is from an OUTPUT or PROBE node
                         if (sndr_output_node_proj_owner in composition_nodes and
                                 not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE}
-                                        if role in self._get_roles_by_node(composition, sndr_output_node_proj_owner,
-                                                                           context))):
+                                        if role in self._get_roles_by_node(sndr_output_node_proj_owner))):
                             raise ShowGraphError(f"Projection to output_CIM of {composition.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
@@ -2184,7 +2194,7 @@ class ShowGraph():
                                     context):
         """Assign learning nodes and edges to graph"""
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
 
         # Get learning_components (to show in learning_color)
@@ -2198,7 +2208,7 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
-            if NodeRole.TARGET in self._get_roles_by_node(composition, rcvr, context):
+            if NodeRole.TARGET in self._get_roles_by_node(rcvr):
                 rcvr_width = self.bold_width
             else:
                 rcvr_width = self.default_width
@@ -2370,7 +2380,8 @@ class ShowGraph():
                                nesting_level=None,
                                context=None):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         composition = self.composition
         composition_projections = self._get_projections(composition, context)
         if nesting_level not in comp_hierarchy:
@@ -2486,7 +2497,7 @@ class ShowGraph():
                     composition.active_item_rendered = True
 
                 # Projection to or from a LearningMechanism
-                elif (NodeRole.LEARNING in self._get_roles_by_node(composition, rcvr, context)):
+                elif (NodeRole.LEARNING in self._get_roles_by_node(rcvr)):
                     proj_color = self.learning_color
                     proj_width = str(self.default_width)
 
@@ -2561,7 +2572,7 @@ class ShowGraph():
                     if not self._proj_in_composition(proj, composition_projections, context):
                         if (show_projections_not_in_composition
                                 # MODIFIED TEACHER_TARGET NEW:
-                                or hasattr(proj.sender.owner, PROXY_FOR)
+                                or self.show_pytorch is False and hasattr(proj.sender.owner, PROXY_FOR)
                                 and (getattr(proj.sender.owner, PROXY_FOR) in composition._get_all_nodes()
                                      or proj.sender.owner in composition._get_all_nodes())
                                 # MODIFIED TEACHER_TARGET END
@@ -2660,7 +2671,8 @@ class ShowGraph():
                          context
                          ):
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         # graphviz is currently only imported within methods
         from graphviz.backend.execute import ExecutableNotFound
 
@@ -2689,7 +2701,7 @@ class ShowGraph():
         for node in nodes:
             if isinstance(node, Composition):
                 continue
-            roles = self._get_roles_by_node(composition, node, context)
+            roles = self._get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
@@ -2767,13 +2779,13 @@ class ShowGraph():
     def _is_composition_controller(self, mech, context, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
         # return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         if not isinstance(mech, ControlMechanism):
             return False
         for comp in [self.composition, enclosing_comp]:
             if not comp:
                 continue
-            if mech in comp._all_nodes and NodeRole.CONTROLLER in self._get_roles_by_node(comp, mech, context):
+            if mech in comp._all_nodes and NodeRole.CONTROLLER in comp.get_roles_by_node(mech):
                 return True
         return False
 

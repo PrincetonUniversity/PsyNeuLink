@@ -19,7 +19,8 @@ from typing import Union, Optional, Literal, Tuple
 from torch import nn
 
 import psyneulink.core.scheduling.condition as conditions
-from psyneulink.core.compositions.composition import LearningScale, NodeRole
+from psyneulink.core.compositions.composition import LearningScale
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -300,7 +301,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                     f"{pnl_proj.sender.name} to {self.composition.gru_mech.name} in {outer_comp.name}. ")
                 dir_proj = dir_proj[0]
             else:
-                dir_proj = MappingProjection(name="Projection to GRU COMP",
+                dir_proj = MappingProjection(name=f"Projection {direction} PYTORCH GRU NODE",
                                              sender=sender,
                                              receiver=receiver,
                                              learnable=pnl_proj.learnable,
@@ -351,9 +352,37 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         processing_graph = {self.composition.gru_mech:set()}
         return processing_graph
 
-    def _get_roles_by_node(self, node, context):
+    def _get_roles_by_node(self, node):
         """Override to return NodeRole for 'PYTORCH GRU NODE'"""
-        return {self.composition.gru_mech:[NodeRole.INTERNAL]}
+        if self.outer_creator:
+            outer_comp = self.outer_creator.composition
+            processing_graph = self.outer_creator._processing_graph
+        else:
+            outer_comp = procesing_graph = None
+        gru_comp = self.composition
+        PYTORCH_GRU_NODE = self.composition.gru_mech
+        if outer_comp:
+            # GRU-related nodes are LossMechanism and TARGET Node for PYTORCH GRU NODE.
+            non_GRU_related_nodes = [n for n in outer_comp.nodes if n is not gru_comp
+                                     and NodeRole.TARGET not in outer_comp.get_roles_by_node(n)
+                                     and NodeRole.LEARNING_OBJECTIVE not in outer_comp.get_roles_by_node(n)]
+            if non_GRU_related_nodes:
+            # If GRUComposition is nested and there are any other Nodes in the OUTER Compostion,
+            #    determine whether GRU is an INPUT, OUTPUT or INTERNAL Node;
+            #    otherwise, drop down to return as SINGTEON
+                # PYTORCH_GRU_NODE is not an INPUT Node if it depends on any others
+                preceding_inputs = any(n for n in non_GRU_related_nodes if n in processing_graph[PYTORCH_GRU_NODE])
+                # PYTORCH_GRU_NODE is not an OUTPUT Node if any others depend on it
+                succeding_outputs = any(PYTORCH_GRU_NODE in v for k,v in processing_graph.items()
+                                        if k in non_GRU_related_nodes)
+                if preceding_inputs and succeding_outputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.INTERNAL]}
+                elif preceding_inputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.OUTPUT]}
+                elif succeding_outputs:
+                    return {PYTORCH_GRU_NODE:[NodeRole.INPUT]}
+        # If GRUComposition is standalone, treat PYTORCH_GRU_NODE as SINGLETON
+        return {PYTORCH_GRU_NODE:[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON]}
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
@@ -404,7 +433,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper._copy_pnl_proj_to_torch_gru_parameter(context, self.torch_dtype)
 
-    def get_parameters_from_torch_gru(torch_gru)->Tuple[torch.Tensor]:
+    def get_parameters_from_torch_gru(torch_gru)->tuple[torch.Tensor]:
         """Get parameters from PyTorch GRU module corresponding to GRUComposition's Projections.
         Format tensors:
           - transpose all weight and bias tensors;

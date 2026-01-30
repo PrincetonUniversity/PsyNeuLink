@@ -310,7 +310,8 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError, NodeRole
+from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
@@ -1141,7 +1142,7 @@ class GRUComposition(AutodiffComposition):
         # Add target Node to GRUComposition to support learning in standalone or solo nested composition
         self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.LEARNING],
                       context=Context(source=ContextFlags.METHOD, string='FROM GRU'))
-        self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context)
+        self.exclude_node_roles(target_mech, NodeRole.OUTPUT, context=context)
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)

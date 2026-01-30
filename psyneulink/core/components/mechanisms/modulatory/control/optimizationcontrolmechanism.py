@@ -1866,7 +1866,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # If agent_rep is a Composition, but there are more state_features than INPUT Nodes,
         #     defer initialization until they are added
         elif agent_rep.componentCategory=='Composition':
-            from psyneulink.core.compositions.composition import NodeRole
+            from psyneulink.core.compositions.noderoles import NodeRole
             if (state_features
                     and len(convert_to_list(state_features)) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT))):
                 # Temporarily name InputPort
@@ -2149,7 +2149,8 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries for state_input_ports
         """
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.compositions.noderoles import NodeRole
         # Agent rep's input Nodes and their names
         agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
         self._specified_INPUT_Node_InputPorts_in_order = []

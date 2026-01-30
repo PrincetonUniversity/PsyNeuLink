@@ -1531,7 +1531,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             input_port.internal_only = True
 
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.noderoles import NodeRole
         self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
         self.aux_components.append(projection_from_objective)
 
@@ -1969,7 +1969,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if self.objective_mechanism and self.objective_mechanism in composition.nodes:
                 # Safe to assert this, as it is already in the ControlMechanism's aux_components
                 #    and will therefore be added to the Composition along with the ControlMechanism
-                from psyneulink.core.compositions.composition import NodeRole
+                from psyneulink.core.compositions.noderoles import NodeRole
                 assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
                     f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} " \
                     f"not listed in its 'aux_components' attribute."

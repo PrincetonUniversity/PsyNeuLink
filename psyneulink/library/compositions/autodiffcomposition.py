@@ -737,7 +737,8 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale, NodeRole)
+from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale)
+from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
@@ -1094,14 +1095,14 @@ class AutodiffComposition(Composition):
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
             if specs:
-                # MODIFIED TEACH_TARGET OLD:
-                if isinstance(specs, (LossMechanism, tuple)):
-                    specs = convert_to_list(specs)
-                elif isinstance(specs, dict):
-                    specs = [(k,v) for k,v in spec.items()]
-                # # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
-                # if isinstance(specs, (LossMechanism, tuple, dict)):
+                # # MODIFIED TEACH_TARGET OLD:
+                # if isinstance(specs, (LossMechanism, tuple)):
                 #     specs = convert_to_list(specs)
+                # elif isinstance(specs, dict):
+                #     specs = [(k,v) for k,v in specs.items()]
+                # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
+                if isinstance(specs, (LossMechanism, tuple, dict)):
+                    specs = convert_to_list(specs)
                 # MODIFIED TEACH_TARGET END
                 for i, spec_tuple in enumerate(specs.copy()):
                     sample, target = spec_tuple
@@ -1582,7 +1583,7 @@ class AutodiffComposition(Composition):
                          f"learning that has no afferent pathways with any learnable Projections.")
         else:
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
-            if sample_mech in self.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
+            if sample_mech in self.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
                 #   but are not specified in targets dict of learn() method.
                 # Allow construction, as they could be a Mechanism for a learnable PyTorch module (e.g., GRU),
@@ -1688,7 +1689,7 @@ class AutodiffComposition(Composition):
 
         # Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         for mech in loss_mechs + target_mechs:
-            self.exclude_node_roles(mech, NodeRole.OUTPUT, context)
+            self.exclude_node_roles(mech, NodeRole.OUTPUT, context=context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
 
@@ -1828,7 +1829,7 @@ class AutodiffComposition(Composition):
                 if comparators_for_output_port:
                     target_mech = comparators_for_output_port[0].input_ports[TARGET].path_afferents[0].sender.owner
                     # Autodiff now owns this TARGET Node, so dissociate from learning_components used for Python
-                    self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context)
+                    self.exclude_node_roles(target_mech, [NodeRole.LEARNING], context=context)
                     # TARGET Node already exists, so no need to construct
                     continue
                 else:
