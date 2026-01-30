@@ -233,6 +233,7 @@ class NodeRolesManager(object):
         self.nodes_to_roles = OrderedDict()
         self.required_node_roles = []
         self.excluded_node_roles = []
+        self._need_determine_node_roles = True
 
     def _determine_node_roles(self):
         """Assign NodeRoles to Nodes based on the position / use in self.graph
@@ -246,6 +247,9 @@ class NodeRolesManager(object):
         # This ensures that NodeRoleManagers that are not for a Composition don't invoke Composition-specific handling
         composition = self.owner if isinstance(self.owner, Composition) else None
 
+        if not self.nodes:
+            return
+
         # Make NodeRole assignments
         self._set_up()
         self._determine_origin_and_terminal_nodes_from_consideration_queue(composition)
@@ -257,7 +261,7 @@ class NodeRolesManager(object):
         self._exclude_roles(self.nodes, composition)
         self._CONTROLLER_Node(composition)
 
-        self.owner.needs_determine_node_roles = False
+        self._need_determine_node_roles = False
 
     # HELPER METHODS FOR _determine_node_roles
     # region
@@ -268,13 +272,13 @@ class NodeRolesManager(object):
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.graph})
         # Assign required_node_roles
-        # MODIFIED TEACHER_TARGET OLD:
-        for node, role in self.required_node_roles:
-            self._add_node_role(node, role)
-        # # MODIFIED TEACHER_TARGET NEW 1/28/26:
+        # # MODIFIED TEACHER_TARGET OLD:
         # for node, role in self.required_node_roles:
-        #     if node in self.graph:
-        #         self._add_node_role(node, role)
+        #     self._add_node_role(node, role)
+        # MODIFIED TEACHER_TARGET NEW 1/28/26:
+        for node, role in self.required_node_roles:
+            if node in self.graph:
+                self._add_node_role(node, role)
         # MODIFIED TEACHER_TARGET END
 
     def _INPUT_Nodes(self, nodes, composition=None):
@@ -291,7 +295,7 @@ class NodeRolesManager(object):
             # Check all remaining ORIGIN Nodes
             if node in input_nodes:
                 # Don't allow INTERNAL Nodes to be INPUTS
-                if NodeRole.INTERNAL in self.get_roles_by_node(node):
+                if NodeRole.INTERNAL in self._get_roles_by_node(node):
                     continue
                 self._add_node_role(node, NodeRole.INPUT)
 
@@ -385,7 +389,7 @@ class NodeRolesManager(object):
     def _modulatory_or_bias_node_that_projects_out_of_a_nested_composition(self, node)->bool:
         """Return True for ModulatoryMechanism or a BIAS Node in nested Composition that projects to an outer one"""
         return (isinstance(node, ModulatoryMechanism_Base)
-                or (NodeRole.BIAS in self.get_roles_by_node(node)
+                or (NodeRole.BIAS in self._get_roles_by_node(node)
                     and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
                                 for p in node.efferents)))
 
@@ -394,7 +398,7 @@ class NodeRolesManager(object):
         Assign only if not already so designated;  this is needed for user-specified ObjectiveMechanisms
         """
         if (isinstance(node, ObjectiveMechanism)
-                and NodeRole.CONTROL_OBJECTIVE not in self.get_roles_by_node(node)):
+                and NodeRole.CONTROL_OBJECTIVE not in self._get_roles_by_node(node)):
             ctl_mech = next((p.receiver.owner for p in node.efferents
                              if isinstance(p.receiver.owner, ControlMechanism)), None)
             if ctl_mech:
@@ -403,9 +407,9 @@ class NodeRolesManager(object):
 
     def _SINGLETON_and_INTERNAL_Nodes(self, nodes):
         for node in self.nodes:
-            if all(n in self.get_roles_by_node(node) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            if all(n in self._get_roles_by_node(node) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
-            if not any(n in self.get_roles_by_node(node) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
+            if not any(n in self._get_roles_by_node(node) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
 
     def _TERMINAL_Nodes(self, composition, graph)->list:
@@ -462,7 +466,7 @@ class NodeRolesManager(object):
                         nodes_without_receivers.remove(node)
 
         for node in nodes_without_receivers:
-            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
+            if NodeRole.CONTROLLER_OBJECTIVE not in self._get_roles_by_node(node):
                 terminal_nodes.add(node)
             # If CONTROLLER_OBJECTIVE node is only one without receivers, get its senders as TERMINAL Nodes
             elif len(nodes_without_receivers) < 2:
@@ -529,7 +533,7 @@ class NodeRolesManager(object):
                     continue
 
                 # Exclude TARGETS as OUTPUT Node
-                if NodeRole.TARGET in self.get_roles_by_node(node):
+                if NodeRole.TARGET in self._get_roles_by_node(node):
                     continue
 
                 # Exclude ModulatoryMechanisms as OUTPUT Node
@@ -542,8 +546,8 @@ class NodeRolesManager(object):
 
                 # Check for OUTPUT CYCLE (i.e., one in which all Nodes are OUTPUTS)
                 # Note:  assign OUTPUT to all members of CYCLE once detected, to avoid re-checking for each
-                elif (node in self.get_nodes_by_role(NodeRole.CYCLE)
-                      and node not in self.get_nodes_by_role(NodeRole.OUTPUT)):
+                elif (node in self._get_nodes_by_role(NodeRole.CYCLE)
+                      and node not in self._get_nodes_by_role(NodeRole.OUTPUT)):
                     # # Get Nodes in the CYCLE:
                     cycle_nodes = [node]
                     queue = deque([node])
@@ -551,7 +555,7 @@ class NodeRolesManager(object):
                     while queue:
                         curr_node = queue.popleft()
                         for next_node in [proj.receiver.owner for proj in curr_node.efferents
-                                          if proj.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE)]:
+                                          if proj.receiver.owner in self._get_nodes_by_role(NodeRole.CYCLE)]:
                             if next_node in cycle_nodes: # Cycle closed
                                 continue
                             cycle_nodes.append(next_node)
@@ -560,8 +564,7 @@ class NodeRolesManager(object):
                         assert i < 1000, f"PROGRAM ERROR: CYCLE DETECTION FAILED FOR {node} IN {self.name}."
                     # Ensure they are all satisfy criteria for OUTPUT Node
                     if (all(self._CYCLE_NODE_as_OUTPUT(cycle_node, composition, allow_cycle=True)
-                            # and cycle_node is not in self.get_nodes_by_role(NodeRole.OUTPUT)
-                            and not any(role in self.get_roles_by_node(cycle_node)
+                            and not any(role in self._get_roles_by_node(cycle_node)
                                         for role in {NodeRole.OUTPUT,NodeRole.TERMINAL})
                             for cycle_node in cycle_nodes)):
                         for cycle_node in cycle_nodes:
@@ -581,12 +584,12 @@ class NodeRolesManager(object):
                 # Assign as OUTPUT if:
                 #    - node is not CONTROL_OBJECTIVE or LEARNING_OBJECTIVE (e.g., LossMechanism)
                 #    - no other nodes are dependent on it
-                elif (not any(mod_objective in self.get_roles_by_node(node)
+                elif (not any(mod_objective in self._get_roles_by_node(node)
                               for mod_objective in {NodeRole.CONTROL_OBJECTIVE,
                                                     NodeRole.CONTROLLER_OBJECTIVE,
                                                     NodeRole.LEARNING_OBJECTIVE})
                       and not any(node in [n for n in v
-                                           if not (NodeRole.LEARNING_OBJECTIVE in self.get_roles_by_node(k))]
+                                           if not (NodeRole.LEARNING_OBJECTIVE in self._get_roles_by_node(k))]
                                   for k, v in self.graph.items())):
                     self._add_node_role(node, NodeRole.OUTPUT)
 
@@ -624,7 +627,7 @@ class NodeRolesManager(object):
         - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
         - and/or projects to another node in a CYCLE but otherwise meets the above criteria
         """
-        return all((any(p.receiver.owner in self.get_nodes_by_role(role)
+        return all((any(p.receiver.owner in self._get_nodes_by_role(role)
                         for role in {NodeRole.CONTROL_OBJECTIVE,
                                      NodeRole.CONTROLLER_OBJECTIVE,
                                      NodeRole.LEARNING_OBJECTIVE})
@@ -632,7 +635,7 @@ class NodeRolesManager(object):
                     or (p.receiver.owner is self.owner.output_CIM if composition else None)
                     or (isinstance(p.receiver.owner, ControlMechanism)
                         and not isinstance(node, ObjectiveMechanism))
-                    or (allow_cycle and p.receiver.owner in self.get_nodes_by_role(NodeRole.CYCLE))
+                    or (allow_cycle and p.receiver.owner in self._get_nodes_by_role(NodeRole.CYCLE))
                     for p in node.efferents))
 
     def _CONTROLLER_Node(self, composition=None):
@@ -644,8 +647,9 @@ class NodeRolesManager(object):
     def _exclude_roles(self, nodes, composition=None):
         """Remove from nodes_to_roles all NodeRole assignments specified in excluded_node_roles"""
         for node, role in self.excluded_node_roles:
-            if role in self.get_roles_by_node(node):
+            if role in self._get_roles_by_node(node):
                 self._remove_node_role(node, role)
+        self._need_determine_node_roles = True
 
     def _add_node_role(self, node, role):
         if role not in NodeRole:
@@ -654,6 +658,7 @@ class NodeRolesManager(object):
             self.nodes_to_roles[node].add(role)
         except KeyError:
             raise NodeRoleError(f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.owner.name}.")
+        self._need_determine_node_roles = True
 
     def _add_required_node_role(self, node, role, context=Context()):
         """
@@ -726,8 +731,7 @@ class NodeRolesManager(object):
                                            f"assigned NodeRole.INPUT (since it does not receive any input).")
 
             elif role in unmodifiable_node_roles:
-                raise NodeRoleError(f"A Node assigned NodeRole.BIAS ('{node.name}') cannot also be "
-                                       f"assigned NodeRole.INPUT (since it does not receive any input).")
+                raise NodeRoleError(f"Attempt to assign '{node.name }' the NodeRole.{role.name} which is not allowed.")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
@@ -735,6 +739,7 @@ class NodeRolesManager(object):
         node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1] is role]
         for item in node_role_pairs:
             self.excluded_node_roles.remove(item)
+        self._need_determine_node_roles = True
 
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
@@ -750,10 +755,17 @@ class NodeRolesManager(object):
             #                   f"{role} not found for {node} in {self.name}.nodes_to_role."
             # else:
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
+        self._need_determine_node_roles = True
+
     # endregion HELPER METHODS FOR _determine_node_roles
 
     # USER-ACCESSIBLE ROLE-MANAGEMENT METHODS
     # region
+    def _get_nodes_to_roles(self):
+        if self._need_determine_node_roles:
+            self._determine_node_roles()
+        return self.nodes_to_roles
+
     def require_node_roles(self, node, roles, context=None):
         """
             Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
@@ -773,6 +785,7 @@ class NodeRolesManager(object):
         roles = convert_to_list(roles)
         for role in roles:
             self._add_required_node_role(node, role, context)
+        self._need_determine_node_roles = True
 
     def exclude_node_roles(self, node:Mechanism_Base, roles:list, context=None)->list:
         """
@@ -809,7 +822,17 @@ class NodeRolesManager(object):
                 self.required_node_roles.remove(node_role_pair)
             self._remove_node_role(node, role)
 
-    def get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->list:
+        self._need_determine_node_roles = True
+
+    def get_nodes_by_role(self, *args, **kwargs):
+        """Interface to get_nodes_by_role that enforces prior call to _determine_node_roles
+        This should be used in general,
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+        if self._need_determine_node_roles:
+            self._determine_node_roles()
+        return self._get_nodes_by_role(*args, **kwargs)
+
+    def _get_nodes_by_role(self, role:NodeRole, scope:Optional[Literal[ALL]]=None)->list:
         """Return a list of `Nodes <Composition_Nodes>` assigned the `NodeRole`specified in **role**.
         If **scope** is not specified, searches for and returns only nodes at top level of the Composition.
         If **scope** is ALL, includes nodes in top level Composition and any nested within it.
@@ -843,7 +866,16 @@ class NodeRolesManager(object):
         except KeyError as e:
             raise NodeRoleError(f'Node missing from {self}.nodes_to_roles: {e}.')
 
-    def get_roles_by_node(self, node, scope:Optional[Literal[ALL, NESTED]]=None)->list[NodeRole]:
+    def get_roles_by_node(self, *args, **kwargs):
+        """Interface to _get_roles_by_node that enforces prior call to _determine_node_roles
+        This should be used in general,
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+
+        if self._need_determine_node_roles:
+            self._determine_node_roles()
+        return self._get_roles_by_node(*args, **kwargs)
+
+    def _get_roles_by_node(self, node, scope:Optional[Literal[ALL, NESTED]]=None)->list[NodeRole]:
         """Return a list of `NodeRoles <NodeRole>` assigned to **node**.
         If **scope** is not specified, returns roles for the node only if it is at the top level of the Composition.
         If **scope** is *ALL*, the node can be in the top level Compostion or any nested within it.
@@ -938,6 +970,9 @@ class NodeRolesManager(object):
         from psyneulink.core.compositions.composition import Composition
         assert isinstance(comp, Composition), (f"PROGRAM ERROR: get_nested_nodes_by_roles_at_any_level() was called "
                                                f"for a NodeRoleManager the owner of which is not a Composition.")
+        if self._need_determine_node_roles:
+            self._determine_node_roles()
+
         nested_nodes = []
         include_roles = [] if include_roles is None else convert_to_list(include_roles)
         exclude_roles = [] if exclude_roles is None else convert_to_list(exclude_roles)

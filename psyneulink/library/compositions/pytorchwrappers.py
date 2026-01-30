@@ -928,8 +928,13 @@ class PytorchCompositionWrapper(torch.nn.Module):
         return list(self.nodes_map.keys())
 
     @property
+    def nodes_to_roles(self):
+        return self.node_roles_mgr._get_nodes_to_roles()
+
+    @property
     def all_nodes_to_roles(self):
-        assert False, f"PROGRAM ERROR: PytorchCompositionWrapper doesn't support 'all_nodes_to_roles (not needed)"
+        assert False, (f"PROGRAM ERROR: PytorchCompositionWrapper doesn't support 'all_nodes_to_roles; "
+                       f"not needed since pytorch_representation is flattened.")
 
     @property
     def is_nested(self):

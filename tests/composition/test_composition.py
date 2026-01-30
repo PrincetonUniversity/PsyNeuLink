@@ -2950,23 +2950,29 @@ class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
 
-        comp = Composition()
         mechs = [TransferMechanism() for x in range(4)]
+        comp = Composition([mechs])
 
-        for mech in mechs:
-            comp.add_node(mech)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[0], NodeRole.ORIGIN)
+        assert ("Attempt to assign 'TransferMechanism-0' the NodeRole.ORIGIN which is not allowed."
+                in str(error_text.value))
 
-        comp.node_roles_mgr._add_node_role(mechs[0], NodeRole.ORIGIN)
-        comp.node_roles_mgr._add_node_role(mechs[1], NodeRole.INTERNAL)
-        comp.node_roles_mgr._add_node_role(mechs[2], NodeRole.INTERNAL)
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[1], NodeRole.INTERNAL)
+        assert ("Attempt to assign 'TransferMechanism-1' the NodeRole.INTERNAL which is not allowed."
+                in str(error_text.value))
 
-        for role in list(NodeRole):
-            if role is NodeRole.ORIGIN:
-                assert comp.get_nodes_by_role(role) == [mechs[0]]
-            elif role is NodeRole.INTERNAL:
-                assert comp.get_nodes_by_role(role) == [mechs[1], mechs[2]]
-            else:
-                assert comp.get_nodes_by_role(role) == []
+        with pytest.raises(NodeRoleError) as error_text:
+            comp.require_node_roles(mechs[2], NodeRole.TERMINAL)
+        assert ("Attempt to assign 'TransferMechanism-2' the NodeRole.TERMINAL which is not allowed."
+                in str(error_text.value))
+
+        comp.require_node_roles(mechs[1], NodeRole.INPUT)
+        assert NodeRole.INPUT in comp.get_roles_by_node(mechs[1])
+
+        comp.require_node_roles(mechs[2], NodeRole.OUTPUT)
+        assert NodeRole.OUTPUT in comp.get_roles_by_node(mechs[2])
 
     @pytest.mark.xfail(raises=NodeRoleError)
     def test_nonexistent_role(self):
