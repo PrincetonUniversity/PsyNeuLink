@@ -1084,11 +1084,8 @@ class GRUComposition(AutodiffComposition):
         self._trained_comp_nodes_to_pytorch_nodes_map = {self.output_node: self.gru_mech}
         self.target_node = ProcessingMechanism(default_variable = np.zeros_like(self.gru_mech.value),
                                                name= GRU_TARGET_NODE)
-        # MODIFIED TEACHER_TARGET NEW:
-        # setattr(self.gru_mech, PROXY_FOR, self)
         setattr(self.gru_mech, PROXY_FOR, self.output_node)
         setattr(self.output_node, PROXY_FOR, self.gru_mech)
-        # # MODIFIED TEACHER_TARGET END
 
     def get_weights(self, context=None):
         wts_ir = self.wts_ir.parameters.matrix.get(context)
@@ -1226,11 +1223,6 @@ class GRUComposition(AutodiffComposition):
         queue.append((self.gru_mech, direct_proj_in, self))
 
     def _identify_output_nodes(self, context):
-        # # MODIFIED TEACHER_TARGET NEW:
-        # # BREADCRUMB: GET LossMechanism AND ADD PROJECTION ASSIGNED AS PROXY FROM OUTPUT NODE TO LOSS.SAMPLE
-        # #             TO BE SHOWN IN show_graph() (i.e., show_pytorch=False) AND USED TO SUPPRESS WARNING.
-        # self._get_outer_compositions()[1].nodes
-        # # MODIFIED TEACHER_TARGET END
         return [self.gru_mech, self.output_node]
 
     def add_node(self, node, required_roles=None, context=None):
