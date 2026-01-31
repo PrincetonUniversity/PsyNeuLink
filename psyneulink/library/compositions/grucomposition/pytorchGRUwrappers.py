@@ -20,7 +20,7 @@ from torch import nn
 
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.compositions.composition import LearningScale
-from psyneulink.core.compositions.noderoles import NodeRole
+from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -352,7 +352,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         processing_graph = {self.composition.gru_mech:set()}
         return processing_graph
 
-    def _get_roles_by_node(self, node):
+    def _get_roles_by_node(self, node)->list:
         """Override to return NodeRole for 'PYTORCH GRU NODE'"""
         if self.outer_creator:
             outer_comp = self.outer_creator.composition
@@ -376,13 +376,13 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 succeding_outputs = any(PYTORCH_GRU_NODE in v for k,v in processing_graph.items()
                                         if k in non_GRU_related_nodes)
                 if preceding_inputs and succeding_outputs:
-                    return {PYTORCH_GRU_NODE:[NodeRole.INTERNAL]}
+                    return [NodeRole.INTERNAL]
                 elif preceding_inputs:
-                    return {PYTORCH_GRU_NODE:[NodeRole.OUTPUT]}
+                    return [NodeRole.OUTPUT]
                 elif succeding_outputs:
-                    return {PYTORCH_GRU_NODE:[NodeRole.INPUT]}
+                    return [NodeRole.INPUT]
         # If GRUComposition is standalone, treat PYTORCH_GRU_NODE as SINGLETON
-        return {PYTORCH_GRU_NODE:[NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.SINGLETON]}
+        return [NodeRole.ORIGIN, NodeRole.INPUT, NodeRole.OUTPUT, NodeRole.TERMINAL, NodeRole.SINGLETON]
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,

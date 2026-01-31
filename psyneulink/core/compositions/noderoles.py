@@ -407,7 +407,7 @@ class NodeRolesManager(object):
 
     def _SINGLETON_and_INTERNAL_Nodes(self, nodes):
         for node in self.nodes:
-            if all(n in self._get_roles_by_node(node) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+            if (all(n in self._get_roles_by_node(node) for n in {NodeRole.ORIGIN, NodeRole.TERMINAL})):
                 self._add_node_role(node, NodeRole.SINGLETON)
             if not any(n in self._get_roles_by_node(node) for n in {NodeRole.INPUT, NodeRole.OUTPUT}):
                 self._add_node_role(node, NodeRole.INTERNAL)
