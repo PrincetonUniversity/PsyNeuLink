@@ -203,8 +203,8 @@ class PytorchShowGraph(ShowGraph):
                 receivers = dependencies.keys()
                 senders = [sender for sender_list in dependencies.values() for sender in sender_list]
                 roles = self.pytorch_rep.node_roles_mgr.get_roles_by_node(rcvr)
-                INPUT = (roles and NodeRole.INPUT in roles) or (rcvr in senders and rcvr not in receivers)
-                OUTPUT = (roles and NodeRole.OUTPUT in roles) or (rcvr in receivers and rcvr not in senders)
+                INPUT = roles and NodeRole.INPUT in roles
+                OUTPUT = roles and NodeRole.OUTPUT in roles
                 if INPUT and OUTPUT:
                     kwargs['color'] = self.input_and_output_color
                     kwargs['penwidth'] = str(self.bold_width)
