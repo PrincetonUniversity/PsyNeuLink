@@ -976,7 +976,6 @@ class ShowGraph():
         Sort graph by node name for consistency in display
         Add nodes marked as _proxy_for to graph
         """
-        # MODIFIED TEACHER_TARGET OLD: BREADCRUMB: MAKE SURE THIS STUFF IS DONE IN node_roles_mgr IMPLEMENTATION
         graph = composition.graph_processing.dependency_dict.copy()
         for node, dependents in graph.items():
             from psyneulink.core.compositions.composition import Composition
@@ -985,9 +984,6 @@ class ShowGraph():
                 if (sender not in dependents and self._sender_is_proxy_in_composition(sender)):
                     graph[node].add(getattr(sender, PROXY_FOR))
         return graph
-        # # MODIFIED TEACHER_TARGET NEW:
-        # return self.composition.node_roles_mgr.graph
-        # MODIFIED TEACHER_TARGET END
 
     def _get_nodes(self, composition, context=None):
         """Helper method that allows override by subclass to filter nodes used for graph"""
