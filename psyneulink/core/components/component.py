@@ -1417,7 +1417,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
 
         # Prune subcomponents (which are enabled by type rather than a list)
         # that should be omitted
-        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs"}
+        blacklist = { "objective_mechanism", "agent_rep", "projections", "shadow_inputs", "target", "sample"}
 
         # Mechanisms;
         # * use "value" state
@@ -1629,11 +1629,6 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # Matrices of learnable projections are stateful
         if getattr(self, 'owner', None) and getattr(self.owner, 'learnable', False):
             blacklist.add('matrix')
-
-        if hasattr(self, 'state'):
-            # blacklist.update(["sample", "target"])
-            blacklist.add("sample")
-            blacklist.add("target")
 
 
         def _is_compilation_param(p):
