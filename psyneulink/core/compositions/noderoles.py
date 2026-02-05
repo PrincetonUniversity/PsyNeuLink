@@ -272,14 +272,9 @@ class NodeRolesManager(object):
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.graph})
         # Assign required_node_roles
-        # # MODIFIED TEACHER_TARGET OLD:
-        # for node, role in self.required_node_roles:
-        #     self._add_node_role(node, role)
-        # MODIFIED TEACHER_TARGET NEW 1/28/26:
         for node, role in self.required_node_roles:
             if node in self.graph:
                 self._add_node_role(node, role)
-        # MODIFIED TEACHER_TARGET END
 
     def _INPUT_Nodes(self, nodes, composition=None):
         """Assign NodeRole.INPUT to qualifying Nodes"""
@@ -430,7 +425,6 @@ class NodeRolesManager(object):
         """
         terminal_nodes = set()
 
-        # MODIFIED TEACHER_TARGET OLD:
         senders = {n: set() for n in graph}
         for receiver in graph:
             # graph is {receiver:{senders}
@@ -438,21 +432,6 @@ class NodeRolesManager(object):
             for sender in graph[receiver]:
                 senders[sender].add(receiver)
         nodes_without_receivers = {sender for sender in graph if len(senders[sender]) == 0}
-        # # MODIFIED TEACHER_TARGET NEW
-        # senders = {n: set() for n in graph}
-        # nodes_without_receivers = []
-        # for receiver in graph:
-        #     # graph is {receiver:{senders}
-        #     # invert it to {sender:{receivers}}, so that nodes (senders) without receivers can be found
-        #     for sender in graph[receiver]:
-        #         senders[sender].add(receiver)
-        # for sender in senders:
-        #     if len(senders[sender]) == 0:
-        #         nodes_without_receivers.append(sender)
-        #     # elif all(isinstance(efferent.receiver.owner, (CompositionInterfaceMechanism, LossMechanism))
-        #     #          for efferent in sender.efferents):
-        #     #     nodes_without_receivers.append(sender)
-        # MODIFIED TEACHER_TARGET END
 
         # if a node is in a flattened cycle, all others in that cycle
         # must also have no receivers, or that node cannot be terminal
@@ -766,7 +745,7 @@ class NodeRolesManager(object):
             self._determine_node_roles()
         return self.nodes_to_roles
 
-    def require_node_roles(self, node, roles, context=None):
+    def require_node_roles(self, node: object, roles: object, context: object = None) -> None:
         """
             Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
             it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.

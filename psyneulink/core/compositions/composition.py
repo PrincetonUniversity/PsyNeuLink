@@ -3868,10 +3868,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
-        # MODIFIED TEACHER_TARGET OLD:
         self.node_roles_mgr = NodeRolesManager(owner=self)
-        # # MODIFIED TEACHER_TARGET END
-        # TEACHER_TARGET BREADCRUMB MAKE PROPERTIES THAT ACCESS node_roles_mgr
         self.allow_probes = allow_probes
         self.include_probes_in_output=include_probes_in_output
 
@@ -3996,11 +3993,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if termination_processing is not None:
             self.termination_processing = termination_processing
-
-        # # MODIFIED TEACHER_TARGET NEW:
-        # self.node_roles_mgr = NodeRolesManager(owner=self)
-        # MODIFIED TEACHER_TARGET END
-
 
     def assign_ShowGraph(self, show_graph_attributes):
         """Helper function to allow override of the ShowGraph class in subclasses (e.g., AutodiffComposition)"""
@@ -4202,10 +4194,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.graph.add_component(node)  # Set incoming edge list of node to empty
             self.nodes.append(node)
             self.node_ordering.append(node)
-            # MODIFIED TEACHER_TARGET OLD:
-            # self.nodes_to_roles[node] = set()
-            # MODIFIED TEACHER_TARGET END
-
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
             self.needs_update_scheduler = True
@@ -7634,9 +7622,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_name = name or pathway.name
             pathway = pathway.pathway
             # learning_rate specified in call to method takes precedence
-            # MODIFIED TEACHER_TARGET 11/24/25 NEW:
             learning_rate = learning_rate or (pathway.learning_rate if isinstance(pathway, Pathway) else None)
-            # MODIFIED 11/24/25 END
         else:
             pathway_name = name
 
@@ -9378,14 +9364,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receiver = proj.receiver.owner
                 errant_node_msg = None
 
-                # MODIFIED TEACHER_TARGET NEW:
                 # Skip warning if node is a proxy for a node in self
                 if all([sender in self.nodes
                         or (hasattr(sender, PROXY_FOR) and getattr(sender, PROXY_FOR) in self._get_all_nodes()),
                         receiver in self.nodes
                         or (hasattr(receiver, PROXY_FOR) and getattr(receiver, PROXY_FOR) in self._get_all_nodes)]):
                     continue
-                # MODIFIED TEACHER_TARGET END
 
                 if node is sender:
                     errant_node_name = receiver.name
@@ -9686,8 +9670,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 u.pop(key)
             return d
 
-        # MODIFIED TEACHER_TARGET NEW:
-        # BREADCRUMB: BREAK THIS OUT AS ITS OWN METHOD AND OVERRIDE IN AUTODIFF
+        # TEACHER_TARGET BREADCRUMB: BREAK THIS OUT AS ITS OWN METHOD AND OVERRIDE IN AUTODIFF
         def _validate_targets_spec(target_specs:list)->bool:
             """Validate dict specification for samples and targets in learn() method of AutodiffComposition:
             Ensure that:
@@ -9734,19 +9717,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   - a TARGET Node constructed for the sample
             # identify samples as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
-            # # MODIFIED TEACHER_TARGET OLD:
-            # sample_nodes = [target.efferents[0].receiver.owner.sample.owner for target in TARGET_Nodes_in_comp]
-            # MODIFIED TEACHER_TARGET NEW:
             sample_nodes = []
             for target in TARGET_Nodes_in_comp:
                 sample_node = target.efferents[0].receiver.owner.sample.owner
                 if isinstance(sample_node, CompositionInterfaceMechanism):
                     _, sample_node, _ = sample_node._get_source_info_from_output_CIM(target.efferents[0].receiver.owner.sample)
                 sample_nodes.append(sample_node)
-            # MODIFIED TEACHER_TARGET NEWER:
-            # # TEACHER_TARGET BREADCRUMB: SHOULD REPLACE THIS WITH USE OF NodeRole.SAMPLE ONCE ADDED:
+            # TEACHER_TARGET BREADCRUMB: SHOULD REPLACE THIS WITH USE OF NodeRole.SAMPLE ONCE ADDED:
             # sample_nodes = self.all_nodes(self.get_nodes_by_role(NodeRole.SAMPLE))
-            # MODIFIED TEACHER_TARGET END
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]

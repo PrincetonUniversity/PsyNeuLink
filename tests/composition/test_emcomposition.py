@@ -1115,14 +1115,8 @@ class TestExecution:
                                       device=pnl.CPU)
 
         learning_components = EGO.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
-        # MODIFIED TEACHER_TARGET OLD:
-        # assert len(learning_components) == 2
-        # assert learning_components[0].name == 'LOSS for PREDICTION'
-        # assert learning_components[1].name == 'TARGET for PREDICTION'
-        # MODIFIED TEACHER_TARGET NEW:
         assert len(learning_components) == 1
         assert learning_components[0].name == 'LOSS for PREDICTION'
-        # MODIFIED TEACHER_TARGET END
         # # TEACHER_TARGET BREADCRUMB: OLD,BUT KEEP FOR TESTING
         # #                            configuration in which another node is assigned a projection to a TARGET Node
         # #                            instead of assigning that node as a target in the *targets* arg of the constructor

@@ -1955,15 +1955,6 @@ class AutodiffComposition(Composition):
                                               target=self.sample_port_to_target_port_map[sample],
                                               function=None,
                                               loss=self.loss_spec)
-                    # # MODIFIED TEACHER_TARGET NEW:
-                    # if hasattr(sample.owner, PROXY_FOR):
-                    #     sender = getattr(sample.owner, PROXY_FOR)
-                    #     output_to_loss_proj = MappingProjection(sender=sender,
-                    #                                             receiver=loss_mech.input_ports[SAMPLE])
-                    #     output_to_loss_proj._proxy_for = sender
-                    #     # self.add_projection(output_to_loss_proj)
-                    # assert True
-                    # MODIFIED TEACHER_TARGET END
                     loss_mech._initialize_from_context(context, base_context, override=False)
                     for proj in loss_mech.path_afferents:
                         proj.learnable= False
@@ -2089,15 +2080,10 @@ class AutodiffComposition(Composition):
 
         # Construct a new pytorch_representation if none exists or new is specified
 
-        # MODIFIED TEACHER_TARGET NEW:
-        # BREADCRUMB: THIS IS A HACK TO INSURE THAT _instantiate_loss_components() IS CALLED
-        #             BEFORE THE pytorch_representation IS CONSTRUCTED;
-        #             NOT SURE IF THAT IS OK IN GENERAL
         from psyneulink.core.llvm import ExecutionMode
         self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
                                                      context=context,
                                                      base_context=base_context)
-        # MODIFIED TEACHER_TARGET END
 
         if self.parameters.pytorch_representation._get(context=context) is None or new:
             # Instantiate pytorch_representation

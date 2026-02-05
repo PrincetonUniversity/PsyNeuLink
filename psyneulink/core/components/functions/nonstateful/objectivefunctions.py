@@ -1496,64 +1496,76 @@ class LossFunction(ObjectiveFunction):
         #     result = np.sum([product, offset], axis=0)
         return self.convert_output_type(result)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_loss(self, ctx, builder, loss, sample, target, accumulator_ptr, counter_ptr):
+        diff = builder.fsub(sample, target)
+        if loss == Loss.L0:
+            result = diff
+
+        elif loss == Loss.L1:
+            llvm_fabs = ctx.get_builtin("fabs", [diff.type])
+            result = builder.call(llvm_fabs, [diff])
+
+        elif loss in {Loss.SSE, Loss.MSE}:
+            result = builder.fmul(diff, diff)
+
+        elif loss == Loss.POISSON_NLL:
+            m_target = pnlvm.helpers.fneg(builder, target)
+            sample_p_e = builder.fadd(sample, sample.type(1e-9))
+            log_sample = pnlvm.helpers.log(ctx, builder, sample_p_e)
+            result = builder.fmul(m_target, log_sample)
+            result = builder.fadd(result, sample)
+
+        else:
+            assert False, "Unsupported loss type: {}".format(loss)
+
+        acc = builder.load(accumulator_ptr)
+        acc = builder.fadd(acc, result)
+        builder.store(acc, accumulator_ptr)
+
+        counter = builder.load(counter_ptr)
+        counter = builder.fadd(counter, counter.type(1))
+        builder.store(counter, counter_ptr)
 
 
-        # 1. Get pointer to the LOSS parameter state
-        # FIXME: we currently don't have a way to compare strings in llvm, so we can't match on loss type.
-        loss_ty_ptr = ctx.get_param_or_state_ptr(builder, self, "loss", param_struct_ptr=params)
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+
         normalize_ptr = ctx.get_param_or_state_ptr(builder, self, "normalize", param_struct_ptr=params)
-        metric_ptr = ctx.get_param_or_state_ptr(builder, self, "metric", param_struct_ptr=params)
-        sample_ptr = ctx.get_param_or_state_ptr(builder, self, "sample", param_struct_ptr=params)
-        target_ptr = ctx.get_param_or_state_ptr(builder, self, "target", param_struct_ptr=params)
 
-        # 2. Get pointers to Network Output (Index 0) and Target (Index 1)
-        # arg_in type: [2 x [1 x double]]*
-        # We GEP indices: [dereference pointer, outer array index]
-        zero = ctx.int32_ty(0)
-        one = ctx.int32_ty(1)
+        sample_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)], name="input_array_ptr")
+        target_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)], name="target_array_ptr")
 
-        # input_ptr and target_ptr will be of type [1 x double]*
-        input_ptr = builder.gep(arg_in, [zero, zero], name="input_array_ptr")
-        target_ptr = builder.gep(arg_in, [zero, one], name="target_array_ptr")
+        accumulator_ptr = builder.alloca(ctx.float_ty)
+        counter_ptr = builder.alloca(ctx.float_ty)
+        builder.store(accumulator_ptr.type.pointee(0), accumulator_ptr)
+        builder.store(counter_ptr.type.pointee(0), counter_ptr)
 
-        # 3. Determine dimensionality from the struct type
-        # arg_in.type.pointee.element is [1 x double]
-        dim_int = input_ptr.type.pointee.count
-        dim = ctx.int32_ty(dim_int)
+        loss = self.parameters.loss.get()
+        if loss in {Loss.L0, Loss.L1, Loss.SSE, Loss.MSE, Loss.POISSON_NLL}:
+            with pnlvm.helpers.recursive_iterate_arrays(ctx, builder, sample_ptr, target_ptr) as (b, sample_element, target_element):
+                sample = b.load(sample_element)
+                target = b.load(target_element)
+                self._gen_llvm_loss(ctx, b, loss, sample, target, accumulator_ptr, counter_ptr)
 
-        # 4. Initialize Sum Accumulator
-        sum_ptr = builder.alloca(ctx.float_ty, name="mse_accumulator")
-        builder.store(ctx.float_ty(0.0), sum_ptr)
+            result = builder.load(accumulator_ptr)
 
-        # 5. Loop over dimensions to calculate Sum((Input - Target)^2)
-        with pnlvm.helpers.for_loop_zero_inc(builder, dim, "mse_loop") as (b, idx):
-            # GEP indices: [dereference pointer, array index]
-            val_ptr = b.gep(input_ptr, [zero, idx])
-            tgt_ptr = b.gep(target_ptr, [zero, idx])
-
-            val = b.load(val_ptr)
-            tgt = b.load(tgt_ptr)
-
-            diff = b.fsub(val, tgt)
-            sq_diff = b.fmul(diff, diff)
-
-            # Accumulate
-            current_sum = b.load(sum_ptr)
-            b.store(b.fadd(current_sum, sq_diff), sum_ptr)
-
-        # 6. Calculate MSE: Sum / Dimension
-        total_sum = builder.load(sum_ptr)
-        # Convert integer dimension to float for division
-        dim_float = builder.uitofp(dim, ctx.float_ty)
-        mse_result = builder.fdiv(total_sum, dim_float, name="mse_result")
+        else:
+            assert False, "Unsupported loss type: {}".format(loss)
 
 
-        # 8. Store result in arg_out
-        # arg_out type: [1 x [1 x double]]*
-        # We need to store result at [0, 0, 0]
-        output_storage = builder.gep(arg_out, [zero, zero, zero], name="output_storage")
-        builder.store(mse_result, output_storage)
+        if loss in {Loss.MSE, Loss.POISSON_NLL}:
+            count = builder.load(counter_ptr)
+            result = builder.fdiv(result, count)
+
+        normalize = builder.load(normalize_ptr)
+        do_normalize = builder.fcmp_ordered("!=", normalize, normalize.type(0))
+        with builder.if_else(do_normalize) as (t, e):
+            with t:
+                count = builder.load(counter_ptr)
+                norm_result = builder.fdiv(result, count)
+                builder.store(norm_result, arg_out)
+            with e:
+                builder.store(result, arg_out)
+
         return builder
 
     def _gen_pytorch_fct(self, device, context=None):

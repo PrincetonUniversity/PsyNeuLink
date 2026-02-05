@@ -1135,13 +1135,8 @@ class ShowGraph():
 
         # INPUT and OUTPUT Node
         # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_roles_by_node
-        # # MODIFIED TEACHER_TARGET OLD:
-        # if (rcvr in self._get_nodes_by_role(composition, NodeRole.INPUT, context)
-        #         and rcvr in self._get_nodes_by_role(composition, NodeRole.OUTPUT, context)):
-        # MODIFIED TEACHER_TARGET NEW:
         if all(role in self._get_roles_by_node(rcvr)
                for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
-        # MODIFIED TEACHER_TARGET END
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.input_and_output_color
@@ -2567,12 +2562,9 @@ class ShowGraph():
 
                     if not self._proj_in_composition(proj, composition_projections, context):
                         if (show_projections_not_in_composition
-                                # MODIFIED TEACHER_TARGET NEW:
                                 or self.show_pytorch is False and hasattr(proj.sender.owner, PROXY_FOR)
                                 and (getattr(proj.sender.owner, PROXY_FOR) in composition._get_all_nodes()
-                                     or proj.sender.owner in composition._get_all_nodes())
-                                # MODIFIED TEACHER_TARGET END
-                        ):
+                                     or proj.sender.owner in composition._get_all_nodes())):
                             proj_color=self.inactive_projection_color
                         else:
                             continue
