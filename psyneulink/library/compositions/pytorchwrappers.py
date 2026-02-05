@@ -370,14 +370,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         self.composition.parameters.pytorch_representation._set(self, context, skip_history=True, skip_log=True)
         self.projection_wrappers = list(self.projections_map.values())
+
+        # Set up NodeRolesManager if PytorchCompositionWrapper is for outermost Composition
         if not self.composition.is_nested:
-            self.node_roles_mgr = NodeRolesManager(self)
-            self.node_roles_mgr.required_node_roles = \
-                [(node, role) for node, role in self.composition.node_roles_mgr.required_node_roles
-                 if node in self.node_roles_mgr.nodes]
-            self.node_roles_mgr.excluded_node_roles = \
-                [(node, role) for node, role in self.composition.node_roles_mgr.excluded_node_roles
-                 if node in self.node_roles_mgr.nodes]
+            self._assign_node_roles_manager()
 
         composition.scheduler._delete_counts(execution_context.execution_id)
 
@@ -447,6 +443,15 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 assert isinstance(item, (PytorchMechanismWrapper, PytorchCompositionWrapper)), \
                     (f"PROGRAM ERROR: {self}.execution_sets contains a set with non-PytorchMechanismWrapper "
                      f"or PytorchCompositionWrapper object).")
+
+    def _assign_node_roles_manager(self):
+        self.node_roles_mgr = NodeRolesManager(self)
+        self.node_roles_mgr.required_node_roles = \
+            [(node, role) for node, role in self.composition.node_roles_mgr.required_node_roles
+             if node in self.node_roles_mgr.nodes]
+        self.node_roles_mgr.excluded_node_roles = \
+            [(node, role) for node, role in self.composition.node_roles_mgr.excluded_node_roles
+             if node in self.node_roles_mgr.nodes]
 
     def _construct_node_wrapper_maps(self, _node_wrapper_pairs):
         self._modules_dict = torch.nn.ModuleDict()

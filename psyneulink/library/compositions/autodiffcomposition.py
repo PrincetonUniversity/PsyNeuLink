@@ -108,6 +108,26 @@ COMMENT
 
 .. _AutodiffComposition_Learning_Pathways:
 
+COMMENT:
+TEACHER_TARGET BREADCRUMB: - FINISH WORDING THIS
+                           - REVISE WHEN NO LEARNABLE PATHWAYS BECOMES AN ERROR RATHER THAN A WARNING
+                           - MOVE OR COPY THIS TO SECTION ON STRUCDTURE BELOW
+Because learning in implemeted by changes to `matrix <MappingProjection.matrix>` Parameters of `MappingProjections`,
+only pathways that have at least one learnable MappingProjection (i.e., one with its `learnable <MappingProjection.learnable>`
+attribute set to ``True``) can be used for learning.  Thus, only `samples <AutodiffComposition_Sample>` that are the
+endpoints of such pathways can be specified in the **targets** argument of the AutodiffComposition's constructor,
+and only those will be trained when the `learn() <AutodiffComposition.learn>` method is called.
+Pathways no learnable MappingProjections are ignored, and a warning is issued if any are specified in the
+**targets** argument of the AutodiffComposition's constructor.  This includes the case in which there is a single
+Mechanism in the pathway (i.e., it is a `SINGELTON <NodeRole.SINGLETON>`), since there are no Projections in such a pathway.
+
+.. technical_note::
+   This differs from the behavior in Pytorch, in which a single torch.nn.Module can be trained, since its parameters
+    can be modified directly. However, PsyNeuLink's design implements learning as changes to the `matrix
+    <MappingProjection.matrix>` Parameters of `MappingProjections`, which do not exist in a pathway
+    consisting of a single Mechanism.
+COMMENT
+
 *Configuring Learning Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -301,7 +321,6 @@ automatically when learning is executed in `Python mode <AutodiffComposition_Pyt
 <AutodiffComposition_LLVM>`, and PyTorch-compatible Components are constructed when it is executed in
 `PyTorch mode <AutodiffComposition_PyTorch>`.
 
-
 .. _AutodiffComposition_Bias_Parameters:
 
 *No Bias Parameters*. AutodiffComposition does not (currently) support the *automatic* construction of separate bias parameters.
@@ -330,7 +349,7 @@ Structure
 *Learning Components*
 ~~~~~~~~~~~~~~~~~~~~~
 
-The following learning compnents are constructed for an AutodiffComposition for use in `PyTorch mode
+The following learning components are constructed for an AutodiffComposition for use in `PyTorch mode
 <AutodiffComposition_Pytorch>`, that are listed in its `learning_components <Composition.learning_components>`
 attribute:
 
@@ -372,6 +391,9 @@ corresponding *sample* in the **targets** argument of the `learn() <AutodiffComp
 the corresponding `LossMechanism`. The *TARGET Nodes* for an AutodiffComposition are listed in its `target_nodes
 <AutodiffCompostion.target_nodes>` and `learning_components <Composition.learning_components>` attributes.
 
+COMMENT:
+TEACHER_TARGET BREADCRUMB: ADD NOTE HERE FROM ABOVE ABOUT SINGLETONS NOT BEING LEARNABLE
+COMMENT
 
 .. _AutodiffComposition_PytorchRepresentation:
 

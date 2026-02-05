@@ -202,12 +202,19 @@ class PytorchShowGraph(ShowGraph):
                 dependencies = self._get_processing_graph(self.composition, context)
                 receivers = dependencies.keys()
                 senders = [sender for sender_list in dependencies.values() for sender in sender_list]
-                if rcvr in receivers and rcvr not in senders:
-                    kwargs['color'] = self.output_color
+                roles = self.pytorch_rep.node_roles_mgr.get_roles_by_node(rcvr)
+                INPUT = roles and NodeRole.INPUT in roles
+                OUTPUT = roles and NodeRole.OUTPUT in roles
+                if INPUT and OUTPUT:
+                    kwargs['color'] = self.input_and_output_color
                     kwargs['penwidth'] = str(self.bold_width)
-                elif rcvr in senders and rcvr not in receivers:
+                elif INPUT:
                     kwargs['color'] = self.input_color
                     kwargs['penwidth'] = str(self.bold_width)
+                elif OUTPUT:
+                    kwargs['color'] = self.output_color
+                    kwargs['penwidth'] = str(self.bold_width)
+
             g.node(*args, **kwargs)
         else:
             return super()._implement_graph_node( g, rcvr, context, *args, **kwargs)

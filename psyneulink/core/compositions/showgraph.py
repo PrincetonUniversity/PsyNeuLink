@@ -976,7 +976,6 @@ class ShowGraph():
         Sort graph by node name for consistency in display
         Add nodes marked as _proxy_for to graph
         """
-        # TEACHER_TARGET BREADCRUMB: MAKE SURE THIS STUFF IS DONE IN node_roles_mgr IMPLEMENTATION
         graph = composition.graph_processing.dependency_dict.copy()
         for node, dependents in graph.items():
             from psyneulink.core.compositions.composition import Composition
