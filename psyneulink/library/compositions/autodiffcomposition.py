@@ -121,11 +121,24 @@ Pathways no learnable MappingProjections are ignored, and a warning is issued if
 **targets** argument of the AutodiffComposition's constructor.  This includes the case in which there is a single
 Mechanism in the pathway (i.e., it is a `SINGELTON <NodeRole.SINGLETON>`), since there are no Projections in such a pathway.
 
+.. note::
+   This differs from configuration in Pytorch, in which a single torch.nn.Module can be trained since it is
+   automatically assigned parameters (based on its input dimensionality) at construction; this can be thought of as
+   equivalent to -- and can be replicated in PsyNeulink by -- construting a pathway with a single MappingProjection
+   from an input Node to a Mechanism that that corresponds to (i.e., implements the same function os) the
+   torch.nn.Module being trained.  In other words, in PsyNeulink, the equivalent of a module's parameters must be
+   constructed explicity in the form of an afferent `MappingProjection` which, in turn, requires a node that sends
+   that Projection to the Mechanism.
+
 .. technical_note::
-   This differs from the behavior in Pytorch, in which a single torch.nn.Module can be trained, since its parameters
-    can be modified directly. However, PsyNeuLink's design implements learning as changes to the `matrix
-    <MappingProjection.matrix>` Parameters of `MappingProjections`, which do not exist in a pathway
-    consisting of a single Mechanism.
+   The technical reason that a pathway with only a SINGLETON <NodeRole.SINGLETON> Node cannot be trained is that
+   its afferent and efferent MappingProjections are from the `input_CIM <Composition.input_CIM>` and to the
+   `output_CIM <Composition.output_CIM>` of the Composition to which it belongs. Such MappingProjectiosn
+    (i.e., from an input_CIM to its INPUT Nodes nor those from its OUTPUT Nodes to its output_CIM) are not
+   learnable; they serve simply as conduits of information between the Composition and either the Composition within
+   which it is nested, or the "outside world."
+
+
 COMMENT
 
 *Configuring Learning Pathways*
