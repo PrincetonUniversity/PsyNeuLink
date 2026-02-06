@@ -576,6 +576,7 @@ class ParameterEstimationComposition(Composition):
 
         self._outcome_variable_indices = []
         in_comp = self.nodes[0]
+        output_port_sizes = [len(port.parameters.value.get(context)) for port in in_comp.output_ports]
         for outcome_var in self.outcome_variables:
             try:
                 if not isinstance(outcome_var, OutputPort):
@@ -585,6 +586,10 @@ class ParameterEstimationComposition(Composition):
                 # we must use the inner composition's portmap to get the CIM output port that corresponds to
                 # the outcome variable
                 index = in_comp.output_ports.index(in_comp.output_CIM.port_map[outcome_var][1])
+
+                # The actual index of the outcome variable in the output of the composition is the sum of the sizes of
+                # all output ports that come before it in the output_ports list
+                index = sum(output_port_sizes[:index])
 
                 self._outcome_variable_indices.append(index)
             except KeyError:
