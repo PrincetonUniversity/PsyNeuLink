@@ -1,5 +1,5 @@
 jupyter<1.1.2
-packaging<26.0
+packaging<27.0
 pytest>=8.0.2, <9.0.3
 pytest-benchmark<5.2.4
 pytest-cov<7.0.1
