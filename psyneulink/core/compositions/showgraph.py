@@ -2607,7 +2607,12 @@ class ShowGraph():
                                         and not sndr.afferents and show_cim
                                         or self._is_composition_controller(sndr, context, enclosing_comp)):
                                     continue
-                                if sender is composition.parameter_CIM:
+                                if (isinstance(sndr, CompositionInterfaceMechanism)
+                                        and sndr is sndr.composition.output_CIM):
+                                    # sender is the output_CIM of another nested Composition,
+                                    #    so get its source as the actual sender
+                                    sndr = sndr_port.owner._get_source_info_from_output_CIM(sndr_port)[1]
+                                elif sender is composition.parameter_CIM:
                                     # # Allow MappingProjections to iconified rep of nested Composition
                                     # # to show as ControlProjection
                                     # if (isinstance(proj, ControlProjection)

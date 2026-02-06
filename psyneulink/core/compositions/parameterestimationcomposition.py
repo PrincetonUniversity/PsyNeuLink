@@ -669,7 +669,7 @@ class ParameterEstimationComposition(Composition):
                                      f"is dependent on.")
 
                 # If the column is string, convert to categorical
-                if self.data[col].dtype == object:
+                if pd.api.types.is_string_dtype(self.data[col].dtype):
                     self.data[col] = self.data[col].astype('category')
 
                 # If the column is not categorical, return and error
