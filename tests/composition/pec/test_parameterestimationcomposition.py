@@ -13,7 +13,6 @@ from psyneulink.core.components.functions.nonstateful.fitfunctions import (
     PECOptimizationFunction,
 )
 
-
 # Set the number of threads to 1 for all tests in this module, tests are often run in parallel
 # and having multiple threads per test can lead to oversubscription of CPU resources.
 pytestmark = pytest.mark.usefixtures("set_threads_to_one")
@@ -559,3 +558,66 @@ def test_pec_controller_specified():
             optimization_function="differential_evolution",
             controller=pnl.ControlMechanism(),
         )
+
+@pytest.mark.composition
+def test_pec_lca():
+
+    # Construct model
+    input_mech = pnl.TransferMechanism(
+        input_shapes=2,
+        integrator_mode=True,
+        integration_rate=1,
+        termination_threshold=1
+    )
+
+    lca_mech = pnl.LCAMechanism(
+        name="LCA",
+        input_shapes=2,
+        function=pnl.Logistic(gain=10, bias=0),
+        threshold=0.6,
+        leak=8,
+        competition=8,
+        self_excitation=0,
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=0.1),
+        time_step_size=0.01,
+        execute_until_finished=True,
+        output_ports=[pnl.DECISION_OUTCOME, pnl.DECISION_INDEX, pnl.DECISION_TIME],
+        reset_stateful_function_when=pnl.AtTrialStart()
+    )
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([input_mech, lca_mech])
+
+    input_dict = {
+        input_mech: np.tile([1,0], (100,1))
+    }
+
+    # Generate data to fit
+    comp.run(inputs=input_dict, execution_mode=pnl.ExecutionMode.LLVMRun)
+
+    data_to_fit = pd.DataFrame(
+        {
+            'decision': [v[0] for v in comp.results[:, 1]],
+            'response_time': [v[0] for v in comp.results[:, 2]],
+        }
+    )
+
+    data_to_fit["decision"] = data_to_fit["decision"].astype("category")
+
+    # Construct and run PEC
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("termination_threshold", input_mech): np.linspace(1, 10, 10)},
+        outcome_variables=[
+            lca_mech.output_ports[1],
+            lca_mech.output_ports[2],
+        ],
+        data=data_to_fit,
+        optimization_function=pnl.PECOptimizationFunction(method=optuna.samplers.TPESampler, max_iterations=10),
+        num_estimates=10,
+    )
+
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    pec.controller.function.parameters.save_values.set(True)
+
+    ret = pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
