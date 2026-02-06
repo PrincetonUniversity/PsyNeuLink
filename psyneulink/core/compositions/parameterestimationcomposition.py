@@ -674,7 +674,7 @@ class ParameterEstimationComposition(Composition):
                                      f"is dependent on.")
 
                 # If the column is string, convert to categorical
-                if self.data[col].dtype == object:
+                if pd.api.types.is_string_dtype(self.data[col].dtype):
                     self.data[col] = self.data[col].astype('category')
 
                 # If the column is not categorical, return and error
@@ -965,8 +965,21 @@ class ParameterEstimationComposition(Composition):
             num_trials_per_estimate, context=context
         )
 
-        # Run the composition as normal
-        results = super(ParameterEstimationComposition, self).run(*args, context=context, **kwargs)
+        # Run the composition as normal, if we are in Python execution mode
+        if self.controller.parameters.comp_execution_mode.get(context) == 'Python':
+            results = super(ParameterEstimationComposition, self).run(*args, context=context, **kwargs)
+
+        # Otherwise, we are in LLVM mode, so we need to set the execution phase to PROCESSING and call the
+        # controller's execute method directly. This is a performance workaround to avoid the overhead of the
+        # of running Composition.run() after the controller has been executed in LLVM mode, because then the
+        # run() method is executed in Python mode, unecessarily slowing down the overall execution since the
+        # controller has already done all the work in LLVM mode.
+        else:
+            context.execution_phase = ContextFlags.PROCESSING
+            self.controller.execute(context=context)
+            context.remove_flag(ContextFlags.PROCESSING)
+
+            results = self.parameters.results._get(context)
 
         # IMPLEMENTATION NOTE: has not executed OCM after first call
         if hasattr(self.controller, "optimal_control_allocation"):

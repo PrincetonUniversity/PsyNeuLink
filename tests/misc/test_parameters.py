@@ -411,10 +411,7 @@ class TestSharedParameters:
         assert t.integration_rate.modulated == t.integration_rate.base == expected_rate
 
     def test_conflict_warning(self):
-        with pytest.warns(
-            UserWarning,
-            match=shared_parameter_warning_regex('integration_rate', 'rate')
-        ):
+        with pytest.warns(UserWarning, match=shared_parameter_warning_regex('integration_rate', 'rate')):
             pnl.TransferMechanism(
                 integration_rate=.1,
                 integrator_function=pnl.AdaptiveIntegrator(rate=.2)
@@ -440,12 +437,10 @@ class TestSharedParameters:
         # pytest doesn't support inverse warning assertion for specific
         # warning only
         with warnings.catch_warnings():
-            warnings.simplefilter(action='error', category=UserWarning)
-            try:
-                mech_type(**{param_name: param_value})
-            except UserWarning as w:
-                if re.match(shared_parameter_warning_regex(param_name, shared_param_name), str(w)):
-                    raise
+            warnings.filterwarnings(action='error',
+                                    message=shared_parameter_warning_regex(param_name, shared_param_name),
+                                    category=UserWarning)
+            mech_type(**{param_name: param_value})
 
     def test_conflict_no_warning_parser(self):
         # replace with different class/parameter if _parse_noise ever implemented
@@ -455,15 +450,10 @@ class TestSharedParameters:
         # pytest doesn't support inverse warning assertion for specific
         # warning only
         with warnings.catch_warnings():
-            warnings.simplefilter(action='error', category=UserWarning)
-            try:
-                pnl.TransferMechanism(
-                    noise=2,
-                    integrator_function=pnl.AdaptiveIntegrator(noise=1)
-                )
-            except UserWarning as w:
-                if re.match(shared_parameter_warning_regex('noise'), str(w)):
-                    raise
+            warnings.filterwarnings(action='error',
+                                    message=shared_parameter_warning_regex('noise'),
+                                    category=UserWarning)
+            pnl.TransferMechanism(noise=2, integrator_function=pnl.AdaptiveIntegrator(noise=1))
 
         delattr(pnl.AdaptiveIntegrator.parameters, '_parse_noise')
 
