@@ -644,6 +644,19 @@ class PytorchCompositionWrapper(torch.nn.Module):
             nested_rcvr_port, nested_rcvr_mech, _ = \
                 rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)
             nested_pytorch_comp_wrapper = self.nodes_map[rcvr_mech.composition]
+
+            # MODIFIED TEACHER_TARGET NEW:
+            # If sender is from an output_CIM,
+            # then replace sndr_mech with the node in the nested Composition that sends the projection
+            if isinstance(sndr_mech, CompositionInterfaceMechanism):
+                assert sndr_mech is sndr_mech.composition.output_CIM, \
+                    (f"PROGRAM ERROR: Projection {projection} is from a CIM of a nested Composition "
+                     f"('{sndr_mech.composition.name}') that not its output_CIM: '{sndr_mech.name}'.")
+                assert sndr_mech.composition in self.nodes,\
+                    (f"PROGRAM ERROR: Projection '{projection}' is from a CIM of a nested Composition "
+                     f"'{sndr_mech.composition.name}' that not in '{self.name}'.")
+                sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
+            # MODIFIED TEACHER_TARGET END
             proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
                 nested_pytorch_comp_wrapper._flatten_for_pytorch(projection,
                                                                  sndr_mech, rcvr_mech,
