@@ -13557,13 +13557,18 @@ def get_composition_for_node(node):
             receiver = efferent.receiver.owner
             if isinstance(receiver, CompositionInterfaceMechanism):
                 return receiver.composition
+            elif receiver == node:
+                return None
             elif isinstance(receiver, ModulatoryMechanism_Base):
                 # End search on this path if receiver is a ModulatoryMechanism since it:
                 #   - won't lead to a CIM
                 #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
                 return None
             else:
-                return search_for_output_CIM(receiver)
+                try:
+                    return search_for_output_CIM(receiver)
+                except RecursionError:
+                    return None
         return receiver
 
     comp = search_for_output_CIM(node)

@@ -2004,7 +2004,7 @@ class AutodiffComposition(Composition):
             return
 
         if any(isinstance(mech, CompositionInterfaceMechanism) for mech in (sender, receiver)):
-            # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathways
+            # Should not be passed any CIMS (should have been handled in call from _get_pytorch_backprop_pathway
             assert False, f"PROGRAM ERROR: CIM unexpectedly encountered in {self.name}._add_dependency()"
 
         # Dereference InputPort of sender and index of its afferent

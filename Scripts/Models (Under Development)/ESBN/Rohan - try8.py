@@ -168,6 +168,8 @@ for _ in range(N_TRAIN):
 print("\n--- ATTEMPTING PYNL NATIVE LEARN (EXPECTED FAILURE DEMO) ---")
 y_hat_mech.function = pnl.Identity() 
 
+esbn_gru_comp.show_graph(show_pytorch=True)
+
 # This call will FAIL due to nested Compositions.
 try:
     esbn_gru_comp.learn(

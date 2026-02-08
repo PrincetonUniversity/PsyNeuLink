@@ -21,6 +21,7 @@ from torch import nn
 import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
@@ -286,12 +287,44 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         Replace GRUComposition's nodes with gru_mech and projections to and from it.
         """
 
-        def _get_direct_proj(pnl_proj, direction:Literal['to', 'from'])-> Union[Projection, bool]:
+        # TEACHER_TARGET BREADCRUMB: DO THE SAME FOR rcvr_mech_wrapper
+        #                            TO DEAL WITH PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
+        # MODIFIED TEACHER_TARGET NEW:
+        def _get_sndr_mech_wrapper(sndr_mech:Mechanism_Base, pnl_proj:Projection)->(Mechanism_Base,
+                                                                                    PytorchMechanismWrapper):
+            """Get wrapper for sndr_mech
+            If sndr_mech is a Mechanism in the outer Composition, get wrapper for sndr_mech directly from its nodes_map;
+            If sndr_mech is an output_CIM, then get node in nested Composition that is its source
+               and add it to the nodes_map for the outer Composition;
+             """
+            # TEACHER_TARGET BREADCRUMB: NEED TO GET WRAPPER FOR NODE IN NESTED NODE OF OUTER_CREATOR
+            if sndr_mech in self.outer_creator.nodes_map:
+                sndr_mech_wrapper = self.outer_creator.nodes_map[sndr_mech]
+                sender = pnl_proj.sender
+            else:
+                from psyneulink.core.compositions.composition import Composition
+                for nested_comp in [node for node in self.outer_creator.nodes_map if isinstance(node, Composition)]:
+                    if sndr_mech in nested_comp.pytorch_representation.nodes_map:
+                        sender = sndr_mech
+                        sndr_mech_wrapper = nested_comp.pytorch_representation.nodes_map[sndr_mech]
+                        self.outer_creator.nodes_map[sndr_mech] = sndr_mech_wrapper
+                        break
+            return sender, sndr_mech_wrapper
+        # MODIFIED TEACHER_TARGET END
+
+        def _get_direct_proj(pnl_proj, node:Mechanism_Base, direction:Literal['to', 'from'])->Union[Projection,bool]:
             """Get direct Projection to/from GRUComposition's gru_mech
             Checks for existing Projection and returns that if found; otherwise, constructs it.
             """
-            sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
-            receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
+
+            # MODIFIED TEACHER_TARGET OLD:
+            # sender = pnl_proj.sender if direction == 'to' else self.composition.gru_mech
+            # receiver = self.composition.gru_mech if direction == 'to' else pnl_proj.receiver
+            # MODIFIED TEACHER_TARGET NEW:
+            sender = node if direction == 'to' else self.composition.gru_mech
+            receiver = self.composition.gru_mech if direction == 'to' else node
+            # MODIFIED TEACHER_TARGET END
+
             dir_proj = outer_comp._check_for_existing_projections(sender=sender,
                                                                   receiver=receiver,
                                                                   in_composition=ANY)
@@ -313,16 +346,17 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         use = [LEARNING, SYNCH]
 
         if access == ENTER_NESTED:
-            sndr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[sndr_mech]
+            sndr_mech, sndr_mech_wrapper = _get_sndr_mech_wrapper(sndr_mech, pnl_proj)
             rcvr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
-            direct_proj = _get_direct_proj(pnl_proj, 'to')
+            direct_proj = _get_direct_proj(pnl_proj, sndr_mech,'to')
             # Index of input_CIM.output_ports for which pnl_proj is an efferent
             sender_port_idx = pnl_proj.sender.owner.output_ports.index(pnl_proj.sender)
 
         elif access == EXIT_NESTED:
             sndr_mech_wrapper = self.nodes_map[self.composition.gru_mech]
             rcvr_mech_wrapper = outer_comp_pytorch_rep.nodes_map[rcvr_mech]
-            direct_proj = _get_direct_proj(pnl_proj, 'from')
+            # TEACHER_TARGET BREADCRUMB: NEED TO GET PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
+            direct_proj = _get_direct_proj(pnl_proj, pnl_proj.receiver, 'from')
             sender_port_idx = 0
 
         else:
