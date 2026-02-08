@@ -292,15 +292,19 @@ class TestNested:
         assert gv == expected
 
     expected_output_for_nested_to_nested = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP 1`" {\n\t\tgraph [label="NESTED COMP 1`" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=brown\n\t\tlabel="NESTED COMP 1`"\n\t}\n\tsubgraph "cluster_NESTED COMP 2" {\n\t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"OUTPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP 2"\n\t}\n}\n'
+    expected_output_for_nested_to_nested_pytorch = ''
     def test_projection_from_node_in_one_nested_comp_to_node_in_another(self):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-        nested_comp_1 = Composition(name='NESTED COMP 1`', nodes = input_mech)
-        nested_comp_2 = Composition(name='NESTED COMP 2',nodes=[output_mech])
-        outer_comp = Composition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
+        nested_comp_1 = AutodiffComposition(name='NESTED COMP 1`', nodes = input_mech)
+        nested_comp_2 = AutodiffComposition(name='NESTED COMP 2',nodes=[output_mech])
+        outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
         outer_comp.add_projection(sender=input_mech, receiver=output_mech)
         gv = outer_comp.show_graph(output_fmt='source')
         assert gv == self.expected_output_for_nested_to_nested
+        gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
+        assert gv == self.expected_output_for_nested_to_nested_pytorch
 
 
 class TestLearning:
