@@ -1073,7 +1073,7 @@ class ShowGraph():
                 input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
                 output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
                 probe_nodes = composition.get_nodes_by_role(NodeRole.PROBE)
-                if rcvr in input_nodes and output_nodes:
+                if rcvr in input_nodes and rcvr in output_nodes:
                     nested_comp_attributes.update({"color": self.input_and_output_color})
                 elif rcvr in input_nodes:
                     nested_comp_attributes.update({"color": self.input_color})
@@ -1134,7 +1134,6 @@ class ShowGraph():
             condition = None
 
         # INPUT and OUTPUT Node
-        # TEACHER_TARGET BREADCRUMB: REPLACE composition.get_nodes_by_role WITH self._get_roles_by_node
         if all(role in self._get_roles_by_node(rcvr)
                for role in {NodeRole.INPUT, NodeRole.OUTPUT}):
             if rcvr in active_items:
@@ -2562,7 +2561,8 @@ class ShowGraph():
 
                     if not self._proj_in_composition(proj, composition_projections, context):
                         if (show_projections_not_in_composition
-                                or self.show_pytorch is False and hasattr(proj.sender.owner, PROXY_FOR)
+                                or (hasattr(self, 'show_pytorch') and self.show_pytorch is False)
+                                and hasattr(proj.sender.owner, PROXY_FOR)
                                 and (getattr(proj.sender.owner, PROXY_FOR) in composition._get_all_nodes()
                                      or proj.sender.owner in composition._get_all_nodes())):
                             proj_color=self.inactive_projection_color

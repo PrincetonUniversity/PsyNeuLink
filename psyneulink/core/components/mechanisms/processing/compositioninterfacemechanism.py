@@ -402,8 +402,17 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                     continue
                 receivers_info.append((efferent.receiver, efferent.receiver.owner, receiver_comp))
             else:
-                receivers_info.append(self._get_destination_info_for_output_CIM(efferent.receiver,
-                                                                                efferent.receiver.owner.composition))
+                # # MODIFIED TEACHER_TARGET OLD:
+                # receivers_info.extend(self._get_destination_info_for_output_CIM(efferent.receiver,
+                #                                                                 efferent.receiver.owner.composition))
+                # MODIFIED TEACHER_TARGET NEW:
+                receiver = self._get_destination_info_for_output_CIM(efferent.receiver,
+                                                                     efferent.receiver.owner.composition)
+                if receiver is not None:
+                    receivers_info.extend(receiver)
+                # else:
+                #     receivers_info.append(None)
+                # MODIFIED TEACHER_TARGET END
         return receivers_info if any(receivers_info) else None
 
     def _sender_is_probe(self, output_port):

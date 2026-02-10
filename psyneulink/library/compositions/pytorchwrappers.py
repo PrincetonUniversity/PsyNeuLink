@@ -656,7 +656,18 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     (f"PROGRAM ERROR: Projection '{projection}' is from a CIM of a nested Composition "
                      f"'{sndr_mech.composition.name}' that not in '{self.name}'.")
                 sndr_mech = sndr_mech._get_source_info_from_output_CIM(projection.sender)[1]
+            # If rcvr is an input_CIM,
+            # then replace rcvr_mech with the node in the nested Composition that receives the projection
+            # if isinstance(rcvr_mech, CompositionInterfaceMechanism):
+            #     assert rcvr_mech is rcvr_mech.composition.input_CIM, \
+            #         (f"PROGRAM ERROR: Projection {projection} is to a CIM of a nested Composition "
+            #          f"('{rcvr_mech.composition.name}') that not its input_CIM: '{rcvr_mech.name}'.")
+            #     assert rcvr_mech.composition in self.nodes,\
+            #         (f"PROGRAM ERROR: Projection '{projection}' is to a CIM of a nested Composition "
+            #          f"'{rcvr_mech.composition.name}' that not in '{self.name}'.")
+            #     rcvr_mech = rcvr_mech._get_destination_info_from_input_CIM(projection.receiver)[1]
             # MODIFIED TEACHER_TARGET END
+
             proj, proj_sndr_wrapper, proj_rcvr_wrapper, use = (
                 nested_pytorch_comp_wrapper._flatten_for_pytorch(projection,
                                                                  sndr_mech, rcvr_mech,
@@ -666,8 +677,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                                  self,
                                                                  ENTER_NESTED,
                                                                  context,
-                                                                 base_context,
-                                                                 )
+                                                                 base_context)
             )
             if proj_sndr_wrapper is None:
                 proj_sndr_wrapper = self.nodes_map[sndr_mech]
@@ -733,6 +743,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
 
         if access == ENTER_NESTED:
             proj_rcvr_wrapper = self.nodes_map[nested_mech]
+            sndr_mech, proj_sndr_wrapper = self._get_sndr_mech_wrapper(sndr_mech, projection)
+
             # Assign Projection from input_CIM to nested_rcvr_port as pnl_proj (for use in forward())
             nested_comp = projection.receiver.owner.composition
             incoming_projections = [proj for proj in nested_comp.input_CIM.port_map[nested_port][1].efferents
@@ -758,7 +770,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             try:
                 direct_proj = MappingProjection(name=f"Direct Projection from {projection.sender.owner.name} "
                                                      f"to {destination_rcvr_mech.name}",
-                                                sender=projection.sender,
+                                                sender=sndr_mech,
                                                 receiver=destination_rcvr_port,
                                                 learnable=projection.learnable,
                                                 learning_rate=projection.parameters.learning_rate.get(context))
@@ -836,6 +848,32 @@ class PytorchCompositionWrapper(torch.nn.Module):
             assert False, f"PROGRAM ERROR: access must be ENTER_NESTED or EXIT_NESTED, not {access}"
 
         return pnl_proj, proj_sndr_wrapper, proj_rcvr_wrapper, use
+
+    # TEACHER_TARGET BREADCRUMB: DO THE SAME FOR rcvr_mech_wrapper
+    #                            TO DEAL WITH PROJECTION FROM GRU TO NODE IN NESTED COMP OF OUTER_COMP
+    # MODIFIED TEACHER_TARGET NEW:
+    # def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection)->(Mechanism_Base,
+    #                                                                                   PytorchMechanismWrapper):
+    def _get_sndr_mech_wrapper(self, sndr_mech:Mechanism_Base, pnl_proj:Projection):
+        """Get wrapper for sndr_mech
+        If sndr_mech is a Mechanism in the outer Composition, get wrapper for sndr_mech directly from its nodes_map;
+        If sndr_mech is an output_CIM, then get node in nested Composition that is its source
+           and add it to the nodes_map for the outer Composition;
+         """
+        # TEACHER_TARGET BREADCRUMB: NEED TO GET WRAPPER FOR NODE IN NESTED NODE OF OUTER_CREATOR
+        if sndr_mech in self.outer_creator.nodes_map:
+            sndr_mech_wrapper = self.outer_creator.nodes_map[sndr_mech]
+            sender = pnl_proj.sender
+        else:
+            from psyneulink.core.compositions.composition import Composition
+            for nested_comp in [node for node in self.outer_creator.nodes_map if isinstance(node, Composition)]:
+                if sndr_mech in nested_comp.pytorch_representation.nodes_map:
+                    sender = sndr_mech
+                    sndr_mech_wrapper = nested_comp.pytorch_representation.nodes_map[sndr_mech]
+                    self.outer_creator.nodes_map[sndr_mech] = sndr_mech_wrapper
+                    break
+        return sender, sndr_mech_wrapper
+    # MODIFIED TEACHER_TARGET END
 
     def _get_execution_sets(self, composition, base_context)->list:
         """Return list of execution sets containing PytorchMechanismWrappers and/or PytorchCompositionWrappers"""

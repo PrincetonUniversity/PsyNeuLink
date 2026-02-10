@@ -497,6 +497,7 @@ class NodeRolesManager(object):
         for node in self.nodes:
             # Assign as OUTPUT if node is TERMINAL but not a modulatory or bias node
             if node in terminal_nodes:
+
                 if self._modulatory_or_bias_node_that_projects_out_of_a_nested_composition(node):
                     continue
                 self._add_node_role(node, NodeRole.OUTPUT)
@@ -550,15 +551,40 @@ class NodeRolesManager(object):
                             self._add_node_role(cycle_node, NodeRole.OUTPUT)
 
                 # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
-                #     or projections to self.output_CIM, then assign as OUTPUT Node
+                #     or projections only to self.output_CIM, then assign as OUTPUT Node
                 # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
-                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project only to outer Composition's
+                #       Composition *and* legit OUTPUT Nodes (i.e., ones that project *only* to outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
                 elif isinstance(node, Composition):
-                    if any(not port.efferents or
-                           any(proj.receiver.owner is composition.output_CIM for proj in port.efferents)
-                           for port in node.output_CIM.output_ports):
-                        self._add_node_role(node, NodeRole.OUTPUT)
+                    # TEACHER_TARGET BREADCRUMB:  ENUSRE THAT IF A NESTED NODE PROJECTS TO ANY NODE OTHER THAN THE
+                    #                             OUTPUT_CIM OF THE OUTER COMPOSITION, THEN IT IS NOT ASSIGNED AS AN
+                    #                             OUTPUT NODE;  THIS PREVENTS NODES IN A NESTED COMPOSITION FROM BEING
+                    #                             ASSIGNED AS OUTPUTS IF THEY PROJECT TO ANY OTHER NODE IN THE OUTER
+                    #                             COMPOSITION
+
+                    # MODIFIED TEACHER_TARGET OLD:
+                    # if any(not port.efferents or
+                    #        any(proj.receiver.owner is composition.output_CIM for proj in port.efferents)
+                    #        for port in node.output_CIM.output_ports):
+                    #     self._add_node_role(node, NodeRole.OUTPUT)
+
+                    # MODIFIED TEACHER_TARGET CODE PILOT:
+                    # Check if any nodes in the nested Composition project to nodes other than output_CIM
+                    has_internal_projections = any(
+                        any(proj.receiver.owner is not composition.output_CIM
+                            for proj in inner_node.efferents
+                            if isinstance(proj.receiver.owner, Mechanism))
+                        for inner_node in node.nodes
+                    )
+
+                    # Only assign OUTPUT if nested Composition has no external projections
+                    # or all projections are to the output_CIM
+                    if not has_internal_projections:
+                        if any(not port.efferents or
+                               all(proj.receiver.owner is composition.output_CIM for proj in port.efferents)
+                               for port in node.output_CIM.output_ports):
+                            self._add_node_role(node, NodeRole.OUTPUT)
+                    # MODIFIED TEACHER_TARGET END
 
                 # Assign as OUTPUT if:
                 #    - node is not CONTROL_OBJECTIVE or LEARNING_OBJECTIVE (e.g., LossMechanism)

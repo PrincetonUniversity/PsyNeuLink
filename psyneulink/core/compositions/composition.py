@@ -13544,36 +13544,36 @@ def get_compositions():
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
 
-def get_composition_for_node(node):
-    # Find first CIM to which node projects as indication of the Composition to which it belong
+def get_composition_for_node(node) -> Union[None, Composition]:
+    """Find Composition to which node belongs.
 
-    def search_for_output_CIM(node):
-        # TEACHER_TARGET BREADCRUMB: SHOULD NOT BE NEEDED ONCE MappnigProjections HAVE BEEN ASSIGNED IN PyTorch mode
-        if not node.efferents:
-            # If there are no efferents, probably a TARGET Node
+    Recursively searches all efferents of node for the first output_CIM
+    that belongs to the composition to which the node belongs.
+    """
+    visited = set()
+
+    def _search_efferents(current_node):
+        if current_node in visited:
             return None
-        # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
-        for efferent in node.efferents:
-            receiver = efferent.receiver.owner
-            if isinstance(receiver, CompositionInterfaceMechanism):
-                return receiver.composition
-            elif receiver == node:
-                return None
-            elif isinstance(receiver, ModulatoryMechanism_Base):
-                # End search on this path if receiver is a ModulatoryMechanism since it:
-                #   - won't lead to a CIM
-                #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
-                return None
-            else:
-                try:
-                    return search_for_output_CIM(receiver)
-                except RecursionError:
-                    return None
-        return receiver
+        visited.add(current_node)
 
-    comp = search_for_output_CIM(node)
-    return comp
+        for efferent in current_node.efferents:
+            # Check if receiver is an output_CIM
+            if hasattr(efferent, 'receiver') and isinstance(efferent.receiver.owner, CompositionInterfaceMechanism):
+                output_cim = efferent.receiver.owner
+                # Verify node belongs to this composition
+                if hasattr(output_cim, 'composition') and node in output_cim.composition.nodes:
+                    return output_cim.composition
 
+            # Recursively search efferents of the receiver
+            if hasattr(efferent, 'receiver') and hasattr(efferent.receiver, 'owner'):
+                result = _search_efferents(efferent.receiver.owner)
+                if result is not None:
+                    return result
+
+        return None
+
+    return _search_efferents(node)
 
 class LearningScale(PNLStrEnum):
     """Scales at which `learning <Composition_Learning>` occurs
