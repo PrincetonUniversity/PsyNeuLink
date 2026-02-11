@@ -140,9 +140,6 @@ class TestNested:
         outer_mech_2 = ProcessingMechanism(name='Outer Mech 2', input_shapes=3)
         inner_comp = AutodiffComposition(name='Inner Comp', pathways=[inner_mech_1, inner_mech_2])
         outer_comp = AutodiffComposition(name='Outer Comp', pathways=[outer_mech_1,inner_comp,outer_mech_2])
-        # TEACHER_TARGET BREADCRUMB:
-        # outer_comp.show_graph(show_pytorch=True)
-        # outer_comp.show_graph(show_pytorch=True)
         gv = outer_comp.show_graph(show_pytorch=True, output_fmt='source')
         assert gv == self.expected_output_for_nested_autodiff
 
@@ -277,10 +274,6 @@ class TestNested:
             assert (f"A pathway of 'EM COMP' terminating in 'VALUE [RETRIEVED]' cannot be trained "
                     f"since it has no learnable Projections; this may be because the learning_rate for "
                     f"the corresponding field_weight is set to False.") in str(warning[2].message)
-            # assert (f"It will not be possible to execute learning for 'EM COMP' "
-            #         f"since it does not have any learnable Projections.") in str(warning[6].message)
-            # assert (f"It will not be possible to execute learning for 'EM COMP' "
-            #         f"since it does not have any learnable Projections.") in str(warning[6].message)
         elif show_pytorch and show_learning:
             with pytest.warns(UserWarning) as warning:
                 gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
@@ -291,20 +284,35 @@ class TestNested:
             gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
         assert gv == expected
 
-    expected_output_for_nested_to_nested = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP 1`" {\n\t\tgraph [label="NESTED COMP 1`" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP 1`"\n\t}\n\tsubgraph "cluster_NESTED COMP 2" {\n\t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"OUTPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP 2"\n\t}\n}\n'
-    expected_output_for_nested_to_nested_pytorch = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
-    def test_projection_from_node_in_one_nested_comp_to_node_in_another(self):
+    expected_output_for_nested_to_nested_direct = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP 1" {\n\t\tgraph [label="NESTED COMP 1" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP 1"\n\t}\n\tsubgraph "cluster_NESTED COMP 2" {\n\t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"OUTPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP 2"\n\t}\n}\n'
+    expected_output_for_nested_to_nested_pytorch_direct = ('digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n')
+    expected_output_for_nested_to_nested_with_hidden = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"OUTER COMP INPUT_CIM" -> "INPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "HIDDEN MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP 1" {\n\t\tgraph [label="NESTED COMP 1" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"INPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP 1"\n\t}\n\tsubgraph "cluster_NESTED COMP 2" {\n\t\tgraph [label="NESTED COMP 2" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"OUTPUT MECH" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP 2"\n\t}\n}\n'
+    expected_output_for_nested_to_nested_pytorch_with_hidden = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"HIDDEN MECH" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "HIDDEN MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"HIDDEN MECH" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    @pytest.mark.parametrize("hidden", [True, False])
+    def test_projection_from_node_in_one_nested_comp_to_node_in_another(self, hidden):
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         input_mech = ProcessingMechanism(name='INPUT MECH', input_shapes=3)
         output_mech = ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-        nested_comp_1 = AutodiffComposition(name='NESTED COMP 1`', nodes = input_mech)
+        hidden_mech = ProcessingMechanism(name='HIDDEN MECH', input_shapes=2)
+        nested_comp_1 = AutodiffComposition(name='NESTED COMP 1', nodes = input_mech)
         nested_comp_2 = AutodiffComposition(name='NESTED COMP 2',nodes=[output_mech])
-        outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
-        outer_comp.add_projection(sender=input_mech, receiver=output_mech)
+        if hidden:
+            outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, hidden_mech, nested_comp_2])
+            outer_comp.add_projection(sender=input_mech, receiver=hidden_mech)
+            outer_comp.add_projection(sender=hidden_mech, receiver=output_mech)
+        else:
+            outer_comp = AutodiffComposition(name='OUTER COMP', nodes=[nested_comp_1, nested_comp_2])
+            outer_comp.add_projection(sender=input_mech, receiver=output_mech)
+
         gv = outer_comp.show_graph(output_fmt='source')
-        assert gv == self.expected_output_for_nested_to_nested
-        gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
-        assert gv == self.expected_output_for_nested_to_nested_pytorch
+        if hidden:
+            assert gv == self.expected_output_for_nested_to_nested_with_hidden
+            gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
+            assert gv == self.expected_output_for_nested_to_nested_pytorch_with_hidden
+        else:
+            assert gv == self.expected_output_for_nested_to_nested_direct
+            gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
+            assert gv == self.expected_output_for_nested_to_nested_pytorch_direct
 
 
 class TestLearning:

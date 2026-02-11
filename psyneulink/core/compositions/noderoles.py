@@ -550,8 +550,8 @@ class NodeRolesManager(object):
                         for cycle_node in cycle_nodes:
                             self._add_node_role(cycle_node, NodeRole.OUTPUT)
 
-                # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
-                #     or projections only to self.output_CIM, then assign as OUTPUT Node
+                # If node is a (nested) Composition and its output_CIM has any OutputPorts that either
+                #    have no Projections or projections only to self.output_CIM, then assign it as an OUTPUT Node
                 # Note: this ensures that if a nested Comp has both Nodes that project to others in the outer
                 #       Composition *and* legit OUTPUT Nodes (i.e., ones that project *only* to outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
