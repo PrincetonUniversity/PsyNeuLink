@@ -1785,7 +1785,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
-                if NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism):
+                if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
+                        and not NodeRole.TARGET in self.composition.get_roles_by_node(component.mechanism)):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                     input_id = component._idx
