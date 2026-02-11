@@ -2555,6 +2555,12 @@ class ShowGraph():
             # Iterate through all Projections from all OutputPorts of sender
             for output_port in sender.output_ports:
                 for proj in output_port.efferents:
+                    # MODIFIED TEACHER_TARGET NEW:
+                    # if (proj.receiver.owner not in {rcvr, rcvr.input_CIM, rcvr.parameter_CIM}
+                    #         and not self._sender_is_proxy_in_composition(sender)):
+                    if proj.receiver.owner is not rcvr:
+                        continue
+                    # MODIFIED TEACHER_TARGET END
 
                     proj_color = proj_color_default
                     proj_arrowhead = proj_arrow_default
