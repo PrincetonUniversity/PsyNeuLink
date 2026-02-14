@@ -1777,7 +1777,7 @@ class AutodiffComposition(Composition):
                 sample_mech = sample_port.owner
                 target_mech = target_spec.owner if isinstance(target_spec, OutputPort) else target_spec
                 # If specified sample Mechanism is not in a pathway with at least one learnable Projection
-                #   then raise error, as constructing a LossMechanism with aLossFunction that tries to compute
+                #   then raise error, as constructing a LossMechanism with a LossFunction that tries to compute
                 #   loss in pytorch will cause a crash
                 _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
                                                                            target_mech=target_mech,
@@ -3065,7 +3065,20 @@ class AutodiffComposition(Composition):
             # Synchronize specified outcomes at end of run
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
-                pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
+                # # MODIFIED TEACHER_TARGET OLD:
+                # pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
+                # MODIFIED TEACHER_TARGET NEW:
+                # Synchronize with PsyNeuLink at end of run if in learning mode (i.e., called from learn()),
+                if context.runmode == ContextFlags.LEARNING_MODE:
+                    pytorch_rep.synch_with_psyneulink(kwargs[SYNCH_WITH_PNL_OPTIONS], LearningScale.RUN, context)
+                else:
+                # But not if called directly from run(), since that is always executed in Python
+                # irrespective of execution_mode, so pytorch_representation will not be updated,
+                # and may not have executed at all.
+                    warnings.warn(f"Although the run() method of '{self.name}' was called with "
+                                  f"'execution_mode=ExecutionMode.PyTorch' it will be run in Python mode; an "
+                                  f"AutodiffComposition is only executed in PyTorch mode when its learn() is called.")
+                # MODIFIED TEACHER_TARGET END
 
         return results
 

@@ -1758,9 +1758,9 @@ class TestTrainingCorrectness:
         pnl_out_wts_after_learning = pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy()
         # Record loss before executing again
         pnl_loss = autodiff_comp.nodes['LOSS for SAMPLE'].parameters.value.get('autodiff_comp').squeeze()
-        # Execute again to see effects of learning
-        result = autodiff_comp.run(inputs={inputs: pnl_stim},
-                                   execution_mode=pnl.ExecutionMode.PyTorch)
+        # # Execute again to see effects of learning
+        # result = autodiff_comp.run(inputs={inputs: pnl_stim},
+        #                            execution_mode=pnl.ExecutionMode.PyTorch)
         # Record results
         pnl_sample_after_learning = autodiff_comp.nodes[pnl.SAMPLE].parameters.value.get('autodiff_comp').squeeze()
         pnl_target_after_learning = autodiff_comp.nodes[pnl.TARGET].parameters.value.get('autodiff_comp').squeeze()
