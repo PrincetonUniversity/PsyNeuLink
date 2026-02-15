@@ -564,19 +564,10 @@ can be further customized as described below.
 *Additional Optimizations Steps*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-More than one optimization step per `minibatch <LearningScale.MINIBATCH>` can be specified in the
-**optimizations_per_minibatch** argument of an AutodiffComposition's constructor, in which case
-several forward
-COMMENT:
-and backward  BREADCRUMB: <- INCORRECT, RIGHT?
-COMMENT
-passes are executed for each minibatch (see `optimizations_per_minibatch
-<Composition.optimizations_per_minibatch>` for additional details).
-COMMENT:
-BREADCRUMB: SAY MORE HERE ABOUT WHEN ERROR IS CALCULATED OR REFERNCE DISCUSSION OF LearningScale ABOVE
-            ALSO, ADD COMMENT IN DOCSTRING FOR autodiff_forward()
-COMMENT
-In that case, the
+More than one optimization step for each stimulus in a `minibatch <LearningScale.MINIBATCH>` can be specified in the
+**optimizations_per_minibatch** argument of an AutodiffComposition's constructor, in which case the forward,
+backward, an optimization_steps methods are called the specified number of times for each stimulus in the minibatch
+(see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for additional details). In that case, the
 **execute_in_additional_optimizations** argument of either the AutodiffComposition's constructor or its `learn()
 <AutodiffCompostion.learn>` method can be used to specify which Nodes are executed in which additional `optimization
 steps <LearningScale.OPTIMIZATION_STEP>` after the first. This is specified as a dict, each key of which is a `Node
