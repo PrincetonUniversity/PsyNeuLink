@@ -1695,9 +1695,9 @@ class TestTrainingCorrectness:
                 out = self.out(sample)  # weights of .outputs should be set to R^{-1} and frozen
                 return sample, target, out
         torch_model = SimpleSampleTargetTorchModule()
-        torch_sample_encoding_wts = torch_model.sample.state_dict()['weight']
-        torch_target_encoding_wts = torch_model.target.state_dict()['weight']
-        torch_output_decoding_wts = torch_model.out.state_dict()['weight']
+        torch_sample_wts_before_learning = torch_model.sample.state_dict()['weight'].detach().clone()
+        torch_target_wts_before_learning = torch_model.target.state_dict()['weight'].detach().clone()
+        torch_output_wts_before_learning = torch_model.out.state_dict()['weight'].detach().clone()
         torch_optimizer = torch.optim.SGD(torch_model.parameters(), lr=LEARNING_RATE)
         torch_loss_function = torch.nn.MSELoss()
 
@@ -1740,33 +1740,43 @@ class TestTrainingCorrectness:
                                                 name='autodiff_comp')
 
         # Copy initial torch weights to PNL model and construct pytorch_represenation
-        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_sample_encoding_wts, torch_sample_encoding_wts)
-        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_target_encoding_wts, torch_target_encoding_wts)
-        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_output_decoding_wts, torch_output_decoding_wts)
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_sample_encoding_wts, torch_sample_wts_before_learning)
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_target_encoding_wts, torch_target_wts_before_learning)
+        autodiff_comp.copy_torch_param_to_projection_matrix(pnl_output_decoding_wts, torch_output_wts_before_learning)
         pytorch_rep = autodiff_comp._build_pytorch_representation()
         # Ensure initial weights are identical for torch and PNL models
-        assert (pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS') == torch_sample_encoding_wts.T).all()
-        assert (pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS') == torch_target_encoding_wts.T).all()
-        assert (pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS') == torch_output_decoding_wts.T).all()
+        assert (pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS') == torch_sample_wts_before_learning.T).all()
+        assert (pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS') == torch_target_wts_before_learning.T).all()
+        assert (pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS') == torch_output_wts_before_learning.T).all()
 
         # Execute PNL model
         pnl_stim = torch_stim.detach().numpy()
         autodiff_comp.learn(inputs={inputs: pnl_stim},
                             execution_mode=pnl.ExecutionMode.PyTorch)
-        pnl_sample_wts_after_learning = pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS').detach().numpy()
+
+        pnl_sample_wts_after_learning = pnl_sample_encoding_wts.parameters.matrix.get('autodiff_comp')
         pnl_target_wts_after_learning = pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy()
         pnl_out_wts_after_learning = pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy()
+        # Update pytorch_rep to be one used for learning
+        pytorch_rep = autodiff_comp.parameters.pytorch_representation.get('autodiff_comp')
+        pytorch_rep_sample_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('SAMPLE ENCODING WTS').detach().numpy())
+        pytorch_rep_target_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('TARGET ENCODING WTS').detach().numpy())
+        pytorch_rep_out_wts_after_learning = (
+            pytorch_rep.get_torch_param_for_projection('OUTPUT DECODING WTS').detach().numpy())
+
         # Record loss before executing again
         pnl_loss = autodiff_comp.nodes['LOSS for SAMPLE'].parameters.value.get('autodiff_comp').squeeze()
         # # Execute again to see effects of learning
-        # result = autodiff_comp.run(inputs={inputs: pnl_stim},
-        #                            execution_mode=pnl.ExecutionMode.PyTorch)
+        result = autodiff_comp.run(inputs={inputs: pnl_stim},
+                                   execution_mode=pnl.ExecutionMode.PyTorch)
         # Record results
         pnl_sample_after_learning = autodiff_comp.nodes[pnl.SAMPLE].parameters.value.get('autodiff_comp').squeeze()
         pnl_target_after_learning = autodiff_comp.nodes[pnl.TARGET].parameters.value.get('autodiff_comp').squeeze()
         pnl_outputs_after_learning = autodiff_comp.nodes['OUTPUTS'].parameters.value.get('autodiff_comp').squeeze()
-        # pnl_results_after_learning = autodiff_comp.results[0].squeeze()
-        pnl_results_after_learning = autodiff_comp.learning_results[0].squeeze()
+        pnl_results_after_learning = autodiff_comp.results[1].squeeze()
+        # pnl_results_after_learning = autodiff_comp.learning_results[0].squeeze()
 
         # COMPARE RESULTS -------------------------------
         np.testing.assert_allclose(torch_stim, pnl_stim)
@@ -1777,6 +1787,10 @@ class TestTrainingCorrectness:
         np.testing.assert_allclose(pnl_sample_wts_after_learning, torch_sample_wts_after_learning.T)
         np.testing.assert_allclose(pnl_target_wts_after_learning, torch_target_wts_after_learning.T)
         np.testing.assert_allclose(pnl_out_wts_after_learning, torch_out_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_sample_wts_after_learning, torch_sample_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_target_wts_after_learning, torch_target_wts_after_learning.T)
+        np.testing.assert_allclose(pytorch_rep_out_wts_after_learning, torch_out_wts_after_learning.T)
+
         # autodiff_comp.show_graph(show_pytorch=True)
         torch.set_default_dtype(entry_torch_dtype)
 

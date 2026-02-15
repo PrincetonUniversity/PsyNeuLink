@@ -1346,6 +1346,8 @@ class AutodiffComposition(Composition):
         self._warned_about_modulatory_components = False
         # - target appears before sample in the same pathway
         self._warned_about_target_before_sample_in_pathway = False
+        # - no learnable Projections in the Composition
+        self._warned_about_no_learnable_projections = False
         # torch params added when warned in copy_projection_matrix_to_torch_param() to avoid repeats for same param
         self.require_grad_warning = []
 
@@ -1895,8 +1897,10 @@ class AutodiffComposition(Composition):
                                                f"since it does not have any learnable Projections.")
             else:
                 # Raise warning on attempt to construct without any learnable Projections
-                warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
-                              f"since it does not have any learnable Projections.")
+                if not self._warned_about_no_learnable_projections:
+                    warnings.warn(f"It will not be possible to execute learning for '{self.name}' "
+                                  f"since it does not have any learnable Projections.")
+                self._warned_about_no_learnable_projections = True
         for loss_mech_spec in list(loss_mech_specs):
             # Assume that self.targets is a list of LossMechanisms and/or tuples specifying sample:target pairs
             assert isinstance(loss_mech_spec, (LossMechanism, tuple)), \
