@@ -13391,6 +13391,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return related_processing_mechanisms + learned_projections
 
     @property
+    def _has_learnable_pathways(self):
+        return any(p for p in self.projections if hasattr(p, 'learnable') and p.learnable)
+
+    @property
     def afferents(self):
         return ContentAddressableList(component_type=Projection,
                                       list=[proj for proj in self.input_CIM.afferents])

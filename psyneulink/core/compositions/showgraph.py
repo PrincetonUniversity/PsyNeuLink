@@ -926,6 +926,9 @@ class ShowGraph():
 
         # Add learning-related Components to graph if show_learning
         if show_learning:
+            if not composition._has_learnable_pathways:
+                warnings.warn(f"The 'show_graph' method of '{composition.name}' was called with "
+                              f"'show_learning=True' but there are no learnable pathways in the Composition.")
             self._assign_learning_components(G,
                                              processing_graph,
                                              enclosing_comp,

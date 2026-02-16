@@ -1016,6 +1016,33 @@ class TestStructural:
 
 class TestNoLearning:
 
+    def test_no_learnable_pathways_warnings(self):
+        input_mech = pnl.ProcessingMechanism(name="INPUT")
+        hidden_mech_1 = pnl.ProcessingMechanism(name="HIDDEN 1")
+        hidden_mech_2 = pnl.ProcessingMechanism(name="HIDDEN 2")
+        output_mech = pnl.ProcessingMechanism(name="OUTPUT")
+        pathway_1 = pnl.Pathway([input_mech,
+                                 pnl.MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                                 hidden_mech_1,
+                                 pnl.MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                                 output_mech])
+        pathway_2 = [input_mech,
+                     pnl.MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     pnl.MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+        comp =Composition(name="COMP", pathways=[pathway_1, pathway_2])
+        assert not comp._has_learnable_pathways
+        error_msg_1 = ("The 'show_graph' method of 'COMP' was called with 'show_learning=True' "
+                       "but there are no learnable pathways in the Composition.")
+        with pytest.warns(UserWarning, match=re.escape(error_msg_1)):
+            comp.show_graph(show_learning=True, output_fmt='source')
+        comp.run(inputs={input_mech: [[1.0]]})
+        error_msg_2 = ("learn() method called on 'COMP', but it has no learning components; "
+                       "it will be run but no learning will occur.")
+        with pytest.warns(UserWarning, match=re.escape(error_msg_2)):
+            comp.learn(inputs={input_mech: [[1.0]]})
+
     def test_multilayer(self):
         Input_Layer = pnl.TransferMechanism(
             name='Input Layer',
