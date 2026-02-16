@@ -12,6 +12,8 @@ from psyneulink import RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.pathway import Pathway
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import Loss, DEFAULT_LEARNING_RATE, TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -64,6 +66,37 @@ class TestAutodiffConstructor:
     def test_no_initial_pytorch_representation(self):
         comp = AutodiffComposition()
         assert comp.pytorch_representation is None
+
+    def test_warnings_and_errors_for_no_learnable_pathways(self):
+        input_mech = ProcessingMechanism(name="INPUT")
+        hidden_mech_1 = ProcessingMechanism(name="HIDDEN 1")
+        hidden_mech_2 = ProcessingMechanism(name="HIDDEN 2")
+        output_mech = ProcessingMechanism(name="OUTPUT")
+        pathway_1 = Pathway([input_mech,
+                             MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                             hidden_mech_1,
+                             MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                             output_mech])
+        pathway_2 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP", pathways=[pathway_1, pathway_2])
+        warning_message_1 = ("The 'show_learning' argument in the call to show_graph() for 'AUTODIFF COMP' is "
+                             "unnecessary since learning components are shown for an AutodiffComposition only when "
+                             "'show_pytorch' is used.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_1)):
+            autodiff_comp.show_graph(show_learning=True, output_fmt='source')
+        warning_message_2 = ("No learnable pathways were found in 'AUTODIFF COMP'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message_2)):
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        autodiff_comp.run(inputs={input_mech: [[1.0]]})
+        error_msg = (f"'AUTODIFF COMP' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
 
     def test_duplicate_projections_to_nested_comp(self):
         input_node_autodiff = pnl.ProcessingMechanism(name='autodiff INPUT', input_shapes=2)
@@ -1793,6 +1826,7 @@ class TestTrainingCorrectness:
 
         # autodiff_comp.show_graph(show_pytorch=True)
         torch.set_default_dtype(entry_torch_dtype)
+
 
 @pytest.mark.pytorch
 @pytest.mark.acidenticalness

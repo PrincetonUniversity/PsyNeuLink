@@ -1569,9 +1569,9 @@ class AutodiffComposition(Composition):
 
         return pathways
 
-    # @property
-    # def _has_learnable_pathways(self):
-    #     return any(self._mech_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
+    @property
+    def _has_learnable_pathways(self):
+        return any(self._mech_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
 
     def _mech_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
         """Return True if `mech` receives a Projection from any pathway that has at least one learnable Projection"""
@@ -2080,9 +2080,13 @@ class AutodiffComposition(Composition):
         # Construct a new pytorch_representation if none exists or new is specified
 
         from psyneulink.core.llvm import ExecutionMode
-        self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
-                                                     context=context,
-                                                     base_context=base_context)
+        if self._has_learnable_pathways:
+            self.infer_backpropagation_learning_pathways(execution_mode=ExecutionMode.PyTorch,
+                                                         context=context,
+                                                         base_context=base_context)
+        else:
+            warnings.warn(f"No learnable pathways were found in '{self.name}'; therefore, "
+                          f"no pytorch_representation will be constructed, and learning will not be possible.")
 
         if self.parameters.pytorch_representation._get(context=context) is None or new:
             # Instantiate pytorch_representation
@@ -2755,6 +2759,10 @@ class AutodiffComposition(Composition):
                                                f"that are not AutodiffCompositions: {' ,'.join(nested_comps)}.")
 
         if self._built_pathways is False:
+            # TEACHER_TARGET BREADCRUMB: ADD TEST HERE FOR LEARNABLE PATHWAYS AND WARN IF NONE
+            if not self._has_learnable_pathways:
+                raise AutodiffCompositionError(f"'{self.name}' does not have any learnable pathways, "
+                                               f"therefore its learn() method cannot be executed.")
             self.infer_backpropagation_learning_pathways(execution_mode, context=context, base_context=base_context)
             self._built_pathways = True
 

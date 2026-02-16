@@ -58,18 +58,18 @@ class PytorchShowGraph(ShowGraph):
             self.composition.infer_backpropagation_learning_pathways(ExecutionMode.Python)
             kwargs[SHOW_LEARNING] = True
             return super().show_graph(*args, **kwargs)
-        elif SHOW_LEARNING in kwargs:
+        elif SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING]:
             # Remove SHOW_LEARNING spec from kwargs to prevent double-handling in super().show_graph
             kwargs.pop(SHOW_LEARNING, None)
             if self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph is False:
                 import warnings
-                warnings.warn(f"'{SHOW_LEARNING}' argument in call to show_graph() for '{self.composition.name}' "
-                              f"is unnecessary since learning components are shown when '{SHOW_PYTORCH}' is used.")
+                warnings.warn(f"The '{SHOW_LEARNING}' argument in the call to show_graph() for "
+                              f"'{self.composition.name}' is unnecessary since learning components "
+                              f"are shown for an AutodiffComposition only when '{SHOW_PYTORCH}' is used.")
                 self.composition._warned_about_unecessary_show_learning_arg_in_call_to_show_graph = True
         self.show_pytorch = kwargs.pop('show_pytorch', False)
         context = kwargs.get('context')
         if self.show_pytorch:
-            self.composition.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
             self.pytorch_rep = (
                 self.composition._build_pytorch_representation(
                     context=Context(source=ContextFlags.SHOW_GRAPH, execution_id=context.execution_id),

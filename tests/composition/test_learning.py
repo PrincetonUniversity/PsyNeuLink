@@ -1031,16 +1031,16 @@ class TestNoLearning:
                      hidden_mech_2,
                      pnl.MappingProjection(hidden_mech_2, output_mech, learnable=False),
                      output_mech]
-        comp =Composition(name="COMP", pathways=[pathway_1, pathway_2])
-        assert not comp._has_learnable_pathways
-        error_msg_1 = ("The 'show_graph' method of 'COMP' was called with 'show_learning=True' "
-                       "but there are no learnable pathways in the Composition.")
-        with pytest.warns(UserWarning, match=re.escape(error_msg_1)):
+        comp = Composition(name="COMP", pathways=[pathway_1, pathway_2])
+        warning_msg_1 = (f"The 'show_graph' method of 'COMP' was called with 'show_learning=True' "
+                       f"but there are no learnable pathways in the Composition; use one of the Composition's "
+                       f"add_learning_pathway methods or an AutdoiffComposition to create learnable pathways.")
+        with pytest.warns(UserWarning, match=re.escape(warning_msg_1)):
             comp.show_graph(show_learning=True, output_fmt='source')
         comp.run(inputs={input_mech: [[1.0]]})
-        error_msg_2 = ("learn() method called on 'COMP', but it has no learning components; "
+        warning_msg_2 = ("learn() method called on 'COMP', but it has no learning components; "
                        "it will be run but no learning will occur.")
-        with pytest.warns(UserWarning, match=re.escape(error_msg_2)):
+        with pytest.warns(UserWarning, match=re.escape(warning_msg_2)):
             comp.learn(inputs={input_mech: [[1.0]]})
 
     def test_multilayer(self):

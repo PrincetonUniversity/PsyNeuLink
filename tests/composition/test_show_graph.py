@@ -230,7 +230,6 @@ class TestNested:
     expected_output_for_nested_pytorch_learning_em = 'digraph "OUTER COMP" {\n\tgraph [label="OUTER COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT MECH" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT MECH" [color=green penwidth=3 rank=source shape=oval]\n\t"KEY [MATCH to KEYS]" [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [QUERY]" -> "KEY [MATCH to KEYS]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"KEY [QUERY]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "KEY [QUERY]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"KEY [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "KEY [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"LOSS for OUTPUT MECH" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT MECH" -> "LOSS for OUTPUT MECH" [label="" arrowhead=normal color=black penwidth=1]\n\t"KEY [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\t"VALUE [RETRIEVED]" -> "OUTPUT MECH" [label="" arrowhead=normal color=orange penwidth=1]\n\tRETRIEVE [color=black penwidth=1 rank=same shape=oval]\n\t"KEY [MATCH to KEYS]" -> RETRIEVE [label="" arrowhead=normal color=black penwidth=1]\n\tSTORE [color=brown penwidth=1 rank=same shape=oval style=dotted]\n\t"KEY [QUERY]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [VALUE]" -> STORE [label="" arrowhead=normal color=black penwidth=1]\n\t"VALUE [RETRIEVED]" [color=black penwidth=1 rank=same shape=oval]\n\tRETRIEVE -> "VALUE [RETRIEVED]" [label="" arrowhead=normal color=brown penwidth=1 style=dotted]\n\t"VALUE [VALUE]" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT MECH" -> "VALUE [VALUE]" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT MECH" -> "OUTPUT MECH" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT MECH" [color=red penwidth=3 rank=max shape=oval]\n}\n'
     test_em_data = [
         #   nesting       mode                expected
-        # TEACHER_TARGET BREADCRUMB: UNCOMMENT WHEN DONE DEBUGGING:
         (  'unnested',  'Python',   expected_output_for_unnested_python_em),
         (  'nested',    'Python',   expected_output_for_nested_python_em),
         (  'unnested',  'PyTorch',  expected_output_for_unnested_pytorch_em),
@@ -238,9 +237,6 @@ class TestNested:
         (  'unnested',  'PyTorch with learning',  expected_output_for_unnested_pytorch_learning_em),
         (  'nested',    'PyTorch with learning',  expected_output_for_nested_pytorch_learning_em)
     ]
-    # TEACHER_TARGET: BREADCRUMB:
-    #                 - ERROR FOR SPECIFICATION OF LEARNING FOR Python Nested
-    #                 - WARNING FOR SPECIFICATION OF show_learning AND show_pytorch
     @pytest.mark.parametrize("nesting, mode, expected", test_em_data, ids=[f"{x[0]}-{x[1]}" for x in test_em_data])
     @pytest.mark.pytorch
     def test_show_graph_for_em_composition(self, nesting, mode, expected):
@@ -266,20 +262,26 @@ class TestNested:
         elif nesting == 'unnested' and (show_learning or show_pytorch):
             with pytest.warns(UserWarning) as warning:
                 gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
-            assert (f"'show_learning' argument in call to show_graph() for 'EM COMP' is unnecessary since "
-                    f"learning components are shown when 'show_pytorch' is used.") in str(warning[0].message)
-            assert (f"A pathway of 'EM COMP' terminating in 'KEY [RETRIEVED]' cannot be trained "
-                    f"since it has no learnable Projections; this may be because the learning_rate for "
-                    f"the corresponding field_weight is set to False.") in str(warning[1].message)
-            assert (f"A pathway of 'EM COMP' terminating in 'VALUE [RETRIEVED]' cannot be trained "
-                    f"since it has no learnable Projections; this may be because the learning_rate for "
-                    f"the corresponding field_weight is set to False.") in str(warning[2].message)
+            if show_learning:
+                assert (("The 'show_learning' argument in the call to show_graph() for 'EM COMP' is unnecessary since "
+                        "learning components are shown for an AutodiffComposition only when 'show_pytorch' is used.")
+                        in str(warning[0].message))
+            # assert (f"A pathway of 'EM COMP' terminating in 'KEY [RETRIEVED]' cannot be trained "
+            #         f"since it has no learnable Projections; this may be because the learning_rate for "
+            #         f"the corresponding field_weight is set to False.") in str(warning[1].message)
+            # assert (f"A pathway of 'EM COMP' terminating in 'VALUE [RETRIEVED]' cannot be trained "
+            #         f"since it has no learnable Projections; this may be because the learning_rate for "
+            #         f"the corresponding field_weight is set to False.") in str(warning[2].message)
+            n = 1 if show_learning else 0
+            assert (f"No learnable pathways were found in '{outer_comp.name}'; therefore, no pytorch_representation "
+                    f"will be constructed, and learning will not be possible." in str(warning[n].message))
         elif show_pytorch and show_learning:
             with pytest.warns(UserWarning) as warning:
                 gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
             comp_name = 'OUTER COMP' if nesting == 'nested' else 'EM COMP'
-            assert (f"'show_learning' argument in call to show_graph() for '{comp_name}' is unnecessary since "
-                    f"learning components are shown when 'show_pytorch' is used.") in str(warning[0].message)
+            assert (f"The 'show_learning' argument in the call to show_graph() for '{comp_name}' is unnecessary since "
+                    f"learning components are shown for an AutodiffComposition only when 'show_pytorch' is used."
+                    in str(warning[0].message))
         else:
             gv = outer_comp.show_graph(show_pytorch=show_pytorch, show_learning=show_learning, output_fmt='source')
         assert gv == expected
