@@ -101,29 +101,29 @@ class LossProjection(ModulatoryProjection_Base):
         receiver=[INPUT_PORT]
 
     class Parameters(ModulatoryProjection_Base.Parameters):
-            """
-                Attributes
-                ----------
+        """
+            Attributes
+            ----------
 
-                    exponent
-                        see `exponent <Projection_Base.exponent>`
+                exponent
+                    see `exponent <Projection_Base.exponent>`
 
-                        :default value: None
-                        :type:
+                    :default value: None
+                    :type:
 
-                    function
-                        see `function <Projection_Base.function>`
+                function
+                    see `function <Projection_Base.function>`
 
-                        :default value: `MatrixTransform`
-                        :type: `Function`
+                    :default value: `MatrixTransform`
+                    :type: `Function`
 
-                    weight
-                        see `weight <Projection_Base.weight>`
+                weight
+                    see `weight <Projection_Base.weight>`
 
-                        :default value: None
-                        :type:
-            """
-            has_initializers = Parameter(None, pnl_internal=True, fallback_value=DEFAULT)
+                    :default value: None
+                    :type:
+        """
+        has_initializers = Parameter(None, pnl_internal=True, fallback_value=DEFAULT)
 
 
     @beartype

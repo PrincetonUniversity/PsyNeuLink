@@ -1693,7 +1693,7 @@ class AutodiffComposition(Composition):
                          f"'{self.name}', since there are no learnable Projections in any of the pathways that "
                          f"project to that Node.")
         else:
-            # TEACHER_TARGET BREADCRUMB: REMOVE THIS, SINCE UNLEARNABLE PATHWAYS ARE IGNORED, 
+            # TEACHER_TARGET BREADCRUMB: REMOVE THIS, SINCE UNLEARNABLE PATHWAYS ARE IGNORED,
             #                            AND IF THERE ARE NO LEARNABLE ONES, A WARNING IS ISSUED
             # assert False
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
@@ -1940,7 +1940,7 @@ class AutodiffComposition(Composition):
                 output_ports_for_learning.remove(output_port_for_learning)
                 continue
             # Check for existing TARGET Nodes
-            existing_output_ports_for_learnings = [sample for sample, target in  self.loss_mechs_map.values()]
+            existing_output_ports_for_learnings = [sample for sample, target in self.loss_mechs_map.values()]
             # Get or construct TARGET Node if none exists for OUTPUT Node
             if output_port_for_learning not in existing_output_ports_for_learnings:
                 # Check that TARGET Node doesn't already exist for OUTPUT Node
@@ -2349,7 +2349,7 @@ class AutodiffComposition(Composition):
             if isinstance(val, torch.Tensor):
                 inputs_and_targets[component] = val.to(device=self.device, dtype=torch.double)
             else:
-                 inputs_and_targets[component] = torch.tensor(val, device=self.device, dtype=torch.double)
+                inputs_and_targets[component] = torch.tensor(val, device=self.device, dtype=torch.double)
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
         output_values = pytorch_rep.forward(inputs=inputs_and_targets,
@@ -3609,7 +3609,7 @@ class AutodiffComposition(Composition):
         from psyneulink.library.compositions.pytorchshowgraph import SHOW_PYTORCH
         if (SHOW_LEARNING in kwargs and kwargs[SHOW_LEARNING]
                 and any(isinstance(node, Composition) for node in self.nodes)
-                and (not SHOW_PYTORCH in kwargs or not kwargs[SHOW_PYTORCH])):
+                and (SHOW_PYTORCH not in kwargs or not kwargs[SHOW_PYTORCH])):
             raise AutodiffCompositionError(f"'{self.name}' has a nested Composition, so PyTorch mode must be used "
                                            f"for learning; use 'show_pytorch=True' in the call to show_graph().")
         return self._show_graph.show_graph(*args, **kwargs)

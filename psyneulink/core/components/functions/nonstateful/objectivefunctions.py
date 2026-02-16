@@ -1585,27 +1585,27 @@ class LossFunction(ObjectiveFunction):
         elif loss == Loss.L1:
             fct = torch.nn.L1Loss(reduction='sum')
         elif loss == Loss.SSE:
-            fct =  torch.nn.MSELoss(reduction='sum')
+            fct = torch.nn.MSELoss(reduction='sum')
         elif loss == Loss.MSE:
-            fct =  torch.nn.MSELoss(reduction='mean')
+            fct = torch.nn.MSELoss(reduction='mean')
         elif loss == Loss.CROSS_ENTROPY:
             from packaging import version
             if version.parse(torch.version.__version__) >= version.parse('1.12.0'):
-                fct =  torch.nn.CrossEntropyLoss()
+                fct = torch.nn.CrossEntropyLoss()
             # Cross entropy loss is used for multiclass categorization and needs inputs in shape
             # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
             # and where target is a 1d vector of type long specifying the index to the target category. This
             # formatting is different from most other loss functions available to autodiff compositions,
             # and therefore requires a wrapper function to properly package inputs.
-            fct =  lambda x, y: torch.nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
+            fct = lambda x, y: torch.nn.CrossEntropyLoss()(torch.atleast_2d(x), torch.atleast_2d(y.type(x.type())))
         elif loss == Loss.BINARY_CROSS_ENTROPY:
-            fct =  torch.nn.BCELoss()
+            fct = torch.nn.BCELoss()
         elif loss == Loss.NLL:
-            fct =  torch.nn.NLLLoss(reduction='sum')
+            fct = torch.nn.NLLLoss(reduction='sum')
         elif loss == Loss.POISSON_NLL:
-            fct =  torch.nn.PoissonNLLLoss(reduction='sum')
+            fct = torch.nn.PoissonNLLLoss(reduction='sum')
         elif loss == Loss.KL_DIV:
-            fct =  torch.nn.KLDivLoss(reduction='sum')
+            fct = torch.nn.KLDivLoss(reduction='sum')
         else:
             raise FunctionError(f"The 'loss' parameter of {self.componentName} ({loss.name}) is not supported.")
 
