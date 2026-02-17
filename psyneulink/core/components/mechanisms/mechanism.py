@@ -2594,9 +2594,6 @@ class Mechanism_Base(Mechanism):
 
                 self.parameters.value._set(value, context=context)
 
-            # # UPDATE OUTPUTPORT(S)
-            # self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
-
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
             num_executions = np.asarray(self.parameters.num_executions_before_finished._get(context) + 1)
@@ -2618,6 +2615,9 @@ class Mechanism_Base(Mechanism):
             if not self.parameters.execute_until_finished._get(context):
                 self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
+
+            # Keep source OutputPorts current for recurrent/internal projections between iterative updates.
+            self._update_output_ports_with_efferents(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
         # REPORT EXECUTION
 
@@ -2756,6 +2756,16 @@ class Mechanism_Base(Mechanism):
             port = self.output_ports[i]
             port._update(params=runtime_output_port_params,
                          context=context)
+
+    def _update_output_ports_with_efferents(self, runtime_output_port_params=None, context=None):
+        """Update only OutputPorts that project to other Components.
+
+        This keeps recurrent/feedback projections synchronized during iterative execution
+        without forcing full output-port reporting updates on every internal step.
+        """
+        for port in self.output_ports:
+            if port.efferents:
+                port._update(params=runtime_output_port_params, context=context)
 
     def initialize(self, value, context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
@@ -3463,6 +3473,16 @@ class Mechanism_Base(Mechanism):
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
+
+            # Python execution updates output ports again when exiting because execute_until_finished is False.
+            # Refresh compiled output ports here too, using the incremented execution count.
+            refresh_outputs = builder.and_(exec_until_off, builder.not_(is_finished))
+            with builder.if_then(refresh_outputs):
+                mech_val_ptr = ctx.get_state_space(builder, self, state, VALUE)
+                builder = self._gen_llvm_output_ports(
+                    ctx, builder, mech_val_ptr, base_params, state, arg_in, arg_out
+                )
+
             builder.branch(end_block)
 
         builder.branch(loop_block)
