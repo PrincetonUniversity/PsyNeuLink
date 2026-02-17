@@ -1,5 +1,7 @@
+import contextlib
 import numpy as np
 import pytest
+import re
 
 import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transformfunctions
@@ -74,13 +76,14 @@ class TestInputPorts:
         assert t.input_port.function.operation == pnl.PRODUCT
 
     def test_combine_dict_spec_redundant_with_function(self):
-        with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
+        msg = "Both COMBINE ('product') and FUNCTION (LinearCombination Function) "\
+              "specifications found in InputPort specification dictionary for "\
+              "'InputPort' of 'TransferMechanism-0'; no need to specify both."
+
+        with pytest.warns(UserWarning, match=re.escape(msg)):  # Warn, since default_input is NOT set
             t = pnl.TransferMechanism(input_ports={pnl.COMBINE:pnl.PRODUCT,
                                                    pnl.FUNCTION:pnl.LinearCombination(operation=pnl.PRODUCT)})
-        assert any(w.message.args[0] == "Both COMBINE ('product') and FUNCTION (LinearCombination Function) "
-                                              "specifications found in InputPort specification dictionary for "
-                                              "'InputPort' of 'TransferMechanism-0'; no need to specify both."
-                   for w in warnings)
+
         assert t.input_port.function.operation == pnl.PRODUCT
 
     def test_combine_dict_spec_conflicts_with_function(self):
@@ -132,10 +135,15 @@ class TestInputPorts:
                                                              variable=variable)])
         m.execute()
         assert m.input_port.value == variable
+
         if default_input:
             assert m.input_port.internal_only is True
+            warn_context = contextlib.nullcontext()
         else:
             assert m.input_port.internal_only is False
+            match = "InputPort ('INTERNAL_NODE') of 'TransferMechanism-0' doesn't have any afferent Projections."
+            warn_context = pytest.warns(UserWarning, match=re.escape(match))
+
         comp = pnl.Composition()
         comp.add_node(
             m,
@@ -148,15 +156,8 @@ class TestInputPorts:
 
         assert not m.path_afferents  # No path_afferents since internal_only is set by default_input
 
-
-        if default_input is None:
-            with pytest.warns(UserWarning) as warnings:  # Warn, since default_input is NOT set
-                comp.run()
-            assert any(repr(w.message.args[0]) == '"InputPort (\'INTERNAL_NODE\') of \'TransferMechanism-0\' '
-                                                  'doesn\'t have any afferent Projections."'
-                       for w in warnings)
-        else:
-            comp.run()                   # No warning since default_input is set
+        with warn_context:
+            comp.run()
 
         assert m.input_port.value == variable # For Mechanisms other than controller, default_variable seems
         assert m.value == variable            #     to still be used even though default_input is NOT set
@@ -165,10 +166,13 @@ class TestInputPorts:
         A = pnl.InputPort()
         with pytest.raises(pnl.PortError) as error:
             A.efferents
+
         assert 'InputPorts do not have \'efferents\'; (access attempted for Deferred Init InputPort).' \
                in str(error.value)
+
         with pytest.raises(pnl.PortError) as error:
             A.efferents = ['test']
+
         assert 'InputPorts are not allowed to have \'efferents\' ' \
                '(assignment attempted for Deferred Init InputPort).' in str(error.value)
 
@@ -286,10 +290,6 @@ class TestDefaultInput:
         np.testing.assert_array_equal(comp.run(inputs), [[10], [5]])
 
         b.input_ports[1].parameters.default_input.set(None, override=True)
-        with pytest.raises(
-            pnl.FunctionError, match="may be due to missing afferent projection"
-        ):
-            with pytest.warns(
-                UserWarning, match="'ProcessingMechanism-1' doesn't have any afferent Projections"
-            ):
+        with pytest.raises(pnl.FunctionError, match="may be due to missing afferent projection"):
+            with pytest.warns(UserWarning, match="'ProcessingMechanism-1' doesn't have any afferent Projections"):
                 comp.run(inputs)

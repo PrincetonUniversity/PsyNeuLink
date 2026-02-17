@@ -1,4 +1,4 @@
-# "License");
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -1196,7 +1196,7 @@ determining the learning_rate for a Projection used at execution:
    |                |    ``my_learning_mechanimsm=LearningMechanism(learning_rate=val)``                                                  |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Learning pathway <Composition_Learning_Pathway>` constructor                                                      |
-   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                                |
+   |                |    ``my_composition.add_linear_learning_pathway([<pathway>], learning_rate=val)``                                   |
    |                +---------------------------------------------------------------------------------------------------------------------+
    |                |  `Composition.learn` method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition    |
    |                |    ``my_composition.learn(learning_rate=val or {DEFAULT_LEARNING_RATE: val})`` (applies only during that execution) |
@@ -1211,51 +1211,51 @@ determining the learning_rate for a Projection used at execution:
    | **No effect**: |    ``my_projection.learning_rate=val`` (see `note <Composition_Learning_Rate_Assignment_After_Construction>` above) |
    +----------------+---------------------------------------------------------------------------------------------------------------------+
 
-   .. hint::
-      If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
-      assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
-      specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
-      of the first Composition within which it is nested that has an explicitly specified `learning_rate
-      <Composition.learning_rate>`, or the default learning_rate for the outermost Composition if no Composition
-      learning_rates are explicitly specified.
+.. hint::
+    If the learning_rate of a Projection in a `nested Composition <Composition_Nested>` is not specified, it is
+    assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
+    specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
+    of the first Composition within which it is nested that has an explicitly specified `learning_rate
+    <Composition.learning_rate>`, or the default learning_rate for the outermost Composition if no Composition
+    learning_rates are explicitly specified.
 
-   .. note::
-      Specifying a numeric value for the **learning_rate** argument of a Composition's `learn <Composition.learn>`
-      method overrides all other specifications, except assignment of ``False`` to the `learning_rate
-      <MappingProjection.learning_rate>` Parameter or `learnable <MappingProjection.learnable>` attribute of a
-      Projection, or the `enable_learning <Composition.enable_learning>` attribute of a Composition (see next note);
-      however, it applies only for that execution.
+.. note::
+    Specifying a numeric value for the **learning_rate** argument of a Composition's `learn <Composition.learn>`
+    method overrides all other specifications, except assignment of ``False`` to the `learning_rate
+    <MappingProjection.learning_rate>` Parameter or `learnable <MappingProjection.learnable>` attribute of a
+    Projection, or the `enable_learning <Composition.enable_learning>` attribute of a Composition (see next note);
+    however, it applies only for that execution.
 
-   .. note::
-      Setting `enable_learning <Composition.enable_learning>` (for a Composition) and/or `learnable
-      <MappingProjection.learnable>` (for Projections) to ``False`` take precedence over any other assignments;
-      in either case, no learning takes place for that object (though, for a Composition, learning may occur for
-      Compositions nested within it), irrespective of any specifications in the **learning_rate** argument of
-      the Composition's constructor and/or its `learn <Composition.learn>` method.
+.. note::
+    Setting `enable_learning <Composition.enable_learning>` (for a Composition) and/or `learnable
+    <MappingProjection.learnable>` (for Projections) to ``False`` take precedence over any other assignments;
+    in either case, no learning takes place for that object (though, for a Composition, learning may occur for
+    Compositions nested within it), irrespective of any specifications in the **learning_rate** argument of
+    the Composition's constructor and/or its `learn <Composition.learn>` method.
 
-   .. _Composition_Learning_Rate_False:
+.. _Composition_Learning_Rate_False:
 
-   .. note::
+.. note::
 
-      Specifying **learning_rate** as ``False`` in Composition's constructor or `learn() <Composition.learn>` method
-      applies only to Projections within its scope assigned 'None' (i.e., it functions as the default `learning_rate
-      <MappingProjection.learning_rate>` for those Projections); Projecions assigned a numeric value use that value,
-      and any assigned `True` use the first explicitly specified Composition `learning_rate <Composition.learning_rate>`
-      that is not ``False`` found in the nesting hierarchy, or the default learning_rate for the outermost
-      Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection's
-      `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against assigning 'False' to the
-      `learning_rate <Composition.learning_rate>` of the Composition to which it belongs or any within which that is
-      nested, and forces use of a default value procured from a Composition within which it is nested; however, if
-      there is no such Composition, or the outermost one is set to ``False``, then it will be assigned ``False``.
-      Nevertheless, as suggested in the warning below, the safest way to fully disable learning for a Composition is
-      to set its `enable_learning <Composition.enable_learning>` attribute to ``False``.
+    Specifying **learning_rate** as ``False`` in Composition's constructor or `learn() <Composition.learn>` method
+    applies only to Projections within its scope assigned 'None' (i.e., it functions as the default `learning_rate
+    <MappingProjection.learning_rate>` for those Projections); Projecions assigned a numeric value use that value,
+    and any assigned `True` use the first explicitly specified Composition `learning_rate <Composition.learning_rate>`
+    that is not ``False`` found in the nesting hierarchy, or the default learning_rate for the outermost
+    Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection's
+    `learning_rate <MappingProjection.learning_rate>` as 'True' "protects" it against assigning 'False' to the
+    `learning_rate <Composition.learning_rate>` of the Composition to which it belongs or any within which that is
+    nested, and forces use of a default value procured from a Composition within which it is nested; however, if
+    there is no such Composition, or the outermost one is set to ``False``, then it will be assigned ``False``.
+    Nevertheless, as suggested in the warning below, the safest way to fully disable learning for a Composition is
+    to set its `enable_learning <Composition.enable_learning>` attribute to ``False``.
 
-   .. warning::
-      Setting the `learning_rate <Composition.learning_rate>` to ``False`` does not necessarily disable learning
-      for the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
-      overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
-      <Composition.learn>` method. To fully disable learning for a Composition, its `enable_learning
-      <Composition.enable_learning>` attribute should be set to ``False``.
+.. warning::
+    Setting the `learning_rate <Composition.learning_rate>` to ``False`` does not necessarily disable learning
+    for the Composition -- it does so only for Projections within its scope that are assigned 'None', and can be
+    overridden by specifying a numeric value for the **learning_rate** argument of the Composition's `learn
+    <Composition.learn>` method. To fully disable learning for a Composition, its `enable_learning
+    <Composition.enable_learning>` attribute should be set to ``False``.
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -3945,7 +3945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     :type: ``list``
         """
         enable_learning = Parameter(True, structural=True)
-        learning_rate = Parameter(.05, fallback_value=DEFAULT)
+        learning_rate = Parameter(.05)
         learning_rates_dict = Parameter({}, stateful=True, pnl_internal=True, modulable=False, loggable=False)
         minibatch_size = Parameter(1, modulable=True, pnl_internal=True)
         optimizations_per_minibatch = Parameter(1, modulable=True, pnl_internal=True)
@@ -3980,6 +3980,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate:Optional[Union[float, int, dict]] = None,
             minibatch_size:int = 1,
             optimizations_per_minibatch:int = 1,
+            execute_in_additional_optimizations=None,  # BREADCRUMB: MOVE TO AUTODIFF
             controller: ControlMechanism = None,
             enable_controller=None,
             controller_mode: Literal['before', 'after'] = 'after',
@@ -4045,6 +4046,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
+        self.execute_in_additional_optimizations = execute_in_additional_optimizations or {}  # BREADCRUMB: MOVE TO AUTODIFF
 
         # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -6050,13 +6052,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check for any errant / residual output_CIM.input_ports
         #  (these can result from order of construction and/or selective outputs from nodes within a nested Composition)
-        # Do this by checking if the source of the projection to each output_CIM.input_port has any other efferents;
+        # Do this by checking if the sender of the projection to each output_CIM.input_port has any other efferents;
         #  if it does, and the following are true:
         #  - the Node is not a PROBE or a CYCLE Node in a cycle all of which are output NODES
         #  - and the other efferents are NOT to ones allowed for an OUTPUT Node
-        #    (i.e., AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
+        #    (i.e., PROBES, AutoassociativeProjections, or ones to OBJECTIVE, CONTROL, or LEARNING Nodes)
         #  then the Node should NOT be considered an OUTPUT Node,
-        #  so remove the input_port for it on the OutputCIM and the corresponding Projection
+        #  so remove the input_port for it on the OutputCIM and the corresponding Projection to that
         defunct_input_ports = set()
         for input_port in self.output_CIM.input_ports:
             # First ensure that input_port under consideration has only one afferent belonging to the Composition
@@ -6074,13 +6076,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # And check the other efferents of its sender
             # FIX: 9/1/23 - NEED TO CHECK THAT ALL NODES IN THE CYCLE ARE OUTPUT NODES, OTHERWISE THEY SHOULD BE PROBES
             #               LEAVE PROJECTION FROM SENDER TO AN OUTPUT_CIM.INPUT_PORT THAT IS A PROBE TO
+            # BREADCRUMB: SHOULD MAKE THE FOLLOWING A METHOD ON Composition OR A ROLE ASSIGNMENT
+            # If projection's sender:
+            #   is not a PROBE, OUTPUT or in a CYCLE
+            #   and its other efferents are in self.projections
+            #       and go to Nodes that are not OUTPUT Nodes in self
+            #  then remove the input_port for it on the output_CIM and the corresponding Projection
             if (node not in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.CYCLE)
                     and NodeRole.OUTPUT not in self.get_required_roles_by_node(node)
                     and not proj_sender_is_PROBE
-                    and len([p for p in proj.sender.efferents
+                    and any([p for p in proj.sender.efferents
                              if (p in self.projections
-                                 and p.receiver.owner in self.get_nodes_by_role(NodeRole.OUTPUT)
-                                 and not isinstance(p, AutoAssociativeProjection))]) != 0):
+                                 and p.receiver.owner in self.nodes
+                                 and not isinstance(p.receiver.owner, ControlMechanism)
+                                 and not any(role in {NodeRole.CONTROLLER,
+                                                      NodeRole.FEEDBACK_RECEIVER,
+                                                      NodeRole.CONTROLLER_OBJECTIVE,
+                                                      NodeRole.CONTROL_OBJECTIVE,
+                                                      NodeRole.LEARNING}
+                                             for role in self.get_roles_by_node(p.receiver.owner))
+                                 and not isinstance(p, AutoAssociativeProjection))])):
                 defunct_input_ports.add(input_port)
         # Remove afferent to each defunct input_port and then the input_port and its corresponding output_port
         for input_port in defunct_input_ports:
@@ -10388,23 +10403,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             """
             Recursively calls update on dictionaries, which prevents deletion of keys
             """
-            for key, val in u.items():
+            for key, val in u.copy().items():
                 if isinstance(val, collections.abc.Mapping):
                     d[key] = _recursive_update(d.get(key, {}), val)
                 else:
                     d[key] = val
+                # Remove entry from targets dict to avoid duplicate target warnings
+                u.pop(key)
             return d
+
+        duplicate_targets = sorted([item.name for item in inputs if targets and item in targets])
+        if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
+            warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
+                          f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
+                          f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
+            self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         if targets is not None:
             targets = self._infer_target_nodes(targets, execution_mode)
             inputs = _recursive_update(inputs, targets)
-
-            duplicate_targets = sorted([item.name for item in inputs if item in targets])
-            if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
-                warnings.warn(f"There are one or more TARGET_MECHANISMS specified in both the 'inputs' and 'targets' "
-                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); "
-                              f"This isn't technically a problem, but it is redundant so thought you should know ;^).")
-                self._warned_about_targets_mechs_in_inputs_and_targets = True
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
@@ -11762,7 +11779,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    content='run_start',
                    context=context)
 
-            self.TRIAL_NUM = -1
+            self._trial_num = -1  # For debugging
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -11782,6 +11799,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ):
                     break
 
+                optimization_num = None
+
                 # PROCESSING ------------------------------------------------------------------------
                 # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
                 if input_nodes:
@@ -11794,7 +11813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # from the call to _parse_learning_spec
                         if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
                                                     'CompositionRunner._batch_function_inputs' in str(inputs)):
-                            execution_stimuli = next(inputs)
+                            execution_stimuli, optimization_num = next(inputs)
                         else:
                             execution_stimuli = self._parse_trial_inputs(inputs, trial_num, context)
 
@@ -11806,6 +11825,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # execute processing, passing stimuli for this trial
                 # IMPLEMENTATION NOTE: for autodiff, the following executes the forward pass for a single input
                 trial_output = self.execute(inputs=execution_stimuli,
+                                            optimization_num=optimization_num,
                                             scheduler=scheduler,
                                             termination_processing=termination_processing,
                                             call_before_time_step=call_before_time_step,
@@ -11917,6 +11937,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learning_rate: Optional[Union[int,float]]=None,
             minibatch_size:Optional[int]=None,
             optimizations_per_minibatch:Optional[int]=None,
+            execute_in_additional_optimizations: Optional[dict] = None,  # BREADCRUMB MOVE TO AUTODIFF
             patience: Optional[int] = None,
             min_delta: int = 0,
             execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
@@ -11983,16 +12004,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 they are responsible; this overrides the Composition's default value.
 
             optimizations_per_minibatch : int (default=1)
-                specifies the number of executions and weight updates of learnable pathways that are carried out for
-                each set of stimuli in a `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's
-                default value.
+                specifies the number of executions and weight updates of learnable pathways (forward and backward
+                passes -- or optimization steps -- in PyTorch), that are carried out for each set of stimuli in a
+                `minibatch <LearningScale.MINIBATCH>`; this overrides the Composition's default value. Optimization
+                steps after the first can be restricted to a subset of nodes using the
+                **execute_in_additional_optimizations** argument (see below), which can also designate particular
+                Parameter values used for those optimization steps.
 
                 .. hint::
                    This can be used to implement the `backprop-to-activation procedure
                    <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
                    learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
-                   for a pattern of activation in response to a given input (or set of inputs) that is useful for some
-                   downstream purpose.
+                   for a pattern of activation in response to a given input (or set of inputs) that is useful for
+                   some downstream purpose (see EGO Model for an example).
+
+            # BREADCRUMB: 8/21/25 MOVE THIS (AND REFERENCE ABOVE TO IT) TO AutodiffComposition
+            execute_in_additional_optimizations : dict{`Node <Composition_Nodes>`:[(Parameter, value)]} (default None)
+                specifies which `Nodes <Composition_Nodes>` of the Composition should be included in the forward pass
+                for any additional optimization steps after the first (see **optimizations_per_minibatch** for
+                additional information); each key should be a `Node <Composition_Nodes>` in the Composition or one
+                nested within it, and the value can be one of the following:
+
+                  *None* or *True*: execute in additional optimizations without any modificadtion(s) to its Parameters;
+
+                  *False* or *EXCLUDE*: exclude from execution during additional optimizations;  this is useful
+                    primarly when a nested Composition is specified but nodes within it should be excluded;
+
+                  *(Parameter, value)* or *[(Parameter, value), ...]*: assign specified Parameter values during
+                    execution of additional optimizations, restoring to previous value(s) for first optimization
+                    of next trial.
+
+                If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
+                are included, except for ones explicitly excluded.
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized in each epoch
@@ -12097,6 +12140,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
+        else:
+            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
 
         result = runner.run_learning(
             inputs=inputs,
@@ -14151,13 +14196,25 @@ def get_compositions():
 
 def get_composition_for_node(node):
     # Find first CIM to which node projects as indication of the Composition to which it belong
-    receiver = node
-    if not receiver.efferents:
-        return None
-    while not isinstance(receiver, CompositionInterfaceMechanism):
-        for efferent in receiver.efferents:
+
+    def search_for_output_CIM(node):
+        # Recursively search over all efferents until a CIM is found (will be an output_CIM given direction of search)
+        for efferent in node.efferents:
             receiver = efferent.receiver.owner
-    return receiver.composition
+            if isinstance(receiver, CompositionInterfaceMechanism):
+                return receiver.composition
+            elif isinstance(receiver, ModulatoryMechanism_Base):
+                # End search on this path if receiver is a ModulatoryMechanism since it:
+                #   - won't lead to a CIM
+                #   - likely (always?) will be part of a cycle and thus lead to an infinitely recursive loop
+                return None
+            else:
+                return search_for_output_CIM(receiver)
+        return receiver
+
+    comp = search_for_output_CIM(node)
+    assert isinstance(comp, Composition), f"PROGRAM ERROR: can't find Composition for node: {node.name}"
+    return comp
 
 
 class LearningScale(PNLStrEnum):

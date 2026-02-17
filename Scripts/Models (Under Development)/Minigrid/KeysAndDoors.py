@@ -7,9 +7,10 @@ from msdm.core.distributions import DictDistribution
 
 # Door states: O - open, D - Door closed, R - red locked, G - green locked, etc
 
-State = namedtuple("State", "x y door_states key_states holding_key key_color")
-Action = namedtuple("Action", "dx dy open pickup")
-Observation = namedtuple("Observation", "x y obs_grid door_states key_states holding_key key_color")
+State = namedtuple("State", "x y door_states key_states holding_key key_color heaven heaven_certainty")
+Action = namedtuple("Action", "right left up down open pickup read")
+Observation = namedtuple("Observation",
+                         "x y obs_grid door_states key_states holding_key key_color heaven heaven_certainty")
 
 
 class KeysAndDoors(TabularPOMDP):
@@ -19,6 +20,8 @@ class KeysAndDoors(TabularPOMDP):
             discount_rate=.95,
             step_cost=-1,
             target_reward=100,
+            heaven_reward=50,
+            hell_reward=-50,
             grid=None
     ):
         """
@@ -32,6 +35,7 @@ class KeysAndDoors(TabularPOMDP):
                           `s` is the initial state,
                           `#` are walls,
                           't' is the target
+                          'h' and 'j' are potential heaven/hell locations
                           'd' are closed doors
                           'O' are open doors
                           'R', 'G', 'B'... etc are locked doors
@@ -75,6 +79,12 @@ class KeysAndDoors(TabularPOMDP):
         self.discount_rate = discount_rate
         self.step_cost = step_cost
         self.target_reward = target_reward
+        self.heaven_reward = heaven_reward
+        self.hell_reward = hell_reward
+        if "t" in self.loc_features.values():
+            self.target_included = True
+        else:
+            self.target_included = False
 
     def initial_state_dist(self):
         x, y = self.features_loc['s'][0]
@@ -90,39 +100,54 @@ class KeysAndDoors(TabularPOMDP):
         # Initializes all keys as present
         key_states = [True] * len(self.key_loc)
 
-        return DictDistribution({
-            State(x=x, y=y, door_states=initial_door_stat, holding_key=False, key_states=tuple(key_states),
-                  key_color=None): 1.0,
-        })
+        if self.target_included:
+            return DictDistribution({
+                State(x=x, y=y, door_states=initial_door_stat, holding_key=False, key_states=tuple(key_states),
+                      key_color=None, heaven='t', heaven_certainty=1.0): 1.0,
+            })
+        else:
+            return DictDistribution({
+                State(x=x, y=y, door_states=initial_door_stat, holding_key=False, key_states=tuple(key_states),
+                      key_color=None, heaven='j', heaven_certainty=0.0): 0.5,
+                State(x=x, y=y, door_states=initial_door_stat, holding_key=False, key_states=tuple(key_states),
+                      key_color=None, heaven='h', heaven_certainty=0.0): 0.5,
+            })
 
     # Current Actions: x, y, open door, Pick up key
     def actions(self, s):
         return (
-            Action(0, -1, False, False),
-            Action(0, 1, False, False),
-            Action(-1, 0, False, False),
-            Action(1, 0, False, False),
-            Action(0, 0, True, False),
-            Action(0, 0, False, True),
+            Action(1, 0, 0, 0, False, False, False),
+            Action(0, 1, 0, 0, False, False, False),
+            Action(0, 0, 1, 0, False, False, False),
+            Action(0, 0, 0, 1, False, False, False),
+            Action(0, 0, 0, 0, True, False, False),
+            Action(0, 0, 0, 0, False, True, False),
+            Action(0, 0, 0, 0, False, False, True),
         )
 
     def is_absorbing(self, s):
         loc = (s.x, s.y)
-        return self.loc_features.get(loc) == 't'
+        targets = ["t", "j", "h"]
+        return self.loc_features.get(loc) in targets
 
     def next_state_dist(self, s, a):
         x, y = s.x, s.y
-        nx, ny = (s.x + a.dx, s.y + a.dy)
+        nx, ny = (s.x + a.right - a.left, s.y + a.down - a.up)
         door_states = list(s.door_states)
         key_states = list(s.key_states)
         adjacent = []
         key_state = s.holding_key
         held_color = s.key_color
 
+        certainty = s.heaven_certainty
+        if a.read and self.loc_features.get((x, y)) == 'c':
+            certainty = self.coherence
+
         # Don't consider states outside of the grid
         if nx < 0 or nx >= self.width or ny < 0 or ny >= self.height:
             return DictDistribution({State(x=x, y=y, door_states=tuple(door_states), key_states=tuple(key_states),
-                                           holding_key=key_state, key_color=held_color): 1.0})
+                                           holding_key=key_state, key_color=held_color, heaven=s.heaven,
+                                           heaven_certainty=certainty): 1.0})
 
         # Check if agent is on an edge
         if (x - 1 >= 0):
@@ -166,14 +191,23 @@ class KeysAndDoors(TabularPOMDP):
 
         return DictDistribution({
             State(x=nx, y=ny, door_states=tuple(door_states), key_states=tuple(key_states), holding_key=key_state,
-                  key_color=held_color): 1.0
+                  key_color=held_color, heaven=s.heaven, heaven_certainty=certainty): 1.0
         })
 
     def reward(self, s, a, ns):
         r = 0
         r += self.step_cost
-        if self.loc_features[(ns.x, ns.y)] == 't':
-            r += self.target_reward
+        loc = (ns.x, ns.y)
+        loc_feature = self.loc_features.get(loc)
+
+        if self.target_included:
+            if loc_feature == 't':
+                r += self.target_reward
+        else:
+            if loc_feature == ns.heaven:
+                r += self.heaven_reward
+            elif loc_feature in ['j', 'h'] and loc_feature != ns.heaven:
+                r += self.hell_reward
         return r
 
     def observation_dist(self, a, ns):
@@ -237,10 +271,49 @@ class KeysAndDoors(TabularPOMDP):
             else:
                 obs_door.append(None)
 
-        return DictDistribution({
-            Observation(x=ns.x, y=ns.y, obs_grid=tuple(obs_grid), door_states=tuple(obs_door), key_states=ns.key_states,
-                        holding_key=ns.holding_key, key_color=ns.key_color): 1.0
-        })
+        # Heaven/Hell Observation
+        nloc = (ns.x, ns.y)
+        if self.target_included:
+            # If target is included, always certain and always 't'
+            heaven_obs = 't'
+            certainty_obs = 1.0
+
+            return DictDistribution({
+                Observation(x=ns.x, y=ns.y, obs_grid=tuple(obs_grid),
+                            door_states=tuple(obs_door), key_states=ns.key_states,
+                            holding_key=ns.holding_key, key_color=ns.key_color,
+                            heaven=heaven_obs, heaven_certainty=certainty_obs): 1.0
+            })
+        else:
+            # Heaven/Hell scenario with uncertainty
+            if a.read and self.loc_features.get(nloc) == 'c':
+                # Reading at the church gives coherent signal and increases certainty
+                return DictDistribution({
+                    Observation(x=ns.x, y=ns.y, obs_grid=tuple(obs_grid),
+                                door_states=tuple(obs_door), key_states=ns.key_states,
+                                holding_key=ns.holding_key, key_color=ns.key_color,
+                                heaven=ns.heaven, heaven_certainty=self.coherence): self.coherence,
+                    Observation(x=ns.x, y=ns.y, obs_grid=tuple(obs_grid),
+                                door_states=tuple(obs_door), key_states=ns.key_states,
+                                holding_key=ns.holding_key, key_color=ns.key_color,
+                                heaven=('j' if ns.heaven == 'h' else 'h'),
+                                heaven_certainty=self.coherence): 1 - self.coherence
+                })
+            else:
+                # Not reading at church
+                if ns.heaven_certainty >= self.coherence:
+                    # Already certain - show the heaven location
+                    heaven_obs = ns.heaven
+                else:
+                    # Still uncertain - show unknown
+                    heaven_obs = ' '
+
+                return DictDistribution({
+                    Observation(x=ns.x, y=ns.y, obs_grid=tuple(obs_grid),
+                                door_states=tuple(obs_door), key_states=ns.key_states,
+                                holding_key=ns.holding_key, key_color=ns.key_color,
+                                heaven=heaven_obs, heaven_certainty=ns.heaven_certainty): 1.0
+                })
 
     def state_string(self, s):
         grid = copy.deepcopy(self.grid)

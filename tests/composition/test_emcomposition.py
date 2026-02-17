@@ -1,5 +1,7 @@
+import contextlib
 import numpy as np
 import pytest
+import re
 from types import MappingProxyType
 
 import psyneulink as pnl
@@ -229,9 +231,11 @@ class TestConstruction:
         em = EMComposition()
         with pytest.raises(EMCompositionError) as error_text:
             em.add_node(pnl.ProcessingMechanism())
+
         assert "Nodes cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
         with pytest.raises(EMCompositionError) as error_text:
             em.add_projection(pnl.MappingProjection())
+
         assert "Projections cannot be added to an EMComposition: ('EM_Composition')." in str(error_text.value)
 
     @pytest.mark.parametrize("softmax_choice, expected",
@@ -260,13 +264,11 @@ class TestConstruction:
             em.parameters.softmax_choice.set(softmax_choice)
             em.learn()
 
-        for softmax_choice in [pnl.ARG_MAX, pnl.PROBABILISTIC]:
-            with pytest.warns(UserWarning) as warning:
-                em = EMComposition(softmax_choice=softmax_choice, enable_learning=True)
-                warning_msg = (f"The 'softmax_choice' arg of '{em.name}' is set to '{softmax_choice}' with "
-                               f"'enable_learning' set to True; this will generate an error if its "
-                               f"'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
-            assert warning_msg in str(warning[0].message)
+        warning_msg = (f"The 'softmax_choice' arg of 'EM_Composition-1' is set to '{softmax_choice}' with "
+                       "'enable_learning' set to True; this will generate an error if its "
+                       "'learn' method is called. Set 'softmax_choice' to WEIGHTED_AVG before learning.")
+        with pytest.warns(UserWarning, match=re.escape(warning_msg)):
+            EMComposition(softmax_choice=softmax_choice, enable_learning=True)
 
     def test_fields_arg_and_associated_errors(self):
 
@@ -298,7 +300,10 @@ class TestConstruction:
         target_fields = [None, None, None, [True, False]]
         comp_name = ["COMP_FN", "COMP_FW", "COMP_LFW", "COMP_TF"]
         for fn, fw, lfw, tf, cn in zip(field_names, field_weights, learn_field_weights, target_fields, comp_name):
-            with pytest.warns(UserWarning) as warning:
+            warning_msg = (f"The 'fields' arg for '{cn}' was specified, so any of the "
+                            "'field_names', 'field_weights',  'learn_field_weights' or "
+                            "'target_fields' args will be ignored.")
+            with pytest.warns(UserWarning, match=re.escape(warning_msg)):
                 EMComposition(name=cn,
                               memory_template=(2,1),
                               memory_capacity=1,
@@ -308,19 +313,15 @@ class TestConstruction:
                               field_weights=fw,
                               learn_field_weights=lfw,
                               target_fields=tf)
-            assert (f"The 'fields' arg for '{cn}' was specified, so any of the "
-                    f"'field_names', 'field_weights',  'learn_field_weights' or "
-                    f"'target_fields' args will be ignored." in str(warning[0].message))
 
+        warning_msg = ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
+                       "but it is not allowed for value fields; it will be ignored.")
         # Test error on specification of learning for value field
-        with pytest.warns(UserWarning) as warning:
+        with pytest.warns(UserWarning, match=re.escape(warning_msg)):
             EMComposition(memory_template=(2,1),
                           memory_capacity=1,
                           fields={'A': (1.2, 3.4, True),
                                   'B': (None, True, True)})
-        assert ("A learning_rate was specified for field 'B' in the 'learn_field_weights' arg for 'EM_Composition', "
-                "but it is not allowed for value fields; it will be ignored."
-                 in str(warning[0].message))
         # MODIFIED 6/19/25 OLD:  WARNING NO LONGER OCCURS ON CONSTRUCTION, BUT IT SHOULD BE RAISED ON LEARN
         # assert ("The 'enable_learning' arg of 'EM_Composition-1' is set to 'True', but it has only one key "
         #         "('A [QUERY]-5') so fields_weights and learning will have no effect; therefore, "
@@ -493,46 +494,45 @@ class TestConstruction:
         # pytest.skip(<UNECESSARY TESTS>>)
 
         def construct_em(field_weights):
-            return pnl.EMComposition(memory_template=[[[5,0], [5], [5,0,3]], [[20,0], [20], [20,1,199]]],
+            return pnl.EMComposition(memory_template=[[[5, 0], [5], [5, 0, 3]], [[20, 0], [20], [20, 1, 199]]],
                                      memory_capacity=4,
                                      field_weights=field_weights)
 
         field_weights = field_weight_1 + field_weight_2 + field_weight_3
-        em = None
 
-        if all([fw is None for fw in field_weights]):
-            with pytest.raises(EMCompositionError) as error_text:
+        if all(fw is None for fw in field_weights):
+            error_msg = ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
+                         "since that will preclude the construction of any keys.")
+            with pytest.raises(EMCompositionError, match=re.escape(error_msg)):
                 construct_em(field_weights)
-            assert ("The entries in 'field_weights' arg for EM_Composition can't all be 'None' "
-                    "since that will preclude the construction of any keys." in str(error_text.value))
+
+            return
 
         elif not any(field_weights):
-            with pytest.warns(UserWarning) as warning:
-                em = construct_em(field_weights)
-            assert ("All of the entries in the 'field_weights' arg for EM_Composition "
-                    "are either None or set to 0; this will result in no retrievals "
-                    "unless/until one or more of them are changed to a positive value."
-                    in str(warning[0].message))
+            warning_msg = ("All of the entries in the 'field_weights' arg for EM_Composition "
+                           "are either None or set to 0; this will result in no retrievals "
+                           "unless/until one or more of them are changed to a positive value.")
+            expectation = pytest.warns(UserWarning, match=re.escape(warning_msg))
 
-        elif any([fw == 0 for fw in field_weights]):
-            with pytest.warns(UserWarning) as warning:
-                em = construct_em(field_weights)
+        elif any(fw == 0 for fw in field_weights):
             warning_msg = ("Some of the entries in the 'field_weights' arg for EM_Composition are set to 0; those "
                            "fields will be ignored during retrieval unless/until they are changed to a positive value.")
-            assert warning_msg in str(warning[0].message)
+            expectation = pytest.warns(UserWarning, match=re.escape(warning_msg))
 
         else:
+            expectation = contextlib.nullcontext()
+
+        with expectation:
             em = construct_em(field_weights)
 
-        if em:
-            for field_weight, field in zip(field_weights, em.fields):
-                # Validate proper field-type assignments
-                if field_weight is None:
-                    assert field.type == pnl.FieldType.VALUE
-                else:
-                    assert field.type == pnl.FieldType.KEY
-                # Validate alignment of field with memory
-                assert len(field.memories[0]) == [2,1,3][field.index]
+        for field_weight, field in zip(field_weights, em.fields):
+            # Validate proper field-type assignments
+            if field_weight is None:
+                assert field.type == pnl.FieldType.VALUE
+            else:
+                assert field.type == pnl.FieldType.KEY
+            # Validate alignment of field with memory
+            assert len(field.memories[0]) == [2, 1, 3][field.index]
 
     test_args_for_learning_rate_errors = [
         ("learning_rate_dict",
@@ -548,6 +548,7 @@ class TestConstruction:
     def test_learning_rate_specification_errors(self, _condition, learning_rate, fields, error_message):
         learning_rate = dict(learning_rate) if isinstance(learning_rate, MappingProxyType) else learning_rate
         fields = dict(fields) if isinstance(fields, MappingProxyType) else fields
+
         with pytest.raises(EMCompositionError) as error_text:
             em = EMComposition(name= "EM COMP",
                                memory_template=(5,1),

@@ -1,5 +1,7 @@
 import numpy as np
 import pytest
+import re
+import warnings
 
 import psyneulink as pnl
 
@@ -481,15 +483,13 @@ class TestConnectCompositionsViaCIMS:
         # NOTE: Adding ports to CIM from command line is disallowed
         error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported; '
                      'these are managed automatically when a Composition is created or modified.')
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(CompositionError, match=re.escape(error_msg)):
             comp.input_CIM.add_ports(InputPort())
-        assert error_msg in str(error_text.value)
 
-        # with pytest.warns(None) as w:
-        #     comp._analyze_graph()
-        #     comp.run({mech: [[1]]})
-        #
-        # assert len(w) == 0
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='error', category=UserWarning)
+            comp._analyze_graph()
+            comp.run({mech: [[1]]})
 
     def test_user_added_ports(self):
 
@@ -516,9 +516,8 @@ class TestConnectCompositionsViaCIMS:
 
         error_msg = ('Adding ports to a CompositionInterfaceMechanism is not supported; '
                      'these are managed automatically when a Composition is created or modified.')
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(CompositionError, match=re.escape(error_msg)):
             comp.input_CIM.add_ports([inp, out])
-        assert error_msg in str(error_text.value)
 
 
     def test_parameter_CIM_port_order(self) -> object:

@@ -1,10 +1,11 @@
 import collections
 import functools
 import logging
-import warnings
-from timeit import timeit
-
 import numpy as np
+import re
+from timeit import timeit
+import warnings
+
 import pytest
 
 import psyneulink as pnl
@@ -599,20 +600,21 @@ comp.add_node(B)
         icomp = Composition(name='iCOMP', pathways=[A, B])
         comp1 = Composition(name='COMP_1', pathways=[icomp])
         comp2 = Composition(name='COMP_2', pathways=[C, D])
-        with pytest.warns(UserWarning) as warning:
+
+        error_msg_1 = ("\nThe following Projections were specified but are not being used by Nodes "
+                       "in 'iCOMP':\n\tMappingProjection from A[OutputPort-0] to C[InputPort-0] "
+                       "(from 'A' to 'C').")
+        error_msg_2 = ("\nThe following Projections were specified but are not being used by Nodes "
+                       "in 'COMP_2':\n\tMappingProjection from A[OutputPort-0] to C[InputPort-0] "
+                       "(to 'C' from 'A').")
+
+        with pytest.warns(UserWarning, match=re.escape(error_msg_1)), \
+             pytest.warns(UserWarning, match=re.escape(error_msg_2)):
             ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
             icomp.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             comp1.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             comp2.verbosePref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
             ocomp.run()
-        error_msg_1 = ('"\\nThe following Projections were specified but are not being used by Nodes '
-                       'in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
-                       '(from \'A\' to \'C\')."')
-        error_msg_2 = ('"\\nThe following Projections were specified but are not being used by Nodes '
-                       'in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] '
-                       '(to \'C\' from \'A\')."')
-        assert error_msg_1 in repr(warning[0].message.args[0])
-        assert error_msg_2 in repr(warning[1].message.args[0])
 
 
 @pytest.mark.composition
@@ -2625,7 +2627,7 @@ class TestExecutionOrder:
         for i in range(len(comp.scheduler.consideration_queue)):
             assert comp.scheduler.consideration_queue[i] == expected_consideration_sets[i]
 
-    @pytest.mark.parametrize('position', range(4), ids=range(4))
+    @pytest.mark.parametrize('position', range(4))
     # @pytest.mark.parametrize('position',d [1])
     def test_order_of_ctl_mech_in_pathway(self, position):
         ia = TransferMechanism(name='ia')
@@ -2643,9 +2645,9 @@ class TestExecutionOrder:
             warning_msg = ("'ia' may be an INPUT Node, since it followed a ControlMechanism "
                            "('control_mechanism') that was the first Node in 'pathway' arg "
                            "for add_linear_processing_pathway method of 'comp'.")
-            with pytest.warns(UserWarning) as warning:
+            with pytest.warns(UserWarning, match=re.escape(warning_msg)):
                 comp = Composition(pathway,name='comp')
-            assert warning_msg in str(warning[0].message)
+
             # Since ia follows ctl_mech, it doesn't get any MappingProjection
             #  so it should be considered an INPUT Node along with ctl_mech
             assert {ia,ctl_mech} == set(comp.get_nodes_by_role(NodeRole.INPUT))
@@ -2661,11 +2663,11 @@ class TestExecutionOrder:
             warning_msg_2 = ("'A MappingProjection has been created from 'ia' to ib' since the latter "
                            "followed a ControlMechanism ('control_mechanism') in 'pathway' arg for "
                            "add_linear_processing_pathway method of 'comp'.")
-            with pytest.warns(UserWarning) as warning:
+            with pytest.warns(UserWarning, match=re.escape(warning_msg_1)), \
+                 pytest.warns(UserWarning, match=re.escape(warning_msg_2)):
                 comp = Composition(pathway,name='comp',
                                    prefs={pnl.VERBOSE_PREF: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
-            assert warning_msg_1 in str(warning[2].message)
-            assert warning_msg_2 in str(warning[3].message)
+
             assert comp.get_roles_by_node(ia) == {NodeRole.INPUT, NodeRole.ORIGIN}
             # A MappingProjection should have been added from ia to ib
             assert ib.input_port.path_afferents[0].sender.owner == ia
@@ -4237,11 +4239,12 @@ class TestRun:
         # warning_msg = '"InputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
         #               'doesn\'t have any afferent Projections."'
         # with pytest.raises(TypeError): # Caused by error on B at construction (with only one InputPort "occupied")
-        #     with pytest.warns(warning_type) as warning:
+        #     with pytest.warns(warning_type, match=re.escape(warning_msg)):
         #         comp.run()
-        # assert repr(warning[0].message.args[0]) == warning_msg
+
         with pytest.raises(pnl.FunctionError) as error: # Caused by error on B at construction (with only one InputPort
             comp.run()
+
         assert "Item 1 of variable passed to Linear Function" in str(error.value)
         assert "may be due to missing afferent projection to input_ports[1]" in str(error.value)
 
@@ -4251,11 +4254,10 @@ class TestRun:
         C = ProcessingMechanism(name='C')
         comp = Composition([A,B,C])
         warning_type = UserWarning
-        warning_msg = '"OutputPort (\'UNOCCUPIED\') of \'ProcessingMechanism-1\' ' \
-                      'doesn\'t have any efferent Projections in \'Composition-0\'."'
-        with pytest.warns(warning_type) as warning:
+        warning_msg = "OutputPort ('UNOCCUPIED') of 'ProcessingMechanism-1' " \
+                      "doesn't have any efferent Projections in 'Composition-0'."
+        with pytest.warns(warning_type, match=re.escape(warning_msg)):
             comp.run()
-        assert repr(warning[0].message.args[0]) == warning_msg
 
     def test_one_time_warning_for_run_with_no_inputs(self):
         mech_1 = ProcessingMechanism()
@@ -4265,9 +4267,8 @@ class TestRun:
         # Should get warning on first run
         warning_msg = ('No inputs provided in call to Composition-0.run(). The following defaults will be used for '
                        'each INPUT Node:{(ProcessingMechanism ProcessingMechanism-0): [[[0.0]]]}')
-        with pytest.warns(UserWarning) as warning:
+        with pytest.warns(UserWarning, match=re.escape(warning_msg)):
             comp.run()
-        assert warning_msg in warning[0].message.args[0]
 
         # Should *NOT* get a warning on the second
         with warnings.catch_warnings():
@@ -7002,8 +7003,7 @@ class TestInitialize:
               f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. " \
               f"Its value will be overwritten when the node first executes, and therefore not used."
         with pytest.warns(UserWarning, match=err):
-            a_Composition.run(inputs={A:[1]},
-                              initialize_cycle_values={A:[1]})
+            a_Composition.run(inputs={A:[1]}, initialize_cycle_values={A:[1]})
 
     @pytest.mark.parametrize("context_specified", [True, False])
     def test_initialize_cycles(self, context_specified):
@@ -7688,9 +7688,9 @@ class TestNodeRoles:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
 
     def test_three_node_cycle_with_FEEDBACK(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = TransferMechanism(name='C')
         comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
         comp._analyze_graph()

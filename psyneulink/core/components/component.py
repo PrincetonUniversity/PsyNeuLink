@@ -576,7 +576,7 @@ from psyneulink.core.globals.parameters import (
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceLevel, PreferenceSet, _assign_prefs
-from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix
+from psyneulink.core.globals.registry import register_category, _get_auto_name_prefix, _PNL_INHERENT_PREFIX
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import (
     ContentAddressableList,
@@ -1375,6 +1375,12 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         # 'import psyneulink' call
         newone._is_pnl_inherent = False
 
+        # Remove internal prefix from name if an internal instance is the
+        # source of the copy
+        # FIXME: Use str.removeprefix in Python 3.9+
+        if newone.name.startswith(_PNL_INHERENT_PREFIX):
+            newone.name = newone.name[len(_PNL_INHERENT_PREFIX):]
+
         return newone
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -1386,7 +1392,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         if p.read_only and p.getter is not None:
             return False
 
-        # Shared and aliased parameters are for user conveniecne and not compiled.
+        # Shared and aliased parameters are for user convenience and not compiled.
         if isinstance(p, (ParameterAlias, SharedParameter)):
             return False
 
@@ -1634,37 +1640,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     def llvm_param_ids(self):
         return self._get_param_ids()
 
-    def _is_param_modulated(self, p):
-        try:
-            if p in self.owner.parameter_ports:
-                return True
-        except AttributeError:
-            pass
-        try:
-            if p in self.parameter_ports:
-                return True
-        except AttributeError:
-            pass
-        try:
-            modulated_params = (
-                getattr(self.parameters, p.sender.modulation).source
-                for p in self.owner.mod_afferents)
-            if p in modulated_params:
-                return True
-        except AttributeError:
-            pass
-
-        return False
-
     def _get_param_initializer(self, context):
         def _convert(x):
             if isinstance(x, Enum):
                 return x.value
+
             elif isinstance(x, SampleIterator):
                 if isinstance(x.generator, list):
                     return tuple(v for v in x.generator)
+
                 else:
                     return (x.start, x.step, x.num)
+
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
@@ -1672,28 +1659,30 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 # This can't use tupleize and needs to recurse to handle
                 # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
+
             except TypeError:
                 return x if x is not None else tuple()
 
         def _get_values(p):
             param = p.get(context)
-            # Modulated parameters change shape to array
-            if np.ndim(param) == 0 and self._is_param_modulated(p):
-                return (param,)
-            elif p.name == 'num_trials_per_estimate': # Should always be int
+            if p.name == 'num_trials_per_estimate': # Should always be int
                 return 0 if param is None else int(param)
+
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asarray(param, dtype=float).ravel())
+
             return _convert(param)
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
-    def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
+    def _gen_llvm_function_reset(self, ctx:pnlvm.LLVMBuilderContext, builder:pnlvm.ir.IRBuilder, *_, tags:frozenset):
         assert "reset" in tags
         return builder
 
-    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
-                                    extra_args=[], tags:frozenset):
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, extra_args=[], tags:frozenset):
+        assert not self.is_pnl_inherent, "Can't compile internal Component: {}".format(self.name)
+        assert not self.name.startswith(_PNL_INHERENT_PREFIX), "Can't compile internal Component: {}".format(self.name)
+
         args = [ctx.get_param_struct_type(self).as_pointer(),
                 ctx.get_state_struct_type(self).as_pointer(),
                 ctx.get_input_struct_type(self).as_pointer(),
@@ -1706,11 +1695,11 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                 p.attributes.add('noalias')
 
         if "reset" in tags:
-            builder = self._gen_llvm_function_reset(ctx, builder, params, state,
-                                                    arg_in, arg_out, tags=tags)
+            builder = self._gen_llvm_function_reset(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
         else:
-            builder = self._gen_llvm_function_body(ctx, builder, params, state,
-                                                   arg_in, arg_out, tags=tags)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+
         builder.ret_void()
         return builder.function
 

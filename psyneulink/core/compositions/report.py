@@ -155,7 +155,7 @@ from psyneulink._typing import Union, Optional
 import numpy as np
 from rich import print, box
 from rich.color import Color
-from rich.console import Console, RenderGroup
+from rich.console import Console, Group
 from rich.padding import Padding
 from rich.panel import Panel
 from rich.progress import Progress as RichProgress
@@ -1156,7 +1156,7 @@ class Report:
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = \
-                    Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
+                    Padding.indent(Panel(Group(*(self.output_reports[node][DEFAULT][-1].run_report)),
                                          box=outer_panel_box,
                                          border_style=outer_panel_color,
                                          title=title,
@@ -1201,7 +1201,7 @@ class Report:
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 output_report.trial_report.append('')
                 title = f'[bold {time_step_panel_color}]\nTime Step {scheduler.get_clock(context).time.time_step}[/]'
-                output_report.trial_report.append(Padding.indent(Panel(RenderGroup(*output_report.time_step_report),
+                output_report.trial_report.append(Padding.indent(Panel(Group(*output_report.time_step_report),
                                                                        # box=box.HEAVY,
                                                                        border_style=time_step_panel_color,
                                                                        box=time_step_panel_box,
@@ -1223,7 +1223,7 @@ class Report:
                     title = self._trial_header_stack.pop()
                 else:
                     title = f'[bold{trial_panel_color}] {caller.name}{self._mode_str}: Trial {trial_num}[/] '
-                output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
+                output_report.trial_report = Padding.indent(Panel(Group(*output_report.trial_report),
                                                                   box=default_trial_panel_box,
                                                                   border_style=trial_panel_color,
                                                                   title=title,
@@ -1259,7 +1259,7 @@ class Report:
                                    f" {control_allocation}")
                 title = f'[bold{controller_panel_color}] {node.name} SIMULATION OF {node.composition.name}[/] ' \
                         f'{node.composition.controller_mode.upper()} its Trial {trial_num}'
-                ctlr_report = Padding.indent(Panel(RenderGroup(*ctlr_report),
+                ctlr_report = Padding.indent(Panel(Group(*ctlr_report),
                                                    box=controller_panel_box,
                                                    border_style=controller_panel_color,
                                                    title=title,
@@ -1279,7 +1279,7 @@ class Report:
                 if trial_report_type is ReportOutput.FULL:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
                     title = f'[bold{execution_panel_color}]EXECUTION OF {caller.name}[/] '
-                    output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
+                    output_report.run_report = Padding.indent(Panel(Group(*output_report.run_report),
                                                                     box=execution_panel_box,
                                                                     border_style=execution_panel_color,
                                                                     title=title,
@@ -1639,13 +1639,16 @@ class Report:
         # Generate report -------------------------------------------------------------------------------
 
         if params_string:
-            node_report = RenderGroup(input_report,
-                                      Panel(params_string,
-                                            box=params_panel_box,
-                                            border_style=params_panel_color,
-                                            title='params'
-                                            ),
-                                      output_report)
+            node_report = Group(
+                input_report,
+                Panel(
+                    params_string,
+                    box=params_panel_box,
+                    border_style=params_panel_color,
+                    title='params',
+                ),
+                output_report,
+            )
         else:
             node_report = f'{input_report}\n{output_report}'
 

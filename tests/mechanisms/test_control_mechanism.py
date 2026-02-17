@@ -76,20 +76,18 @@ class TestLCControlMechanism:
     @pytest.mark.benchmark(group="LCControlMechanism Basic")
     def test_lc_control_mech_basic(self, benchmark, mech_mode):
 
-        LC = pnl.LCControlMechanism(
-            base_level_gain=3.0,
-            scaling_factor_gain=0.5,
-            default_variable = 10.0
-        )
+        LC = pnl.LCControlMechanism(base_level_gain=3.0, scaling_factor_gain=0.5, default_variable = 10.0)
         EX = pytest.helpers.get_mech_execution(LC, mech_mode)
 
         val = benchmark(EX, [10.0])
         expected = [[3.001397762387422]]
+
         # The difference in result shape is caused by shape mismatch in output port values.
         # The default shape is 1D, giving 2D overall result in compiled mode.
         # The true results are 2D per port, giving 3d overall result in Python mode.
         if mech_mode == 'Python':
             expected = [[ex] for ex in expected]
+
         np.testing.assert_allclose(val, expected)
 
     @pytest.mark.composition

@@ -1,4 +1,3 @@
-import declan.utils as utils
 from psyneulink import *
 
 STATE_D = 11  # dimensionality of the state input
@@ -7,10 +6,10 @@ OUTPUT_D = 11
 
 MEMORY_INIT = 0.01  # initial value for the memory entries
 
-SOFTMAX_THRESHOLD = .001
-INTEGRATION_RATE = .5
-NUM_OPTIM_STEPS = 1
-LEARNING_RATE = 0.01
+SOFTMAX_THRESHOLD = 1e-10
+INTEGRATION_RATE = 0.5
+NUM_OPTIM_STEPS = 10
+LEARNING_RATE = 0.2
 
 TEMPERATURE = 1.
 
@@ -20,7 +19,7 @@ params_data = dict(
     seed=0,
 )
 
-params_declan = dict(
+params_torch = dict(
     state_d=STATE_D,
     context_d=CONTEXT_D,
     output_d=OUTPUT_D,

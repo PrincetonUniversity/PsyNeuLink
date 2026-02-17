@@ -102,10 +102,7 @@ class TestMechanism:
 
         t = pnl.TransferMechanism(input_shapes=size, noise=noise)
 
-        with pytest.warns(
-            UserWarning,
-            match='Setting noise to a numeric value after instantiation.*'
-        ):
+        with pytest.warns(UserWarning, match='Setting noise to a numeric value after instantiation.*'):
             t.parameters.noise.set(0)
 
     @pytest.mark.parametrize(
@@ -124,10 +121,7 @@ class TestMechanism:
 
         t = pnl.TransferMechanism(input_shapes=size, noise=noise)
 
-        with pytest.warns(
-            UserWarning,
-            match='Setting noise to a value containing functions after instantiation.*'
-        ):
+        with pytest.warns(UserWarning, match='Setting noise to a value containing functions after instantiation.*'):
             t.parameters.noise.set(pnl.NormalDist)
 
     def test_execute_no_input_doesnt_change_default_variable(self):

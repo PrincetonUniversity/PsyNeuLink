@@ -388,7 +388,7 @@ import numpy as np
 from packaging import version
 from pathlib import Path, PosixPath
 from collections import deque
-from typing import Any, Dict, Set, Tuple, Union
+from typing import Any, Dict, Hashable, Set, Tuple, Union
 
 try:
     import torch
@@ -714,13 +714,13 @@ class AutodiffComposition(Composition):
     class Parameters(Composition.Parameters):
         pytorch_representation = None
         # optimizer = None
-        synch_projection_matrices_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
-        synch_node_variables_with_torch = Parameter(None, fallback_value=DEFAULT)
-        synch_node_values_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
-        synch_results_with_torch = Parameter(LearningScale.RUN, fallback_value=DEFAULT)
-        retain_torch_trained_outputs = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
-        retain_torch_targets = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
-        retain_torch_losses = Parameter(LearningScale.MINIBATCH, fallback_value=DEFAULT)
+        synch_projection_matrices_with_torch = Parameter(LearningScale.RUN)
+        synch_node_variables_with_torch = Parameter(None)
+        synch_node_values_with_torch = Parameter(LearningScale.RUN)
+        synch_results_with_torch = Parameter(LearningScale.RUN)
+        retain_torch_trained_outputs = Parameter(LearningScale.MINIBATCH)
+        retain_torch_targets = Parameter(LearningScale.MINIBATCH)
+        retain_torch_losses = Parameter(LearningScale.MINIBATCH)
         torch_trained_outputs = Parameter([], getter=_get_torch_trained_outputs)
         torch_targets = Parameter([], getter=_get_torch_targets)
         torch_losses = Parameter([], getter=_get_torch_losses)
@@ -991,7 +991,7 @@ class AutodiffComposition(Composition):
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
             pathway.insert(0, entry)
-            # # Only allow odd number of components since there must be one fewer Projections than Mechanisms
+            # Only allow odd number of components since there must be one fewer Projections than Mechanisms
             assert len(pathway) % 2, \
                 f"PROGRAM ERROR: There are one too many Projections in pathway: {' ,'.join(pathway)}"
             return pathway
@@ -1186,7 +1186,7 @@ class AutodiffComposition(Composition):
             self.scheduler = Scheduler(graph=self.graph_processing)
 
         # Construct a new pytorch_representation if none exists or new is specified
-        if self.parameters.pytorch_representation._get(context=context, fallback_value=None) is None or new:
+        if self.parameters.pytorch_representation._get(context=context) is None or new:
             # Instantiate pytorch_representation
             self.pytorch_composition_wrapper_type(composition=self,
                                                   device=self.device,
@@ -1201,6 +1201,7 @@ class AutodiffComposition(Composition):
         # Get pytorch_representation (assigned in constructor for PytorchCompositionWrapper)
         pytorch_rep = self.parameters.pytorch_representation._get(context)
 
+        # BREADCRUMB: MOVE THIS TO PytorchCompositionWrapper __init__(), since it belongs to that
         # Set up optimizer
         old_opt = pytorch_rep.optimizer
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),
@@ -1315,7 +1316,9 @@ class AutodiffComposition(Composition):
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode)
         return super(AutodiffComposition, self).get_target_nodes()
 
-    def autodiff_forward(self, inputs, targets,
+    def autodiff_forward(self,
+                         inputs, targets,
+                         optimization_num,
                          synch_with_pnl_options, retain_in_pnl_options,
                          execution_mode, scheduler, context):
         """
@@ -1340,9 +1343,12 @@ class AutodiffComposition(Composition):
                 curr_tensors_for_inputs[component] = inputs[component]
 
         # Execute PytorchCompositionWrapper to get value of all OUTPUT nodes for current trial
-        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs, optimization_num=None,
+        curr_tensors_for_outputs = pytorch_rep.forward(inputs=curr_tensors_for_inputs,
+                                                       optimization_num=optimization_num,
                                                        synch_with_pnl_options=synch_with_pnl_options,
-                                                       full_sequence_mode=self.full_sequence_mode, context=context)
+                                                       full_sequence_mode=self.full_sequence_mode,
+                                                       sequence_lengths=None if not hasattr(pytorch_rep, '_batch_seq_lengths') else pytorch_rep._batch_seq_lengths,
+                                                       context=context)
 
         # Get value of OUTPUT nodes that are being trained (i.e., for which there are TARGET nodes)
         curr_tensors_for_trained_outputs = {k:v for k,v in curr_tensors_for_outputs.items()
@@ -1395,13 +1401,14 @@ class AutodiffComposition(Composition):
         # --------- Return the values of output of trained nodes and all nodes  ---------------------------------------
 
         # IMPLEMENTATION NOTE: Need values in order corresponding to output_CIM Ports.
-
         # Get output Nodes, their out_ports and corresponding indices
         #     in order of outermost AutodiffComposition's output_CIM Ports
         outputs_idx_port_node_comp = []
         for port in self.output_CIM.input_ports:
+
             source_info = self.output_CIM._get_source_info_from_output_CIM(port)
             source_ouput_port_idx = source_info[1].output_ports.index(source_info[0])
+            # BREADCRUMB: DON'T INCLUDE AS OUTPUT IF IT PROJECTS TO ANOTHER NODE IN AN OUTER COMPOSITION
             outputs_idx_port_node_comp.append(tuple((source_ouput_port_idx, *source_info)))
 
         # Assign values to trained_output_values and all_output_values
@@ -1633,6 +1640,7 @@ class AutodiffComposition(Composition):
     @handle_external_context(fallback_default=True)
     def learn(self,
               *args,
+              execute_in_additional_optimizations: Optional[dict] = None,
               synch_projection_matrices_with_torch: SynchRetainArg = NotImplemented,
               synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
               synch_node_values_with_torch: SynchRetainArg = NotImplemented,
@@ -1693,6 +1701,12 @@ class AutodiffComposition(Composition):
             overrides specification(s) made in Autodiff constructor; see `retain_torch_losses
             <AutodiffComposition.retain_torch_losses>` for additional details.
         """
+        # NOTE: do not call _initialize_from_context here -
+        # infer_backpropagation_learning_pathways call below can change
+        # the structure of the Composition and its CIMs and this will
+        # result in them having old values. Stateful Parameter get may
+        # not have a value before call to super().learn
+
         execution_phase_at_entry = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -1863,6 +1877,7 @@ class AutodiffComposition(Composition):
                 num_trials=None,
                 minibatch_size=1,
                 optimizations_per_minibatch=1,
+                optimization_num=None,
                 do_logging=False,
                 scheduler=None,
                 termination_processing=None,
@@ -1899,69 +1914,51 @@ class AutodiffComposition(Composition):
                                    f"that includes nested AutodiffComposition(s).")
 
         if execution_mode is not pnlvm.ExecutionMode.Python:
-            self._assign_execution_ids(context)
-            context.composition = self
-            context.source = ContextFlags.COMPOSITION
-
-            if execution_mode is pnlvm.ExecutionMode.PyTorch and not torch_available:
-                raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
-                                               f"but Pytorch module ('torch') is not installed. "
-                                               f"Please install it with `pip install torch` or `pip3 install torch`")
 
             if scheduler is None:
                 scheduler = self.scheduler
 
+            # TBI: How are we supposed to use base_context and statefulness here?
             if ContextFlags.LEARNING_MODE in context.runmode:
-                # In LEARNING_MODE, so check that at least one enable_learning is True (potentially in nested Comp)
-                if self._is_learning(context) or any(comp._is_learning(context)
-                                                     for comp in self._get_nested_compositions()):
-                    # TBI: How are we supposed to use base_context and statefulness here?
+                autodiff_inputs = self._get_autodiff_inputs_values(inputs)
+                autodiff_targets = self._get_autodiff_targets_values(inputs)
 
-                    autodiff_inputs = self._get_autodiff_inputs_values(inputs)
-                    autodiff_targets = self._get_autodiff_targets_values(inputs)
+                # Begin reporting of learning TRIAL:
+                report(self,
+                       LEARN_REPORT,
+                       # EXECUTE_REPORT,
+                       report_num=report_num,
+                       scheduler=scheduler,
+                       content='trial_start',
+                       context=context)
 
-                    # Begin reporting of learning TRIAL:
-                    report(self,
-                           LEARN_REPORT,
-                           # EXECUTE_REPORT,
-                           report_num=report_num,
-                           scheduler=scheduler,
-                           content='trial_start',
-                           context=context)
+                trained_output_values, all_output_values = \
+                    self.autodiff_forward(inputs=autodiff_inputs,
+                                          targets=autodiff_targets,
+                                          optimization_num=optimization_num,
+                                          synch_with_pnl_options=synch_with_pnl_options,
+                                          retain_in_pnl_options=retain_in_pnl_options,
+                                          execution_mode=execution_mode,
+                                          scheduler=scheduler,
+                                          context=context)
+                execution_phase = context.execution_phase
+                context.execution_phase = ContextFlags.PROCESSING
+                context.execution_phase = execution_phase
 
-                    self._build_pytorch_representation(optimizer_params=optimizer_params,
-                                                       learning_rate=self.parameters.learning_rate.get(context),
-                                                       context=context, base_context=base_context)
-                    trained_output_values, all_output_values = \
-                                                    self.autodiff_forward(inputs=autodiff_inputs,
-                                                                          targets=autodiff_targets,
-                                                                          synch_with_pnl_options=synch_with_pnl_options,
-                                                                          retain_in_pnl_options=retain_in_pnl_options,
-                                                                          execution_mode=execution_mode,
-                                                                          scheduler=scheduler,
-                                                                          context=context)
-                    execution_phase = context.execution_phase
-                    context.execution_phase = ContextFlags.PROCESSING
-                    context.execution_phase = execution_phase
+                # Complete TRIAL Panel for output report, and report progress
+                report(self,
+                       # [LEARN_REPORT],
+                       [EXECUTE_REPORT, PROGRESS_REPORT],
+                       report_num=report_num,
+                       scheduler=scheduler,
+                       content='trial_end',
+                       context=context)
 
-                    # Complete TRIAL Panel for output report, and report progress
-                    report(self,
-                           # [LEARN_REPORT],
-                           [EXECUTE_REPORT, PROGRESS_REPORT],
-                           report_num=report_num,
-                           scheduler=scheduler,
-                           content='trial_end',
-                           context=context)
+                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-                    scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+                self.most_recent_context = context
+                return all_output_values
 
-                    self.most_recent_context = context
-                    return all_output_values
-                else:
-                    raise AutodiffCompositionError(f"The learn() method of '{self.name}' was called, but its "
-                                                   f"'enable_learning' Parameter (and the ones for any Compositions "
-                                                   f"nested within) it are set to 'False'. Either set at least one to "
-                                                   f"'True', or use {self.name}.run().")
 
         # Call Composition execute in Python mode
         return super(AutodiffComposition, self).execute(inputs=inputs,
@@ -1984,6 +1981,7 @@ class AutodiffComposition(Composition):
 
     @handle_external_context(fallback_default=True)
     def run(self, *args,
+            execution_mode: pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             synch_projection_matrices_with_torch: SynchRetainArg = NotImplemented,
             synch_node_variables_with_torch: SynchRetainArg = NotImplemented,
             synch_node_values_with_torch: SynchRetainArg = NotImplemented,
@@ -1992,7 +1990,8 @@ class AutodiffComposition(Composition):
             retain_torch_targets: SynchRetainArg = NotImplemented,
             retain_torch_losses: SynchRetainArg = NotImplemented,
             batched_results:bool=False,
-            context: Context = None,
+            context: Union[Context, Hashable] = None,
+            base_context: Context = Context(execution_id=None),
             **kwargs):
         """Override to handle synch and retain args if run called directly from run() rather than learn()
         Note: defaults for synch and retain args are NotImplemented, so that the user can specify None if they want
@@ -2000,6 +1999,9 @@ class AutodiffComposition(Composition):
               for details). This is distinct from the user assigning the Parameter default_values(s), which is done
               in the AutodiffComposition constructor and handled by the Parameter._specify_none attribute.
         """
+        # NOTE: like in .learn, do not call _initialize_from_context
+        # here. correct shapes for CIMs are determined in .run before
+        # _initialize_from_context is called there.
 
         # Store whether we need to return results list with a batch dimension, or flatten it
         self.batched_results = batched_results
@@ -2029,10 +2031,34 @@ class AutodiffComposition(Composition):
             kwargs[SYNCH_WITH_PNL_OPTIONS] = synch_with_pnl_options
             kwargs[RETAIN_IN_PNL_OPTIONS] = retain_in_pnl_options
 
-        # Run AutodiffComposition
-        results = super(AutodiffComposition, self).run(*args, context=context, **kwargs)
+        # In LEARNING_MODE, so check that at least one enable_learning is True (potentially in nested Comp)
+        if ContextFlags.LEARNING_MODE in context.runmode and not (self._is_learning(context) or
+                                                                  any(comp._is_learning(context)
+                                                                      for comp in self._get_nested_compositions())):
+            raise AutodiffCompositionError(f"The learn() method of '{self.name}' was called, but its "
+                                           f"'enable_learning' Parameter (and the ones for any Compositions "
+                                           f"nested within) it are set to 'False'. Either set at least one to "
+                                           f"'True', or use {self.name}.run().")
 
-        if EXECUTION_MODE in kwargs and kwargs[EXECUTION_MODE] is pnlvm.ExecutionMode.PyTorch:
+        if execution_mode != pnlvm.ExecutionMode.Python and ContextFlags.LEARNING_MODE in context.runmode:
+            self._assign_execution_ids(context)
+            context.composition = self
+            context.source = ContextFlags.COMPOSITION
+
+            if execution_mode is pnlvm.ExecutionMode.PyTorch and not torch_available:
+                raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
+                                               f"but Pytorch module ('torch') is not installed. "
+                                               f"Please install it with `pip install torch` or `pip3 install torch`")
+
+            self._build_pytorch_representation(optimizer_params=kwargs.get('optimizer_params', None),
+                                               learning_rate=self.parameters.learning_rate.get(context),
+                                               context=context,
+                                               base_context=Context(execution_id=None))
+
+        # Run AutodiffComposition
+        results = super(AutodiffComposition, self).run(*args, execution_mode=execution_mode, context=context, **kwargs)
+
+        if execution_mode == pnlvm.ExecutionMode.PyTorch:
             # Synchronize specified outcomes at end of run
             pytorch_rep = self.parameters.pytorch_representation.get(context)
             if pytorch_rep:
@@ -2200,7 +2226,7 @@ class AutodiffComposition(Composition):
 
     def _get_state_struct_type(self, ctx):
         comp_state_type_list = ctx.get_state_struct_type(super())
-        pytorch_representation = self._build_pytorch_representation()
+        pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
         return pnlvm.ir.LiteralStructType((
@@ -2471,6 +2497,13 @@ class AutodiffComposition(Composition):
         for pytorch_repr in self.parameters.pytorch_representation.values.values():
             if pytorch_repr is not None:
                 res.extend([w.projection for w in pytorch_repr.projection_wrappers])
+                try:
+                    dummy_proj_pairs = pytorch_repr._projection_wrapper_pairs
+                except AttributeError:
+                    # currently only GRU wrapper uses them
+                    pass
+                else:
+                    res.extend([dummy_proj for dummy_proj, _ in dummy_proj_pairs])
 
         return res
 

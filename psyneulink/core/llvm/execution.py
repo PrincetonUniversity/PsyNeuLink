@@ -533,8 +533,24 @@ class CompExecution(CUDAExecution):
         return c_inputs
 
     def _get_generator_run_input_struct(self, inputs, runs):
+        # ignore optimization_num from CompositionRunner._batch_inputs,
+        # but also handle externally-passed generators that do not
+        # include this second element
+        def _get_item_input(x):
+            if isinstance(x, tuple):
+                return x[0]
+            return x
+
         # Extract input for each trial
-        run_inputs = ((np.atleast_2d(x) for x in self._composition._build_variable_for_input_CIM({k:np.atleast_1d(v) for k,v in inp.items()})) for inp in inputs)
+        run_inputs = (
+            (
+                np.atleast_2d(x)
+                for x in self._composition._build_variable_for_input_CIM(
+                    {k: np.atleast_1d(v) for k, v in _get_item_input(inp).items()}
+                )
+            )
+            for inp in inputs
+        )
         run_inputs = _tupleize(run_inputs)
         num_input_sets = len(run_inputs)
         runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs

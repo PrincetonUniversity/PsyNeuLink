@@ -284,9 +284,11 @@ def convert_type(builder, val, t):
     if is_integer(val) and is_integer(t):
         if val.type.width > t.width:
             return builder.trunc(val, t)
+
         elif val.type.width < t.width:
             # Python integers are signed
             return builder.zext(val, t)
+
         else:
             assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
 
@@ -295,12 +297,18 @@ def convert_type(builder, val, t):
         return builder.sitofp(val, t)
 
     if is_floating_point(val) and is_integer(t):
+        # Propagate constant conversions to allow constant indexing in UDFs
+        if hasattr(val, 'constant'):
+            # Calling val.fptosi directly doesn't work
+            return t(val.constant)
+
         # Python integers are signed
         return builder.fptosi(val, t)
 
     if is_floating_point(val) and is_floating_point(t):
         if isinstance(val.type, ir.HalfType) or isinstance(t, ir.DoubleType):
             return builder.fpext(val, t)
+
         elif isinstance(val.type, ir.DoubleType) or isinstance(t, ir.HalfType):
             # FIXME: Direct conversion from double to half needs a runtime
             #        function (__truncdfhf2). llvmlite MCJIT fails to provide
@@ -311,9 +319,14 @@ def convert_type(builder, val, t):
             #        see: https://github.com/numba/llvmlite/issues/834
             if isinstance(val.type, ir.DoubleType) and isinstance(t, ir.HalfType):
                 val = builder.fptrunc(val, ir.FloatType())
+
             return builder.fptrunc(val, t)
         else:
             assert False, "Unknown float conversion: {} -> {}".format(val.type, t)
+
+    if isinstance(val.type, ir.ArrayType) and len(val.type) == 1:
+        val = builder.extract_value(val, [0])
+        return convert_type(builder, val, t)
 
     assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
 

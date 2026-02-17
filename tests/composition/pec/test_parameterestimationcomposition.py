@@ -72,6 +72,7 @@ pec = pnl.ParameterEstimationComposition(
     outcome_variables=output_node,
     objective_function=lambda x: np.sum(x),
     optimization_function=PECOptimizationFunction(method="differential_evolution"),
+    initial_seed=42,
 )
 run_input_test_args = [
     pytest.param(
@@ -182,11 +183,11 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
 # [2] https://docs.scipy.org/doc/scipy/release/1.14.0-notes.html#scipy-optimize-improvements
 # [3] https://github.com/scipy/scipy/pull/20677
 if pversion.parse(scipy.version.version) >= pversion.parse('1.14.0'):
-    expected_differential_evolution = [0.010113000942356953]
+    expected_differential_evolution = [0.020908]
 elif pversion.parse(scipy.version.version) >= pversion.parse('1.12.0'):
-    expected_differential_evolution = [0.010074123395259815]
+    expected_differential_evolution = [0.015430]
 else:
-    expected_differential_evolution = [0.010363518438648106]
+    expected_differential_evolution = [0.026944]
 
 @pytest.mark.composition
 @pytest.mark.parametrize(
@@ -383,7 +384,7 @@ def test_parameter_estimation_ddm_cond(func_mode):
 
     np.testing.assert_allclose(
         list(pec.optimized_parameter_values.values()),
-        [0.13574824786818707, 0.04513454296326741, 0.49615574384553446, 0.8985587363124521]
+        [0.4377533727946954, 0.08565823101086734, 0.7888704042741785, 0.9305157370458915]
     )
 
 
