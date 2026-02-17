@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+9
+                  0.18.0.0+6
                 </div>
               
             
@@ -1264,6 +1264,125 @@ to Projections within its scope that are assigned ‘None’ (that is, it functi
 </div></blockquote>
 <p>Below is a complete listing of places where learning_rate(s) can be specified, indicating their precedence in
 determining the learning_rate for a Projection used at execution:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td colspan="2"><p><strong>Learning Rate Precedence Hierarchy</strong></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Highest</strong>:</p></td>
+<td><dl class="simple">
+<dt><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.learn()</span></code></a> method dict specifying Projection-specific learning_rate(s)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition.learn(learning_rate={my_projection:val})</span></code> (applies only during that execution)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td rowspan="7"></td>
+<td><dl class="simple">
+<dt>MappingProjection in Composition constructor dict</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate={my_projection:</span> <span class="pre">val})</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> Parameter (before Composition construction)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_projection.learning_rate=val</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_learning_mechanimsm=MappingProjection(learning_rate=val)</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt>LearningMechanism <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a> Parameter (after construction)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_learning_mechanism.learning_rate=val</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt><a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_learning_mechanimsm=LearningMechanism(learning_rate=val)</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><dl class="simple">
+<dt><a class="reference internal" href="#composition-learning-pathway"><span class="std std-ref">Learning pathway</span></a> constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition.add_linear_learning_pathway([&lt;pathway&gt;],</span> <span class="pre">learning_rate=val)</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><dl class="simple">
+<dt><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.learn</span></code></a> method (value or using DEFAULT_LEARNING_RATE key in dict specifying default for Composition</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition.learn(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:</span> <span class="pre">val})</span></code> (applies only during that execution)</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td></td>
+<td><dl class="simple">
+<dt>Nested Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:</span> <span class="pre">val})</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><p><strong>Lowest</strong>:</p></td>
+<td><dl class="simple">
+<dt>Outer Composition constructor</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_composition=Composition(learning_rate=val</span> <span class="pre">or</span> <span class="pre">{DEFAULT_LEARNING_RATE:</span> <span class="pre">val})</span></code></p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>No effect</strong>:</p></td>
+<td><dl class="simple">
+<dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> Parameter (<em>after</em> Composition assginment)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">my_projection.learning_rate=val</span></code> (see <a class="reference internal" href="#composition-learning-rate-assignment-after-construction"><span class="std std-ref">note</span></a> above)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If the learning_rate of a Projection in a <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition</span></a> is not specified, it is
+assigned the default learning_rate for the nested Composition to which it belongs if that has been explicitly
+specified or if it is not nested within any other Compositions; otherwise, it is assigned the learning_rate
+of the first Composition within which it is nested that has an explicitly specified <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_rate" title="psyneulink.core.compositions.composition.Composition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>, or the default learning_rate for the outermost Composition if no Composition
+learning_rates are explicitly specified.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Specifying a numeric value for the <strong>learning_rate</strong> argument of a Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>
+method overrides all other specifications, except assignment of <code class="docutils literal notranslate"><span class="pre">False</span></code> to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> Parameter or <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learnable" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learnable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learnable</span></code></a> attribute of a
+Projection, or the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.enable_learning" title="psyneulink.core.compositions.composition.Composition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> attribute of a Composition (see next note);
+however, it applies only for that execution.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.enable_learning" title="psyneulink.core.compositions.composition.Composition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> (for a Composition) and/or <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learnable" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learnable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learnable</span></code></a> (for Projections) to <code class="docutils literal notranslate"><span class="pre">False</span></code> take precedence over any other assignments;
+in either case, no learning takes place for that object (though, for a Composition, learning may occur for
+Compositions nested within it), irrespective of any specifications in the <strong>learning_rate</strong> argument of
+the Composition’s constructor and/or its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+</div>
+<div class="admonition note" id="composition-learning-rate-false">
+<p class="admonition-title">Note</p>
+<p>Specifying <strong>learning_rate</strong> as <code class="docutils literal notranslate"><span class="pre">False</span></code> in Composition’s constructor or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn()</span></code></a> method
+applies only to Projections within its scope assigned ‘None’ (i.e., it functions as the default <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for those Projections); Projecions assigned a numeric value use that value,
+and any assigned <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> use the first explicitly specified Composition <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_rate" title="psyneulink.core.compositions.composition.Composition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>
+that is not <code class="docutils literal notranslate"><span class="pre">False</span></code> found in the nesting hierarchy, or the default learning_rate for the outermost
+Composition if no Composition learning_rates are explicitly specified; that is, specifying a Projection’s
+<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> as ‘True’ “protects” it against assigning ‘False’ to the
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_rate" title="psyneulink.core.compositions.composition.Composition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> of the Composition to which it belongs or any within which that is
+nested, and forces use of a default value procured from a Composition within which it is nested; however, if
+there is no such Composition, or the outermost one is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, then it will be assigned <code class="docutils literal notranslate"><span class="pre">False</span></code>.
+Nevertheless, as suggested in the warning below, the safest way to fully disable learning for a Composition is
+to set its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.enable_learning" title="psyneulink.core.compositions.composition.Composition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> attribute to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Setting the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learning_rate" title="psyneulink.core.compositions.composition.Composition.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> to <code class="docutils literal notranslate"><span class="pre">False</span></code> does not necessarily disable learning
+for the Composition – it does so only for Projections within its scope that are assigned ‘None’, and can be
+overridden by specifying a numeric value for the <strong>learning_rate</strong> argument of the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method. To fully disable learning for a Composition, its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.enable_learning" title="psyneulink.core.compositions.composition.Composition.enable_learning"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">enable_learning</span></code></a> attribute should be set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</div>
 </section>
 </section>
 <section id="learning-using-autodiffcompositon">
@@ -2868,7 +2987,7 @@ When looking for values after a run, it’s important to know the execution cont
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.composition.</span></span><span class="sig-name descname"><span class="pre">Composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_probes=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_probes_in_output=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_mode='after'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_time_scale=TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_condition=&lt;psyneulink.core.scheduling.condition.Always</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_old_simulation_data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_graph_attributes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_processing=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.composition.</span></span><span class="sig-name descname"><span class="pre">Composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathways=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_probes=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_probes_in_output=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_learning=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execute_in_additional_optimizations=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_controller=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_mode='after'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_time_scale=TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller_condition=&lt;psyneulink.core.scheduling.condition.Always</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_old_simulation_data=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_graph_attributes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_processing=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition" title="Link to this definition">¶</a></dt>
 <dd><p>Base class for Composition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5372,7 +5491,7 @@ trials.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.learn">
-<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode=&lt;ExecutionMode.Python:</span> <span class="pre">0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_minibatches=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_before_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_after_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.learn" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minibatch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizations_per_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execute_in_additional_optimizations=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_mode=&lt;ExecutionMode.Python:</span> <span class="pre">0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomize_minibatches=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_before_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_after_minibatch=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_initialization=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.learn" title="Link to this definition">¶</a></dt>
 <dd><p>Runs the composition in learning mode - that is, any components with enable_learning <code class="docutils literal notranslate"><span class="pre">True</span></code> will be
 executed in learning mode. See <a class="reference internal" href="#composition-learning"><span class="std std-ref">Learning in a Composition</span></a> for details.</p>
 <dl class="field-list simple">
@@ -5408,16 +5527,37 @@ method (see <a class="reference internal" href="#composition-learning-rate"><spa
 for one step (gradient update) of learning, after which LearningMechanisms with learning mode TRIAL
 will update the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for which
 they are responsible; this overrides the Composition’s default value.</p></li>
-<li><p><strong>optimizations_per_minibatch</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – <p>specifies the number of executions and weight updates of learnable pathways that are carried out for
-each set of stimuli in a <code class="xref any docutils literal notranslate"><span class="pre">minibatch</span></code>; this overrides the Composition’s
-default value.</p>
+<li><p><strong>optimizations_per_minibatch</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – <p>specifies the number of executions and weight updates of learnable pathways (forward and backward
+passes – or optimization steps – in PyTorch), that are carried out for each set of stimuli in a
+<code class="xref any docutils literal notranslate"><span class="pre">minibatch</span></code>; this overrides the Composition’s default value. Optimization
+steps after the first can be restricted to a subset of nodes using the
+<strong>execute_in_additional_optimizations</strong> argument (see below), which can also designate particular
+Parameter values used for those optimization steps.</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>This can be used to implement the <a class="reference external" href="https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf">backprop-to-activation procedure</a> in which the <code class="xref any docutils literal notranslate"><span class="pre">backpropagation</span>
 <span class="pre">learning</span> <span class="pre">algorithm</span></code> is used, with a high learning rate, to quickly search
-for a pattern of activation in response to a given input (or set of inputs) that is useful for some
-downstream purpose.</p>
+for a pattern of activation in response to a given input (or set of inputs) that is useful for
+some downstream purpose (see EGO Model for an example).</p>
 </div>
+</p></li>
+<li><p><strong>BREADCRUMB</strong> (<em>#</em>)</p></li>
+<li><p><strong>execute_in_additional_optimizations</strong> (dict{<a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a>:[(Parameter, value)]} (default None)) – <p>specifies which <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> of the Composition should be included in the forward pass
+for any additional optimization steps after the first (see <strong>optimizations_per_minibatch</strong> for
+additional information); each key should be a <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> in the Composition or one
+nested within it, and the value can be one of the following:</p>
+<blockquote>
+<div><p><em>None</em> or <em>True</em>: execute in additional optimizations without any modificadtion(s) to its Parameters;</p>
+<dl class="simple">
+<dt><em>False</em> or <em>EXCLUDE</em>: exclude from execution during additional optimizations;  this is useful</dt><dd><p>primarly when a nested Composition is specified but nodes within it should be excluded;</p>
+</dd>
+<dt><em>(Parameter, value)</em> or <em>[(Parameter, value), …]</em>: assign specified Parameter values during</dt><dd><p>execution of additional optimizations, restoring to previous value(s) for first optimization
+of next trial.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>If a Composition is specified as a key, then all Nodes within that Composition and any nested within it
+are included, except for ones explicitly excluded.</p>
 </p></li>
 <li><p><strong>randomize_minibatch</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – specifies whether the order of the input trials should be randomized in each epoch</p></li>
 <li><p><strong>patience</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – used for early stopping of training; If a model has more than <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code> bad consecutive epochs,
@@ -6352,7 +6492,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=5d8abaae"></script>
+         <script src="_static/documentation_options.js?v=3e2360b9"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

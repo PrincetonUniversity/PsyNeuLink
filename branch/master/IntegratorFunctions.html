@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+9
+                  0.18.0.0+6
                 </div>
               
             
@@ -882,161 +882,86 @@ this psyneulink Function</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.stateful.integratorfunctions.</span></span><span class="sig-name descname"><span class="pre">DriftOnASphereIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_point</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator" title="Link to this definition">¶</a></dt>
-<dd><p id="driftonasphereintegrator">Drift and diffuse on a sphere.  <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> integrates previous coordinates
-with drift and/or noise that is applied either equally to all coordinates or dimension by dimension:</p>
-<div class="math notranslate nohighlight">
-\[previous\_value + rate \cdot variable \cdot time\_step\_size + \mathcal{N}(\sigma^2)\]</div>
-<p>where</p>
-<div class="math notranslate nohighlight">
-\[\sigma^2 =\sqrt{time\_step\_size \cdot noise}\]</div>
-<p><em>Modulatory Parameters:</em></p>
-<div class="line-block">
-<div class="line"><em>MULTIPLICATIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a></div>
-<div class="line"><em>ADDITIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.offset" title="psyneulink.core.components.functions.stateful.integratorfunctions.AdaptiveIntegrator.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a></div>
-<div class="line"><br /></div>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.stateful.integratorfunctions.</span></span><span class="sig-name descname"><span class="pre">DriftOnASphereIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator" title="Link to this definition">¶</a></dt>
+<dd><p id="driftonasphereintegrator">Integrate a state evolving on the <strong>unit sphere</strong> <span class="math notranslate nohighlight">\(S^{dimension-1}\)</span> embedded in
+<span class="math notranslate nohighlight">\(\mathbb{R}^{dimension}\)</span>.  The value stored in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> is
+always a <strong>unit vector</strong>, and updates occur by applying drift and noise in the <strong>tangent space</strong> and mapping back to
+the sphere using the <strong>exponential map</strong>.  This yields the correct form of geometric Brownian motion on a sphere.</p>
+<dl class="simple">
+<dt><strong>Drift Input</strong></dt><dd><ul class="simple">
+<li><p>If <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> is a <strong>scalar</strong>, drift is applied along a persistent tangent
+direction that is <strong>parallel transported</strong> at each step.</p></li>
+<li><dl class="simple">
+<dt>If it is a <strong>vector</strong> of length <code class="xref any docutils literal notranslate"><span class="pre">(dimension</span> <span class="pre">-</span> <span class="pre">1)</span></code>, it is interpreted as a tangent-space displacement.</dt><dd><p>The <strong>magnitude of the vector corresponds to an angular rotation</strong> (in radians) along the sphere.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If it is a <strong>vector</strong> (length = <code class="xref any docutils literal notranslate"><span class="pre">dimension</span></code>), it is a target on the sphere to in.</dt><dd><p>The <strong>magnitude is ignored</strong> and the vector is projected onto the sphere.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Rate</strong></dt><dd><p>The <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter controls the <strong>amount of angular movement per unit time</strong>:</p>
+<ul class="simple">
+<li><p>In <strong>scalar drift mode</strong>, <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> scales the angular velocity along the persistent drift direction.</p></li>
+<li><p>In <strong>tangent mode</strong>, the <strong>norm</strong> of the input vector encodes an angular displacement (in radians),
+and <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> scales this angular step size.</p></li>
+<li><p>In <strong>target mode</strong>, the drift direction is the geodesic pointing toward the target; <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> specifies
+the <strong>fraction of the remaining geodesic distance traveled per time step</strong>. Thus, with
+<code class="xref any docutils literal notranslate"><span class="pre">rate</span> <span class="pre">=</span> <span class="pre">1.0</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span> <span class="pre">=</span> <span class="pre">1.0</span></code>, the system reaches the target <strong>in exactly one step</strong>.
+Values <code class="xref any docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">rate</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> move only partway toward the target.</p></li>
+</ul>
+</dd>
+<dt><strong>Initializer</strong></dt><dd><ul class="simple">
+<li><p>A 1D array of length <code class="docutils literal notranslate"><span class="pre">dimension</span></code> is interpreted as a Cartesian point (normalized to unit length).</p></li>
+<li><p>A 1D array of length <code class="docutils literal notranslate"><span class="pre">dimension</span> <span class="pre">-</span> <span class="pre">1</span></code> is interpreted as <strong>hyperspherical coordinates</strong>.</p></li>
+</ul>
+</dd>
+<dt><strong>Noise</strong></dt><dd><ul class="simple">
+<li><p>A scalar specifies <strong>isotropic</strong> diffusion on the sphere.</p></li>
+<li><p>A 1D array of length <code class="docutils literal notranslate"><span class="pre">dimension</span> <span class="pre">-</span> <span class="pre">1</span></code> specifies <strong>anisotropic</strong> diffusion in tangent coordinates.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Mathematical Form</strong>
+.. math:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">dt</span> \<span class="n">cdot</span> \<span class="n">text</span><span class="p">{</span><span class="n">drift</span>\<span class="n">_tangent</span><span class="p">}</span> \<span class="p">;</span><span class="o">+</span>\<span class="p">;</span> \<span class="n">sqrt</span><span class="p">{</span><span class="n">dt</span><span class="p">}</span> \<span class="n">cdot</span> \<span class="n">text</span><span class="p">{</span><span class="n">noise</span>\<span class="n">_tangent</span><span class="p">}</span>
+\\
+<span class="n">x_</span><span class="p">{</span><span class="n">t</span><span class="o">+</span><span class="n">dt</span><span class="p">}</span> <span class="o">=</span> \<span class="n">exp_</span><span class="p">{</span><span class="n">x</span><span class="p">}(</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
 </div>
+<p>where <span class="math notranslate nohighlight">\(\exp_{x}\)</span> is the exponential map on the unit sphere and all drift/noise terms are orthogonally projected
+into the tangent space <span class="math notranslate nohighlight">\(T_{x}S^{d-1}\)</span> at the current state <span class="math notranslate nohighlight">\(x\)</span>.</p>
+<p>—</p>
+<p><strong>Modulatory Parameters</strong></p>
+<div class="line-block">
+<div class="line"><em>MULTIPLICATIVE_PARAM:</em> <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code></div>
+<div class="line"><em>ADDITIVE_PARAM:</em> <code class="xref any docutils literal notranslate"><span class="pre">offset</span></code></div>
+</div>
+<p>—</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>list</em><em> or </em><em>1d array : default class_defaults.variable</em>) – specifies template for drift:  if specified, its length must be 1 or the value specified for <em>dimension</em>
-minus 1 (see <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> for additional details).</p></li>
-<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – applied multiplicatively to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  If it is a list or array, it must
-be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a>
-for details).</p></li>
-<li><p><strong>noise</strong> (<em>float : default 0.0</em>) – specifies a value by which to scale the normally distributed random value added to the integral in each call to
-<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).</p></li>
-<li><p><strong>offset</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies constant value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>;
-if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
-(see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.offset" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> for details).</p></li>
-<li><p><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array:  default 0.0</em>) – specifies the starting value for the integration process; if it is a list or array, it must be the
-same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">starting_point</span></code></a> for details).</p></li>
-<li><p><strong>time_step_size</strong> (<em>float : default 0.0</em>) – specifies the timing precision of the integration process (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.time_step_size" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.time_step_size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step_size</span></code></a> for details.</p></li>
-<li><p><strong>dimension</strong> (<em>int : default 2</em>) – specifies dimensionality of the sphere over which drift occurs.</p></li>
-<li><p><strong>initializer</strong> (<em>1d array : default</em><em> [</em><em>0</em><em>]</em>) – specifies the starting point on the sphere from which angle is derived;  its length must be equal to
-<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dimension</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.initializer" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>
-for additional details).</p></li>
-<li><p><strong>angle_function</strong> (<em>TransferFunction : default Angle</em>) – specifies function used to compute angle from position on sphere specified by coordinates in
-<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+<li><p><strong>default_variable</strong> (<em>float</em><em> or </em><em>1d array : default class_defaults.variable</em>) – Template for input to the integrator. If a vector, its length must equal <code class="docutils literal notranslate"><span class="pre">dimension</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em> or </em><em>1d array : default 1.0</em>) – Multiplies the drift input (see <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code>).</p></li>
+<li><p><strong>noise</strong> (<em>float</em><em> or </em><em>1d array : default 0.0</em>) – Scales random diffusion. A float applies isotropically; an array must be length <code class="docutils literal notranslate"><span class="pre">dimension</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
+<li><p><strong>offset</strong> (<em>float</em><em> or </em><em>1d array : default 0.0</em>) – Additive drift term (projected into tangent space).</p></li>
+<li><p><strong>time_step_size</strong> (<em>float : default 1.0</em>) – Integration time step <span class="math notranslate nohighlight">\(dt\)</span>.</p></li>
+<li><p><strong>initializer</strong> (<em>1d array</em><em> or </em><em>None</em>) – Starting point on the sphere; either Cartesian of length <code class="docutils literal notranslate"><span class="pre">dimension</span></code> or hyperspherical of length <code class="docutils literal notranslate"><span class="pre">dimension-1</span></code>.</p></li>
+<li><p><strong>dimension</strong> (<em>int : default 3</em>) – Ambient dimension of the embedding space <span class="math notranslate nohighlight">\(\mathbb{R}^{dimension}\)</span>.</p></li>
+<li><p><strong>seed</strong> (<em>int : default None</em>) – Seeds the internal random number generator.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword : param value</em><em>] </em><em>: default None</em>) – Parameter dictionary.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – Component to which this Function is assigned.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict</em>) – Preference settings.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable">
-<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="Link to this definition">¶</a></dt>
-<dd><p>current input value that determines rate of drift on the sphere.  If it is a scalar, it is applied equally
-to all coordinates (subject to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a>; if it is an array, each element
-determines rate of drift over a given dimension;  coordinate values are integrated over each execution, with
-the previous set stored in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.rate">
-<span class="sig-name descname"><span class="pre">rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.rate" title="Link to this definition">¶</a></dt>
-<dd><p>applied multiplicatively to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (can be thought of as implementing
-the attentional component of the drift rate).  If it is a float or has a single element, its value is applied
-to all the elements of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; if it is an array, each element is
-applied to the corresponding element of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. Serves as
-<em>MULTIPLICATIVE_PARAM</em> for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or 1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state">
-<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state" title="Link to this definition">¶</a></dt>
-<dd><p>private pseudorandom number generator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy.RandomState</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise">
-<span class="sig-name descname"><span class="pre">noise</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="Link to this definition">¶</a></dt>
-<dd><p>scales the normally distributed random value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>. If <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is a list or array,
-and noise is a float, a single random term is generated and applied for each element of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.  If noise is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and a separate random term scaled by noise is applied for each of the
-corresponding elements of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or 1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.offset">
-<span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.offset" title="Link to this definition">¶</a></dt>
-<dd><p>constant value added to integral in each call to <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>.
-If <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is an array and offset is a float, offset is applied
-to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
-the corresponding elements of the integral (i.e., Hadamard addition). Serves as <em>ADDITIVE_PARAM</em> for
-<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> of <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or 1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point">
-<span class="sig-name descname"><span class="pre">starting_point</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point" title="Link to this definition">¶</a></dt>
-<dd><p>determines the starting value for the integration process; if it is a list or array, it must be the
-same length as <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. If <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
-is an array and starting_point is a float, starting_point is used for each element of the integral;  if
-starting_point is a list or array, each of its elements is used as the starting point for each element of the
-integral.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or 1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.time_step_size">
-<span class="sig-name descname"><span class="pre">time_step_size</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.time_step_size" title="Link to this definition">¶</a></dt>
-<dd><p>determines the timing precision of the integration process and is used to scale the <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> parameter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension">
-<span class="sig-name descname"><span class="pre">dimension</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension" title="Link to this definition">¶</a></dt>
-<dd><p>determines dimensionality of sphere on which drift occurs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.initializer">
-<span class="sig-name descname"><span class="pre">initializer</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.initializer" title="Link to this definition">¶</a></dt>
-<dd><p>determines the starting point on the sphere from which angle is derived;  its length must be equal to
-<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dimension</span></code></a>.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value">
+<span class="sig-name descname"><span class="pre">previous_value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="Link to this definition">¶</a></dt>
+<dd><p>Current point on the sphere.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1d array</p>
@@ -1045,154 +970,102 @@ integral.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.angle_function">
-<span class="sig-name descname"><span class="pre">angle_function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.angle_function" title="Link to this definition">¶</a></dt>
-<dd><p>determines the function used to compute angle (reported as result) from coordinates on sphere specified by
-coordinates in <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> displaced by <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and possibly <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a>.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.drift_dir">
+<span class="sig-name descname"><span class="pre">drift_dir</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.drift_dir" title="Link to this definition">¶</a></dt>
+<dd><p>The persistent drift direction used for scalar drift inputs, transported along the sphere.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.nonstateful.transferfunctions.TransferFunction">TransferFunction</a></p>
+<dd class="field-odd"><p>1d array</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_time">
-<span class="sig-name descname"><span class="pre">previous_time</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_time" title="Link to this definition">¶</a></dt>
-<dd><p>stores previous time at which the function was executed and accumulates with each execution according to
-<code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span></code>.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state">
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state" title="Link to this definition">¶</a></dt>
+<dd><p>Private pseudorandom number generator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value">
-<span class="sig-name descname"><span class="pre">previous_value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value" title="Link to this definition">¶</a></dt>
-<dd><p>stores previous set of coordinates on sphere over which drift is occuring.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1d array : default class_defaults.variable</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.owner">
-<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.owner" title="Link to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.name">
-<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.name" title="Link to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.prefs">
-<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.prefs" title="Link to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
-for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
+<dd class="field-odd"><p>numpy.RandomState</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_params">
-<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_params" title="Link to this definition">¶</a></dt>
-<dd><p>Check inner dimension (length) of all parameters used for the function</p>
-<dl>
-<dt>Insure that for any parameters that are in the Parameters class, designated as function_arg, and</dt><dd><p>specified by the user with length&gt;1:
-1) they all have the same length;
-2) if default_variable:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>was specified by the user, the parameters all have the same length as that</p></li>
-<li><p>was NOT specified by the user, they all have the same length as each other;
-in this case, default_variable will be set to the length of those parameters in
-_instantiate_attributes_before_function below</p></li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._proj_tangent">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_proj_tangent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._proj_tangent" title="Link to this definition">¶</a></dt>
+<dd><p>Project v into the tangent space at x.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_initializers">
-<span class="sig-name descname"><span class="pre">_validate_initializers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_initializers" title="Link to this definition">¶</a></dt>
-<dd><p>Need to override this to manage mismatch in dimensionality of initializer vs. variable</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._expmap_sphere">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_expmap_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._expmap_sphere" title="Link to this definition">¶</a></dt>
+<dd><p>Exponential map at point x with tangent vector y.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._parallel_transport_exact">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_parallel_transport_exact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._parallel_transport_exact" title="Link to this definition">¶</a></dt>
+<dd><p>Parallel transport tangent vector v along geodesic exp_x(y).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._tangent_basis">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_tangent_basis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._tangent_basis" title="Link to this definition">¶</a></dt>
+<dd><p>Return orthonormal basis of tangent space at x (matrix shape: [dimension, dimension-1]).
+Uses a Householder reflection to align x with e_0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._hyperspherical_to_cartesian">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_hyperspherical_to_cartesian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._hyperspherical_to_cartesian" title="Link to this definition">¶</a></dt>
+<dd><p>Convert hyperspherical angle vector of length d-1 to a unit Cartesian vector in R^d.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._logmap_sphere">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_logmap_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._logmap_sphere" title="Link to this definition">¶</a></dt>
+<dd><p>Return tangent vector y at x such that exp_x(y)=t (shortest geodesic).</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._instantiate_attributes_before_function">
 <span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._instantiate_attributes_before_function" title="Link to this definition">¶</a></dt>
-<dd><p>Need to override this to manage mismatch in dimensionality of initializer vs. variable</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate">
-<span class="sig-name descname"><span class="pre">_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate" title="Link to this definition">¶</a></dt>
-<dd><p>Validate angle_function</p>
+<dd><p>Insure inner dimension of default_variable matches the length of any parameters that have len&gt;1</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function">
 <span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Compute one integration step on the unit sphere.</p>
+<p>The state evolves from the current position <span class="math notranslate nohighlight">\(x\)</span> by computing a drift term and a diffusion term
+in the tangent space <span class="math notranslate nohighlight">\(T_x S^{dimension-1}\)</span>, then mapping the result back to the sphere using
+the exponential map.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>1d array : default class_defaults.variable</em>) – value used as drift;  if it is a number, then used for all coordinates;  if it is  list or array its
-length must equal <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">dimension</span></code></a> - 1, and is applied Hadamard to
-each coordinate.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
+<li><p><strong>variable</strong> (<em>float</em><em> or </em><em>1d array</em>) – Drift input. If a <strong>scalar</strong> is provided, it scales the persistent tangent drift direction
+(<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.drift_dir" title="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.drift_dir"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">drift_dir</span></code></a>). If a <strong>1d array</strong> of length <code class="docutils literal notranslate"><span class="pre">dimension</span></code> is provided, it is projected
+into the tangent space and used directly as the drift direction.</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>]</em>) – Parameter override dictionary. Values in <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.ExponentialDist.params" title="psyneulink.core.components.functions.distributionfunctions.ExponentialDist.params"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">params</span></code></a> temporarily replace current parameter values
+for this call only.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li></li>
-<li><p><strong>updated coordinates</strong> (<em>1d array</em>)</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>The updated position on the sphere <span class="math notranslate nohighlight">\(S^{dimension-1}\)</span>. The returned vector is guaranteed
+to have unit norm.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1d array</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">previous_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">previous_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.reset" title="Link to this definition">¶</a></dt>
-<dd><p>Resets <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>  and <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>
-to the specified value(s).</p>
-<p>If arguments are passed into the reset method, then reset sets each of the attributes in
-<a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding argument.
-Next, it sets the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to a list containing each of the argument values.</p>
-<p>If reset is called without arguments, then it sets each of the attributes in <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding attribute in <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a>. Next, it sets the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to a list containing
-the values of each of the attributes in <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a>.</p>
-<p>Often, the only attribute in <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> is
-<a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> and the only attribute in <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a> is <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>, in which case
-the reset method sets <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to either the value of the argument (if an argument was passed into
-reset) or the current value of <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>.</p>
-<p>For specific types of StatefulFunction functions, the reset method may carry out other
-reinitialization steps.</p>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.reset" title="Link to this definition">¶</a></dt>
+<dd><p>Reset previous_value to initializer and return reset state
+consistent with PNL integrator reset protocol.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1662,7 +1535,8 @@ correspond as follows:</p>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">type default_variable<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>number, list or array : default class_defaults.variable</p>
+</dd>
 <dt class="field-even">param default_variable<span class="colon">:</span></dt>
 <dd class="field-even"><p>specifies a template for the external stimulus</p>
 </dd>
@@ -1670,7 +1544,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>number, list or array : default class_defaults.variable</p>
 </dd>
 <dt class="field-even">type initial_w<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float, list or 1d array : default 0.0</p>
+</dd>
 <dt class="field-odd">param initial_w<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
@@ -1679,7 +1554,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float, list or 1d array : default 0.0</p>
 </dd>
 <dt class="field-odd">type initial_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float, list or 1d array : default 0.0</p>
+</dd>
 <dt class="field-even">param initial_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
 <a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
@@ -1688,7 +1564,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float, list or 1d array : default 0.0</p>
 </dd>
 <dt class="field-even">type time_step_size<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default 0.1</p>
+</dd>
 <dt class="field-odd">param time_step_size<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies the time step size of numerical integration</p>
 </dd>
@@ -1696,7 +1573,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default 0.1</p>
 </dd>
 <dt class="field-odd">type t_0<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 0.0</p>
+</dd>
 <dt class="field-even">param t_0<span class="colon">:</span></dt>
 <dd class="field-even"><p>specifies starting value for time</p>
 </dd>
@@ -1704,7 +1582,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default 0.0</p>
 </dd>
 <dt class="field-even">type a_v<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default -1/3</p>
+</dd>
 <dt class="field-odd">param a_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the v^3 term of the dv/dt equation</p>
 </dd>
@@ -1712,7 +1591,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default -1/3</p>
 </dd>
 <dt class="field-odd">type b_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 0.0</p>
+</dd>
 <dt class="field-even">param b_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>coefficient on the v^2 term of the dv/dt equation</p>
 </dd>
@@ -1720,7 +1600,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default 0.0</p>
 </dd>
 <dt class="field-even">type c_v<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default 1.0</p>
+</dd>
 <dt class="field-odd">param c_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the v term of the dv/dt equation</p>
 </dd>
@@ -1728,7 +1609,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default 1.0</p>
 </dd>
 <dt class="field-odd">type d_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 0.0</p>
+</dd>
 <dt class="field-even">param d_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>constant term in the dv/dt equation</p>
 </dd>
@@ -1736,7 +1618,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default 0.0</p>
 </dd>
 <dt class="field-even">type e_v<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default -1.0</p>
+</dd>
 <dt class="field-odd">param e_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the w term in the dv/dt equation</p>
 </dd>
@@ -1744,7 +1627,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default -1.0</p>
 </dd>
 <dt class="field-odd">type f_v<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default  1.0</p>
+</dd>
 <dt class="field-even">param f_v<span class="colon">:</span></dt>
 <dd class="field-even"><p>coefficient on the external stimulus (<a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) term in the dv/dt equation</p>
 </dd>
@@ -1752,7 +1636,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default  1.0</p>
 </dd>
 <dt class="field-even">type time_constant_v<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default 1.0</p>
+</dd>
 <dt class="field-odd">param time_constant_v<span class="colon">:</span></dt>
 <dd class="field-odd"><p>scaling factor on the dv/dt equation</p>
 </dd>
@@ -1760,7 +1645,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default 1.0</p>
 </dd>
 <dt class="field-odd">type a_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 1.0,</p>
+</dd>
 <dt class="field-even">param a_w<span class="colon">:</span></dt>
 <dd class="field-even"><p>coefficient on the v term of the dw/dt equation</p>
 </dd>
@@ -1768,7 +1654,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default 1.0,</p>
 </dd>
 <dt class="field-even">type b_w<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default -0.8,</p>
+</dd>
 <dt class="field-odd">param b_w<span class="colon">:</span></dt>
 <dd class="field-odd"><p>coefficient on the w term of the dv/dt equation</p>
 </dd>
@@ -1776,7 +1663,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default -0.8,</p>
 </dd>
 <dt class="field-odd">type c_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 0.7,</p>
+</dd>
 <dt class="field-even">param c_w<span class="colon">:</span></dt>
 <dd class="field-even"><p>constant term in the dw/dt equation</p>
 </dd>
@@ -1784,7 +1672,8 @@ correspond as follows:</p>
 <dd class="field-odd"><p>float : default 0.7,</p>
 </dd>
 <dt class="field-even">type threshold<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default -1.0</p>
+</dd>
 <dt class="field-odd">param threshold<span class="colon">:</span></dt>
 <dd class="field-odd"><p>specifies a value of the input below which the LC will tend not to respond and above which it will</p>
 </dd>
@@ -1792,7 +1681,8 @@ correspond as follows:</p>
 <dd class="field-even"><p>float : default -1.0</p>
 </dd>
 <dt class="field-odd">type mode<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 1.0</p>
+</dd>
 <dt class="field-even">param mode<span class="colon">:</span></dt>
 <dd class="field-even"><p>coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
 (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
@@ -1802,7 +1692,8 @@ activity) decreases</p>
 <dd class="field-odd"><p>float : default 1.0</p>
 </dd>
 <dt class="field-even">type uncorrelated_activity<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>float : default 0.0</p>
+</dd>
 <dt class="field-odd">param uncorrelated_activity<span class="colon">:</span></dt>
 <dd class="field-odd"><p>constant term in the dw/dt equation</p>
 </dd>
@@ -1810,7 +1701,8 @@ activity) decreases</p>
 <dd class="field-even"><p>float : default 0.0</p>
 </dd>
 <dt class="field-odd">type time_constant_w<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dd class="field-odd"><p>float : default 12.5</p>
+</dd>
 <dt class="field-even">param time_constant_w<span class="colon">:</span></dt>
 <dd class="field-even"><p>scaling factor on the dv/dt equation</p>
 </dd>
@@ -1818,7 +1710,8 @@ activity) decreases</p>
 <dd class="field-odd"><p>float : default 12.5</p>
 </dd>
 <dt class="field-even">type integration_method<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>str : default “RK4”</p>
+</dd>
 <dt class="field-odd">param integration_method<span class="colon">:</span></dt>
 <dd class="field-odd"><p>selects the numerical integration method. Currently, the choices are: “RK4” (4th Order Runge-Kutta) or “EULER”
 (Forward Euler)</p>
@@ -1838,7 +1731,8 @@ arguments of the constructor.</p>
 <dd class="field-odd"><p>Dict[param keyword: param value] : default None</p>
 </dd>
 <dt class="field-even">type owner<span class="colon">:</span></dt>
-<dd class="field-even"><p></p></dd>
+<dd class="field-even"><p>Component</p>
+</dd>
 <dt class="field-odd">param owner<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 </dd>
@@ -3460,25 +3354,16 @@ _instantiate_attributes_before_function below</p></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator</span></code></a><ul>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.variable"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.variable</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.rate"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.rate</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.random_state</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.noise"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.noise</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.offset"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.offset</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.starting_point</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.time_step_size"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.time_step_size</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.dimension"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.dimension</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.initializer"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.initializer</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.angle_function"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.angle_function</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_time"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.previous_time</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.previous_value"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.previous_value</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.owner"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.owner</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.name"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.name</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.prefs"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.prefs</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_params"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._validate_params()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_initializers"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._validate_initializers()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.drift_dir"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.drift_dir</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.random_state"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.random_state</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._proj_tangent"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._proj_tangent()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._expmap_sphere"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._expmap_sphere()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._parallel_transport_exact"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._parallel_transport_exact()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._tangent_basis"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._tangent_basis()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._hyperspherical_to_cartesian"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._hyperspherical_to_cartesian()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._logmap_sphere"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._logmap_sphere()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._instantiate_attributes_before_function"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._instantiate_attributes_before_function()</span></code></a></li>
-<li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._validate()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._function"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator._function()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.reset"><code class="docutils literal notranslate"><span class="pre">DriftOnASphereIntegrator.reset()</span></code></a></li>
 </ul>
@@ -3635,7 +3520,7 @@ _instantiate_attributes_before_function below</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=5d8abaae"></script>
+         <script src="_static/documentation_options.js?v=3e2360b9"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+9
+                  0.18.0.0+6
                 </div>
               
             
@@ -268,7 +268,7 @@ are not constrained to be used by PsyNeuLink objects</p>
 <h3><em>LIST MANAGEMENT</em><a class="headerlink" href="#list-management" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">insert_list</span></code></p></li>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">convert_to_list</span></code></p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_list" title="psyneulink.core.globals.utilities.convert_to_list"><code class="xref any py py-func docutils literal notranslate"><span class="pre">convert_to_list</span></code></a></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">flatten_list</span></code></p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">nesting_depth</span></code></p></li>
 </ul>
@@ -542,6 +542,16 @@ parameter of components in the list.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="psyneulink.core.globals.utilities.convert_to_list">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.utilities.</span></span><span class="sig-name descname"><span class="pre">convert_to_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.convert_to_list" title="Link to this definition">¶</a></dt>
+<dd><p>Enclose l in a list if it is not one already
+If it is a single item or tuple, place in list
+If it is a numpy array of dimension &gt; 0, convert to list
+If it is a dict, convert to list of tuples
+If it is None, return None</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="psyneulink.core.globals.utilities.convert_to_np_array">
 <span class="sig-prename descclassname"><span class="pre">psyneulink.core.globals.utilities.</span></span><span class="sig-name descname"><span class="pre">convert_to_np_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.convert_to_np_array" title="Link to this definition">¶</a></dt>
 <dd><p>Converts value to np.ndarray if it is not already. Handles
@@ -725,6 +735,7 @@ From: <a class="reference external" href="https://stackoverflow.com/questions/32
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.ContentAddressableList.get_values_as_lists"><code class="docutils literal notranslate"><span class="pre">ContentAddressableList.get_values_as_lists()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_list"><code class="docutils literal notranslate"><span class="pre">convert_to_list()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_np_array"><code class="docutils literal notranslate"><span class="pre">convert_to_np_array()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.get_value_from_array"><code class="docutils literal notranslate"><span class="pre">get_value_from_array()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.is_iterable"><code class="docutils literal notranslate"><span class="pre">is_iterable()</span></code></a></li>
@@ -759,7 +770,7 @@ From: <a class="reference external" href="https://stackoverflow.com/questions/32
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=5d8abaae"></script>
+         <script src="_static/documentation_options.js?v=3e2360b9"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

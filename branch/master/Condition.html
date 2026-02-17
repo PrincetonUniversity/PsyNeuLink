@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+9
+                  0.18.0.0+6
                 </div>
               
             
@@ -1507,8 +1507,8 @@ allowed to execute.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> (<em>callable</em>) – specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</p></li>
-<li><p><strong>args</strong> (<a href="#id37"><span class="problematic" id="id38">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
-<li><p><strong>kwargs</strong> (<a href="#id39"><span class="problematic" id="id40">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
+<li><p><strong>args</strong> (<a href="#id39"><span class="problematic" id="id40">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
+<li><p><strong>kwargs</strong> (<a href="#id43"><span class="problematic" id="id44">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1519,9 +1519,9 @@ allowed to execute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>args</strong> (<a href="#id41"><span class="problematic" id="id42">*</span></a>args) – specifies additional formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.
+<li><p><strong>args</strong> (<a href="#id47"><span class="problematic" id="id48">*</span></a>args) – specifies additional formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.
 these are appended to the <strong>args</strong> specified at instantiation of this Condition</p></li>
-<li><p><strong>kwargs</strong> (<a href="#id43"><span class="problematic" id="id44">**</span></a>kwargs) – specifies additional keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.
+<li><p><strong>kwargs</strong> (<a href="#id51"><span class="problematic" id="id52">**</span></a>kwargs) – specifies additional keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.
 these are added to the <strong>kwargs</strong> specified at instantiation of this Condition</p></li>
 </ul>
 </dd>
@@ -1732,7 +1732,7 @@ for new code.</p>
 <li><p><strong>process_graph_function</strong> (<em>Callable</em>) – a function taking an optional
 ‘self’ argument (as the first argument, if present), and a
 graph dependency dictionary</p></li>
-<li><p><strong>kwargs</strong> (<a href="#id45"><span class="problematic" id="id46">**</span></a>kwargs) – optional arguments to be stored as attributes</p></li>
+<li><p><strong>kwargs</strong> (<a href="#id55"><span class="problematic" id="id56">**</span></a>kwargs) – optional arguments to be stored as attributes</p></li>
 </ul>
 </dd>
 </dl>
@@ -2043,7 +2043,7 @@ specified.</p>
 <dd><dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.repeat">
 <span class="sig-name descname"><span class="pre">repeat</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.repeat" title="Link to this definition">¶</a></dt>
-<dd><p>the interval between <a href="#id47"><span class="problematic" id="id48">*</span></a>unit*s where this condition can be
+<dd><p>the interval between <a href="#id57"><span class="problematic" id="id58">*</span></a>unit*s where this condition can be
 satisfied</p>
 </dd></dl>
 
@@ -2222,8 +2222,8 @@ allowed to execute.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> (<em>callable</em>) – specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</p></li>
-<li><p><strong>args</strong> (<a href="#id49"><span class="problematic" id="id50">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
-<li><p><strong>kwargs</strong> (<a href="#id51"><span class="problematic" id="id52">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
+<li><p><strong>args</strong> (<a href="#id61"><span class="problematic" id="id62">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
+<li><p><strong>kwargs</strong> (<a href="#id65"><span class="problematic" id="id66">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2237,9 +2237,9 @@ allowed to execute.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> – callable
 specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</p></li>
-<li><p><strong>args</strong> – <a href="#id53"><span class="problematic" id="id54">*</span></a>args
+<li><p><strong>args</strong> – <a href="#id67"><span class="problematic" id="id68">*</span></a>args
 specifies formal arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
-<li><p><strong>kwargs</strong> – <a href="#id55"><span class="problematic" id="id56">**</span></a>kwargs
+<li><p><strong>kwargs</strong> – <a href="#id69"><span class="problematic" id="id70">**</span></a>kwargs
 specifies keyword arguments to pass to <code class="xref any docutils literal notranslate"><span class="pre">func</span></code> when the Condition is evaluated.</p></li>
 </ul>
 </dd>
@@ -2527,7 +2527,7 @@ Defaults to False.</p></li>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=5d8abaae"></script>
+         <script src="_static/documentation_options.js?v=3e2360b9"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      

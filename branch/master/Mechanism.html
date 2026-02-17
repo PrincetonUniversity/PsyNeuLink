@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.17.0.0+9.g35b41f33e documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.18.0.0+6.ga4b4a1b35 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.17.0.0+9
+                  0.18.0.0+6
                 </div>
               
             
@@ -1857,6 +1857,12 @@ For each type-specific sub-dict,</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable">
+<span class="sig-name descname"><span class="pre">_gen_llvm_output_port_parse_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mech_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable" title="Link to this definition">¶</a></dt>
+<dd><p>Create output port variable based on the variable specification.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function">
 <span class="sig-name descname"><span class="pre">_gen_llvm_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function" title="Link to this definition">¶</a></dt>
 <dd><p>Overloaded main function LLVM generation method.</p>
@@ -2333,6 +2339,7 @@ this Component to execute in that Context</p>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_output_ports"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._update_output_ports()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.initialize"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base.initialize()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._parse_runtime_params"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._parse_runtime_params()</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_output_port_parse_variable"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_output_port_parse_variable()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_function()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._gen_llvm_function_body"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._gen_llvm_function_body()</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._show_structure"><code class="docutils literal notranslate"><span class="pre">Mechanism_Base._show_structure()</span></code></a></li>
@@ -2377,7 +2384,7 @@ this Component to execute in that Context</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=5d8abaae"></script>
+         <script src="_static/documentation_options.js?v=3e2360b9"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
      
