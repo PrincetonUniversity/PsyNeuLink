@@ -621,3 +621,61 @@ def test_pec_lca():
     pec.controller.function.parameters.save_values.set(True)
 
     ret = pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
+
+
+@pytest.mark.composition
+def test_pec_lca_num_estimates_llvm_stochasticity():
+    """Ensure LLVM PEC estimates vary for LCA when noise is stochastic."""
+
+    input_mech = pnl.TransferMechanism(
+        input_shapes=2,
+        integrator_mode=True,
+        integration_rate=1,
+        termination_threshold=1,
+    )
+
+    lca_mech = pnl.LCAMechanism(
+        name="LCA",
+        input_shapes=2,
+        function=pnl.Logistic(gain=10, bias=0),
+        threshold=0.6,
+        leak=8,
+        competition=8,
+        self_excitation=0,
+        noise=pnl.NormalDist(mean=0.0, standard_deviation=0.1),
+        time_step_size=0.01,
+        execute_until_finished=True,
+        output_ports=[pnl.DECISION_OUTCOME, pnl.DECISION_INDEX, pnl.DECISION_TIME],
+        reset_stateful_function_when=pnl.AtTrialStart(),
+    )
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([input_mech, lca_mech])
+
+    captured = {}
+
+    def objective(sim_data):
+        # Keep the first simulation batch so we can validate estimate-to-estimate variability.
+        if "sim_data" not in captured:
+            captured["sim_data"] = sim_data.copy()
+        return float(np.mean(np.std(sim_data, axis=1)))
+
+    pec = pnl.ParameterEstimationComposition(
+        nodes=comp,
+        parameters={("termination_threshold", input_mech): np.linspace(1, 2, 3)},
+        outcome_variables=[lca_mech.output_ports[pnl.DECISION_TIME]],
+        objective_function=objective,
+        optimization_function=pnl.PECOptimizationFunction(
+            method="differential_evolution", max_iterations=1
+        ),
+        num_estimates=4,
+        num_trials_per_estimate=5,
+        initial_seed=42,
+    )
+
+    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    pec.run(inputs={input_mech: np.tile([1, 0], (5, 1))})
+
+    assert "sim_data" in captured
+    # sim_data shape: (num_trials, num_estimates, num_outcomes)
+    assert np.mean(np.std(captured["sim_data"], axis=1)) > 0.0

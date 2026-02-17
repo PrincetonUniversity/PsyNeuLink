@@ -3125,6 +3125,38 @@ class Mechanism_Base(Mechanism):
                                        mech_params,
                                        mech_state,
                                        mech_input)
+
+        # Apply modulation to nested function-valued parameters (e.g., integrator_function.noise.seed)
+        # by recursively compiling ParameterPorts for those nested objects and storing back the
+        # modulated parameter structures.
+        for param_id in obj.llvm_param_ids:
+            param_obj = getattr(obj.parameters, param_id, None)
+            if param_obj is None:
+                continue
+
+            nested_obj = param_obj.get(None)
+            if not isinstance(nested_obj, Component):
+                continue
+            if not hasattr(nested_obj, "llvm_param_ids"):
+                continue
+
+            # Pull nested object parameters strictly from the parameter structure.
+            # Some nested attributes also have state entries, and get_param_or_state_ptr
+            # requires state pointers for those; here we only need the parameter branch.
+            nested_base_params = pnlvm.helpers.get_param_ptr(builder, obj, params_out, param_id)
+            nested_params, builder = self._gen_llvm_param_ports_for_obj(
+                nested_obj,
+                nested_base_params,
+                ctx,
+                builder,
+                mech_params,
+                mech_state,
+                mech_input
+            )
+
+            if nested_params is not nested_base_params:
+                builder.store(builder.load(nested_params), nested_base_params)
+
         return params_out, builder
 
 
