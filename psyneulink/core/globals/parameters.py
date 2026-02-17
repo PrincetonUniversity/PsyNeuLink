@@ -321,6 +321,7 @@ import types
 import typing
 import weakref
 
+import numpy as np
 import toposort
 
 from psyneulink._typing import Iterable, Optional, Set, Union
@@ -1864,7 +1865,12 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
         value_updated = False
         if not compilation_sync:
             try:
-                update_array_in_place(self.values[execution_id], value)
+                target_value = self.values[execution_id]
+                value_for_update = value
+                if isinstance(target_value, np.ndarray) and np.isscalar(value):
+                    value_for_update = np.asarray(value)
+
+                update_array_in_place(target_value, value_for_update)
             except (KeyError, TypeError, ValueError):
                 # no self.values for execution_id
                 # failure during attempted update
