@@ -2889,7 +2889,7 @@ class PytorchProjectionWrapper():
     The matrix of the wrapped `projection <PytorchProjectionWrapper.projection>` is assigned as a parameter of
     (set of connection weights in ) the PyTorch Module that, coupled with a corresponding input and `torch.matmul
     <https://pytorch.org/docs/main/generated/torch.matmul.html>`_ operation, provide the input to the Pytorch
-    function associated with the `Node <Composition_Node>` of the AutdiffComposition that is the `receiver
+    function associated with the `Node <Composition_Nodes>` of the AutdiffComposition that is the `receiver
     <Projection_Base.receiver>` of the wrapped Projection.
 
     .. note::

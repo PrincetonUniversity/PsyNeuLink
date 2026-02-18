@@ -943,7 +943,7 @@ while the last two should be used as values::
 
     **Use of field_weights to specify keys and values.**
 
-Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `nodes <Composition_Node>`,
+Note that the figure now shows `<QUERY> [WEIGHT] <EMComposition.field_weight_nodes>` `Nodes <Composition_Nodes>`,
 that are used to implement the relative contribution that each key field makes to the matching process specifed in
 `field_weights <EMComposition.field_weights>` argument.  By default, these are equal (all assigned a value of 1),
 but different values can be used to weight the relative contribution of each key field.  The values are normalized so

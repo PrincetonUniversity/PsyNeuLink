@@ -38,6 +38,8 @@ Contents
           COMMENT:
           - `AutodiffComposition_Exclusion_From_Gradient_Calculation`
           COMMENT
+          - `AutodiffComposition_Synchronization_with_PyTorch`
+          - `AutodiffComposition_Save_Pytorch_Training_Data`
       - `AutodiffComposition_LLVM`
       - `AutodiffComposition_Python`
       - `AutodiffComposition_Logging`
@@ -87,7 +89,7 @@ An AutodiffComposition is created in the same way as a standard Composition, wit
 - there are some `restrictions <AutodiffComposition_Restrictions>` that apply to its construction;
 
 - an AutodiffComposition's `pytorch_representation <AutodiffComposition.pytorch_representation>` is used to
-  execute it in PyTorch, which is constructed when its `learn() <AutodiffComposition.learn>` method is called
+  execute it in PyTorch, which is constructed when its `learn() <Composition.learn>` method is called
   (see `AutodiffComposition_PytorchRepresentation` for additional details).
 
 COMMENT:
@@ -99,7 +101,7 @@ BREADCRUMB - UPDATE ONCE KATHERINE'S CHANGES HAVE BEEN INCORPORATED
 
 In addition to `learning_rate <Projection.learning_rate>`, other parameters can be customized by constructing
 a `torch.nn.optimizer <https://pytorch.org/docs/main/optim.html>`_ and assigining it to the **optimizer** argument
-of either the AutodiffComposition's constructor or `learn <AutodiffComposition.learn>` method.  This requires creating
+of either the AutodiffComposition's constructor or `learn <Composition.learn>` method.  This requires creating
 and adding ``param_groups`` for the `torch.nn.Parameters
 <https://pytorch.org/docs/stable/generated/torch.nn.parameter.Parameter.html>`_ corresponding to the Projections to be
 specified, which are listed in the AutodiffComposition's `torch_parameters <AutodiffComposition.torch_parameters>`
@@ -116,7 +118,7 @@ Because learning in implemeted by changes to `matrix <MappingProjection.matrix>`
 only pathways that have at least one learnable MappingProjection (i.e., one with its `learnable <MappingProjection.learnable>`
 attribute set to ``True``) can be used for learning.  Thus, only `samples <AutodiffComposition_Sample>` that are the
 endpoints of such pathways can be specified in the **targets** argument of the AutodiffComposition's constructor,
-and only those will be trained when the `learn() <AutodiffComposition.learn>` method is called.
+and only those will be trained when the `learn() <Composition.learn>` method is called.
 Pathways no learnable MappingProjections are ignored, and a warning is issued if any are specified in the
 **targets** argument of the AutodiffComposition's constructor.  This includes the case in which there is a single
 Mechanism in the pathway (i.e., it is a `SINGELTON <NodeRole.SINGLETON>`), since there are no Projections in such a pathway.
@@ -157,7 +159,7 @@ This is a Component that generates the value of a pathway being trained (sometim
 specified by the `ProcessingMechanism` at the end of the `pathway <Composition_Pathways>`, or one of its `OutputPorts
 <OutputPort>`. The *sample* can be anywhere in the AutodiffComposition, or in one `nested <AutodiffComposition_Nesting>`
 within it. It is trained using the value of the `target <AutodiffComposition_Target>` with which it is paired, or by
-values specified in the **targets** argument of the `learn() <AutodiffComposition.learn>` method (see `below
+values specified in the **targets** argument of the `learn() <Composition.learn>` method (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). Only one *target* can be associated with a *sample*,
 though a target can be assigned to multiple *samples*.
 
@@ -173,16 +175,16 @@ though a target can be assigned to multiple *samples*.
 ^^^^^^^^
 This is the source of the value used to train the `sample <AutodiffComposition_Sample>`  with which it is paired
 (sometimes referred to as a "teacher"); it can be the `value <OutputPort.value>` of another Mechanism in the
-AutodiffComposition, or an external value value provided when the `learn() <AutodiffComposition.learn>` method is
-executed. An internal source can be any ProcessingMechanism in the AutodiffComposition or one nested
+AutodiffComposition, or an external value value provided when the `learn() <Composition.learn>` method is
+executed. An internal source can be any ProcessingMechanism in the AutodiffComposition or one `nested
 <AutodiffComposition_Nesting>` within it, so long as it is not in the same `pathway <Composition_Pathways>` as the
 sample it trains. This allows the value of one pathway to be used to train another. Alternatively, the kewyord
 *TARGET* can be used to specify the *target* for a *sample*, which allows external values provided in the **targets**
-argument of the `learn() <AutodiffComposition.learn>` method to be used to train the pathway (see `below
+argument of the `learn() <Composition.learn>` method to be used to train the pathway (see `below
 <AutodiffComposition_Specifying_Learning_Pathways>`). In that case, a `TARGET Node
 <AutodiffComposition_Structure_Target_Nodes>` is automtically constructed for the *sample*, to receive the external
 input when learning is executed, and the values (assigned as inputs to the those *TARGET Nodes*) must be provided in
-the **targets** argument of the `learn() <AutodiffComposition.learn>` when it is called
+the **targets** argument of the `learn() <Composition.learn>` when it is called
 (see `Autodiffcomposition_PyTorch`).
 
     .. hint::
@@ -192,11 +194,11 @@ the **targets** argument of the `learn() <AutodiffComposition.learn>` when it is
        If an internal source (i.e., a ProcessingMechanism) is specified for the *target* of a `sample
        <AutodiffComposition_Sample>` in the **targets** argument of the AutodiffComposition's constructor,
        then there should *NOT* be an entry for that *sample-target* pair in the **targets** argument of
-       the `learn() <AutodiffComposition.learn>` method; the presence of one will raise an error.
+       the `learn() <Composition.learn>` method; the presence of one will raise an error.
 
        Conversely, any *sample* paired with the keyword `TARGET` in the **targets** argument of
        the AutodiffComposition's constructor (specifying the use of external training signals)
-       *MUST* appear in the **targets** argument of the `learn() <AutodiffComposition.learn>`
+       *MUST* appear in the **targets** argument of the `learn() <Composition.learn>`
        method, paired with one or more values to be used for training that sample during learning
        (see `Target Inputs <Composition_Target_Inputs>` for information specifying these).
 
@@ -206,12 +208,14 @@ the **targets** argument of the `learn() <AutodiffComposition.learn>` when it is
 *LossMechanism*
 ^^^^^^^^^^^^^^^
 
-This calculates the loss for the current values of a *sample* and *target*. If the LossMechanism is specified
-explicity (see `below `AutodiffComposition_Specifying_Learning_Pathways`), it uses the form of `Loss` specified in
-either the **loss** or **function** argument of its constructor; in this case then its *sample* and *target* must also
-be specified in the corresponding arguments of the constructor. If a LossMechanism is not specified explicity for a
-*sample-target* pair, one is automatically constructed for them, and uses the `Loss` specified by the `loss_spec
-<AutodiffComposition.loss_spec>` of the AutodiffComposition.
+This calculates the loss for the current values of a `sample <AutodiffComposition_Sample>` and
+`target <AutodiffComposition_Target>`. If the LossMechanism is specified explicity (see `below
+<AutodiffComposition_Specifying_Learning_Pathways>`), it uses the form of `Loss` specified in
+either the **loss** or **function** argument of its constructor; in this case then its *sample*
+and *target* must also be specified in the corresponding arguments of the constructor. If a
+LossMechanism is not specified explicity for a *sample-target* pair, one is automatically
+constructed for them, and uses the `Loss` specified by the `loss_spec <AutodiffComposition.loss_spec>`
+of the AutodiffComposition.
 
 .. _AutodiffComposition_Specifying_Learning_Pathways:
 
@@ -267,14 +271,14 @@ COMMENT
 *Learning Rates*
 ~~~~~~~~~~~~~~~~
 
-The **learning** argument of the constructor and/or the `learn <AutodiffComposition.learn>` method can be used to
-specify a `learning_rate <AutodiffComposition.learning_rate>` for an entire AutodiffComposition, ones nested within
+The **learning** argument of the constructor and/or the `learn <Composition.learn>` method can be used to
+specify a `learning_rate <Composition.learning_rate>` for an entire AutodiffComposition, ones nested within
 it, and/or individual MappingProjections (see `Composition_Learning_rate` for details of specification, and the `table
 <Composition_Learning_Rate_Precedence_Hierarchy>` for which specifications take prcedence over others). Learning_rates
 specified for individual MappingProjections are passed to the corresponding parameters of the AutodiffComposition's
 `pytorch_representation <AutodiffComposition.pytorch_representation>` when it is executed. Specifications made in the
 constructor for the AutodiffComposition are used as the default learning_rates for all executions of the `learn
-<AutodiffComposition.learn>`; specifications made in the call to the `learn() <AutodiffComposition.learn>` method
+<Composition.learn>`; specifications made in the call to the `learn() <Composition.learn>` method
 override any made in the constructor, but are used only for that execution. A warning is issued if a learning_rate is
 specified for a Projection with a `learnable <MappingProjection.learnable>` attribute set to ``False``, and an error
 is generated if the Projection is associated with a PyTorch Parameter that is not learnable.
@@ -320,7 +324,7 @@ for cases in which the matrix of a Project corresponds to only a subpart of the 
 <Composition_Controller>`, that will operate normally when it's `run() <Composition.run>`is run in both `Python mode
 <AutodiffComposition_Python>` and `PyTorch mode <AutodiffComposition_PyTorch>`. However, at present, these are not
 supported for learning in `PyTorch mode <AutodiffComposition_PyTorch>`; a warning is issued and these are ignored
-when the `learn() <AutodiffComposition.learn>` method is called with **execution_mode** = `ExecutionMode.PyTorch`.
+when the `learn() <Composition.learn>` method is called with **execution_mode** = `ExecutionMode.PyTorch`.
 Accomodation of control during learning in `PyTorch mode <AutodiffComposition_PyTorch>` will be implemented in a
 future version.
 
@@ -423,7 +427,7 @@ COMMENT
 
 
 An AutodiffComposition uses a `pytorch_representation <AutodiffComposition.pytorch_representation>` to execute
-learning when it's `learn() <AutodiffComposition.learn>` method is called in `Pytorch mode
+learning when it's `learn() <Composition.learn>` method is called in `Pytorch mode
 <AutodiffComposition_PyTorch>`.  This is comprised of a outer `PytorchCompositionWrapper` for the AutodiffComposition,
 that is comprised of `PytorchMechanismWrappers <PytorchMechanismWrapper` and `PytorchProjectionWrappers
 <PytorchProjectionWrappers>` for the Compositions Mechanisms and Projections, and `PytorchCompositionWrapper
@@ -495,7 +499,7 @@ assignment; see `Composition_Enable_Learning` for enabling and disabling learnin
 
   .. warning::
      Nested Compositions are supported for learning only in `PyTorch mode <AutodiffComposition_PyTorch>`, and
-     cause an error if the `learn <AutodiffComposition.learn>` method of an AutodiffComposition is executed in
+     cause an error if the `learn <Composition.learn>` method of an AutodiffComposition is executed in
      `Python mode <AutodiffComposition_Python>` or `LLVM mode <AutodiffComposition_LLVM>`.
 
 
@@ -504,14 +508,15 @@ assignment; see `Composition_Enable_Learning` for enabling and disabling learnin
 Execution
 ---------
 
-An AutodiffComposition's `run <AutodiffComposition.run>` and `learn <AutodiffComposition.learn>` methods are the same
+An AutodiffComposition's `run <AutodiffComposition.run>` and `learn <Composition.learn>` methods are the same
 as for a `Composition`. However, the **execution_mode** argument has different effects than for a standard Composition.
 
-For `run() <Composition.run>`, execution occurs in `Python mode <AutodiffComposition_Python>` by default and if either
-`ExecutionMode.Python` or `ExecutionMode.PyTorch` are specified explicitly (see `note <AutodiffComposition_PyTorch_Note>` below); `LLVM compilation <AutodiffComposition_LLVM>` is attempted
-if one of the  `ExecutionMode.LLVM` modes is specified.
+For `run() <Composition.run>`, execution occurs in `Python mode <AutodiffComposition_Python>`
+by default and if either `ExecutionMode.Python` or `ExecutionMode.PyTorch` are specified explicitly
+(see `note <AutodiffComposition_PyTorch_Note>` below); `LLVM compilation <AutodiffComposition_LLVM>`
+is attempted if one of the  `ExecutionMode.LLVM` modes is specified.
 
-For `learn() <AutodiffComposition.learn>`, `PyTorch mode <Autodiff_PyTorch>` is used by default, which uses the
+For `learn() <Composition.learn>`, `PyTorch mode <Autodiff_PyTorch>` is used by default, which uses the
 `pytorch_representation <AutodiffComposition.pytorch_representation` for execution. Python execution and LLVM
 Compilation can be specified explicity (using `ExecutionMode.Python` or `ExecutionMode.LLVMRun`, respectively),
 but `restrictions apply. Each mode of exeuction is each described in greater detail below, and summarized in `this
@@ -524,7 +529,7 @@ AutodiffComposition and standard `Composition`.
 ~~~~~~~~~~~~~~
 
 This is the default mode for learning of an AutodiffComposition, but can also be specified explicitly by setting
-**execution_mode** = `ExecutionMode.PyTorch` in the `learn() <AutodiffComposition.learn>` method
+**execution_mode** = `ExecutionMode.PyTorch` in the `learn() <Composition.learn>` method
 (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`). In this mode, the AutodiffComposition's
 `pytorch_representation <AutodiffComposition.pytorch_representation>` is used for learning,
 which is about three orders of magntidue faster than `Python mode <AutodiffComposition_Python>`, and
@@ -535,7 +540,7 @@ in PyTorch (e.g., `self-organized maps <https://github.com/giannisnik/som>`_).
 
     .. _AutodiffComposition_PyTorch_Note:
     .. note::
-       While specifying `ExecutionMode.PyTorch` in the `learn <AutodiffComposition.learn>` method of an
+       While specifying `ExecutionMode.PyTorch` in the `learn <Composition.learn>` method of an
        AutodiffComposition causes it to use PyTorch for training, specifying this in the `run <Composition.run>`
        method causes it to be executed in `Python mode <AutodiffComposition_Python>` (i.e., using the *Python*
        interpreter, and not PyTorch); this is so that any modulation can take effect during execution, which is
@@ -545,14 +550,31 @@ in PyTorch (e.g., `self-organized maps <https://github.com/giannisnik/som>`_).
       * Specifying `ExecutionMode.LLVMRun` or `ExecutionMode.PyTorch` in the learn() method of a standard
         `Composition` raises an error.
 
-When PyTorch is usd for learning, the AutodiffComposition executes forward and backward passes using its
-`pytorch_representation <AutodiffComposition.pytorch_representation>`. The number of forward passes for each input
-is specified by `optimizations_per_minibatch <AutodiffComposition.optimizations_per_minibatch>`, over which the
-loss is accumulated, and then used to make weight adjustments in the backward pass.
-COMMENT:
-BREADCRUMB: MENTION SYNCHRONIZATION WITH PNL HERE
-BREADCRUMB: HOW DO OPTIMIZATION_STEPS RELATE TO MINIBATCH AND STIMULI/INPUTS??
-COMMENT
+*Execution Sequence*
+^^^^^^^^^^^^^^^^^^^^
+
+When PyTorch is used for learning, the AutodiffComposition's `pytorch_representation
+<AutodiffComposition.pytorch_representation>` is executed, which is used to implement each `optimization_step
+<LearningScale.OPTIMIZATION_STEP>` of the learning process, by calling the relevant forward, backward,
+and optimizer_step methods of Pytorch used to implement learning; each optimization_step carries out the following
+operations:
+
+  - execute the AutodiffComposition's `forward <AutodiffComposition.autodiff_forward>` method for each stimulus
+    in the `minibatch <LearningScale.MINIBATCH>` -- the number of which is specified by the value of `minibatch_size
+    <Composition.minibatch_size>` -- to generate the values used to compute the `Losses <Loss>` for each stimulus;
+
+  - aggregate the losses across all stimuli in the minibatch, which is then passed to the AutdoiffCompositon's
+    `backward <AutodiffComposition.autodiff_backward>` method to compute the gradients and corresponding weight
+    changes for all learnable parameters in the AutodiffComposition;
+
+  - copy the Node values generated in the forward pass and changes to parameters generated in the backward pass and
+    optimizer step of the `pytorch_representation <AutodiffComposition.pytorch_representation>`
+    to the corresponding Mechanisms' `variables <Mechanism_Base.variable>` and/or `values <Mechanism_Base.value>`,
+    and `learnable <MappingProjection.learnable>` Projections' `matrices <MappingProjection.matrix>`) of the
+    AutodiffComposition as specified, which can be after each optimizer step, or at the end of the `MINIBATCH` or
+    `EPOCH` (see `below <AutodiffComposition_Synchronization_with_PyTorch>`), but always at the end of the `RUN`
+    (i.e., call to learn()).
+
 
 .. _AutodiffComposition_Configuring_Learning:
 
@@ -564,26 +586,42 @@ can be further customized as described below.
 *Additional Optimizations Steps*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-More than one optimization step for each stimulus in a `minibatch <LearningScale.MINIBATCH>` can be specified in the
-**optimizations_per_minibatch** argument of an AutodiffComposition's constructor, in which case the forward,
-backward, an optimization_steps methods are called the specified number of times for each stimulus in the minibatch
-(see `optimizations_per_minibatch <Composition.optimizations_per_minibatch>` for additional details). In that case, the
-**execute_in_additional_optimizations** argument of either the AutodiffComposition's constructor or its `learn()
-<AutodiffCompostion.learn>` method can be used to specify which Nodes are executed in which additional `optimization
-steps <LearningScale.OPTIMIZATION_STEP>` after the first. This is specified as a dict, each key of which is a `Node
-<Composition_Nodes>` in the AutodiffComposition or one `nested <AutodiffComposition_Nesting>` within it, and its value
-is of the following:
+*optimizatons_per_minibatch*: By default, a single optimization_step is carried out for all of the stimuli in a
+`minibatch <LearningScale.MINIBATCH>`. However, as long as there is only one stimulus in a minibatch (i.e.,
+`minibatch_size <Composition.minibatch_size>`\==1), then multiple optimization_steps can be specified for each
+stimulus, using the **optimizations_per_minibatch** argument of the AutodiffComposition's constructor (to specify
+the default number) or its `learn() <Composition.learn>` method (to specify it for just that execution).
+Specifying optimizatons_per_minibatch > 1 can be similar to, but is *not* the same as increasing the `learning_rate
+<Composition.learning_rate>` (see `note <Composition_Optimizations_per_Minibatch_Note>`) and, when used with
+`execute_in_additional_optimizations <AutodiffComposition.execute_in_additional_optimizations>` can produce important
+differences, as described below.
+
+*execute_in_additional_optimizations*: this can be used to specify which `Nodes <Composition_Nodes>` are executed in
+which additional `optimization_steps <LearningScale.OPTIMIZATION_STEP>` (i.e., after the first) when more than one
+optimization_step is specified. This can be used to implement a form of "online replay" (or `backprop-to-activity
+procedure <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_) in which a particular part of the model
+is given extra optimization_steps to quickly search for a pattern of activity over a subset of Nodes in response to
+the stimulus that is useful for some downstream  purpose (see EGO Model for an example). The
+**execute_in_additional_optimizations** argument can be specified in either the AutodiffComposition's constructor
+(to sepcify a default value) or its `learn() <Compostion.learn>` method (which applies to only that execution).
+It is specified as a dict, each key of which is a `Node <Composition_Nodes>` in the AutodiffComposition or one
+`nested <AutodiffComposition_Nesting>` within it, and its value is of the following:
 
   *None* or *True*: execute in all additional optimizations
   COMMENT:
-  without any modificadtion(s) to its Parameters;
+  without any modification(s) to its Parameters;
+  COMMENT
+  ;
+
+  *False* or *EXCLUDE*: exclude from execution during optimization_steps after the first; this is useful
+  primarly when a nested Composition is specified but nodes within it should be excluded
+  (e.g., see `note <AutodiffComposition_Nested_Additional_Optimizations>` below);
+  COMMENT:
+  GIVE EXAMPLE HERE
   COMMENT
 
-  *False* or *EXCLUDE*: exclude from execution during additional optimization step; this is useful
-  primarly when a nested Composition is specified but nodes within it should be excluded;
-
-  *FIRST*, *LAST*, *ALL* or range: include in only the first, last, all, or a specified set of additional
-  optimization steps;
+  *FIRST*, *LAST*, *ALL* or `range <https://docs.pytorch.org/docs/stable/generated/torch.range.html>`_: include in
+  only the first, last, all, or a specified set of additional optimization steps.
 
   COMMENT:
   BREADCRUMB: IS THIS IMPLEMENTED?
@@ -591,19 +629,12 @@ is of the following:
     execution of additional optimizations, restoring to previous value(s) for first optimization
     of next trial.
   COMMENT
-  BREADCRUMB: IS THE FOLLOWING HINT CORRECT, IF THERE IS ONLY ONE ERROR CALC FOR ALL ADDITIONAL OPTIMIZATION STEPS?
-  COMMENT:
-  IS THE
-  COMMENT
-  .. hint::
-     This can be used to implement the `backprop-to-activation procedure
-     <https://web.stanford.edu/~jlmcc/papers/RogersMcCBook_7_03.pdf>`_ in which the `backpropagation
-     learning algorithm <Backpropagation>` is used, with a high learning rate, to quickly search
-     for a pattern of activation in response to a given input (or set of inputs) that is useful for
-     some downstream purpose (see EGO Model for an example).
 
-If an AutodiffComposition is specified as a key, then all Nodes within that AutodiffComposition and any nested within
-it are included, except for ones explicitly excluded.
+  .. _AutodiffComposition_Nested_Additional_Optimizations:
+
+  .. note::
+     If an AutodiffComposition is specified as a key, then all Nodes within that AutodiffComposition and any nested
+     within it are included, except for any explicitly excluded.
 
 COMMENT:
 BREADCRUMB: ADD TEXT AND UNCOMM'T ONCE IMPLEMENTED IN CONSTRUCTOR AND LEARN()
@@ -615,6 +646,46 @@ BREADCRUMB: ADD TEXT AND UNCOMM'T ONCE IMPLEMENTED IN CONSTRUCTOR AND LEARN()
 
 `exclude_from_gradient_calc`
 COMMENT
+
+.. _AutodiffComposition_Synchronization_with_PyTorch:
+
+*Synchronization of PsyNeuLink Values with PyTorch*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+By default, the outputs (of the modules) and parameters (connection weights) generated in Pytorch during execution
+of an AutodiffComposition's `learn() <Composition.learn>` method (using its `pytorch_representation
+<AutodiffComposition.pytorch_representation>`) are copied to the corresponding Mechanisms and Projections of the
+AutodiffComposition itself at the end of each `run <AutodiffComposition.run>`.  However, this can be cusotmized,
+selectively for Mechanism `variables <Mechanism_Base.variable>` or `values <Mechanism_Base.value>`, Projection
+`matrices<MappingProjection.matrix>`, and/or the Composition `results <Composition.results>`, to occur after each
+`optimization_step <LearningScale.OPTIMIZATION_STEP>`, `minibatch <LearningScale.MINIBATCH>`, `trial
+<LearningScale.TRIAL>`, training `epoch <LearningScale.EPOCH>`, full `run <LearningScale.RUN>`, or not at all.
+This can be specified using following arguments of either the AutodiffComposition's constructor or `learn()
+<Composition.learn>` method:
+
+    - synch_projection_matrices_with_torch : `OPTIMIZATION_STEP`, `MINIBATCH`, `EPOCH` or `RUN`
+    - synch_node_variables_with_torch : `OPTIMIZATION_STEP`, `TRIAL`, `MINIBATCH`, `EPOCH`, `RUN` or None
+    - synch_node_values_with_torch : `OPTIMIZATION_STEP`, `MINIBATCH`, `EPOCH` or `RUN`
+    - synch_results_with_torch : `OPTIMIZATION_STEP`, `MINIBATCH`, `EPOCH` or `RUN`
+
+    .. note::
+        Copying more frequently keeps the PsyNeuLink components more closely synchronized with the corresponding
+        Pytorch elements of the `pytorch_representation <AutodiffComposition.pytorch_representation>` during learning,
+        which can be useful for debugging and/or monitoring the learning process in Pytorch; but can slow performance.
+
+.. _AutodiffComposition_Save_Pytorch_Training_Data:
+
+*Saving Pytorch Training Data*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, the `samples <AutodiffComposition_Sample>`, `targets <AutodiffComposition_Target>`, and `losses
+<AutodiffComposition_LossMechanism>` are stored for the last stimulus of each `MINIBATCH`. However, this can be
+customized to occur for each `OPTIMIZATION_STEP`, `EPOCH`, `RUN`, or not at all (using ``None``) by specifying one
+of these values for the following Parameters, using the corresponding argument in either the AutodiffComposition's
+constructor (to specify the default vaue) or its `learn() <Composition.learn>` method (to specify the value used for
+that execution):
+`retain_torch_sample_values <AutodiffComposition.retain_torch_sample_values>`,
+`retain_torch_targets <AutodiffComposition.retain_torch_targets>`,
+or `retain_torch_losses <AutodiffComposition.retain_torch_losses>`.
 
 .. _AutodiffComposition_Python:
 
@@ -628,7 +699,7 @@ Compositions or AutodiffCompositions; nor can it be used to specify internal *ta
 
 *LLVM mode*
 ~~~~~~~~~~~
-This is specified by setting **execution_mode** = `ExecutionMode.LLVMRun` in the `learn <AutodiffComposition.learn>`
+This is specified by setting **execution_mode** = `ExecutionMode.LLVMRun` in the `learn <Composition.learn>`
 method of an AutodiffCompositon. This provides the fastest performance, but is limited to `supervised learning
 <Composition_Learning_Supervised>` using the `BackPropagation` algorithm, and does not support learning of `nested
  Compositions <Composition_Nested>` nor subclasses of AutodiffComposition that rely on PyTorch (e.g.,
@@ -639,7 +710,7 @@ for additional details, and `Compilation Modes <Composition_Compiled_Modes>` for
 Composition in compiled mode.
 
     .. note::
-       Specifying `ExecutionMode.LLVMRun` in either the `learn <AutodiffComposition.learn>` and `run <Composition.run>`
+       Specifying `ExecutionMode.LLVMRun` in either the `learn <Composition.learn>` and `run <Composition.run>`
        methods of an AutodiffComposition causes it to (attempt to) use compiled execution in both cases; this is
        because LLVM compilation supports the use of modulation in PsyNeuLink models (as compared to `PyTorch mode
        <AutodiffComposition_PyTorch>`; see `note <AutodiffComposition_PyTorch_Note>` below).
@@ -666,7 +737,7 @@ COMMENT
 ~~~~~~~~~
 
 Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`. However, since an
-AutodiffComposition internally converts all of its Mechanisms either an equivalent PyTorch module (or to LLVM in
+AutodiffComposition internally converts all of its Mechanisms either to an equivalent PyTorch module (or to LLVM in
 `LLVM mode <AutodiffComposition_LLVM>`), then its inner components are not actually executed. This means that there
 is limited support for logging parameters of components inside an AutodiffComposition; Currently, the only supported
 parameters are the:
@@ -821,7 +892,8 @@ def _get_torch_sample_values(owning_component=None, context=None):
     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
     if not pytorch_rep:
         return None
-    return np.array(pytorch_rep.retained_sample_values)
+    # TEACHER_TARGET BREADCRUMB: HACK BELOW TO DEAL WITH samples AS LISTS
+    return [sample[0].detach().numpy() for sample in pytorch_rep.retained_sample_values]
 
 def _get_torch_targets(owning_component=None, context=None):
     if not context.execution_id:
@@ -829,8 +901,8 @@ def _get_torch_targets(owning_component=None, context=None):
     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
     if not pytorch_rep:
         return None
-    return np.array(pytorch_rep.retained_targets)
-
+    # return np.array(pytorch_rep.retained_targets)
+    return [target[0].detach().numpy() for target in pytorch_rep.retained_targets]
 def _get_torch_losses(owning_component, context):
     if not context.execution_id:
         return None
@@ -891,7 +963,7 @@ class AutodiffComposition(Composition):
 
     enable_learning : bool: default True
         specifies whether the AutodiffComposition should enable learning when run in `learning mode
-        <AutodiffComposition.learn>` (see `Composition_Enable_Learning` for additional details).
+        <Composition.learn>` (see `Composition_Enable_Learning` for additional details).
 
     learning_rate : float, int, bool or dict : default 0.001
         specifies the learning rate(s) passed to the optimizer; overridden by any specified in the `learn
@@ -907,47 +979,47 @@ class AutodiffComposition(Composition):
     synch_projection_matrices_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy Pytorch parameters to PsyNeuLink
         `Projection matrices <MappingProjection.matrix>` (connection weights), which can be overridden by specifying
-        the **synch_projection_matrices_with_torch** argument in the `learn <AutodiffComposition.learn>` method
-        (see `synch_projection_matrices_with_torch <AutodiffComposition.synch_projection_matrices_with_torch>`
-        for additional details).
+        the **synch_projection_matrices_with_torch** argument in the `learn <Composition.learn>` method (see
+        `LearningScale` for information about settings, an `AutodiffComposition_Synchronization_with_PyTorch` for
+        additional details).
 
     synch_node_variables_with_torch : `LearningScale` : default None
-        specifies the default for the AutodiffComposition for when to copy the current input to Pytorch nodes
-        to the PsyNeuLink `variable <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes
-        <Composition_Node>`, which can be overridden by specifying the **synch_node_variables_with_torch** argument
-        in the `learn <AutodiffComposition.learn>` method (see `synch_node_variables_with_torch
-        <AutodiffComposition.synch_node_variables_with_torch>` for additional details).
+        specifies the default for the AutodiffComposition for when to copy the current input to Pytorch nodes to
+        the PsyNeuLink `variable <Mechanism_Base.value>` of the corresponding PsyNeuLink `Nodes <Composition_Nodes>`,
+        which can be overridden by specifying the **synch_node_variables_with_torch** argument in the `learn
+        <Composition.learn>` method (see `LearningScale` for information about settings, and
+        `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     synch_node_values_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the current output of Pytorch nodes to the
-        PsyNeuLink `value <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
+        PsyNeuLink `value <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Nodes>`,
         which can be overridden by specifying the **synch_node_values_with_torch** argument in the `learn
-        <AutodiffComposition.learn>` method (see `synch_node_values_with_torch
-        <AutodiffComposition.synch_node_values_with_torch>` for additional details).
+        <Composition.learn>` method (see `LearningScale` for information about settings, and
+        `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     synch_results_with_torch : `LearningScale` : default RUN
         specifies the default for the AutodiffComposition for when to copy the outputs of the Pytorch model
         to the AutodiffComposition's `results <Composition.results>` attribute, which can be overridden by
-        specifying the **synch_results_with_torch** argument in the `learn <AutodiffComposition.learn>` method.
+        specifying the **synch_results_with_torch** argument in the `learn <Composition.learn>` method.
         Note that this differs from **retain_torch_sample_values**, which specifies the frequency at which
         the outputs of the PyTorch model are tracked, all of which are stored in the AutodiffComposition's
         `torch_sample_values <AutodiffComposition.torch_sample_values>` attribute at the end of the run
-        (see `synch_results_with_torch <AutodiffComposition.synch_results_with_torch>` for
-        additional details).
+        (see `LearningScale` for information about settings, an
+        `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     retain_torch_sample_values : `LearningScale` : default MINIBATCH
-        specifies the default for the AutodiffComposition for scale at which the outputs of the Pytorch
+        specifies the default for the AutodiffComposition for the scale at which the outputs of the Pytorch
         model are tracked, all of which are stored in the AutodiffComposition's `torch_sample_values
         <AutodiffComposition.torch_sample_values>` attribute at the end of the run; this can be overridden
-        by specifying the **retain_torch_sample_values** argument in the `learn <AutodiffComposition.learn>` method.
+        by specifying the **retain_torch_sample_values** argument in the `learn <Composition.learn>` method.
         Note that this differs from **synch_results_with_torch**, which specifies the frequency with
-        which values are called to the AutodiffComposition's `results` attribute (see `retain_torch_sample_values
+        which values are copied to the AutodiffComposition's `results` attribute (see `retain_torch_sample_values
         <AutodiffComposition.retain_torch_sample_values>` for additional details).
 
     retain_torch_targets : `LearningScale` : default MINIBATCH
         specifies the default for the AutodiffComposition for when to copy the targets used for training the Pytorch
         model to the AutodiffComposition's `torch_targets <Composition.torch_targets>` attribute, which can be
-        overridden by specifying the **retain_torch_targets** argument in the `learn <AutodiffComposition.learn>`
+        overridden by specifying the **retain_torch_targets** argument in the `learn <Composition.learn>`
         method (see `retain_torch_targets <AutodiffComposition.retain_torch_targets>` for additional details).
 
     retain_torch_losses : `LearningScale` : default MINIBATCH
@@ -993,57 +1065,49 @@ class AutodiffComposition(Composition):
 
     synch_projection_matrices_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy PyTorch parameters to PsyNeuLink `Projection matrices <MappingProjection.matrix>`
-        (connection weights) if this is not specified in the call to `learn <AutodiffComposition.learn>`. Copying more
-        frequently keeps the PsyNeuLink representation more closely synchronized with parameter updates in Pytorch,
-        but slows performance (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        (connection weights) if this is not specified in the call to `learn <Composition.learn>` (see
+        `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     synch_node_variables_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines when to copy the current input to Pytorch functions to the PsyNeuLink `variable
-        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
-        if this is not specified in the call to `learn <AutodiffComposition.learn>`.
+        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `Nodes <Composition_Nodes>`,
+        if this is not specified in the call to `learn <Composition.learn>`
         COMMENT:
-        8/8/24 - FIX: 3/15/25 ADD EXPLANATION OF WHY THIS IS NOT GENERALLY USEFUL ALONG THE LINES OF THE FOLLOWING
+        BREADCRUMB: 3/15/25 ADD EXPLANATION OF WHY THIS IS NOT GENERALLY USEFUL ALONG THE LINES OF THE FOLLOWING
                  ALSO RELATE TO EXECUTE_NODES OPTION ONCE IMPLEMENTED
-        This is supported for inspection and debugging, but is not generally useful, as PsyNeuLink uses `Lazy
+        . This is supported for inspection and debugging, but is not generally useful, as PsyNeuLink uses `Lazy
         Evaluation <Component_Lazy_Updating>`, in which the variable of a node is determined by the input it receives
         during execution.
         COMMENT
-        Copying more frequently keeps the PsyNeuLink representation more closely copying more frequently
-        keeps them synchronized with parameter updates in Pytorch, but can slow performance (see
-        `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        (see `AutodiffComposition_Synchronization_with_PyTorch` for additional details)
 
     synch_node_values_with_torch : OPTIMIZATION_STEP, MINIBATCH, EPOCH or RUN
         determines when to copy the current output of Pytorch functions to the PsyNeuLink `value
-        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `nodes <Composition_Node>`,
-        if this is not specified in the call to `learn <AutodiffComposition.learn>`. Copying more
-        frequently keeps the PsyNeuLink representation more closely synchronized with parameter
-        updates in Pytorch, but can also slow performance (see `AutodiffComposition_PyTorch_LearningScale`
-        for information about settings).
+        <Mechanism_Base.value>` attribute of the corresponding PsyNeuLink `Nodes <Composition_Nodes>`,
+        if this is not specified in the call to `learn <Composition.learn>` (see
+        `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     synch_results_with_torch : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH or RUN
-        determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results
-        <Composition.results>` attribute of the AutodiffComposition if this is not specified in
-        the call to `learn <AutodiffComposition.learn>`. Copying more frequently keeps the PsyNeuLink
-        representation more closely synchronized with parameter updates in Pytorch, but slows performance
-        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        determines when to copy the current outputs of Pytorch nodes to the PsyNeuLink `results <Composition.results>`
+        attribute of an AutodiffComposition if this is not specified in the call to `learn <Composition.learn>`
+        (see `AutodiffComposition_Synchronization_with_PyTorch` for additional details).
 
     retain_torch_sample_values : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
-        determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in
-        the AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not
-        specified in the call to `learn <AutodiffComposition.learn>`(see `AutodiffComposition_PyTorch_LearningScale`
-        for information about settings)
+        determines the scale at which the outputs of the Pytorch model are tracked, all of which are stored in the
+        AutodiffComposition's `results <Composition.results>` attribute at the end of the run if this is not specified
+        in the call to `learn <Composition.learn>` (see `LearningScale` for information about settings).
 
     retain_torch_targets : OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the targets used for training the Pytorch model are tracked, all of which
-        are stored in the AutodiffComposition's `targets <Composition.targets>` attribute at the end of the run
-        if this is not specified in the call to `learn <AutodiffComposition.learn>`
-        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        are stored in the AutodiffComposition's `targets <AutodiffComposition_Target>` attribute at the end of the run
+        if this is not specified in the call to `learn <Composition.learn>`
+        (see `LearningScale` for information about settings).
 
     retain_torch_losses : OPTIMIZATION_STEP, MINIBATCH, EPOCH, RUN or None
         determines the scale at which the losses of the Pytorch model are tracked, all of which are stored in
-        the AutodiffComposition's `torch_losses <Composition.torch_losses>` attribute at the end of the run
-        if this is nota specified in the call to `learn <AutodiffComposition.learn>`
-        (see `AutodiffComposition_PyTorch_LearningScale` for information about settings).
+        the AutodiffComposition's `torch_losses <AutodiffComposition.torch_losses>` attribute at the end of the run
+        if this is nota specified in the call to `learn <Composition.learn>`
+        (see `LearningScale` for information about settings).
 
     torch_parameters : List[Tuple[str, torch.nn.parameter]]
         list of PyTorch named_parameters() for `pytorch_representation <AutodiffComposition.pytorch_representation>`
