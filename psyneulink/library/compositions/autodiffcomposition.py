@@ -892,8 +892,8 @@ def _get_torch_sample_values(owning_component=None, context=None):
     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
     if not pytorch_rep:
         return None
-    # TEACHER_TARGET BREADCRUMB: HACK BELOW TO DEAL WITH samples AS LISTS
-    return [sample[0].detach().numpy() for sample in pytorch_rep.retained_sample_values]
+    return [np.vstack(sample.detach().numpy()[...,0])
+            for samples in pytorch_rep.retained_sample_values for sample in samples]
 
 def _get_torch_targets(owning_component=None, context=None):
     if not context.execution_id:
@@ -901,8 +901,9 @@ def _get_torch_targets(owning_component=None, context=None):
     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
     if not pytorch_rep:
         return None
-    # return np.array(pytorch_rep.retained_targets)
-    return [target[0].detach().numpy() for target in pytorch_rep.retained_targets]
+    return [np.vstack(target.detach().numpy()[...,0])
+            for targets in pytorch_rep.retained_targets for target in targets]
+
 def _get_torch_losses(owning_component, context):
     if not context.execution_id:
         return None
@@ -1144,10 +1145,10 @@ class AutodiffComposition(Composition):
 
     full_sequence_mode: bool : default False
         Whether to run the underlying Composition in full sequence mode or not. In full sequence mode, each element of
-    an input sequence for a trial is processed in a separate time step. This is needed only if there are sequential
-    dependencies between the mechanisms of the compositions. Note, if the composition contains GRU compositions wrappers
-    full sequence mode is not needed (and should be avoided to improve efficiency) because the composition wrapper
-    itself handles the  sequential dependencies between the mechanisms of the GRU composition.
+        an input sequence for a trial is processed in a separate time step. This is needed only if there are sequential
+        dependencies between the mechanisms of the compositions. Note, if the composition contains GRU compositions
+        wrappers full sequence mode is not needed (and should be avoided to improve efficiency) because the composition
+        wrapper itself handles the sequential dependencies between the mechanisms of the GRU composition.
 
     """
 

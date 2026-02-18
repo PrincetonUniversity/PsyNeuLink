@@ -254,10 +254,12 @@ class PytorchCompositionWrapper(torch.nn.Module):
         list of the `output_values <Composition.output_values>` of the AutodiffComposition for ever trial executed
         in a call to `run <Composition.run>` or `learn <AutoDiffComposition.learn>`.
 
+    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM SAMPLES
     retained_sample_values : List[ndarray]
-        values of the trained `OUTPUT <NodeRole.OUTPUT>` Node (i.e., ones associated with `TARGET <NodeRole.TARGET>`
-        Node) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
+        values of the trained `SAMPLE <NodeRole.SAMPLE>` Nodes (i.e., ones associated with `TARGET <NodeRole.TARGET>`
+        Nodes) for each trial executed in a call to `learn <AutoDiffComposition.learn>`.
 
+    # TEACHER_TARGET BREADCRUMB:  REVISE TO REFER TO LOSSMECHANISM TARGETS
     retained_targets : List[ndarray]
         values of the `TARGET <NodeRole.TARGET>` Nodes for each trial executed in a call to `learn
         <AutoDiffComposition.learn>`.
@@ -2239,9 +2241,9 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                           [NODE_VARIABLES, NODE_VALUES])
 
         self.retain_for_psyneulink({SAMPLE_VALUES: sample_values,
-                                           TARGETS: target_values},
-                                          retain_in_pnl_options,
-                                          context)
+                                    TARGETS: target_values},
+                                   retain_in_pnl_options,
+                                   context)
 
         return output_values
 
