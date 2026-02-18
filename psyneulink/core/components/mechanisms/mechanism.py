@@ -2763,9 +2763,23 @@ class Mechanism_Base(Mechanism):
         This keeps recurrent/feedback projections synchronized during iterative execution
         without forcing full output-port reporting updates on every internal step.
         """
+        cims = ()
+        if context is not None and getattr(context, "composition", None) is not None:
+            from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
+            cims = (CompositionInterfaceMechanism,)
+
         for port in self.output_ports:
-            if port.efferents:
-                port._update(params=runtime_output_port_params, context=context)
+            if not port.efferents:
+                continue
+
+            if cims:
+                has_non_cim_efferent = any(
+                    not isinstance(proj.receiver.owner, cims) for proj in port.efferents
+                )
+                if not has_non_cim_efferent:
+                    continue
+
+            port._update(params=runtime_output_port_params, context=context)
 
     def initialize(self, value, context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
@@ -3087,7 +3101,18 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder, mech_params, mech_state, mech_input):
+    def _gen_llvm_param_ports_for_obj(
+        self,
+        obj,
+        params_in,
+        ctx,
+        builder,
+        mech_params,
+        mech_state,
+        mech_input,
+        *,
+        track_param_use=True,
+    ):
 
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
@@ -3109,11 +3134,19 @@ class Mechanism_Base(Mechanism):
             builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
 
         def _get_modulated_param_output_ptr(b, i):
-            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_out)
+            if track_param_use:
+                ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_out)
+            else:
+                param_name = getattr(param_ports[i].source, "name", param_ports[i].source)
+                ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out, param_name)
             return b, ptr
 
         def _get_param_base_ptr(b, i):
-            ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_in)
+            if track_param_use:
+                ptr = ctx.get_param_or_state_ptr(b, obj, param_ports[i].source, param_struct_ptr=params_in)
+            else:
+                param_name = getattr(param_ports[i].source, "name", param_ports[i].source)
+                ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in, param_name)
             return b, ptr
 
         builder = self._gen_llvm_ports(ctx,
@@ -3151,7 +3184,8 @@ class Mechanism_Base(Mechanism):
                 builder,
                 mech_params,
                 mech_state,
-                mech_input
+                mech_input,
+                track_param_use=False,
             )
 
             if nested_params is not nested_base_params:
@@ -3344,7 +3378,16 @@ class Mechanism_Base(Mechanism):
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        # Run output ports after updating the mech state (num_executions and value)
+        # Keep execution-before-finished count in sync with Python semantics:
+        # increment before evaluating output ports that depend on it (e.g., DECISION_STEPS/TIME).
+        is_finished_count_ptr = ctx.get_param_or_state_ptr(
+            builder, self, "num_executions_before_finished", state_struct_ptr=m_state
+        )
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count, is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+
+        # Run output ports after updating the mech state (num_executions, num_executions_before_finished, and value)
         builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         # is_finished should be checked after output ports ran
@@ -3479,9 +3522,6 @@ class Mechanism_Base(Mechanism):
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.fadd(is_finished_count,
-                                         is_finished_count.type(1))
-        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
@@ -3505,15 +3545,6 @@ class Mechanism_Base(Mechanism):
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
-
-            # Python execution updates output ports again when exiting because execute_until_finished is False.
-            # Refresh compiled output ports here too, using the incremented execution count.
-            refresh_outputs = builder.and_(exec_until_off, builder.not_(is_finished))
-            with builder.if_then(refresh_outputs):
-                mech_val_ptr = ctx.get_state_space(builder, self, state, VALUE)
-                builder = self._gen_llvm_output_ports(
-                    ctx, builder, mech_val_ptr, base_params, state, arg_in, arg_out
-                )
 
             builder.branch(end_block)
 

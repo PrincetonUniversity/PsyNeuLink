@@ -1867,7 +1867,11 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             try:
                 target_value = self.values[execution_id]
                 value_for_update = value
-                if isinstance(target_value, np.ndarray) and np.isscalar(value):
+                if (
+                    self._tracking_compiled_struct
+                    and isinstance(target_value, np.ndarray)
+                    and np.isscalar(value)
+                ):
                     value_for_update = np.asarray(value)
 
                 update_array_in_place(target_value, value_for_update)
