@@ -231,6 +231,10 @@ def sample_memory_sequential(memories,
             else:
                 context_retrieval_weight_sim = 1 - time_retrieval_weight
 
+            if context_retrieval_weight_sim < 0:
+                context_retrieval_weight_sim =0
+
+
             queries = (retrieved_state, context_sim, time_sim, 0)
 
             # retrieve state based on projected context (state_retrieval_weight_sim == 0)

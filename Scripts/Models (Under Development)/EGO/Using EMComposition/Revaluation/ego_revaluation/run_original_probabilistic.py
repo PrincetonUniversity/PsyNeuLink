@@ -1,5 +1,8 @@
 import numpy as np
 from random import random
+import itertools
+import pandas as pd
+
 
 from .src import gen_trials
 from .model_python import gen_memories, estimate_reward_from_starting_state
@@ -174,7 +177,7 @@ def val_to_choice(
         r1: float,  # value/reward retrieved from memory for candidate choice "1"
         r2: float,  # value/reward retrieved from memory for candidate choice "2"
         prev_choice: int,  # np.array, identity of previous 1st stage choice
-        temp: float = 2,  # temperature for softmax
+        temp: float = 2.,  # temperature for softmax
         bias: float = 0.5,  # perseveration bias, only for 1st stage ('rocket') choice
 ):
     # determine if choice in question is repetition from previous trial
@@ -219,7 +222,7 @@ def gen_trials_base_persevere(
         model_free=True,
         random_alien=True,
         is_random_initial_probs=False,
-        is_drifting=False,
+        is_drifting=True,
 ):
     """
     - First-stage states: 1, 2  (rockets)
@@ -331,6 +334,83 @@ def gen_trials_base_persevere(
 
     return np.array(visited_states), np.array(rewards), times, trial_log
 
+def gen_trials_from_data(
+        subj_data
+):
+    """
+    - First-stage states: 1, 2  (rockets)
+    - Second-stage states: 3, 4 (planets)
+    - Third-stage states: 5, 6, 7, 8 (aliens/reward)
+    - Reward depends on second-stage state:
+        p3(t), p4(t) drift independently over trials.
+    """
+
+
+    visited_states = []
+    _rewards = subj_data['r'].tolist()
+    __rewards = [[0,0,1] if r == 1 else [0,0,0] for r in _rewards]
+    # flatten rewards
+    rewards = list(itertools.chain.from_iterable(__rewards))
+
+    rockets_choice = subj_data['c1'].tolist()
+    landed_planet = subj_data['s'].tolist()
+    alien_choice = subj_data['c2'].tolist()
+
+    n = len(rockets_choice)
+
+
+
+    trial_log = []
+
+    for trial in range(n):
+        start_id = rockets_choice[trial]
+        second_id = 3 if landed_planet[trial] == 1 else 4
+        transition = 'common' if rockets_choice[trial] == landed_planet[trial] else 'rare'
+
+        if second_id == 3:
+            terminal_id = 5 if alien_choice[trial] == 1 else 6
+        else:
+            terminal_id = 7 if landed_planet[trial] == 1 else 8
+
+        visited_states.extend([STATES[start_id], STATES[second_id], STATES[terminal_id]])
+
+
+        reward = 1 if _rewards[trial] == 1 else 0
+        # append full 3-step sequence for memory
+        rewards.extend([0, 0, reward])
+
+        # -----------------------------
+        # 4. Drift reward probabilities
+        # -----------------------------
+
+
+        # -----------------------------
+        # 5. Log trial info
+        # (value estimates filled in later)
+        # -----------------------------
+        trial_log.append({
+            "trial": trial,
+            "start_id": start_id,
+            "second_id": second_id,
+            "terminal_id": terminal_id,
+            "transition": transition,  # "common" or "rare"
+            "reward": reward,  # 0/1
+            "estimate_reward_state1": None,
+            "estimate_reward_state2": None,
+            "pred_next_state": None,  # 1 or 2 based on estimates
+            "stay": None,  # 0/1 w.r.t. previous start_state
+            "reward_prob_a5": None,
+            "reward_prob_a6": None,
+            "reward_prob_a7": None,
+            "reward_prob_a8": None,
+        })
+
+    # one time-step per event (3 events per trial | n is number of trials)
+    # times = gen_trials.get_time_sequence(n * 3)
+    times = gen_trials.get_time_sequence_event(n, 3)
+
+    return np.array(visited_states), np.array(rewards), times, trial_log
+
 
 def get_reward_estimates(
         states, rewards, times,
@@ -357,6 +437,7 @@ def get_reward_estimates(
         state_d=9,
         context_d=9,
         time_retrieval_weight=time_retrieval_weight,
+        state_integration_rate=state_integration_rate,
     )
     r2 = estimate_reward_from_starting_state(
         memories, state_2, times[-1],
@@ -366,6 +447,7 @@ def get_reward_estimates(
         state_d=9,
         context_d=9,
         time_retrieval_weight=time_retrieval_weight,
+        state_integration_rate=state_integration_rate,
     )
 
     return r1, r2
@@ -469,6 +551,57 @@ def run_random_choices(
     return trial_log
 
 
+def run_human_choices(
+        metric='dot_product',
+        model_based_ness=defaults.MODEL_BASED_NESS,
+        state_integration_rate=defaults.STATE_INTEGRATION_RATE,
+        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
+        subj_data=None,
+):
+    """
+    run with data generated with human choices
+    """
+    # vs, rw, t, trial_log = gen_trials_base(
+
+
+    vs, rw, t, trial_log = gen_trials_from_data(subj_data)
+
+
+
+    for i, tr in enumerate(trial_log):
+        # use memory up to and including this trial
+        end = (i + 1) * 3  # 3 events per trial
+        r1, r2 = get_reward_estimates(
+            states=vs[:end],
+            rewards=rw[:end],
+            times=t[:end],
+            n_steps=3,
+            state_1=STATES[1],
+            state_2=STATES[2],
+            metric=metric,
+            model_based_ness=model_based_ness,
+            state_integration_rate=state_integration_rate,
+            time_retrieval_weight=time_retrieval_weight,
+        )
+
+        tr["estimate_rew_state1"] = r1
+        tr["estimate_rew_state2"] = r2
+
+        # get previous choice, only valid for 2nd trial onwards
+        prev_choice = tr["start_id"]
+        # get softmax choice probabilities
+        p_choice1, p_choice2 = val_to_choice(r1, r2, prev_choice)
+        # “policy”: pick start state with higher estimated reward
+        pred_next = 1 if random() < p_choice1 else 2
+
+        # pred_next = val_to_choice2(r1, r2)
+        tr["pred_next_state"] = pred_next
+
+        # "stay" = would the model repeat the current first-stage state on the next trial?
+        tr["stay"] = int(pred_next == tr["start_id"])
+
+    return trial_log
+
 def run_model_choices(
         metric='dot_product',
         model_based_ness=defaults.MODEL_BASED_NESS,
@@ -477,7 +610,7 @@ def run_model_choices(
         n_base_trials=200,
         common_prob=0.7,
         is_random_initial_probs=False,
-        is_drifting=False
+        is_drifting=True
 ):
     # generate timestamps for each trial for EM
     times = gen_trials.get_time_sequence_event(n_base_trials, 3)

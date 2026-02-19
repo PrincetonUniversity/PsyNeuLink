@@ -1,8 +1,10 @@
 "replicating Daw, 2011"
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import random
 
 from tqdm import tqdm
 
@@ -10,6 +12,10 @@ from tqdm import tqdm
 from ego_revaluation.run_original_probabilistic import run
 from ego_revaluation.run_original_probabilistic import run_random_choices
 from ego_revaluation.run_original_probabilistic import run_model_choices
+from ego_revaluation.run_original_probabilistic import run_human_choices
+
+RUN_TYPE = 'random'  # 'model', 'random', 'human'
+PLOT_ESTIMATES = False
 
 
 # ============================================================
@@ -24,6 +30,13 @@ def ensure_dir(path):
 # ============================================================
 # Daw 2011 Stay Probability Computation
 # ============================================================
+def trans_to_rgba(t):
+    if t == "common":
+        return (0.2, 0.4, 0.8, 0.8)   # blue-ish
+    elif t == "rare":
+        return (0.9, 0.4, 0.1, 0.8)   # orange-ish
+    else:
+        return (0, 0, 0, 0)
 
 def compute_stay_stats(trial_log):
     """Return stay probabilities for the four Daw 2011 conditions."""
@@ -33,6 +46,11 @@ def compute_stay_stats(trial_log):
     estimated_reward_prob_a5, estimated_reward_prob_a6, estimated_reward_prob_a7, estimated_reward_prob_a8 = [], [], [], []
 
     estimated_reward_r1, estimated_reward_r2 = [], []
+    rewards_prev_1 = []
+    rewards_prev_2 = []
+    transitions_prev_1 = []
+    transitions_prev_2 = []
+
     # "estimate_rew_alien5": None, "estimate_rew_alien6": None,
     # "estimate_rew_alien7": None, "estimate_rew_alien8": None,
     # "pred_next_rocket": None,  # 1 or 2 based on estimates
@@ -40,7 +58,6 @@ def compute_stay_stats(trial_log):
     # "stay": None,  # 0/1 w.r.t. previous start_state
     # "reward_prob_a5": rew_probs[5], "reward_prob_a6": rew_probs[6],
     # "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
-
 
     for tr in trial_log:
         stay = tr["stay"]
@@ -51,15 +68,26 @@ def compute_stay_stats(trial_log):
         # reward_prob_a6.append(tr["reward_prob_a6"])
         # reward_prob_a7.append(tr["reward_prob_a7"])
         # reward_prob_a8.append(tr["reward_prob_a8"])
-        #
+
         # estimated_reward_prob_a5.append(tr["estimate_rew_alien5"])
         # estimated_reward_prob_a6.append(tr["estimate_rew_alien6"])
         # estimated_reward_prob_a7.append(tr["estimate_rew_alien7"])
         # estimated_reward_prob_a8.append(tr["estimate_rew_alien8"])
 
-        # estimated_reward_r1.append(tr["estimate_rew_state1"])
-        # estimated_reward_r2.append(tr["estimate_rew_state2"])
 
+        estimated_reward_r1.append(tr["estimate_rew_state1"])
+        estimated_reward_r2.append(tr["estimate_rew_state2"])
+
+        if tr['start_id'] == 1:
+            rewards_prev_1.append(tr['reward'])
+            transitions_prev_1.append(tr['transition'])
+            rewards_prev_2.append(None)
+            transitions_prev_2.append(None)
+        else:
+            rewards_prev_2.append(tr['reward'])
+            transitions_prev_2.append(tr['transition'])
+            rewards_prev_1.append(None)
+            transitions_prev_1.append(None)
 
         reward = tr["reward"]
         transition = tr["transition"]
@@ -73,31 +101,46 @@ def compute_stay_stats(trial_log):
         elif reward == 0 and transition == "rare":
             ur.append(stay)
 
-    # fig, ax = plt.subplots(1,2, figsize = (12,4), sharey=True, sharex=True)
-    #
-    # ax[0].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',marker='.', alpha = 0.25)
-    # ax[0].plot(reward_prob_a5, label="reward_prob_a5", color="red")
-    # ax[0].scatter(range(len(estimated_reward_prob_a5)), estimated_reward_prob_a5, label="estimated_reward_prob_a5",
-    #               color="red", marker=".", alpha=.25)
+    if PLOT_ESTIMATES:
+        fig, ax = plt.subplots(1,2, figsize = (12,4), sharey=True, sharex=True)
 
-    # ax[1].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',
-    #               marker='.', alpha=0.25)
-    # ax[1].plot(reward_prob_a6, label="reward_prob_a6", color="blue")
-    # ax[1].scatter(range(len(estimated_reward_prob_a6)), estimated_reward_prob_a6, label="estimated_reward_prob_a6",
-    #               color="blue", marker=".", alpha=.25)
-    #
-    # ax[1].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
-    #               marker='.', alpha=0.25)
-    # ax[2].plot(reward_prob_a7, label="reward_prob_a7", color="green")
-    # ax[2].scatter(range(len(estimated_reward_prob_a7)), estimated_reward_prob_a7, label="estimated_reward_prob_a7",
-    #             color="green", marker=".", alpha=.25)
+        a1 = [.1 if r is not None else 0. for r in rewards_prev_1]
+        rewards_prev_1 = np.array([r if r is not None else 0 for r in rewards_prev_1], dtype=float)
 
-    # ax[3].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
-    #               marker='.', alpha=0.25)
-    # ax[3].plot(reward_prob_a8, label="reward_prob_a8", color="orange")
-    # ax[3].scatter(range(len(estimated_reward_prob_a8)), estimated_reward_prob_a8, label="estimated_reward_prob_a8", color="orange", marker=".", alpha=.25)
+        # Per-point colors
+        c1 = [trans_to_rgba(t) for t in transitions_prev_1]
 
-    # plt.savefig('estimate_vs_reward_prob.pdf')
+        ax[0].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',marker='.', alpha = 0.25)
+        ax[0].scatter(range(len(rewards_prev_1)), rewards_prev_1, label='rewards_1', color=c1, marker='.', alpha = a1)
+        # ax[0].plot(reward_prob_a5, label="reward_prob_a5", color="red")
+        # ax[0].scatter(range(len(estimated_reward_prob_a5)), estimated_reward_prob_a5, label="estimated_reward_prob_a5",
+        #               color="red", marker=".", alpha=.25)
+
+        # ax[1].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',
+        #               marker='.', alpha=0.25)
+        # ax[1].plot(reward_prob_a6, label="reward_prob_a6", color="blue")
+        # ax[1].scatter(range(len(estimated_reward_prob_a6)), estimated_reward_prob_a6, label="estimated_reward_prob_a6",
+        #               color="blue", marker=".", alpha=.25)
+
+        a2 = [.1 if r is not None else 0. for r in rewards_prev_2]
+        rewards_prev_2 = np.array([r if r is not None else 0 for r in rewards_prev_2], dtype=float)
+
+        # Per-point colors
+        c2 = [trans_to_rgba(t) for t in transitions_prev_2]
+        ax[1].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
+                      marker='.', alpha=0.25)
+        ax[1].scatter(range(len(rewards_prev_2)), rewards_prev_2, label='rewards_1', color=c2, marker='.', alpha=a2)
+
+        # ax[2].plot(reward_prob_a7, label="reward_prob_a7", color="green")
+        # ax[2].scatter(range(len(estimated_reward_prob_a7)), estimated_reward_prob_a7, label="estimated_reward_prob_a7",
+        #             color="green", marker=".", alpha=.25)
+
+        # ax[3].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
+        #               marker='.', alpha=0.25)
+        # ax[3].plot(reward_prob_a8, label="reward_prob_a8", color="orange")
+        # ax[3].scatter(range(len(estimated_reward_prob_a8)), estimated_reward_prob_a8, label="estimated_reward_prob_a8", color="orange", marker=".", alpha=.25)
+
+        plt.savefig('estimate_vs_reward_prob.pdf')
     return np.array([
         np.mean(rc) if rc else np.nan,
         np.mean(rr) if rr else np.nan,
@@ -123,20 +166,57 @@ def simulate_participants(
     all_stats = []
 
     trial_log = []
-    for _ in range(n_participants):
-        trial_log = (
-            run_model_choices(
-            # run_random_choices(
-            state_integration_rate=state_integration_rate,
-            time_retrieval_weight=time_retrieval_weight,
-            model_based_ness=model_based_ness,
-            metric=metric,
-            n_base_trials=n_base_trials,
-            common_prob=common_prob,
-        ))
-        all_stats.append(compute_stay_stats(trial_log))
-        trial_log.append(trial_log)
+    if RUN_TYPE == 'random' or RUN_TYPE == 'model':
+        if PLOT_ESTIMATES:
+            n_participants = 10
+        for _ in range(n_participants):
+            if RUN_TYPE == 'random':
+                trial_log = (
+                    run_random_choices(
+                        state_integration_rate=state_integration_rate,
+                        time_retrieval_weight=time_retrieval_weight,
+                        model_based_ness=model_based_ness,
+                        metric=metric,
+                        n_base_trials=n_base_trials,
+                        common_prob=common_prob,
+                    ))
 
+            elif RUN_TYPE == 'model':
+                trial_log = (
+                    run_model_choices(
+                        state_integration_rate=state_integration_rate,
+                        time_retrieval_weight=time_retrieval_weight,
+                        model_based_ness=model_based_ness,
+                        metric=metric,
+                        n_base_trials=n_base_trials,
+                        common_prob=common_prob,
+                    ))
+            else:
+                raise NotImplementedError('Invalid RUN_TYPE')
+
+            all_stats.append(compute_stay_stats(trial_log))
+            trial_log.append(trial_log)
+    else:
+
+        human_data = pd.read_csv('./data/twostep.csv')
+        # Use column `sub` to split into subjects:
+        ids = pd.unique(human_data['sub']).tolist()
+
+        # randomly select 100 participants
+        ids = random.sample(ids, 100)
+        for _id in tqdm(ids):
+            subj_data = human_data[human_data['sub'] == _id]
+            trial_log = (
+                    run_human_choices(
+                        state_integration_rate=state_integration_rate,
+                        time_retrieval_weight=time_retrieval_weight,
+                        model_based_ness=model_based_ness,
+                        metric=metric,
+                        subj_data=subj_data,
+                    )
+                )
+            all_stats.append(compute_stay_stats(trial_log))
+            trial_log.append(trial_log)
     return np.array(all_stats), trial_log  # shape = (participants, 4)
 
 
@@ -232,6 +312,19 @@ def parameter_sweep(
                     print(f"UC={mean_stats[2]:.3f} ± {sem_stats[2]:.3f}")
                     print(f"UR={mean_stats[3]:.3f} ± {sem_stats[3]:.3f}")
                     print("----------------------------------------------------")
+                    df = pd.DataFrame({
+                        'Rewarded Common': [mean_stats[0]],
+                        'Rewarded Common (SEM)': [sem_stats[0]],
+                        'Rewarded Rare': [mean_stats[1]],
+                        'Rewarded Rare (SEM)': [sem_stats[1]],
+                        'Rewarded UC': [mean_stats[2]],
+                        'Rewarded UC (SEM)': [sem_stats[2]],
+                        'Rewarded UR': [mean_stats[3]],
+                        'Rewarded UR (SEM)': [sem_stats[3]],
+                    })
+                    df.to_csv(
+                        f'{RUN_TYPE}_ir({ir})_tw({tw}).csv'
+                    )
 
                     # -----------------------------------------------------
                     # 🔥 MACHINE-READABLE BLOCK FOR PASTING BACK TO CHATGPT
@@ -286,15 +379,31 @@ def parameter_sweep(
 if __name__ == "__main__":
     save_dir = "./figures_daw2011"
     ensure_dir(save_dir)
+    if RUN_TYPE == 'human':
+        parameter_sweep(
+            save_dir=save_dir,
+            integration_rates=[0.5],
+            # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
+            time_weights=[.35],#, 2.], #[0, .2, .45], # [.0, .3, .4
+            # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
+            # time_weights=[0.25],  # .1, .6 in multiplicative
+            model_based_ness_list=[0.0],
+            n_base_trials=200,
+            n_participants=100
+        )
+    else:
+        parameter_sweep(
+            save_dir=save_dir,
+            integration_rates=[.5], #[.6, .8, 1.],
+            # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
+            time_weights=[3.],#[0., .2, 3.],#[0., .3, .6],#[0., .3, .5],  # [0, .2, .45], # [.0, .3, .4
+            # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
+            # time_weights=[0.25],  # .1, .6 in multiplicative
+            model_based_ness_list=[0.0],
+            n_base_trials=200,
+            n_participants=20
+        )
 
-    parameter_sweep(
-        save_dir=save_dir,
-        integration_rates=[.2],
-        # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
-        time_weights=[0,0.2,.6],
-        # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
-        # time_weights=[0.25],  # .1, .6 in multiplicative
-        model_based_ness_list=[0.0],
-        n_base_trials=200,
-        n_participants=20
-    )
+
+
+# [.2], [0, .2, .6] works for random

@@ -12,17 +12,17 @@ TASK_SIZE = 1  # (only used in PNL version)
 # Used to simulate time: the higher noise, the less 2 subsequent time points are correlated
 TIME_SIZE = 25  # length of the time vector (arbitrary choice, the more dimensions, the less likely `wrap-around`)
 TIME_DRIFT_RATE = 0.  # constant drift in one "direction"
-TIME_DRIFT_NOISE = .2  # Brownian motion noise on the sphere
+TIME_DRIFT_NOISE = .05  # Brownian motion noise on the sphere .2
 
 # === MODEL === #
 # time retrieval weight (influences how fast to relearn)
-TIME_RETRIEVAL_WEIGHT = .3
+TIME_RETRIEVAL_WEIGHT = .6
 # state integration rate (how fast working memory is updated)
-STATE_INTEGRATION_RATE = 1.  # .6
+STATE_INTEGRATION_RATE = .8  # .6
 
 TEMPERATURE = .02  # temperature of the softmax used during memory retrieval (smaller means more argmax-like)
 MEMORY_INIT = .001
-SOFTMAX_THRESHOLD = .01
+SOFTMAX_THRESHOLD = 0.01
 N_STEPS = 3  # number of steps per rollout (not used in PNL version, use 3 for equal match)
 
 # how much to retrieve context from memory (instead of simulating it) in rollout.
