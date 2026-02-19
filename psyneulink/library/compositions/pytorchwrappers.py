@@ -762,7 +762,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     f"First afferent Projection to '{nested_port.owner.name}' (which should be from "
                     f"'{nested_port.path_afferents[0].sender.owner.name}') is not the same as its "
                     f"Projection from the input_CIM of '{projection.receiver.owner.composition.name}'. "
-                    f"One for this reason may be that these Components belong to different Compositions.")
+                    f"One reason for this may be that these Components belong to different Compositions.")
 
             # Construct direct Projection from sender in outer Composition to receiver in nested Composition,
             #   and a PytorchCompositionWrapper for it that is assigned use=SHOW_PYTORCH,

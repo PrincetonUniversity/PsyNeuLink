@@ -120,7 +120,7 @@ class TestAutodiffConstructor:
             autodiff_comp._build_pytorch_representation()
         assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
                                                 "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
-                                                "from the input_CIM of 'autodiff NESTED 2'. One for this reason may "
+                                                "from the input_CIM of 'autodiff NESTED 2'. One reason for this may "
                                                 "be that these Components belong to different Compositions.")
 
     @pytest.fixture
@@ -3932,6 +3932,145 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    # @pytest.mark.parametrize(
+    #     'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
+    #         (1, 1, [0], [0], [0]),
+    #         (1, 3, [0], [0], [0]),
+    #         (3, 1, [0], [0], [0]),
+    #         (3, 3, [0], [0], [0])
+    #     ]
+    # )
+    # def test_additional_optimizations_and_retain_values_nested(self,
+    #                                                            minibatch_size,
+    #                                                            num_optimizations,
+    #                                                            expected_sample_values,
+    #                                                            expected_targets,
+    #                                                            expected_losses):
+    #     inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
+    #     middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
+    #     middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
+    #     outer_mech_teacher = pnl.ProcessingMechanism(name='OUTER NODE TEACHER')
+    #     outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+    #     outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+    #
+    #     middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech_1,
+    #                                           name="MIDDLE PROJECTION 1")
+    #     middle_proj_2 = pnl.MappingProjection(inner_mech_1, middle_mech_2,
+    #                                           name="MIDDLE PROJECTION 2")
+    #     outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
+    #                                          name="OUTER PROJECTION 1")
+    #     outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
+    #                                          name="OUTER PROJECTION 2")
+    #
+    #     inner_comp = pnl.AutodiffComposition(
+    #         name='INNER Comp',
+    #         pathways=[inner_mech_1]
+    #     )
+    #     middle_comp = pnl.AutodiffComposition(
+    #         name='MIDDLE Comp',
+    #         pathways=[middle_mech_1, middle_proj_1,
+    #                   inner_comp, middle_proj_2, middle_mech_2]
+    #     )
+    #     outer_comp = pnl.AutodiffComposition(
+    #         pathways=[[outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
+    #                   [outer_mech_teacher]],
+    #         targets={#inner_comp: outer_mech_teacher,
+    #                  outer_mech_out: pnl.TARGET},
+    #         name='Outer Comp'
+    #     )
+    #     outer_comp._build_pytorch_representation()
+    #     # Learn
+    #     outer_comp.learn(inputs={outer_mech_in: [[1],[2],[3],[4]],
+    #                              outer_comp.get_target_nodes()[0]: [[.5],[.6],[.7],[.8]]},
+    #                      num_trials=4,
+    #                      minibatch_size=minibatch_size,
+    #                      optimizations_per_minibatch=num_optimizations,
+    #                      execute_in_additional_optimizations={inner_mech_1: None,
+    #                                                           middle_mech_1: [(SLOPE, 2), (INTERCEPT, 3)],
+    #                                                           outer_mech_out: (SLOPE, 4)
+    #                                                           },
+    #                      execution_mode=pnl.ExecutionMode.PyTorch)
+    #     outer_comp.torch_sample_values = expected_sample_values
+    #     outer_comp.torch_targets = expected_targets
+    #     outer_comp.torch_losses = expected_losses
+
+
+    @pytest.mark.parametrize(
+        'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
+            (1, 1,
+             [[[[[3., 3., 3.]]]],
+              [[[[6.89815728, 6.89954496, 6.90093264]]]],
+              [[[[10.03520758, 10.04203698, 10.04886638]]]],
+              [[[[11.43676641, 11.45333151, 11.46989661]]]]],
+             [[[[[0.1, 0.2, 0.3]]]], [[[[0.4, 0.5, 0.6]]]], [[[[0.7, 0.8, 0.9]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[7.846666666666667], [40.96065862149859], [85.4210346911484], [105.13544798962482]]),
+            (1, 3,
+             [[[[[3., 3., 3.]]]], [[[[2.9547624, 2.9553568, 2.9559512]]]], [[[[2.91086682, 2.9120357, 2.91320457]]]],
+              [[[[6.70336877, 6.70739865, 6.71142853]]]], [[[[6.21660962, 6.22330099, 6.22999236]]]],[[[[5.79805965, 5.80699878, 5.81593791]]]],
+              [[[[8.55203308, 8.56911815, 8.58620321]]]], [[[[7.34812205, 7.36811662, 7.3881112 ]]]], [[[[6.45817216, 6.48016374, 6.50215532]]]],
+              [[[[7.88048368, 7.91244204, 7.9444004 ]]]], [[[[6.53558712, 6.56768038, 6.59977363]]]], [[[[5.6101948, 5.64210949, 5.67402417]]]]],
+             [[[[[0.1, 0.2, 0.3]]]], [[[[0.1, 0.2, 0.3]]]], [[[[0.1, 0.2, 0.3]]]],
+              [[[[0.4, 0.5, 0.6]]]], [[[[0.4, 0.5, 0.6]]]], [[[[0.4, 0.5, 0.6]]]],
+              [[[[0.7, 0.8, 0.9]]]], [[[[0.7, 0.8, 0.9]]]], [[[[0.7, 0.8, 0.9]]]],
+              [[[[1.1, 1.2, 1.3]]]], [[[[1.1, 1.2, 1.3]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[7.846666666666667], [7.598578744180479], [7.361649356078462],
+              [38.53793820119458], [32.7619785653037], [28.16976410462867],
+              [60.36378001953371], [43.14442321137341], [32.26831699119115],
+              [45.05996462963623], [28.81506685361018], [19.735427085583574]]),
+            (3, 1,
+             [[[[[ 3.,  3.,  3.]]], [[[ 7.,  7.,  7.]]], [[[11., 11., 11.]]]],
+              [[[[13.63361853, 13.64022793, 13.64683733]]]]],
+             [[[[[0.1, 0.2, 0.3]]], [[[0.4, 0.5, 0.6]]], [[[0.7, 0.8, 0.9]]]], [[[[1.1, 1.2, 1.3]]]]],
+             [[51.38333333333334], [154.76508556939916]]),
+            (3, 3, None, None, None) # <-expect error: optimizations_per_minibatch>1 allowed only if minibatch_size==1
+        ]
+    )
+    # TEACHER_TARGET BREADCRUMB: ADD PARAMETERIZTION OF retain_torch_values... options
+    def test_additional_optimizations_and_retain_values_simple(self,
+                                                               minibatch_size,
+                                                               num_optimizations,
+                                                               expected_sample_values,
+                                                               expected_targets,
+                                                               expected_losses):
+        input_mech = pnl.ProcessingMechanism(name='INPUT NODE', input_shapes=2)
+        middle_mech = pnl.ProcessingMechanism(name='MIDDLE NODE')
+        output_mech = pnl.ProcessingMechanism(name='OUTPUT NODE', input_shapes=3)
+
+        autodiff_comp = pnl.AutodiffComposition(
+            pathways=[input_mech, middle_mech, output_mech],
+            name='AUTODIFF COMP'
+        )
+
+        learn_args = {'inputs': {input_mech: [[1,2],[3,4],[5,6],[7,8]],
+                               autodiff_comp.get_target_nodes()[0]: [[.1, .2, .3],
+                                                                     [.4, .5, .6],
+                                                                     [.7, .8, .9],
+                                                                     [1.1, 1.2, 1.3]]},
+                      'num_trials': 4,
+                      'minibatch_size': minibatch_size,
+                      'optimizations_per_minibatch': num_optimizations,
+                      'execute_in_additional_optimizations': {input_mech: None,
+                                                              middle_mech: pnl.ALL,
+                                                              output_mech: range(2)
+                                                              },
+                      'execution_mode': pnl.ExecutionMode.PyTorch}
+
+        if minibatch_size == 3 and num_optimizations == 3:
+            err_msg = ("'AUTODIFF COMP': 'optimizations_per_minibatch' (3) and "
+                       "'minimbatch_size' (3) cannot both be greater than 1.")
+            with pytest.raises(pnl.CompositionError, match=re.escape(err_msg)):
+                autodiff_comp.learn(**learn_args)
+            return
+
+        autodiff_comp.learn(**learn_args)
+        for data, expected_data in zip([autodiff_comp.torch_sample_values,
+                                        autodiff_comp.torch_targets,
+                                        autodiff_comp.torch_losses],
+                                       [expected_sample_values, expected_targets, expected_losses],):
+            for actual_val, expected_val in zip(data, expected_data):
+                np.testing.assert_allclose(actual_val, expected_val)
+
+
 
     # Data for test_learning_rate_assignments():
     default_expected = [[1.07514814, 0.2338579, 1.3005379, 1.05193546, 0.60906245]]      # lr = .0001
@@ -4390,7 +4529,7 @@ class TestMiscTrainingFunctionality:
                                    autodiff_result_before_learning, atol=1e-8)
 
         # Test of execution after backward pass (learning):
-        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses.squeeze())
+        np.testing.assert_allclose(torch_loss.detach().numpy(), outer_comp.torch_losses)
         np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                    autodiff_result_after_learning, atol=1e-8)
 
@@ -5494,7 +5633,7 @@ def test_training_xor_with_batching(batch_size, batched_results):
               execution_mode=autodiff_mode,
               batched_results=batched_results)
 
-    np.testing.assert_allclose(torch_losses, xor.torch_losses.flatten(), rtol=1e-5)
+    np.testing.assert_allclose(torch_losses, np.array(xor.torch_losses).flatten(), rtol=1e-5)
 
     if batched_results:
         np.testing.assert_allclose(torch_results, xor.results, rtol=1e-5)

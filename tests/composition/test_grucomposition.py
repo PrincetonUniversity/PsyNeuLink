@@ -346,7 +346,7 @@ if torch_available:
                                        autodiff_result_before_learning, atol=1e-8)
 
             # Test of execution after backward pass (learning):
-            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses)
             np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                        autodiff_result_after_learning, atol=1e-8)
 
@@ -499,7 +499,7 @@ if torch_available:
             results = autodiff_comp.results
 
             # Compare recorded losses: lengths/order of minibatches should match between torch training loop above and PNL
-            np.testing.assert_allclose(torch_losses, autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_losses, np.array(autodiff_comp.torch_losses).squeeze())
 
 
         constructor_expected = [[ 0.23619161, 0.18558876, 0.16821693, 0.27253839, -0.18351431]]
@@ -819,7 +819,7 @@ if torch_available:
                                        autodiff_result_before_learning, atol=1e-8)
 
             # Test of execution after backward pass (learning):
-            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses.squeeze())
+            np.testing.assert_allclose(torch_loss.detach().numpy(), autodiff_comp.torch_losses)
             np.testing.assert_allclose(torch_result_after_learning.detach().numpy(),
                                        autodiff_result_after_learning, atol=1e-8)
 

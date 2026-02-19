@@ -588,7 +588,7 @@ can be further customized as described below.
 
 *optimizatons_per_minibatch*: By default, a single optimization_step is carried out for all of the stimuli in a
 `minibatch <LearningScale.MINIBATCH>`. However, as long as there is only one stimulus in a minibatch (i.e.,
-`minibatch_size <Composition.minibatch_size>`\==1), then multiple optimization_steps can be specified for each
+`minibatch_size <Composition.minibatch_size>`\\==1), then multiple optimization_steps can be specified for each
 stimulus, using the **optimizations_per_minibatch** argument of the AutodiffComposition's constructor (to specify
 the default number) or its `learn() <Composition.learn>` method (to specify it for just that execution).
 Specifying optimizatons_per_minibatch > 1 can be similar to, but is *not* the same as increasing the `learning_rate
@@ -885,32 +885,34 @@ EXCLUDE_FROM_GRADIENT_CALC = 'exclude_from_gradient_calc'
 
 SynchRetainArg = Optional[Union[LearningScale, str]]
 
+# # MODIFIED TEACHER_TARGET OLD:
+# def _get_torch_sample_values(owning_component=None, context=None):
+#     if not context.execution_id:
+#         return None
+#     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+#     if not pytorch_rep:
+#         return None
+#     return np.array([np.hstack(np.vstack(sample.detach().numpy()))
+#                      for samples in pytorch_rep.retained_sample_values for sample in samples])
+#
+# def _get_torch_targets(owning_component=None, context=None):
+#     if not context.execution_id:
+#         return None
+#     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+#     if not pytorch_rep:
+#         return None
+#     return np.array([np.hstack(np.vstack(target.detach().numpy()))
+#                      for targets in pytorch_rep.retained_targets for target in targets])
+#
+# def _get_torch_losses(owning_component, context):
+#     if not context.execution_id:
+#         return None
+#     pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
+#     if not pytorch_rep:
+#         return None
+#     return np.array(pytorch_rep.retained_losses)
+# # MODIFIED TEACHER_TARGET END
 
-def _get_torch_sample_values(owning_component=None, context=None):
-    if not context.execution_id:
-        return None
-    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
-    if not pytorch_rep:
-        return None
-    return [np.vstack(sample.detach().numpy()[...,0])
-            for samples in pytorch_rep.retained_sample_values for sample in samples]
-
-def _get_torch_targets(owning_component=None, context=None):
-    if not context.execution_id:
-        return None
-    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
-    if not pytorch_rep:
-        return None
-    return [np.vstack(target.detach().numpy()[...,0])
-            for targets in pytorch_rep.retained_targets for target in targets]
-
-def _get_torch_losses(owning_component, context):
-    if not context.execution_id:
-        return None
-    pytorch_rep = owning_component.parameters.pytorch_representation._get(context)
-    if not pytorch_rep:
-        return None
-    return np.array(pytorch_rep.retained_losses)
 
 class AutodiffCompositionError(CompositionError):
 
@@ -1171,9 +1173,9 @@ class AutodiffComposition(Composition):
         retain_torch_sample_values = Parameter(LearningScale.MINIBATCH)
         retain_torch_targets = Parameter(LearningScale.MINIBATCH)
         retain_torch_losses = Parameter(LearningScale.MINIBATCH)
-        torch_sample_values = Parameter([], getter=_get_torch_sample_values)
-        torch_targets = Parameter([], getter=_get_torch_targets)
-        torch_losses = Parameter([], getter=_get_torch_losses)
+        # torch_sample_values = Parameter([], getter=_get_torch_sample_values)
+        # torch_targets = Parameter([], getter=_get_torch_targets)
+        # torch_losses = Parameter([], getter=_get_torch_losses)
         trial_losses = Parameter([]) # FIX <- related to early_stopper, but not getting assigned anywhere
         device = None
 
@@ -3611,3 +3613,35 @@ class AutodiffComposition(Composition):
 
     def _get_default_comp_learning_rate(self):
         self._get_nested_compositions()
+
+    # MODIFIED TEACHER_TARGET NEW:
+    @property
+    @handle_external_context(fallback_default=True)
+    def torch_sample_values(self, context=None):
+        if not context.execution_id:
+            return None
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        if not pytorch_rep:
+            return None
+        return [sample.detach().numpy() for samples in pytorch_rep.retained_sample_values for sample in samples]
+
+    @property
+    @handle_external_context(fallback_default=True)
+    def torch_targets(self, context=None):
+        if not context.execution_id:
+            return None
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        if not pytorch_rep:
+            return None
+        return [target.detach().numpy() for targets in pytorch_rep.retained_targets for target in targets]
+
+    @property
+    @handle_external_context(fallback_default=True)
+    def torch_losses(self, context):
+        if not context.execution_id:
+            return None
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        if not pytorch_rep:
+            return None
+        return pytorch_rep.retained_losses
+    # MODIFIED TEACHER_TARGET END

@@ -1001,17 +1001,11 @@ class TestExecution:
                     em.learn(inputs=inputs, execution_mode=exec_mode)
                 assert "EMComposition does not support learning with 'concatenate_queries'='True'." in str(error.value)
 
-            elif not learning and exec_mode == pnl.ExecutionMode.PyTorch:
+            elif not learning:
                 with pytest.raises(AutodiffCompositionError) as error:
-                    with pytest.warns(UserWarning) as warning:
-                        em.learn(inputs=inputs, execution_mode=exec_mode)
-                for x in range(0,2):
-                    warning_msg = (f"A pathway of 'EM_Composition' terminating in '{x} [RETRIEVED]' cannot be "
-                                   f"trained since it has no learnable Projections; this may be because the "
-                                   f"learning_rate for the corresponding field_weight is set to False.")
-                    assert warning_msg in str(warning[x].message)
-                assert (f"Learning cannot be executed for 'EM_Composition' since it does not have any learnable "
-                        f"Projections." in str(error.value))
+                    em.learn(inputs=inputs, execution_mode=exec_mode)
+                assert ("'EM_Composition' does not have any learnable pathways, "
+                        "therefore its learn() method cannot be executed." in str(error.value))
 
             else:
                 #     # FIX: Not sure why Python mode reverses last two rows/entries (dict issue?)

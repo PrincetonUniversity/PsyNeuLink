@@ -11468,7 +11468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if optimizations_per_minibatch is None:
             optimizations_per_minibatch = self.parameters.optimizations_per_minibatch._get(context)
         else:
-            self.parameters.optimizations_per_minibatch._set(optimizations_per_minibatch, context)
+            self.parameters.optimizations_per_minibatch._set(np.array(optimizations_per_minibatch), context)
 
         result = runner.run_learning(
             inputs=inputs,

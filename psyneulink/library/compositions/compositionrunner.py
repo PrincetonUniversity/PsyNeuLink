@@ -145,7 +145,10 @@ class CompositionRunner():
             minibatch_size = np.array(minibatch_size).item()
 
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
-            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(
+                f"'{self._composition.name}': 'optimizations_per_minibatch' ({optimizations_per_minibatch}) "
+                f"and 'minimbatch_size' ({minibatch_size}) cannot both be greater than 1.")
 
         if isinstance(inputs, dict):
             inputs = self.convert_input_to_arrays(inputs, execution_mode, add_sequence_dim=True)
@@ -309,7 +312,10 @@ class CompositionRunner():
             minibatch_size = np.array(minibatch_size).item()
 
         if minibatch_size > 1 and optimizations_per_minibatch != 1:
-            raise ValueError("Cannot optimize multiple times per batch if minibatch size is greater than 1.")
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(
+                f"'{self._composition.name}': 'optimizations_per_minibatch' ({optimizations_per_minibatch}) "
+                f"and 'minimbatch_size' ({minibatch_size}) cannot both be greater than 1.")
 
         for epoch in range(epochs):
             for i in range(0, num_trials, minibatch_size):
@@ -449,7 +455,9 @@ class CompositionRunner():
                 minibatch_size = num_trials
 
             if minibatch_size > num_trials:
-                raise Exception("The minibatch size cannot be greater than the number of trials.")
+                from psyneulink.core.compositions.composition import CompositionError
+                raise CompositionError(f"'{self._composition.name}': 'minimbatch_size' ({minibatch_size}) "
+                                       f"cannot be greater than 'num_trials' ({num_trials}) ")
 
             early_stopper = None
             if patience is not None and not self._is_llvm_mode:

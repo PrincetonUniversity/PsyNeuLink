@@ -2915,6 +2915,9 @@ class EMComposition(AutodiffComposition):
             if warning:
                 warnings.warn(warning)
 
+        if self.concatenate_queries:
+            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
+
         return super().learn(
             *args,
             context=context,
@@ -2964,10 +2967,10 @@ class EMComposition(AutodiffComposition):
                           f"because the learning_rate for the corresponding field_weight is set to False.")
         return result
 
-    def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
-        if self.concatenate_queries:
-            raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
-        return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
+    # def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
+    #     if self.concatenate_queries:
+    #         raise EMCompositionError(f"EMComposition does not support learning with 'concatenate_queries'='True'.")
+    #     return super().infer_backpropagation_learning_pathways(execution_mode, context=context)
 
     def do_gradient_optimization(self, retain_in_pnl_options, context, optimization_num=None):
         # 7/10/24 - MAKE THIS CONTEXT DEPENDENT:  CALL super() IF BEING EXECUTED ON ITS OWN?
