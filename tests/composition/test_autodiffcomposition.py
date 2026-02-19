@@ -3932,6 +3932,7 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
+    # TEACHER_TARGET BREADCRUMB: USE TEST THAT ALREADY HAS INTERNAL TARGET
     # @pytest.mark.parametrize(
     #     'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
     #         (1, 1, [0], [0], [0]),
