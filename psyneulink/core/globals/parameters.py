@@ -1503,7 +1503,7 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
     def _validate_method(self):
         return self._owner._get_validate_method(self.name)
 
-    def _validate(self, value):
+    def _get_validation_error_message(self, value) -> Union[str, None]:
         err_msg = None
 
         valid_types = self.valid_types
@@ -1521,7 +1521,13 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
             if err_msg is False:
                 err_msg = '{0} returned False'.format(validation_method)
 
+        return err_msg
+
+    def _validate(self, value):
+        err_msg = self._get_validation_error_message(value)
         if err_msg is not None:
+            if isinstance(value, str):
+                value = f"'{value}'"
             raise ParameterError(
                 "Value ({0}) assigned to parameter '{1}' of {2}.parameters is not valid: {3}".format(
                     value,
