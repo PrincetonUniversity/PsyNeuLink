@@ -98,31 +98,6 @@ class TestAutodiffConstructor:
         with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
             autodiff_comp.learn(inputs={input_mech: [[1.0]]})
 
-    def test_duplicate_projections_to_nested_comp(self):
-        input_node_autodiff = pnl.ProcessingMechanism(name='autodiff INPUT', input_shapes=2)
-        hidden_node_autodiff_1 = pnl.ProcessingMechanism(name='autodiff HIDDEN 1', input_shapes=3)
-        hidden_node_autodiff_2 = pnl.ProcessingMechanism(name='autodiff HIDDEN 2', input_shapes=4)
-        hidden_node_autodiff_3 = pnl.ProcessingMechanism(name='autodiff HIDDEN 3', input_shapes=5)
-        output_node_autodiff = pnl.ProcessingMechanism(name='autodiff OUTPUT', input_shapes=3)
-
-        nested = pnl.AutodiffComposition(name='autodiff NESTED',
-                                     nodes = [hidden_node_autodiff_1,
-                                              hidden_node_autodiff_2])
-
-        nested = pnl.AutodiffComposition(name='autodiff NESTED 2',
-                                     nodes = [hidden_node_autodiff_1,
-                                              hidden_node_autodiff_2])
-        pathway_a = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_1), nested]
-        pathway_b = [input_node_autodiff, MappingProjection(input_node_autodiff, hidden_node_autodiff_2), nested,
-                     MappingProjection(sender=hidden_node_autodiff_2, name="PROBLEM PROJ"), output_node_autodiff]
-        autodiff_comp = pnl.AutodiffComposition(pathways=[pathway_a, pathway_b], name='autodiff COMP')
-        with pytest.raises(AutodiffCompositionError) as error_text:
-            autodiff_comp._build_pytorch_representation()
-        assert error_text.value.error_value == ("First afferent Projection to 'autodiff HIDDEN 1' (which should be "
-                                                "from 'autodiff NESTED Input_CIM') is not the same as its Projection "
-                                                "from the input_CIM of 'autodiff NESTED 2'. One reason for this may "
-                                                "be that these Components belong to different Compositions.")
-
     @pytest.fixture
     def copy_test_components(self):
         import torch

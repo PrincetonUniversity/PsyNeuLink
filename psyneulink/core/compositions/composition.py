@@ -5568,9 +5568,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     continue
                 if isinstance(node_port, InputPort):
                     if node_port in nc.input_CIM_ports:
+                        # node is in immediately nested Composition
                         CIM_port_for_nested_node = owning_composition.input_CIM_ports[node_port][0]
                         CIM = owning_composition.input_CIM
                     else:
+                        # recursively search for more deeply nested Compositions for node
                         nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node, node_port, NodeRole.INPUT)
                         CIM_port_for_nested_node = nc.input_CIM_ports[nested_node_CIM_port_spec[0]][0]
                         CIM = nc.input_CIM
@@ -5583,10 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         CIM_port_for_nested_node = owning_composition.output_CIM_ports[node_port][1]
                         CIM = owning_composition.output_CIM
                     else:
-                        nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node,
-                                                                                 node_port,
-                                                                                 role)
-                                                                                 # NodeRole.OUTPUT)
+                        nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node, node_port, role)
                         # FIX: IF CIM_port_for_nested_node COMES BACK WITH NONE,
                         #      OR IT CAN BE MORE DIRECTLY ASCERTAINED THAT, EVEN IF IT IS A PROJECTION FROM AN OUTPUT
                         #      NODE, IT *ITSELF* DOES NOT PROJECT TO AN OUTPUT_CIM, THEN TRY ASSIGNING AS PROBE?
@@ -9296,7 +9295,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # add sender and receiver to self.parameter_CIM_ports dict
         for p in control_signal.projections:
-            # self.add_projection(p)
             graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal, context=context)
         try:
             sender._remove_projection_to_port(projection)

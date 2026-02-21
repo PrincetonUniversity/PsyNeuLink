@@ -404,8 +404,8 @@ class TestAddProjection:
         np.testing.assert_allclose(proj.matrix.base, weights)
 
     test_args = [(None, ([1],[1],[1],[1]), 3.0),
-        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
-        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612)]
+                 ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
+                 ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612)]
     @pytest.mark.parametrize('projs, expected_matrices, expected_result', test_args, ids=[x[0] for x in test_args])
     def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices, expected_result):
         """Test both automatic creation as well as explicit specification of Projections from outer Composition to
