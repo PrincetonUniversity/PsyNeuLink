@@ -3933,7 +3933,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     @property
     def is_initializing(self):
         try:
-            owner_initializing = self.owner.initialization_status == ContextFlags.INITIALIZING
+            owner_initializing = self.owner.is_initializing
         except AttributeError:
             owner_initializing = False
 
