@@ -5598,8 +5598,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             CIM_port_for_nested_node = nc.output_CIM_ports[node_port][1]
                             CIM = nc.output_CIM
                         else:
-                            CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
-                            CIM = nc.output_CIM
+                            # # MODIFIED TEACHER_TARGET OLD:
+                            # CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
+                            # CIM = nc.output_CIM
+                            # MODIFIED TEACHER_TARGET NEW:
+                            # TEACHER_TARGET BREADCRUMB: NEED TO CHECK WHETHER nested_node_CIM_port_spec[0]
+                            #                            IS IN DIRECTLY NESTED COMP OR DEEPER, AND IF LATTER,
+                            #                            RECURSLYVE CALL __get_nested_node_CIM_port() AGAIN
+                            if nested_node_CIM_port_spec[0] in nc.output_CIM_ports:
+                                CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
+                                CIM = nc.output_CIM
+                            else:
+                                nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node, node_port, role)
+                                nc = nested_node_CIM_port_spec[2]
+                                CIM_port_for_nested_node = nc.output_CIM_ports[node_port][1]
+                                CIM = nc.output_CIM
+                            # MODIFIED TEACHER_TARGET END
                 elif isinstance(node_port, ParameterPort):
                     # NOTE: there is special casing here for parameter ports. They don't have a node role
                     # associated with them in the way that input and output nodes do, so we don't know for sure

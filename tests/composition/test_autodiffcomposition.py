@@ -3907,7 +3907,7 @@ class TestMiscTrainingFunctionality:
         if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.PyTorch:
             np.testing.assert_allclose(results, expected)
 
-    # TEACHER_TARGET BREADCRUMB: USE TEST THAT ALREADY HAS INTERNAL TARGET
+    # # TEACHER_TARGET BREADCRUMB: INCLUDES 2 LEVELS OF NESTING THAT FAILS
     # @pytest.mark.parametrize(
     #     'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
     #         (1, 1, [0], [0], [0]),
@@ -3922,16 +3922,16 @@ class TestMiscTrainingFunctionality:
     #                                                            expected_sample_values,
     #                                                            expected_targets,
     #                                                            expected_losses):
-    #     inner_mech_1 = pnl.ProcessingMechanism(name='INNER NODE 1')
+    #     inner_mech = pnl.ProcessingMechanism(name='INNER NODE')
     #     middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
     #     middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
     #     outer_mech_teacher = pnl.ProcessingMechanism(name='OUTER NODE TEACHER')
     #     outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
     #     outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
     #
-    #     middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech_1,
+    #     middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech,
     #                                           name="MIDDLE PROJECTION 1")
-    #     middle_proj_2 = pnl.MappingProjection(inner_mech_1, middle_mech_2,
+    #     middle_proj_2 = pnl.MappingProjection(inner_mech, middle_mech_2,
     #                                           name="MIDDLE PROJECTION 2")
     #     outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
     #                                          name="OUTER PROJECTION 1")
@@ -3940,7 +3940,7 @@ class TestMiscTrainingFunctionality:
     #
     #     inner_comp = pnl.AutodiffComposition(
     #         name='INNER Comp',
-    #         pathways=[inner_mech_1]
+    #         pathways=[inner_mech]
     #     )
     #     middle_comp = pnl.AutodiffComposition(
     #         name='MIDDLE Comp',
@@ -3950,7 +3950,9 @@ class TestMiscTrainingFunctionality:
     #     outer_comp = pnl.AutodiffComposition(
     #         pathways=[[outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
     #                   [outer_mech_teacher]],
-    #         targets={#inner_comp: outer_mech_teacher,
+    #         # targets={inner_comp: outer_mech_teacher,
+    #         #          outer_mech_out: pnl.TARGET},
+    #         targets={inner_mech: outer_mech_teacher,
     #                  outer_mech_out: pnl.TARGET},
     #         name='Outer Comp'
     #     )
