@@ -72,6 +72,9 @@ class TestAutodiffConstructor:
         hidden_mech_1 = ProcessingMechanism(name="HIDDEN 1")
         hidden_mech_2 = ProcessingMechanism(name="HIDDEN 2")
         output_mech = ProcessingMechanism(name="OUTPUT")
+        solo_mech = ProcessingMechanism(name="SOLO")
+
+        # Test without **targets** specification
         pathway_1 = Pathway([input_mech,
                              MappingProjection(input_mech, hidden_mech_1, learnable=False),
                              hidden_mech_1,
@@ -83,20 +86,69 @@ class TestAutodiffConstructor:
                      MappingProjection(hidden_mech_2, output_mech, learnable=False),
                      output_mech]
         autodiff_comp = AutodiffComposition(name="AUTODIFF COMP", pathways=[pathway_1, pathway_2])
+
+        # Test for warning that show_graph(show_learning=True) is uncessary for AutodiffComposition
         warning_message_1 = ("The 'show_learning' argument in the call to show_graph() for 'AUTODIFF COMP' is "
                              "unnecessary since learning components are shown for an AutodiffComposition only when "
                              "'show_pytorch' is used.")
         with pytest.warns(UserWarning, match=re.escape(warning_message_1)):
             autodiff_comp.show_graph(show_learning=True, output_fmt='source')
+
+        # Test for warning if show_pytorch=True with no learnable pathways
         warning_message_2 = ("No learnable pathways were found in 'AUTODIFF COMP'; therefore, no "
                              "pytorch_representation will be constructed, and learning will not be possible.")
         with pytest.warns(UserWarning, match=re.escape(warning_message_2)):
             autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
         autodiff_comp.run(inputs={input_mech: [[1.0]]})
+
+        # Test for error on learn() with no learnable pathways
         error_msg = (f"'AUTODIFF COMP' does not have any learnable pathways, "
                      f"therefore its learn() method cannot be executed.")
         with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
             autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
+        # Test for error on **targets** specification for unlearnable pathway
+        unlearnable_proj = MappingProjection(input_mech, output_mech, learnable=False)
+        unlearnable_pathway = [input_mech, unlearnable_proj, output_mech]
+        # Test for **targets** specification with no learnable pathways
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_2', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_2",
+                                                pathways=unlearnable_pathway,
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of a non-learnable pathway when there are other learnable ones
+        input_mech_2 = ProcessingMechanism(name="INPUT_2")
+        output_mech_2 = ProcessingMechanism(name="OUTPUT_2")
+        learnable_proj = MappingProjection(input_mech_2, output_mech_2, learnable=True)
+        learnable_pathway = [input_mech_2, learnable_proj, output_mech_2]
+        error_msg = ("An external TARGET input can't be assigned to 'OUTPUT' in the 'targets' argument of "
+                     "'AUTODIFF COMP_3', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_3",
+                                                pathways=[unlearnable_pathway, learnable_pathway],
+                                                targets={output_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("An external TARGET input can't be assigned to 'SOLO' in the 'targets' argument of "
+                     "'AUTODIFF COMP_4', since there are no learnable Projections in any of the pathways that "
+                     "project to that Node.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_4",
+                                                pathways=[learnable_pathway, solo_mech],
+                                                targets={solo_mech: pnl.TARGET})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_5', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_5",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
 
     @pytest.fixture
     def copy_test_components(self):

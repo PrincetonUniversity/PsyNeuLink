@@ -1673,14 +1673,19 @@ class AutodiffComposition(Composition):
         if target_mech:
             # Target was specified in *targets* arg of constructor
             if isinstance(target_mech, LossMechanism):
-                target_msg = f"LossMechanism ('{loss_mech.name}')"
-            elif constructed_target_mechs and target_mech in constructed_target_mechs:
-                target_msg = "TARGET input"
+                target_msg = f"A LossMechanism ('{loss_mech.name}')"
+            elif (target_mech == TARGET or
+                  (constructed_target_mechs and target_mech in constructed_target_mechs)):
+                target_msg = "An external TARGET input"
             else:
-                target_msg = f"TARGET node ('{target_mech.name}')"
-            error_msg = (f"A {target_msg} has been assigned to a node ('{sample_mech.name}') for "
-                         f"learning that has no afferent pathways with any learnable Projections.")
+                target_msg = f"A TARGET node ('{target_mech.name}')"
+            error_msg = (f"{target_msg} can't be assigned to '{sample_mech.name}' in the 'targets' argument of "
+                         f"'{self.name}', since there are no learnable Projections in any of the pathways that "
+                         f"project to that Node.")
         else:
+            # TEACHER_TARGET BREADCRUMB: REMOVE THIS, SINCE UNLEARNABLE PATHWAYS ARE IGNORED, 
+            #                            AND IF THERE ARE NO LEARNABLE ONES, A WARNING IS ISSUED
+            assert False
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             if sample_mech in self.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
@@ -2152,6 +2157,12 @@ class AutodiffComposition(Composition):
                                                          context=context,
                                                          base_context=base_context)
         else:
+            # No learnable pathways
+            if self.targets:
+                # The **targets** arg was specified illegally in the constructor
+                raise AutodiffCompositionError(f"The 'targets' argument was specified for '{self.name}', "
+                                               f"but it has no learnable pathways")
+            # No targets specified, so just warn that none can be.
             warnings.warn(f"No learnable pathways were found in '{self.name}'; therefore, "
                           f"no pytorch_representation will be constructed, and learning will not be possible.")
 

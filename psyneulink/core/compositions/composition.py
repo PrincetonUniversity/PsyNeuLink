@@ -5602,13 +5602,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
                             # CIM = nc.output_CIM
                             # MODIFIED TEACHER_TARGET NEW:
-                            # TEACHER_TARGET BREADCRUMB: NEED TO CHECK WHETHER nested_node_CIM_port_spec[0]
-                            #                            IS IN DIRECTLY NESTED COMP OR DEEPER, AND IF LATTER,
-                            #                            RECURSLYVE CALL __get_nested_node_CIM_port() AGAIN
+                            # TEACHER_TARGET BREADCRUMB:
+                            #   THIS PARTIALLY ADDRESSES PROJECTION ACROSS 2 LEVELS OF NESTING; NOT SURE ABOUT 3+
+                            #   PARTIAL BECAUSE:
+                            #   A) IT ONLY WORKS IF THE NESTED COMPOSITION IS SPECIIED AS THE RECEIVER AND NOT THE NODE
+                            #      WITHIN ITSELF (IF THE NODE IS SPECIFIED, IT DOESNT CRASH, BUT ERRONEOUSLY CREATES A
+                            #      DIRECT PROJECTION AND NOT THE INTERMEDIATE PROJECTIONS TO RELEVANT CIMS ALONG THE WAY
+                            #   B) NOT CLEAR WHETHER IT WORKS FOR NODES OTHER THAN INPUT NODES -- SHOULD WORK
+                            #      FOR OTHERS, FORCING THEM TO BE INPUT NODES OF THE NESTED COMP
+                            #   C) DOES NOT SHOW UP CORRECTLY IN show_graph(),
+                            #      THOUGH IT DOES INshow_graph(show_pytorch=True) FOR AutodiffComposition
                             if nested_node_CIM_port_spec[0] in nc.output_CIM_ports:
                                 CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
                                 CIM = nc.output_CIM
                             else:
+                                # node is more deeply nested, so keep looking
                                 nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node, node_port, role)
                                 nc = nested_node_CIM_port_spec[2]
                                 CIM_port_for_nested_node = nc.output_CIM_ports[node_port][1]
