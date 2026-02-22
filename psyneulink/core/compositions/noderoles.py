@@ -505,7 +505,6 @@ class NodeRolesManager(object):
                 if self._modulatory_or_bias_node_that_projects_out_of_a_nested_composition(node):
                     continue
                 self._add_node_role(node, NodeRole.OUTPUT)
-                assert True
 
             # Assign OUTPUT to any other relevant non-TERMINAL Nodes
             else:
@@ -703,7 +702,7 @@ class NodeRolesManager(object):
             composition = self.owner
         else:
             composition = self.owner.composition
-        nodes = composition._get_all_nodes()
+        nodes = composition._get_all_nodes(include_cims=True)
         projections = []
         for node in nodes:
             projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])

@@ -4616,7 +4616,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
                           root_composition=NotImplemented,
-                          visited_compositions=NotImplemented)->tuple:
+                          visited_compositions=NotImplemented,
+                          include_cims=NotImplemented)->tuple:
         """Recursively search and return all nodes of all nested Compositions
            in a tuple with Composition in which they are nested.
         :return
@@ -4629,13 +4630,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             root_composition=self
         if visited_compositions is NotImplemented:
             visited_compositions = [self]
-        for node in self.nodes:
+        nodes = list(self.nodes) + [self.input_CIM, self.output_CIM] if include_cims else self.nodes
+        for node in nodes:
             if node.componentType == 'Composition' and \
                     node not in visited_compositions:
                 visited_compositions.append(node)
                 node._get_nested_nodes(nested_nodes,
                                        root_composition,
-                                       visited_compositions)
+                                       visited_compositions,
+                                       include_cims)
             elif root_composition is not self:
                 nested_nodes.append((node,self))
         return nested_nodes
@@ -4703,11 +4706,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 result.reverse()
                 return result
 
-    def _get_all_nodes(self):
+    def _get_all_nodes(self, include_cims=False)->list:
         """Return all nodes, including those within nested Compositions at any level
         Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
         """
-        return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
+        cims = [self.input_CIM, self.output_CIM] if include_cims else []
+        return [k[0] for k in self._get_nested_nodes(include_cims=include_cims)] + list(self.nodes) + cims
 
     def _get_all_projections(self, start_comp=None)->dict:
         """Return dict of {Projection: Composition} with all Projections in and nested within start_comp"""
