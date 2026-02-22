@@ -41,6 +41,7 @@ import enum
 import toposort
 from copy import copy
 from collections import OrderedDict, deque
+from typing import Union, Literal
 
 from psyneulink._typing import Literal, Optional
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -48,7 +49,9 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+from psyneulink.core.components.ports.port import Port
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
@@ -386,7 +389,8 @@ class NodeRolesManager(object):
         return (isinstance(node, ModulatoryMechanism_Base)
                 or (NodeRole.BIAS in self._get_roles_by_node(node)
                     and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
-                                for p in node.efferents)))
+                                for p in self._get_projections(node, 'efferents')
+                                if p in self.composition.projections)))
 
     def _CONTROL_OBJECTIVE_Node(self, node)->bool:
         """Assign NodeRole.CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
@@ -394,7 +398,7 @@ class NodeRolesManager(object):
         """
         if (isinstance(node, ObjectiveMechanism)
                 and NodeRole.CONTROL_OBJECTIVE not in self._get_roles_by_node(node)):
-            ctl_mech = next((p.receiver.owner for p in node.efferents
+            ctl_mech = next((p.receiver.owner for p in self._get_projections(node, 'efferents')
                              if isinstance(p.receiver.owner, ControlMechanism)), None)
             if ctl_mech:
                 node.control_mechanism = ctl_mech
@@ -535,7 +539,7 @@ class NodeRolesManager(object):
                     i = 0
                     while queue:
                         curr_node = queue.popleft()
-                        for next_node in [proj.receiver.owner for proj in curr_node.efferents
+                        for next_node in [proj.receiver.owner for proj in self._get_projections(curr_node, 'efferents')
                                           if proj.receiver.owner in self._get_nodes_by_role(NodeRole.CYCLE)]:
                             if next_node in cycle_nodes: # Cycle closed
                                 continue
@@ -567,16 +571,17 @@ class NodeRolesManager(object):
                     # no projections to any other Nodes within its Composition or any outer one other than ones
                     # to the output_CIM of nested (and from there outer) Composition
                     has_nodes_with_limited_projections = \
-                        any(not inner_node.efferents or
-                            all(proj.receiver.owner is node.output_CIM for proj in inner_node.efferents)
+                        any(not self._get_projections(inner_node, 'efferents') or
+                            all(proj.receiver.owner is node.output_CIM
+                                for proj in self._get_projections(inner_node,'efferents'))
                             for inner_node in node.nodes
                             if isinstance(inner_node, Mechanism))
 
                     if has_nodes_with_limited_projections:
-                        if any(not port.efferents or
+                        if any(not self._get_projections(port, 'efferents') or
                                all(proj.receiver.owner is composition.output_CIM
                                    or isinstance(proj.receiver.owner, LossMechanism)
-                                   for proj in port.efferents)
+                                   for proj in self._get_projections(port, 'efferents'))
                                for port in node.output_CIM.output_ports):
                             self._add_node_role(node, NodeRole.OUTPUT)
 
@@ -596,7 +601,8 @@ class NodeRolesManager(object):
                 elif all((isinstance(receiver, LossMechanism) and receiver.sample.owner is node)
                          or (isinstance(receiver, CompositionInterfaceMechanism)
                              and receiver is receiver.composition.output_CIM)
-                         for receiver in [efferent.receiver.owner for efferent in node.efferents]):
+                         for receiver in [efferent.receiver.owner
+                                          for efferent in self._get_projections(node, 'efferents')]):
                     self._add_node_role(node, NodeRole.OUTPUT)
 
     def _RECURRENT_MECHANISM_as_OUTPUT(self, node, composition)->bool:
@@ -605,11 +611,22 @@ class NodeRolesManager(object):
         AutoassociativeLearningMechanism; this isn't picked up as `TERMINAL` since it projects to
         the AutoassociativeLearningMechanism but can (or already does) project to an output_CIM.
         """
-        return all((p.receiver.owner is node # <- recurrence
-                or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-                or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
-                    if composition else None))
-               for p in node.efferents)
+
+        recurrent = True
+        for p in self._get_projections(node, 'efferents'):
+            if not (p.receiver.owner is node # <- recurrence
+                    or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                    or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
+                    if composition else None)):
+                recurrent = False
+        return recurrent
+
+        # return all((p.receiver.owner is node # <- recurrence
+        #         or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+        #         or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
+        #             if composition else None))
+        #        for p in self._get_projections(node, 'efferents'))
+
             # IMPLEMENTATION NOTE:
             #   The following alternate version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
             #   The version above restricts OUTPUT only to RecurrentTransferMechanism
@@ -635,13 +652,64 @@ class NodeRolesManager(object):
                     or (isinstance(p.receiver.owner, ControlMechanism)
                         and not isinstance(node, ObjectiveMechanism))
                     or (allow_cycle and p.receiver.owner in self._get_nodes_by_role(NodeRole.CYCLE))
-                    for p in node.efferents))
+                    for p in self._get_projections(node, 'efferents')))
 
     def _CONTROLLER_Node(self, composition=None):
         # Manual override to avoid INPUT/OUTPUT setting, which would cause
         # CIMs to be created, which is not correct for controllers
         if composition and composition.controller is not None:
             self.nodes_to_roles[composition.controller] = {NodeRole.CONTROLLER}
+
+    def _get_projections(self, component, aff_or_eff:Union[Literal['afferents','efferents']])->list[Projection]:
+        """Return afferents or efferents of Node filtered for those that are in current Composition"""
+        from psyneulink.core.compositions.composition import Composition
+        if not isinstance(component, (Port, Mechanism_Base, Composition)):
+            assert False, f"PROGRAM ERROR: node in call to _get_projections must be Mechanism or Composition."
+        if aff_or_eff == 'afferents':
+            xferents = component.afferents
+        elif aff_or_eff == 'efferents':
+            xferents = component.efferents
+        else:
+            assert False, f"PROGRAM ERROR: call to _get_projections must specify 'afferents' or 'efferents'"
+        # if isinstance(self.owner, Composition):
+        #     if hasattr(self.owner, '_pytorch_projections'):
+        #         projections = self.owner._pytorch_projections
+        #     else:
+        #         projections = self.owner._get_all_projections()
+        # else:
+        #     # composition = self.owner.composition
+        #     # composition = self.owner.projections_map
+        #     if hasattr(self.owner, '_pytorch_projections'):
+        #         projections = self.owner.composition._pytorch_projections
+        #     else:
+        #         projections = self.owner.composition._get_all_projections()
+        projections = self._get_all_projections()
+        # assert not any(p not in projections for p in xferents)
+        # # MODIFIED TEACHER_TARGET EQUIVALENT OF OLD:
+        # return [p for p in xferents]
+        # MODIFIED TEACHER_TARGET NEW:
+        return [p for p in xferents if p in projections]
+        # MODIFIED TEACHER_TARGET END
+
+    # MODIFIED TEACHER_TARGET NEW:
+    def _get_all_projections(self)->list:
+        """Return all Projections in Composition the receivers of which are in the Composition hierarchy.
+        Unlike Composition._get_all_projections, this includes direct Projections between outer and nested
+        Compositions that are needed for support of other representations (e.g.,
+        AutodiffComposition.pytorch_representation).
+        """
+        from psyneulink.core.compositions.composition import Composition
+        if isinstance(self.owner, Composition):
+            composition = self.owner
+        else:
+            composition = self.owner.composition
+        nodes = composition._get_all_nodes()
+        projections = []
+        for node in nodes:
+            projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])
+        return projections
+    # MODIFIED TEACHER_TARGET END
+
 
     def _exclude_roles(self, nodes, composition=None):
         """Remove from nodes_to_roles all NodeRole assignments specified in excluded_node_roles"""

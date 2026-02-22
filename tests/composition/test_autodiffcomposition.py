@@ -150,6 +150,38 @@ class TestAutodiffConstructor:
                                                 targets={output_mech: solo_mech})
             autodiff_comp.show_graph(show_pytorch=True)
 
+        # Test for **targets** specification of SINGLETON Node when there are other learnable ones
+        error_msg = ("The 'targets' argument was specified for 'AUTODIFF COMP_6', but it has no learnable pathways")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_6",
+                                                pathways=[unlearnable_pathway, solo_mech],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.show_graph(show_pytorch=True)
+
+        # Test for warning on nested SINGELTON without any learnable projections on show_graph(show_pytorch=True)
+        warning_message = ("No learnable pathways were found in 'AUTODIFF COMP_7'; therefore, no "
+                             "pytorch_representation will be constructed, and learning will not be possible.")
+        with pytest.warns(UserWarning, match=re.escape(warning_message)):
+            nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_7",
+                                                pathways=[nested_comp])
+            autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+
+        # Test for error on nested SINGELTON without any learnable projections on learn()
+        error_msg = (f"'AUTODIFF COMP_8' does not have any learnable pathways, "
+                     f"therefore its learn() method cannot be executed.")
+        with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+                                                pathways=[nested_comp],
+                                                targets={output_mech: solo_mech})
+            autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
+        # Test for execution of nested SINGELTON with any learnable projections in outer on learn()
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_9",
+                                            pathways=[input_mech, nested_comp],
+                                            )
+        autodiff_comp.learn(inputs={input_mech: [[1.0]]})
+
     @pytest.fixture
     def copy_test_components(self):
         import torch

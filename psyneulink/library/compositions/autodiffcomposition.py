@@ -1685,7 +1685,7 @@ class AutodiffComposition(Composition):
         else:
             # TEACHER_TARGET BREADCRUMB: REMOVE THIS, SINCE UNLEARNABLE PATHWAYS ARE IGNORED, 
             #                            AND IF THERE ARE NO LEARNABLE ONES, A WARNING IS ISSUED
-            assert False
+            # assert False
             # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             if sample_mech in self.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
