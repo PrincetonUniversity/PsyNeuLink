@@ -4172,7 +4172,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context()
     def add_node(self, node, required_roles=None, context=None):
         """
-            Add a Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
+            Add a Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it has not already been added
 
             Arguments
             ---------
@@ -4225,7 +4225,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._pre_existing_pathway_components[NODES].append(node)
 
-        # Aux components are being added by Composition, even if main Node is being added was from COMMAND_LINE
+        # Aux components are being added by Composition, even if main Node being added was from COMMAND_LINE
         invalid_aux_components = self._add_node_aux_components(node, context=context)
 
         # Implement required_roles
@@ -4712,7 +4712,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_all_nodes(self, include_cims=False, include_controller=False)->list:
         """Return all nodes, including those within nested Compositions at any level
-        Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
+        Note:  this is more flexiby than the _all_nodes property,
+               which obligately includes cims and controller, and only returns nodes at the top level
         """
         cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
         controller = [self.controller] if include_controller is not NotImplemented and self.controller else []
@@ -4817,8 +4818,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     sender_node = proj_spec[0].sender.owner.owner_mech
                 if isinstance(receiver_node, AutoAssociativeProjection):
                     receiver_node = proj_spec[0].receiver.owner.owner_mech
+                # MODIFIED TEACHER_TARGET OLD:
                 if sender_node in self._all_nodes and \
                         receiver_node in self._all_nodes:
+                # # MODIFIED TEACHER_TARGET NEW:
+                # if sender_node in self._get_all_nodes() and \
+                #         receiver_node in self._get_all_nodes():
+                # MODIFIED TEACHER_TARGET END
                     self.add_projection(projection=proj_spec[0],
                                         feedback=proj_spec[1],
                                         context=context,
@@ -6114,13 +6120,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projection._activate_for_compositions(self)
         for comp in nested_compositions:
             projection._activate_for_compositions(comp)
-
-        # Note: do all of the following even if Projection is a existing_projections,
-        #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
-
-        # if feedback in {True, FEEDBACK}:
-        #     self.feedback_senders.add(sender_mechanism)
-        #     self.feedback_receivers.add(receiver_mechanism)
 
         self.node_roles_mgr._need_determine_node_roles = True
         return projection

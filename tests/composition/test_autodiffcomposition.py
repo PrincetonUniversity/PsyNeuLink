@@ -3992,69 +3992,69 @@ class TestMiscTrainingFunctionality:
             np.testing.assert_allclose(results, expected)
 
     # # TEACHER_TARGET BREADCRUMB: INCLUDES 2 LEVELS OF NESTING THAT FAILS
-    # @pytest.mark.parametrize(
-    #     'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
-    #         (1, 1, [0], [0], [0]),
-    #         (1, 3, [0], [0], [0]),
-    #         (3, 1, [0], [0], [0]),
-    #         (3, 3, [0], [0], [0])
-    #     ]
-    # )
-    # def test_additional_optimizations_and_retain_values_nested(self,
-    #                                                            minibatch_size,
-    #                                                            num_optimizations,
-    #                                                            expected_sample_values,
-    #                                                            expected_targets,
-    #                                                            expected_losses):
-    #     inner_mech = pnl.ProcessingMechanism(name='INNER NODE')
-    #     middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
-    #     middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
-    #     outer_mech_teacher = pnl.ProcessingMechanism(name='OUTER NODE TEACHER')
-    #     outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
-    #     outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
-    #
-    #     middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech,
-    #                                           name="MIDDLE PROJECTION 1")
-    #     middle_proj_2 = pnl.MappingProjection(inner_mech, middle_mech_2,
-    #                                           name="MIDDLE PROJECTION 2")
-    #     outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
-    #                                          name="OUTER PROJECTION 1")
-    #     outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
-    #                                          name="OUTER PROJECTION 2")
-    #
-    #     inner_comp = pnl.AutodiffComposition(
-    #         name='INNER Comp',
-    #         pathways=[inner_mech]
-    #     )
-    #     middle_comp = pnl.AutodiffComposition(
-    #         name='MIDDLE Comp',
-    #         pathways=[middle_mech_1, middle_proj_1,
-    #                   inner_comp, middle_proj_2, middle_mech_2]
-    #     )
-    #     outer_comp = pnl.AutodiffComposition(
-    #         pathways=[[outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
-    #                   [outer_mech_teacher]],
-    #         # targets={inner_comp: outer_mech_teacher,
-    #         #          outer_mech_out: pnl.TARGET},
-    #         targets={inner_mech: outer_mech_teacher,
-    #                  outer_mech_out: pnl.TARGET},
-    #         name='Outer Comp'
-    #     )
-    #     outer_comp._build_pytorch_representation()
-    #     # Learn
-    #     outer_comp.learn(inputs={outer_mech_in: [[1],[2],[3],[4]],
-    #                              outer_comp.get_target_nodes()[0]: [[.5],[.6],[.7],[.8]]},
-    #                      num_trials=4,
-    #                      minibatch_size=minibatch_size,
-    #                      optimizations_per_minibatch=num_optimizations,
-    #                      execute_in_additional_optimizations={inner_mech_1: None,
-    #                                                           middle_mech_1: [(SLOPE, 2), (INTERCEPT, 3)],
-    #                                                           outer_mech_out: (SLOPE, 4)
-    #                                                           },
-    #                      execution_mode=pnl.ExecutionMode.PyTorch)
-    #     outer_comp.torch_sample_values = expected_sample_values
-    #     outer_comp.torch_targets = expected_targets
-    #     outer_comp.torch_losses = expected_losses
+    @pytest.mark.parametrize(
+        'minibatch_size, num_optimizations, expected_sample_values, expected_targets, expected_losses', [
+            (1, 1, [0], [0], [0]),
+            (1, 3, [0], [0], [0]),
+            (3, 1, [0], [0], [0]),
+            (3, 3, [0], [0], [0])
+        ]
+    )
+    def test_additional_optimizations_and_retain_values_nested(self,
+                                                               minibatch_size,
+                                                               num_optimizations,
+                                                               expected_sample_values,
+                                                               expected_targets,
+                                                               expected_losses):
+        inner_mech = pnl.ProcessingMechanism(name='INNER NODE')
+        middle_mech_1 = pnl.ProcessingMechanism(name='MIDDLE NODE 1')
+        middle_mech_2 = pnl.ProcessingMechanism(name='MIDDLE NODE 2')
+        outer_mech_teacher = pnl.ProcessingMechanism(name='OUTER NODE TEACHER')
+        outer_mech_in = pnl.ProcessingMechanism(name='INPUT NODE')
+        outer_mech_out = pnl.ProcessingMechanism(name='OUTPUT NODE')
+
+        middle_proj_1 = pnl.MappingProjection(middle_mech_1, inner_mech,
+                                              name="MIDDLE PROJECTION 1")
+        middle_proj_2 = pnl.MappingProjection(inner_mech, middle_mech_2,
+                                              name="MIDDLE PROJECTION 2")
+        outer_proj_1 = pnl.MappingProjection(outer_mech_in, middle_mech_1,
+                                             name="OUTER PROJECTION 1")
+        outer_proj_2 = pnl.MappingProjection(middle_mech_2, outer_mech_out,
+                                             name="OUTER PROJECTION 2")
+
+        inner_comp = pnl.AutodiffComposition(
+            name='INNER Comp',
+            pathways=[inner_mech]
+        )
+        middle_comp = pnl.AutodiffComposition(
+            name='MIDDLE Comp',
+            pathways=[middle_mech_1, middle_proj_1,
+                      inner_comp, middle_proj_2, middle_mech_2]
+        )
+        outer_comp = pnl.AutodiffComposition(
+            pathways=[[outer_mech_in, outer_proj_1, middle_comp, outer_proj_2, outer_mech_out],
+                      [outer_mech_teacher]],
+            # targets={inner_comp: outer_mech_teacher,
+            #          outer_mech_out: pnl.TARGET},
+            targets={inner_mech: outer_mech_teacher,
+                     outer_mech_out: pnl.TARGET},
+            name='Outer Comp'
+        )
+        outer_comp._build_pytorch_representation()
+        # Learn
+        outer_comp.learn(inputs={outer_mech_in: [[1],[2],[3],[4]],
+                                 outer_comp.get_target_nodes()[0]: [[.5],[.6],[.7],[.8]]},
+                         num_trials=4,
+                         minibatch_size=minibatch_size,
+                         optimizations_per_minibatch=num_optimizations,
+                         execute_in_additional_optimizations={inner_mech_1: None,
+                                                              middle_mech_1: [(SLOPE, 2), (INTERCEPT, 3)],
+                                                              outer_mech_out: (SLOPE, 4)
+                                                              },
+                         execution_mode=pnl.ExecutionMode.PyTorch)
+        outer_comp.torch_sample_values = expected_sample_values
+        outer_comp.torch_targets = expected_targets
+        outer_comp.torch_losses = expected_losses
 
 
     @pytest.mark.parametrize(

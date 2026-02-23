@@ -86,6 +86,49 @@ class TestSimpleCompositions:
 
 
 class TestNested:
+
+    expected_solo_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=brown\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_solo_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n}\n'
+    expected_input_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"AUTODIFF COMP INPUT_CIM" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=green\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_input_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"SOLO NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT NODE" -> "OUTPUT NODE" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_middle_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_middle_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for OUTPUT NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for OUTPUT NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for OUTPUT NODE" -> "LOSS for OUTPUT NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"SOLO NODE" -> "OUTPUT NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"SOLO NODE" [color=black penwidth=1 rank=same shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for OUTPUT NODE" -> "OUTPUT NODE" [color=brown penwidth=1 style=dotted]\n\t"OUTPUT NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    expected_output_python = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph "cluster_NESTED COMP" {\n\t\tgraph [label="NESTED COMP" overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"SOLO NODE" [color=brown penwidth=3 rank=same shape=oval]\n\t\tcolor=red\n\t\tlabel="NESTED COMP"\n\t}\n}\n'
+    expected_output_pytorch = 'digraph "AUTODIFF COMP" {\n\tgraph [label="AUTODIFF COMP" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for SOLO NODE" [color=orange penwidth=3 rank=source shape=oval]\n\t"INPUT NODE" [color=green penwidth=3 rank=source shape=oval]\n\t"LOSS for SOLO NODE" [color=orange penwidth=1 rank=same shape=oval]\n\t"SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for SOLO NODE" -> "LOSS for SOLO NODE" [label="" arrowhead=normal color=black penwidth=1]\n\t"INPUT NODE" -> "SOLO NODE" [label="" arrowhead=normal color=orange penwidth=1]\n\t"LOSS for SOLO NODE" -> "SOLO NODE" [color=brown penwidth=1 style=dotted]\n\t"SOLO NODE" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+    solo_nested_data = [
+        ('solo',  expected_solo_python, expected_solo_pytorch),
+        ('input', expected_input_python, expected_input_pytorch),
+        ('middle', expected_middle_python, expected_middle_pytorch),
+        ('output', expected_output_python, expected_output_pytorch)
+    ]
+    @pytest.mark.parametrize("position, expected_python, expected_pytorch",
+                             solo_nested_data, ids=[f"{x[0]}-{x[1]}" for x in solo_nested_data])
+    @pytest.mark.pytorch
+    def test_solo_nested(self, position, expected_python, expected_pytorch):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        input_mech = ProcessingMechanism(name='INPUT NODE')
+        solo_mech = ProcessingMechanism(name='SOLO NODE')
+        output_mech = ProcessingMechanism(name='OUTPUT NODE')
+        nested_comp = AutodiffComposition([solo_mech], name="NESTED COMP")
+        if position == 'solo':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[nested_comp])
+        elif position == 'input':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[nested_comp, output_mech])
+        elif position == 'middle':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[input_mech, nested_comp, output_mech])
+        elif position == 'output':
+            autodiff_comp = AutodiffComposition(name="AUTODIFF COMP",
+                                                pathways=[input_mech, nested_comp])
+        else:
+            assert False, "TEST ERROR: position not recognized"
+        gv_python = autodiff_comp.show_graph(output_fmt='source')
+        gv_pytorch = autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        assert gv_python == expected_python
+        assert gv_pytorch == expected_pytorch
+
     def test_multiple_projections_to_node_of_nested_composition(self):
         '''This is based on the nback script'''
 
