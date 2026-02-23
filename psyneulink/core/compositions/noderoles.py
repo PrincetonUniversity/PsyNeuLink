@@ -560,15 +560,9 @@ class NodeRolesManager(object):
                 #       Composition *and* legit OUTPUT Nodes (i.e., ones that project *only* to outer Composition's
                 #       output_CIM), the latter qualify to still make the nested Comp an OUTPUT Node
                 elif isinstance(node, Composition):
-                    # TEACHER_TARGET BREADCRUMB:  ENUSRE THAT IF A NESTED NODE PROJECTS TO ANY NODE OTHER THAN THE
-                    #                             OUTPUT_CIM OF THE OUTER COMPOSITION, THEN IT IS NOT ASSIGNED AS AN
-                    #                             OUTPUT NODE;  THIS PREVENTS NODES IN A NESTED COMPOSITION FROM BEING
-                    #                             ASSIGNED AS OUTPUTS IF THEY PROJECT TO ANY OTHER NODE IN THE OUTER
-                    #                             COMPOSITION
-
-                    # write code that assigns OUTPUT NodeRole to a nested Composition if it has any nodes with
-                    # no projections to any other Nodes within its Composition or any outer one other than ones
-                    # to the output_CIM of nested (and from there outer) Composition
+                    # Assign NodeRole.OUTPUT to a nested Composition if it has any nodes with no projections to any
+                    # other Nodes within its Composition or any outer one other than ones to the output_CIM of nested
+                    # (and from there outer) Composition
                     has_nodes_with_limited_projections = \
                         any(not self._get_projections(inner_node, 'efferents') or
                             all(proj.receiver.owner is node.output_CIM
@@ -611,6 +605,13 @@ class NodeRolesManager(object):
         the AutoassociativeLearningMechanism but can (or already does) project to an output_CIM.
         """
 
+        # MODIFIED TEACHER_TARGET OLD:
+        # return all((p.receiver.owner is node # <- recurrence
+        #         or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+        #         or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
+        #             if composition else None))
+        #        for p in self._get_projections(node, 'efferents'))
+        # MODIFIED TEACHER_TARGET NEW:
         recurrent = True
         for p in self._get_projections(node, 'efferents'):
             if not (p.receiver.owner is node # <- recurrence
@@ -619,12 +620,8 @@ class NodeRolesManager(object):
                     if composition else None)):
                 recurrent = False
         return recurrent
+        # MODIFIED TEACHER_TARGET END
 
-        # return all((p.receiver.owner is node # <- recurrence
-        #         or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
-        #         or (p.receiver.owner is composition.output_CIM  # <- already projects to an output_CIM
-        #             if composition else None))
-        #        for p in self._get_projections(node, 'efferents'))
 
             # IMPLEMENTATION NOTE:
             #   The following alternate version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
@@ -684,13 +681,8 @@ class NodeRolesManager(object):
         #         projections = self.owner.composition._get_all_projections()
         projections = self._get_all_projections()
         # assert not any(p not in projections for p in xferents)
-        # MODIFIED TEACHER_TARGET EQUIVALENT OF OLD:
-        return [p for p in xferents]
-        # # MODIFIED TEACHER_TARGET NEW:
-        # return [p for p in xferents if p in projections]
-        # MODIFIED TEACHER_TARGET END
+        return [p for p in xferents if p in projections]
 
-    # MODIFIED TEACHER_TARGET NEW:
     def _get_all_projections(self)->list:
         """Return all Projections in Composition the receivers of which are in the Composition hierarchy.
         Unlike Composition._get_all_projections, this includes direct Projections between outer and nested
@@ -707,8 +699,6 @@ class NodeRolesManager(object):
         for node in nodes:
             projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])
         return projections
-    # MODIFIED TEACHER_TARGET END
-
 
     def _exclude_roles(self, nodes, composition=None):
         """Remove from nodes_to_roles all NodeRole assignments specified in excluded_node_roles"""

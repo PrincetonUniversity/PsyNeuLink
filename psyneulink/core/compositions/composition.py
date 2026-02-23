@@ -4632,8 +4632,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if visited_compositions is NotImplemented:
             visited_compositions = [self]
         nodes = list(self.nodes)
-        nodes += [self.input_CIM, self.output_CIM] if include_cims else nodes
-        nodes += [self.controller] if include_controller and self.controller else nodes
+        nodes += [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else nodes
+        nodes += [self.controller] if include_controller is not NotImplemented and self.controller else nodes
         for node in nodes:
             if node.componentType == 'Composition' and \
                     node not in visited_compositions:
@@ -4714,8 +4714,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return all nodes, including those within nested Compositions at any level
         Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
         """
-        cims = [self.input_CIM, self.output_CIM] if include_cims else []
-        controller = [self.controller] if include_controller and self.controller else []
+        cims = [self.input_CIM, self.parameter_CIM, self.output_CIM] if include_cims is not NotImplemented else []
+        controller = [self.controller] if include_controller is not NotImplemented and self.controller else []
         return ([k[0] for k in
                  self._get_nested_nodes(include_cims=include_cims,
                                         include_controller=include_controller)]
