@@ -390,7 +390,7 @@ class NodeRolesManager(object):
                 or (NodeRole.BIAS in self._get_roles_by_node(node)
                     and not any(isinstance(p.receiver.owner, CompositionInterfaceMechanism)
                                 for p in self._get_projections(node, 'efferents')
-                                if p in self.composition.projections)))
+                                if p in self.owner.projections)))
 
     def _CONTROL_OBJECTIVE_Node(self, node)->bool:
         """Assign NodeRole.CONTROL_OBJECTIVE to any ObjectiveMechanism that projects to a ControlMechanism
@@ -684,10 +684,10 @@ class NodeRolesManager(object):
         #         projections = self.owner.composition._get_all_projections()
         projections = self._get_all_projections()
         # assert not any(p not in projections for p in xferents)
-        # # MODIFIED TEACHER_TARGET EQUIVALENT OF OLD:
-        # return [p for p in xferents]
-        # MODIFIED TEACHER_TARGET NEW:
-        return [p for p in xferents if p in projections]
+        # MODIFIED TEACHER_TARGET EQUIVALENT OF OLD:
+        return [p for p in xferents]
+        # # MODIFIED TEACHER_TARGET NEW:
+        # return [p for p in xferents if p in projections]
         # MODIFIED TEACHER_TARGET END
 
     # MODIFIED TEACHER_TARGET NEW:
@@ -702,7 +702,7 @@ class NodeRolesManager(object):
             composition = self.owner
         else:
             composition = self.owner.composition
-        nodes = composition._get_all_nodes(include_cims=True)
+        nodes = composition._get_all_nodes(include_cims=True, include_controller=True)
         projections = []
         for node in nodes:
             projections.extend([p for p in node.efferents + node.afferents if p.receiver.owner in nodes])
