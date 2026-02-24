@@ -14,7 +14,7 @@ from ego_revaluation.run_original_probabilistic import run_random_choices
 from ego_revaluation.run_original_probabilistic import run_model_choices
 from ego_revaluation.run_original_probabilistic import run_human_choices
 
-RUN_TYPE = 'random'  # 'model', 'random', 'human'
+RUN_TYPE = 'model'  # 'model', 'random', 'human'
 PLOT_ESTIMATES = False
 
 
@@ -149,6 +149,116 @@ def compute_stay_stats(trial_log):
     ])
 
 
+def compute_stay_stats_from_prev(trial_log):
+    """Return stay probabilities for the four Daw 2011 conditions."""
+    rc, rr, uc, ur = [], [], [], []
+
+    reward_prob_a5, reward_prob_a6, reward_prob_a7, reward_prob_a8 = [], [], [], []
+    estimated_reward_prob_a5, estimated_reward_prob_a6, estimated_reward_prob_a7, estimated_reward_prob_a8 = [], [], [], []
+
+    estimated_reward_r1, estimated_reward_r2 = [], []
+    rewards_prev_1 = []
+    rewards_prev_2 = []
+    transitions_prev_1 = []
+    transitions_prev_2 = []
+
+    # "estimate_rew_alien5": None, "estimate_rew_alien6": None,
+    # "estimate_rew_alien7": None, "estimate_rew_alien8": None,
+    # "pred_next_rocket": None,  # 1 or 2 based on estimates
+    # "pred_next_alien": None,
+    # "stay": None,  # 0/1 w.r.t. previous start_state
+    # "reward_prob_a5": rew_probs[5], "reward_prob_a6": rew_probs[6],
+    # "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
+
+    for tr in trial_log:
+        stay = tr["stay"]
+        if stay is None:
+            continue
+
+        # reward_prob_a5.append(tr["reward_prob_a5"])
+        # reward_prob_a6.append(tr["reward_prob_a6"])
+        # reward_prob_a7.append(tr["reward_prob_a7"])
+        # reward_prob_a8.append(tr["reward_prob_a8"])
+
+        # estimated_reward_prob_a5.append(tr["estimate_rew_alien5"])
+        # estimated_reward_prob_a6.append(tr["estimate_rew_alien6"])
+        # estimated_reward_prob_a7.append(tr["estimate_rew_alien7"])
+        # estimated_reward_prob_a8.append(tr["estimate_rew_alien8"])
+
+
+        estimated_reward_r1.append(tr["estimate_rew_state1"])
+        estimated_reward_r2.append(tr["estimate_rew_state2"])
+
+        if tr['start_id'] == 1:
+            rewards_prev_1.append(tr['prev_reward'])
+            transitions_prev_1.append(tr['prev_transition'])
+            rewards_prev_2.append(None)
+            transitions_prev_2.append(None)
+        else:
+            rewards_prev_2.append(tr['prev_reward'])
+            transitions_prev_2.append(tr['prev_transition'])
+            rewards_prev_1.append(None)
+            transitions_prev_1.append(None)
+
+        reward = tr['prev_reward']
+        transition = tr['prev_transition']
+
+        if reward == 1 and transition == 'common':
+            rc.append(stay)
+        elif reward == 1 and transition == 'rare':
+            rr.append(stay)
+        elif reward == 0 and transition == 'common':
+            uc.append(stay)
+        elif reward == 0 and transition == 'rare':
+            ur.append(stay)
+
+    if PLOT_ESTIMATES:
+        fig, ax = plt.subplots(1,2, figsize = (12,4), sharey=True, sharex=True)
+
+        a1 = [.1 if r is not None else 0. for r in rewards_prev_1]
+        rewards_prev_1 = np.array([r if r is not None else 0 for r in rewards_prev_1], dtype=float)
+
+        # Per-point colors
+        c1 = [trans_to_rgba(t) for t in transitions_prev_1]
+
+        ax[0].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label='estimated_rew_r1', color='grey',marker='.', alpha = 0.25)
+        ax[0].scatter(range(len(rewards_prev_1)), rewards_prev_1, label='rewards_1', color=c1, marker='.', alpha = a1)
+        # ax[0].plot(reward_prob_a5, label="reward_prob_a5", color="red")
+        # ax[0].scatter(range(len(estimated_reward_prob_a5)), estimated_reward_prob_a5, label="estimated_reward_prob_a5",
+        #               color="red", marker=".", alpha=.25)
+
+        # ax[1].scatter(range(len(estimated_reward_r1)), estimated_reward_r1, label="estimated_rew_r1", color='grey',
+        #               marker='.', alpha=0.25)
+        # ax[1].plot(reward_prob_a6, label="reward_prob_a6", color="blue")
+        # ax[1].scatter(range(len(estimated_reward_prob_a6)), estimated_reward_prob_a6, label="estimated_reward_prob_a6",
+        #               color="blue", marker=".", alpha=.25)
+
+        a2 = [.1 if r is not None else 0. for r in rewards_prev_2]
+        rewards_prev_2 = np.array([r if r is not None else 0 for r in rewards_prev_2], dtype=float)
+
+        # Per-point colors
+        c2 = [trans_to_rgba(t) for t in transitions_prev_2]
+        ax[1].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label='estimated_rew_r1', color='grey',
+                      marker='.', alpha=0.25)
+        ax[1].scatter(range(len(rewards_prev_2)), rewards_prev_2, label='rewards_1', color=c2, marker='.', alpha=a2)
+
+        # ax[2].plot(reward_prob_a7, label="reward_prob_a7", color="green")
+        # ax[2].scatter(range(len(estimated_reward_prob_a7)), estimated_reward_prob_a7, label="estimated_reward_prob_a7",
+        #             color="green", marker=".", alpha=.25)
+
+        # ax[3].scatter(range(len(estimated_reward_r2)), estimated_reward_r2, label="estimated_rew_r1", color='grey',
+        #               marker='.', alpha=0.25)
+        # ax[3].plot(reward_prob_a8, label="reward_prob_a8", color="orange")
+        # ax[3].scatter(range(len(estimated_reward_prob_a8)), estimated_reward_prob_a8, label="estimated_reward_prob_a8", color="orange", marker=".", alpha=.25)
+
+        plt.savefig('estimate_vs_reward_prob.pdf')
+    return np.array([
+        np.mean(rc) if rc else np.nan,
+        np.mean(rr) if rr else np.nan,
+        np.mean(uc) if uc else np.nan,
+        np.mean(ur) if ur else np.nan,
+    ])
+
 # ============================================================
 # Averaging across participants
 # ============================================================
@@ -194,7 +304,7 @@ def simulate_participants(
             else:
                 raise NotImplementedError('Invalid RUN_TYPE')
 
-            all_stats.append(compute_stay_stats(trial_log))
+            all_stats.append(compute_stay_stats_from_prev(trial_log))
             trial_log.append(trial_log)
     else:
 
@@ -327,7 +437,7 @@ def parameter_sweep(
                     )
 
                     # -----------------------------------------------------
-                    # 🔥 MACHINE-READABLE BLOCK FOR PASTING BACK TO CHATGPT
+                    # MACHINE-READABLE BLOCK FOR PASTING BACK TO CHATGPT
                     # -----------------------------------------------------
                     print(
                         f"### RESULT int={ir}, time={tw}, mb={mb}\n"
@@ -394,14 +504,11 @@ if __name__ == "__main__":
     else:
         parameter_sweep(
             save_dir=save_dir,
-            integration_rates=[.5], #[.6, .8, 1.],
-            # [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],# [0.05, 0.1, 0.3, 0.6], #[0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0.6], # .6 in multiplicative
-            time_weights=[3.],#[0., .2, 3.],#[0., .3, .6],#[0., .3, .5],  # [0, .2, .45], # [.0, .3, .4
-            # [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #[0, 0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 1.6], # .1, .6 in multiplicative
-            # time_weights=[0.25],  # .1, .6 in multiplicative
+            integration_rates=[.5],
+            time_weights=[.35, 3.],
             model_based_ness_list=[0.0],
             n_base_trials=200,
-            n_participants=20
+            n_participants=100
         )
 
 

@@ -21,7 +21,6 @@ STATES = {
 
 def drift(p, sigma=0.025, lo=0.25, hi=0.75):
     """Gaussian random walk for reward probabilities, clipped."""
-
     p = p + np.random.normal(0, sigma)
     return float(np.clip(p, lo, hi))
 
@@ -645,6 +644,8 @@ def run_model_choices(
     first_trial = {
         "trial": 0,
         "start_id": start_id, "second_id": second_id, "terminal_id": terminal_id,
+        "prev_transition": None,
+        "prev_reward": None,
         "transition": transition,  # "common" or "rare"
         "reward": reward,  # 0/1
         "estimate_rew_state1": None, "estimate_rew_state2": None,
@@ -691,18 +692,20 @@ def run_model_choices(
         # pred_next_rocket = 1 if random() < p_choice1 else 2
         pred_next_rocket_model = 1 if random() < p_choice1 else 2
 
-        pred_next_rocket_random = 1 if random() < .5 else 2
+        # pred_next_rocket_random = 1 if random() < .5 else 2
 
 
         # make a choice
-        # start_id = pred_next_rocket_model
-        start_id = pred_next_rocket_random
+        start_id = pred_next_rocket_model
+        # start_id = pred_next_rocket_random
 
 
 
         # -----------------------------
         # 2. Second-stage state (planet)
         # -----------------------------
+        # Cache previous transition
+        prev_transition = transition
         second_id, transition = common_v_rare_transition(start_id, common_prob)
 
         # -----------------------------
@@ -717,7 +720,7 @@ def run_model_choices(
             states=np.array(visited_states),
             rewards=rewards,
             times=times[:end],
-            n_steps=1,  # "rollout" of 1 for terminal state
+            n_steps=2,  # "rollout" of 1 for terminal state
             state_1=STATES[alien_states[0]],
             state_2=STATES[alien_states[1]],
             metric=metric,
@@ -742,7 +745,13 @@ def run_model_choices(
         pred_next_alien = alien_states[0] if random() < p_choice_alien1 else alien_states[1]
         terminal_id = pred_next_alien
 
-        reward_prob = rew_probs[pred_next_alien]
+        # pred_next_alien_random = alien_states[0] if random() < .5 else alien_states[1]
+        # terminal_id = pred_next_alien_random
+
+        reward_prob = rew_probs[terminal_id]
+
+        # Cache previous reward for logging
+        prev_reward = reward
         reward = 1 if random() < reward_prob else 0
 
         # -----------------------------
@@ -751,9 +760,14 @@ def run_model_choices(
         visited_states.extend(
             [STATES[start_id], STATES[second_id], STATES[terminal_id]])
         rewards.extend([0, 0, reward])
+        # reward_prob = rew_probs[pred_next_alien]
+        # reward = 1 if random() < reward_prob else 0
+
         trial_ = [{
             "trial": trial,
             "start_id": start_id, "second_id": second_id, "terminal_id": terminal_id,
+            "prev_transition": prev_transition,  # "common" or "rare"
+            "prev_reward": prev_reward,  # 0/1
             "transition": transition,  # "common" or "rare"
             "reward": reward,  # 0/1
             "estimate_rew_state1": r1, "estimate_rew_state2": r2,
@@ -767,6 +781,7 @@ def run_model_choices(
             "reward_prob_a7": rew_probs[7], "reward_prob_a8": rew_probs[8],
         }]
         trial_log.extend(trial_)
+
 
         # -----------------------------
         # 4. Drift reward probabilities
