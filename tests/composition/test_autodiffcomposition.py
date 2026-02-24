@@ -377,6 +377,12 @@ class TestAutodiffConstructor:
 
 class TestAutodiffTargetSpecs:
 
+    # TEACHER_TARGET BREADCRUMB:  REFACTOR TO BE JUST 3 TEST:
+    #                             1) THAT USES EACH TYPE FOR A DIFFERENT TARGET
+    #                             2) DEFAULT (NO TARGET SPECS)
+    #                             3) ERROR
+    #                             AND TEST FOR CORRECT RESULTS
+    #                             OR LEAVE AS MULTIPLTE TESTS AND TEST FOR SAME RESULT
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
