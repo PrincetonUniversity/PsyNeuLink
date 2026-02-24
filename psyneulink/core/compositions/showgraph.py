@@ -2597,9 +2597,9 @@ class ShowGraph():
                             #     and therefore is not passing an afferent Projection from that Composition
                             if not sender.afferents and rcvr is not composition.controller:
                                 continue
-                            # FIX: LOOP HERE OVER sndr_spec IF THERE ARE SEVERAL
                             # Get node(s) from enclosing Composition that is/are source(s) of sender(s)
-                            sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
+                            sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level,
+                                                                                            comp_hierarchy)
                             if not sndrs_specs:
                                 continue
                             for sndr_spec in sorted(sndrs_specs):
@@ -2807,11 +2807,11 @@ class ShowGraph():
     def _trace_senders_for_original_sender_mechanism(self,
                                                      proj:Projection,
                                                      nesting_level:int,
-                                                     comp=None
+                                                     comp_hierarchy:list
                                                      ) -> [(Mechanism, Port, int)]:
         """
         Find the original sender of a projection that is routed through n-levels of cims.
-        If there is no outer root Mechanism, as in the case of a nested input Mechanism that is not projected to,
+        If there is no outer root Mechanism, as in the case of a nested input Mechanism without afferent projections,
         return None.
         """
         sender = proj.sender
@@ -2821,31 +2821,22 @@ class ShowGraph():
             nesting_level -= 1
             num_afferents = len(owner.port_map[proj.receiver][0].path_afferents)
             if num_afferents == 0:
-                # MODIFIED 1/6/22 OLD:
                 return None
-                # # MODIFIED 1/6/22 NEW:
-                # # Presumably outermost Composition, so return CIM itself
-                # return [(owner, sender, nesting_level)]
-                # MODIFIED 1/6/22 END
-            # # FIX: ITERATE OVER ALL AFFERENTS TO relevant InputPort of cim:
-            # # MODIFIED 4/5/21 OLD:
-            # outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
-            # enclosing_showgraph = owner.composition._show_graph
-            # return enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
-            # MODIFIED 4/5/21 NEW:
             senders = []
             for outer_proj in owner.port_map[proj.receiver][0].path_afferents:
                 enclosing_showgraph = owner.composition._show_graph
-                sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
+                sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj,
+                                                                                         nesting_level,
+                                                                                         comp_hierarchy)
                 if sndrs is not None:
                     senders.extend(sndrs)
-                # MODIFIED 1/6/22 NEW:
                 else:
                     senders.append((outer_proj.sender.owner, sender, nesting_level))
-                # MODIFIED 1/6/22 END
+            # Filter senders to include nodes anywhere within the outermost Composition or ones nested within it, and
+            # excluding ones belonging to other unrelated Compositions (from which some Nodes might receive Projections)
+            senders = [s for s in senders
+                       if s[0] in comp_hierarchy[0]._get_all_nodes(include_cims=True, include_controller=True)]
             return senders
-            # MODIFIED 4/5/21 END
-        # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
         return [(owner, sender, nesting_level)]
 
     def _trace_receivers_for_terminal_receiver(self, receiver, comp=None):

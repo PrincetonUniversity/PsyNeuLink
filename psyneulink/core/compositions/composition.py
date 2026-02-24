@@ -4679,7 +4679,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_outer_compositions(self, outer_composition=None)->list:
         """Return list of outer Compositions within which self is nested, from innermost to outermost
-        *outer_composition* specifies Composition at which to start the search; self must be nested within it.
+        **outer_composition** specifies Composition at which to start the search; self must be nested within it.
         Return list of Compositions, starting with self and ending with outer_composition, or self if it is not nested.
         """
         if not self.is_nested:

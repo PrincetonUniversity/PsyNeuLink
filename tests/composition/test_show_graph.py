@@ -359,6 +359,43 @@ class TestNested:
             gv = outer_comp.show_graph(output_fmt='source', show_pytorch=True)
             assert gv == self.expected_output_for_nested_to_nested_pytorch_direct
 
+    @pytest.mark.pytorch
+    def test_filtering_out_of_projections_from_other_compositions(self):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+
+        input_mech = ProcessingMechanism(name="INPUT")
+        hidden_mech_1 = ProcessingMechanism(name="HIDDEN 1")
+        hidden_mech_2 = ProcessingMechanism(name="HIDDEN 2")
+        output_mech = ProcessingMechanism(name="OUTPUT")
+        solo_mech = ProcessingMechanism(name="SOLO")
+        nested_comp = AutodiffComposition([hidden_mech_1, hidden_mech_2])
+
+        # Test without **targets** specification
+        pathway_1 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_1, learnable=False),
+                     hidden_mech_1,
+                     MappingProjection(hidden_mech_1, output_mech, learnable=False),
+                     output_mech]
+        pathway_2 = [input_mech,
+                     MappingProjection(input_mech, hidden_mech_2, learnable=False),
+                     hidden_mech_2,
+                     MappingProjection(hidden_mech_2, output_mech, learnable=False),
+                     output_mech]
+
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_8",
+                                            pathways=[nested_comp],
+                                            targets={output_mech: solo_mech})
+
+        autodiff_comp = AutodiffComposition(name="AUTODIFF COMP_9",
+                                            pathways=[input_mech, nested_comp])
+
+        expected_gv_python = 'digraph "AUTODIFF COMP_9" {\n\tgraph [label="AUTODIFF COMP_9" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tINPUT [color=green penwidth=3 rank=source shape=oval]\n\tINPUT -> "HIDDEN 1" [label="" arrowhead=normal color=black penwidth=1]\n\tsubgraph cluster_autodiff_composition {\n\t\tgraph [label=autodiff_composition overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"HIDDEN 1" [color=green penwidth=3 rank=source shape=oval]\n\t\t"HIDDEN 1" -> "HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"HIDDEN 2" [color=red penwidth=3 rank=max shape=oval]\n\t\tcolor=red\n\t\tlabel=autodiff_composition\n\t}\n}\n'
+        expected_gv_pytorch = 'digraph "AUTODIFF COMP_9" {\n\tgraph [label="AUTODIFF COMP_9" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\t"TARGET for HIDDEN 2" [color=orange penwidth=3 rank=source shape=oval]\n\tINPUT [color=green penwidth=3 rank=source shape=oval]\n\t"HIDDEN 1" [color=black penwidth=1 rank=same shape=oval]\n\tINPUT -> "HIDDEN 1" [label="" arrowhead=normal color=orange penwidth=1]\n\t"HIDDEN 1" -> "HIDDEN 2" [label="" arrowhead=normal color=orange penwidth=1]\n\tINPUT -> "HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for HIDDEN 2" [color=orange penwidth=1 rank=same shape=oval]\n\t"HIDDEN 2" -> "LOSS for HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"TARGET for HIDDEN 2" -> "LOSS for HIDDEN 2" [label="" arrowhead=normal color=black penwidth=1]\n\t"LOSS for HIDDEN 2" -> "HIDDEN 2" [color=brown penwidth=1 style=dotted]\n\t"HIDDEN 2" [color=red penwidth=3 rank=max shape=oval]\n}\n'
+        gv_python = autodiff_comp.show_graph(output_fmt='source')
+        gv_pytorch = autodiff_comp.show_graph(show_pytorch=True, output_fmt='source')
+        assert gv_python == expected_gv_python
+        assert gv_pytorch == expected_gv_pytorch
+
 
 class TestLearning:
     def test_process(self):
