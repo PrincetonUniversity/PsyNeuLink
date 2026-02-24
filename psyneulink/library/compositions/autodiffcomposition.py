@@ -1883,7 +1883,7 @@ class AutodiffComposition(Composition):
                                                                                   dtype=object),
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
-                    target_port = target_mech.output_port
+                    target_spec = target_mech.output_port
                     # # MODIFIED TEACHER_TARGET OLD:
                     # self.sample_port_to_target_port_map.update({sample_port: target_port})
                     # MODIFIED TEACHER_TARGET END

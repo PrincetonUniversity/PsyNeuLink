@@ -375,45 +375,56 @@ class TestAutodiffConstructor:
         # assert comp.patience == 10
 
 
-# class TestAutodiffTargetSpecs:
+class TestAutodiffTargetSpecs:
 
-    # @pytest.mark.pytorch
-    # @pytest.mark.composition
-    # @pytest.mark.parametrize('target_spec', ["default", "internal", "external", "loss_mech", "str"])
-    # def  test_output_port_as_sample_for_loss_mech(self, target_spec):
-    #         input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
-    #         output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
-    #         teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
-    #         if target_spec == "default":
-    #             targets_constructor_arg = None
-    #             targets_learn_arg = None
-    #         elif target_spec == "internal":
-    #             targets_constructor_arg = {output_mech.output_port:teacher_mech.output_port}
-    #             targets_learn_arg = None
-    #         elif target_spec == "external":
-    #             targets_constructor_arg={output_mech.output_port:pnl.TARGET}
-    #         elif target_spec == "loss_mech":
-    #             targets_constructor_arg={LossMechanism(sample=output_mech.output_port,
-    #                                    target=teacher_mech.output_port)}
-    #             targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[1,2,3,4,5]]}
-    #         elif target_spec == "str":
-    #             targets_constructor_arg = pnl.TARGET
-    #             targets_learn_arg = None
-    #
-    #         if target_spec == "str":
-    #             with pytest.raises(AutodiffCompositionError) as error_text:
-    #                 autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
-    #                                                     targets=targets_constructor_arg,
-    #                                                     name='AUTO-COMP')
-    #                 error_text.value == 'xxx'
-    #             return
-    #
-    #         autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
-    #                                             targets=targets_constructor_arg,
-    #                                             name='AUTO-COMP')
-    #         autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
-    #                             targets=targets_learn_arg,
-    #                             execution_mode=pnl.ExecutionMode.PyTorch)
+    @pytest.mark.pytorch
+    @pytest.mark.composition
+    @pytest.mark.parametrize('target_spec', [
+        "default",
+        "internal",
+        "external",
+        "loss_mech",
+        "str"
+    ])
+    def test_output_port_as_sample_for_loss_mech(self, target_spec):
+        input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
+        output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
+        teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
+        if target_spec == "default":
+            targets_constructor_arg = None
+            targets_learn_arg = None
+        elif target_spec == "internal":
+            targets_constructor_arg = {output_mech.output_port:teacher_mech.output_port}
+            targets_learn_arg = None
+        elif target_spec == "external":
+            targets_learn_arg = None
+            targets_constructor_arg={output_mech.output_port:pnl.TARGET}
+        elif target_spec == "loss_mech":
+            targets_constructor_arg={pnl.LossMechanism(sample=output_mech.output_port,
+                                                       target=teacher_mech.output_port)}
+            targets_learn_arg = None
+        elif target_spec == "str":
+            targets_constructor_arg = pnl.TARGET
+            targets_learn_arg = None
+
+        if target_spec == "str":
+            error_msg = (f"The 'targets' argument for an AutodiffComposition must be a tuple, dict, "
+                         f"set or LossMechanism, not a str ('TARGET').")
+            with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+                autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+                                                    targets=targets_constructor_arg,
+                                                    name='AUTO-COMP')
+            return
+
+        autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+                                            targets=targets_constructor_arg,
+                                            name='AUTO-COMP')
+        if targets_learn_arg == 'external':
+            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[1,2,3,4,5]]}
+
+        autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+                            targets=targets_learn_arg,
+                            execution_mode=pnl.ExecutionMode.PyTorch)
 
 
 # Expected results for test_projection_specific_learning_rates()
