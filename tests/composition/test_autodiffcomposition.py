@@ -56,13 +56,6 @@ class TestAutodiffConstructor:
         assert isinstance(comp, AutodiffComposition)
         assert isinstance(comp_2, AutodiffComposition)
 
-    # KAM removed this pytest 10/30 after removing target_CIM
-    # def test_target_CIM(self):
-    #     comp = AutodiffComposition()
-    #     assert isinstance(comp.target_CIM, CompositionInterfaceMechanism)
-    #     assert comp.target_CIM.composition == comp
-    #     assert comp.target_CIM_ports == {}
-
     def test_no_initial_pytorch_representation(self):
         comp = AutodiffComposition()
         assert comp.pytorch_representation is None
@@ -380,6 +373,47 @@ class TestAutodiffConstructor:
     # def test_patience(self):
         # comp = AutodiffComposition()
         # assert comp.patience == 10
+
+
+# class TestAutodiffTargetSpecs:
+
+    # @pytest.mark.pytorch
+    # @pytest.mark.composition
+    # @pytest.mark.parametrize('target_spec', ["default", "internal", "external", "loss_mech", "str"])
+    # def  test_output_port_as_sample_for_loss_mech(self, target_spec):
+    #         input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
+    #         output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
+    #         teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
+    #         if target_spec == "default":
+    #             targets_constructor_arg = None
+    #             targets_learn_arg = None
+    #         elif target_spec == "internal":
+    #             targets_constructor_arg = {output_mech.output_port:teacher_mech.output_port}
+    #             targets_learn_arg = None
+    #         elif target_spec == "external":
+    #             targets_constructor_arg={output_mech.output_port:pnl.TARGET}
+    #         elif target_spec == "loss_mech":
+    #             targets_constructor_arg={LossMechanism(sample=output_mech.output_port,
+    #                                    target=teacher_mech.output_port)}
+    #             targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[1,2,3,4,5]]}
+    #         elif target_spec == "str":
+    #             targets_constructor_arg = pnl.TARGET
+    #             targets_learn_arg = None
+    #
+    #         if target_spec == "str":
+    #             with pytest.raises(AutodiffCompositionError) as error_text:
+    #                 autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+    #                                                     targets=targets_constructor_arg,
+    #                                                     name='AUTO-COMP')
+    #                 error_text.value == 'xxx'
+    #             return
+    #
+    #         autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
+    #                                             targets=targets_constructor_arg,
+    #                                             name='AUTO-COMP')
+    #         autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+    #                             targets=targets_learn_arg,
+    #                             execution_mode=pnl.ExecutionMode.PyTorch)
 
 
 # Expected results for test_projection_specific_learning_rates()
@@ -948,6 +982,7 @@ def test_retain_results():
     comp.run(inputs={input_node:inputs}, num_trials=3)
     comp.learn(inputs={input_node:inputs},num_trials=4)
     assert len(comp.results) == 10
+
 
 
 @pytest.mark.pytorch

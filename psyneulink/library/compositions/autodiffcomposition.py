@@ -1188,20 +1188,27 @@ class AutodiffComposition(Composition):
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
             if specs:
-                # # MODIFIED TEACH_TARGET OLD:
-                # if isinstance(specs, (LossMechanism, tuple)):
-                #     specs = convert_to_list(specs)
-                # elif isinstance(specs, dict):
-                #     specs = [(k,v) for k,v in specs.items()]
-                # MODIFIED TEACH_TARGET NEW: BREADCRUMB: IMPLEMENT ONCE SUPPORTED BY convert_to_list
-                if isinstance(specs, (LossMechanism, tuple, dict)):
+                if isinstance(specs, (LossMechanism, tuple, set, dict, list)):
                     specs = convert_to_list(specs)
-                # MODIFIED TEACH_TARGET END
+                # TEACHER_TARGET BREADCRUMB:  REMOVE ONCE _validate_targets ISSUE IS RESOLVED
+                else:
+                    raise AutodiffCompositionError(f"The 'targets' argument for an AutodiffComposition must be "
+                                                   f"a tuple, dict, set or LossMechanism, not a "
+                                                   f"{type(specs).__name__} ('{specs}').")
+                # MODIFIED TEACHER_TARGET OLD:
+                # for i, spec_tuple in enumerate(specs.copy()):
+                #     sample, target = spec_tuple
+                #     sample = sample.output_port if isinstance(sample, Mechanism) else sample
+                #     target = target.output_port if isinstance(target, Mechanism) else target
+                #     specs[i] = (sample, target)
+                # MODIFIED TEACHER_TARGET NEW:
                 for i, spec_tuple in enumerate(specs.copy()):
-                    sample, target = spec_tuple
-                    sample = sample.output_port if isinstance(sample, Mechanism) else sample
-                    target = target.output_port if isinstance(target, Mechanism) else target
-                    specs[i] = (sample, target)
+                    if isinstance(spec_tuple, tuple):
+                        sample, target = spec_tuple
+                        sample = sample.output_port if isinstance(sample, Mechanism) else sample
+                        target = target.output_port if isinstance(target, Mechanism) else target
+                        specs[i] = (sample, target)
+                # MODIFIED TEACHER_TARGET END
             return specs
 
         def _validate_targets(self, spec):
@@ -1224,10 +1231,10 @@ class AutodiffComposition(Composition):
                         return (f"target specification must be a ProcessingMechanism or the OutputPort of one.")
                     if isinstance(item[1], str) and item[1] != TARGET:
                         return (f"the only keyword that can be used for the target specification is '{TARGET}'.")
-                assert isinstance(item[0], OutputPort), \
-                    ("PROGRAM ERROR: 1st item of tuple specification for targets arg should be OutputPort by now.")
-                assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
-                    ("PROGRAM ERROR: 2nd item of tuple specification for targets arg should be OutputPort by now.")
+                    assert isinstance(item[0], OutputPort), \
+                        ("PROGRAM ERROR: 1st item of tuple specification for targets arg should be OutputPort by now.")
+                    assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
+                        ("PROGRAM ERROR: 2nd item of tuple specification for targets arg should be OutputPort by now.")
                 return None
             else:
                 return (f"must be a LossMechanism, list of them, "
@@ -1838,9 +1845,12 @@ class AutodiffComposition(Composition):
                 #   then raise error, as executing its LossFunction in pytorch will cause a crash
                 self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
                                                               target_mech=target_mech,
-                                                              loss_mech=loss_mech,
+                                                              loss_mech=loss_mech_spec,
                                                               constructed_target_mechs=constructed_target_mechs,
                                                               action=ERROR)
+                # MODIFIED TEACHER_TARGET NEW:
+                target_spec = target_port
+                # MODIFIED TEACHER_TARGET END
             elif isinstance(loss_mech_spec, tuple):
                 sample_port, target_spec = loss_mech_spec
                 sample_mech = sample_port.owner
@@ -1857,7 +1867,9 @@ class AutodiffComposition(Composition):
                 if isinstance(target_spec, OutputPort):
                     # target is internal Node
                     self._check_if_target_is_in_sample_pathway(sample_port, target_spec, pathways, context)
-                    self.sample_port_to_target_port_map.update({sample_port: target_spec})
+                    # # MODIFIED TEACHER_TARGET OLD:
+                    # self.sample_port_to_target_port_map.update({sample_port: target_spec})
+                    # MODIFIED TEACHER_TARGET END
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so construct TARGET Node
                     if sample_port in self.sample_port_to_target_port_map:
@@ -1872,7 +1884,9 @@ class AutodiffComposition(Composition):
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
                     target_port = target_mech.output_port
-                    self.sample_port_to_target_port_map.update({sample_port: target_port})
+                    # # MODIFIED TEACHER_TARGET OLD:
+                    # self.sample_port_to_target_port_map.update({sample_port: target_port})
+                    # MODIFIED TEACHER_TARGET END
                     self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     constructed_target_mechs.append(target_mech)
                 else:
@@ -1883,7 +1897,12 @@ class AutodiffComposition(Composition):
                                f"({loss_mech_spec} for '{self.name}'.")
 
             target_mechs.append(target_mech)
-            loss_mech_specs.append((loss_mech_spec[0], target_spec))
+            # # MODIFIED TEACHER_TARGET OLD:
+            # loss_mech_specs.append((loss_mech_spec[0], target_spec))
+            # MODIFIED TEACHER_TARGET NEW:
+            self.sample_port_to_target_port_map.update({sample_port: target_spec})
+            loss_mech_specs.append((sample_port, target_spec))
+            # MODIFIED TEACHER_TARGET END
 
         return loss_mech_specs, target_mechs
 
