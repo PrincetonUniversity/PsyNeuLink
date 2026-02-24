@@ -2665,16 +2665,26 @@ class AutodiffComposition(Composition):
                         f"not be included in the dict specified in the 'targets' argument of the learn() method: "
                         f"{', '.join(uncessary_sample_specs_in_learn)}.")
 
-            # Check that all entries in constructor with TARGET as the value have entries in learn()
+            # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
+            # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
+            #  TARGET Node for that sample
             INPUT_targets_unspecified_in_learn = []
             for constructor_sample in [sample for sample, target in constructor_args if target == TARGET]:
+                # Start by assuming that **targets** arg of learn() uses SAMPLE node as key
+                learn_sample_spec = constructor_sample
+                # Check if SAMPLE Node is specified as a key in the **targets** arg of learn
                 if constructor_sample not in learn_method_args:
-                    INPUT_targets_unspecified_in_learn.append(f"'{constructor_sample.name}'")
-                value = learn_method_args[constructor_sample]
+                    # If it is not, check whether its corresponding TARGET Node is used as the key:
+                    if self.sample_port_to_target_port_map[constructor_sample] in learn_method_args:
+                        learn_sample_spec = self.sample_port_to_target_port_map[constructor_sample]
+                    else:
+                        # Add constructor_sample to list of missing specs for warning below
+                        INPUT_targets_unspecified_in_learn.append(f"'{constructor_sample.name}'")
+                value = learn_method_args[learn_sample_spec]
                 assert (is_numeric(value)
                         # Only consider innermost dimension for shape, as that is the one for the OutputPort
                         and np.array(value).shape[-1] == constructor_sample.defaults.variable.shape[-1]),\
-                    (f"PROGRAM ERROR: Non-numberic argument and/or bad shape for specification of value for "
+                    (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
                      f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
             if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
                 warnings.warn(f"The following node(s), specified in the 'targets' argument of the constructor for "

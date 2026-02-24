@@ -377,12 +377,6 @@ class TestAutodiffConstructor:
 
 class TestAutodiffTargetSpecs:
 
-    # TEACHER_TARGET BREADCRUMB:  REFACTOR TO BE JUST 3 TEST:
-    #                             1) THAT USES EACH TYPE FOR A DIFFERENT TARGET
-    #                             2) DEFAULT (NO TARGET SPECS)
-    #                             3) ERROR
-    #                             AND TEST FOR CORRECT RESULTS
-    #                             OR LEAVE AS MULTIPLTE TESTS AND TEST FOR SAME RESULT
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
@@ -396,9 +390,9 @@ class TestAutodiffTargetSpecs:
         input_mech = ProcessingMechanism(input_shapes=5,name="INPUT MECH")
         output_mech = ProcessingMechanism(name="OUTPUT MECH", input_shapes=5)
         teacher_mech = ProcessingMechanism(name="TEACHER MECH", input_shapes=5)
+        expected = [[0.978, 1.956, 2.934, 3.912, 4.890000000000001], [0.0, 0.0, 0.0, 0.0, 0.0]]
         if target_spec == "default":
             targets_constructor_arg = None
-            targets_learn_arg = None
         elif target_spec == "internal":
             targets_constructor_arg = {output_mech.output_port:teacher_mech.output_port}
             targets_learn_arg = None
@@ -425,12 +419,32 @@ class TestAutodiffTargetSpecs:
         autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
                                             targets=targets_constructor_arg,
                                             name='AUTO-COMP')
-        if targets_learn_arg == 'external':
-            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[1,2,3,4,5]]}
+        if target_spec == 'default':
+            # Here, test use of SAMPLE as key in **targets** arg of learn()
+            targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
+        elif target_spec == 'external':
+            # Here, test use of TARGET Node for SAMPLE as key in **targets** arg of learn()
+            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
 
-        autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
-                            targets=targets_learn_arg,
-                            execution_mode=pnl.ExecutionMode.PyTorch)
+        results = autodiff_comp.learn(num_trials = 2,
+                                      inputs={input_mech:[[1,2,3,4,5]]},
+                                      targets=targets_learn_arg,
+                                      execution_mode=pnl.ExecutionMode.PyTorch)
+        np.testing.assert_allclose(results, np.array(expected))
+
+        # For compleness, reverse use of SAMPLE and TARGET nodes in **targets** of learn() for default and external
+        if target_spec == 'default':
+            # Here, test use of TARGET Node for SAMPLE as key in **targets** arg of learn()
+            targets_learn_arg = {autodiff_comp.get_target_nodes()[0]:[[0,0,0,0,0]]}
+            autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+                                targets=targets_learn_arg,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
+        elif target_spec == 'external':
+            # Here, test use of SAMPLE as key in **targets** arg of learn()
+            targets_learn_arg = {output_mech.output_port:[[0,0,0,0,0]]}
+            autodiff_comp.learn(inputs={input_mech:[[1,2,3,4,5]]},
+                                targets=targets_learn_arg,
+                                execution_mode=pnl.ExecutionMode.PyTorch)
 
 
 # Expected results for test_projection_specific_learning_rates()
