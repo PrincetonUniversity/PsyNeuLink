@@ -446,24 +446,24 @@ class TestAutodiffTargetSpecs:
                                 targets=targets_learn_arg,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
 
-    test_args_for_target_spec_errors = [
-        #    sample_position          method                spec_type          num_specs    err_msg
-        #  intrnl / out / both   cnstr / lrn / both    Node / TARGET / both   -1 / 0 / +1        #
-        (  'intrl',                  'cnstr',                 'Node',             -1,          1),
-        (  'output',                 'cnstr',                 'Node',             -1,          2),
-        (  'both',                   'cnstr',                 'Node',             -1,          3),
-    ]
-    @pytest.mark.pytorch
-    @pytest.mark.composition
-    def test_target_spec_errors_in_constructor_and_learn(self, sample_position, method, num_specs, spec_type, err_msg):
-        # Construct 3 pathways, using sample position to determine where the sample is in each of the pathways:
-        #     intrl: all in middle_mech
-        #     output: all in output_mech
-        #     both: at least one of each
-        # method: where to place the error; both should generate an error of its own for num_specs = 0
-        # spec_type: Node, pnl.TARGET or at least one of each
-        # num_specs: -1 = missing spec, +1 = extra spec, 0 = correct number (for method=both)
-        pass
+    # test_args_for_target_spec_errors = [
+    #     #    sample_position          method                spec_type          num_specs    err_msg
+    #     #  intrnl / out / both   cnstr / lrn / both    Node / TARGET / both   -1 / 0 / +1        #
+    #     (  'intrl',                  'cnstr',                 'Node',             -1,          1),
+    #     (  'output',                 'cnstr',                 'Node',             -1,          2),
+    #     (  'both',                   'cnstr',                 'Node',             -1,          3),
+    # ]
+    # @pytest.mark.pytorch
+    # @pytest.mark.composition
+    # def test_target_spec_errors_in_constructor_and_learn(self, sample_position, method, num_specs, spec_type, err_msg):
+    #     # Construct 3 pathways, using sample position to determine where the sample is in each of the pathways:
+    #     #     intrl: all in middle_mech
+    #     #     output: all in output_mech
+    #     #     both: at least one of each
+    #     # method: where to place the error; both should generate an error of its own for num_specs = 0
+    #     # spec_type: Node, pnl.TARGET or at least one of each
+    #     # num_specs: -1 = missing spec, +1 = extra spec, 0 = correct number (for method=both)
+    #     pass
 
 
 # Expected results for test_projection_specific_learning_rates()
