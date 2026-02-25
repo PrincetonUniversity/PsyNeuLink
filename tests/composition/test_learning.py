@@ -886,7 +886,7 @@ class TestStructural:
 
             elif target_specs == 'too_many_targets':
                 # Test error for too many entries in targets arg
-                error = (f"The number of items (3) specified in the the 'targets' arg of the learn() method "
+                error = (f"The number of items (3) specified in the 'targets' arg of the learn() method "
                          f"for 'TEST COMP' must equal the number of TARGET Nodes in the Composition (2).")
                 with pytest.raises(CompositionError, match=re.escape(error)):
                     comp.learn(inputs=inputs_arg,

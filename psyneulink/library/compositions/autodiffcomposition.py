@@ -1456,6 +1456,9 @@ class AutodiffComposition(Composition):
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
         pathways = self._get_pytorch_backprop_pathways(context)
+        self._num_learnable_pathways = len([pway for pway in pathways
+                                            if any(item.learnable
+                                                   for item in pway if isinstance(item, MappingProjection))])
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
@@ -1963,7 +1966,6 @@ class AutodiffComposition(Composition):
                                                                                   dtype=object),
                                                       name= f"{TARGET} for " + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
-                    # TEACHER_TARGET BREADCRUMB: THIS DOES NOT SEEM TO BE USED... DELETE?
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
@@ -2670,16 +2672,17 @@ class AutodiffComposition(Composition):
             #  TARGET Node for that sample
             INPUT_targets_unspecified_in_learn = []
             for constructor_sample in [sample for sample, target in constructor_args if target == TARGET]:
-                # Start by assuming that **targets** arg of learn() uses SAMPLE node as key
+                # Start by assuming that entry in **targets** arg of learn() uses SAMPLE node as key
                 learn_sample_spec = constructor_sample
-                # Check if SAMPLE Node is specified as a key in the **targets** arg of learn
+                # Check if SAMPLE Node is specified as a key in the **targets** arg of learn()
                 if constructor_sample not in learn_method_args:
                     # If it is not, check whether its corresponding TARGET Node is used as the key:
                     if self.sample_port_to_target_port_map[constructor_sample] in learn_method_args:
                         learn_sample_spec = self.sample_port_to_target_port_map[constructor_sample]
                     else:
                         # Add constructor_sample to list of missing specs for warning below
-                        INPUT_targets_unspecified_in_learn.append(f"'{constructor_sample.name}'")
+                        INPUT_targets_unspecified_in_learn.append(constructor_sample)
+                        continue
                 value = learn_method_args[learn_sample_spec]
                 assert (is_numeric(value)
                         # Only consider innermost dimension for shape, as that is the one for the OutputPort
@@ -2687,10 +2690,12 @@ class AutodiffComposition(Composition):
                     (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
                      f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
             if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
+                # TEACHER_TARGET BREADCRUMB:  MAKE THIS AN ERROR
+                problem_node_names = [f"'{n.owner.name}'" for n in INPUT_targets_unspecified_in_learn]
                 warnings.warn(f"The following node(s), specified in the 'targets' argument of the constructor for "
                               f"'{self.name}' as samples that that receive external values for their targets, must "
                               f"be included in the 'targets' argument of the learn() method that specify their "
-                              f"target values during learning: {', '.join(INPUT_targets_unspecified_in_learn)}.")
+                              f"target values during learning: {', '.join(problem_node_names)}.")
                 self._warned_about_unspecified_target_in_learn = True
 
         stim_input, num_input_trials = super()._parse_targets_spec(inputs, targets, execution_mode, context)

@@ -4818,23 +4818,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     sender_node = proj_spec[0].sender.owner.owner_mech
                 if isinstance(receiver_node, AutoAssociativeProjection):
                     receiver_node = proj_spec[0].receiver.owner.owner_mech
-                # MODIFIED TEACHER_TARGET OLD:
-                if sender_node in self._all_nodes and \
-                        receiver_node in self._all_nodes:
-                # # MODIFIED TEACHER_TARGET NEW:
-                # if sender_node in self._get_all_nodes() and \
-                #         receiver_node in self._get_all_nodes():
-                # MODIFIED TEACHER_TARGET END
+                if sender_node in self._all_nodes and receiver_node in self._all_nodes:
                     self.add_projection(projection=proj_spec[0],
                                         feedback=proj_spec[1],
-                                        context=context,
-                    )
+                                        context=context)
                 else:
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1],
-                                        context=context,
-                    )
+                                        context=context)
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
             # # Finally, check for any deferred_init Projections
@@ -9744,11 +9736,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      f"is not a Mechanism or an OutputPort -- shoudl have been caught in _validate_targets")
                 target_specs_as_ports[target_spec] = value
 
-            target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
-            TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
-
             # Check for any target specs in **targets** arg of learn() that are also in **inputs** arg
             # TEACHER_TARGET BREADCRUMB: WHAT IF inputs has port specifications?  CONVERT THAT TO PORTS TOO?
+            target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
             duplicate_targets = sorted([item.name for item in inputs if item in target_specs_as_mechs])
             if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
                 warnings.warn(f"There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' "
@@ -9756,20 +9746,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"is not technically a problem, but it is redundant; one or the other is sufficient.")
                 self._warned_about_targets_mechs_in_inputs_and_targets = True
 
-            # Check that the number of target specifications equals the number of TARGET Nodes in the Composition
+            # Check that the number of target specifications equals the number of TARGET Nodes and learnable pathways
             TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
             num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
-            num_specified_targets = len(target_specs_as_ports)
-            if num_specified_targets != num_TARGET_Nodes_in_comp:
-                raise CompositionError(f"The number of items ({num_specified_targets}) specified in the "
-                                       f"the 'targets' arg of the learn() method for '{self.name}' must equal "
-                                       f"the number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
+            num_targets_specified_in_learn = len(target_specs_as_ports)
+
+            if hasattr(self, 'targets') and self.targets:
+                total_num_target_specs_in_constructor = len(self.targets)
+                num_TARGETS_specified_in_constructor = len([v for v in self.targets if v[1] == TARGET])
+                if num_targets_specified_in_learn != num_TARGETS_specified_in_constructor:
+                    # If **targets** was specified in the constructor, then the number of specified with 'TARGET' there
+                    # must equal the number specified in **targets** of learn here
+                    raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
+                                           f"'targets' argument of the learn() method for '{self.name}' must equal the "
+                                           f"number specified with the keyword 'TARGET' ({num_TARGETS_in_constructor}) "
+                                           f"in the 'targets' arg of the constructor.")
+                if total_num_target_specs_in_constructor != self._num_learnable_pathways:
+                    raise CompositionError(
+                        f"The number of sample-target pairs ({num_TARGETS_specified_in_constructor} specified "
+                        f"in the 'targets' argument of the constructor for '{self.name}' must equal the number "
+                        f"of learnable pathways ({self._num_learnable_pathways}) in the Composition.")
+                self.num_target_specs = total_num_target_specs_in_constructor
+            else:
+
+                if num_targets_specified_in_learn != num_TARGET_Nodes_in_comp:
+                    # Since **targets** arg of the constructor was not specified, then TARGET Nodes should have been
+                    # automatically constructred, and the number in **targets** arg of learn() should be equal to that
+                    raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
+                                           f"'targets' arg of the learn() method for '{self.name}' must equal the "
+                                           f"number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
+                    assert num_TARGET_Nodes_in_comp != self._num_learnable_pathways, \
+                        (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
+                         f"is not equal to the number of learnable pathways ({self._num_learnable_pathways}).")
+                self.num_target_specs = num_targets_specified_in_learn
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
-            # The only legal specification of a target in the learn() method is for:
-            #   - a sample Mechanism or OutputPort (for value to be trained), which must be an OUTPUT Node of the comp
-            #   - a TARGET Node constructed for the sample
-            # identify samples as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
+            # The only legal specifications in the **targets** arg of the learn() method is for:
+            #  - a SAMPLE Node specified in constructor **targets** that is assigned the keyword 'TARGET'
+            #  - TARGET Nodes constructed automatically for all OUTPUT Nodes if constructor **targets** is not specified
+            # Identify SAMPLE Nodes as senders of Projections to the SAMPLE InputPort of the ComparatorMechanism
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
             sample_nodes = []
             for target in TARGET_Nodes_in_comp:
