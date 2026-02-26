@@ -1434,6 +1434,10 @@ def generate_script_from_mdf(model_input, outfile=None):
             # delete=False because of problems with reading file on windows
             with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
                 f.write(model_input)
+
+                # Make sure the contents are resident in FS before re-opening
+                # the file by name
+                f.flush()
                 model = load_mdf(f.name)
 
     imports_str = ''
