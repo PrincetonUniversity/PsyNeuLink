@@ -299,8 +299,7 @@ class TestLCA:
                             ]
         )
         if comp_mode not in {pnl.ExecutionMode.Python, pnl.ExecutionMode.LLVMRun}:
-            # pytest.skip("LCAMechanism_standard_output_ports only works for ExecutionMode = Python or LLVMRun.")
-            return True
+            pytest.skip("LCAMechanism_standard_output_ports only works for ExecutionMode = Python or LLVMRun.")
         comp = pnl.Composition(lca)
         lca.execute_until_finished = True
 
@@ -310,33 +309,19 @@ class TestLCA:
                 assert lca.output_ports[pnl.DECISION_INDEX].value == index_val
                 assert lca.output_ports[pnl.DECISION_STEPS].value == steps_val
                 assert lca.output_ports[pnl.DECISION_TIME].value == time_val
-            elif comp_mode is pnl.ExecutionMode.LLVMRun:
+            else:
                 assert results[1] == index_val
                 assert results[2] == steps_val
                 assert results[3] == time_val
-            else:
-                assert False, (f"TEST ERROR: unrecognized ExecutionMode: {comp_mode} "
-                               f"passed to test_LCAMechanism_standard_output_ports().")
 
         lca.parameters.time_step_size.set(.01, comp.name)
         actual = comp.run(inputs=[[1, 0]], execution_mode=comp_mode)
-        if comp_mode is pnl.ExecutionMode.Python:
-            # BREADCRUMB: IN Python mode, reporting after next execution, so +1 off on number reported
-            expected = (0, 14, .14)
-        else:
-            expected = (0, 14, .14)
+        expected = (0, 14, .14)
         assert_expected_results(actual, expected)
 
         lca.parameters.time_step_size.set(.001, comp.name)
         actual = comp.run(inputs=[[0, 1]], execution_mode=comp_mode)
-        if comp_mode is pnl.ExecutionMode.Python:
-            # Python iterative execution refreshes recurrent outputs each step; this case converges in one more step
-            # than prior expectations from non-refreshed dynamics.
-            expected = (1, 56, .056)
-        else:
-            # LLVM now uses aligned execution-count bookkeeping; remaining one-step difference reflects
-            # small numerical divergence in threshold crossing near the boundary.
-            expected = (1, 55, .055)
+        expected = (1, 56, .056)
         assert_expected_results(actual, expected)
 
         # BREADCRUMB: FAILS BELOW SINCE NOT STARTING FRESH IN LLMRun

@@ -1291,8 +1291,27 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                      state_struct_ptr=state)
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in, reinit_out])
 
-        prev_val_ptr = ctx.get_param_or_state_ptr(builder, self, "old_val", state_struct_ptr=state)
-        builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
+            # Match Python reset semantics for TransferMechanism subclasses:
+            # after resetting integrator state, execute the primary function on
+            # the reset integrator output to get the reset mechanism value.
+            f = ctx.import_llvm_function(self.function)
+            f_params, f_state = ctx.get_param_or_state_ptr(
+                builder,
+                self,
+                "function",
+                param_struct_ptr=params,
+                state_struct_ptr=state,
+            )
+            f_out = builder.alloca(f.args[3].type.pointee, name="function_reinit_out")
+            builder.call(f, [f_params, f_state, reinit_out, f_out])
+            reinit_out = f_out
+
+        # Keep recurrent feedback state aligned with reset output-port values.
+        # Python reset updates output ports, and recurrent input on the next
+        # step is based on those refreshed outputs.
+        builder = self._gen_llvm_output_ports(
+            ctx, builder, reinit_out, params, state, arg_in, arg_out
+        )
         return builder
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
