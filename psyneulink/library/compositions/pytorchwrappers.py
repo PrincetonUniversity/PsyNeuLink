@@ -587,7 +587,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            component_idx = self._get_composition_projections(composition).index(projection)
+            # component_idx is used by compilation to index into a loss structure
+            # that is constructed from the 'proj_wrappers_pairs' so teh indexing
+            # needs to match
+            component_idx = len(proj_wrappers_pairs)
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
