@@ -1558,6 +1558,12 @@ class LossFunction(ObjectiveFunction):
 
         normalize = builder.load(normalize_ptr)
         do_normalize = builder.fcmp_ordered("!=", normalize, normalize.type(0))
+
+        # Unwrap output if it's a 2d array
+        if not pnlvm.helpers.is_scalar(arg_out):
+            assert len(arg_out.type.pointee) == 1 and len(arg_out.type.pointee.elements[0])
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
         with builder.if_else(do_normalize) as (t, e):
             with t:
                 count = builder.load(counter_ptr)

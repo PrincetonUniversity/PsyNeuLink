@@ -31,3 +31,18 @@ def test_basic(loss, variable, normalize, expected, benchmark, func_mode):
 
     expected = expected if not do_normalize else expected / SIZE
     np.testing.assert_allclose(res, expected)
+
+@pytest.mark.mechanism
+@pytest.mark.benchmark
+@pytest.mark.parametrize("loss, variable, expected", test_data, ids=[getattr(x, 'values', x)[0] for x in test_data])
+@pytest.mark.parametrize("normalize", ["normalize", "no-normalize"])
+def test_in_mechanism(loss, variable, normalize, expected, benchmark, mech_mode):
+    do_normalize = normalize == "normalize"
+    f = pnl.LossFunction(default_variable=variable, loss=loss, normalize=do_normalize)
+    m = pnl.ProcessingMechanism(function=f, default_variable=variable)
+
+    EX = pytest.helpers.get_mech_execution(m, mech_mode)
+    res = benchmark(EX, variable)
+
+    expected = expected if not do_normalize else expected / SIZE
+    np.testing.assert_allclose(res, expected)
