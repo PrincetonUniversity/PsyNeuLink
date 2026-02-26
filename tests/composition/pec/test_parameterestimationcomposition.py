@@ -560,7 +560,12 @@ def test_pec_controller_specified():
         )
 
 @pytest.mark.composition
-def test_pec_lca():
+def test_pec_lca(func_mode):
+
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
 
     # Construct model
     input_mech = pnl.TransferMechanism(
@@ -593,7 +598,12 @@ def test_pec_lca():
     }
 
     # Generate data to fit
-    comp.run(inputs=input_dict, execution_mode=pnl.ExecutionMode.LLVMRun)
+    execution_mode_map = {
+        "Python": pnl.ExecutionMode.Python,
+        "LLVM": pnl.ExecutionMode.LLVMRun,
+        "PTX": pnl.ExecutionMode.PTXRun,
+    }
+    comp.run(inputs=input_dict, execution_mode=execution_mode_map[func_mode])
 
     data_to_fit = pd.DataFrame(
         {
@@ -617,15 +627,20 @@ def test_pec_lca():
         num_estimates=10,
     )
 
-    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.controller.function.parameters.save_values.set(True)
 
     ret = pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
 
 
 @pytest.mark.composition
-def test_pec_lca_num_estimates_llvm_stochasticity():
+def test_pec_lca_num_estimates_llvm_stochasticity(func_mode):
     """Ensure LLVM PEC estimates vary for LCA when noise is stochastic."""
+
+    if func_mode == "Python":
+        pytest.skip(
+            "Test not yet implemented for Python. Parameter estimate is too slow."
+        )
 
     input_mech = pnl.TransferMechanism(
         input_shapes=2,
@@ -673,7 +688,7 @@ def test_pec_lca_num_estimates_llvm_stochasticity():
         initial_seed=42,
     )
 
-    pec.controller.parameters.comp_execution_mode.set("LLVM")
+    pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.run(inputs={input_mech: np.tile([1, 0], (5, 1))})
 
     assert "sim_data" in captured
