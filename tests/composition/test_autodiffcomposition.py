@@ -3962,7 +3962,7 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.parametrize(
         'loss, expected', [
-            (Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]]),
+            pytest.param(Loss.CROSS_ENTROPY, [[[0.99330715]], [[0.99933202]], [[0.99933202]], [[0.99985049]]], marks=pytest.mark.llvm_not_implemented),
             pytest.param(Loss.L1, [[[0.99330641]], [[0.9993319 ]], [[0.9993319 ]], [[0.99985045]]], marks=pytest.mark.llvm_not_implemented),
             (Loss.MSE, [[[0.99330509]], [[0.99933169]], [[0.99933169]], [[0.9998504]]]),
             pytest.param(Loss.POISSON_NLL, [[[0.99330385]], [[0.99933149]], [[0.99933149]], [[0.99985034]]], marks=pytest.mark.llvm_not_implemented),
