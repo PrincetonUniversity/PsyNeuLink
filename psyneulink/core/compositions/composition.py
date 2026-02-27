@@ -9757,13 +9757,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if num_targets_specified_in_learn != num_TARGETS_specified_in_constructor:
                     # If **targets** was specified in the constructor, then the number of specified with 'TARGET' there
                     # must equal the number specified in **targets** of learn here
-                    raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
-                                           f"'targets' argument of the learn() method for '{self.name}' must equal the "
-                                           f"number specified with the keyword 'TARGET' ({num_TARGETS_in_constructor}) "
-                                           f"in the 'targets' arg of the constructor.")
+                    raise CompositionError(
+                        f"The number of items ({num_targets_specified_in_learn}) specified in the 'targets' argument "
+                        f"of the learn() method for '{self.name}' must equal the number specified with the keyword "
+                        f"'TARGET' ({num_TARGETS_specified_in_constructor}) in the 'targets' arg of the constructor.")
                 if total_num_target_specs_in_constructor != self._num_learnable_pathways:
                     raise CompositionError(
-                        f"The number of sample-target pairs ({num_TARGETS_specified_in_constructor} specified "
+                        f"The number of sample-target pairs ({total_num_target_specs_in_constructor}) specified "
                         f"in the 'targets' argument of the constructor for '{self.name}' must equal the number "
                         f"of learnable pathways ({self._num_learnable_pathways}) in the Composition.")
                 self.num_target_specs = total_num_target_specs_in_constructor
@@ -9816,6 +9816,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return target_specs_as_ports
 
+        # TEACHER_TARGET BREADCRUMB:
+        #                 IF None, NOT CALLED WHEN self.targets (from construtor) SO  _validate_targets_spec
+        #                 IF THIS IS {} IT WORKS, AS IT WON"T BE SKIPPED AND WILL ALLOW ITERS
         if targets is not None:
             target_specs_as_ports = _validate_targets_spec(targets)
             targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
