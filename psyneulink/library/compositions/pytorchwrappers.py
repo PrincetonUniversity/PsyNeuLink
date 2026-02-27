@@ -587,7 +587,10 @@ class PytorchCompositionWrapper(torch.nn.Module):
             else:
                 continue
 
-            component_idx = self._get_composition_projections(composition).index(projection)
+            # component_idx is used by compilation to index into a loss structure
+            # that is constructed from the 'proj_wrappers_pairs' so teh indexing
+            # needs to match
+            component_idx = len(proj_wrappers_pairs)
             sender_port_idx = projection.sender.owner.output_ports.index(projection.sender)
             pytorch_proj_wrapper = PytorchProjectionWrapper(projection=projection,
                                                             pnl_proj=pnl_proj,
@@ -1798,7 +1801,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
                 builder.store(z_values[component].type.pointee(None),z_values[component])
 
                 if (NodeRole.INPUT in self.composition.get_roles_by_node(component.mechanism)
-                        and not NodeRole.TARGET in self.composition.get_roles_by_node(component.mechanism)):
+                        and NodeRole.TARGET not in self.composition.get_roles_by_node(component.mechanism)):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                     input_id = component._idx
@@ -2884,7 +2887,7 @@ class PytorchLossMechanismWrapper(PytorchMechanismWrapper):
         sample = variable[:,:,0,...]
         # sample.requires_grad must be True so result of the function can be used as the loss for autodiff.backward()
         # sample = sample.requires_grad_()
-        assert sample.requires_grad == True, \
+        assert sample.requires_grad is True, \
             (f"PROGRAM ERROR: the tensor for the sample input to the '{self.mechanism.function.loss}' "
              f"function of '{self.mechanism.name}' does not have 'requires_grad' set to True.")
         # Prevent propagation of error along projection from TARGET

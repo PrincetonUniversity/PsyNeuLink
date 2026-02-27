@@ -9079,7 +9079,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         and self.controller.agent_rep in self._get_nested_compositions()):
         #     self.controller.agent_rep.controller = self.controller
         # MODIFIED 12/30/21 END
-        
+
         # IMPLEMENTATION NOTE:
         #   Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #      its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
@@ -13250,7 +13250,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region
-    
+
     @property
     def input_ports(self):
         """Return all InputPorts that belong to the Input CompositionInterfaceMechanism"""

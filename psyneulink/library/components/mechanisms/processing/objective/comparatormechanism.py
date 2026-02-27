@@ -178,7 +178,7 @@ def _sample_getter(owning_component=None, context=None):
                 and owning_component.input_ports[SAMPLE].path_afferents):
             afferents = owning_component.input_ports[SAMPLE].path_afferents
             # Deal with unusual case of > 1 Projection to SAMPLE
-            if len (afferents) > 1:
+            if len(afferents) > 1:
                 from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
                 # Get senders that are not from CIM's
                 mech_senders = [afferent.sender for afferent in afferents
@@ -190,7 +190,7 @@ def _sample_getter(owning_component=None, context=None):
                 # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
                 mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
                 if len(mech_senders) > 1:
-                    if owning_component._warned_about_more_than_one_sample == False:
+                    if owning_component._warned_about_more_than_one_sample is False:
                         warnings.warn(f"'{owning_component.name}' has more than one '{SAMPLE}'; "
                                       f"therefore, its `sample` Parameter returns a list.")
                         owning_component._warned_about_more_than_one_sample = True
@@ -216,7 +216,7 @@ def _target_getter(owning_component=None, context=None):
                 and owning_component.input_ports[TARGET].path_afferents):
             afferents = owning_component.input_ports[TARGET].path_afferents
             # Deal with unusual case of > 1 Projection to TARGET
-            if len (afferents) > 1:
+            if len(afferents) > 1:
                 from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
                 # Get senders that are not from CIM's
                 mech_senders = [afferent.sender for afferent in afferents
@@ -228,7 +228,7 @@ def _target_getter(owning_component=None, context=None):
                 # Filter any Projections from the same source (i.e., direct + via CIM from a node in a nested comp)
                 mech_senders.extend([source for source in sources_for_cim_senders if source not in mech_senders])
                 if len(mech_senders) > 1:
-                    if owning_component._warned_about_more_than_one_target == False:
+                    if owning_component._warned_about_more_than_one_target is False:
                         warnings.warn(f"'{owning_component.name}' has more than one '{TARGET}'; "
                                       f"therefore, its `target` Parameter returns a list.")
                         owning_component._warned_about_more_than_one_target = True
