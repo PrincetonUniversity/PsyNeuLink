@@ -173,6 +173,24 @@ def test_pec_run_input_formats(inputs_dict, error_msg):
         pec.run(inputs=inputs_dict)
 
 
+@pytest.mark.composition
+def test_pec_controller_defaults_to_llvm_execution_mode():
+    input_node = pnl.ProcessingMechanism(input_shapes=1)
+    output_node = pnl.ProcessingMechanism(input_shapes=1)
+    model = pnl.Composition(pathways=[input_node, output_node], name="model")
+
+    pec = pnl.ParameterEstimationComposition(
+        name="pec",
+        model=model,
+        parameters={("slope", output_node): [1.0, 2.0]},
+        outcome_variables=output_node,
+        objective_function=lambda x: np.sum(x),
+        optimization_function=PECOptimizationFunction(method="differential_evolution"),
+    )
+
+    assert pec.controller.parameters.comp_execution_mode.get(None) == "LLVM"
+
+
 # SciPy changed their implementation of differential evolution and the way it selects
 # samples to evaluate in 1.12 [0,1], and then again in 1.14 [2,3], leading to slightly
 # different results
