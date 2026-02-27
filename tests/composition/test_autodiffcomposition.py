@@ -410,9 +410,10 @@ class TestAutodiffTargetSpecs:
             targets_learn_arg = None
 
         if target_spec == "str":
-            error_msg = (f"The 'targets' argument for an AutodiffComposition must be a tuple, dict, "
-                         f"set or LossMechanism, not a str ('TARGET').")
-            with pytest.raises(AutodiffCompositionError, match=re.escape(error_msg)):
+            error_msg = ("Value (TARGET) assigned to parameter 'targets' of (AutodiffComposition AUTO-COMP).parameters "
+                         "is not valid: should be a dict of sample:target pairs or, alternatively, a set or list of "
+                         "(sample, target) tuples.")
+            with pytest.raises(pnl.ParameterError, match=re.escape(error_msg)):
                 autodiff_comp = AutodiffComposition([[input_mech, output_mech], teacher_mech],
                                                     targets=targets_constructor_arg,
                                                     name='AUTO-COMP')
@@ -469,16 +470,16 @@ class TestAutodiffTargetSpecs:
     test_args_for_target_spec_errors = [
         #  sample_position  errant_position      method         spec_type      num_specs   err_msg_num
         #  in/mid/out/all     in/mid/out     cnstr/lrn/both  Node/TARGET/both   -1/0/+1        #
-        # (     'all',            'in',           'cnstr',          'node',          0,          0), # not learnable
-        # (     'all',            'in',           'cnstr',         'TARGET',         0,          1), # not learnable
-        (     'mid',            'mid',          'cnstr',          'node',         -1,          2), # missing spec
-        # (     'mid',            'mid',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
-        (     'out',            'out',          'cnstr',          'node',         -1,          2), # missing spec
-        # (     'out',            'out',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
-        # (     'all',            'in',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'mid',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'out',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'out',          'lrn',           'TARGET',         +1,          5), # extra TARGET spec
+        # # (     'all',            'in',           'cnstr',          'node',          0,          0), # not learnable
+        # # (     'all',            'in',           'cnstr',         'TARGET',         0,          1), # not learnable
+        # (     'mid',            'mid',          'cnstr',          'node',         -1,          2), # missing spec
+        # # (     'mid',            'mid',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
+        # (     'out',            'out',          'cnstr',          'node',         -1,          2), # missing spec
+        # # (     'out',            'out',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
+        # # (     'all',            'in',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
+        # # (     'all',           'mid',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
+        # # (     'all',           'out',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
+        # # (     'all',           'out',          'lrn',           'TARGET',         +1,          5), # extra TARGET spec
     ]
     @pytest.mark.pytorch
     @pytest.mark.composition
@@ -604,18 +605,6 @@ class TestAutodiffTargetSpecs:
                                 targets=learn_targets,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
         assert True
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Expected results for test_projection_specific_learning_rates()

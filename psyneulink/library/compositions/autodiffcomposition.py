@@ -1187,35 +1187,22 @@ class AutodiffComposition(Composition):
             """Parse targets argument to standardize into list of LossMechanisms or (sample, target) tuples
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
-            if specs:
-                if isinstance(specs, (LossMechanism, tuple, set, dict, list)):
-                    specs = convert_to_list(specs)
-                # TEACHER_TARGET BREADCRUMB:  REMOVE ONCE _validate_targets ISSUE IS RESOLVED
-                else:
-                    raise AutodiffCompositionError(f"The 'targets' argument for an AutodiffComposition must be "
-                                                   f"a tuple, dict, set or LossMechanism, not a "
-                                                   f"{type(specs).__name__} ('{specs}').")
-                # MODIFIED TEACHER_TARGET OLD:
-                # for i, spec_tuple in enumerate(specs.copy()):
-                #     sample, target = spec_tuple
-                #     sample = sample.output_port if isinstance(sample, Mechanism) else sample
-                #     target = target.output_port if isinstance(target, Mechanism) else target
-                #     specs[i] = (sample, target)
-                # MODIFIED TEACHER_TARGET NEW:
+            if isinstance(specs, (LossMechanism, tuple, set, dict, list)):
+                specs = convert_to_list(specs)
                 for i, spec_tuple in enumerate(specs.copy()):
                     if isinstance(spec_tuple, tuple):
                         sample, target = spec_tuple
                         sample = sample.output_port if isinstance(sample, Mechanism) else sample
                         target = target.output_port if isinstance(target, Mechanism) else target
                         specs[i] = (sample, target)
-                # MODIFIED TEACHER_TARGET END
             return specs
 
         def _validate_targets(self, spec):
             if spec is None:
                 return None
             if not isinstance(spec, list):
-                "PROGRAM ERROR: specification of targets should have been converted to a list in _parse_targets."
+                return (f"should be a dict of sample:target pairs or, alternatively, "
+                        f"a set or list of (sample, target) tuples.")
             for item in spec:
                 if not isinstance(item, (LossMechanism, tuple)):
                     return (f"must be a (sample, target) tuple, LossMechanism, or a list containing these.")
@@ -1236,9 +1223,6 @@ class AutodiffComposition(Composition):
                     assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
                         ("PROGRAM ERROR: 2nd item of tuple specification for targets arg should be OutputPort by now.")
                 return None
-            else:
-                return (f"must be a LossMechanism, list of them, "
-                        f"or a tuple or dict containing pairs of student, teacher nodes.")
 
         def _parse_LearningScale_param(self, value):
             try:
