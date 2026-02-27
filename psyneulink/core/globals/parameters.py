@@ -1864,21 +1864,15 @@ class Parameter(ParameterBase, metaclass=_ParameterMeta):
 
         value_updated = False
         if not compilation_sync:
+            value_for_update = value
+
+            # bools are stored as ints in compiled structs; convert here to
+            # avoid incorrectly flagging type change
+            if self._tracking_compiled_struct and isinstance(value, bool):
+                value_for_update = np.asarray(value)
+
             try:
-                target_value = self.values[execution_id]
-                value_for_update = value
-
-                # if tracking compiled struct and value is scalar but target value is array,
-                # update array in place with scalar value, this is to maintain the compiled
-                # struct and avoid replacement of the array which would break syncing with the compiled struct.
-                if (
-                    self._tracking_compiled_struct
-                    and isinstance(target_value, np.ndarray)
-                    and np.isscalar(value)
-                ):
-                    value_for_update = np.asarray(value)
-
-                update_array_in_place(target_value, value_for_update)
+                update_array_in_place(self.values[execution_id], value_for_update)
             except (KeyError, TypeError, ValueError):
                 # no self.values for execution_id
                 # failure during attempted update
