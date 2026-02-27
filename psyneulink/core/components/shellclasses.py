@@ -127,6 +127,9 @@ class Port(ShellClass):
 
 
 class Projection(ShellClass):
+    # here to ensure they exist for DummyProjection as well, which
+    # subclasses Projection and not Projection_Base as others do
+    _proxy_for = None
 
     # def assign_states(self):
     #     raise ShellClassError("Must implement assign_states in {0}".format(self.__class__.__name__))

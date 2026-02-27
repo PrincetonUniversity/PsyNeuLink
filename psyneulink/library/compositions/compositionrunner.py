@@ -399,9 +399,6 @@ class CompositionRunner():
                 kwargs['runtime_params'].update(runtime_params)
             else:
                 kwargs['runtime_params'] = runtime_params
-        else:
-            # This is used by local learning-related methods to override the default learning_rate set at construction.
-            self._composition._runtime_learning_rate = learning_rate
 
         # Handle function and generator inputs
         if isgeneratorfunction(inputs):

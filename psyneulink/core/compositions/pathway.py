@@ -351,11 +351,13 @@ from enum import Enum
 
 from psyneulink._typing import Literal
 
-from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.components.component import UsesParametersMeta
+from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole, _get_optimizer_Parameter_parser
 from psyneulink.core.globals.graph import EdgeType
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.utilities import is_matrix
 from psyneulink.core.globals.registry import register_category
 
@@ -450,7 +452,7 @@ class PathwayRole(Enum):
     LEARNING = 8
 
 
-class Pathway(object):
+class Pathway(object, metaclass=UsesParametersMeta):
     """
     Pathway(                       \
         pathway,                   \
@@ -553,6 +555,11 @@ class Pathway(object):
     componentName = componentType
     name = componentName
 
+    class Parameters(ParametersBase):
+        learning_rate = Parameter(None, stateful=False)
+
+        _parse_learning_rate = _get_optimizer_Parameter_parser('learning_rate')
+
     def __init__(
             self,
             pathway:list,
@@ -572,6 +579,8 @@ class Pathway(object):
                 raise CompositionError(
                     f"'composition' arg of constructor for {self.__class__.__name__} must be a {Composition.__name__}."
                 )
+
+        self._initialize_parameters()
 
         # There should be no other arguments in constructor
         if kwargs:
@@ -611,6 +620,9 @@ class Pathway(object):
                     self.default_projection_matrix = item
         assert True
 
+    def __iter__(self):
+        return iter(self.pathway)
+
     def _assign_roles(self, composition):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
         <Composition_Nodes>` by the **composition** to which it belongs.
@@ -638,6 +650,14 @@ class Pathway(object):
             self.roles.add(PathwayRole.INTERNAL)
         if self.learning_components:
             self.roles.add(PathwayRole.LEARNING)
+
+    # TODO: consider if appropriate to make Pathway a Component type or
+    # both of some shared superclass in the same vein as
+    # UsesParametersMeta
+    def _initialize_parameters(self):
+        self.parameters = self.Parameters(owner=self, parent=type(self).parameters)
+        for param in self.parameters:
+            param.set(param.default_value)
 
     @property
     def input(self):
@@ -700,3 +720,26 @@ class Pathway(object):
                     assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                                   f"has PathwayRole.LEARNING assigned but no 'learning_function' attribute."
                 return None
+
+    @property
+    def _optimization_projections(self):
+        """
+        Contains projections that can have optimization parameter values
+        defined by this Pathway
+        """
+        opt_projections = set(filter(lambda o: isinstance(o, Projection), self.pathway))
+        # can use only if self.composition is not None and the
+        # composition is (in?) the proxy outer node composition(s?)
+        proxies = {p: p._proxy_for for p in opt_projections if p._proxy_for}
+        opt_projections.update(proxies)
+
+        outer_only_projs = set()
+        nested_comps = self.composition._get_nested_compositions()
+        for p in opt_projections:
+            if not self.composition._controls_optimization_for_projection(p, nested_comps):
+                outer_only_projs.add(p)
+
+        if len(outer_only_projs):
+            opt_projections.difference_update(outer_only_projs)
+
+        return opt_projections
