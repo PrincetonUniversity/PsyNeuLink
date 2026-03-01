@@ -1523,7 +1523,7 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 
 .. _Composition_Input_Dictionary_Entries:
 
-The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
+The simplest way to specify inputs (including targets for learning) is using a dict, in which each entry specifies
 the inputs to a given `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`. The key for each entry of the dict is
 either an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` or the `InputPort` of one, and the value is the input
 to be provided to it for each `TRIAL <TimeScale.TRIAL>` of execution.  A diciontary can have entries for *either* an
@@ -1676,6 +1676,7 @@ dictionary for that Mechanism generates and error.
 This can be done in either the **targets** argument of the Composition's `learn() <Composition.learn>`,
 or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
 
+  # TEACHER_TARGET BREADCRUMB:  ADD MENTION OF TARGET Nodes and get_target_nodes() METHOD
   * **targets** (dict): this is the simplest way of specifying target values; the key for each entry is an
     `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (i.e., the final `Node <Composition_Nodes>` of a `learning Pathway
     <Composition_Learning_Pathway>` or the `OutputPort` of one), and the value is the target value used to
@@ -1687,11 +1688,12 @@ or in its **inputs** argument along with the inputs for the `INPUT` Nodes:
     a list of the TARGET_MECHANISMs for a Composition can be obtained using its `get_target_nodes()
     <Composition.get_target_nodes>` method.
 
+  # TEACHER_TARGET BREADCRUMB:  INTEGRATE INTO TEXT ABOVE
   .. note::
      `TARGET_MECHANISMs <Composition_Learning_Components>` can also be used as entries in the **targets** dict,
      alt though this will elicit a warning indicating that the standard way to specify targets is one of the above.
 
-In either case, the target values in the dict must be formatted as described in under <Composition_Input_Dictionary>`.
+In either case, the target values in the dict must be formatted as described under <Composition_Input_Dictionary>`.
 The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
 can be seen using its `get_input_format <Composition.get_input_format>` method.
 
@@ -7983,17 +7985,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # Move creation of LearningProjections and learning-related projections (MappingProjections) here
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
-    def get_target_nodes(self)->list:
+    def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
         """Return a list of all `TARGET_MECHANISM <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
         """
         target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
         if not target_nodes:
+            # No TARGET Nodes were found
             if not self.learning_components:
                 warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            else:
-                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
+            # MODIFIED TEACHER_TARGET OLD:
+            # else:
+            #     assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
+            # MODIFIED TEACHER_TARGET NEW:
+            elif (hasattr(self, 'targets') and
+                    len([v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET])):
+                # Should be TARGET Nodes since they were specified in the **targets** arg of the constructor
+                assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
+            # MODIFIED TEACHER_TARGET END
         return target_nodes
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
@@ -8473,15 +8483,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # comparator = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
         # learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
-        # If target and comparator already exist (due to overlapping pathway), use those
         try:
+            # If target already exisits from overlapping pathway, use that
             target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            objective_mechanism = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
-
-        # Otherwise, create new ones
         except KeyError:
-            target_mechanism = ProcessingMechanism(name=self._get_target_name(output_source),
-                                                   default_variable=output_source.output_ports[0].value)
+            target_mechanism_name = self._get_target_name(output_source)
+            try:
+                # If target already exists due to construction elsewhere (such as pytorch_representation), use that
+                target_mechanism = self.nodes[target_mechanism_name]
+            except (KeyError, TypeError):
+                # Else, construct a new one
+                target_mechanism = ProcessingMechanism(name=target_mechanism_name,
+                                                       default_variable=output_source.output_ports[0].value)
+
+        try:
+            # If Comparator already exists (from overlapping pathway),use that
+            objective_mechanism = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
+        except KeyError:
+            # Otherwise, construct a new one:
             # Base for objective_mechanism input_ports:
             sample={NAME: SAMPLE,
                     VARIABLE: output_source.output_ports[0].value}
@@ -9665,7 +9684,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
                 target_nodes = [t for t in comparator_afferent_mechanisms
                                 if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
+                                    # and NodeRole.LEARNING in self.get_roles_by_node(t)
+                                    )]
 
                 if len(target_nodes) != 1:
                     # Invalid specification: no valid target nodes or ambiguity in which target node to choose
@@ -9677,7 +9697,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_values_for_target_nodes
 
-    def _parse_targets_spec(self, inputs, targets, execution_mode, context):
+    def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -9717,43 +9737,64 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         # TEACHER_TARGET BREADCRUMB: BREAK THIS OUT AS ITS OWN METHOD AND OVERRIDE IN AUTODIFF
-        def _validate_targets_spec(target_specs:list)->bool:
+        def _validate_targets_spec(target_specs_from_learn_method:list, context, base_context)->dict or None:
             """Validate dict specification for samples and targets in learn() method of AutodiffComposition:
             Ensure that:
                 - number of entries in dict equals number of TARGET_MECHANISMS in Composition
                 - keys are either sample port, sample node, or TARGET nodes
-            Warn if keys are TARGET Nodes (OK, but sample Node specifiations are simpler and clearer
+            Warn if keys are existing TARGET Nodes (OK, but sample Node specifications are simpler and clearer
+            Convert all targets specifie as Mechanism to their primary OutputPort
+
+            Return dict of {target as output_port : value or 'TARGET'}
             """
 
-            # Standardize on use of output_ports for designating targets
-            target_specs_as_ports = {}
-            for target_spec, value in target_specs.items():
-                # convert any targets specified as Mechanisms to its primary OutputPort
-                if isinstance(target_spec, Mechanism_Base):
-                    target_spec = target_spec.output_port
-                assert isinstance(target_spec, OutputPort), \
-                    (f"PROGRAM ERROR: target specification in call to _parse_targets_spec for '{self.name}'"
-                     f"is not a Mechanism or an OutputPort -- shoudl have been caught in _validate_targets")
-                target_specs_as_ports[target_spec] = value
+            constructor_has_target_specs = bool(hasattr(self, 'targets') and self.targets)
+            learn_method_has_target_specs = bool(target_specs_from_learn_method)
 
-            # Check for any target specs in **targets** arg of learn() that are also in **inputs** arg
-            # TEACHER_TARGET BREADCRUMB: WHAT IF inputs has port specifications?  CONVERT THAT TO PORTS TOO?
-            target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
-            duplicate_targets = sorted([item.name for item in inputs if item in target_specs_as_mechs])
-            if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
-                warnings.warn(f"There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' "
-                              f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); This "
-                              f"is not technically a problem, but it is redundant; one or the other is sufficient.")
-                self._warned_about_targets_mechs_in_inputs_and_targets = True
-
-            # Check that the number of target specifications equals the number of TARGET Nodes and learnable pathways
-            TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
+            num_targets_specified_in_learn = len(target_specs_from_learn_method) if target_specs_from_learn_method else 0
+            # # MODIFIED TEACHER_TARGET OLD:
+            # TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
+            # MODIFIED TEACHER_TARGET NEW:
+            TARGET_Nodes_in_comp = self.get_target_nodes(execution_mode, context, base_context)
+            # MODIFIED TEACHER_TARGET END
             num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
-            num_targets_specified_in_learn = len(target_specs_as_ports)
+
+            target_specs_as_ports = {}
+            target_specs_as_mechs = []
+
+            if learn_method_has_target_specs:
+                # Standardize on use of output_ports for designating targets
+                for target_spec, value in target_specs_from_learn_method.items():
+                    # convert any targets specified as Mechanisms to its primary OutputPort
+                    if isinstance(target_spec, Mechanism_Base):
+                        target_spec = target_spec.output_port
+                    assert isinstance(target_spec, OutputPort), \
+                        (f"PROGRAM ERROR: target specification in call to _parse_targets_spec for '{self.name}'"
+                         f"is not a Mechanism or an OutputPort -- should have been caught in _validate_targets")
+                    target_specs_as_ports[target_spec] = value
+
+                # Check for any target specs in **targets** arg of learn() that are also in **inputs** arg
+                # TEACHER_TARGET BREADCRUMB: WHAT IF inputs has port specifications?  CONVERT THAT TO PORTS TOO?
+                target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
+                duplicate_targets = sorted([item.name for item in inputs if item in target_specs_as_mechs])
+                if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
+                    warnings.warn(f"There are one or more TARGET Nodes specified in both the 'inputs' and 'targets' "
+                                  f"args of the learn() method for {self.name} ({' ,'.join(duplicate_targets)}); This "
+                                  f"is not technically a problem, but it is redundant; one or the other is sufficient.")
+                    self._warned_about_targets_mechs_in_inputs_and_targets = True
+
+                # Check that the number of target specifications equals the number of TARGET Nodes and learnable pathways
+                # # MODIFIED TEACH_TARGET OLD:
+                # num_targets_specified_in_learn = len(target_specs_as_ports)
+                # MODIFIED TEACH_TARGET NEW:
+                assert num_targets_specified_in_learn == len(target_specs_as_ports), \
+                    f"PROGRAM ERROR: number of target_specs_as_ports not equal to number of targets specified in learn"
+                # MODIFIED TEACH_TARGET END
 
             if hasattr(self, 'targets') and self.targets:
                 total_num_target_specs_in_constructor = len(self.targets)
-                num_TARGETS_specified_in_constructor = len([v for v in self.targets if v[1] == TARGET])
+                num_TARGETS_specified_in_constructor = len([v for v in self.targets
+                                                            if isinstance(v, tuple) and v[1] == TARGET])
                 if num_targets_specified_in_learn != num_TARGETS_specified_in_constructor:
                     # If **targets** was specified in the constructor, then the number of specified with 'TARGET' there
                     # must equal the number specified in **targets** of learn here
@@ -9767,8 +9808,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"in the 'targets' argument of the constructor for '{self.name}' must equal the number "
                         f"of learnable pathways ({self._num_learnable_pathways}) in the Composition.")
                 self.num_target_specs = total_num_target_specs_in_constructor
-            else:
 
+            else:
                 if num_targets_specified_in_learn != num_TARGET_Nodes_in_comp:
                     # Since **targets** arg of the constructor was not specified, then TARGET Nodes should have been
                     # automatically constructred, and the number in **targets** arg of learn() should be equal to that
@@ -9788,7 +9829,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
             sample_nodes = []
             for target in TARGET_Nodes_in_comp:
+                # MODIFIED TEACHER_TARGET OLD:
                 sample_node = target.efferents[0].receiver.owner.sample.owner
+                # # MODIFIED TEACHER_TARGET NEW:
+                # sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items()
+                #                 #                    if t.owner is target)
+                # MODIFIED TEACHER_TARGET END
                 if isinstance(sample_node, CompositionInterfaceMechanism):
                     _, sample_node, _ = sample_node._get_source_info_from_output_CIM(target.efferents[0].receiver.owner.sample)
                 sample_nodes.append(sample_node)
@@ -9819,10 +9865,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # TEACHER_TARGET BREADCRUMB:
         #                 IF None, NOT CALLED WHEN self.targets (from construtor) SO  _validate_targets_spec
         #                 IF THIS IS {} IT WORKS, AS IT WON"T BE SKIPPED AND WILL ALLOW ITERS
-        if targets is not None:
-            target_specs_as_ports = _validate_targets_spec(targets)
+        #                 RELEVANT TESTS:
+        #                 - test_output_port_as_sample_for_loss_mech()
+        #                 - test_args_for_target_spec_errors()
+        # MODIFIED TEACHER_TARGET OLD:
+        # if targets is not None:
+        #     target_specs_as_ports = _validate_targets_spec(targets)
+        #     targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
+        #     inputs = _recursive_update(inputs, targets)
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # If **targets** specified either in learn() or constructor for AutoodiffComposition:
+        # if targets is not None or (hasattr(self, 'targets') and self.targets):
+        #     target_specs_as_ports = _validate_targets_spec(targets)
+        #     targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
+        #     inputs = _recursive_update(inputs, targets)
+
+        # MODIFIED TEACHER_TARGET NEWER:
+        # If **targets** arg not specified in learn(), look for and extract any targets specified in **inputs** arg
+        if targets is None:
+            inputs_copy = inputs.copy()
+            targets = {}
+            for t in inputs.copy():
+                if t in self.get_nodes_by_role(NodeRole.TARGET):
+                    targets[t] = inputs.pop(t)
+
+        target_specs_as_ports = _validate_targets_spec(targets, context, base_context)
+        if target_specs_as_ports:
             targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
             inputs = _recursive_update(inputs, targets)
+        # MODIFIED TEACHER_TARGET END
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >

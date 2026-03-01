@@ -1013,7 +1013,8 @@ class TestExecution:
                                    [[400., 500., 600.], [444., 555., 666.]],
                                    [[25., 50., 75.], [27.75, 55.5,  83.25]],
                                    [[2.5, 3.125, 3.75 ], [2.5625, 3.1875, 3.8125]]]
-                em.learn(inputs=inputs, execution_mode=exec_mode)
+                targets = {target:target.value for target in em.get_target_nodes()}
+                em.learn(inputs=inputs, targets=targets, execution_mode=exec_mode)
                 np.testing.assert_equal(em.memory, expected_memory)
 
     @pytest.mark.composition
@@ -1171,7 +1172,9 @@ class TestExecution:
                   [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
 
-        result = EGO.learn(inputs={'STATE':INPUTS}, learning_rate=.5, execution_mode=pnl.ExecutionMode.PyTorch)
+        result = EGO.learn(inputs={'STATE':INPUTS},
+                           learning_rate=.5,
+                           execution_mode=pnl.ExecutionMode.PyTorch)
 
         if not field_weight_learning:
             expected = [

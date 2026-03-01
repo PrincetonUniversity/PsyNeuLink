@@ -282,8 +282,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
         variable = Parameter(None, read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(0.3, modulable=True)
         function = Parameter(PredictionErrorDeltaFunction, stateful=False, loggable=False)
-        sample = None
-        target = None
 
     @check_user_specified
     @beartype
@@ -298,6 +296,9 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  prefs:  Optional[ValidPrefSet] = None,
                  **kwargs
                  ):
+
+        sample = sample.output_port if isinstance(sample, Mechanism_Base) else sample
+        target = target.output_port if isinstance(target, Mechanism_Base) else target
 
         super().__init__(
             sample=sample,

@@ -308,7 +308,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         if subclass_components is None:
             self._early_init(composition, device)
             # Instantiate standard PytorchWrappers for Mechanisms and Projections, and execution_sets used in forward()
-            _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context)
+            _node_wrapper_pairs = self._instantiate_pytorch_mechanism_wrappers(composition, device, context, base_context)
             self._construct_node_wrapper_maps(_node_wrapper_pairs)
             _projection_wrapper_pairs = self._instantiate_pytorch_projection_wrappers(composition, device, context, base_context)
             self._construct_projection_wrapper_maps(_projection_wrapper_pairs)
@@ -478,7 +478,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
             self.node_wrappers.remove(node)
         self._modules_dict.pop(node.name)
 
-    def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context)->list:
+    def _instantiate_pytorch_mechanism_wrappers(self, composition, device, context, base_context)->list:
         """Instantiate PytorchMechanismWrappers for Mechanisms in the Composition being wrapped"""
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
@@ -520,7 +520,8 @@ class PytorchCompositionWrapper(torch.nn.Module):
                                                              use=[LEARNING, SYNCH, SHOW_PYTORCH],
                                                              dtype=self.torch_dtype,
                                                              device=device,
-                                                             context=context)
+                                                             context=context,
+                                                             base_context=base_context)
                 else:
                     continue
                 pytorch_node_wrapper._is_bias = node in self.composition.get_nodes_by_role(NodeRole.BIAS)
@@ -2479,7 +2480,8 @@ class PytorchMechanismWrapper(torch.nn.Module):
                  dtype:torch.dtype,                             # needed for Pytorch
                  device:str,                                    # needed for Pytorch
                  subclass_specifies_function:bool=False,        # used to determine whether to assign function here
-                 context=None):
+                 context=None,
+                 base_context=None):
         # # MODIFIED 7/10/24 NEW: NEEDED FOR torch MPS SUPPORT
         # super().__init__()
         # MODIFIED 7/10/24 END

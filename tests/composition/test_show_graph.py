@@ -823,10 +823,6 @@ class TestControl:
     def test_of_show_nested_show_cim_and_show_node_structure(self,
                                                              show_graph_kwargs,
                                                              expected_output):
-        # TEACH_TARGET BREADCRUMB: DELETE AFTER DEBUGGING
-        if 'show_node_structure' not in show_graph_kwargs or show_graph_kwargs['show_node_structure']:
-            return
-
         # Inner Composition
         ia = TransferMechanism(name='ia')
         icomp = Composition(name='icomp', pathways=[ia])

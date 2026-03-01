@@ -299,7 +299,8 @@ class CompositionRunner():
                                call_after_minibatch=None,
                                early_stopper=None,
                                execution_mode:ExecutionMode=ExecutionMode.Python,
-                               context=None) -> Generator[Tuple[np.ndarray, Optional[int]], None, None]:
+                               context=None,
+                               base_context=None) -> Generator[Tuple[np.ndarray, Optional[int]], None, None]:
 
         assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
         assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
@@ -328,9 +329,10 @@ class CompositionRunner():
                     try:
                         self._composition._stim_num = i  # For debugging
                         input_batch, _ = self._composition._parse_targets_spec(inputs=inputs(idx),
-                                                                                targets=None,
-                                                                                execution_mode=execution_mode,
-                                                                                context=context)
+                                                                               targets=None,
+                                                                               execution_mode=execution_mode,
+                                                                               context=context,
+                                                                               base_context=base_context)
                     except:
                         break
                     if input_batch is None:
@@ -442,9 +444,10 @@ class CompositionRunner():
             # By-pass parse learning spec if we are dealing with sequences for now
             if not (isinstance(stim_input, list) and all(isinstance(i, dict) for i in stim_input)):
                 stim_input, num_input_trials = self._composition._parse_targets_spec(inputs=stim_input,
-                                                                                      targets=stim_target,
-                                                                                      execution_mode=execution_mode,
-                                                                                      context=context)
+                                                                                     targets=stim_target,
+                                                                                     execution_mode=execution_mode,
+                                                                                     context=context,
+                                                                                     base_context=base_context)
             else:
                 num_trials = len(stim_input)
 
@@ -475,7 +478,8 @@ class CompositionRunner():
                                                                 call_after_minibatch=call_after_minibatch,
                                                                 early_stopper=early_stopper,
                                                                 execution_mode=execution_mode,
-                                                                context=context)
+                                                                context=context,
+                                                                base_context=base_context)
             else:
                 minibatched_input = self._batch_inputs(inputs=stim_input,
                                                        epochs=stim_epoch,

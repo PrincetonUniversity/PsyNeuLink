@@ -1222,7 +1222,6 @@ class AutodiffComposition(Composition):
                         ("PROGRAM ERROR: 1st item of tuple specification for targets arg should be OutputPort by now.")
                     assert isinstance(item[1], OutputPort) or item[1] == TARGET, \
                         ("PROGRAM ERROR: 2nd item of tuple specification for targets arg should be OutputPort by now.")
-                return None
 
         def _parse_LearningScale_param(self, value):
             try:
@@ -1440,9 +1439,16 @@ class AutodiffComposition(Composition):
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
         pathways = self._get_pytorch_backprop_pathways(context)
+        # # MODIFIED TEACHER_TARGET OLD:
+        # self._num_learnable_pathways = len([pway for pway in pathways
+        #                                     if any(item.learnable for item in pway
+        #                                             if isinstance(item, MappingProjection))])
+        # # MODIFIED TEACHER_TARGET NEW:
         self._num_learnable_pathways = len([pway for pway in pathways
-                                            if any(item.learnable
-                                                   for item in pway if isinstance(item, MappingProjection))])
+                                            if (not isinstance(pway[-1], LossMechanism) and
+                                                any(item.learnable for item in pway
+                                                    if isinstance(item, MappingProjection)))])
+        # MODIFIED TEACHER_TARGET END
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
@@ -2304,7 +2310,7 @@ class AutodiffComposition(Composition):
         """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
         self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
                                                      context=context, base_context=base_context)
-        return super(AutodiffComposition, self).get_target_nodes()
+        return super(AutodiffComposition, self).get_target_nodes(context, base_context)
 
     def autodiff_forward(self,
                          inputs, targets,
@@ -2616,13 +2622,21 @@ class AutodiffComposition(Composition):
 
         # Assign target values specified in learn() to TARGET Nodes
         for port, value in target_specs.copy().items():
-            if port in self.sample_port_to_target_port_map:
-                # Use TARGET Node (target_port owner) for key
-                target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
+            # # MODIFIED TEACHER_TARGET OLD:
+            # if port in self.sample_port_to_target_port_map:
+            #     # Use TARGET Node (target_port owner) for key
+            #     target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
+            # MODIFIED TEACHER_TARGET NEW:
+            # port be specified for sample or target; what matters is
+            sample, target = next((item for item in self.sample_port_to_target_port_map.items()
+                                   if port in item), (None,None))
+            if sample:
+                target_values_for_target_nodes[self.sample_port_to_target_port_map[sample].owner] = value
+            # MODIFIED TEACHER_TARGET END
 
         return target_values_for_target_nodes
 
-    def _parse_targets_spec(self, inputs, targets, execution_mode, context):
+    def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
         - constructor: validate entries since Composition does not support **targets** arg in constructor
         - learn(): entries reauired to match ones assigned TARGET as value in **targets** dict of constructor
@@ -2682,7 +2696,8 @@ class AutodiffComposition(Composition):
                               f"target values during learning: {', '.join(problem_node_names)}.")
                 self._warned_about_unspecified_target_in_learn = True
 
-        stim_input, num_input_trials = super()._parse_targets_spec(inputs, targets, execution_mode, context)
+        stim_input, num_input_trials = super()._parse_targets_spec(inputs, targets,
+                                                                   execution_mode, context, base_context)
 
         # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
         if not callable(inputs):

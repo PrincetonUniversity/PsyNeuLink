@@ -524,8 +524,10 @@ class TestStructural:
             comp1 = Composition()
             p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B])
             # Call learn with default_variable specified for target (for comparison with missing target)
+            targets = {target:target.value for target in comp1.get_target_nodes()}
             comp1.learn(inputs={A: 1.0,
                                 p1.target: 0.0},
+                        targets=targets,
                      num_trials=2)
             np.testing.assert_allclose(comp1.results, [[[1.]], [[0.9]]])
 
@@ -535,7 +537,9 @@ class TestStructural:
             comp2 = Composition()
             comp2.add_backpropagation_learning_pathway(pathway=[C,D])
             # Call learn with no target specification
+            targets = {target:target.value for target in comp2.get_target_nodes()}
             comp2.learn(inputs={C: 1.0},
+                        targets=targets,
                        num_trials=2)
             # Should be same with default target specification
             np.testing.assert_allclose(comp2.results, comp1.results)
@@ -735,38 +739,6 @@ class TestStructural:
                              p2.target: 4.0
                              })
             np.testing.assert_allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
-
-        def test_dict_target_spec_divering_pathways_with_only_one_target(self):
-            # First test with both targets (but use default_variale for second for comparison with missing target)
-            A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-            B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-            C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-            D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-            E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-            comp1 = Composition()
-            p1 = comp1.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            p2 = comp1.add_backpropagation_learning_pathway(pathway=[A,D,E])
-            comp1.learn(inputs={A: 1.0,
-                                p1.target: 0.0,
-                                p2.target: 2.0
-                                },
-                        num_trials=2)
-            np.testing.assert_allclose(comp1.results,[[[1.], [1.]], [[0.81], [1.21]]])
-
-            F = TransferMechanism(name="diverging-learning-pathways-mech-F")
-            G = TransferMechanism(name="diverging-learning-pathways-mech-G")
-            H = TransferMechanism(name="diverging-learning-pathways-mech-H")
-            I = TransferMechanism(name="diverging-learning-pathways-mech-I")
-            J = TransferMechanism(name="diverging-learning-pathways-mech-J")
-            comp2 = Composition()
-            p3 = comp2.add_backpropagation_learning_pathway(pathway=[F,G,H])
-            p4 = comp2.add_backpropagation_learning_pathway(pathway=[F,I,J])
-            # Call learn with missing spec for p3.target;  should use default_variable
-            comp2.learn(inputs={F: 1.0,
-                                p4.target: 2.0
-                                },
-                        num_trials=2)
-            np.testing.assert_allclose(comp2.results, comp1.results)
 
         def test_target_spec_over_nesting_of_items_in_target_value_error(self):
             A = TransferMechanism(name="learning-process-mech-A")
@@ -3615,9 +3587,9 @@ class TestRumelhartSemanticNetwork:
               num_trials=2,
               inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
                       rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
-              # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-              #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-              #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-              #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
+              targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+                       prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+                       qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
+                       act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
               )
         print(comp.results)

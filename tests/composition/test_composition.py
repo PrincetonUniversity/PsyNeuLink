@@ -6407,7 +6407,8 @@ class TestInputSpecifications:
             }
 
         xor_comp.learn(inputs=test_function,
-              num_trials=4)
+                       targets=xor_targets,
+                       num_trials=4)
 
     @pytest.mark.control
     @pytest.mark.parametrize(
