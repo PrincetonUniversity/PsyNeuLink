@@ -3930,6 +3930,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = []
         self.parsed_inputs = False
 
+        # Learning-related attributes
+        self.sample_port_to_target_port_map = {} # {sample OutputPort : TARGET Node OutputPort}
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
 
@@ -9802,11 +9804,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"The number of items ({num_targets_specified_in_learn}) specified in the 'targets' argument "
                         f"of the learn() method for '{self.name}' must equal the number specified with the keyword "
                         f"'TARGET' ({num_TARGETS_specified_in_constructor}) in the 'targets' arg of the constructor.")
-                if total_num_target_specs_in_constructor != self._num_learnable_pathways:
+                if total_num_target_specs_in_constructor != self.num_learnable_pathways:
                     raise CompositionError(
                         f"The number of sample-target pairs ({total_num_target_specs_in_constructor}) specified "
                         f"in the 'targets' argument of the constructor for '{self.name}' must equal the number "
-                        f"of learnable pathways ({self._num_learnable_pathways}) in the Composition.")
+                        f"of learnable pathways ({self.num_learnable_pathways}) in the Composition.")
                 self.num_target_specs = total_num_target_specs_in_constructor
 
             else:
@@ -9816,9 +9818,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
                                            f"'targets' arg of the learn() method for '{self.name}' must equal the "
                                            f"number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
-                    assert num_TARGET_Nodes_in_comp != self._num_learnable_pathways, \
+                    assert num_TARGET_Nodes_in_comp != self.num_learnable_pathways, \
                         (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
-                         f"is not equal to the number of learnable pathways ({self._num_learnable_pathways}).")
+                         f"is not equal to the number of learnable pathways ({self.num_learnable_pathways}).")
                 self.num_target_specs = num_targets_specified_in_learn
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
@@ -9829,11 +9831,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
             sample_nodes = []
             for target in TARGET_Nodes_in_comp:
-                # MODIFIED TEACHER_TARGET OLD:
-                sample_node = target.efferents[0].receiver.owner.sample.owner
+                # # MODIFIED TEACHER_TARGET OLD:
+                # sample_node = target.efferents[0].receiver.owner.sample.owner
                 # # MODIFIED TEACHER_TARGET NEW:
-                # sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items()
-                #                 #                    if t.owner is target)
+                # sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items() if t.owner is target)
+                # MODIFIED TEACHER_TARGET NEWER:
+                # TEACHER_TARGET BREADCRUMB: SHOULD POPULATE sample_port_to_target_port_map FOR COMPOSITION
+                #                            AND THEN REVERT TO "NEW" ABOVE:
+                if self.sample_port_to_target_port_map:
+                    sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items()
+                                       if t.owner is target)
+                else:
+                    sample_node = target.efferents[0].receiver.owner.sample.owner
                 # MODIFIED TEACHER_TARGET END
                 if isinstance(sample_node, CompositionInterfaceMechanism):
                     _, sample_node, _ = sample_node._get_source_info_from_output_CIM(target.efferents[0].receiver.owner.sample)

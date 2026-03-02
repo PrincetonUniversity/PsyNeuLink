@@ -266,7 +266,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             return sender, sender.owner, comp
         return self._get_source_node_for_input_CIM(sender, sender.owner.composition, return_outermost_comp)
 
-    def _get_destination_info_from_input_CIM(self, port, comp=None):
+    def _get_destination_info_from_input_CIM(self, port, comp=None)->tuple:
         """Return Port, Node and Composition for "ultimate" destination of projection to **port**.
         **port**: InputPort or OutputPort of the input_CIM to which the projection of interest projects;
                   used to find destination (key) in output_CIM's port_map.

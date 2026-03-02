@@ -1349,7 +1349,6 @@ class AutodiffComposition(Composition):
 
         self._built_pathways = False
         self.loss_mechs_map = {}  # {LossMechanism : (sample, target)} tuple of sender Ports
-        self.sample_port_to_target_port_map = {} # {sample OutputPort : TARGET Node OutputPort}
         self._trained_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace trained OUTPUT Nodes
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
@@ -1438,27 +1437,27 @@ class AutodiffComposition(Composition):
         base_context = base_context or Context()
 
         # Construct a pathway(s) for each INPUT Node (including BIAS Nodes), except the TARGET Node)
-        pathways = self._get_pytorch_backprop_pathways(context)
+        self.pytorch_backprop_pathways = self._get_pytorch_backprop_pathways(context)
         # # MODIFIED TEACHER_TARGET OLD:
         # self._num_learnable_pathways = len([pway for pway in pathways
         #                                     if any(item.learnable for item in pway
         #                                             if isinstance(item, MappingProjection))])
-        # # MODIFIED TEACHER_TARGET NEW:
-        self._num_learnable_pathways = len([pway for pway in pathways
-                                            if (not isinstance(pway[-1], LossMechanism) and
-                                                any(item.learnable for item in pway
-                                                    if isinstance(item, MappingProjection)))])
+        # # # MODIFIED TEACHER_TARGET NEW:
+        # self._num_learnable_pathways = len([pway for pway in pathways
+        #                                     if (not isinstance(pway[-1], LossMechanism) and
+        #                                         any(item.learnable for item in pway
+        #                                             if isinstance(item, MappingProjection)))])
         # MODIFIED TEACHER_TARGET END
 
         if execution_mode is pnlvm.ExecutionMode.PyTorch:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
-            self._instantiate_loss_components(pathways, context, base_context)
+            self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
 
         else:
         # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
             #    that will construct learning components, including TARGET Nodes for all TERMINAL Nodes
-            for pathway in pathways:
+            for pathway in self.pytorch_backprop_pathways:
                 self.add_backpropagation_learning_pathway(pathway=pathway,
                                                           loss_spec=self.loss_spec)
 
@@ -1487,22 +1486,26 @@ class AutodiffComposition(Composition):
         afferent = input_node.input_port.path_afferents[0] if input_node.input_port.path_afferents else None
         queue = deque([(input_node, afferent, self)])  # Queue of nodes to visit in breadth-first
 
-        def create_pathway(current_comp, node:ProcessingMechanism_Base, afferent_proj:MappingProjection)->list:
+        def create_pathway(current_comp, terminal_node:ProcessingMechanism_Base, afferent_proj:MappingProjection)->list:
             """Create pathway starting with node (presumably an output NODE) and working backward via dependency_dict"""
             pathway = []
             if isinstance(afferent_proj.receiver.owner, CompositionInterfaceMechanism):
                 cim_output_port = afferent_proj.receiver.owner._get_output_port_for_input_port(afferent_proj.receiver)
                 afferent_proj = cim_output_port.efferents[0]
-            assert node == afferent_proj.receiver.owner, \
+            assert terminal_node == afferent_proj.receiver.owner, \
                 (f"PROGRAM ERROR: Bad afferent_proj passed to _create_pathways "
-                 f"for OUTPUT Node {node.name} in {self.name}")
+                 f"for OUTPUT Node {terminal_node.name} in {self.name}")
             entry = (afferent_proj.receiver, afferent_proj.receiver.path_afferents.index(afferent_proj))
+            # TEACHER_TARGET BREADCRUMB: entry in dependency_dict FAILS TO MAKE IT PAST input_CIM
+            #                            SINCE CIMs ARE NOT IN dependency_dict, AS LEAST NOT FOR EMCOMPOSITION
+            #                            SHOULD PROXY / DIRECT_PROJ BE IN DEPENDENCY_DICT?
             while entry in dependency_dict:
                 # Prevent cycle from recurrent pathway
                 if entry in pathway:
                     break
                 pathway.insert(0, entry)
                 entry = dependency_dict[entry]
+                assert True
             pathway.insert(0, entry)
             # Only allow odd number of components since there must be one fewer Projections than Mechanisms
             assert len(pathway) % 2, \
@@ -2092,19 +2095,43 @@ class AutodiffComposition(Composition):
         # Dereference InputPort of sender and index of its afferent
         sender_port = afferent_proj.receiver
         sender_idx = sender_port.path_afferents.index(afferent_proj)
+        # MODIFIED TEACHER_TARGET NEW:
+        if isinstance(sender_port.owner, CompositionInterfaceMechanism):
+            sender_to_cim_info = sender_port.owner._get_source_node_for_input_CIM(sender_port)
+            if sender_to_cim_info:
+                _, sender_to_cim_mech, _ = sender_to_cim_info
+                # Find direct Projection from sender_to_cim_mech to sender,
+                direct_proj_to_sender_port = next((p for p in sender.path_afferents
+                                                   if p.sender.owner == sender_to_cim_mech), None)
+                if direct_proj_to_sender_port:
+                    # Use that to dereference sender_port and sender_idx
+                    sender_port = direct_proj_to_sender_port.receiver
+                    sender_idx = sender.path_afferents.index(direct_proj_to_sender_port)
+        # MODIFIED TEACHER_TARGET END
 
         # Dereference InputPort of receiver and index of its afferent
         if isinstance(projection.receiver.owner, CompositionInterfaceMechanism):
-            cim_output_port = projection.receiver.owner._get_output_port_for_input_port(projection.receiver)
-            receiver_proj = cim_output_port.efferents[0]
-            receiver_port = receiver_proj.receiver
-            receiver_idx = receiver_port.path_afferents.index(receiver_proj)
+            # Get Projection from sender to receiver_port of input_CIM
+            input_cim_output_port = projection.receiver.owner._get_output_port_for_input_port(projection.receiver)
+            # Use that to dereference receiver_port
+            proj_from_input_cim_to_receiver = input_cim_output_port.efferents[0]
+            receiver_port = proj_from_input_cim_to_receiver.receiver
+            proj_to_receiver = next((p for p in receiver_port.path_afferents
+                                     if p.sender.owner == sender_port.owner),None)
+            # Dereference receiver_idx
+            if proj_to_receiver:
+                receiver_idx = receiver_port.path_afferents.index(proj_to_receiver)
+            else:
+                proj_to_receiver = projection
+                receiver_idx = receiver_port.path_afferents.index(proj_from_input_cim_to_receiver)
         else:
+            proj_to_receiver = projection
             receiver_port = projection.receiver
             receiver_idx = receiver_port.path_afferents.index(projection)
 
-        dependency_dict[(receiver_port, receiver_idx)] = projection
-        dependency_dict[projection] = (sender_port, sender_idx)
+        dependency_dict[(receiver_port, receiver_idx)] = proj_to_receiver
+        dependency_dict[proj_to_receiver] = (sender_port, sender_idx)
+        assert True
 
         queue.append((receiver_port.owner, projection, comp))
 
@@ -2627,7 +2654,7 @@ class AutodiffComposition(Composition):
             #     # Use TARGET Node (target_port owner) for key
             #     target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
             # MODIFIED TEACHER_TARGET NEW:
-            # port be specified for sample or target; what matters is
+            # port to be specified for sample or target; what matters is
             sample, target = next((item for item in self.sample_port_to_target_port_map.items()
                                    if port in item), (None,None))
             if sample:
@@ -3612,6 +3639,25 @@ class AutodiffComposition(Composition):
             raise AutodiffCompositionError(f"'{self.name}' has a nested Composition, so PyTorch mode must be used "
                                            f"for learning; use 'show_pytorch=True' in the call to show_graph().")
         return self._show_graph.show_graph(*args, **kwargs)
+
+    @property
+    def num_learnable_pathways(self):
+        """Return number of unique learnable pathways in the AutodiffComposition
+        Learnable pathways are ones that end in a non-loss Node and contain at least one learnableMappingProjection;
+        Unique learnable pathways are defined as those that have different sets of learnable MappingProjections.
+        NOTE: THis method is used to insure that all learnable pathways are assigned a TARGET Node and LossMechanism.
+        """
+        # Get pathways that end in a non-loss Node and contain at least one learnable MappingProjection
+        learning_pathways = [pway for pway in self.pytorch_backprop_pathways
+                             if (not isinstance(pway[-1], LossMechanism) and
+                                 any(item.learnable for item in pway if isinstance(item, MappingProjection)))]
+        # Get learnable Projections in each pway:
+        learnable_projs_in_pway = [set(item for item in pway if isinstance(item, MappingProjection) and item.learnable)
+                                    for pway in learning_pathways]
+        # Reduce to number of unique sets of learnable Projections in learnable pathways
+        num_learnable_pathways = len(set(tuple(projs) for projs in learnable_projs_in_pway))
+
+        return num_learnable_pathways
 
     @property
     def sample_nodes(self):

@@ -1253,6 +1253,15 @@ class GRUComposition(AutodiffComposition):
             return loss_function(sample, target)
 
     @property
+    def num_learnable_pathways(self):
+        """Override to return just 1,
+        Since there is only one pathway through which learning can occur in GRUComposition:
+        the direct pathway through the GRU mechanism (i.e., self.gru_mech), and no explicilty learnable Projections
+        (since that occurs within the Pytorch module itself"""
+        return 1
+
+
+    @property
     def w_ih_learning_rate(self):
         from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import INPUT_TO_HIDDEN
         pytorch_rep = self._build_pytorch_representation()
