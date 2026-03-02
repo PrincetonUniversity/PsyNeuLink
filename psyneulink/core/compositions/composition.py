@@ -7997,15 +7997,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self.learning_components:
                 warnings.warn(f"The 'get_target_nodes()' method for {self.name} was called, "
                               f"but it does not (yet) have any learning pathways.")
-            # MODIFIED TEACHER_TARGET OLD:
-            # else:
-            #     assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though it has learning pathways."
-            # MODIFIED TEACHER_TARGET NEW:
             elif (hasattr(self, 'targets') and
                     len([v for v in self.targets if isinstance(v, tuple) and v[1] == TARGET])):
                 # Should be TARGET Nodes since they were specified in the **targets** arg of the constructor
                 assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
-            # MODIFIED TEACHER_TARGET END
         return target_nodes
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway, default_projection_matrix=None):
