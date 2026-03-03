@@ -232,7 +232,7 @@ class LossMechanism(#ModulatoryMechanism_Base,
                 from psyneulink.core.globals.keywords import Loss
                 import torch.nn
 
-                if isinstance(function, Loss):
+                if function in Loss:
                     return True
                 # Check for torch.nn loss function instance
                 if isinstance(function, torch.nn.modules.loss._Loss):
