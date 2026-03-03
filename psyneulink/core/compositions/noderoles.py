@@ -311,7 +311,8 @@ class NodeRolesManager(object):
         """Assign NodeRole.INPUT to appropriate Nodes that receive ControlProjections
         ControlMechanisms create MappingProjections to inner composition parameter CIMs,
         which may or may not create scheduler dependencies (determined by user action).
-        If an inner Composition is not ORIGIN because of this condition, add it as INPUT anyway."""
+        If an inner Composition is not ORIGIN because of this condition, add it as INPUT anyway.
+        """
         for child in composition.graph_processing.comp_to_vertex[node].children:
             for parent in child.parents:
                 # MappingProjections from non-ControlMechanisms
@@ -359,9 +360,10 @@ class NodeRolesManager(object):
                 #     self._remove_node_role(node, NodeRole.OUTPUT)
 
     def _CYCLE_Nodes_as_INPUT(self, composition, input_nodes:dict):
-        """"Assign list of input nodes all Nodes of a cycle if none receive any other inputs
+        """Assign list of input nodes all Nodes of a cycle if none receive any other inputs
         ex: tests/composition/test_composition.py::TestNodeRoles::test_BIAS
-             Processing of cycles not currently supported for flattened processing_graph"""
+             Processing of cycles not currently supported for flattened processing_graph
+        """
         if composition.graph_processing.cycle_vertices:
             for cycle in composition.graph_processing.cycle_vertices:
                 for i, node in enumerate(cycle):
@@ -883,7 +885,8 @@ class NodeRolesManager(object):
     def get_nodes_by_role(self, *args, **kwargs):
         """Interface to get_nodes_by_role that enforces prior call to _determine_node_roles
         This should be used in general,
-           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion.
+        """
         if self._need_determine_node_roles:
             self._determine_node_roles()
         return self._get_nodes_by_role(*args, **kwargs)
@@ -925,7 +928,8 @@ class NodeRolesManager(object):
     def get_roles_by_node(self, *args, **kwargs):
         """Interface to _get_roles_by_node that enforces prior call to _determine_node_roles
         This should be used in general,
-           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion."""
+           but avoided in cases where it is called from under _determine_node_roles itself to avoid recursion.
+        """
 
         if self._need_determine_node_roles:
             self._determine_node_roles()
