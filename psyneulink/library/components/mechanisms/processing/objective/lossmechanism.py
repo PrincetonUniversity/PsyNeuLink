@@ -86,7 +86,11 @@ Class Reference
 
 """
 
-import torch
+try:
+    import torch
+except (ImportError, ModuleNotFoundError):
+    torch = None
+    torch_available = False
 
 from collections.abc import Iterable
 
@@ -230,10 +234,15 @@ class LossMechanism(#ModulatoryMechanism_Base,
             def is_loss_spec_or_torch_loss(function):
                 # Check for Loss spec
                 from psyneulink.core.globals.keywords import Loss
-                import torch.nn
 
                 if function in Loss:
                     return True
+
+                try:
+                    import torch.nn
+                except ModuleNotFoundError:
+                    return False
+
                 # Check for torch.nn loss function instance
                 if isinstance(function, torch.nn.modules.loss._Loss):
                     return True
