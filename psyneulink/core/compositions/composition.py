@@ -4412,7 +4412,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 node._analyze_graph(context=context)
             except AttributeError as e:
-                if e.name == '_analyze_graph':
+                if "no attribute '_analyze_graph'" in str(e):
                     # Node is not a nested Composition
                     pass
                 else:
