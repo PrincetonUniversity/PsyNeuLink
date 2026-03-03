@@ -3189,7 +3189,7 @@ from PIL import Image
 from beartype import beartype
 
 import psyneulink
-from psyneulink._typing import Any, Callable, Dict, Literal, List, Mapping, Optional, Set, Type, Union
+from psyneulink._typing import Any, Callable, Dict, Literal, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
@@ -4919,7 +4919,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           root_composition=NotImplemented,
                           visited_compositions=NotImplemented,
                           include_cims=NotImplemented,
-                          include_controller=NotImplemented)->list[tuple]:
+                          include_controller=NotImplemented
+                          ) -> List[Tuple]:
         """Recursively search and return all nodes of all nested Compositions
            in a tuple with Composition in which they are nested.
         :return
@@ -9029,7 +9030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return covariates_sources
 
-        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection)->list[list]:
+        def _get_acts_in_out_cov(input_source_output_port, output_source_output_port, learned_projection) -> List[List]:
             """Get shapes of activation_input and activation_output used by LearningMechanism and BackPropagation Fct"""
             # activation_input has more than one value if activation function has more than one argument
             activation_input = [input_source_output_port.value]
@@ -10411,7 +10412,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
     # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
     #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
-    def _aggregate_and_filter_sample_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None)->list:
+    def _aggregate_and_filter_sample_target_specs(self, targets_dicts: Optional[Dict[str, Dict]] = None) -> List:
         """Consolidate all sample and target specifciations in learn() and possibly a sublcass constructor
         In learn() specifications can be in **inputs** or **targets** args, or TARGETS subdict of **inputs**
         For subclass, can be in **targets** arg of constructor

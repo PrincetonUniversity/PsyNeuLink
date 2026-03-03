@@ -41,7 +41,7 @@ import enum
 import toposort
 from copy import copy
 from collections import OrderedDict, deque
-from typing import Union, Literal
+from typing import List, Union, Literal
 
 from psyneulink._typing import Literal, Optional
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
@@ -671,7 +671,7 @@ class NodeRolesManager(object):
         if composition and composition.controller is not None:
             self.nodes_to_roles[composition.controller] = {NodeRole.CONTROLLER}
 
-    def _get_projections(self, component, aff_or_eff:Union[Literal['afferents','efferents']])->list[Projection]:
+    def _get_projections(self, component, aff_or_eff: Union[Literal['afferents', 'efferents']]) -> List[Projection]:
         """Return afferents or efferents of Node filtered for those that are in current Composition"""
         from psyneulink.core.compositions.composition import Composition
         if not isinstance(component, (Port, Mechanism_Base, Composition)):
@@ -1002,7 +1002,7 @@ class NodeRolesManager(object):
             self._determine_node_roles()
         return self._get_roles_by_node(*args, **kwargs)
 
-    def _get_roles_by_node(self, node, scope:Optional[Literal[ALL, NESTED]]=None)->list[NodeRole]:
+    def _get_roles_by_node(self, node, scope: Optional[Literal[ALL, NESTED]] = None) -> List[NodeRole]:
         """Return a list of `NodeRoles <NodeRole>` assigned to **node**.
         If **scope** is not specified, returns roles for the node only if it is at the top level of the Composition.
         If **scope** is *ALL*, the node can be in the top level Compostion or any nested within it.
@@ -1056,7 +1056,7 @@ class NodeRolesManager(object):
             raise NodeRoleError(f"Node ('{node.name}') for which roles were requested is not in '{self.name}' "
                                    f"or any Compositions nested within it.")
 
-    def get_required_roles_by_node(self, node)->list[NodeRole]:
+    def get_required_roles_by_node(self, node) -> List[NodeRole]:
         """
             Return a list of `NodeRoles <NodeRole>` that have been user-assigned to a specified **node**.
 
