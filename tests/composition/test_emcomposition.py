@@ -408,9 +408,9 @@ class TestConstruction:
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_A) == .5
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_B) == .01
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj_KEY_VAL) is False
-        assert proj_KEY_A.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .5
-        assert proj_KEY_B.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) == .01
-        assert proj_KEY_VAL.parameters.learning_rate.get(em.name + pnl.DEFAULT_SUFFIX) is False
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_A) == .5
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_B) == .01
+        assert em.get_optimizer_param_value('learning_rate', projection=proj_KEY_VAL) is False
         # Assert that all non-field_weight Projections are not learnable
         for proj in [p for p in em.pytorch_representation.wrapped_projections
                      if p not in [proj_KEY_A, proj_KEY_B, proj_KEY_VAL]]:

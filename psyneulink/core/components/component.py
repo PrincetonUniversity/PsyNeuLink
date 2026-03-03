@@ -768,7 +768,7 @@ def _has_initializers_setter(value, owning_component=None, context=None, *, comp
 
 # *****************************************   COMPONENT CLASS  ********************************************************
 
-class ComponentsMeta(ABCMeta):
+class UsesParametersMeta(ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -780,20 +780,28 @@ class ComponentsMeta(ABCMeta):
         self.parameters = self.Parameters(owner=self, parent=parent)
 
         for param in self.parameters:
-            if not hasattr(self, param.name):
-                setattr(self, param.name, make_parameter_property(param))
-
             try:
                 if param.default_value.owner is None:
                     param.default_value.owner = param
             except AttributeError:
                 pass
 
+            self._addl_per_parameter_setup(param)
+
+    def _addl_per_parameter_setup(self, param: Parameter):  # noqa: U100
+        pass
+
     # consider removing this for explicitness
     # but can be useful for simplicity
     @property
     def class_defaults(self):
         return self.defaults
+
+
+class ComponentsMeta(UsesParametersMeta):
+    def _addl_per_parameter_setup(self, param: Parameter):
+        if not hasattr(self, param.name):
+            setattr(self, param.name, make_parameter_property(param))
 
 
 class Component(MDFSerializable, metaclass=ComponentsMeta):
@@ -1575,6 +1583,7 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
                      "minibatch_size", "optimizations_per_minibatch", "device",
                      "retain_torch_sample_values", "retain_torch_targets", "retain_torch_losses"
                      "torch_sample_values", "torch_targets", "torch_losses",
+                     "learnable",
                      # "input_weights_learning_rate", "hidden_weights_learning_rate", "output_weights_learning_rate",
                      # "input_biases_learning_rate", "hidden_biases_learning_rate", "output_biases_learning_rate",
                      # should be added to relevant _gen_llvm_function... when aug:

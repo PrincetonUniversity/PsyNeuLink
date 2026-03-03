@@ -2668,10 +2668,6 @@ class EMComposition(AutodiffComposition):
             for field in self.fields:
                 field.storage_projection = self.storage_node.path_afferents[field.index]
 
-    def _assign_learning_rates(self, projections=None, context=None):
-        """Override to defer population of learning_rates_dict until call to _set_learning_attributes below."""
-        pass
-
     def _set_learning_attributes(self):
         """Set learning-related attributes for Node and Projections
         Make exclude_fron_gradient_calc assignments to relevant Nodes
@@ -2712,7 +2708,6 @@ class EMComposition(AutodiffComposition):
                 projection.learnable = False
                 projection.learning_rate = False
 
-        constructor_learning_rate = self._optimizer_constructor_params
         learn_field_weights = self.parameters.learn_field_weights.spec
 
         if not isinstance(learn_field_weights, (list, np.ndarray)):
@@ -2734,8 +2729,11 @@ class EMComposition(AutodiffComposition):
             # BREADCRUMB:  ASSIGN ACTUAL learning_rates TO PROJECTIONS HERE?
             # Construct dict for constructor_learning_rate from learn_field_weights if that is a list
             lr_dict = {}
-            if constructor_learning_rate:
-                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate.pop(DEFAULT_LEARNING_RATE, None)
+
+            # Assuming since no context that this is meant to be used statelessly
+            constructor_learning_rate = self.parameters.learning_rate.get(None)
+            if not isinstance(constructor_learning_rate, dict):
+                lr_dict[DEFAULT_LEARNING_RATE] = constructor_learning_rate
             for i, field in enumerate(self.fields):
                 if field.type == FieldType.KEY:
                     # Get Projection for field_weight_node
@@ -2752,8 +2750,7 @@ class EMComposition(AutodiffComposition):
                         raise EMCompositionError(f"PROGRAM ERROR: learning_rate for {field.name} "
                                                  f"({learn_field_weights[i]}) is not a valid value.")
 
-        self.parameters.learning_rates_dict.set(lr_dict, context=None)
-        self._optimizer_constructor_params = lr_dict
+        self.parameters.learning_rate._set(lr_dict, context=Context(execution_id=None))
 
     def _validate_options_with_learning(self,
                                         use_gating_for_weighting,

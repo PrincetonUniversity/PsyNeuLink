@@ -291,10 +291,10 @@ Class Reference
 
 """
 import copy
+import weakref
 
 import numpy as np
 from typing import Union
-
 from psyneulink._typing import Optional
 
 from psyneulink.core.components.component import parameter_keywords
@@ -308,19 +308,17 @@ from psyneulink.core.globals.keywords import \
     (AUTO_ASSIGN_MATRIX, DEFAULT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX,
      IDENTITY_MATRIX, INPUT_PORT, MAPPING_PROJECTION, MATRIX, OUTPUT_PORT, VALUE)
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified, copy_parameter_value
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, SharedParameter, check_user_specified, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'MappingError', 'MappingProjection',
-    'PROXY_FOR', 'PROXY_FOR_ATTRIB'
+    'PROXY_FOR'
 ]
 
 PROXY_FOR = 'proxy_for'
-PROXY_FOR_ATTRIB = '_' + PROXY_FOR
-
 parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
 
@@ -411,7 +409,7 @@ class MappingProjection(PathwayProjection_Base):
         or of any for the Composition to which the MappingProjection belongs, and any attempts to assign a
         `learning_rate <MappingProjection.learning_rate>' (other than False) raises an error.
 
-    learning_rate : float, int, bool or None
+    learning_rate : float, int, bool, or None
         determines Projection-specific learning_rate, that takes effect only if the MappingProjection's `learnable
         <MappingProjection.learnable>` attribute is True. If it is a numeric value, that value is used, unless it
         is overridden by a value specified for the MappingProjection in the `learn method
@@ -474,6 +472,7 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
 
         """
+        learnable = Parameter(True, stateful=False, aliases=['enable_learning_rate'])
         learning_rate = Parameter(None, stateful=True)
         function = Parameter(MatrixTransform, stateful=False, loggable=False)
         matrix = FunctionParameter(DEFAULT_MATRIX,
@@ -499,6 +498,8 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
+    _proxy_ref = None
+
     @check_user_specified
     def __init__(self,
                  sender=None,
@@ -523,14 +524,9 @@ class MappingProjection(PathwayProjection_Base):
 
         self.learning_mechanism = None
         self.has_learning_projection = None
-        self.learnable = bool(learnable)
-        if not self.learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
+        if not learnable and not isinstance(learning_rate, bool) and is_numeric_scalar(learning_rate):
             raise MappingError(f"The 'learning_rate' argument ({learning_rate}) cannot be specified as a "
                                f"float or int when 'learnable' is False.")
-        if PROXY_FOR in kwargs:
-            # Identifies Projection into or out of a nested Composition for which this is the proxy
-            #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
-            self._proxy_for = kwargs.pop(PROXY_FOR)
 
         # If sender or receiver has not been assigned, defer init to Port.instantiate_projection_to_state()
         if sender is None or receiver is None:
@@ -542,6 +538,7 @@ class MappingProjection(PathwayProjection_Base):
                          weight=weight,
                          exponent=exponent,
                          matrix=matrix,
+                         learnable=learnable,
                          learning_rate=learning_rate,
                          function=function,
                          params=params,
@@ -687,3 +684,46 @@ class MappingProjection(PathwayProjection_Base):
     def logPref(self, setting):
         self.prefs.logPref = setting
         self.parameter_ports[MATRIX].logPref = setting
+
+    @property
+    def _proxy(self):
+        try:
+            return self._proxy_ref()
+        except TypeError:
+            return None
+
+    @_proxy.setter
+    def _proxy(self, value):
+        try:
+            self._proxy_ref = weakref.ref(value)
+        except TypeError:
+            self._proxy_ref = value
+
+
+class ProxyProjection(MappingProjection):
+    _proxy_for_ref = None
+
+    class Parameters(MappingProjection.Parameters):
+        learning_rate = SharedParameter(None, attribute_name='_proxy_for')
+
+    def __init__(self, proxy_for, **kwargs):
+        # Identifies Projection into or out of a nested Composition for which this is the proxy
+        #  (created to Projection to/from input_CIM/output_CIM of nested Composition)
+        self._proxy_for = proxy_for
+        super().__init__(**kwargs)
+
+    @property
+    def _proxy_for(self):
+        try:
+            return self._proxy_for_ref()
+        except TypeError:
+            return None
+
+    @_proxy_for.setter
+    def _proxy_for(self, value):
+        try:
+            self._proxy_for_ref = weakref.ref(value)
+        except TypeError:
+            self._proxy_for_ref = value
+        else:
+            value._proxy = self

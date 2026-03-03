@@ -803,6 +803,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import logging
 import os
 import warnings
@@ -810,7 +811,7 @@ import numpy as np
 from packaging import version
 from pathlib import Path, PosixPath
 from collections import deque
-from typing import Any, Dict, Hashable, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Hashable, Set, Tuple, Union
 
 try:
     import torch
@@ -834,7 +835,12 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale)
+from psyneulink.core.compositions.composition import (
+    Composition,
+    CompositionError,
+    LearningScale,
+    OptimizerParams,
+)
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
@@ -865,12 +871,16 @@ from psyneulink.core.globals.keywords import (
     SAMPLE_VALUES,
     WARNING
 )
-from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric, is_numeric_scalar,
-                                               convert_to_list, convert_to_np_array, deprecation_warning)
+from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric,
+                                               convert_to_list, deprecation_warning)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
+
+
+if TYPE_CHECKING:
+    from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import DummyProjection
 
 
 logger = logging.getLogger(__name__)
@@ -1353,8 +1363,6 @@ class AutodiffComposition(Composition):
         self._input_comp_nodes_to_pytorch_nodes_map = None # Set by subclasses that replace INPUT Nodes
         self._pytorch_projections = []
         self.optimizer_type = optimizer_type
-        self._optimizer_constructor_params = self.parameters.learning_rates_dict.get(None)
-        self._runtime_learning_rate = None
         self.force_no_retain_graph = force_no_retain_graph
         self.refresh_losses = refresh_losses
         self.weight_decay = weight_decay
@@ -2135,8 +2143,32 @@ class AutodiffComposition(Composition):
 
         queue.append((receiver_port.owner, projection, comp))
 
+    def _validate_optimizer_params(
+        self,
+        opt_params: OptimizerParams,
+        context: Context,
+        err_source: str = '',
+        runtime: bool = True,
+    ):
+        if runtime:
+            for comp in [self] + self._get_nested_compositions():
+                if not hasattr(comp, '_validate_optimizer_param_invalid_GRU_projections'):
+                    continue
+
+                for o_param in opt_params:
+                    comp._validate_optimizer_param_invalid_GRU_projections(
+                        o_param, err_source=f'{self}.learn()'
+                    )
+
+        super()._validate_optimizer_params(
+            opt_params=opt_params,
+            context=context,
+            err_source=err_source,
+            runtime=runtime,
+        )
+
     # BREADCRUMB: move some of what's done in the methods below to a "_validate_params" type of method
-    @handle_external_context()
+    @handle_external_context(fallback_most_recent=True)
     def _build_pytorch_representation(self,
                                       learning_rate=None,
                                       optimizer_params=None,
@@ -2165,12 +2197,13 @@ class AutodiffComposition(Composition):
         ---------
 
         new : bool or None : default None
-            specifies creation of a new pytorch_representation, using self._optimizer_constructor_params
+            specifies creation of a new pytorch_representation, using optimizer
+            parameter values from the constructor
             as the base values, and updated with any specified in the **learning_rates** arg.  If the method is called
             from the command_line more than once without **new** specified as `True`, warns and ignores.
 
         learning_rate : float, int, dict : default None
-            if None, then the values in self.learning_rates_dict (and stored in self._optimizer_constructor_params)
+            if None, then the values from the constructor
             are used to assign learning_rates to all Projections in the Composition (and any nested within it)
             (see `Composition_Learning_Rate` for details of specification); if a numeric values is specified,
             that is used as the default learning_rate for the pytorch_representation (replacing
@@ -2181,11 +2214,16 @@ class AutodiffComposition(Composition):
             .. note::
                Projection-specific learning_rates specified in a dict assigned to **learning_rate** here, like
                any specified in the constructor for the Composition, are stored in the corresponding Projections'
-               `learning_rate <MappingProjection.learning_rate>` Parameter under the context <self.name>.DEFAULT_SUFFIX.
+               `learning_rate <MappingProjection.learning_rate>` Parameter under **context**.
         """
         optimizer_params = optimizer_params or {}
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
+
+        # optimization parameters currently are used even if not building first time or rebuilding
+        if learning_rate is not None:
+            self.parameters.learning_rate.set(learning_rate, context)
+            self.parameters.learning_rate._user_specified = True
 
         # Construct a new pytorch_representation if none exists or new is specified
 
@@ -2226,8 +2264,6 @@ class AutodiffComposition(Composition):
         # Get default learning rate (used for all Parameters for which specific learning_rates are not specified),
         #    giving precedence to learning_rate specified in call to learn() (stored in self._runtime_learning_rate)
         #    over learning_rate specified in constructor (passed in above as learning_rate)
-        default_learning_rate = \
-            (self._runtime_learning_rate if self._runtime_learning_rate is not None else learning_rate)
         if isinstance(learning_rate, dict):
             if optimizer_params:
                 # if learning_rate is a dict, optimizer_params should not have been passed in call
@@ -2237,23 +2273,6 @@ class AutodiffComposition(Composition):
                 assert False, \
                     ("PROGRAM ERROR:  Assignment of 'optimizer_params' in a direct call to "
                      "_build_pytorch_representation() from the command line is not currently supported.")
-            lr_dict = default_learning_rate
-            default_learning_rate = lr_dict.pop(DEFAULT_LEARNING_RATE, self.parameters.learning_rate.get(context))
-            optimizer_params = lr_dict
-            for proj, lr in lr_dict.items():
-                if isinstance(proj, str):
-                    proj = next(p.projection for p in pytorch_rep.projection_wrappers if p.projection.name == proj)
-                proj.parameters.learning_rate.set(lr, context)
-            assert self.parameters.learning_rates_dict.get(None) == self._optimizer_constructor_params
-
-        if default_learning_rate is None:
-            default_learning_rate = self.parameters.learning_rate.get(default_learning_rate)
-        else:
-            self.parameters.learning_rate.set(default_learning_rate, context)
-
-        if self._runtime_learning_rate is not None:
-            # If _runtime_learning_rate has been specified in call to learn(), make sure that is used
-            optimizer_params.update({DEFAULT_LEARNING_RATE: default_learning_rate})
 
         if (old_opt is None or new) and new is not False:
             # Instantiate a new optimizer if there isn't one yet or new has been called and is not blocked)
@@ -2262,30 +2281,24 @@ class AutodiffComposition(Composition):
                 #    instantiate it using params specified in constructor (if any) since:
                 #   - need those implemented in a params_group to revert back to after execution of learn()
                 #   - the ones in the call to learn() will be applied in call to _update_optimizer_params() below
-                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
-                                                                    self._optimizer_constructor_params,
-                                                                    context)
+                pytorch_rep.optimizer = self._instantiate_optimizer(context)
                 # Then update optimizer params with any specified in the call to learn()
-                if optimizer_params:
-                    pytorch_rep._update_optimizer_params(pytorch_rep.optimizer,
-                                                         optimizer_params,
-                                                         Context(source=ContextFlags.METHOD,
-                                                                 runmode=context.runmode,
-                                                                 execution_id=context.execution_id))
+                self._update_optimizer_params(
+                    pytorch_rep.optimizer,
+                    Context(
+                        source=ContextFlags.METHOD, runmode=context.runmode, execution_id=context.execution_id
+                    ),
+                )
             else:
                 # Otherwise, if call is from Composition constructor, use params specified by user in that call
-                opt_params = optimizer_params or self._optimizer_constructor_params
-                pytorch_rep.optimizer = self._instantiate_optimizer(default_learning_rate,
-                                                                    opt_params,
-                                                                    context)
+                pytorch_rep.optimizer = self._instantiate_optimizer(context)
 
         elif context.source is ContextFlags.SHOW_GRAPH:
             # Don't bother updating for call to show_graph()
             pass
         else:
             # Otherwise, just update it
-            pytorch_rep._update_optimizer_params(old_opt,
-                                                 optimizer_params,
+            self._update_optimizer_params(old_opt,
                                                  Context(source=ContextFlags.METHOD,
                                                          runmode=context.runmode,
                                                          execution_id=context.execution_id))
@@ -2300,18 +2313,18 @@ class AutodiffComposition(Composition):
 
         return pytorch_rep
 
-    def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
+    def _instantiate_optimizer(self, context):
+        learning_rate = self._get_optimizer_param_value('learning_rate', context)
+        composition_optimizer_params = OptimizerParams.from_component(self, context)
+        self._validate_optimizer_params(composition_optimizer_params, context)
+        try:
+            runtime_optimizer_params = self.runtime_optimizer_params[context.execution_id]
+        except KeyError:
+            # no runtime for this context, ignore validation
+            pass
+        else:
+            self._validate_optimizer_params(runtime_optimizer_params, context, 'the learn() method')
 
-        if isinstance(learning_rate, dict):
-            # If learning_rate is a dict, move to optimizer_params and set self.learning_rate to default value
-            optimizer_params = learning_rate
-            learning_rate = optimizer_params.pop(DEFAULT_LEARNING_RATE,
-                                                 self.parameters.learning_rate.default_value)
-            self.parameters.learning_rate.set(learning_rate, context)
-        if not is_numeric_scalar(learning_rate):
-            raise AutodiffCompositionError(
-                f"A value ('{learning_rate}') specified in the 'learning_rate' arg of the learn() method "
-                f"for '{self.name}' is not valid; it must be an int, float, bool or None.")
         if self.optimizer_type not in ['sgd', 'adam']:
             raise AutodiffCompositionError("Invalid optimizer specified. Optimizer argument must be a string. "
                                            "Currently, Stochastic Gradient Descent and Adam are the only available "
@@ -2329,8 +2342,23 @@ class AutodiffComposition(Composition):
             optimizer = optim.SGD(params, lr=learning_rate, weight_decay=self.weight_decay)
         else:
             optimizer = optim.Adam(params, lr=learning_rate, weight_decay=self.weight_decay)
-        pytorch_rep._update_optimizer_params(optimizer, optimizer_params, context)
+        self._update_optimizer_params(optimizer, context, validate=False)
         return optimizer
+
+    def _update_optimizer_params(self, optimizer, context, validate=True):
+        if validate:
+            composition_optimizer_params = OptimizerParams.from_component(self, context)
+            self._validate_optimizer_params(composition_optimizer_params, context)
+            try:
+                runtime_optimizer_params = self.runtime_optimizer_params[context.execution_id]
+            except KeyError:
+                # no runtime for this context, ignore validation
+                pass
+            else:
+                self._validate_optimizer_params(runtime_optimizer_params, context, 'the learn() method')
+
+        pytorch_rep = self.parameters.pytorch_representation._get(context)
+        pytorch_rep._update_optimizer_params(optimizer, context)
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch,
                          context=None, base_context=None):
@@ -2857,6 +2885,7 @@ class AutodiffComposition(Composition):
         execution_mode = self._get_execution_mode(kwargs.pop('execution_mode', None))
         context.execution_phase = execution_phase_at_entry
 
+        learning_rate = kwargs.get(LEARNING_RATE, None)
         # Deal with deprecated arg (can't use deprecation_warning() since that is for constructors)
         if OPTIMIZER_PARAMS in kwargs:
             default_learning_rate = kwargs.pop(LEARNING_RATE, None)
@@ -2865,6 +2894,10 @@ class AutodiffComposition(Composition):
                                                 method="learn() method",
                                                 additional_msg=" Other torch.nn.optimizer parameters are not "
                                                                "currently supported, but will be in a future version.")
+
+        runtime_optimizer_params = OptimizerParams(learning_rate=copy.copy(learning_rate))
+
+        if OPTIMIZER_PARAMS in kwargs:
             kwargs.update(learning_rate)
             # Move learning_rate spec into optimizer_params dict
             if default_learning_rate is not None:
@@ -2928,6 +2961,8 @@ class AutodiffComposition(Composition):
                              context=context,
                              base_context=base_context,
                              skip_initialization=skip_initialization,
+                             # TODO: rename/replace this with just optimizer_params
+                             runtime_optimizer_params=runtime_optimizer_params,
                              **kwargs)
 
     def parse_synch_and_retain_args(
@@ -3197,9 +3232,7 @@ class AutodiffComposition(Composition):
                 raise AutodiffCompositionError(f"'{self.name}.learn()' has been called with ExecutionMode.Pytorch, "
                                                f"but Pytorch module ('torch') is not installed. "
                                                f"Please install it with `pip install torch` or `pip3 install torch`")
-
             self._build_pytorch_representation(optimizer_params=kwargs.get('optimizer_params', None),
-                                               learning_rate=self.parameters.learning_rate.get(context),
                                                context=context,
                                                base_context=Context(execution_id=None))
 
@@ -3682,23 +3715,28 @@ class AutodiffComposition(Composition):
         except:
             raise AutodiffCompositionError(
                 f"PROGRAM ERROR:  problem accessing torch.named_parameters() for '{self.name}'.")
-    @property
-    def _dependent_components(self) -> Iterable[Component]:
-        res = super()._dependent_components
 
+    @property
+    def _dummy_projections(self) -> Set['DummyProjection']:
+        res = set()
         # NOTE: _dependent_components should possibly be reworked to be
         # a context-dependent method
         for pytorch_repr in self.parameters.pytorch_representation.values.values():
             if pytorch_repr is not None:
-                res.extend([w.projection for w in pytorch_repr.projection_wrappers])
+                res.update([w.projection for w in pytorch_repr.projection_wrappers])
                 try:
                     dummy_proj_pairs = pytorch_repr._projection_wrapper_pairs
                 except AttributeError:
                     # currently only GRU wrapper uses them
                     pass
                 else:
-                    res.extend([dummy_proj for dummy_proj, _ in dummy_proj_pairs])
+                    res.update([dummy_proj for dummy_proj, _ in dummy_proj_pairs])
+        return res
 
+    @property
+    def _dependent_components(self) -> Iterable[Component]:
+        res = super()._dependent_components
+        res.extend(self._dummy_projections)
         return res
 
     def _get_default_comp_learning_rate(self):

@@ -298,7 +298,7 @@ Class Reference
 """
 import numpy as np
 import warnings
-from typing import Union
+from typing import Set, Union
 # from sympy.stats import Logistic
 from collections import deque
 
@@ -310,7 +310,7 @@ from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, get_matrix, _random_state_getter, _seed_setter)
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.composition import CompositionError, OptParam, OptimizerParams
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition, torch_available
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -333,7 +333,8 @@ __all__ = ['GRUComposition', 'GRUCompositionError', 'INPUT_NODE', 'HIDDEN_LAYER'
            'HIDDEN_TO_OUTPUT',
            'BIAS_NODE_INPUT_TO_NEW', 'BIAS_NODE_INPUT_TO_UPDATE', 'BIAS_NODE_INPUT_TO_RESET', 'BIAS_NODE_HIDDEN_TO_NEW',
            'BIAS_NODE_HIDDEN_TO_RESET', 'BIAS_NODE_HIDDEN_TO_UPDATE', 'BIAS_INPUT_TO_RESET', 'BIAS_INPUT_TO_UPDATE',
-           'BIAS_INPUT_TO_NEW', 'BIAS_HIDDEN_TO_RESET', 'BIAS_HIDDEN_TO_UPDATE', 'BIAS_HIDDEN_TO_NEW'
+           'BIAS_INPUT_TO_NEW', 'BIAS_HIDDEN_TO_RESET', 'BIAS_HIDDEN_TO_UPDATE', 'BIAS_HIDDEN_TO_NEW',
+           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN', 'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN',
            ]
 
 # Node names
@@ -386,6 +387,14 @@ TO_HIDDEN_LAYER_INPUT = 'TO HIDDEN LAYER INPUT'
 RESET_GATING_SIGNAL = 'RESET GATING SIGNAL'
 RECURRENT_GATING_SIGNAL = 'RECURRENT GATING SIGNAL'
 NEW_GATING_SIGNAL = 'NEW GATING SIGNAL'
+
+# torch related names
+INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
+HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
+BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
+BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
+HIDDEN_PROJECTION_SETS = [INPUT_TO_HIDDEN, HIDDEN_TO_HIDDEN]
+HIDDEN_BIAS_SETS = [BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN]
 
 
 class GRUCompositionError(CompositionError):
@@ -476,7 +485,7 @@ class GRUComposition(AutodiffComposition):
         determines whether learning is enabled for the GRUComposition
         (see `Learning Arguments <GRUComposition_Learning_Arguments>` for additional details).
 
-    learning_rate : float, int, bool or None
+    learning_rate : float, int, bool, or None
         determines the default learning_rate for the parameters of the Pytorch `GRU
         <https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>`_ module that are not specified
         for individual parameters in the **optimizer_params** argument of the AutodiffComposition's
@@ -1260,23 +1269,108 @@ class GRUComposition(AutodiffComposition):
         (since that occurs within the Pytorch module itself"""
         return 1
 
+    def _validate_optimizer_param_invalid_GRU_projections(
+        self,
+        o_param: OptParam,
+        err_source: str = '',
+    ):
+        val = o_param._value
+        try:
+            val_items = iter(val.items())
+        except (AttributeError, TypeError):
+            # opt param value is not dictionary spec
+            return
+
+        bias_keys = set()
+        bad_ih_keys = set()
+        bad_hh_keys = set()
+
+        for proj_key, _ in val_items:
+            # check both key as str and Projection (.name)
+            proj_key_spec_set = {proj_key, getattr(proj_key, 'name', proj_key)}
+
+            if (
+                not self.bias
+                and proj_key_spec_set.intersection({BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN})
+            ):
+                try:
+                    bias_keys.add(proj_key.replace(' ', '_'))
+                except AttributeError:
+                    bias_keys.add(proj_key)
+
+            if proj_key_spec_set.intersection(set(INPUT_TO_HIDDEN_WEIGHTS)):
+                bad_ih_keys.add(proj_key)
+
+            if proj_key_spec_set.intersection(set(HIDDEN_TO_HIDDEN_WEIGHTS)):
+                bad_hh_keys.add(proj_key)
+
+        # Raise error for attempt to specify bias parameters when bias=False
+        if not self.bias and bias_keys:
+            err_msg = self._opt_param_err_msg(
+                o_param.name,
+                val,
+                (
+                    f"Attempt to set {o_param.name} for bias(es) of GRU using '{' ,'.join(bias_keys)}'"
+                    f" when the bias option of {self} is set to False; the spec(s) must be removed or bias set to True.",
+                ),
+                err_source,
+            )
+            raise GRUCompositionError(err_msg)
+
+        # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
+        def _hid_err_msg(proj_type_name: str, bad_keys: Set) -> str:
+            return (
+                f"GRUComposition does not support setting {o_param.name} for individual"
+                f" {proj_type_name.lower()} Projections ({' ,'.join(bad_keys)});"
+                f" use '{proj_type_name.upper()}' to set {o_param.name} for all such weights."
+            )
+
+        if bad_ih_keys:
+            err_msg = self._opt_param_err_msg(
+                o_param.name,
+                val,
+                _hid_err_msg('INPUT_TO_HIDDEN', bad_ih_keys),
+                err_source,
+            )
+            raise GRUCompositionError(err_msg)
+
+        if bad_hh_keys:
+            err_msg = self._opt_param_err_msg(
+                o_param.name,
+                val,
+                _hid_err_msg('HIDDEN_TO_HIDDEN', bad_hh_keys),
+                err_source,
+            )
+            raise GRUCompositionError(err_msg)
+
+    def _validate_optimizer_params(
+        self,
+        opt_params: OptimizerParams,
+        context: Context,
+        err_source: str = '',
+        runtime: bool = True,
+    ):
+        if runtime:
+            for o_param in opt_params:
+                self._validate_optimizer_param_invalid_GRU_projections(
+                    o_param, err_source
+                )
+
+        super()._validate_optimizer_params(opt_params, context, err_source, runtime)
 
     @property
     def w_ih_learning_rate(self):
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import INPUT_TO_HIDDEN
         pytorch_rep = self._build_pytorch_representation()
         return pytorch_rep._pnl_refs_to_torch_param_names[INPUT_TO_HIDDEN].projection.learning_rate
 
     @property
     def w_hh_learning_rate(self):
-        from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import HIDDEN_TO_HIDDEN
         pytorch_rep = self._build_pytorch_representation()
         return pytorch_rep._pnl_refs_to_torch_param_names[HIDDEN_TO_HIDDEN].projection.learning_rate
 
     @property
     def b_ih_learning_rate(self):
         if self.bias:
-            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_INPUT_TO_HIDDEN
             pytorch_rep = self._build_pytorch_representation()
             return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_INPUT_TO_HIDDEN].projection.learning_rate
         warnings.warn(f"{self.name} does not have any bias parameters; "
@@ -1285,7 +1379,6 @@ class GRUComposition(AutodiffComposition):
     @property
     def b_hh_learning_rate(self):
         if self.bias:
-            from psyneulink.library.compositions.grucomposition.pytorchGRUwrappers import BIAS_HIDDEN_TO_HIDDEN
             pytorch_rep = self._build_pytorch_representation()
             return pytorch_rep._pnl_refs_to_torch_param_names[BIAS_HIDDEN_TO_HIDDEN].projection.learning_rate
         warnings.warn(f"{self.name} does not have any bias parameters; "

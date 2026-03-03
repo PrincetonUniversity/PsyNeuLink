@@ -6,7 +6,13 @@ import psyneulink as pnl
 from psyneulink.library.compositions.autodiffcomposition import AutodiffCompositionError, torch_available
 
 if torch_available:
-    from psyneulink.library.compositions.grucomposition.grucomposition import GRUComposition
+    from psyneulink.library.compositions.grucomposition.grucomposition import (
+        BIAS_HIDDEN_TO_HIDDEN,
+        BIAS_INPUT_TO_HIDDEN,
+        HIDDEN_TO_HIDDEN,
+        INPUT_TO_HIDDEN,
+        GRUComposition,
+    )
 
     # All tests are set to run. If you need to skip certain tests,
     # see http://doc.pytest.org/en/latest/skipping.html
@@ -508,15 +514,15 @@ if torch_available:
         none_expected = [[0.19536549, 0.04794166, 0.14910019, 0.3058192, -0.35057197]]
 
         test_specs = [
-            ('constructor', pnl.INPUT_TO_HIDDEN, constructor_expected),
+            ('constructor', INPUT_TO_HIDDEN, constructor_expected),
             ('constructor', "HIDDEN TO UPDATE WEIGHTS", None),
-            ('learn_method', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
+            ('learn_method', HIDDEN_TO_HIDDEN, learn_method_expected),
             ('learn_method', "HIDDEN TO UPDATE WEIGHTS", None),
-            ('constructor', pnl.BIAS_INPUT_TO_HIDDEN, None),
-            ('learn_method', pnl.BIAS_HIDDEN_TO_HIDDEN, None),
-            ('both', pnl.HIDDEN_TO_HIDDEN, learn_method_expected),
-            ('specs_to_nested', pnl.INPUT_TO_HIDDEN, constructor_expected),
-            ('none', pnl.HIDDEN_TO_HIDDEN, none_expected)]
+            ('constructor', BIAS_INPUT_TO_HIDDEN, None),
+            ('learn_method', BIAS_HIDDEN_TO_HIDDEN, None),
+            ('both', HIDDEN_TO_HIDDEN, learn_method_expected),
+            ('specs_to_nested', INPUT_TO_HIDDEN, constructor_expected),
+            ('none', HIDDEN_TO_HIDDEN, none_expected)]
 
         @pytest.mark.pytorch
         @pytest.mark.parametrize("condition, gru_proj, expected", test_specs,
@@ -536,7 +542,7 @@ if torch_available:
             gru_proj_lr = .3 if lr_dict_spec == 'constructor' else .95 if lr_dict_spec == 'learn_method' else .001
             input_proj_lr = 2.9 if lr_dict_spec == 'constructor' else .66 if lr_dict_spec == 'learn_method' else .001
             output_proj_lr = .5 if lr_dict_spec == 'constructor' else 1.5 if lr_dict_spec == 'learn_method' else .001
-            if gru_proj == pnl.INPUT_TO_HIDDEN:
+            if gru_proj == INPUT_TO_HIDDEN:
                 ih_lr = gru_proj_lr
                 hh_lr = .001
             else:
@@ -549,9 +555,9 @@ if torch_available:
 
             # Test for error on attempt to set individual Projection learning rate
             if gru_proj == "HIDDEN TO UPDATE WEIGHTS":
-                error_msg = ("GRUComposition does not support setting of learning rates for individual "
+                error_msg = ("GRUComposition does not support setting learning_rate for individual "
                              "hidden_to_hidden Projections (HIDDEN TO UPDATE WEIGHTS); use 'HIDDEN_TO_HIDDEN' "
-                             "to set learning rate for all such weights.")
+                             "to set learning_rate for all such weights.")
                 with pytest.raises(pnl.GRUCompositionError) as error_text:
                     outer = pnl.AutodiffComposition(
                         [input_mech, input_proj, gru, output_proj, output_mech],
@@ -562,10 +568,9 @@ if torch_available:
                 assert error_msg in str(error_text.value)
 
             # Test for error on attempt to set BIAS learning rate if bias option is False
-            elif gru_proj in {pnl.BIAS_INPUT_TO_HIDDEN, pnl.BIAS_HIDDEN_TO_HIDDEN}:
-                bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == pnl.BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
-                error_msg = (f"Attempt to set learning rate for bias(es) of GRU using '{bias_spec}' in the "
-                             f"'learning_rate' arg of the learn() method for 'GRU Composition' when its bias option "
+            elif gru_proj in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}:
+                bias_spec = 'BIAS_INPUT_TO_HIDDEN' if gru_proj == BIAS_INPUT_TO_HIDDEN else "BIAS_HIDDEN_TO_HIDDEN"
+                error_msg = (f"Attempt to set learning_rate for bias(es) of GRU using '{bias_spec}' when the bias option of (GRUComposition GRU Composition) "
                              f"is set to False; the spec(s) must be removed or bias set to True.")
                 with pytest.raises(pnl.GRUCompositionError) as error_text:
                     outer = pnl.AutodiffComposition(
@@ -598,8 +603,8 @@ if torch_available:
                 pytorch_rep = outer._build_pytorch_representation()
                 assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
                 assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
+                assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == (ih_lr if constr else 0.001)
+                assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == (hh_lr if constr else 0.001)
 
                 # Test assignment of learning_Rate on learning
                 results = outer.learn(
@@ -609,8 +614,8 @@ if torch_available:
                 pytorch_rep = outer.pytorch_representation
                 assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == input_proj_lr
                 assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == output_proj_lr
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == ih_lr
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == hh_lr
+                assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == ih_lr
+                assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == hh_lr
                 np.testing.assert_allclose(expected, results)
 
                 # Check that values are returned to constructor defaults for new call to learn() w/o specs
@@ -619,8 +624,8 @@ if torch_available:
                     learning_rate=None)
                 assert pytorch_rep.get_torch_learning_rate_for_projection(input_proj) == (input_proj_lr if constr else .001)
                 assert pytorch_rep.get_torch_learning_rate_for_projection(output_proj) == (output_proj_lr if constr else .001)
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
-                assert pytorch_rep.get_torch_learning_rate_for_projection(pnl.HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
+                assert pytorch_rep.get_torch_learning_rate_for_projection(INPUT_TO_HIDDEN) == (ih_lr if constr else .001)
+                assert pytorch_rep.get_torch_learning_rate_for_projection(HIDDEN_TO_HIDDEN) == (hh_lr if constr else .001)
 
 
         @pytest.mark.parametrize("bias", [False, True])
@@ -673,11 +678,11 @@ if torch_available:
             # Set up and run PNL Autodiff model -------------------------------------
 
             # Initialize GRU Node of PNL with starting weights from Torch GRU, so that they start identically
-            learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+            learning_rate = {INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, HIDDEN_TO_HIDDEN: W_HH_LEARNING_RATE}
             if bias:
                 learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
-                                      pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                      pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+                                      BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                      BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
             pnl_gru = GRUComposition(input_size=3, hidden_size=5, bias=bias, learning_rate=learning_rate)
             pnl_gru.set_weights(*torch_gru_initial_weights)
             target_node = pnl_gru.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
@@ -789,11 +794,11 @@ if torch_available:
 
             input_mech = pnl.ProcessingMechanism(name='INPUT MECH', input_shapes=3)
             output_mech = pnl.ProcessingMechanism(name='OUTPUT MECH', input_shapes=5)
-            learning_rate={pnl.INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, pnl.HIDDEN_TO_HIDDEN:W_HH_LEARNING_RATE}
+            learning_rate = {INPUT_TO_HIDDEN: W_IH_LEARNING_RATE, HIDDEN_TO_HIDDEN: W_HH_LEARNING_RATE}
             if bias:
                 learning_rate.update({pnl.DEFAULT_LEARNING_RATE: LEARNING_RATE,
-                                      pnl.BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
-                                      pnl.BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
+                                      BIAS_INPUT_TO_HIDDEN: B_IH_LEARNING_RATE,
+                                      BIAS_HIDDEN_TO_HIDDEN: B_HH_LEARNING_RATE})
             gru = GRUComposition(name='GRU COMP',
                                  input_size=3, hidden_size=5, bias=bias, learning_rate = LEARNING_RATE)
             autodiff_comp = pnl.AutodiffComposition(name='OUTER COMP',

@@ -95,6 +95,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'enable_learning_rate': 'OFF',
             'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_execute_until_finished': 'OFF',
@@ -106,6 +107,7 @@ class TestLog:
             'func_operation': 'OFF',
             'func_value': 'OFF',
             'has_initializers': 'OFF',
+            'learnable': 'OFF',
             'learning_rate': 'OFF',
             'func_variable': 'OFF',
             'matrix': 'OFF',
@@ -200,6 +202,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'enable_learning_rate': 'OFF',
             'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_execute_until_finished': 'OFF',
@@ -212,6 +215,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learnable': 'OFF',
             'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
@@ -227,8 +231,7 @@ class TestLog:
         PS.run(inputs={T_1:[3,4]})
 
         assert T_1.logged_items == {'RESULT': 'EXECUTION', 'mod_noise': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
-                                   'learning_rate': 'OFF'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
         T_1.log.print_entries(contexts=PS)
         # assert T_1.log.print_entries() ==
@@ -366,6 +369,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'enable_learning_rate': 'OFF',
             'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_execute_until_finished': 'OFF',
@@ -378,6 +382,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learnable': 'OFF',
             'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
@@ -475,6 +480,7 @@ class TestLog:
             'variable': 'OFF'
         }
         assert PJ.loggable_items == {
+            'enable_learning_rate': 'OFF',
             'execute_until_finished': 'OFF',
             'exponent': 'OFF',
             'func_execute_until_finished': 'OFF',
@@ -487,6 +493,7 @@ class TestLog:
             'func_value': 'OFF',
             'func_variable': 'OFF',
             'has_initializers': 'OFF',
+            'learnable': 'OFF',
             'learning_rate': 'OFF',
             'matrix': 'OFF',
             'max_executions_before_finished': 'OFF',
@@ -507,8 +514,7 @@ class TestLog:
         assert T2.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
                                    'value': 'EXECUTION'}
-        assert PJ.logged_items == {'mod_matrix': 'EXECUTION',
-                                   'learning_rate': 'OFF'}
+        assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
@@ -1186,8 +1192,7 @@ class TestClearLog:
 
         assert list(log_dict_T_1.keys()) == [COMP.default_execution_id]
         assert list(log_dict_T_2.keys()) == [COMP.default_execution_id]
-        assert sorted(log_dict_PJ.keys()) == [COMP.default_execution_id,
-                                              COMP.default_execution_id + pnl.DEFAULT_SUFFIX]
+        assert sorted(log_dict_PJ.keys()) == [COMP.default_execution_id]
 
         # Confirm that values were logged correctly
         sys_log_dict = log_dict_T_1[COMP.default_execution_id]

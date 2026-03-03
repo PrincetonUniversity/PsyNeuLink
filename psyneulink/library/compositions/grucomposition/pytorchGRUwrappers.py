@@ -9,12 +9,12 @@
 
 """PyTorch wrapper for GRUComposition"""
 
+import weakref
 import numpy as np
-import graph_scheduler
 import torch
 
 
-from typing import Union, Optional, Literal, Tuple
+from typing import Union, Literal, Tuple
 
 from torch import nn
 
@@ -23,28 +23,30 @@ from psyneulink.core.compositions.composition import LearningScale
 from psyneulink.core.compositions.noderoles import NodeRole, NodeRolesManager
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.projections.projection import Projection, ProjectionRegistry
+from psyneulink.core.globals.registry import register_category
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.library.compositions.grucomposition.grucomposition import (
+    BIAS_HIDDEN_TO_HIDDEN,
+    BIAS_INPUT_TO_HIDDEN,
+    HIDDEN_BIAS_SETS,
+    HIDDEN_PROJECTION_SETS,
+    HIDDEN_TO_HIDDEN,
+    INPUT_TO_HIDDEN,
+)
 from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
     PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
-from psyneulink.core.globals.keywords import (ALL, ANY, CONTEXT, DEFAULT, INPUT, INPUTS, LEARNING,
-                                              NODE_VALUES, SAMPLE, SHOW_PYTORCH, SYNCH,SYNCH_WITH_PNL_OPTIONS)
+from psyneulink.core.globals.keywords import (
+    ANY, INPUT, LEARNING, NODE_VALUES, SHOW_PYTORCH, SYNCH,
+)
 from psyneulink.core.globals.log import LogCondition
 
-__all__ = ['PytorchGRUCompositionWrapper',
-           'BIAS_INPUT_TO_HIDDEN', 'BIAS_HIDDEN_TO_HIDDEN', 'B_IH_NAME', 'B_HH_NAME',
-           'HIDDEN_TO_HIDDEN', 'INPUT_TO_HIDDEN', 'W_IH_NAME', 'W_HH_NAME']
+__all__ = ['PytorchGRUCompositionWrapper', 'B_IH_NAME', 'B_HH_NAME', 'W_IH_NAME', 'W_HH_NAME']
 
-INPUT_TO_HIDDEN = 'INPUT TO HIDDEN'
-HIDDEN_TO_HIDDEN = 'HIDDEN TO HIDDEN'
-BIAS_INPUT_TO_HIDDEN = 'BIAS INPUT TO HIDDEN'
-BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
-HIDDEN_PROJECTION_SETS = [INPUT_TO_HIDDEN, HIDDEN_TO_HIDDEN]
-HIDDEN_BIAS_SETS = [BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN]
 W_IH_NAME = 'weight_ih_l0'
 W_HH_NAME = 'weight_hh_l0'
 B_IH_NAME = 'bias_ih_l0'
@@ -118,35 +120,6 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         for dummy_proj, _ in _projection_wrapper_pairs:
             dummy_proj._initialize_from_context(context, base_context)
 
-    def _validate_optimizer_param_specs(self, optimizer_param_specs:dict, source:str, context, nested=False):
-        """Override to filter and raise error for individual Projections (i.e., specifications of slices)"""
-        from psyneulink.library.compositions.grucomposition.grucomposition import (
-            GRUCompositionError, INPUT_TO_HIDDEN_WEIGHTS, HIDDEN_TO_HIDDEN_WEIGHTS)
-
-        # Raise error for attempt to specify bias parameters when bias=False
-        if not self.composition.bias:
-            bias_specs = [spec for spec in optimizer_param_specs
-                          if spec in {BIAS_INPUT_TO_HIDDEN, BIAS_HIDDEN_TO_HIDDEN}]
-            if bias_specs:
-                bias_specs = [spec.replace(BIAS_INPUT_TO_HIDDEN, 'BIAS_INPUT_TO_HIDDEN') for spec in bias_specs]
-                bias_specs = [spec.replace(BIAS_HIDDEN_TO_HIDDEN, 'BIAS_HIDDEN_TO_HIDDEN') for spec in bias_specs]
-                raise GRUCompositionError(
-                    f"Attempt to set learning rate for bias(es) of GRU using '{' ,'.join(bias_specs)}' in the "
-                    f"'learning_rate' arg of the {self.get_source_str(source)} for '{self.composition.name}' "
-                    f"when its bias option is set to False; the spec(s) must be removed or bias set to True.")
-
-        # Raise error for attempt to specify individual input_to_hidden or hidden_to_hidden Projections
-        bad_ih_specs = [spec for spec in optimizer_param_specs if spec in INPUT_TO_HIDDEN_WEIGHTS]
-        if bad_ih_specs:
-            raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
-                                      f"for individual input_to_hidden Projections ({' ,'.join(bad_ih_specs)}); "
-                                      f"use 'INPUT_TO_HIDDEN' to set learning rate for all such weights.")
-        bad_hh_specs = [spec for spec in optimizer_param_specs if spec in HIDDEN_TO_HIDDEN_WEIGHTS]
-        if bad_hh_specs:
-            raise GRUCompositionError(f"GRUComposition does not support setting of learning rates "
-                                      f"for individual hidden_to_hidden Projections ({' ,'.join(bad_hh_specs)}); "
-                                      f"use 'HIDDEN_TO_HIDDEN' to set learning rate for all such weights.")
-
     def _instantiate_GRU_pytorch_mechanism_wrappers(self, gru_comp, outer_creator, device, context):
         """Instantiate PytorchMechanismWrapper for GRU Node"""
         gru_mech = gru_comp.gru_mech
@@ -208,7 +181,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             _projection_wrapper_pairs.append((pnl_proj, pytorch_wrapper))
 
         # Construct DummyProjection for INPUT_TO_HIDDEN and HIDDEN_TO_HIDDEN that are used to access their learning_rate
-        W_IH_projection = DummyProjection(INPUT_TO_HIDDEN)
+        W_IH_projection = DummyProjection(INPUT_TO_HIDDEN, composition=self.composition)
         pytorch_wrapper = PytorchGRUProjectionWrapper(projection=W_IH_projection,
                                                       torch_parameter=(W_IH_NAME, torch_gru.state_dict()[W_IH_NAME]),
                                                       use=LEARNING,
@@ -218,7 +191,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
         input_to_hidden_param_name_comp_tuple = ParamNameCompositionTuple(W_IH_projection, W_IH_NAME, self.composition)
         self._pnl_refs_to_torch_param_names.update({INPUT_TO_HIDDEN:input_to_hidden_param_name_comp_tuple})
 
-        W_HH_projection = DummyProjection(HIDDEN_TO_HIDDEN)
+        W_HH_projection = DummyProjection(HIDDEN_TO_HIDDEN, composition=self.composition)
         pytorch_wrapper = PytorchGRUProjectionWrapper(projection=W_HH_projection,
                                                       torch_parameter=(W_HH_NAME, torch_gru.state_dict()[W_IH_NAME]),
                                                       use=LEARNING,
@@ -249,7 +222,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
                 _projection_wrapper_pairs.append((pnl_bias_proj, pytorch_wrapper))
                 # self._pnl_refs_to_torch_param_names.update({pnl_bias_proj.name: torch_bias_spec})
 
-            B_IH_proj = DummyProjection(BIAS_INPUT_TO_HIDDEN)
+            B_IH_proj = DummyProjection(BIAS_INPUT_TO_HIDDEN, composition=self.composition)
             pytorch_wrapper = PytorchGRUProjectionWrapper(projection=B_IH_proj,
                                                           torch_parameter=(B_IH_NAME,torch_gru.state_dict()[B_IH_NAME]),
                                                           use=LEARNING,
@@ -259,7 +232,7 @@ class PytorchGRUCompositionWrapper(PytorchCompositionWrapper):
             bias_in_to_hid_param_name_comp_tuple = ParamNameCompositionTuple(B_IH_proj, B_IH_NAME, self.composition)
             self._pnl_refs_to_torch_param_names.update({BIAS_INPUT_TO_HIDDEN:bias_in_to_hid_param_name_comp_tuple})
 
-            B_HH_proj = DummyProjection(BIAS_HIDDEN_TO_HIDDEN)
+            B_HH_proj = DummyProjection(BIAS_HIDDEN_TO_HIDDEN, composition=self.composition)
             pytorch_wrapper = PytorchGRUProjectionWrapper(projection=B_HH_proj,
                                                           torch_parameter=(B_HH_NAME,torch_gru.state_dict()[B_HH_NAME]),
                                                           use=LEARNING,
@@ -887,21 +860,40 @@ class DummyProjection(Projection):
     so DummyProjections are used to provide access to their learning_rates
     """
     name = ""
+    componentName = 'DummyProjection'
 
     class Parameters(Projection.Parameters):
+        learnable = Parameter(True, stateful=False, aliases=['enable_learning_rate'])
         learning_rate = Parameter(None, stateful=True)
 
     @check_user_specified
-    def __init__(self, name):
+    def __init__(self, name, composition=None):
         self.name = name
+        self.compositions = weakref.WeakSet()
+        if composition is not None:
+            self.compositions.add(composition)
         self._initialize_parameters(learning_rate=None, context=Context(execution_id=None))
         self.parameters.learning_rate.set(None, None)
-        self.learnable = True
+
+        register_category(
+            entry=self,
+            base_class=DummyProjection,
+            name=name,
+            registry=ProjectionRegistry,
+        )
 
     def __getattr__(self, name):
         obj_name = f"{self.name} "
-        if name not in {'learning_rate', 'name'}:
+        if name not in {'learning_rate', 'name', 'compositions'}:
             raise AttributeError(f"This object is used to convey the learning rate for the torch parameters "
                                  f"corresponding to the set of {obj_name}Projections of a GRUComposition, "
                                  f"that cannot be set directly.  It has only 'name', 'learnable', and"
                                  f"'learning_rate' as attributes, and no others.")
+        return super().__getattribute__(name)
+
+
+register_category(
+    entry=DummyProjection,
+    base_class=Projection,
+    registry=ProjectionRegistry,
+)
