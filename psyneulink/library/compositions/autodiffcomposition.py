@@ -1423,7 +1423,7 @@ class AutodiffComposition(Composition):
         For Python mode:
           - calls add_backpropagation_learning_pathway() for each identified pathway
             which also creates TARGET Nodes for TERMINAL Nodes in each pathway
-        For PyTorch mode:
+        For non-Python modes:
           - if **targets** are specified in the AutodiffComposition constructor,
              LossMechanisms and MappingProjections are constructed for them;
           - otherwise, TERMINAL Nodes of each pathway are used to construct LossMechanisms and TARGET Nodes
@@ -1449,13 +1449,12 @@ class AutodiffComposition(Composition):
         #                                             if isinstance(item, MappingProjection)))])
         # MODIFIED TEACHER_TARGET END
 
-        if execution_mode is pnlvm.ExecutionMode.PyTorch:
+        if execution_mode is not pnlvm.ExecutionMode.Python:
             # Construct LossMechanisms, and TARGET Nodes if needed, for inclusion in pathway construction below
             self._instantiate_loss_components(self.pytorch_backprop_pathways, context, base_context)
 
         else:
-        # if execution_mode is not pnlvm.ExecutionMode.PyTorch:
-            # For non-Pytorch modes, construct and add PNL backpropagation learning pathways for each INPUT Node
+            # For Python mode, construct and add PNL backpropagation learning pathways for each INPUT Node
             #    that will construct learning components, including TARGET Nodes for all TERMINAL Nodes
             for pathway in self.pytorch_backprop_pathways:
                 self.add_backpropagation_learning_pathway(pathway=pathway,
@@ -1467,7 +1466,8 @@ class AutodiffComposition(Composition):
     @handle_external_context()
     def _get_pytorch_backprop_pathways(self, context)->list:
         """Get backpropagation pathways for all INPUT Nodes of AutodiffComposition
-        Return a list of all pathways"""
+        Return a list of all pathways
+        """
         self._analyze_graph()
         return [pathway
                     for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
@@ -2298,6 +2298,10 @@ class AutodiffComposition(Composition):
         else:
             self.loss_function = self._get_loss(self.loss_spec)
 
+        # _build_pytorch_representation() can add Targets, LossMechanisms, and CIM ports after the
+        # surrounding run/learn path has already initialized the current execution context.
+        self._initialize_from_context(context, base_context, override=False)
+
         return pytorch_rep
 
     def _instantiate_optimizer(self, learning_rate, optimizer_params, context):
@@ -2335,8 +2339,10 @@ class AutodiffComposition(Composition):
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.PyTorch,
                          context=None, base_context=None):
         """Return `TARGET` `Nodes <Composition_Nodes>` of the AutodiffComposition."""
-        self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
-                                                     context=context, base_context=base_context)
+        if not self.get_nodes_by_role(NodeRole.TARGET):
+            self.infer_backpropagation_learning_pathways(execution_mode=execution_mode,
+                                                         context=context,
+                                                         base_context=base_context)
         return super(AutodiffComposition, self).get_target_nodes(context, base_context)
 
     def autodiff_forward(self,
@@ -2644,7 +2650,7 @@ class AutodiffComposition(Composition):
         target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
 
 
-        if execution_mode is not pnlvm.ExecutionMode.PyTorch:
+        if execution_mode is pnlvm.ExecutionMode.Python:
             return super()._map_external_target_values_to_target_nodes(target_specs, execution_mode)
 
         # Assign target values specified in learn() to TARGET Nodes
@@ -3380,8 +3386,8 @@ class AutodiffComposition(Composition):
         return super()._get_state_ids() + ["optimizer"]
 
     def _get_state_struct_type(self, ctx):
-        comp_state_type_list = ctx.get_state_struct_type(super())
         pytorch_representation = self._build_pytorch_representation(context=self._context_for_pytorch)
+        comp_state_type_list = ctx.get_state_struct_type(super())
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
         return pnlvm.ir.LiteralStructType((

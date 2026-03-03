@@ -1216,9 +1216,21 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
     builder.call(exec_f, [state, params, data_in_ptr, data, cond])
 
+    if "learning" in tags:
+        # Autodiff learning executes a specialized compiled training body. Re-run output_CIM with the
+        # standard node assembly so the Composition's recorded result reflects the current OUTPUT node data.
+        output_cim_w = ctx.get_node_assembly(composition, composition.output_CIM)
+        output_cim_f = ctx.import_llvm_function(output_cim_w, tags=frozenset({"node_assembly"}))
+        builder.call(output_cim_f, [state, params, data_in_ptr, data, data])
+
     if not simulation or "simulation_results" in tags:
-        # Extract output_CIM result
-        node_idx = composition._get_node_index(composition.output_CIM)
+        from psyneulink.core.compositions.noderoles import NodeRole
+        output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
+        if "learning" in tags and len(output_nodes) == 1:
+            # In autodiff learning, the OUTPUT node data is valid even when output_CIM's compiled value is not.
+            node_idx = composition._get_node_index(output_nodes[0])
+        else:
+            node_idx = composition._get_node_index(composition.output_CIM)
         result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(node_idx)])
         output_ptr = builder.gep(data_out, [iters])
         result = builder.load(result_ptr)

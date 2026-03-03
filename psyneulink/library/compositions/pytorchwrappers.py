@@ -1842,6 +1842,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         model_output = data
         # setup useful mappings
         input_nodes = set(self.composition.get_nodes_by_role(NodeRole.INPUT))
+        objective_nodes = set(self.composition.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))
 
         # initialize optimizer params:
         delta_w = builder.gep(optim_struct, [ctx.int32_ty(0), ctx.int32_ty(optimizer._DELTA_W_NUM)])
@@ -1858,7 +1859,7 @@ class PytorchCompositionWrapper(torch.nn.Module):
         error_dict = {}
         for exec_set in reversed(self.execution_sets):
             for node in exec_set:
-                if node.mechanism in input_nodes:
+                if node.mechanism in input_nodes or node.mechanism in objective_nodes:
                     continue
 
                 node_z_value = z_values[node]
@@ -1871,8 +1872,25 @@ class PytorchCompositionWrapper(torch.nn.Module):
                     # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
 
                     # 1) Lookup desired target value
-                    terminal_sequence = self.composition._terminal_backprop_sequences[node.mechanism]
-                    target_idx = self.composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
+                    terminal_sequence = self.composition._terminal_backprop_sequences.get(node.mechanism)
+                    if terminal_sequence is not None:
+                        target_mechanism = terminal_sequence[TARGET_MECHANISM]
+                    else:
+                        sample_port = next(
+                            (
+                                port
+                                for port in node.mechanism.output_ports
+                                if port in self.composition.sample_port_to_target_port_map
+                            ),
+                            None,
+                        )
+                        assert sample_port is not None, (
+                            f"PROGRAM ERROR: No target was found for OUTPUT node '{node.mechanism.name}' "
+                            f"in '{self.composition.name}'."
+                        )
+                        target_mechanism = self.composition.sample_port_to_target_port_map[sample_port].owner
+
+                    target_idx = self.composition.get_nodes_by_role(NodeRole.INPUT).index(target_mechanism)
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value

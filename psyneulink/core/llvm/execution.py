@@ -184,6 +184,12 @@ class Execution:
                         # Reshape to match the shape of the old value.
                         # Do not try to reshape ragged arrays.
                         if getattr(pnl_value, 'dtype', object) != object and pnl_value.shape != value.shape:
+                            if attribute == "value":
+                                from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import (
+                                    CompositionInterfaceMechanism,
+                                )
+                                if isinstance(component, CompositionInterfaceMechanism):
+                                    continue
 
                             # Reshape to match numpy 0d arrays and "matrix"
                             # parameters that are flattened in compiled form
