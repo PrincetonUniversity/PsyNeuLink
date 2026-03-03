@@ -1153,7 +1153,8 @@ class GRUComposition(AutodiffComposition):
     @handle_external_context()
     def infer_backpropagation_learning_pathways(self, execution_mode, context=None, base_context=None)->list:
         """Override to construct only TARGET Node and LossMechanism for GRUComposition.
-        Return a list containing TARGET Nodes, that needs to be referenced in inputs argument of learn()"""
+        Return a list containing TARGET Nodes, that needs to be referenced in inputs argument of learn()
+        """
 
         if execution_mode is not pnlvm.ExecutionMode.PyTorch:
             raise GRUCompositionError(f"Learning in {self.componentCategory} "
@@ -1205,7 +1206,6 @@ class GRUComposition(AutodiffComposition):
                         dependency_dict:dict,
                         queue:deque,
                         comp:AutodiffComposition):
-
         """Override to implement direct pathway through gru_mech for pytorch backprop pathway.
         Add direct_proj_in and direct_proj_out to self._pytorch_projections
         Other projections (including 'INPUT TO UPDATE WEIGHTS') are added in super()._get_pytorch_backprop_pathway()
@@ -1274,7 +1274,8 @@ class GRUComposition(AutodiffComposition):
         return [self.gru_mech, self.output_node]
 
     def _handle_illegal_sample_target_specs_from_learn(self, specs:list):
-        """Override to remove """
+        """Override to remove
+        """
         if self in specs:
             return super()._handle_illegal_sample_target_specs_from_learn(specs)
 
@@ -1305,7 +1306,8 @@ class GRUComposition(AutodiffComposition):
         """Override to return just 1,
         Since there is only one pathway through which learning can occur in GRUComposition:
         the direct pathway through the GRU mechanism (i.e., self.gru_mech), and no explicilty learnable Projections
-        (since that occurs within the Pytorch module itself"""
+        (since that occurs within the Pytorch module itself
+        """
         return 1
 
     def _validate_optimizer_param_invalid_GRU_projections(

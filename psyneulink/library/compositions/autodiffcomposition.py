@@ -1436,7 +1436,8 @@ class AutodiffComposition(Composition):
     @handle_external_context()
     def _get_pytorch_backprop_pathways(self, context)->list:
         """Get backpropagation pathways for all INPUT Nodes of AutodiffComposition
-        Return a list of all pathways"""
+        Return a list of all pathways
+        """
         self._analyze_graph()
         return [pathway
                     for node in (self.get_nodes_by_role(NodeRole.INPUT) + self.get_nodes_by_role(NodeRole.BIAS))
@@ -1813,8 +1814,7 @@ class AutodiffComposition(Composition):
                         break
                     # If item is a Node and any of its efferents project to a LossMechanism, break
                     if isinstance(item, ProcessingMechanism_Base):
-                        sender = backwards_pathway[i-1].receiver if isinstance(item, CompositionInterfaceMechanism) \
-                            else item
+                        sender = backwards_pathway[i - 1].receiver if isinstance(item, CompositionInterfaceMechanism) else item
                         if self._mech_is_sender_in_learnable_pathway(sender):
                             break
                     if isinstance(item, MappingProjection) and item.learnable:
@@ -2833,7 +2833,7 @@ class AutodiffComposition(Composition):
         self._handle_redundant_sample_target_specs()
 
         # Check that all specified Nodes are in the Composition
-        nodes_in_comp =  self._get_all_nodes()
+        nodes_in_comp = self._get_all_nodes()
         not_in_comp = []
         # Get entries in **targets** of constructor for Nodes that are not in the Composition
         # Note: ignore any specified LossMechanisms; they are added in _instantiate_loss_mechanisms()
@@ -2945,9 +2945,11 @@ class AutodiffComposition(Composition):
         # MODIFIED TEACHER_TARGET NEWER:
         # Add any illegal specs passed in to bad_specs for reporting in error message
         for spec in illegal_specs:
-            illegal_spec = (f"'{spec.target_spec.full_name}'"
-                            if isinstance (spec.target_spec, (OutputPort, ProcessingMechanism_Base))
-                            else spec.target_spec)
+            illegal_spec = (
+                f"'{spec.target_spec.full_name}'"
+                if isinstance(spec.target_spec, (OutputPort, ProcessingMechanism_Base))
+                else spec.target_spec
+            )
             bad_specs.append((spec, illegal_spec, f"does not correspond to any sample specified "
                                                   f"in the constructor"))
         # MODIFIED TEACHER_TARGET END

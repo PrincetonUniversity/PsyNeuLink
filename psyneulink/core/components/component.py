@@ -3821,7 +3821,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
     @property
     def full_name(self):
         """Stub to allow override by subclasses (such as port)
-        Allows use blind to whether subclass has a full_name attribute or not, providing default if not"""
+        Allows use blind to whether subclass has a full_name attribute or not, providing default if not
+        """
         return self.name
 
     @property

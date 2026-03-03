@@ -10559,7 +10559,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_redundant_sample_target_specs(self):
         # BREADCRUMB: CREATE OVERRIDE FOR Autodiff TO ALLOW TARGET and VALUE
         #             ULTIMATELY, MOVE TO sample_target_specs CLASS
-        """ Identify redundant specs for SAMPLE-TARGET pairs"""
+        """Identify redundant specs for SAMPLE-TARGET pairs
+        """
         all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
         sample_port_counts = counts(all_sample_specs_as_ports)
         return sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
@@ -10648,9 +10649,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  "sample_port in _sample_target_pairs")
             sources = [f"'{source}'" for source in sorted(set(entry.source for entry in self._sample_target_specs
                                                               if sample_port is entry.sample_port))]
-            if len (sources) == 1:
+            if len(sources) == 1:
                 source_str = f"{sources[0]} arg"
-            elif len (sources) == 2:
+            elif len(sources) == 2:
                 sources_str = f"{sources[0]} and {sources[1]} args"
             else:
                 source_str = f"{sources[0]}, {sources[1]} and {sources[2]} args"
