@@ -8,6 +8,8 @@
 
 # ********************************************* AutodiffComposition *************************************************
 
+import collections.abc
+
 from typing import Generator, Hashable, Union
 
 import numpy as np
@@ -287,8 +289,42 @@ class CompositionRunner():
                 # end early if patience exceeded
                 pass
 
+    def _get_trial_targets(self, targets, trial_num, execution_mode, context, base_context):
+        if targets is None:
+            return None
+
+        if callable(targets) and not isgeneratorfunction(targets):
+            targets = targets(trial_num)
+
+        if isinstance(targets, collections.abc.Mapping):
+            return {
+                key: (value[trial_num] if isinstance(value, (list, tuple, np.ndarray)) else value)
+                for key, value in targets.items()
+            }
+
+        target_nodes = self._composition.get_target_nodes(execution_mode=execution_mode,
+                                                          context=context,
+                                                          base_context=base_context)
+        if not target_nodes:
+            return None
+
+        trial_targets = targets[trial_num] if isinstance(targets, (list, tuple, np.ndarray)) else targets
+
+        if len(target_nodes) == 1:
+            return {target_nodes[0]: trial_targets}
+
+        if not isinstance(trial_targets, (list, tuple, np.ndarray)) or len(trial_targets) != len(target_nodes):
+            from psyneulink.core.compositions.composition import CompositionError
+            raise CompositionError(
+                f"Callable inputs for '{self._composition.name}.learn()' require trial-wise target values that "
+                f"match the number of TARGET Nodes ({len(target_nodes)})."
+            )
+
+        return dict(zip(target_nodes, trial_targets))
+
     def _batch_function_inputs(self,
                                inputs: dict,
+                               targets,
                                epochs: int,
                                num_trials: int,
                                minibatch_size: int = 1,
@@ -329,7 +365,13 @@ class CompositionRunner():
                     try:
                         self._composition._stim_num = i  # For debugging
                         input_batch, _ = self._composition._parse_targets_spec(inputs=inputs(idx),
-                                                                               targets=None,
+                                                                               targets=self._get_trial_targets(
+                                                                                   targets,
+                                                                                   idx,
+                                                                                   execution_mode,
+                                                                                   context,
+                                                                                   base_context,
+                                                                               ),
                                                                                execution_mode=execution_mode,
                                                                                context=context,
                                                                                base_context=base_context)
@@ -415,6 +457,8 @@ class CompositionRunner():
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
+        inputs_are_callable = callable(inputs) and not isgeneratorfunction(inputs)
+
         if (isinstance(inputs, dict) or callable(inputs) or
                 (isinstance(inputs, list) and all(isinstance(i, dict) for i in inputs))):
             inputs = [inputs]
@@ -426,6 +470,10 @@ class CompositionRunner():
             targets = [targets]
         elif targets is None:
             targets = inf_yield_val(targets)
+        elif (inputs_are_callable
+              and ((isinstance(targets, list) and not all(isinstance(t, dict) for t in targets))
+                   or isinstance(targets, (tuple, np.ndarray)))):
+            targets = [targets]
 
         if isgeneratorfunction(epochs):
             epochs = epochs()
@@ -468,6 +516,7 @@ class CompositionRunner():
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
                 minibatched_input = self._batch_function_inputs(stim_input,
+                                                                stim_target,
                                                                 stim_epoch,
                                                                 num_trials,
                                                                 minibatch_size,
