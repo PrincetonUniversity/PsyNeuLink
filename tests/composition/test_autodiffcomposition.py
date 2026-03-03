@@ -416,7 +416,7 @@ class TestAutodiffTargetSpecs:
             targets_learn_arg = None
 
         if target_spec == "str":
-            error_msg = ("Value (TARGET) assigned to parameter 'targets' of (AutodiffComposition AUTO-COMP).parameters "
+            error_msg = ("Value ('TARGET') assigned to parameter 'targets' of (AutodiffComposition AUTO-COMP).parameters "
                          "is not valid: should be a dict of sample:target pairs or, alternatively, a set or list of "
                          "(sample, target) tuples.")
             with pytest.raises(pnl.ParameterError, match=re.escape(error_msg)):
