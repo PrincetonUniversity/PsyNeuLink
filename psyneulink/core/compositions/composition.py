@@ -9749,11 +9749,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             learn_method_has_target_specs = bool(target_specs_from_learn_method)
 
             num_targets_specified_in_learn = len(target_specs_from_learn_method) if target_specs_from_learn_method else 0
-            # # MODIFIED TEACHER_TARGET OLD:
-            # TARGET_Nodes_in_comp = self.get_nodes_by_role(NodeRole.TARGET)
-            # MODIFIED TEACHER_TARGET NEW:
             TARGET_Nodes_in_comp = self.get_target_nodes(execution_mode, context, base_context)
-            # MODIFIED TEACHER_TARGET END
             num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
 
             target_specs_as_ports = {}
@@ -9781,12 +9777,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._warned_about_targets_mechs_in_inputs_and_targets = True
 
                 # Check that the number of target specifications equals the number of TARGET Nodes and learnable pathways
-                # # MODIFIED TEACH_TARGET OLD:
-                # num_targets_specified_in_learn = len(target_specs_as_ports)
-                # MODIFIED TEACH_TARGET NEW:
                 assert num_targets_specified_in_learn == len(target_specs_as_ports), \
                     f"PROGRAM ERROR: number of target_specs_as_ports not equal to number of targets specified in learn"
-                # MODIFIED TEACH_TARGET END
 
             if hasattr(self, 'targets') and self.targets:
                 total_num_target_specs_in_constructor = len(self.targets)
@@ -9826,13 +9818,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #   that receives a Projection in its TARGET InputPort from the TARGET Node (target_mech)
             sample_nodes = []
             for target in TARGET_Nodes_in_comp:
-                # # MODIFIED TEACHER_TARGET OLD:
-                # sample_node = target.efferents[0].receiver.owner.sample.owner
-                # # MODIFIED TEACHER_TARGET NEW:
-                # sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items() if t.owner is target)
                 # MODIFIED TEACHER_TARGET NEWER:
-                # TEACHER_TARGET BREADCRUMB: SHOULD POPULATE sample_port_to_target_port_map FOR COMPOSITION
+                # TEACHER_TARGET BREADCRUMB: SHOULD POPULATE sample_port_to_target_port_map FOR Composition
                 #                            AND THEN REVERT TO "NEW" ABOVE:
+                #                            OR, BETTER STILL, USE NodeRole.SAMPLE ONCE IMPEMENTED
                 if self.sample_port_to_target_port_map:
                     sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items()
                                        if t.owner is target)
@@ -9866,25 +9855,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             return target_specs_as_ports
 
-        # TEACHER_TARGET BREADCRUMB:
-        #                 IF None, NOT CALLED WHEN self.targets (from construtor) SO  _validate_targets_spec
-        #                 IF THIS IS {} IT WORKS, AS IT WON"T BE SKIPPED AND WILL ALLOW ITERS
-        #                 RELEVANT TESTS:
-        #                 - test_output_port_as_sample_for_loss_mech()
-        #                 - test_args_for_target_spec_errors()
-        # MODIFIED TEACHER_TARGET OLD:
-        # if targets is not None:
-        #     target_specs_as_ports = _validate_targets_spec(targets)
-        #     targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
-        #     inputs = _recursive_update(inputs, targets)
-        # # MODIFIED TEACHER_TARGET NEW:
-        # # If **targets** specified either in learn() or constructor for AutoodiffComposition:
-        # if targets is not None or (hasattr(self, 'targets') and self.targets):
-        #     target_specs_as_ports = _validate_targets_spec(targets)
-        #     targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
-        #     inputs = _recursive_update(inputs, targets)
-
-        # MODIFIED TEACHER_TARGET NEWER:
         # If **targets** arg not specified in learn(), look for and extract any targets specified in **inputs** arg
         if targets is None:
             inputs_copy = inputs.copy()
@@ -9897,7 +9867,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if target_specs_as_ports:
             targets = self._map_external_target_values_to_target_nodes(target_specs_as_ports, execution_mode)
             inputs = _recursive_update(inputs, targets)
-        # MODIFIED TEACHER_TARGET END
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >

@@ -466,21 +466,31 @@ class TestAutodiffTargetSpecs:
         4: ("The number of items (2) specified in the 'targets' arg of the learn() method for 'autodiff_composition' "
             "must equal the number of TARGET Nodes in the Composition (3).", CompositionError),
         5: ("The number of items (3) specified in the 'targets' arg of the learn() method for 'autodiff_composition' "
-            "must equal the number of TARGET Nodes in the Composition (2).", CompositionError)
+            "must equal the number of TARGET Nodes in the Composition (2).", CompositionError),
+        6: ("The following Node(s) have been specified to receive target inputs in the learn() method of "
+            "'autodiff_composition' but are not TARGET Nodes: 'pway2_mech_S'.", CompositionError),
+        7: ("The following Node(s) have been specified to receive target inputs in the learn() method of "
+            "'autodiff_composition' but are not TARGET Nodes: 'pway2_mech_S', 'pway3_mech_S'.", CompositionError)
     }
     test_args_for_target_spec_errors = [
-        #  sample_position  errant_position      method         spec_type      num_specs   err_msg_num
-        #  in/mid/out/all     in/mid/out     cnstr/lrn/both  Node/TARGET/both   -1/0/+1        #
-        # (     'all',            'in',           'cnstr',          'node',          0,          0), # not learnable
-        # (     'all',            'in',           'cnstr',         'TARGET',         0,          1), # not learnable
-        (     'mid',            'mid',          'cnstr',          'node',         -1,          2), # missing spec
-        # (     'mid',            'mid',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
-        (     'out',            'out',          'cnstr',          'node',         -1,          2), # missing spec
-        # (     'out',            'out',          'cnstr',         'TARGET',        -1,          3), # missing TARGET spec
-        # (     'all',            'in',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'mid',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'out',          'lrn',           'TARGET',         -1,          4), # missing TARGET spec
-        # (     'all',           'out',          'lrn',           'TARGET',         +1,          5), # extra TARGET spec
+        #  sample_position  errant_position     method         spec_type        num_specs  err_msg_num
+        #  in/mid/out/all     in/mid/out    cnstr/lrn/both Node/TARGET/both/bad  -1/0/+1       #
+        # TEACHER_TARGET BREADCRUMB: RESTORE AFTER DEBUGGING
+        (     'all',            'in',          'cnstr',         'node',             0,         0), # not learnable
+        (     'all',            'in',          'cnstr',        'TARGET',            0,         1), # not learnable
+        (     'mid',            'mid',         'cnstr',         'node',            -1,         2), # missing spec
+        (     'mid',            'mid',         'cnstr',        'TARGET',           -1,         3), # missing TARGET spec
+        (     'out',            'out',         'cnstr',         'node',            -1,         2), # missing spec
+        (     'out',            'out',         'cnstr',        'TARGET',           -1,         3), # missing TARGET spec
+        (     'all',            'in',           'lrn',         'TARGET',           -1,         4), # missing TARGET spec
+        (     'all',            'mid',          'lrn',         'TARGET',           -1,         4), # missing TARGET spec
+        (     'all',            'out',          'lrn',         'TARGET',           -1,         4), # missing TARGET spec
+        (     'all',            'mid',          'lrn',         'TARGET',           +1,         5), # extra TARGET spec
+        (     'all',            'mid',          'lrn',           'bad',            -1,         4), # 1 bad + 1 missing
+        (     'all',            'mid',          'lrn',           'bad',             0,         6), # 1 bad TARGET spec
+        (     'all',            'mid',          'lrn',          'both',             0,         7), # 2 bad TARGET specs
+        (     'all',            'mid',          'lrn',           'bad',            +1,         5), # 1 bad + 1 extra
+        # (     'all',            'mid',          'both',         'both',             0,         5), # cstr & lrn specs
     ]
     @pytest.mark.pytorch
     @pytest.mark.composition
@@ -488,12 +498,20 @@ class TestAutodiffTargetSpecs:
                              test_args_for_target_spec_errors)
     def test_target_spec_errors_in_constructor_and_learn(self, sample_position, errant_position, method,
                                                          spec_type, num_specs, err_msg_num):
+        #TEACHER_TARGET BREADCRUMB: TODO:
+        #                 - TWO TARGETS FOR SAME SAMPLE
+        #                 - OK FOR TWO SAMPLES FOR SAME TARGET Node
+        #                 - BAD SPEC TYPE (e.g., string that isn't 'TARGET' or 'node')
+        #                 ? PATHWAY WITH >1 NODE AND NO LEARNABLE PROJECTIONS
+        #                 - CONSTRUTOR AND LEARN
         # Construct 3 pathways, using sample position to determine where the sample is in each of the pathways:
         #     intrl: all in middle_mech
         #     output: all in output_mech
         #     both: at least one of each
         # method: where to place the error; both should generate an error of its own for num_specs = 0
-        # spec_type: Node, pnl.TARGET or at least one of each
+        # spec_type:
+        #    for method='cnstr": Node specified as target or pnl.TARGET used to specify external input
+        #    for method='lrn": bad => wrong node specified; both => extra + bad or missing + bad
         # num_specs: -1 = missing spec, +1 = extra spec, 0 = correct number (for method=both)
         pway1_mech_A = pnl.ProcessingMechanism(name='pway1_mech_A')
         pway1_mech_B = pnl.ProcessingMechanism(name='pway1_mech_B')
@@ -526,11 +544,13 @@ class TestAutodiffTargetSpecs:
         if method == 'cnstr':
             if spec_type == 'node':
                 if num_specs == 0:
+                    # Not learnable error
                     if errant_position == 'in':
                         constructor_targets = {pway3_mech_S: pway3_mech_T}
                     else:
                         assert False, f"TEST ERROR: bad 'errant_position'"
                 elif num_specs == -1:
+                    # Missing Node spec error
                     if errant_position in {'mid', 'out'}:
                         constructor_targets = {pway1_mech_S: pway1_mech_T,
                                                pway3_mech_S: pway3_mech_T}
@@ -538,20 +558,23 @@ class TestAutodiffTargetSpecs:
                     assert False, f"TEST ERROR: bad 'num_specs' spec"
             elif spec_type == 'TARGET':
                 if num_specs == 0:
+                    # Not learnable error
                     if errant_position == 'in':
                         constructor_targets = {pway3_mech_S: pnl.TARGET}
                 if num_specs == -1:
+                    # Missing TARGET spec error
                     if errant_position == 'mid':
                         constructor_targets = {pway1_mech_S: pnl.TARGET,
                                                pway3_mech_S: pnl.TARGET}
                         learn_targets = {pway1_mech_S: [[10]]}
+                    # Missing TARGET spec error
                     elif errant_position == 'out':
                         constructor_targets = {pway2_mech_S: pnl.TARGET,
                                                pway3_mech_S: pnl.TARGET}
                         learn_targets = {pway1_mech_S: [[10]]}
             # BREADCRUMB: TO BE CONSTRUCTED:
             elif spec_type == 'both':
-                if num_specs == -1:
+                if num_specs == 0:
                     if errant_position == 'mid':
                         constructor_targets = {pway1_mech_S: pway1_mech_T,
                                                pway3_mech_S: pnl.TARGET}
@@ -562,40 +585,78 @@ class TestAutodiffTargetSpecs:
         elif method == 'lrn':
             constructor_targets = None
             if num_specs == -1:
-                if errant_position == 'in':
-                    learn_targets = {pway2_mech_B: [[10]],
+                if spec_type == 'TARGET':
+                    # Missing spec in **targets** arg of learn() method
+                    if errant_position == 'in':
+                        learn_targets = {pway2_mech_B: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    elif errant_position == 'mid':
+                        learn_targets = {pway1_mech_S: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    elif errant_position == 'out':
+                        learn_targets = {pway1_mech_S: [[10]],
+                                         pway2_mech_B: [[10]]}
+                elif spec_type == 'bad':
+                    # Missing spec in **targets** arg of learn() method, and wrong spec for one that is present
+                    learn_targets = {pway2_mech_S: [[10]],
                                      pway3_mech_B: [[10]]}
-                elif errant_position == 'mid':
+            elif num_specs == 0:
+                if spec_type == 'bad':
+                    # One bad specificatons: pway2_mech_S should be pway2_mech_B)
                     learn_targets = {pway1_mech_S: [[10]],
+                                     pway2_mech_S: [[10]],
                                      pway3_mech_B: [[10]]}
-                elif errant_position == 'out':
+                elif spec_type == 'both':
+                    # Two bad specificatons: pway2_mech_S and pway2_mech_S (should be pway2_mech_B and pway3_mech_B)
                     learn_targets = {pway1_mech_S: [[10]],
-                                     pway2_mech_B: [[10]]}
+                                     pway2_mech_S: [[10]],
+                                     pway3_mech_S: [[10]]}
             elif num_specs == +1:
-                learn_targets = {pway1_mech_S: [[10]],
-                                 pway2_mech_B: [[10]],
-                                 pway3_mech_B: [[10]],
-                                 }
+                if spec_type == 'TARGET':
+                    # Extra spec in **targets** arg of learn() method
+                    learn_targets = {pway1_mech_S: [[10]],
+                                     pway2_mech_B: [[10]],
+                                     pway3_mech_B: [[10]],
+                                     }
+                # 1 bad and 1 extra spec in **targets** arg of learn() method
+                elif spec_type == 'bad':
+                    learn_targets = {pway1_mech_S: [[10]],
+                                     pway2_mech_S: [[10]],
+                                     pway3_mech_B: [[10]]}
             else:
                 assert False, "TEST ERROR: bad num_specs"
 
-        # BREADCRUMB: TO BE CONSTRUCTED:
-        elif spec_type == 'both':
-            if num_specs == -1:
-                if errant_position == 'mid':
-                    constructor_targets = {pway1_mech_S: pway1_mech_T,
-                                           pway3_mech_S: pnl.TARGET}
-                elif errant_position == 'out':
-                    constructor_targets = {pway2_mech_S: pway1_mech_T,
-                                           pway3_mech_S: pnl.TARGET}
+        elif method == 'both':
+            constructor_targets = {pway1_mech_S: pway1_mech_T,
+                                   pway2_mech_S: pway2_mech_T,
+                                   pway3_mech_B: pnl.TARGET}
+            learn_targets = {pway3_mech_B: [[10]]}
 
-
-        if method == 'lrn' and num_specs == +1:
-            pathways = [pway1, pway2, pway1_mech_T, pway2_mech_T, pway3_mech_T]
-            inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]]}
         else:
+            assert False, f"TEST ERROR: bad method spec"
+
+        # Construct pathways
+        if method in {'cnstr', 'both'}:
+            # Include pway1_mech_T, pway2_mech_T and pway3_mech_T for use as TARGET specs
             pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T, pway3_mech_T]
             inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+        elif method == 'lrn':
+            # No need for pway1_mech_T, pway2_mech_T or pway3_mech_T
+            if num_specs == -1:
+                # Construct 3 pathways, so that one can be missing
+                pathways = [pway1, pway2, pway3]
+                inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+            if num_specs == 0:
+                if spec_type in {'bad', 'both'}:
+                    # Construct 3 pathways, one of which will get erroneous spec
+                    pathways = [pway1, pway2, pway3]
+                    inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+            elif num_specs == +1:
+                # Construct 2 pathways, so the 3rd spec can be the erroneous extra one
+                pathways = [pway1, pway2]
+                inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]]}
+        else:
+            assert False, f"TEST ERROR: bad method spec"
 
         error_msg = self.error_messages_for_target_spec_errors[err_msg_num][0]
         error_type = self.error_messages_for_target_spec_errors[err_msg_num][1]
