@@ -1164,7 +1164,16 @@ class AutodiffComposition(Composition):
         device = None
 
         def _validate_loss_spec(self, spec):
-            if spec and spec not in Loss and torch_available and not isinstance(torch.nn.modules.loss._Loss):
+            if spec:
+                try:
+                    if spec in Loss:
+                        return
+                except TypeError:
+                    pass
+
+                if not torch_available or isinstance(spec, torch.nn.modules.loss._Loss):
+                    return
+
                 return f"must be a member of the Loss enum or a PyTorch loss function."
 
         def _parse_targets(self, specs)->list:

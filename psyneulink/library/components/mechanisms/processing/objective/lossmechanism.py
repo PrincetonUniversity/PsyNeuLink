@@ -235,8 +235,11 @@ class LossMechanism(#ModulatoryMechanism_Base,
                 # Check for Loss spec
                 from psyneulink.core.globals.keywords import Loss
 
-                if function in Loss:
-                    return True
+                try:
+                    if function in Loss:
+                        return True
+                except TypeError:
+                    pass
 
                 try:
                     import torch.nn
