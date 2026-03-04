@@ -3184,7 +3184,9 @@ import numpy as np
 import pint
 import toposort
 from PIL import Image
+from babel.util import missing
 from beartype import beartype
+from torch.utils.benchmark.utils.cpp_jit import CXX_FLAGS
 
 from psyneulink._typing import Callable, Literal, List, Mapping, Optional, Set, Type, Union
 
@@ -9756,6 +9758,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_specs_as_mechs = []
 
             if learn_method_has_target_specs:
+                # Process **targets** for learn() method for validation
+
                 # Standardize on use of output_ports for designating targets
                 for target_spec, value in target_specs_from_learn_method.items():
                     # convert any targets specified as Mechanisms to its primary OutputPort
@@ -9776,17 +9780,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   f"is not technically a problem, but it is redundant; one or the other is sufficient.")
                     self._warned_about_targets_mechs_in_inputs_and_targets = True
 
-                # Check that the number of target specifications equals the number of TARGET Nodes and learnable pathways
+                # Check that the number of target specifications equals the number of TARGET Nodes
                 assert num_targets_specified_in_learn == len(target_specs_as_ports), \
                     f"PROGRAM ERROR: number of target_specs_as_ports not equal to number of targets specified in learn"
 
-            if hasattr(self, 'targets') and self.targets:
+            # TEACHER_TARGET BREADCRUMB: REFACTOR THE FOLLOWING BY FORMING SETS FOR CONSTRUCTOR AND LEARN TARGET SPECS
+            #                            AND THEN COMPARING THEM TO IDENTIFY MISMATCHES AND GENERATE ERRORS ACCORDINGLY
+
+            # # MODIFIED TEACHER_TARGET  OLD:
+            # if hasattr(self, 'targets') and self.targets:
+            # MODIFIED TEACHER_TARGET  NEW:
+            if constructor_has_target_specs:
+                # MODIFIED TEACHER_TARGET  END
+                if learn_method_has_target_specs:
+                    # Any **targets** specified in the lear() method must correpond to ones specified as *TARGETS*
+                    #   in the **targets** arg of the constructor
+                    bad_specs = [spec for spec in target_specs_as_ports if spec not in [s[0] for s in self.targets]]
+                    bad_spec_names_as_specified_in_targets = \
+                        [f"'{spec.full_name}'" if spec in target_specs_from_learn_method
+                         else f"'{spec.owner.name}'" for spec in bad_specs]
+                    if bad_specs:
+                        raise CompositionError(f"The following entries in the 'targets' arg of the learn() method for "
+                                               f"'{self.name}' are not specified as 'TARGETS' in the 'targets' arg of "
+                                               f"its constructor: {', '.join(bad_spec_names_as_specified_in_targets)}.")
+
                 total_num_target_specs_in_constructor = len(self.targets)
                 num_TARGETS_specified_in_constructor = len([v for v in self.targets
                                                             if isinstance(v, tuple) and v[1] == TARGET])
+                # if num_targets_specified_in_learn < num_TARGETS_specified_in_constructor:
+                #     # TEACHER_TARGET BREADCRUMB: FIND TARGETS NOT SPECIFIED IN LEARN AND INCLUDE IN ERROR
+                #     missing_specs = [spec for spec in target_specs_as_ports if spec not in [s[0] for s in self.targets]]
+                #     missing_spec_names_as_specified_in_targets = \
+                #         [f"'{spec.full_name}'" if spec in target_specs_from_learn_method
+                #          else f"'{spec.owner.name}'" for spec in bad_specs]
+                #     raise CompositionError(
+                #         f"The 'targets' argument of the learn() method for '{self.name}' is missing entries for the "
+                #         f"following Node(s) specified as 'TARGET' in the 'targets' argument of its constructor: "
+                #         f"{', '.join(missing_spec_names_as_specified_in_targets)}")
                 if num_targets_specified_in_learn != num_TARGETS_specified_in_constructor:
+                    assert True
                     # If **targets** was specified in the constructor, then the number of specified with 'TARGET' there
-                    # must equal the number specified in **targets** of learn here
+                    # must equal the number specified in **targets** of learn()
                     raise CompositionError(
                         f"The number of items ({num_targets_specified_in_learn}) specified in the 'targets' argument "
                         f"of the learn() method for '{self.name}' must equal the number specified with the keyword "
@@ -9799,15 +9833,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.num_target_specs = total_num_target_specs_in_constructor
 
             else:
+                # No **targets** specific in constructor, so all OUTPUT Nodes in the Composition should be
+                # aassigned TARGET Nodes, which should match the number of learnable pathways in the Composition
+                assert num_TARGET_Nodes_in_comp == self.num_learnable_pathways, \
+                    (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
+                     f"is not equal to the number of learnable pathways ({self.num_learnable_pathways}).")
+
+                if num_targets_specified_in_learn < num_TARGET_Nodes_in_comp:
+                    assert True
                 if num_targets_specified_in_learn != num_TARGET_Nodes_in_comp:
+                    assert True
                     # Since **targets** arg of the constructor was not specified, then TARGET Nodes should have been
-                    # automatically constructred, and the number in **targets** arg of learn() should be equal to that
+                    # automatically constructed, and the number in **targets** arg of learn() should be equal to that
                     raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
                                            f"'targets' arg of the learn() method for '{self.name}' must equal the "
                                            f"number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}).")
-                    assert num_TARGET_Nodes_in_comp != self.num_learnable_pathways, \
-                        (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
-                         f"is not equal to the number of learnable pathways ({self.num_learnable_pathways}).")
                 self.num_target_specs = num_targets_specified_in_learn
 
             # Check for target specs that do not refer to a OUTPUT Node (for which a TARGET Node has been constructed)
@@ -9833,6 +9873,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sample_nodes.append(sample_node)
             # TEACHER_TARGET BREADCRUMB: SHOULD REPLACE THIS WITH USE OF NodeRole.SAMPLE ONCE ADDED:
             # sample_nodes = self.all_nodes(self.get_nodes_by_role(NodeRole.SAMPLE))
+            # TEACHER_TARGET BREADCRUMB: USE TYPE OF SPEC (MECH OR OUTPUTPORT) IN ERR MSG THAT IS WHAT WAS ORIG SPEC'D
             legal_target_specs = sample_nodes + TARGET_Nodes_in_comp
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
