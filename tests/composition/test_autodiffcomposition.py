@@ -486,7 +486,7 @@ class TestAutodiffTargetSpecs:
         #  in/mid/out/all     in/mid/out    cnstr/lrn/both Node/TARGET/both/bad  -1/0/+1       #
         # (     'all',            'in',          'cnstr',         'node',             0,         0), # not learnable
         # (     'all',            'in',          'cnstr',        'TARGET',            0,         1), # not learnable
-        # (     'mid',            'mid',         'cnstr',         'node',            -1,         2), # missing spec
+        (     'mid',            'mid',         'cnstr',         'node',            -1,         2), # missing spec
         (     'mid',            'mid',         'cnstr',        'TARGET',           -1,         3), # missing TARGET spec
         # (     'out',            'out',         'cnstr',         'node',            -1,         2), # missing spec
         (     'out',            'out',         'cnstr',        'TARGET',           -1,         9), # missing TARGET spec
@@ -510,8 +510,10 @@ class TestAutodiffTargetSpecs:
         #TEACHER_TARGET BREADCRUMB: TODO:
         #                 - TWO TARGETS FOR SAME SAMPLE -> ERROR
         #                 - TWO SAMPLES FOR SAME TARGET Node -> OK
-        #                 - BAD SPEC TYPE (e.g., string that isn't 'TARGET' or 'node')
-        #                 ? PATHWAY WITH >1 NODE AND NO LEARNABLE PROJECTIONS
+        #                 - BAD SPEC TYPE (e.g., string that isn't 'TARGET' or 'node') -> ERROR
+        #                 ? PATHWAY WITH >1 NODE AND NO LEARNABLE PROJECTIONS -> ERROR
+        #                 - SAMPLE AND TARGET Node FOR THAT SAME BOTH AS ENTRIES IN **targets** FOR learn()
+        #                                (POSSIBLE SINCE THEY ARE DIFFERENT KEYS IN THE DICT) -> ERROR
         # Construct 3 pathways, using sample position to determine where the sample is in each of the pathways:
         #     intrl: all in middle_mech
         #     output: all in output_mech
