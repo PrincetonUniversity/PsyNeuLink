@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 
 import psyneulink as pnl
 
-
 # MODEL CONFIGURATION
 EGO_NAME = "EGO"
 EM_NAME = "EM"
@@ -25,12 +24,12 @@ STATE_RETRIEVAL_WEIGHT: float | None = None
 CONTEXT_RETRIEVAL_WEIGHT: float = .5
 PREVIOUS_STATE_RETRIEVAL_WEIGHT: float = .5
 
-MEMORY_INIT = .01
+MEMORY_INIT = .001
 
 SOFTMAX_TEMPERATURE: float = .1
-SOFTMAX_THRESHOLD: float = .001
+SOFTMAX_THRESHOLD: float = .01
 
-LEARNING_RATE: float = 0.5
+LEARNING_RATE: float = 1.
 NUM_OPTIM_STEPS: int = 10
 
 
@@ -47,7 +46,8 @@ def construct_model(
 
     # Context layer (learned representation of the context, which is integrated over time)
     context_layer = pnl.TransferMechanism(
-        name=CONTEXT_NAME, input_shapes=STATE_SIZE,
+        name=CONTEXT_NAME,
+        input_shapes=STATE_SIZE,
         function=pnl.Tanh(gain=1),
         integrator_mode=True,
         integration_rate=CONTEXT_INTEGRATION_RATE)
@@ -86,7 +86,8 @@ def construct_model(
         enable_learning=True,
         learning_rate=LEARNING_RATE,
         device=pnl.CPU,
-        store_on_optimization='last')
+        store_on_optimization='last'
+    )
 
     prediction_layer = pnl.ProcessingMechanism(name=PREDICTION_NAME, input_shapes=STATE_SIZE)
 
@@ -143,8 +144,10 @@ def construct_model(
                   context_learning_pathway],
         learning_rate=LEARNING_RATE,
         loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
-        execute_in_additional_optimizations={context_layer: pnl.LAST,
-                                             previous_state_layer: pnl.LAST},
+        execute_in_additional_optimizations={
+            context_layer: pnl.LAST,
+            previous_state_layer: pnl.LAST,
+        },
         # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
         optimizations_per_minibatch=NUM_OPTIM_STEPS,
 
@@ -191,6 +194,9 @@ def get_trials(
     10 (cue) -> 1 -> 4 -> 5 -> 8
     10 (cue) -> 2 -> 3 -> 6 -> 7
 
+    Blocked paradigm: contexts are blocked together
+    Interleaved paradigm: contexts are alternating
+
     Arguments:
         paradigm: The name of the paradigm (allowed values are "interleaved" and "blocked").
         n_contexts: The number of contexts to generate (required for both paradigms). The number of states
@@ -204,14 +210,14 @@ def get_trials(
     def gen_context_1():
         # context cue + random "first" state (1 or 2)
         states = [9, np.random.choice([1, 2])]
-        for _ in range(2):
+        for _ in range(3):
             states.append(states[-1] + 2)
         return states
 
     def gen_context_2():
         # context cue + random "first" state (1 or 2)
         states = [10, np.random.choice([1, 2])]
-        for _ in range(2):
+        for _ in range(3):
             if states[-1] % 2 == 0:
                 states.append(states[-1] + 1)
             else:
@@ -223,8 +229,8 @@ def get_trials(
         Generate interleaved contexts for the model.
         """
         contexts = []
-        for _ in range(n_contexts):
-            if np.random.rand() < 0.5:
+        for i in range(n_contexts):
+            if i % 2 == 0:
                 contexts += gen_context_1()
             else:
                 contexts += gen_context_2()
@@ -251,14 +257,22 @@ def get_trials(
 
         return contexts
 
+    def gen_contexts_test():
+        contexts = []
+        for i in range(n_contexts // 4):
+            if np.random.random() < 0.5:
+                contexts += gen_context_1()
+            else:
+                contexts += gen_context_2()
+        return contexts
+
     if paradigm not in ['interleaved', 'blocked']:
         raise ValueError('Paradigm must be either `interleaved` or `blocked`.')
 
     if paradigm == 'interleaved':
-        return [to_one_hot(c) for c in gen_contexts_interleaved()]
+        return [to_one_hot(c) for c in gen_contexts_interleaved() + gen_contexts_test()]
     if paradigm == 'blocked':
-        return [to_one_hot(c) for c in gen_contexts_blocked()]
-
+        return [to_one_hot(c) for c in gen_contexts_blocked() + gen_contexts_test()]
 
 
 def run_model(model,
@@ -273,30 +287,57 @@ def run_model(model,
                 synch_results_with_torch=pnl.RUN,
                 )
 
-    print(model.results)
 
-    return model.results[::NUM_OPTIM_STEPS][:, 2]
+    R = np.asarray(model.results)  # shape: (T * NUM_OPTIM_STEPS, ...)
+    # your code uses [:, 2] as the prediction output; keep that
+    preds = R[:, 2]
 
-def plot_results(predictions, targets):
-    fig, ax = plt.subplots()
-    # print(len(predictions))
-    # print(target)
-    accuracy = 1 - (np.abs(predictions - targets)).sum(-1) / 2
-    ax.plot(accuracy)
-    ax.set_xlabel('Stimuli')
-    ax.set_ylabel('loss')
+    # IMPORTANT: in this results stream, each logical trial contributes NUM_OPTIM_STEPS entries.
+    # First entry = pre-update prediction, last entry = post-K-updates prediction.
+    preds_first = preds[0::NUM_OPTIM_STEPS]
+    preds_last = preds[(NUM_OPTIM_STEPS - 2)::NUM_OPTIM_STEPS]
+
+    return preds_first, preds_last
+
+def compute_accuracy(predictions, targets):
+    preds = np.asarray(predictions).reshape(-1, 5, 10)[:, 2:, :].reshape(-1, 10)
+    targs = np.asarray(targets).reshape(-1, 5, 10)[:, 2:, :].reshape(-1, 10)
+
+    accuracy = 1 - np.abs(preds - targs).sum(axis=1) / 2
+    return accuracy
+
+def plot_results(*series, labels=None):
+    fig, ax = plt.subplots(figsize=(8,4))
+
+    for i, acc in enumerate(series):
+        label = labels[i] if labels else f"series {i+1}"
+        ax.plot(acc, label=label, alpha=0.9)
+
+    ax.set_xlabel("Stimuli")
+    ax.set_ylabel("Accuracy")
+    ax.set_ylim(0, 1)
+
+    if len(series) > 1:
+        ax.legend()
+
+    ax.grid(alpha=0.3)
+
+    plt.tight_layout()
     plt.show()
 
 
-if __name__ == '__main__':
-    trials = get_trials('interleaved', 200, n_blocks=4)
-    targets = trials
-    print(len(trials))
+if __name__ == "__main__":
+    trials = get_trials("interleaved", 50, n_blocks=4)
+
     model = construct_model(memory_capacity=len(trials))
-    results = run_model(model, trials)
+    preds_first, preds_last = run_model(model, trials)
 
+    acc_first = compute_accuracy(preds_first, trials)
+    acc_last = compute_accuracy(preds_last, trials)
 
-    plot_results(results, targets)
-    # model, _, _, _ = construct_model(memory_capacity=5)
-    # results = run_model(model, trials)
-    print(results)
+    plot_results(
+        acc_first,
+        acc_last,
+        labels=["Pre-update", "Post-update"]
+    )
+
