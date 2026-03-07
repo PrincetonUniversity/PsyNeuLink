@@ -16,6 +16,9 @@ try:
     from .grucomposition import *
     __all__.extend(grucomposition.__all__)
 
+    from .rnncomposition import *
+    __all__.extend(rnncomposition.__all__)
+
     # Some torch releases have silent dependency on a more recent numpy than the one curently required by PNL.
     # This breaks torch numpy bindings, see e.g:  https://github.com/pytorch/pytorch/issues/100690
     torch.tensor([1,2,3]).numpy()

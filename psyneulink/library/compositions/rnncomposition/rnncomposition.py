@@ -768,7 +768,7 @@ class RNNComposition(AutodiffComposition):
         input_biases_learning_rate = Parameter(True, structural=True)
         hidden_biases_learning_rate = Parameter(True, structural=True)
 
-        hidden_function = Parameter(Tanh(), structural=True, stateful=False)
+        hidden_function = Parameter(Tanh, structural=True, stateful=False)
 
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
@@ -806,7 +806,7 @@ class RNNComposition(AutodiffComposition):
                  input_size=None,
                  hidden_size=None,
                  bias=None,
-                 enable_learning=True,
+                 enable_learning=False,
                  learning_rate=None,
                  hidden_function=None,
                  random_state=None,

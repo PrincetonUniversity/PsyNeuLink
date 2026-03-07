@@ -12,6 +12,7 @@
 import numpy as np
 import graph_scheduler
 import torch
+from collections import defaultdict
 
 from typing import Union, Optional, Literal, Tuple
 
@@ -21,9 +22,12 @@ import psyneulink.core.scheduling.condition as conditions
 from psyneulink.core.compositions.composition import LearningScale, NodeRole
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection, DuplicateProjectionError
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-from psyneulink.library.compositions.pytorchwrappers import PytorchCompositionWrapper, PytorchMechanismWrapper, \
-    PytorchProjectionWrapper, PytorchFunctionWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple
+from psyneulink.library.compositions.pytorchwrappers import (
+    PytorchCompositionWrapper, PytorchMechanismWrapper, PytorchProjectionWrapper, PytorchFunctionWrapper,
+    PytorchLossMechanismWrapper, ENTER_NESTED, EXIT_NESTED, TorchParam, ParamNameCompositionTuple)
+
 from psyneulink.library.components.mechanisms.processing.objective.lossmechanism import LossMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
@@ -361,7 +365,7 @@ class PytorchRNNCompositionWrapper(PytorchCompositionWrapper):
 
     @handle_external_context()
     def forward(self, inputs, optimization_num, synch_with_pnl_options, retain_in_pnl_options,
-                full_sequence_mode, sequence_lengths, context=None) -> dict:
+                full_sequence_mode, sequence_lengths, context=None):
         """Forward method of the model for PyTorch modes
 
         This is called only when RNNComposition is run as a standalone Composition.
@@ -408,49 +412,38 @@ class PytorchRNNCompositionWrapper(PytorchCompositionWrapper):
             if SYNCH in proj_wrapper._use:
                 proj_wrapper._copy_pnl_proj_to_torch_rnn_parameter(context, self.torch_dtype)
 
-    def get_parameters_from_torch_rnn(self) -> Tuple[torch.Tensor]:
+    @staticmethod
+    def get_parameters_from_torch_rnn(torch_rnn) -> Tuple[tuple, tuple | None]:
         """
-        Get parameters from PyTorch RNN module corresponding to RNNComposition's Projections.
-        Format tensors:
-          - transpose all weight and bias tensors;
-          - reformat biases as 2d
-        Return formatted tensors, which are used:
-         - in set_weights_from_torch_rnn(), where they are converted to numpy arrays
-         - for forward computation in pytorchRNNWrappers._copy_pytorch_node_outputs_to_pnl_values()
+        Get parameters from the PyTorch RNN module corresponding to RNNComposition's Projections.
+
+        Returns
+        -------
+        weights : tuple
+            (wts_ih, wts_hh), each transposed to match PNL projection matrix shape.
+
+        biases : tuple | None
+            (bias_ih, bias_hh), each formatted as 2d arrays, or None if bias=False.
         """
-
-        hid_len = self.hidden_size
-        z_idx = hid_len
-        n_idx = 2 * hid_len
-
-        wts_ih = self.state_dict()[W_IH_NAME]
-        wts_ir = wts_ih[:z_idx].T.detach().cpu().numpy().copy()
-        wts_iu = wts_ih[z_idx:n_idx].T.detach().cpu().numpy().copy()
-        wts_in = wts_ih[n_idx:].T.detach().cpu().numpy().copy()
-        wts_hh = self.state_dict()[W_HH_NAME]
-        wts_hr = wts_hh[:z_idx].T.detach().cpu().numpy().copy()
-        wts_hu = wts_hh[z_idx:n_idx].T.detach().cpu().numpy().copy()
-        wts_hn = wts_hh[n_idx:].T.detach().cpu().numpy().copy()
-        weights = (wts_ir, wts_iu, wts_in, wts_hr, wts_hu, wts_hn)
+        wts_ih = torch_rnn.state_dict()[W_IH_NAME].T.detach().cpu().numpy().copy()
+        wts_hh = torch_rnn.state_dict()[W_HH_NAME].T.detach().cpu().numpy().copy()
+        weights = (wts_ih, wts_hh)
 
         biases = None
-        if self.bias:
-            # Transpose 1d bias Tensors using permute instead of .T (per PyTorch warning)
-            b_ih = self.state_dict()['bias_ih_l0']
-            b_ir = torch.atleast_2d(
-                b_ih[:z_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_iu = torch.atleast_2d(
-                b_ih[z_idx:n_idx].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_in = torch.atleast_2d(
-                b_ih[n_idx:].permute(*torch.arange(b_ih.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hh = self.state_dict()['bias_hh_l0']
-            b_hr = torch.atleast_2d(
-                b_hh[:z_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hu = torch.atleast_2d(
-                b_hh[z_idx:n_idx].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            b_hn = torch.atleast_2d(
-                b_hh[n_idx:].permute(*torch.arange(b_hh.ndim - 1, -1, -1))).detach().cpu().numpy().copy()
-            biases = (b_ir, b_iu, b_in, b_hr, b_hu, b_hn)
+        if torch_rnn.bias:
+            b_ih = torch_rnn.state_dict()[B_IH_NAME]
+            b_hh = torch_rnn.state_dict()[B_HH_NAME]
+
+            bias_ih = torch.atleast_2d(
+                b_ih.permute(*torch.arange(b_ih.ndim - 1, -1, -1))
+            ).detach().cpu().numpy().copy()
+
+            bias_hh = torch.atleast_2d(
+                b_hh.permute(*torch.arange(b_hh.ndim - 1, -1, -1))
+            ).detach().cpu().numpy().copy()
+
+            biases = (bias_ih, bias_hh)
+
         return weights, biases
 
     def _torch_params_to_projections(self, param_groups: list) -> dict:
@@ -557,15 +550,12 @@ class PytorchRNNMechanismWrapper(PytorchMechanismWrapper):
           received from other node(s) that project to the RNNComposition, and its outputs used by the
           collect_afferents method(s) of the other node(s) that receive Projections from the  RNNComposition.
         """
-
         # Get hidden state from RNNComposition's HIDDEN_NODE.value
-        from psyneulink.library.compositions.rnncomposition.rnncomposition import HIDDEN_LAYER
-
         self.composition.pytorch_representation._set_synch_with_pnl(self, synch_with_pnl_options)
 
         self.input = variable
 
-        hidden_state = self.composition.nodes[HIDDEN_LAYER].parameters.value.get(context)
+        hidden_state = self.composition.hidden_layer_node.output_port.parameters.value.get(context)
         self.hidden_state = torch.tensor(hidden_state).unsqueeze(1)
         # Save starting hidden_state for re-computing current values in _copy_pytorch_node_outputs_to_pnl_values()
         self.previous_hidden_state = self.hidden_state.detach()
@@ -669,44 +659,32 @@ class PytorchRNNMechanismWrapper(PytorchMechanismWrapper):
         return res
 
     def _calculate_torch_rnn_internal_state_values(self, input, hidden_state) -> dict:
-        """Manually calculate and store internal state values for torch RNN prior to backward pass
-        These are needed for assigning to the corresponding nodes in the RNNComposition.
-        Returns r_t, z_t, n_t, h_t current reset, update, new, hidden and state values, respectively
         """
+        Manually calculate and store internal state values for torch RNN prior to backward pass.
 
-        torch_rnn_parameters = PytorchRNNCompositionWrapper.get_parameters_from_torch_rnn(self.function.function)
+        Returns
+        -------
+        dict
+            Contains only the final hidden state.
+        """
+        torch_rnn = self.function.function
 
-        # Get weights
-        torch_weights = list(torch_rnn_parameters[0])
-        for i, weight in enumerate(torch_weights):
-            torch_weights[i] = torch.tensor(weight, dtype=self.torch_dtype)
-        w_ir, w_iz, w_in, w_hr, w_hz, w_hn = torch_weights
+        w_ih = torch_rnn.state_dict()[W_IH_NAME].T.detach().to(self.torch_dtype)
+        w_hh = torch_rnn.state_dict()[W_HH_NAME].T.detach().to(self.torch_dtype)
 
-        # Get biases
-        pnl_comp = self.composition
-        if pnl_comp.bias:
-            assert len(torch_rnn_parameters) > 1, \
-                (f"PROGRAM ERROR: '{pnl_comp.name}' has bias set to True, "
-                 f"but no bias weights were returned for torch_rnn_parameters.")
-            torch_biases = list(torch_rnn_parameters[1])
-            for i, bias in enumerate(torch_rnn_parameters[1]):
-                torch_biases[i] = torch.tensor(bias, dtype=self.torch_dtype)
-
-            b_ir, b_iz, b_in, b_hr, b_hz, b_hn = torch_biases
+        if torch_rnn.bias:
+            b_ih = torch.atleast_2d(torch_rnn.state_dict()[B_IH_NAME]).detach().to(self.torch_dtype)
+            b_hh = torch.atleast_2d(torch_rnn.state_dict()[B_HH_NAME]).detach().to(self.torch_dtype)
         else:
-            b_ir = b_iz = b_in = b_hr = b_hz = b_hn = 0.0
+            b_ih = 0.0
+            b_hh = 0.0
 
-        # Do calculations for internal state values
         h = hidden_state
         for x in input:
-            r_t = torch.sigmoid(torch.matmul(x, w_ir) + b_ir + torch.matmul(h, w_hr) + b_hr)
-            z_t = torch.sigmoid(torch.matmul(x, w_iz) + b_iz + torch.matmul(h, w_hz) + b_hz)
-            n_t = torch.tanh(torch.matmul(x, w_in) + b_in + r_t * (torch.matmul(h, w_hn) + b_hn))
-            h_t = (1 - z_t) * n_t + z_t * h
-            h = h_t
+            h = torch.tanh(torch.matmul(x, w_ih) + b_ih + torch.matmul(h, w_hh) + b_hh)
 
-        from psyneulink.library.compositions.rnncomposition.rnncomposition import RNN_INTERNAL_STATE_NAMES
-        return {k: v for k, v in zip(RNN_INTERNAL_STATE_NAMES, [n_t, r_t, z_t, h_t])}
+        from psyneulink.library.compositions.rnncomposition.rnncomposition import HIDDEN_LAYER
+        return {HIDDEN_LAYER: h}
 
     def set_pnl_variable_and_values(self,
                                     set_variable: bool = False,
@@ -720,31 +698,29 @@ class PytorchRNNMechanismWrapper(PytorchMechanismWrapper):
                 f"PROGRAM ERROR: copying variables to RNNComposition from pytorch execution is not currently supported."
 
         if set_value:
-            n_t, r_t, z_t, h_t = list(self.torch_rnn_internal_state_values.values())
+            from psyneulink.library.compositions.rnncomposition.rnncomposition import HIDDEN_LAYER
+
+            h_t = self.torch_rnn_internal_state_values[HIDDEN_LAYER]
             try:
-                # Ensure that result of manual-calculated state values matches output of actual call to PyTorch module
                 output = self.output.squeeze(2).detach().numpy()
-                np.testing.assert_allclose(h_t.detach().numpy()[0],
-                                           output[-1],
-                                           atol=1e-8)
+                np.testing.assert_allclose(
+                    h_t.detach().cpu().numpy()[0],
+                    output[-1],
+                    atol=1e-8
+                )
             except ValueError:
-                assert False, "PROGRAM ERROR:  Problem with calculation of internal states of {pnl_comp.name} RNN Node."
+                assert False, (
+                    f"PROGRAM ERROR: Problem with calculation of internal states of "
+                    f"{self.composition.name} RNN Node."
+                )
 
-            # Set values of nodes in pnl rnn_comp to the result of the corresponding computations in the PyTorch module
             pnl_comp = self.composition
-            pnl_comp.reset_node.output_port.parameters.value._set(r_t.detach().cpu().numpy().squeeze(), context)
-            pnl_comp.update_node.output_ports[0].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
-            pnl_comp.update_node.output_ports[1].parameters.value._set(z_t.detach().cpu().numpy().squeeze(), context)
-            pnl_comp.new_node.output_port.parameters.value._set(n_t.detach().cpu().numpy().squeeze(), context)
-            pnl_comp.output_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
-            # Note: no need to set hidden_layer since it was already done when the RNN Node executed
-            # pnl_comp.hidden_layer_node.output_port.parameters.value._set(h_t.detach().cpu().numpy().squeeze(), context)
-
-            # # KEEP THIS FOR REFERENCE IN CASE hidden_layer_node IS REPLACED WITH RecurrentTransferMechanism
-            # # If pnl_node's function is Stateful, assign value to its previous_value parameter
-            # #   so that if Python implementation is run it picks up where PyTorch execution left off
-            # if isinstance(pnl_node.function, StatefulFunction):
-            #     pnl_node.function.parameters.previous_value._set(torch_rnn_output, context)
+            pnl_comp.hidden_layer_node.output_port.parameters.value._set(
+                h_t.detach().cpu().numpy().squeeze(), context
+            )
+            pnl_comp.output_node.output_port.parameters.value._set(
+                h_t.detach().cpu().numpy().squeeze(), context
+            )
 
     def log_value(self):
         # FIX: LOG HIDDEN STATE OF COMPOSITION MECHANISM
@@ -753,11 +729,6 @@ class PytorchRNNMechanismWrapper(PytorchMechanismWrapper):
             self.mechanism.output_port.parameters.value._set(detached_value, self._context)
             self.mechanism.parameters.value._set(detached_value, self._context)
 
-    def log_matrix(self):
-        if self.projection.parameters.matrix.log_condition != LogCondition.OFF:
-            detached_matrix = self.matrix.detach().cpu().numpy()
-            self.projection.parameters.matrix._set(detached_matrix, context=self._context)
-            self.projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
 
 class PytorchRNNProjectionWrapper(PytorchProjectionWrapper):
