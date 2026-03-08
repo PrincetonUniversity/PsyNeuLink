@@ -1610,9 +1610,9 @@ class AutodiffComposition(Composition):
 
     @property
     def _has_learnable_pathways(self):
-        return any(self._mech_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
+        return any(self._mech_is_receiver_in_learnable_pathway(port) for node in self.nodes for port in node.output_ports)
 
-    def _mech_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
+    def _mech_is_receiver_in_learnable_pathway(self, mech_output_port: OutputPort) -> bool:
         """Return True if `mech` receives a Projection from any pathway that has at least one learnable Projection"""
         mech = mech_output_port.owner
         if isinstance(mech, CompositionInterfaceMechanism):
@@ -1623,8 +1623,29 @@ class AutodiffComposition(Composition):
         for afferent in afferents:
             if afferent.learnable:
                 return True
-            check_afferent_pathway = self._mech_in_learnable_pathway(afferent.sender)
+            check_afferent_pathway = self._mech_is_receiver_in_learnable_pathway(afferent.sender)
             if check_afferent_pathway:
+                return True
+        return False
+
+    def _mech_is_sender_in_learnable_pathway(self, sender: Union[Mechanism, InputPort]) -> bool:
+        """Return True if `sender` sends a Projection to any pathway that ends in a LossMechanism."""
+        assert not isinstance(sender, CompositionInterfaceMechanism), \
+            "PROGRAM ERROR: Should not send CIM; use its input_port, relevant efferent is not otherwise resolvable."
+        mech = sender if isinstance(sender, Mechanism) else sender.owner
+        if isinstance(mech, CompositionInterfaceMechanism):
+            assert mech is mech.composition.output_CIM,\
+                f"PROGRAM ERROR: Should only reach output_CIMs from this method."
+            destinations = mech._get_destination_info_for_output_CIM(sender)
+            if destinations and any(isinstance(destination[0], LossMechanism) for destination in destinations):
+                return True
+        for efferent in mech.efferents:
+            if isinstance(efferent.receiver.owner, LossMechanism):
+                return True
+            sender = efferent.receiver if isinstance(efferent.receiver.owner, CompositionInterfaceMechanism) \
+                else efferent.receiver.owner
+            check_efferent_pathway = self._mech_is_sender_in_learnable_pathway(sender)
+            if check_efferent_pathway:
                 return True
         return False
 
@@ -1638,7 +1659,7 @@ class AutodiffComposition(Composition):
         - target_mech argument is used to determine error_message;
         - if no action is specified, return True or False
         """
-        if self._mech_in_learnable_pathway(sample_port):
+        if self._mech_is_receiver_in_learnable_pathway(sample_port):
             return True
         # sample is not in learnable pathway, so construct relevant error/warning message
         sample_mech = sample_port.owner
@@ -1769,18 +1790,39 @@ class AutodiffComposition(Composition):
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
 
-        # Issue warning for any pathways that have learnable Projections but do not end in a sample with a LossMechanism
+        # TEACHER_TARGET: BREADCRUMB MAKE THIS A METHOD
+        # Error if there are any learnable Projections in pathways that do not end with a LossMechanism
+        orphaned_learnable_projections = []
         for pathway in pathways:
-            # if any(proj.learnable for mech in pathway if isinstance(mech, Mechanism) for proj in mech.efferents):
+            backwards_pathway = pathway[::-1]
+            # BREADCRUMB: DO ALL OF THIS USING pytorch_represetation TO AVOID ISSUES WITH NESTED COMPS AND CIMs
+            # Only bother with a pathway if it has a learnable Projection
             if any(proj.learnable for proj in pathway if isinstance(proj, MappingProjection)):
-                terminal_node = pathway[-1]
-                terminal_node_output_ports = terminal_node.output_ports
-                if not any(sample_port in self.sample_port_to_target_port_map
-                           for sample_port in terminal_node_output_ports):
-                    warnings.warn(f"The pathway from '{pathway[0].name}' to '{terminal_node.name}' "
-                                  f"contains learnable Projections, but no target has been specified for "
-                                  f"'{terminal_node.name}'. As a result, the weights of the learnable Projections "
-                                  f"in this pathway will not be updated during learning.")
+                # BREADCRUMB: SHOULD REPLACE THIS WITH METHOD THAT GETS ALL TERMINAL NODES FOR EFFERENTS OF A MECHANISM
+                pathway_orphans = [] # Keep these separate so their order be restored (re-reversed) within the pathway
+                for i, item in enumerate(backwards_pathway):
+                    if isinstance(item, LossMechanism):
+                        break
+                    # If item is a Node and any of its efferents project to a LossMechanism, break
+                    if isinstance(item, ProcessingMechanism):
+                        sender = backwards_pathway[i-1].receiver if isinstance(item, CompositionInterfaceMechanism) \
+                            else item
+                        if self._mech_is_sender_in_learnable_pathway(sender):
+                            break
+                    if isinstance(item, MappingProjection) and item.learnable:
+                        pathway_orphans.append(item)
+                orphaned_learnable_projections.extend(pathway_orphans[::-1])
+        if orphaned_learnable_projections:
+            bad_projs_names = [f"'{p}'" for p in orphaned_learnable_projections]
+            plural = len(orphaned_learnable_projections) > 1
+            s = 's' if plural else ''
+            is_are = 'are' if plural else 'is'
+            do_does = 'do' if plural else 'does'
+            a_not_a = '' if plural else 'a '
+            # X TEST DONE
+            raise AutodiffCompositionError(f"The following Projection{s} {is_are} learnable but {is_are} in {a_not_a}"
+                                           f"pathway{s} that {do_does} not end in a LossMechanism, and therefore "
+                                           f"cannot be learned: {', '.join(bad_projs_names)}.")
 
     def _instantiate_constructor_targets_args(self, pathways, context, base_context):
         """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
@@ -2656,13 +2698,20 @@ class AutodiffComposition(Composition):
                         # uncessary_sample_specs_in_learn.append(f"'{learn_sample.full_name}'")
                         uncessary_sample_specs_in_learn.append(learn_sample)
                 if uncessary_sample_specs_in_learn:
-                    unnecesary_specs_as_specified_in_targets = [spec.full_name if spec in targets else spec.owner.name
-                                                                for spec in uncessary_sample_specs_in_learn]
+                    unnecesary_specs_as_specified_in_targets = \
+                        sorted([spec.full_name if spec in targets else spec.owner.name
+                                for spec in uncessary_sample_specs_in_learn])
+                    plural = len(unnecesary_specs_as_specified_in_targets) > 1
+                    is_are = 'are' if plural else 'is'
+                    its_their = 'their' if plural else 'its'
+                    a = '' if plural else 'a '
+                    s = 's' if plural else ''
+                    x = '' if plural else 's'
                     raise AutodiffCompositionError(
-                        f"The following Node(s), specified in the 'targets' argument of the constructor for "
-                        f"'{self.name}' as samples that receive their target values from another node, should "
-                        f"not be included in the dict specified in the 'targets' argument of the learn() method: "
-                        f"{', '.join(unnecesary_specs_as_specified_in_targets)}.")
+                        f"The following Node{s}, specified in the 'targets' argument of the constructor for "
+                        f"'{self.name}' as {a}sample{s} that receive{x} {its_their} target value{s} from another node, "
+                        f"should not be included in the dict specified in the 'targets' argument of the learn() "
+                        f"method: {', '.join(unnecesary_specs_as_specified_in_targets)}.")
 
             # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
             # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
