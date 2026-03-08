@@ -28,6 +28,7 @@ def safe_softmax(t, threshold=0.01):
 
 
 def normalize(x):
+
     nrm = x.norm(dim=-1, keepdim=True)
     if nrm == 0:
         return x
@@ -119,10 +120,15 @@ class ContextMapping(nn.Module):
             self.in_to_out.weight.copy_(torch.eye(state_dim, dtype=torch.float))
             #self.in_to_out.bias.zero_()
         self.in_to_out.weight.requires_grad = True
+
+
+
+
         #self.in_to_out.bias.requires_grad = True
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        return normalize(self.in_to_out(x))
+        #return normalize(self.in_to_out(x))
+        return self.in_to_out(x) * 2.
 
 
 def gen_model(params, len_memory=2):

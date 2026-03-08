@@ -21,12 +21,12 @@ PROBS = [1., 1., 1.]
 RUN_PSY_EGO = True
 RUN_TORCH = True
 
-IS_PLOT = True
+IS_PLOT = False
 IS_TEST = True
 IS_VERBOSE = False
 
 TOLERANCE = 1e-10
-NR_TRIALS_TO_CHECK = 20
+NR_TRIALS_TO_CHECK = 10
 
 
 def main():

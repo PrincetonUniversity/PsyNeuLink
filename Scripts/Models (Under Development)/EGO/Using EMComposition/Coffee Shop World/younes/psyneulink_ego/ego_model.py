@@ -1,6 +1,7 @@
 from psyneulink import *
 import numpy as np
 
+
 def construct_model(
         config,
         memory_capacity,
@@ -58,7 +59,13 @@ def construct_model(
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
 
-
+    context_normalized = TransferMechanism(name=CONTEXT + '[normalized]',
+                                           input_shapes=context_size,
+                                           output_ports=[{
+                                               NAME: "normalized",
+                                               FUNCTION: lambda x: x
+                                           }]
+                                           )
 
     em = EMComposition(
         name=em_name,
@@ -79,8 +86,8 @@ def construct_model(
                 context_name: {FIELD_WEIGHT: context_retrieval_weight,
                                LEARN_FIELD_WEIGHT: False,
                                TARGET_FIELD: False}},
-        normalize_field_weights=False,#normalize_field_weights,
-        normalize_memories=False,#config['normalize_memories'],
+        normalize_field_weights=False,  # normalize_field_weights,
+        normalize_memories=False,  # config['normalize_memories'],
         concatenate_queries=concatenate_queries,
         enable_learning=enable_learning,
         learning_rate=learning_rate,
@@ -121,8 +128,13 @@ def construct_model(
     context_learning_pathway = [context_layer,
                                 MappingProjection(sender=context_layer,
                                                   matrix=IDENTITY_MATRIX,
-                                                  receiver=em.nodes[context_name + QUERY],
+                                                  receiver=context_normalized,
                                                   learnable=True),
+                                context_normalized,
+                                MappingProjection(sender=context_normalized.output_ports["normalized"],
+                                                  matrix=IDENTITY_MATRIX,
+                                                  receiver=em.nodes[context_name + QUERY],
+                                                  learnable=False),
                                 em,
                                 MappingProjection(sender=em.nodes[state_input_name + RETRIEVED],
                                                   receiver=prediction_layer,
@@ -131,19 +143,21 @@ def construct_model(
                                 prediction_layer]
 
     # Composition
-    EGO_comp = AutodiffComposition([state_to_previous_state_pathway,
-                                    state_to_context_pathway,
-                                    state_to_em_pathway,
-                                    previous_state_to_em_pathway,
-                                    context_learning_pathway],
-                                   learning_rate=learning_rate,
-                                   loss_spec=loss_spec,
-                                   execute_in_additional_optimizations={context_layer: LAST,
-                                                                        previous_state_layer: LAST},
-                                   # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
-                                   optimizations_per_minibatch=config['num_optimization_steps'],
-                                   name=model_name,
-                                   device=device)
+    EGO_comp = AutodiffComposition(
+        [state_to_previous_state_pathway,
+         state_to_context_pathway,
+         state_to_em_pathway,
+         previous_state_to_em_pathway,
+         context_learning_pathway],
+        learning_rate=learning_rate,
+        loss_spec=loss_spec,
+        execute_in_additional_optimizations={
+            context_layer: LAST,
+            previous_state_layer: LAST
+        },
+        optimizations_per_minibatch=config['num_optimization_steps'],
+        name=model_name,
+        device=device)
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
@@ -151,6 +165,7 @@ def construct_model(
                                               learnable=False))
 
     EGO_comp.scheduler.add_condition(em, BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(context_normalized, BeforeNodes(em))
     EGO_comp.scheduler.add_condition(prediction_layer, BeforeNodes(previous_state_layer, context_layer))
 
     return EGO_comp, context_layer, state_input_layer, em
@@ -185,6 +200,7 @@ def run_model(model,
     print(model.results)
     # return model.results[config['num_optimization_steps'] - 1::config['num_optimization_steps']][:, 2]
     return model.results[::config['num_optimization_steps']][:, 2]
+
 
 if __name__ == '__main__':
     trials = [[1, 0, 0, 0, 0], [0, 1, 0, 1, 0]]
