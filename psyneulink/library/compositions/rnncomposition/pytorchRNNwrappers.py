@@ -53,6 +53,83 @@ B_IH_NAME = 'bias_ih_l0'
 B_HH_NAME = 'bias_hh_l0'
 
 
+class TorchRNNIntegrationCell(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        hidden_function,
+        state_integration_function,
+        bias: bool = True,
+        dtype: torch.dtype = torch.float64,
+        device=None,
+    ):
+        super().__init__()
+
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.bias = bias
+        self.hidden_function = hidden_function
+        self.state_integration_function = state_integration_function
+
+        self.weight_ih_l0 = nn.Parameter(
+            torch.empty(hidden_size, input_size, dtype=dtype, device=device)
+        )
+        self.weight_hh_l0 = nn.Parameter(
+            torch.empty(hidden_size, hidden_size, dtype=dtype, device=device)
+        )
+
+        if bias:
+            self.bias_ih_l0 = nn.Parameter(
+                torch.empty(hidden_size, dtype=dtype, device=device)
+            )
+            self.bias_hh_l0 = nn.Parameter(
+                torch.empty(hidden_size, dtype=dtype, device=device)
+            )
+        else:
+            self.register_parameter("bias_ih_l0", None)
+            self.register_parameter("bias_hh_l0", None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        bound = 1.0 / np.sqrt(self.hidden_size)
+        nn.init.uniform_(self.weight_ih_l0, -bound, bound)
+        nn.init.uniform_(self.weight_hh_l0, -bound, bound)
+        if self.bias:
+            nn.init.uniform_(self.bias_ih_l0, -bound, bound)
+            nn.init.uniform_(self.bias_hh_l0, -bound, bound)
+
+    def forward(self, inputs: torch.Tensor, hidden_state: torch.Tensor):
+        """
+        inputs: (batch, seq, input_size)
+        hidden_state: (1, batch, hidden_size)
+        returns:
+            outputs: (batch, seq, hidden_size)
+            hidden_state: (1, batch, hidden_size)
+        """
+        h = hidden_state[0]  # (batch, hidden_size)
+        outputs = []
+
+        for t in range(inputs.shape[1]):
+            x_t = inputs[:, t, :]
+            candidate_pre = x_t @ self.weight_ih_l0.T + h @ self.weight_hh_l0.T
+
+            if self.bias:
+                candidate_pre = candidate_pre + self.bias_ih_l0 + self.bias_hh_l0
+
+            candidate = self.hidden_function(candidate_pre)
+
+            # state integration function expects two inputs: candidate and previous hidden
+            integration_input = torch.stack([candidate, h], dim=1)
+            h = self.state_integration_function(integration_input)
+
+            outputs.append(h)
+
+        outputs = torch.stack(outputs, dim=1)
+        return outputs, h.unsqueeze(0)
+
+
 class PytorchRNNCompositionWrapper(PytorchCompositionWrapper):
     """Wrapper for RNNComposition as a Pytorch Module
     Manage the exchange of the Composition's Projection `Matrices <MappingProjection_Matrix>`
@@ -524,11 +601,22 @@ class PytorchRNNMechanismWrapper(PytorchMechanismWrapper):
         input_size = self.composition.parameters.input_size.get(context)
         hidden_size = self.composition.parameters.hidden_size.get(context)
         bias = self.composition.parameters.bias.get(context)
-        torch_RNN = torch.nn.RNN(input_size=input_size,
-                                 hidden_size=hidden_size,
-                                 bias=bias,
-                                 nonlinearity='tanh',
-                                 batch_first=True).to(dtype=self.torch_dtype)
+
+        pnl_hidden_function = self.composition.parameters.hidden_function.get(context)
+        pnl_state_integration_function = self.composition.parameters.state_integration_function.get(context)
+
+        torch_hidden_function = PytorchFunctionWrapper(pnl_hidden_function, device, context)
+        torch_state_integration_function = PytorchFunctionWrapper(pnl_state_integration_function, device, context)
+
+        torch_RNN = TorchRNNIntegrationCell(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            bias=bias,
+            hidden_function=torch_hidden_function,
+            state_integration_function=torch_state_integration_function,
+            dtype=self.torch_dtype,
+            device=device,
+        )
         torch_RNN.name = f"PytorchFunctionWrapper[RNN NODE]"
         torch_RNN._gen_pytorch_fct = lambda x, y: torch_RNN
         self.hidden_state = torch.zeros(1, 1, hidden_size, dtype=self.torch_dtype).to(device)

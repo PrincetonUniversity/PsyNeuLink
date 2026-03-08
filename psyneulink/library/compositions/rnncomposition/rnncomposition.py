@@ -339,6 +339,7 @@ __all__ = [
 
 # Node names
 INPUT_NODE = 'INPUT'
+CANDIDATE_NODE = 'CANDIDATE'
 HIDDEN_LAYER = 'HIDDEN\nLAYER'
 OUTPUT_NODE = 'OUTPUT'
 RNN_NODE = 'PYTORCH RNN NODE'
@@ -354,6 +355,7 @@ BIAS_HIDDEN_TO_HIDDEN = 'BIAS HIDDEN TO HIDDEN'
 
 # Port names
 FROM_INPUT = 'FROM INPUT'
+FROM_CANDIDATE = 'FROM CANDIDATE'
 RECURRENT = 'RECURRENT'
 
 
@@ -769,6 +771,7 @@ class RNNComposition(AutodiffComposition):
         hidden_biases_learning_rate = Parameter(True, structural=True)
 
         hidden_function = Parameter(Tanh, structural=True, stateful=False)
+        state_integration_function = Parameter(LinearCombination(weights=[1., 0.]), structural=True, stateful=False)
 
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED(), modulable=True, setter=_seed_setter)
@@ -809,6 +812,7 @@ class RNNComposition(AutodiffComposition):
                  enable_learning=False,
                  learning_rate=None,
                  hidden_function=None,
+                 state_integration_function=None,
                  random_state=None,
                  seed=None,
                  name="RNN Composition",
@@ -823,6 +827,7 @@ class RNNComposition(AutodiffComposition):
                          enable_learning=enable_learning,
                          learning_rate=learning_rate,
                          hidden_function=hidden_function,
+                         state_integration_function=state_integration_function,
                          random_state=random_state,
                          seed=seed,
                          **kwargs
@@ -831,11 +836,13 @@ class RNNComposition(AutodiffComposition):
         input_size = self.input_size
         hidden_size = self.hidden_size
         hidden_function = self.hidden_function
+        state_integration_function = self.state_integration_function
 
         self._construct_pnl_composition(
             input_size,
             hidden_size,
             hidden_function,
+            state_integration_function,
             context=Context(source=ContextFlags.COMMAND_LINE, string='FROM RNN')
         )
 
@@ -852,6 +859,7 @@ class RNNComposition(AutodiffComposition):
             input_size,
             hidden_size,
             hidden_function,
+            state_integration_function,
             context):
         """Construct Nodes and Projections for RNNComposition"""
         hidden_shape = np.ones(hidden_size)
@@ -861,18 +869,30 @@ class RNNComposition(AutodiffComposition):
             input_shapes=input_size
         )
 
-        # Hidden layer receives:
-        #   1) input drive
-        #   2) recurrent drive from previous hidden state
-        # It sums them, then applies tanh at the OutputPort.
+        # Candidate state:
+        # candidate_t = hidden_function(W_ih x_t + W_hh h_{t-1} + b_ih + b_hh)
+        self.candidate_node = ProcessingMechanism(
+            name=CANDIDATE_NODE,
+            input_shapes=[hidden_size, hidden_size],
+            input_ports=[
+                InputPort(name=FROM_INPUT, function=LinearCombination(scale=hidden_shape)),
+                InputPort(name=RECURRENT, function=LinearCombination(scale=hidden_shape)),
+            ],
+            function=LinearCombination(operation=SUM),
+            output_ports=[OutputPort(function=hidden_function)]
+        )
+
+        # Hidden state:
+        # for now, vanilla pass-through from candidate
+        # later this becomes a true integration rule
         self.hidden_layer_node = ProcessingMechanism(
             name=HIDDEN_LAYER,
             input_shapes=[hidden_size, hidden_size],
             input_ports=[
-                InputPort(name=FROM_INPUT, function=LinearCombination(scale=hidden_shape)),
-                InputPort(name=RECURRENT, function=LinearCombination(scale=hidden_shape))],
-            function=LinearCombination(operation=SUM),
-            output_ports=[OutputPort(function=hidden_function)]
+                InputPort(name=FROM_CANDIDATE, function=LinearCombination(scale=hidden_shape)),
+                InputPort(name=RECURRENT, function=LinearCombination(scale=hidden_shape)),
+            ],
+            function=state_integration_function
         )
 
         self.output_node = ProcessingMechanism(
@@ -881,7 +901,9 @@ class RNNComposition(AutodiffComposition):
             function=Linear)
 
         self.add_nodes(
-            [self.input_node, self.hidden_layer_node, self.output_node],
+            [
+                self.input_node, self.candidate_node, self.hidden_layer_node, self.output_node
+            ],
             context=context
         )
 
@@ -893,7 +915,7 @@ class RNNComposition(AutodiffComposition):
         self.wts_ih = MappingProjection(
             name=INPUT_TO_HIDDEN,
             sender=self.input_node,
-            receiver=self.hidden_layer_node.input_ports[FROM_INPUT],
+            receiver=self.candidate_node.input_ports[FROM_INPUT],
             learnable=True,
             matrix=init_wts(input_size, hidden_size),
         )
@@ -901,9 +923,25 @@ class RNNComposition(AutodiffComposition):
         self.wts_hh = MappingProjection(
             name=HIDDEN_TO_HIDDEN,
             sender=self.hidden_layer_node,
-            receiver=self.hidden_layer_node.input_ports[RECURRENT],
+            receiver=self.candidate_node.input_ports[RECURRENT],
             learnable=True,
             matrix=init_wts(hidden_size, hidden_size),
+        )
+
+        self.candidate_to_hidden = MappingProjection(
+            name="CANDIDATE TO HIDDEN",
+            sender=self.candidate_node,
+            receiver=self.hidden_layer_node.input_ports[FROM_CANDIDATE],
+            learnable=False,
+            matrix=IDENTITY_MATRIX,
+        )
+
+        self.recurrent_to_hidden = MappingProjection(
+            name="RECURRENT TO HIDDEN",
+            sender=self.hidden_layer_node,
+            receiver=self.hidden_layer_node.input_ports[RECURRENT],
+            learnable=False,
+            matrix=IDENTITY_MATRIX,
         )
 
         self.wts_ho = MappingProjection(
@@ -917,7 +955,13 @@ class RNNComposition(AutodiffComposition):
         self.learnable_projections = [self.wts_ih, self.wts_hh]
 
         self.add_projections(
-            [self.wts_ih, self.wts_hh, self.wts_ho],
+            [
+                self.wts_ih,
+                self.wts_hh,
+                self.candidate_to_hidden,
+                self.recurrent_to_hidden,
+                self.wts_ho
+            ],
             context=context
         )
 
@@ -929,7 +973,7 @@ class RNNComposition(AutodiffComposition):
             self.bias_ih = MappingProjection(
                 name=BIAS_INPUT_TO_HIDDEN,
                 sender=self.bias_ih_node,
-                receiver=self.hidden_layer_node.input_ports[FROM_INPUT],
+                receiver=self.candidate_node.input_ports[FROM_INPUT],
                 learnable=True,
             )
 
@@ -940,7 +984,7 @@ class RNNComposition(AutodiffComposition):
             self.bias_hh = MappingProjection(
                 name=BIAS_HIDDEN_TO_HIDDEN,
                 sender=self.bias_hh_node,
-                receiver=self.hidden_layer_node.input_ports[RECURRENT],
+                receiver=self.candidate_node.input_ports[RECURRENT],
                 learnable=True,
             )
 
