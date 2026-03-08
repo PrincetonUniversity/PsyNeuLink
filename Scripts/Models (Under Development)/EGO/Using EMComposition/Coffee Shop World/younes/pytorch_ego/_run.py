@@ -6,12 +6,11 @@ from torch import nn
 
 def run_participant(params, data_loader, len_memory=2):
     loss_fn = nn.BCELoss()
-    context_module, context_mapping, em_module = gen_model(params, len_memory=len_memory)
-    optimizer = torch.optim.SGD(lr=params['learning_rate'], params=context_mapping.parameters())
+    context_module, em_module = gen_model(params, len_memory=len_memory)
+    optimizer = torch.optim.SGD(lr=params['learning_rate'], params=em_module.parameters())
     em_preds = []
 
     context = torch.zeros(11)
-    _context = torch.zeros_like(context)
     prev_state = torch.zeros_like(context)
 
     # Loop over each state of the CSW task.
@@ -23,8 +22,7 @@ def run_participant(params, data_loader, len_memory=2):
             # Skip first state bc which sequence within the context is randomly assigned.
             # i.e., we have not yet observed a full state transition.
 
-            _context = context_mapping(context)
-            pred_em = em_module(prev_state, _context)
+            pred_em = em_module(prev_state, context)
             if i == 0:
                 pred_init = pred_em.detach().cpu().numpy().copy()
 
@@ -39,7 +37,7 @@ def run_participant(params, data_loader, len_memory=2):
             print(f"STIM {trial} optimization step {i}: {float(loss):{5}f}")
 
 
-        context_to_store = _context.detach().cpu()
+        context_to_store = em_module.context_query.detach().cpu()
         em_module.write(prev_state, context_to_store, x)
         context = context_module(x)
         prev_state = x.detach().cpu()

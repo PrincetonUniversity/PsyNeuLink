@@ -1,5 +1,5 @@
 from psyneulink import *
-
+import numpy as np
 
 def construct_model(
         config,
@@ -55,9 +55,10 @@ def construct_model(
     previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     context_layer = TransferMechanism(name=context_name,
                                       input_shapes=context_size,
-                                      function=Tanh(gain=1),
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
+
+
 
     em = EMComposition(
         name=em_name,
@@ -78,8 +79,8 @@ def construct_model(
                 context_name: {FIELD_WEIGHT: context_retrieval_weight,
                                LEARN_FIELD_WEIGHT: False,
                                TARGET_FIELD: False}},
-        normalize_field_weights=normalize_field_weights,
-        normalize_memories=config['normalize_memories'],
+        normalize_field_weights=False,#normalize_field_weights,
+        normalize_memories=False,#config['normalize_memories'],
         concatenate_queries=concatenate_queries,
         enable_learning=enable_learning,
         learning_rate=learning_rate,

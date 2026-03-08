@@ -23,7 +23,7 @@ RUN_TORCH = True
 
 IS_PLOT = True
 IS_TEST = True
-IS_VERBOSE = True
+IS_VERBOSE = False
 
 TOLERANCE = 1e-10
 NR_TRIALS_TO_CHECK = 20
@@ -42,8 +42,6 @@ def main():
         utils.set_random_seed(0)
         model, context, state, em = construct_model(config=params_ego,
                                                     memory_capacity=len(pnl_inputs))
-        # from psyneulink import ALL
-        # em.show_graph(show_node_structure=ALL)
         pnl_results = run_model(model, pnl_inputs, config=params_ego)
         if IS_PLOT:
             print('plotting psyneulink ego')

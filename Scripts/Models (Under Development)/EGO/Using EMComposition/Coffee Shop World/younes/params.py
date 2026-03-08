@@ -25,6 +25,7 @@ params_torch = dict(
     output_d=OUTPUT_D,
 
     memory_init=MEMORY_INIT,  # initial value for the memory entries
+    memory_fill=MEMORY_INIT,  # value to fill memory with when initializing
 
     learning_rate=LEARNING_RATE,  # learning rate for the episodic pathway
     softmax_threshold=SOFTMAX_THRESHOLD,
@@ -51,6 +52,7 @@ params_ego = dict(
     context_d=CONTEXT_D,  # length of context vector
     memory_capacity=ALL,  # number of entries in EM memory; ALL=> match to number of stims
     memory_init=MEMORY_INIT,  # .001,  # Initialize memory with random values in interval
+    memory_fill=MEMORY_INIT,  # value to fill memory with when initializing
     concatenate_queries=False,  # whether to concatenate queries before retrieval
 
     # environment

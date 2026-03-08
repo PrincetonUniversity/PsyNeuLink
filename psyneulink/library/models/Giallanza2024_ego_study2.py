@@ -21,15 +21,15 @@ CONTEXT_INTEGRATION_RATE: float = 0.69
 assert 0 <= CONTEXT_INTEGRATION_RATE <= 1
 
 STATE_RETRIEVAL_WEIGHT: float | None = None
-CONTEXT_RETRIEVAL_WEIGHT: float = .5
-PREVIOUS_STATE_RETRIEVAL_WEIGHT: float = .5
+CONTEXT_RETRIEVAL_WEIGHT: float = 1.
+PREVIOUS_STATE_RETRIEVAL_WEIGHT: float = 1.
 
-MEMORY_INIT = .001
+MEMORY_INIT = .0001
 
-SOFTMAX_TEMPERATURE: float = .1
-SOFTMAX_THRESHOLD: float = .01
+SOFTMAX_TEMPERATURE: float = .2
+SOFTMAX_THRESHOLD: float = .001
 
-LEARNING_RATE: float = 1.
+LEARNING_RATE: float = 2.
 NUM_OPTIM_STEPS: int = 10
 
 
@@ -48,9 +48,12 @@ def construct_model(
     context_layer = pnl.TransferMechanism(
         name=CONTEXT_NAME,
         input_shapes=STATE_SIZE,
-        function=pnl.Tanh(gain=1),
         integrator_mode=True,
         integration_rate=CONTEXT_INTEGRATION_RATE)
+    context_bias = pnl.TransferMechanism(
+        name=CONTEXT_NAME + " BIAS",
+        default_variable=[1.]
+    )
 
     em = pnl.EMComposition(
         name=EM_NAME,
@@ -133,15 +136,26 @@ def construct_model(
                                                       matrix=pnl.IDENTITY_MATRIX,
                                                       learnable=False),
                                 prediction_layer]
+    bias_learning_pathway = [
+        context_bias,
+        pnl.MappingProjection(sender=context_bias,
+                              matrix=np.array([[0.]*STATE_SIZE]),
+                              receiver=em.nodes[CONTEXT_NAME + QUERY],
+                              learnable=True),
+        em,
+    ]
 
     # Composition
     EGO_comp = pnl.AutodiffComposition(
         name=EGO_NAME,
-        pathways=[state_to_previous_state_pathway,
-                  state_to_context_pathway,
-                  state_to_em_pathway,
-                  previous_state_to_em_pathway,
-                  context_learning_pathway],
+        pathways=[
+            state_to_previous_state_pathway,
+            state_to_context_pathway,
+            state_to_em_pathway,
+            previous_state_to_em_pathway,
+            context_learning_pathway,
+            bias_learning_pathway
+        ],
         learning_rate=LEARNING_RATE,
         loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
         execute_in_additional_optimizations={
@@ -275,69 +289,91 @@ def get_trials(
         return [to_one_hot(c) for c in gen_contexts_blocked() + gen_contexts_test()]
 
 
-def run_model(model,
-              trials,
-              ):
-    model.learn(inputs={STATE_NAME: trials},
-                execution_mode=pnl.ExecutionMode.PyTorch,
-                optimizations_per_minibatch=NUM_OPTIM_STEPS,
-                minibatch_size=1,
-                synch_projection_matrices_with_torch=pnl.RUN,
-                synch_node_values_with_torch=pnl.RUN,
-                synch_results_with_torch=pnl.RUN,
-                )
+def run_model(model, trials):
+    model.learn(
+        inputs={STATE_NAME: trials},
+        execution_mode=pnl.ExecutionMode.PyTorch,
+        optimizations_per_minibatch=NUM_OPTIM_STEPS,
+        minibatch_size=1,
+        synch_projection_matrices_with_torch=pnl.RUN,
+        synch_node_values_with_torch=pnl.RUN,
+        synch_results_with_torch=pnl.RUN,
+    )
 
+    R = np.asarray(model.results)
 
-    R = np.asarray(model.results)  # shape: (T * NUM_OPTIM_STEPS, ...)
-    # your code uses [:, 2] as the prediction output; keep that
+    # prediction output
     preds = R[:, 2]
 
-    # IMPORTANT: in this results stream, each logical trial contributes NUM_OPTIM_STEPS entries.
-    # First entry = pre-update prediction, last entry = post-K-updates prediction.
-    preds_first = preds[0::NUM_OPTIM_STEPS]
-    preds_last = preds[(NUM_OPTIM_STEPS - 2)::NUM_OPTIM_STEPS]
+    # one logical trial contributes NUM_OPTIM_STEPS entries
+    predictions = preds[2::NUM_OPTIM_STEPS]
 
-    return preds_first, preds_last
+    return np.asarray(predictions)
 
-def compute_accuracy(predictions, targets):
-    preds = np.asarray(predictions).reshape(-1, 5, 10)[:, 2:, :].reshape(-1, 10)
-    targs = np.asarray(targets).reshape(-1, 5, 10)[:, 2:, :].reshape(-1, 10)
 
-    accuracy = 1 - np.abs(preds - targs).sum(axis=1) / 2
+def compute_accuracy(predictions, targets, trial_len=None, ignore_first_n=0):
+    preds = np.asarray(predictions)
+    targs = np.asarray(targets)
+
+    if preds.shape != targs.shape:
+        raise ValueError(
+            f"Shape mismatch: predictions.shape={preds.shape}, targets.shape={targs.shape}"
+        )
+
+    # accuracy for one-hot vectors:
+    # identical -> 1
+    # completely wrong one-hot -> 0
+    accuracy = 1 - np.abs(preds - targs).sum(axis=-1) / 2
+
+    if trial_len is not None:
+        if len(accuracy) % trial_len != 0:
+            raise ValueError(
+                f"Number of samples ({len(accuracy)}) is not divisible by trial_len ({trial_len})"
+            )
+        accuracy = accuracy.reshape(-1, trial_len)
+
+        if ignore_first_n > 0:
+            accuracy = accuracy[:, ignore_first_n:]
+
+        accuracy = accuracy.reshape(-1)
+
     return accuracy
 
-def plot_results(*series, labels=None):
-    fig, ax = plt.subplots(figsize=(8,4))
 
-    for i, acc in enumerate(series):
-        label = labels[i] if labels else f"series {i+1}"
-        ax.plot(acc, label=label, alpha=0.9)
+def plot_results(*series, labels=None, ylabel="Accuracy"):
+    fig, ax = plt.subplots(figsize=(8, 4))
+
+    for i, values in enumerate(series):
+        label = labels[i] if labels is not None else f"series {i + 1}"
+        ax.plot(values, label=label, alpha=0.9)
 
     ax.set_xlabel("Stimuli")
-    ax.set_ylabel("Accuracy")
+    ax.set_ylabel(ylabel)
     ax.set_ylim(0, 1)
+    ax.grid(alpha=0.3)
 
     if len(series) > 1:
         ax.legend()
-
-    ax.grid(alpha=0.3)
 
     plt.tight_layout()
     plt.show()
 
 
 if __name__ == "__main__":
-    trials = get_trials("interleaved", 50, n_blocks=4)
+    import torch
+    torch.manual_seed(0)
+    np.random.seed(0)
+
+    trials = get_trials("blocked", 100, n_blocks=4)
 
     model = construct_model(memory_capacity=len(trials))
-    preds_first, preds_last = run_model(model, trials)
+    predictions = run_model(model, trials)
 
-    acc_first = compute_accuracy(preds_first, trials)
-    acc_last = compute_accuracy(preds_last, trials)
-
-    plot_results(
-        acc_first,
-        acc_last,
-        labels=["Pre-update", "Post-update"]
+    acc = compute_accuracy(
+        predictions,
+        trials,
+        trial_len=5,  # each logical trial has 5 stimuli
+        ignore_first_n=2  # ignore first 2, keep only the predictable last 3
     )
 
+    plot_results(acc, labels=["blocked"])
