@@ -11,6 +11,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.globals.keywords import Loss
+from psyneulink.core.globals.parameters import ParameterError
 
 
 def xor_network(comp_type, comp_learning_rate, pathway_learning_rate):
@@ -206,7 +207,7 @@ class TestStructural:
             return
         pytorch_rep = autodiff._build_pytorch_representation()
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
-        assert autodiff.learning_rate == comp_exp_lr
+        assert autodiff.get_optimizer_param_value('learning_rate') == comp_exp_lr
 
         # Test learning_rate specs assinged in learn()
         autodiff.learn(inputs=autodiff.get_input_format(),
@@ -216,13 +217,13 @@ class TestStructural:
         pytorch_rep = autodiff.parameters.pytorch_representation.get(autodiff.name)
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == 99
         assert proj.parameters.learning_rate.get(autodiff.name) == proj_lr
-        assert autodiff.learning_rate == 99
+        assert autodiff.get_optimizer_param_value('learning_rate') == comp_exp_lr
 
         # Test that learning_rate specs are restored to their original values at construction
         autodiff.learn(inputs=autodiff.get_input_format(),
                        execution_mode=pnl.ExecutionMode.PyTorch)
         assert pytorch_rep.get_torch_learning_rate_for_projection(proj) == proj_exp_lr
-        assert autodiff.learning_rate == comp_exp_lr
+        assert autodiff.get_optimizer_param_value('learning_rate') == comp_exp_lr
 
     test_nested_args = [
         # NOTE Have to explicitly specify default_lr in constructor here (when it is expected to have an effect),
@@ -269,9 +270,11 @@ class TestStructural:
         ("d_mc",      None,  None,   .1, "d_mc", None, None,  None,   .5,    .4, .001, .5,  .4,  .001,  .5,   .4, .001),
         # Test that inner_proj=True in dict protects against False as default learning_rate for Middle_Comp
         ("d_mcf",     None,  None,  None, "d_mcf", .1, None,  None,  .001,   .4,  .1, .001, .4,    .1, .001,  .4,   .1),
-        # Test that inner_proj=False even though it is assigned True in dict since outer_comp default=False
-        ("d_oc",      None,  None,  None, None, None, "d_oc", None,  False,False, .4, False,False, .4, False,False, .4),
-        ("d_lc",       .1,   None,   .2,  None, .3,   None,  "d_lc",  .1,    .2,  .3, False, .4,   .3,  .1,   .2,   .3),
+        # Same as d_mcf; decided during meeting on Oct 21, 2025 that if
+        # there is a `True` value for a projection, this always
+        # overrides other `False` values
+        ("d_oc",      None,  None,  None, None, None, "d_oc", None,  .001, False, .4, .001, False, .4, .001, False, .4),
+        ("d_lc",       .1,   None,   .2,  None, .3,   None,  "d_lc",  .1,    .2,  .3, .1,    .4,   .3,  .1,   .2,   .3),
         # Test that runtime assignment of True to inner_proj supersedes assignment of inner_comp=False
         ("d_icf_lct", None, "d_icf", .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
         ("d_icf_lct", None,  False,  .2, None,  .3,   None, "d_lct", False,  .2,  .3, .001,  .4,   .5, False, .2,   .3),
@@ -280,7 +283,10 @@ class TestStructural:
         ("d_icf_lc",  None,  False,  .2, None,  .3,   None, "d_lcn", False,  .2,  .3,  .6,   .4,   .5, False, .2,   .3),
         # Test that assignment of inner_proj=False is not overridden by runtime assignment of default_learning_rate=.6
         ("if_lcn",    False, None,   .2, None,  .3,   None,   .6,    False,  .2,  .3, False, .2,   .3, False, .2,   .3),
-        ("d_if_lcn",  False, None,   .2, None,  .3,   None, "d_lcn", False,  .2,  .3, False, .4,   .5, False, .2,   .3)
+        ("d_if_lcn",  False, None,   .2, None,  .3,   None, "d_lcn", False,  .2,  .3, False, .4,   .5, False, .2,   .3),
+        # Test that runtime specified value of None for projection takes the most prioritized default value, even over other projection-specific values.
+        # (inner proj specific value of None in outer comp's runtime dict d_ocn; receives default from d_lcn at middle comp construction)
+        ("d_ocn_mcs", .15,   None,  .2, "d_lcn", .3,  None, "d_ocn", .15,    .4,  .3,  .6,   .4,   .4, .15,   .4,   .3),  # noqa: E241
     ]
     @pytest.fixture
     def test_nested_dicts(self):
@@ -292,9 +298,11 @@ class TestStructural:
                  "d_mc": {"MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: .5},
                  "d_mcf": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
                  "d_oc":  {"INNER PROJECTION": True, "OUTER PROJECTION 2":  .4, DEFAULT_LEARNING_RATE: False},
+                 "d_ocn": {"INNER PROJECTION": None, "OUTER PROJECTION 2": .4},
                  "d_lc":  {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, DEFAULT_LEARNING_RATE: False},
                  "d_lct": {"INNER PROJECTION": True, "MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5},
-                 "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6}}
+                 "d_lcn": {"MIDDLE PROJECTION 1": .4, "OUTER PROJECTION 2": .5, DEFAULT_LEARNING_RATE: .6},
+                 }
             return test_nested_dicts[dict]
         return _get_learning_rate_dicts
 
@@ -388,35 +396,65 @@ class TestStructural:
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_1) == o1r
         assert pytorch_rep.get_torch_learning_rate_for_projection(outer_proj_2) == o2r
 
-
+    # NOTE: check_learn=False below passes value to Composition constructor,
+    # which results in assignment to a Parameter value, and so invalid
+    # assignments raise ParameterError as would other Parameter values.
+    # check_learn=True is validated in Composition.learn and re-raised as
+    # CompositionError to match previous behavior
     error_test_args = [
-        ("comp_lr_spec_str", True,
-         "The 'learning_rate' arg for 'Comp' ('hello') must be a float, int, bool, None, or a dict."),
-        ("comp_lr_spec_proj", True,
-         "The 'learning_rate' arg for 'Comp' ('(MappingProjection INPUT PROJECTION)') "
-         "must be a float, int, bool, None, or a dict."),
-        ("dict_lr_val_str", False,
-        "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' "
-        "must each be a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): 'goodbye'}]'."),
-        ("dict_lr_val_proj", False,
-         "The following values of the entries in the dict specified for the 'learning_rate' arg of 'Comp' must each be "
-         "a float, int, bool, or None: '[{(MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}]'."),
-        ("dict_illegal_key_str", True,
-         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' but its key is not "
-         "a Projection or the name of one in that Composition: 'woa a woa'."),
-        ("dict_illegal_key_int", False,
-         "The following keys in the dict specified for the 'learning_rate' arg of Comp are not MappingProjections "
-         "(or names of ones) in that Composition: '23'."),
-        ("dict_key_bad_proj", True,
-         "The following entry appears in the dict specified for the 'learning_rate' arg of 'Comp' "
-         "but its key is not a Projection or the name of one in that Composition: 'BAD PROJECTION'."),
-        ("dict_proj_not_learnable", True,
-         "The following Projection(s) in the dict specified for the 'learning_rate' arg of 'Comp' are not learnable: "
-         "'INPUT PROJECTION'; check that their 'learnable' attribute is set to True or remove them from the dict."),
+        (
+            'comp_lr_spec_str',
+            True,
+            "('hello') assigned to parameter 'learning_rate'.*must be an int, float, bool, None, or a dict",
+            ParameterError,
+        ),
+        (
+            'comp_lr_spec_proj',
+            True,
+            "((MappingProjection INPUT PROJECTION)) assigned to parameter 'learning_rate'.*must be an int, float, bool, None, or a dict",
+            ParameterError,
+        ),
+        (
+            'dict_lr_val_str',
+            False,
+            "({'default_learning_rate': 0.1, (MappingProjection INPUT PROJECTION): 'goodbye'}) assigned to parameter 'learning_rate'.*entry value for (MappingProjection INPUT PROJECTION): 'goodbye' must be an int, float, bool, or None",
+            ParameterError,
+        ),
+        (
+            'dict_lr_val_proj',
+            False,
+            "({'default_learning_rate': 0.1, (MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION)}) assigned to parameter 'learning_rate'.*entry value for (MappingProjection INPUT PROJECTION): (MappingProjection INPUT PROJECTION) must be an int, float, bool, or None",
+            ParameterError,
+        ),
+        (
+            'dict_illegal_key_str',
+            True,
+            ".*'woa a woa' is not in that Composition or any nested within it",
+            CompositionError,
+        ),
+        (
+            'dict_illegal_key_int',
+            False,
+            "({'default_learning_rate': 0.1, 23: 0.2}) assigned to parameter 'learning_rate'.*is not valid: entry key 23 must be a Projection or name of a Projection",
+            ParameterError,
+        ),
+        (
+            'dict_key_bad_proj',
+            True,
+            '.*(MappingProjection BAD PROJECTION) is not in that Composition or any nested within it',
+            CompositionError,
+        ),
+        (
+            'dict_proj_not_learnable',
+            True,
+            '.*(MappingProjection INPUT PROJECTION) specified in the dict is not enabled; check that its enable_learning_rate attribute is set to True and its learning_rate is not False, or remove it from the dict.',
+            CompositionError,
+        ),
     ]
-    @pytest.mark.parametrize("condition, check_learn, error_msg", error_test_args,
+
+    @pytest.mark.parametrize("condition, check_learn, error_msg, error_type", error_test_args,
                              ids=[f"{x[0]}" for x in error_test_args])
-    def test_learning_rate_specification_errors(self, condition, check_learn, error_msg):
+    def test_learning_rate_specification_errors(self, condition, check_learn, error_msg, error_type):
         # Test for errors with learning_rates specified in Composition constructor
         mech_1 = pnl.ProcessingMechanism(name='Mech 1')
         mech_2 = pnl.ProcessingMechanism(name='Mech 2')
@@ -448,16 +486,15 @@ class TestStructural:
 
         comp_lr = comp_lr or {DEFAULT_LEARNING_RATE: default_lr, key_spec: val_spec}
 
+        error_re = re.sub(r'([\(\)\[\{])', r'\\\1', error_msg)
         if not check_learn:
-            with pytest.raises(CompositionError) as error_text:
+            with pytest.raises(error_type, match=error_re):
                 pnl.Composition(learning_rate=comp_lr, name='Comp')
-            assert error_msg in str(error_text.value)
             return
 
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(error_type, match=error_re):
             comp = pnl.Composition([mech_1, input_proj, mech_2], learning_rate=comp_lr, name='Comp')
             comp.learn(inputs={mech_1: [[1.0]]},)
-        assert error_msg in str(error_text.value)
 
 
     class TestInputAndTargetSpecs:
