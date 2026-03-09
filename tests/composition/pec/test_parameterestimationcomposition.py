@@ -62,7 +62,12 @@ input_node_2 = pnl.ProcessingMechanism(input_shapes=3)
 input_node_3 = pnl.ProcessingMechanism(input_shapes=2)
 output_node = pnl.ProcessingMechanism(input_shapes=2)
 model = pnl.Composition(
-    [{input_node_1, input_node_2, input_node_3}, output_node], name="model"
+    pathways=[
+        [input_node_1, output_node],
+        [input_node_2, output_node],
+        [input_node_3, output_node],
+    ],
+    name="model",
 )
 pec = pnl.ParameterEstimationComposition(
     name="pec",
