@@ -27,12 +27,10 @@ def safe_softmax(t, threshold=0.01):
         return v / torch.sum(v)
 
 
-def normalize(x):
-
-    nrm = x.norm(dim=-1, keepdim=True)
-    if nrm == 0:
-        return x
-    return x / nrm
+def normalize(x, eps=1e-12):
+    norm = torch.linalg.norm(x, ord=2, dim=-1, keepdim=True)
+    denom = torch.clamp(norm, min=eps)
+    return x / denom
 
 
 class EMModule(nn.Module):
@@ -105,7 +103,7 @@ class RecurrentContextModule(nn.Module):
     def forward(self, x: torch.tensor) -> torch.tensor:
         h_new = self.integration_rate * x + (1 - self.integration_rate) * self.hidden_state
         self.hidden_state = h_new.detach().clone()
-        return h_new
+        return torch.tanh(h_new)
 
 
 class ContextMapping(nn.Module):
@@ -115,35 +113,36 @@ class ContextMapping(nn.Module):
 
     def __init__(self, state_dim) -> None:
         super().__init__()
-        self.in_to_out = nn.Linear(state_dim, state_dim, bias=False)
+        self.in_to_out = nn.Linear(state_dim, state_dim)
         with torch.no_grad():
             self.in_to_out.weight.copy_(torch.eye(state_dim, dtype=torch.float))
-            #self.in_to_out.bias.zero_()
+            self.in_to_out.bias.zero_()
         self.in_to_out.weight.requires_grad = True
-
-
-
-
-        #self.in_to_out.bias.requires_grad = True
+        self.in_to_out.bias.requires_grad = True
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        #return normalize(self.in_to_out(x))
-        return self.in_to_out(x) * 2.
+        return normalize(self.in_to_out(x))
 
 
-def gen_model(params, len_memory=2):
+def gen_model(state_size,
+              integration_rate,
+              softmax_temperature,
+              softmax_threshold,
+              memory_fill,
+              len_memory=2,
+              **kwargs):
     context_module = RecurrentContextModule(
-        params['state_d'],
-        params['integration_rate']
+        state_size,
+        integration_rate=integration_rate,
     )
     context_mapping = ContextMapping(
-        params['state_d'],
+        state_dim=state_size,
     )
     em_module = EMModule(
-        params['state_d'],
-        params['temperature'],
-        params['softmax_threshold'],
-        memory_fill=params['memory_fill'],
+        state_dim=state_size,
+        temperature=softmax_temperature,
+        softmax_threshold=softmax_threshold,
+        memory_fill=memory_fill,
         memory_fill_n=len_memory
     )
     return context_module, context_mapping, em_module

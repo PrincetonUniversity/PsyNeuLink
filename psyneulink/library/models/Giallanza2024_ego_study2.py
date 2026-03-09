@@ -379,12 +379,8 @@ def plot_results(*series, labels=None, ylabel="Accuracy"):
 
 
 if __name__ == "__main__":
-    import torch
 
-    # torch.manual_seed(0)
-    # np.random.seed(0)
-
-    trials = get_trials("interleaved", 200, n_blocks=4)
+    trials = get_trials("blocked", 200, n_blocks=4)
 
     model = construct_model(memory_capacity=len(trials))
     predictions = run_model(model, trials)
