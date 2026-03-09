@@ -31,6 +31,7 @@ SOFTMAX_THRESHOLD: float = .001
 
 LEARNING_RATE: float = 2.
 NUM_OPTIM_STEPS: int = 10
+LOSS_SPEC = pnl.Loss.BINARY_CROSS_ENTROPY
 
 
 def construct_model(
@@ -40,27 +41,37 @@ def construct_model(
     # -------------------------------------------------  Nodes  ------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------
 
-    # Input layers (present state and previous state)
+    # Input
     state_input_layer = pnl.ProcessingMechanism(name=STATE_NAME, input_shapes=STATE_SIZE)
     previous_state_layer = pnl.ProcessingMechanism(name=PREVIOUS_STATE_NAME, input_shapes=STATE_SIZE)
 
-    # Context layer (learned representation of the context, which is integrated over time)
+    # Context layer
+    # Simple integrator that projects to a normalize version of itself.
+    # The projection from the integrator to the normalized version is the only learnable
+    # component of the EGO model. It includes a bias term that is also learnable
     context_layer = pnl.TransferMechanism(
         name=CONTEXT_NAME,
         input_shapes=STATE_SIZE,
         integrator_mode=True,
         integration_rate=CONTEXT_INTEGRATION_RATE)
+
     context_bias = pnl.TransferMechanism(
-        name=CONTEXT_NAME + " BIAS",
-        default_variable=[1.]
+        name=CONTEXT_NAME + '[bias]',
+        input_shapes=1,
+        default_variable=[1.],
+    )
+
+    context_normalized = pnl.TransferMechanism(
+        name=CONTEXT_NAME + '[normalized]',
+        input_shapes=STATE_SIZE,
+        function=pnl.Normalize(),
     )
 
     em = pnl.EMComposition(
         name=EM_NAME,
-        memory_template=[
-            [0] * STATE_SIZE,  # state
-            [0] * STATE_SIZE,  # previous state
-            [0] * STATE_SIZE],  # context
+        memory_template=[[0] * STATE_SIZE,  # state
+                         [0] * STATE_SIZE,  # previous state
+                         [0] * STATE_SIZE],  # context
         memory_fill=MEMORY_INIT,
         memory_capacity=memory_capacity,
         memory_decay_rate=0,
@@ -70,27 +81,22 @@ def construct_model(
             STATE_NAME: {
                 pnl.FIELD_WEIGHT: STATE_RETRIEVAL_WEIGHT,
                 pnl.LEARN_FIELD_WEIGHT: False,
-                pnl.TARGET_FIELD: True
-            },
+                pnl.TARGET_FIELD: True},
             PREVIOUS_STATE_NAME: {
                 pnl.FIELD_WEIGHT: PREVIOUS_STATE_RETRIEVAL_WEIGHT,
                 pnl.LEARN_FIELD_WEIGHT: False,
-                pnl.TARGET_FIELD: False
-            },
+                pnl.TARGET_FIELD: False},
             CONTEXT_NAME: {
                 pnl.FIELD_WEIGHT: CONTEXT_RETRIEVAL_WEIGHT,
                 pnl.LEARN_FIELD_WEIGHT: False,
-                pnl.TARGET_FIELD: False
-            }
-        },
-        normalize_field_weights=True,
+                pnl.TARGET_FIELD: False}},
+        normalize_field_weights=False,
         normalize_memories=False,
         concatenate_queries=False,
         enable_learning=True,
         learning_rate=LEARNING_RATE,
         device=pnl.CPU,
-        store_on_optimization='last'
-    )
+        store_on_optimization='last')
 
     prediction_layer = pnl.ProcessingMechanism(name=PREDICTION_NAME, input_shapes=STATE_SIZE)
 
@@ -107,43 +113,47 @@ def construct_model(
         state_input_layer,
         pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
                               learnable=False),
-        previous_state_layer]
+        previous_state_layer
+    ]
     state_to_context_pathway = [
         state_input_layer,
         pnl.MappingProjection(matrix=pnl.IDENTITY_MATRIX,
                               learnable=False),
-        context_layer]
-    state_to_em_pathway = [state_input_layer,
-                           pnl.MappingProjection(sender=state_input_layer,
-                                                 receiver=em.nodes[STATE_NAME + VALUE],
-                                                 matrix=pnl.IDENTITY_MATRIX,
-                                                 learnable=False),
-                           em]
-    previous_state_to_em_pathway = [previous_state_layer,
-                                    pnl.MappingProjection(sender=previous_state_layer,
-                                                          receiver=em.nodes[PREVIOUS_STATE_NAME + QUERY],
-                                                          matrix=pnl.IDENTITY_MATRIX,
-                                                          learnable=False),
-                                    em]
-    context_learning_pathway = [context_layer,
-                                pnl.MappingProjection(sender=context_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      receiver=em.nodes[CONTEXT_NAME + QUERY],
-                                                      learnable=True),
-                                em,
-                                pnl.MappingProjection(sender=em.nodes[STATE_NAME + RETRIEVED],
-                                                      receiver=prediction_layer,
-                                                      matrix=pnl.IDENTITY_MATRIX,
-                                                      learnable=False),
-                                prediction_layer]
-    bias_learning_pathway = [
-        context_bias,
-        pnl.MappingProjection(sender=context_bias,
-                              matrix=np.array([[0.]*STATE_SIZE]),
-                              receiver=em.nodes[CONTEXT_NAME + QUERY],
-                              learnable=True),
-        em,
+        context_layer
     ]
+    state_to_em_pathway = [
+        state_input_layer,
+        pnl.MappingProjection(sender=state_input_layer,
+                              receiver=em.nodes[STATE_NAME + VALUE],
+                              matrix=pnl.IDENTITY_MATRIX,
+                              learnable=False),
+        em
+    ]
+    previous_state_to_em_pathway = [
+        previous_state_layer,
+        pnl.MappingProjection(sender=previous_state_layer,
+                              receiver=em.nodes[PREVIOUS_STATE_NAME + QUERY],
+                              matrix=pnl.IDENTITY_MATRIX,
+                              learnable=False),
+        em
+    ]
+    context_learning_pathway = [
+        context_layer,
+        pnl.MappingProjection(sender=context_layer,
+                              matrix=pnl.IDENTITY_MATRIX,
+                              receiver=context_normalized,
+                              learnable=True),
+        context_normalized,
+        pnl.MappingProjection(sender=context_normalized,
+                              matrix=pnl.IDENTITY_MATRIX,
+                              receiver=em.nodes[CONTEXT_NAME + QUERY],
+                              learnable=False),
+        em,
+        pnl.MappingProjection(sender=em.nodes[STATE_NAME + RETRIEVED],
+                              receiver=prediction_layer,
+                              matrix=pnl.IDENTITY_MATRIX,
+                              learnable=False),
+        prediction_layer]
 
     # Composition
     EGO_comp = pnl.AutodiffComposition(
@@ -153,19 +163,27 @@ def construct_model(
             state_to_context_pathway,
             state_to_em_pathway,
             previous_state_to_em_pathway,
-            context_learning_pathway,
-            bias_learning_pathway
+            context_learning_pathway
         ],
         learning_rate=LEARNING_RATE,
-        loss_spec=pnl.Loss.BINARY_CROSS_ENTROPY,
+        loss_spec=LOSS_SPEC,
         execute_in_additional_optimizations={
             context_layer: pnl.LAST,
-            previous_state_layer: pnl.LAST,
+            previous_state_layer: pnl.LAST
         },
-        # BREADCRUMB: REQUIRED HERE UNTIL IMPLEMENTED FOR learn()
         optimizations_per_minibatch=NUM_OPTIM_STEPS,
 
         device=pnl.CPU)
+
+    EGO_comp.add_node(context_bias)
+    EGO_comp.add_projection(
+        sender=context_bias,
+        receiver=context_normalized,
+        projection=pnl.MappingProjection(
+            matrix=np.zeros((1, STATE_SIZE)),
+            learnable=True
+        )
+    )
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(pnl.ExecutionMode.PyTorch)
     EGO_comp.add_projection(pnl.MappingProjection(sender=state_input_layer,
@@ -173,6 +191,7 @@ def construct_model(
                                                   learnable=False))
 
     EGO_comp.scheduler.add_condition(em, pnl.BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(context_normalized, pnl.BeforeNodes(em))
     EGO_comp.scheduler.add_condition(prediction_layer, pnl.BeforeNodes(previous_state_layer, context_layer))
 
     return EGO_comp
@@ -361,10 +380,11 @@ def plot_results(*series, labels=None, ylabel="Accuracy"):
 
 if __name__ == "__main__":
     import torch
-    torch.manual_seed(0)
-    np.random.seed(0)
 
-    trials = get_trials("blocked", 100, n_blocks=4)
+    # torch.manual_seed(0)
+    # np.random.seed(0)
+
+    trials = get_trials("interleaved", 200, n_blocks=4)
 
     model = construct_model(memory_capacity=len(trials))
     predictions = run_model(model, trials)

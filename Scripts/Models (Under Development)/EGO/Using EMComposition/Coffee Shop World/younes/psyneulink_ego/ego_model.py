@@ -1,5 +1,7 @@
-from psyneulink import *
 import numpy as np
+
+from psyneulink import *
+
 
 
 def construct_model(
@@ -58,13 +60,14 @@ def construct_model(
                                       input_shapes=context_size,
                                       integrator_mode=True,
                                       integration_rate=integration_rate)
+    context_bias = TransferMechanism(name=context_name + '[bias]',
+                                     input_shapes=1,
+                                     default_variable=[1.],
+                                     )
 
     context_normalized = TransferMechanism(name=CONTEXT + '[normalized]',
                                            input_shapes=context_size,
-                                           output_ports=[{
-                                               NAME: "normalized",
-                                               FUNCTION: lambda x: x
-                                           }]
+                                           function=Normalize(),
                                            )
 
     em = EMComposition(
@@ -93,6 +96,8 @@ def construct_model(
         learning_rate=learning_rate,
         device=device,
         store_on_optimization='last')
+
+
 
     prediction_layer = ProcessingMechanism(name=prediction_layer_name, input_shapes=state_size)
 
@@ -131,7 +136,7 @@ def construct_model(
                                                   receiver=context_normalized,
                                                   learnable=True),
                                 context_normalized,
-                                MappingProjection(sender=context_normalized.output_ports["normalized"],
+                                MappingProjection(sender=context_normalized,
                                                   matrix=IDENTITY_MATRIX,
                                                   receiver=em.nodes[context_name + QUERY],
                                                   learnable=False),
@@ -158,6 +163,16 @@ def construct_model(
         optimizations_per_minibatch=config['num_optimization_steps'],
         name=model_name,
         device=device)
+
+    EGO_comp.add_node(context_bias)
+    EGO_comp.add_projection(
+        sender=context_bias,
+        receiver=context_normalized,
+        projection=MappingProjection(
+            matrix=np.zeros((1, context_size)),
+            learnable=True
+        )
+    )
 
     learning_components = EGO_comp.infer_backpropagation_learning_pathways(ExecutionMode.PyTorch)
     EGO_comp.add_projection(MappingProjection(sender=state_input_layer,
