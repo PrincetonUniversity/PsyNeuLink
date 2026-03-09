@@ -384,9 +384,10 @@ class TestAutodiffTargetSpecs:
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
-        "default",
-        "internal",
-        "external",
+        # TEACHER_TARGET BREACRUMB: UNCOMMENT WHEN DONE DEBUGGING
+        # "default",
+        # "internal",
+        # "external",
         "loss_mech",
         "str"
     ])
@@ -480,51 +481,25 @@ class TestAutodiffTargetSpecs:
             "'(MappingProjection MappingProjection from pway2_mech_B[OutputPort-0] to pway2_mech_C[InputPort-0])', "
             "'(MappingProjection MappingProjection from pway3_mech_B[OutputPort-0] to pway3_mech_C[InputPort-0])'.",
             AutodiffCompositionError),
-        6: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-            "'autodiff_composition' are not in the Composition or any nested within it: "
-            "'pway2_mech_B', 'pway3_mech_B'.", CompositionError),
-        7: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-            "'autodiff_composition' are not in the Composition or any nested within it: "
-            "'pway1_mech_C', 'pway3_mech_B'.", CompositionError),
-        8: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-         "'autodiff_composition' are not in the Composition or any nested within it: "
-            "'pway1_mech_C', 'pway2_mech_B'.", CompositionError),
-        9: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-            "'autodiff_composition' are not in the Composition or any nested within it: "
-            "'pway2_mech_C', 'pway3_mech_B'.", CompositionError),
-        10: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-             "'autodiff_composition' are not in the Composition or any nested within it: "
-             "'pway1_mech_C', 'pway2_mech_C', 'pway3_mech_B'.", CompositionError),
-        11: ("The following TARGET Nodes specified in the 'targets' argument of the learn() method for "
-             "'autodiff_composition' are not in the Composition or any nested within it: "
-             "'pway1_mech_C', 'pway2_mech_C', 'pway3_mech_C'.", CompositionError),
+        6: ("Specification for the following OUTPUT Node of a learnable pathway in 'autodiff_composition' is missing "
+            "from the 'targets' argument of the call to its learn() method: 'pway2_mech_C'.", CompositionError),
+        7: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' is used to "
+            "specify a target input, but is not an OUTPUT or TARGET Node: 'pway2_mech_B'.", CompositionError),
+        8: ("The following Node in the 'targets' argument of the learn() method for 'autodiff_composition' "
+            "is not in the Composition or any nested within it: 'pway3_mech_T'.", CompositionError),
+        9: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' is "
+            "used to specify a target input, but is not an OUTPUT or TARGET Node: 'pway3_mech_B'.", CompositionError),
+        10: ("The following entries in the 'targets' argument of the learn() method for 'autodiff_composition' are "
+             "used to specify target inputs, but are not OUTPUT or TARGET Nodes: 'pway1_mech_B', 'pway3_mech_B'.",
+             CompositionError),
+        11: ("The following Node in the 'targets' argument of the learn() method for 'autodiff_composition' is not "
+             "in the Composition or any nested within it: 'pway3_mech_B'.", CompositionError),
         12: ("The following Node, specified in the 'targets' argument of the constructor for 'autodiff_composition' "
             "as a sample that receives its target value from another node, should not be included in the dict "
             "specified in the 'targets' argument of the learn() method: pway3_mech_C.", AutodiffCompositionError),
-        13: ("The following Node in the 'targets' argument of the learn() method for 'autodiff_composition' is not "
-             "in the Composition or any nested within it:  'pway3_mech_B'.", CompositionError),
-        14: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' was not "
+        13: ("The following entry in the 'targets' argument of the learn() method for 'autodiff_composition' was not "
              "specified as a TARGET Node in the 'targets' argument of the constructor for 'autodiff_composition': "
              "pway2_mech_B.", CompositionError),
-
-        # 3: ("The number of items (1) specified in the 'targets' argument of the learn() method for "
-        #     "'autodiff_composition' must equal the number specified with the keyword 'TARGET' (2) in "
-        #     "the 'targets' arg of the constructor.", CompositionError),
-        # 4: ("The number of items (2) specified in the 'targets' arg of the learn() method for 'autodiff_composition' "
-        #     "must equal the number of TARGET Nodes in the Composition (3).", CompositionError),
-        # 5: ("The number of items (3) specified in the 'targets' arg of the learn() method for 'autodiff_composition' "
-        #     "must equal the number of TARGET Nodes in the Composition (2).", CompositionError),
-        # 6: ("The following Node(s) have been specified to receive target inputs in the learn() method of "
-        #     "'autodiff_composition' but are not TARGET Nodes: 'pway2_mech_C'.", CompositionError),
-        # 7: ("The following Node(s) have been specified to receive target inputs in the learn() method of "
-        #     "'autodiff_composition' but are not TARGET Nodes: 'pway2_mech_C', 'pway3_mech_C'.", CompositionError),
-        # 8: ("The following Node(s), specified in the 'targets' argument of the constructor for 'autodiff_composition' "
-        #     "as samples that receive their target values from another node, should not be included in the dict "
-        #     "specified in the 'targets' argument of the learn() method: pway3_mech_C.", CompositionError),
-        # 9: ("The following entries in the 'targets' arg of the learn() method for 'autodiff_composition' are not "
-        #     "specified as 'TARGETS' in the 'targets' arg of its constructor: 'pway1_mech_C'.", CompositionError),
-        # 10: ("The following entries in the 'targets' arg of the learn() method for 'autodiff_composition' are not "
-        #      "specified as 'TARGETS' in the 'targets' arg of its constructor: 'pway2_mech_B'.", CompositionError)
     }
 
     test_args_for_target_spec_errors = [
@@ -533,35 +508,29 @@ class TestAutodiffTargetSpecs:
         #   cnstr/lrn/both   -1/0/+1    node/TARGET/both/bad/extra    in/mid/out/all/bad    #
         (     'cnstr',           0,              'node',                    'in',           0), # not learnable
         (     'cnstr',           0,              'TARGET',                  'in',           0), # not learnable
-        (     'cnstr',           0,              'node',                    None,          -1), # NO ERROR
+        (     'cnstr',           0,               'node',                   None,          -1), # NO ERROR
         (     'cnstr',           0,              'TARGET',                  None,          -1), # NO ERROR
-        (     'cnstr',           0,              'both',                    None,          -1), # NO ERROR
+        (     'cnstr',           0,               'both',                   None,          -1), # NO ERROR
         (     'cnstr',           0,              'extra',                   None,          -1), # NO ERROR
-        (     'cnstr',           0,               'bad',                    'out',          1), # spec not in Comp
-        (     'cnstr',           0,               'bad',                    'bad',          2), # bad spec
+        (     'cnstr',           0,               'bad',                   'out',           1), # spec not in Comp
+        (     'cnstr',           0,               'bad',                   'bad',           2), # bad spec
         (     'cnstr',          -1,               'both',                   None,           3), # orphaned projs
         (     'cnstr',          -1,               'node',                   None,           3), # orphaned proj
-        (     'cnstr',          -1,               'TARGET',                 None,           3), # orphaned proj
-        (     'cnstr',          -1,               'extra',                  None,           4), # orphaned projs
+        (     'cnstr',          -1,              'TARGET',                  None,           3), # orphaned proj
+        (     'cnstr',          -1,              'extra',                   None,           4), # orphaned projs
         (     'cnstr',          -1,               'bad',                    None,           5), # orphaned proj
-        (      'lrn'  ,         -1,              'TARGET',                  'in',           6), # missing TARGET spec
-        (      'lrn',           -1,              'TARGET',                  'mid',          7), # missing TARGET spec
-        (      'lrn',           -1,              'TARGET',                  'out',          8), # missing TARGET spec
-        # BREADCRUMB: INCLUDE VERSIONS OF THE FOLLOWING WITH NODE IN AND NOT IN COMP
-        # TEACHER_TARGET BREADCRUMB: NOT SURE THE ERROR MESSAGES ARE BEING TRIGGERED  FOR THE FOLLOWING:
-        (      'lrn',           -1,                'bad',                   'mid',          9), # 1 missing + 1 bad
-        (      'lrn',            0,                'bad',                   'mid',          10), # 1 bad TARGET spec
-        (      'lrn',            0,               'both',                   'mid',          11), # 2 bad TARGET specs
-        (      'both',           0,               'both',                   'mid',          12), # cstr + same lrn
-        # TEACHER_TARGET BREADCRUMB: NEED AN ERROR MESSAGE THE DEALS WITH A MECH NOT IN THE COMP,
-        #                            AS WELL AS AN EXAMPLE THAT USES ONE IN THE COMP
-        (      'lrn',           +1,              'TARGET',                  'mid',          13), # extra TARGET spec
-        (      'lrn',           +1,              'TARGET',                  'mid',          13), # extra TARGET spec
-        (      'lrn',           +1,                'bad',                   'mid',          13), # 1 bad + 1 extra
-        (      'both',          +1,               'both',                   'mid',          14), # cstr + diff lrn
+        (      'lrn'  ,         -1,               'node',                   None,           6), # missing target spec
+        (      'lrn'  ,         -1,              'TARGET',                  None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'both',                   None,           6), # missing TARGET spec
+        (      'lrn',           -1,               'bad',                    None,           7), # missing TARGET spec
+        (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
+        (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
+        (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
+        (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
+        (      'lrn',           +1,               'bad',                   'mid',          11), # 1 bad + 1 extra
+        (     'both',            0,               'both',                  'mid',          12), # cstr + same lrn
+        (     'both',           +1,               'both',                  'mid',          13), # cstr + diff lrn
     ]
-
-
     @pytest.mark.pytorch
     @pytest.mark.composition
     @pytest.mark.parametrize(["method", "num_specs", "spec_type", "errant_spec", "err_msg_num"],
@@ -570,7 +539,6 @@ class TestAutodiffTargetSpecs:
                                                          method, num_specs,
                                                          errant_spec, spec_type, err_msg_num):
         """Test errors for specifications of **targets** argument in constructor for AutodiffComposition
-        
         constructor:
          pathway that has target spec for middle but not subequent projections
         - pathway that has TARGET spec for middle but not subequent projections
@@ -587,7 +555,7 @@ class TestAutodiffTargetSpecs:
             - no extra specs in **targets** arg of learn()
           - no constructor **targets**:
             - keys not in Comp
-            - keys that do not refer to an OUTPUT Node 
+            - keys that do not refer to an OUTPUT Node
             - there is a spec for every TARGET Node (OUTPUT Node) in Comp
 
 
@@ -625,7 +593,7 @@ class TestAutodiffTargetSpecs:
                     if errant_spec == 'in':
                         # Not learnable error (since Target is for first Node in pathway) - Error 0
                         constructor_targets = {pway3_mech_A: pway3_mech_T}
-                    elif errant_spec == None:
+                    elif errant_spec is None:
                         if spec_type == 'node':
                             constructor_targets = {pway1_mech_C: pway1_mech_T, # <- same target
                                                    pway1_mech_B: pway1_mech_T, # <- same target
@@ -700,43 +668,54 @@ class TestAutodiffTargetSpecs:
                                            pway3_mech_C: pway3_mech_T}
 
                 elif spec_type == 'bad':
-                        #  Spec for middle Nodes of pway1 and pway2, so their last Projections are orphaned
-                        #          and no spec for pway2 so both of its Projections are orphaned - Error 5
-                        constructor_targets = {pway1_mech_B: pway1_mech_T, # <- Middle spec so last proj is orphaned
-                                               # pway2_mech_C: pway2_mech_T, <- OMISSION CAUSES ERROR
-                                               pway3_mech_B: pway3_mech_T} # <- Middle spec so last proj is orphaned
-
-
+                    #  Spec for middle Nodes of pway1 and pway2, so their last Projections are orphaned
+                    #          and no spec for pway2 so both of its Projections are orphaned - Error 5
+                    constructor_targets = {pway1_mech_B: pway1_mech_T, # <- Middle spec so last proj is orphaned
+                                           # pway2_mech_C: pway2_mech_T, <- OMISSION CAUSES ERROR
+                                           pway3_mech_B: pway3_mech_T} # <- Middle spec so last proj is orphaned
 
         elif method == 'lrn':
             constructor_targets = None
             if num_specs == -1:
-                if spec_type == pnl.TARGET:
-                    # Missing spec in **targets** arg of learn() method
-                    if errant_spec == 'in':
-                        learn_targets = {pway2_mech_B: [[10]],
-                                         pway3_mech_B: [[10]]}
-                    elif errant_spec == 'mid':
-                        learn_targets = {pway1_mech_C: [[10]],
-                                         pway3_mech_B: [[10]]}
-                    elif errant_spec == 'out':
-                        learn_targets = {pway1_mech_C: [[10]],
-                                         pway2_mech_B: [[10]]}
-                elif spec_type == 'bad':
-                    # Missing spec in **targets** arg of learn() method, and wrong spec for one that is present
-                    learn_targets = {pway2_mech_C: [[10]],
-                                     pway3_mech_B: [[10]]}
-            elif num_specs == 0:
-                if spec_type == 'bad':
-                    # One bad specificatons: pway2_mech_C should be pway2_mech_B)
+                if spec_type == 'node':
+                    # Missing spec in **targets** arg of learn(); others specified with sample Node
                     learn_targets = {pway1_mech_C: [[10]],
-                                     pway2_mech_C: [[10]],
-                                     pway3_mech_B: [[10]]}
-                elif spec_type == 'both':
-                    # Two bad specificatons: pway2_mech_C and pway2_mech_C (should be pway2_mech_B and pway3_mech_B)
-                    learn_targets = {pway1_mech_C: [[10]],
-                                     pway2_mech_C: [[10]],
                                      pway3_mech_C: [[10]]}
+                elif spec_type == pnl.TARGET:
+                    # Missing spec in **targets** arg of learn(); others specified with TARGET Node
+                    learn_targets = {'ADD TARGETS': [0, 2]}
+                elif spec_type == 'both':
+                    # Missing sample spec in **targets** arg of learn(); others specified as: other node, TARGET Node
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     'ADD TARGETS': [2]}
+                elif spec_type == 'bad':
+                    # Bad spec in **targets** arg of learn() method;
+                    learn_targets = {pway1_mech_C: [[10]],
+                                     pway2_mech_B: [[10]],
+                                     'ADD TARGETS': [2]}
+            elif num_specs == 0:
+                if spec_type == pnl.TARGET:
+                    if errant_spec == 'out':
+                        # One bad specificatons: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_T: [[10]],
+                                         pway2_mech_T: [[10]],
+                                         pway3_mech_T: [[10]]}
+                elif spec_type == 'bad':
+                    if errant_spec == 'bad':
+                        # One bad specificaton: pway3_mech_B should be pway3_mech_C)
+                        learn_targets = {pway1_mech_C: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    elif errant_spec == 'both':
+                        # Two bad specificatons: pway1 and pway3 should be mech_C not mech_B)
+                        learn_targets = {pway1_mech_B: [[10]],
+                                         pway2_mech_C: [[10]],
+                                         pway3_mech_B: [[10]]}
+                    else:
+                        assert False, f"TEST ERROR: bad errant_spec: {errant_spec}"
+                else:
+                    assert False, f"TEST ERROR: bad spec_type: {spec_type}"
+
             elif num_specs == +1:
                 if spec_type == pnl.TARGET:
                     # Extra spec in **targets** arg of learn() method
@@ -750,7 +729,7 @@ class TestAutodiffTargetSpecs:
                                      pway2_mech_C: [[10]],
                                      pway3_mech_B: [[10]]}
             else:
-                assert False, "TEST ERROR: bad num_specs"
+                assert False, f"TEST ERROR: bad num_specs: {num_specs}"
 
         elif method == 'both':
             constructor_targets = {pway1_mech_C: pway1_mech_T,
@@ -761,10 +740,10 @@ class TestAutodiffTargetSpecs:
             elif num_specs == +1: # Specification in learn for TARGET Node not specified in constructor
                 learn_targets = {pway2_mech_B: [[10]]}
             else:
-                assert False, "TEST ERROR: bad num_specs"
+                assert False, f"TEST ERROR: bad num_specs: {num_specs}"
 
         else:
-            assert False, f"TEST ERROR: bad method spec"
+            assert False, f"TEST ERROR: bad method spec: {method}"
 
         # Construct pathways
         if method in {'cnstr'}:
@@ -775,13 +754,20 @@ class TestAutodiffTargetSpecs:
             # No need for pway1_mech_T, pway2_mech_T or pway3_mech_T
             if num_specs == -1:
                 # Construct 3 pathways, so that one can be missing
-                pathways = [pway1, pway2, pway3]
+                pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T, pway3_mech_T]
                 inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
             if num_specs == 0:
-                if spec_type in {'bad', 'both'}:
-                    # Construct 3 pathways, one of which will get erroneous spec
-                    pathways = [pway1, pway2, pway3]
+                if spec_type == pnl.TARGET:
+                    # Construct 3 pathways but only two TARGET Nodes, to test "not in Comp" error for missing one
+                    pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T]
                     inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+                elif spec_type in {'bad', 'both'}:
+                        # Construct 3 pathways, one or two of which will get erroneous spec
+                        pathways = [pway1, pway2, pway3]
+                        inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+                else:
+                    assert False, f"PROGRAM ERROR: bad spec_type: {spec_type}"
+
             elif num_specs == +1:
                 # Construct 2 pathways, so the 3rd spec can be the erroneous extra one
                 pathways = [pway1, pway2]
@@ -793,7 +779,7 @@ class TestAutodiffTargetSpecs:
         else:
             assert False, f"TEST ERROR: bad method spec"
 
-        if err_msg_num == -1:
+        if err_msg_num == -1:  # Conditions with no errors; should fully execute cconstructor and learn()
             autodiff_comp = pnl.AutodiffComposition(pathways=pathways,
                                                     targets=constructor_targets)
             autodiff_comp.learn(inputs=inputs,
@@ -806,10 +792,14 @@ class TestAutodiffTargetSpecs:
         with pytest.raises(error_type, match=re.escape(error_msg)):
             autodiff_comp = pnl.AutodiffComposition(pathways=pathways,
                                                     targets=constructor_targets)
+            if learn_targets and 'ADD TARGETS' in learn_targets:
+                # Add automatically constructed TARGET Nodes if specified
+                target_nodes = sorted(autodiff_comp.get_target_nodes())
+                specs = learn_targets.pop('ADD TARGETS')
+                learn_targets.update({target_nodes[spec]:[[1]] for spec in specs})
             autodiff_comp.learn(inputs=inputs,
                                 targets=learn_targets,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
-        assert True
 
     # =======================================================================================================
 

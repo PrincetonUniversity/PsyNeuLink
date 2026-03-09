@@ -9742,15 +9742,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         targets_from_learn_as_sample_ports = {}
         sample_ports_to_learn_specs = {}
 
-        # If **targets** arg not specified in learn(), look for and extract any targets specified in **inputs** arg
-        if targets:
-            # Create mapping from sample_ports (corresponing to specs in **targets** of learn()) to values
-            # Create mapping from sample_ports to specs in **targets** of learn() (for later use in error messages)
-            # Convert keys in **targets** to sample OutputPorts
+        def spec_as_mech(spec):
+            return spec.owner if isinstance(spec,OutputPort) else spec
 
-            # TEACHER_TARGET BREADCRUMB: MOVE AS MUCH OF BELOW AS POSSIBLE to _validate_target_specs
-            # Make sure all specs are in Comp:
-            not_in_comp = [spec for spec in targets if not spec in self._all_nodes]
+        if targets:
+            # First make sure all specs are in Comp:
+            not_in_comp = [spec for spec in [spec_as_mech(t) for t in targets] if not (spec in self._all_nodes)]
             # Entries in **targets** of learn() for Nodes that are not in the Composition
             if not_in_comp:
                 not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
@@ -9760,13 +9757,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # X TEST DONE
                 raise CompositionError(f"The following Node{s} in the 'targets' argument of the learn() method "
                                        f"for '{self.name}' {is_are} not in the Composition or any nested within it: "
-                                       f" {', '.join(not_in_comp)}.")
+                                       f"{', '.join(not_in_comp)}.")
 
+            # Then:
+            # - convert keys in **targets** to sample OutputPorts
+            # - check for amy duplicate specs of sample (i.e., one entry as Mechanism and another as OutputPort)
+            # - create mapping from sample OutputPorts to values
+            # - create mapping from sample OutputPorts to specs in **targets** of learn() (for use in error messages)
             duplicate_samples_in_learn_target_specs = []
+            not_in_comp = []
             for spec, val in targets.items():
+
                 # Convert keys from **targets** in learn() to sample_port specifications
                 # MODIFIED TEACHER_TARGET OLD:
-                if NodeRole.TARGET in self.get_roles_by_node(spec):
+                if NodeRole.TARGET in self.get_roles_by_node(spec_as_mech(spec)):
                     sample_port = next((k for k, v in self.sample_port_to_target_port_map.items()
                                         if v.owner == spec), None)
                 else:
@@ -9792,20 +9796,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Cache any duplicate sample_port specifications for error checking below
                 if sample_port in targets_from_learn_as_sample_ports:
                     duplicate_samples_in_learn_target_specs.append((sample_ports_to_learn_specs[sample_port], spec))
-                # Add to mapping from sample_ports (corresponing to specs in **targets** of learn()) to values
+                # Add to mapping from sample_ports (corresponding to specs in **targets** of learn()) to values
                 targets_from_learn_as_sample_ports[sample_port] = val
                 # Add to mapping from sample_ports to specs in **targets** of learn() (for later use in error messages)
                 sample_ports_to_learn_specs[sample_port] = spec
 
             if duplicate_samples_in_learn_target_specs:
-                # Error for duplicates in **targets** of learn() that specify both sample and corresponding TAREGET node
+                # Error for duplicates in **targets** of learn() that specify both sample and corresponding TARGET node
                 duplicate_target_spec_names = [f"('{spec1.full_name}' and '{spec2.full_name}'"
                                                for spec1, spec2 in duplicate_samples_in_learn_target_specs]
                 raise CompositionError(f"The following specifications in the 'targets' arg of the learn() method for "
                                        f"'{self.name}' are duplicated (i.e., they specify both a sample port and its "
                                        f"corresponding target node): {', '.join(duplicate_target_spec_names)}.")
 
+        # **targets** arg not specified in learn()
         else:
+            # Look for and extract any targets specified in **inputs** arg
             inputs_copy = inputs.copy()
             targets = {}
             for t in inputs.copy():
@@ -9836,10 +9842,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         BREADCRUMB: ADD DOCSTRING HERE OUTLINING VALIDATION PROCEDURE / LOGIC
         """
 
-        constructor_has_target_specs = bool(hasattr(self, 'targets') and self.targets)
+        # # MODIFIED TEACHER_TARGET OLD:
+        # constructor_has_target_specs = bool(hasattr(self, 'targets') and self.targets)
+        # MODIFIED TEACHER_TARGET NEW:
+        # Parse self.targets (i.e., **targets** from constructor) to OutputPorts (or TARGET)
+        targets_from_constructor_as_ports = [((k.output_port if isinstance(k, Mechanism) else k),
+                                              (v.output_port if isinstance(v, Mechanism) else v))
+                                             for k, v in self.targets] \
+            if (hasattr(self, 'targets') and self.targets) else []
+        assert True
+
+        num_constructor_target_specs = len(targets_from_constructor_as_ports)
+        constructor_has_target_specs = bool(num_constructor_target_specs)
+        # MODIFIED TEACHER_TARGET END
         constructor_TARGETS_set = (set(t[0] for t in self.targets if t[1] == TARGET)
                                     if constructor_has_target_specs else set())
-        self.num_target_specs = len(self.targets) if self.targets else 0
 
         learn_method_has_target_specs = bool(target_specs_from_learn_method)
         learn_target_specs_set = (set(targets_from_learn_as_sample_ports)
@@ -9847,6 +9864,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         missing_sample_specs = constructor_TARGETS_set - learn_target_specs_set
         extra_sample_specs = learn_target_specs_set - constructor_TARGETS_set
+
+        # TEACHER_TARGET BREADCRUMB: MOVE THIS TO globals utlities
+        def get_inflections(plural):
+            inflections = {
+                's': 's' if plural else '',
+                'a': '' if plural else 'a ',
+                'an': '' if plural else 'an ',
+                'the': 'the ' if plural else '',
+                'are_is': 'are' if plural else 'is',
+                'have_has': 'have' if plural else 'has',
+                'entry': 'entries' if plural else 'entry',
+                'was_were': 'were' if plural else 'was',
+            }
+            return inflections
 
         if constructor_has_target_specs:
             # BREADCRUMB: MAKE SURE THAT EARLIER, IN AutodiffCOmposition, ALL constructor SPECS HAVE BEEN VALIDATED?
@@ -9859,52 +9890,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Use assert here since the number of Comparator or LossMechanisms constructed should
             #   equal the number of **targets** specified in the constructor and any disparities
             #   (e.g., due orphaned_learnable_projections) in _instantiate_loss_components() of AutodiffComposition
-            assert len(self.targets) == len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)),\
-                (f"PROGRAM ERROR: The number of sample-target pairs ({len(self.targets)}) specified in the 'targets' "
-                 f"argument of the constructor for '{self.name}' should equal the number of LEARNING_OBJECTIVE "
-                 f"Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
+            assert num_constructor_target_specs == len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)),\
+                (f"PROGRAM ERROR: The number of sample-target pairs ({num_constructor_target_specs}) specified in "
+                 f"the 'targets' argument of the constructor for '{self.name}' should equal the number of "
+                 f"LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
 
             # BREADCRUMB: MAKE SHRE THIS IS NOT ALREADY DONE EARLIER (E.G. IN _valiate_targets or _parse_target_specs
             # Check that all specified Nodes are in the Composition
-            not_in_comp = [spec for item in self.targets for spec in item
+            not_in_comp = [spec for item in targets_from_constructor_as_ports for spec in item
                            if spec != TARGET and spec.owner not in self._get_all_nodes()]
             if not_in_comp:
                 # Entries in **targets** of learn() for Nodes that are not in the Composition
                 not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
-                plural = len(not_in_comp) > 1
-                is_are = 'are' if plural else 'is'
-                s = 's' if plural else ''
+                i = get_inflections(len(not_in_comp) > 1)
                 # X TEST DONE
-                raise CompositionError(f"The following specification{s} in the 'targets' argument of the constructor "
-                                       f"for '{self.name}' {is_are} not in the Composition or any nested within it: "
-                                       f"{', '.join(not_in_comp)}.")
+                raise CompositionError(f"The following specification{i['s']} in the 'targets' argument of the "
+                                       f"constructor for '{self.name}' {i['are_is']} not in the Composition or any "
+                                       f"nested within it: {', '.join(not_in_comp)}.")
 
             # Check that all specified as TARGET nodes are also specified in the **targets** arg of the learn() method
             if missing_sample_specs:
-                plural = len(missing_sample_specs) > 1
-                s = 's' if plural else ''
-                is_are = 'are' if plural else 'is'
-                missing_sample_specs = sorted([f"'{spec[0].full_name}'" for spec in self.targets
+                i = get_inflections(len(missing_sample_specs) > 1)
+                missing_sample_specs = sorted([f"'{spec[0].full_name}'" for spec in num_constructor_target_specs
                                                if spec[0] in missing_sample_specs])
                 # X TEST DONE
-                raise CompositionError(f"The specification of {'the ' if plural else ''}input value{s} for the "
-                                       f"following TARGET Node{s} {is_are} missing from the 'targets' argument "
-                                       f"of the learn() method for '{self.name}': {', '.join(missing_sample_specs)}.")
+                raise CompositionError(f"The specification of {i['the ']}input value{i['s']} for the following TARGET "
+                                       f"Node{i['s']} {i['are_is']} missing from the 'targets' argument of the learn() "
+                                       f"method for '{self.name}': {', '.join(missing_sample_specs)}.")
 
             # Check that there are no extra specs in **targets** arg of learn()
             #   (i.e. that are not specified as TARGET in the **targets** arg of the constructor)
             if extra_sample_specs:
                 # Entries for **targets** in learn() that were not specified as TARGETs in the constructor
-                plural = len(extra_sample_specs) > 1
-                s = 's' if plural else ''
-                entry = 'entries' if plural else 'entry'
-                was_were = 'were' if plural else 'was'
+                i = get_inflections(len(extra_sample_specs) > 1)
                 extra_sample_specs = sorted([sample_ports_to_learn_specs[spec].full_name
                                              for spec in extra_sample_specs])
                 # X TEST DONE
                 raise CompositionError(
-                    f"The following {entry} in the 'targets' argument of the learn() method for '{self.name}' {was_were} "
-                    f"not specified as {'' if plural else 'a'} TARGET Node{s} in the 'targets' argument of the "
+                    f"The following {i['entry']} in the 'targets' argument of the learn() method for '{self.name}' "
+                    f"{i['was_were']} not specified as {i['a']}TARGET Node{i['s']} in the 'targets' argument of the "
                     f"constructor for '{self.name}': {', '.join(extra_sample_specs)}.")
 
         # No constructor specs
@@ -9919,37 +9943,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # - specs for TARGET Nodes rather than samples (latter are simpler and clearer)
 
             # Check that all specifications (keys) in **targets** arg of learn() are in the Composition
-            not_in_comp = [spec for spec in extra_sample_specs if spec not in self._get_all_nodes()]
+            not_in_comp = [spec for spec in extra_sample_specs if spec.owner not in self._get_all_nodes()]
             if not_in_comp:
                 # Entries in **targets** of learn() for Nodes that are not in the Composition
                 not_in_comp = sorted([f"'{sample_ports_to_learn_specs[spec].full_name}'" for spec in not_in_comp])
-                plural = len(not_in_comp) > 1
-                s = 's' if plural else ''
-                is_are = 'are' if plural else 'is'
+                i = get_inflections(len(not_in_comp) > 1)
                 # X TEST DONE
-                raise CompositionError(f"The following TARGET Node{s} specified in the 'targets' argument "
-                                       f"of the learn() method for '{self.name}' are not in the Composition or any "
+                raise CompositionError(f"The following TARGET Node{i['s']} specified in the 'targets' argument of the "
+                                       f"learn() method for '{self.name}' {i['are_is']} not in the Composition or any "
                                        f"nested within it: {', '.join(not_in_comp)}.")
 
             # Check that all OUTPUT Nodes in the Composition are assigned TARGET Nodes,
-            # which should match the number of learnable pathways in the Composition
+            # TEACHER_TARGET BREADCRUMB: DO DIRECT COMPARISON OF targets_from_learn_as_sample_ports WITH TARGET NODES]
+            #                            ACCOUNT FOR SPECS AS MECHS VS.OUTPUTPORTS AND AS SAMPLES VS. TARGETS
             TARGET_Nodes_in_comp = self.get_target_nodes(execution_mode, context, base_context)
             num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
+            num_targets_specified_in_learn = len(target_specs_from_learn_method)
+            # The following assert is justified since all TARGETS are OUTPUT Nodes
             assert num_TARGET_Nodes_in_comp == self.num_learnable_pathways, \
                 (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
                  f"is not equal to the number of learnable pathways ({self.num_learnable_pathways}).")
             if num_targets_specified_in_learn != num_TARGET_Nodes_in_comp:
-                # X TEST DONE
-                raise CompositionError(f"The number of items ({num_targets_specified_in_learn}) specified in the "
-                                       f"'targets' arg of the learn() method for '{self.name}' must equal the "
-                                       f"number of TARGET Nodes in the Composition ({num_TARGET_Nodes_in_comp}); these "
-                                       f"can be identified using the 'get_target_nodes' method of the Composition.")
-            self.num_target_specs = num_targets_specified_in_learn
+                missing_target_specs = sorted([f"'{spec.owner.name}'" for spec in self.sample_port_to_target_port_map
+                                               if spec not in targets_from_learn_as_sample_ports])
+                i = get_inflections(len(missing_target_specs) > 1)
+                raise CompositionError(f"Specification{i['s']} for the following OUTPUT Node{i['s']} of {i['a']}"
+                                       f"learnable pathway{i['s']} in '{self.name}' {i['are_is']} missing from the "
+                                       f"'targets' argument of the call to its learn() method: "
+                                       f"{' ,'.join(missing_target_specs)}.")
 
             # Warn for any target specs in **targets** arg of learn() that are also in **inputs** arg
             # TEACHER_TARGET BREADCRUMB: WHAT IF inputs has port specifications?  CONVERT THAT TO PORTS TOO?
             #                            ARE INPUTS ALREADY PORTS?  IF SO, THEN KEEP target_specs_as_ports
-            target_specs_as_mechs = [target.owner for target in target_specs_as_ports]
+            target_specs_as_mechs = [target.owner for target in targets_from_learn_as_sample_ports]
             duplicate_targets = sorted([item.name for item in inputs if item in target_specs_as_mechs])
             if duplicate_targets and not self._warned_about_targets_mechs_in_inputs_and_targets:
                 # X TEST DONE
@@ -9999,8 +10025,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_target_specs = [f"'{target_mech.name}'" for target_mech in target_specs_as_mechs
                                 if target_mech not in legal_target_specs]
             if bad_target_specs:
-                raise CompositionError(f"The following Node(s) have been specified to receive target inputs "
-                                       f"in the learn() method of '{self.name}' but are not TARGET Nodes: "
+                i = get_inflections(len(bad_target_specs) > 1)
+                raise CompositionError(f"The following {i['entry']} in the 'targets' argument of the learn() method "
+                                       f"for '{self.name}' {i['are_is']} used to specify {i['a']}target input{i['s']}, "
+                                       f"but {i['are_is']} not {i['an']}OUTPUT or TARGET Node{i['s']}: "
                                        f"{', '.join(bad_target_specs)}.")
 
         return True
