@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RUN_TYPE = 'PNL'  # 'PyTorch' or 'PNL'
+RUN_TYPE = 'PyTorch'  # 'PyTorch' or 'PNL'
 
 CONFIG = dict(
     tolerance=1e-10,
@@ -134,7 +134,7 @@ def main():
     file_name = f"IntegrationR({CONFIG['integration_rate']}) LearningR({CONFIG['learning_rate']}) OPTIMIZATION STEPS({CONFIG['num_optimization_steps']})"
     fig = plot_results(df, '')
     fig.show()
-    fig.savefig(f"{file_name}.png")
+    fig.savefig(f"{file_name}.svg", format='svg')
 
 if __name__ == '__main__':
     main()

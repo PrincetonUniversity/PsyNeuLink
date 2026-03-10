@@ -66,7 +66,7 @@ def construct_model(
         softmax_threshold=softmax_threshold,
         fields={state_input_layer.name: {FIELD_WEIGHT: state_retrieval_weight,
                                    LEARN_FIELD_WEIGHT: False,
-                                   TARGET_FIELD: True},
+                                   TARGET_FIELD: False},
                 previous_state_layer.name: {FIELD_WEIGHT: previous_state_retrieval_weight,
                                       LEARN_FIELD_WEIGHT: False,
                                       TARGET_FIELD: False},
@@ -76,8 +76,7 @@ def construct_model(
         normalize_field_weights=False,
         normalize_memories=False,
         concatenate_queries=False,
-        enable_learning=enable_learning,
-        learning_rate=learning_rate,
+        enable_learning=False,
         device=CPU,
         store_on_optimization='last')
 
