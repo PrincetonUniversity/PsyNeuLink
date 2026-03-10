@@ -10045,7 +10045,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"for '{self.name}' {i['are_is']} used to specify {i['a']}target input{i['s']}, "
                                        f"but {i['are_is']} not {i['an']}OUTPUT or TARGET Node{i['s']}: "
                                        f"{', '.join(bad_target_specs)}.")
-
         return True
 
     def _parse_generator_function(self, inputs):
