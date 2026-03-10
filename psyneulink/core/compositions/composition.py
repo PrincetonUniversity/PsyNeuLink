@@ -7994,7 +7994,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ?Do add_nodes and add_projections here or in Learning-type-specific creation methods
 
     def get_target_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
-        """Return a list of all `TARGET_MECHANISM <Composition_Learning_Components>`\\s for `learning Pathways
+        """Return a list of all Nodes <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition.
         """
         target_nodes = self.get_nodes_by_role(NodeRole.TARGET)
@@ -8134,6 +8134,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                        override=True)
+
+        sample_port = objective_mechanism.input_ports['SAMPLE'].path_afferents[0].sender
+        self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
+
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self,
@@ -8221,6 +8225,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         objective_mechanism.modulatory_mechanism = learning_mechanism
 
+        sample_port = objective_mechanism.input_ports['SAMPLE'].path_afferents[0].sender
+        self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
+
         return target_mechanism, objective_mechanism, learning_mechanism
 
     def _create_td_related_mechanisms(self,
@@ -8253,6 +8260,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                learning_rate=learning_rate,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+
+        sample_port = objective_mechanism.input_ports['SAMPLE'].path_afferents[0].sender
+        self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
 
         return target_mechanism, objective_mechanism, learning_mechanism
 
@@ -8532,6 +8542,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       function=error_function,
                                                       output_ports=output_ports)
 
+
         input_source_output_port, output_source_input_port = \
             self._get_ports_for_input_output_sources(learned_projection, output_source)
 
@@ -8569,6 +8580,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
+        sample_proj = learning_related_projections[1]
+        assert sample_proj.receiver.owner == objective_mechanism and sample_proj.receiver.name == 'SAMPLE'
+        sample_port = sample_proj.sender
+        self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
 
         return target_mechanism, objective_mechanism, learning_mechanism
 
@@ -9708,7 +9723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         `dict` :
-            Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
+            Dict mapping mechanisms to values (with TargetMechanisms inferred from OUTPUT nodes if needed)
 
         `int` :
             Number of input sets in dict for each input node in the Composition
@@ -9747,7 +9762,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if targets:
             # First make sure all specs are in Comp:
-            not_in_comp = [spec for spec in [spec_as_mech(t) for t in targets] if not (spec in self._all_nodes)]
+            not_in_comp = [spec for spec in [spec_as_mech(t) for t in targets] if not spec in self._get_all_nodes()]
             # Entries in **targets** of learn() for Nodes that are not in the Composition
             if not_in_comp:
                 not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
@@ -9842,21 +9857,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         BREADCRUMB: ADD DOCSTRING HERE OUTLINING VALIDATION PROCEDURE / LOGIC
         """
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # constructor_has_target_specs = bool(hasattr(self, 'targets') and self.targets)
-        # MODIFIED TEACHER_TARGET NEW:
-        # Parse self.targets (i.e., **targets** from constructor) to OutputPorts (or TARGET)
-        targets_from_constructor_as_ports = [((k.output_port if isinstance(k, Mechanism) else k),
-                                              (v.output_port if isinstance(v, Mechanism) else v))
-                                             for k, v in self.targets] \
-            if (hasattr(self, 'targets') and self.targets) else []
-        assert True
+        # Parse self.targets into tuples of OutputPorts or 'TARGET'
+        targets_from_constructor_as_ports = []
+        if hasattr(self, 'targets') and self.targets:
+            for spec in self.targets:
+                if isinstance(spec, LossMechanism):
+                    sample_port = spec.sample
+                    target_port = spec.target
+                else:
+                    assert isinstance(spec, tuple), f"PROGRAM ERROR: {spec} is not a LossMechanism or a tuple"
+                    sample, target = spec
+                    sample_port = sample.output_port if isinstance(sample, Mechanism) else sample
+                    target_port = target.output_port if isinstance(target, Mechanism) else target
+                targets_from_constructor_as_ports.append((sample_port, target_port))
 
         num_constructor_target_specs = len(targets_from_constructor_as_ports)
         constructor_has_target_specs = bool(num_constructor_target_specs)
-        # MODIFIED TEACHER_TARGET END
-        constructor_TARGETS_set = (set(t[0] for t in self.targets if t[1] == TARGET)
-                                    if constructor_has_target_specs else set())
+        constructor_TARGETS_set = (set(t[0] for t in targets_from_constructor_as_ports if t[1] == TARGET)
+                                   if constructor_has_target_specs else set())
 
         learn_method_has_target_specs = bool(target_specs_from_learn_method)
         learn_target_specs_set = (set(targets_from_learn_as_sample_ports)
@@ -9960,9 +9978,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             num_TARGET_Nodes_in_comp = len(TARGET_Nodes_in_comp)
             num_targets_specified_in_learn = len(target_specs_from_learn_method)
             # The following assert is justified since all TARGETS are OUTPUT Nodes
-            assert num_TARGET_Nodes_in_comp == self.num_learnable_pathways, \
-                (f"PROGRAM ERROR: the number of TARGET NODES in '{self.name}' ({num_TARGET_Nodes_in_comp}) "
-                 f"is not equal to the number of learnable pathways ({self.num_learnable_pathways}).")
             if num_targets_specified_in_learn != num_TARGET_Nodes_in_comp:
                 missing_target_specs = sorted([f"'{spec.owner.name}'" for spec in self.sample_port_to_target_port_map
                                                if spec not in targets_from_learn_as_sample_ports])

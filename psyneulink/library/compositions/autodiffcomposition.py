@@ -827,6 +827,7 @@ from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import (
     ProcessingMechanism, ProcessingMechanism_Base)
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -1642,6 +1643,8 @@ class AutodiffComposition(Composition):
         for efferent in mech.efferents:
             if isinstance(efferent.receiver.owner, LossMechanism):
                 return True
+            if isinstance(efferent.receiver.owner, LearningMechanism):
+                continue
             sender = efferent.receiver if isinstance(efferent.receiver.owner, CompositionInterfaceMechanism) \
                 else efferent.receiver.owner
             check_efferent_pathway = self._mech_is_sender_in_learnable_pathway(sender)
@@ -1792,6 +1795,9 @@ class AutodiffComposition(Composition):
 
         # TEACHER_TARGET: BREADCRUMB MAKE THIS A METHOD
         # Error if there are any learnable Projections in pathways that do not end with a LossMechanism
+        self._check_for_orphaned_learnable_projections(pathways)
+
+    def _check_for_orphaned_learnable_projections(self, pathways):
         orphaned_learnable_projections = []
         for pathway in pathways:
             backwards_pathway = pathway[::-1]
@@ -1804,7 +1810,7 @@ class AutodiffComposition(Composition):
                     if isinstance(item, LossMechanism):
                         break
                     # If item is a Node and any of its efferents project to a LossMechanism, break
-                    if isinstance(item, ProcessingMechanism):
+                    if isinstance(item, ProcessingMechanism_Base):
                         sender = backwards_pathway[i-1].receiver if isinstance(item, CompositionInterfaceMechanism) \
                             else item
                         if self._mech_is_sender_in_learnable_pathway(sender):

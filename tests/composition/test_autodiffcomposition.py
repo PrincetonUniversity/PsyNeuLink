@@ -526,6 +526,7 @@ class TestAutodiffTargetSpecs:
         (      'lrn',            0,              'TARGET',                 'out',           8), # TARGET not in comp
         (      'lrn',            0,               'bad',                   'bad',           9), # 1 bad TARGET spec
         (      'lrn',            0,               'bad',                  'both',          10), # 2 bad TARGET specs
+        # TEACHER_TARGET BREADCRUMB:  ??CHANGE errant_spec FOR THE FOLLOWING TO None??
         (      'lrn',           +1,              'TARGET',                 'mid',          11), # extra TARGET spec
         (      'lrn',           +1,               'bad',                   'mid',          11), # 1 bad + 1 extra
         (     'both',            0,               'both',                  'mid',          12), # cstr + same lrn
@@ -762,9 +763,9 @@ class TestAutodiffTargetSpecs:
                     pathways = [pway1, pway2, pway3, pway1_mech_T, pway2_mech_T]
                     inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
                 elif spec_type in {'bad', 'both'}:
-                        # Construct 3 pathways, one or two of which will get erroneous spec
-                        pathways = [pway1, pway2, pway3]
-                        inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
+                    # Construct 3 pathways, one or two of which will get erroneous spec
+                    pathways = [pway1, pway2, pway3]
+                    inputs = {pway1_mech_A:[[1]], pway2_mech_A:[[2]], pway3_mech_A:[[3]]}
                 else:
                     assert False, f"PROGRAM ERROR: bad spec_type: {spec_type}"
 
@@ -800,8 +801,6 @@ class TestAutodiffTargetSpecs:
             autodiff_comp.learn(inputs=inputs,
                                 targets=learn_targets,
                                 execution_mode=pnl.ExecutionMode.PyTorch)
-
-    # =======================================================================================================
 
 
 # Expected results for test_projection_specific_learning_rates()
