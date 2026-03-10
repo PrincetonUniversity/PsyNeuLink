@@ -4565,10 +4565,10 @@ class TestMiscTrainingFunctionality:
         )
 
         learn_args = {'inputs': {input_mech: [[1,2],[3,4],[5,6],[7,8]],
-                               autodiff_comp.get_target_nodes()[0]: [[.1, .2, .3],
-                                                                     [.4, .5, .6],
-                                                                     [.7, .8, .9],
-                                                                     [1.1, 1.2, 1.3]]},
+                                 autodiff_comp.get_target_nodes()[0]: [[.1, .2, .3],
+                                                                       [.4, .5, .6],
+                                                                       [.7, .8, .9],
+                                                                       [1.1, 1.2, 1.3]]},
                       'num_trials': 4,
                       'minibatch_size': minibatch_size,
                       'optimizations_per_minibatch': num_optimizations,
