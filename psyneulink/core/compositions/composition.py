@@ -8580,10 +8580,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, is_learning_projection=True, feedback=True, context=context)
 
-        sample_proj = learning_related_projections[1]
-        assert sample_proj.receiver.owner == objective_mechanism and sample_proj.receiver.name == 'SAMPLE'
-        sample_port = sample_proj.sender
-        self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
+        sample_projs = convert_to_list(learning_related_projections[1])
+        for proj in sample_projs:
+            assert proj.receiver.owner == objective_mechanism and proj.receiver.name == 'SAMPLE'
+            sample_port = proj.sender
+            self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
 
         return target_mechanism, objective_mechanism, learning_mechanism
 
@@ -9829,9 +9830,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Look for and extract any targets specified in **inputs** arg
             inputs_copy = inputs.copy()
             targets = {}
-            for t in inputs.copy():
+            for t in inputs:
                 if t in self.get_nodes_by_role(NodeRole.TARGET):
-                    targets[t] = inputs.pop(t)
+                    targets[t] = inputs_copy.pop(t)
 
         self._validate_targets_spec(inputs, targets,
                                     targets_from_learn_as_sample_ports,

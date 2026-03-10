@@ -385,9 +385,9 @@ class TestAutodiffTargetSpecs:
     @pytest.mark.composition
     @pytest.mark.parametrize('target_spec', [
         # TEACHER_TARGET BREACRUMB: UNCOMMENT WHEN DONE DEBUGGING
-        # "default",
-        # "internal",
-        # "external",
+        "default",
+        "internal",
+        "external",
         "loss_mech",
         "str"
     ])
