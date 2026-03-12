@@ -220,6 +220,8 @@ ZEROS_MATRIX = "ZerosMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
 DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
+KAIMING_MATRIX = "KaimingMatrix"
+
 # DEFAULT_MATRIX = IDENTITY_MATRIX
 
 MatrixKeywordLiteral = Literal["IdentityMatrix", "HollowMatrix", "InverseHollowMatrix", "FullConnectivityMatrix",

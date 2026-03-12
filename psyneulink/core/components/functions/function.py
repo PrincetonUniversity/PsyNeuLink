@@ -1321,6 +1321,77 @@ class RandomMatrix():
     def __call__(self, sender_size:int, receiver_size:int):
         return random_matrix(sender_size, receiver_size, offset=self.center - 0.5, scale=self.range)
 
+class KaimingMatrix():
+    """Function that returns a matrix initialized using the Kaiming (He) initialization scheme.
+
+    This initialization preserves the variance of activations in deep networks and is
+    commonly used with ReLU or similar activation functions.
+
+    The **distribution**, **fan**, and **gain** arguments are passed at construction and used for all
+    subsequent calls. Once constructed, the function must be called with **sender_size** and
+    **receiver_size**, specifying the number of rows and columns of the matrix.
+
+    Can be used to specify the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
+
+
+
+    Arguments
+    ----------
+    distribution : {'normal', 'uniform'}
+        specifies the distribution used to sample the matrix elements.
+
+    fan : {'in', 'out'} or float
+        determines the fan value used for scaling the initialization.
+        If "in", the fan value is set to the sender size.
+        If "out", the fan value is set to the receiver size.
+        If a numeric value is provided, it is used directly.
+
+    gain : float
+        scaling factor applied to the initialization variance.
+
+    Attributes
+    ----------
+    distribution : {'normal', 'uniform'}
+        the distribution used to generate the matrix elements.
+
+    fan : {'in', 'out'} or float
+        the fan specification used to compute the scaling factor.
+
+    gain : float
+        the gain applied when computing the initialization scale.
+    """
+
+    def __init__(
+        self,
+        distribution: Literal["normal", "uniform"] = "normal",
+        fan: Union[Literal["in", "out"], float, int] = "in",
+        gain: float = 2.0,
+    ):
+        self.distribution = distribution
+        self.fan = fan
+        self.gain = gain
+
+    def __call__(self, sender_size, receiver_size):
+
+        if is_numeric_scalar(self.fan):
+            fan = self.fan
+        elif self.fan == "in":
+            fan = sender_size
+        elif self.fan == "out":
+            fan = receiver_size
+        else:
+            raise FunctionError(f"Invalid fan specification: {self.fan}")
+
+        std = np.sqrt(self.gain / fan)
+
+        if self.distribution == "normal":
+            return np.random.normal(0.0, std, (sender_size, receiver_size))
+        elif self.distribution == "uniform":
+            bound = np.sqrt(3.0) * std
+            return np.random.uniform(-bound, bound, (sender_size, receiver_size))
+        else:
+            raise FunctionError(f"Invalid distribution: {self.distribution}")
+
 
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
