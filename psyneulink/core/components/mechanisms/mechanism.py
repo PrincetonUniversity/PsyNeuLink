@@ -2600,24 +2600,22 @@ class Mechanism_Base(Mechanism):
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 
+            # Update OutputPorts after execution state is current so ports that depend on
+            # num_executions_before_finished (e.g., DECISION_STEPS/TIME) see the final count.
+            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
+
             if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
-                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
 
             if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
-                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
 
             self.parameters.is_finished_flag._set(False, context)
             if not self.parameters.execute_until_finished._get(context):
-                self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
                 break
-
-            # Keep source OutputPorts current for recurrent/internal projections between iterative updates.
-            self._update_output_ports_with_efferents(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
         # REPORT EXECUTION
 
@@ -2756,30 +2754,6 @@ class Mechanism_Base(Mechanism):
             port = self.output_ports[i]
             port._update(params=runtime_output_port_params,
                          context=context)
-
-    def _update_output_ports_with_efferents(self, runtime_output_port_params=None, context=None):
-        """Update only OutputPorts that project to other Components.
-
-        This keeps recurrent/feedback projections synchronized during iterative execution
-        without forcing full output-port reporting updates on every internal step.
-        """
-        cims = ()
-        if context is not None and getattr(context, "composition", None) is not None:
-            from psyneulink.core.compositions.composition import CompositionInterfaceMechanism
-            cims = (CompositionInterfaceMechanism,)
-
-        for port in self.output_ports:
-            if not port.efferents:
-                continue
-
-            if cims:
-                has_non_cim_efferent = any(
-                    not isinstance(proj.receiver.owner, cims) for proj in port.efferents
-                )
-                if not has_non_cim_efferent:
-                    continue
-
-            port._update(params=runtime_output_port_params, context=context)
 
     def initialize(self, value, context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
