@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RUN_TYPE = 'PyTorch'  # 'PyTorch' or 'PNL'
+RUN_TYPE = 'PNL'  # 'PyTorch' or 'PNL'
 
 CONFIG = dict(
     tolerance=1e-10,
@@ -30,7 +30,7 @@ CONFIG = dict(
     softmax_threshold=.001,
     loss_spec_name='BinaryCrossEntropy',
     num_optimization_steps=5,
-    nr_participants=20,
+    nr_participants=1,
 )
 
 
@@ -77,10 +77,10 @@ def run_experiment():
 
     torch.set_default_dtype(torch.float64)
     for _ in tqdm(range(CONFIG['nr_participants'])):
-        for paradigm in ['interleaved', 'blocked']:
+        for paradigm in ['blocked']:
             CONFIG['seed']+=1
             set_random_seed(**CONFIG)
-            states = get_state_sequence(**CONFIG, paradigm=paradigm)
+            states = get_state_sequence(**CONFIG, paradigm=paradigm)[:500]
             if RUN_TYPE == 'PNL':
                 pnl_model, input_layer = construct_model(**CONFIG, memory_capacity=len(states))
                 results = run_model(pnl_model, input_layer, states, **CONFIG)
