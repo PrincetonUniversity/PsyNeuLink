@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
-from util import log
+
 
 class Encoder_conv(nn.Module):
 	def __init__(self):
 		super(Encoder_conv, self).__init__()
-		log.info('Building convolutional encoder...')
+		print('Building convolutional encoder...')
 		# Convolutional layers
-		log.info('Conv layers...')
+		print('Conv layers...')
 		self.conv1 = nn.Conv2d(1, 32, 4, stride=2, padding=1)
 		self.conv2 = nn.Conv2d(32, 32, 4, stride=2, padding=1)
 		self.conv3 = nn.Conv2d(32, 32, 4, stride=2, padding=1)
 		# Fully-connected layers
-		log.info('FC layers...')
+		print('FC layers...')
 		self.fc1 = nn.Linear(4*4*32, 256)
 		self.fc2 = nn.Linear(256, 128)
 		# Nonlinearities
@@ -42,9 +42,9 @@ class Encoder_conv(nn.Module):
 class Encoder_mlp(nn.Module):
 	def __init__(self):
 		super(Encoder_mlp, self).__init__()
-		log.info('Building MLP encoder...')
+		print('Building MLP encoder...')
 		# Fully-connected layers
-		log.info('FC layers...')
+		print('FC layers...')
 		self.fc1 = nn.Linear(32*32, 512)
 		self.fc2 = nn.Linear(512, 256)
 		self.fc3 = nn.Linear(256, 128)
@@ -72,7 +72,7 @@ class Encoder_mlp(nn.Module):
 class Encoder_rand(nn.Module):
 	def __init__(self):
 		super(Encoder_rand, self).__init__()
-		log.info('Building random encoder...')
+		print('Building random encoder...')
 		# Random projection
 		self.fc1 = nn.Linear(32*32, 128)
 		# Nonlinearities
