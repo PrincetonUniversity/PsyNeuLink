@@ -146,7 +146,8 @@ from psyneulink.core.globals.keywords import (comparison_operators, DISTANCE_MET
 
 __all__ = ([
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'extended_array_equal',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'counts',
+    'get_class_attributes', 'extended_array_equal',
     'flatten_list', 'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_keyword', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric',  'is_identity_matrix',
@@ -914,7 +915,6 @@ def get_args(frame):
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
 
-
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -928,7 +928,6 @@ def recursive_update(d, u, non_destructive=False):
                 continue
             d[k] = u[k]
     return d
-
 
 def multi_getattr(obj, attr, default = None):
     """
@@ -998,7 +997,6 @@ def get_deepcopy_with_shared(shared_keys=frozenset()):
 
     return __deepcopy__
 
-
 def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_obj=None):
     result = result_obj or list()
 
@@ -1013,7 +1011,6 @@ def _copy_shared_iterable_elementwise_as_list(obj, shared_types, memo, result_ob
         result.append(new_item)
 
     return result
-
 
 def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
     try:
@@ -1096,7 +1093,6 @@ def copy_iterable_with_shared(obj, shared_types=type(None), memo=None):
 
     return result
 
-
 def get_alias_property_getter(name, attr=None):
     """
         Arguments
@@ -1123,7 +1119,6 @@ def get_alias_property_getter(name, attr=None):
 
     return getter
 
-
 def get_alias_property_setter(name, attr=None):
     """
         Arguments
@@ -1149,6 +1144,26 @@ def get_alias_property_setter(name, attr=None):
             setattr(obj, name, value)
 
     return setter
+
+def counts(item_list:list)->list:
+    """Return number of times each unique unhashable item (e.g., array) occurs in list of items
+    Returns:
+        Dictionary where keys are the unique items (e.g., array values) and values are their counts.
+    """
+    counts = {}
+    for item in item_list:
+        # Iterate through existing keys in the counts dictionary to check for equality
+        found = False
+        for key in counts:
+            if key == item:
+                counts[key] += 1
+                found = True
+                break
+        if not found:
+            # If not found, add the new item as a key
+            counts[item] = 1
+    return counts
+
 #endregion
 
 #region NUMPY ARRAY METHODS ******************************************************************************************

@@ -1768,7 +1768,7 @@ class AutodiffComposition(Composition):
         5) Exclude LossMechanisms and TARGET Nodes from OUTPUT role and suppress warnings about role assignments
         """
         # If loss_components have already been instantiated, skip
-        if self.sample_port_to_target_port_map:
+        if self.sample_port_to_target_port_map and any(isinstance(node, LossMechanism) for node in self.nodes):
             return
 
         context = Context(source=ContextFlags.METHOD, execution_id=context.execution_id)

@@ -539,12 +539,14 @@ class TestAutodiffTargetSpecs:
     def test_target_spec_errors_in_constructor_and_learn(self,
                                                          method, num_specs,
                                                          errant_spec, spec_type, err_msg_num):
-        """Test errors for specifications of **targets** argument in constructor for AutodiffComposition
+        """Test errors for specifications of **targets** argument in constructor and learn() method
+        Note:  these overlap to some extent with tests in tst_learning.py: TestInputAndTargetSpecs
+
         constructor:
-         pathway that has target spec for middle but not subequent projections
+        - pathway that has target spec for middle but not subequent projections
         - pathway that has TARGET spec for middle but not subequent projections
         - pathway that has no spec (should be error in _instantiate_loss, not _validate_target_specs)
-                   [CHANGE ERROR in _validate_targets_specs to assert]
+                   [TEACHER_TARGET BREADCRUMB: CHANGE ERROR in _validate_targets_specs to assert]
         - bad spec: type -> _validate_targets
             - bad spec: not in Comp -> _validate_target_specs
 

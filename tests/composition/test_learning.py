@@ -828,13 +828,12 @@ class TestStructural:
 
             elif target_specs == 'target_mechs_in_targets':
                 # Test for warning about TARGET_MECHANISMS in targets arg
-                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has entries "
-                           f"that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); while this is "
-                           f"OK, it might be easier to clearer to use the OUTPUT Nodes to which they correspond as the "
-                           f"keys of the dict, obviating the need to determine the TARGET Nodes. Alternatively, TARGET "
-                           f"Nodes can be specified in the 'inputs' arg of learn() method, along with INPUT nodes, "
-                           f"obviating the need to specify the 'targets' arg.")
-
+                warning = (f"The dict specified for the 'targets' arg of the learn() method for 'TEST COMP' has "
+                           f"entries that are TARGET Nodes (TARGET for OUTPUT MECH A, TARGET for OUTPUT MECH B); "
+                           f"while this is OK, it might be easier and clearer to use the OUTPUT Nodes to which they "
+                           f"correspond as the keys of the dict, obviating the need to determine the TARGET Nodes. "
+                           f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method, "
+                           f"along with INPUT nodes, obviating the need to specify the 'targets' arg.")
                 with pytest.warns(UserWarning, match=re.escape(warning)):
                     comp.learn(inputs=inputs_arg, targets=target_mechs, execution_mode=execution_mode)
 
