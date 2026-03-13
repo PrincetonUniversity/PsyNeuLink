@@ -9745,7 +9745,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Process target_specs
         target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets)
         self._evaluate_for_redundant_target_specs(target_spec_aliases, target_specs_inventory)
-        targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets, target_specs_inventory)
+        targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets,
+                                                                               target_spec_aliases,
+                                                                               target_specs_inventory)
         self._validate_targets_spec(inputs, targets, sample_ports_to_learn_specs, execution_mode, context, base_context)
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9926,7 +9928,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are in the targets dict, suggest that they be placed there
         # Source(s) of target_specs: inputs, inputs['targets'] and/or targets
         # Determine whether all specs are in targets dict:
-        all_in_targets = all(target_spec.source is 'targets' for target_spec in target_specs_inventory)
+        all_in_targets = all(target_spec.source == 'targets' for target_spec in target_specs_inventory)
         placement = (f"place them all in the 'targets' argument of the learn method()"
                      if not all_in_targets else '')
 
@@ -9941,76 +9943,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.")
 
-    def _canonicalize_target_specs(self, targets:dict, target_specs_inventory:list)->(dict, list):
+    def _canonicalize_target_specs(self, targets:dict,
+                                   target_spec_aliases:list,
+                                   target_specs_inventory:list)->(dict, list):
         """Consolidate target specs into dictionary with entries in a canonical form: {sample OutputPort: value}
+        # For each TARGET Node in the Compostion:
+        #   - if there is a sample_port specification for it already in targets, use that;
+        #   - otherwise, find the first entry in target_specs_inventory that corresponds to it, and use that value
+        #       (Note: this is OK, because any redundant specs were determined to use the same value
+        #       in _evaluate_for_redundant_target_specs()
+        #   - if a spec for the TARGET is not found in target_specs_inventory, give it the value 'MISSING'
+        #       that will be used in _validate_target_specs() to generate an error
         BREADCRUMB:
             - ADD _canonicalize/_targets_specs(), that reduces to {sample_port: value} format
                   - use target_specs_inventory to do so, and create sample_ports_to_learn_specs
                   - replace None in key with actual spec (bad spec)  | for use in detection of missing and bad
                   - no entry for TARGET with no spec                 | keys in _validate_target_specs()
-             - return targets dict in canonical form and sample_ports_to_learn_specs -> _validate_target_specs
              - _validate_target_specs can use canoncial target_specs to:
                   - identify missing specs (missing sample_port entry for TARGET
                   - ientify bad speces: targets key = spec rather than TARGET
+        Return targets dict in canonical form and sample_ports_to_learn_specs
         """
-
-        # # =================================================================================
-        #
-        # targets_from_learn_as_sample_ports = {} # {sample OutputPort: input value}
-        # sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
-        #
-        # # 2) Parse targets into standard form:
-        #     # TEACHER_TARGET BREADCRUMB:
-        #     #  4) Standardize targets dict format:  {sample_port: value}
-        #     #  5) Pass to _validate_target_specs() for full validation
-        #
-        #     spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-        #
-        #     # standardize targets dict
-        #     # - convert keys in **targets** to sample OutputPorts
-        #     # - create mapping from sample OutputPorts to values
-        #     # - create mapping from sample OutputPorts to specs in **targets** of learn() (for use in error messages)
-        #
-        #     for spec, val in targets.items():
-        #
-        #         # Convert keys from **targets** in learn() to sample_port specifications
-        #         # MODIFIED TEACHER_TARGET OLD:
-        #         if NodeRole.TARGET in self.get_roles_by_node(spec_as_mech(spec)):
-        #             sample_port = next((k for k, v in self.sample_port_to_target_port_map.items()
-        #                                 if v.owner == spec), None)
-        #         else:
-        #             sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
-        #             # # TEACHER_TARGET BREADCRUMB: IS THE FOLLOWING CAUGHT LATER?
-        #             # sample_port = None if sample_port not in self.sample_port_to_target_port_map
-        #         if not sample_port:
-        #             # X TEST DONE
-        #             raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
-        #                                    f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
-        #                                    f"TARGET) Nodes specified in the constructor for the Composition.")
-        #         # MODIFIED TEACHER_TARGET NEW: BREADCRUMB: REINSTATE ONCE NodeRole.SAMPLE IS IMPLEMENTED
-        #         # if NodeRole.SAMPLE in node_roles_for_spec:
-        #         #     sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
-        #         # else:
-        #         #     sample_port = next((v for k, v in self.sample_port_to_target_port_map.items()
-        #         #                         if v.owner == spec), None)
-        #         # if not sample_port or NodeRole.TARGET not in node_roles_for_spec:
-        #         #    raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
-        #         #                           f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
-        #         #                           f"TARGET) Nodes specified in the constructor for the Composition.")
-        #         # targets_as_sample_parts[sample_port] = val
-        #         # MODIFIED TEACHER_TARGET END
-        #
-        #         # Add to mapping from sample_ports (corresponding to specs in **targets** of learn()) to values
-        #         targets_from_learn_as_sample_ports[sample_port] = val
-        #         # Add to mapping from sample_ports to specs in **targets** of learn() (for later use in error messages)
-        #         sample_ports_to_learn_specs[sample_port] = spec
-        #
-        #
-        #     # ============================================================================
-
-
-
-        return targets, sample_ports_to_learn_specs
+        # Convert targets to canonical form
+        canonicalized_target_specs = {}
+        sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
+        # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
+        target_nodes = self.get_target_nodes()
+        for TARGET_node in target_nodes:
+            # Get entry in target_spec_aliases for TARGET
+            target_aliases = next((t for t in target_spec_aliases if TARGET_node in t), None)
+            # Get the sample_port spec for that entry, to use as key in canonical_target_specs
+            sample_port = target_aliases.sample_port
+            # Get spec for
+            target_spec = next((t for t in targets if t in target_aliases), None)
+            # # Get all the target_spec(s) associated with TARGET in target_specs_inventory
+            # #     (usually, should only be one, but as long as no conflicting values, multiple are allowed)
+            # target_learn_specs = [t.spec for t in target_specs_inventory if t.target is TARGET]
+            if target_spec:
+                canonicalized_target_specs[sample_port] = targets[target_spec]
+                sample_ports_to_learn_specs[sample_port] = target_spec
+            else:
+                canonicalized_target_specs[sample_port] = 'MISSING'
+                sample_ports_to_learn_specs[sample_port] = 'MISSING'
+        assert len(canonicalized_target_specs) == len(target_nodes) == len(sample_ports_to_learn_specs), \
+            (f"PROGRAM ERROR: Problem canonicalizing targets")
+        return canonicalized_target_specs, sample_ports_to_learn_specs
 
     def _validate_targets_spec(self, inputs,
                                target_specs_from_learn_method:list,  # | BREACRUMB: THESE NO LONGER NEEDED?
