@@ -9720,7 +9720,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Converts learning inputs and targets to a standardized form
 
         Consolidate targets from inputs, inputs['targets'] and targets dicts
-        Resolve multiple specifications for a given TARGET Node:
+        Resolve redundant specifications for a given TARGET Node:
            raise error if there are any value conflicts
            issue warning if they all have the same value
         Create targets dict with canonical entries  {TARGET Node: value} for each TARGET Node in Composition
@@ -9741,142 +9741,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return inputs, sys.maxsize
 
         targets = targets or {}  # **targets**
-        target_spec_aliases, target_specs_inventory = self._consolidate_target_specs(inputs, targets)
+        target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets)
 
-        # Identify multiple specs for TARGET Nodes
-        TARGET_Nodes = [target.target_mech for target in target_spec_aliases]
-        all_target_specs = [spec.target for spec in target_specs_inventory]
-        target_spec_counts = counts(all_target_specs)
-        targets_with_multiple_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
-
-        # Identify multiple specs with mismatching values
-        targets_with_mismatching_specs = []
-        # Search over all targets that have multiple specs
-        for target in [t for t in target_spec_counts if t is not None and target_spec_counts[t] > 1]:
-            target_vals = [spec.value for spec in target_specs_inventory if spec.target is target]
-            if len(counts(np.array(target_vals).squeeze().tolist())) > 1:
-                targets_with_mismatching_specs.append(target)
-
-        # Raise error if mismatches
-        targets_str_lst = []
-        for target in targets_with_mismatching_specs:
-            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in target_specs_inventory if t.target is target])
-            targets_str_lst.append(f"'{target.name}': [{specs_str}]")
-        full_str = '; '.join(targets_str_lst)
-        if full_str:
-            plural = len(targets_str_lst)
-            s = 's' if plural else ''
-            one_of = '' if plural else 'one of '
-            raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are multiple "
-                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
-                                   f"SAMPLE Nodes: {full_str}.")
-
-        # BREADCRUMB: ??MOVE THIS TO _validate_target_specs??
-        # - SYNONYMS IN inputs VS targets OR WITHIN EITHER:
-        #    WARNING: LEGAL BUT NOT NECESSARY AND MAY BE CONFUSING (use
-        # - IGNORE BAD SPECS AS THEY WILL BE DEALT WITH IN _validate_target_specs()
-
-        # Warning for multiple specifications
-        assert True
+        targets = self._handle_redundant_target_specs(target_spec_aliases, target_specs_inventory)
 
 
-        # ================================================================================
-
-        targets_from_learn_as_sample_ports = {} # {sample OutputPort: input value}
-        sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
-
-        # 2) Parse targets into standard form:
-        if targets:
-            # TEACHER_TARGET BREADCRUMB:
-            #  - PARSE:
-            #   1) Check for in composition
-            #   2) Check that legit spec
-            #   3) Check for multiplicity:
-            #      - mech or port for samples, and TARGET mech
-            #      - indicate if they spanned inputs and targets or just in one or the other
-            #      a) divergent values -> ERROR
-            #      b) same values -> WARNING
-            #  4) Standardize targets dict format:  {sample_port: value}
-            #  5) Pass to _validate_target_specs() for full validation
-
-            spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-
-            # First make sure all specs are in Comp (no point in checking for dups if some are not in Comp)
-            not_in_comp = [spec for spec in [spec_as_mech(t) for t in targets] if not spec in self._get_all_nodes()]
-            # Entries in **targets** of learn() for Nodes that are not in the Composition
-            if not_in_comp:
-                not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
-                plural = len(not_in_comp) > 1
-                is_are = 'are' if plural else 'is'
-                s = 's' if plural else ''
-                # X TEST DONE
-                raise CompositionError(f"The following Node{s} in the 'targets' argument of the learn() method "
-                                       f"for '{self.name}' {is_are} not in the Composition or any nested within it: "
-                                       f"{', '.join(not_in_comp)}.")
-
-
-            # Then:
-            # - convert keys in **targets** to sample OutputPorts
-            # - create mapping from sample OutputPorts to values
-            # - create mapping from sample OutputPorts to specs in **targets** of learn() (for use in error messages)
-            duplicate_samples_in_learn_target_specs = []
-            not_in_comp = []
-            for spec, val in targets.items():
-
-                # Convert keys from **targets** in learn() to sample_port specifications
-                # MODIFIED TEACHER_TARGET OLD:
-                if NodeRole.TARGET in self.get_roles_by_node(spec_as_mech(spec)):
-                    sample_port = next((k for k, v in self.sample_port_to_target_port_map.items()
-                                        if v.owner == spec), None)
-                else:
-                    sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
-                    # # TEACHER_TARGET BREADCRUMB: IS THE FOLLOWING CAUGHT LATER?
-                    # sample_port = None if sample_port not in self.sample_port_to_target_port_map
-                if not sample_port:
-                    # X TEST DONE
-                    raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
-                                           f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
-                                           f"TARGET) Nodes specified in the constructor for the Composition.")
-                # MODIFIED TEACHER_TARGET NEW: BREADCRUMB: REINSTATE ONCE NodeRole.SAMPLE IS IMPLEMENTED
-                # if NodeRole.SAMPLE in node_roles_for_spec:
-                #     sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
-                # else:
-                #     sample_port = next((v for k, v in self.sample_port_to_target_port_map.items()
-                #                         if v.owner == spec), None)
-                # if not sample_port or NodeRole.TARGET not in node_roles_for_spec:
-                #    raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
-                #                           f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
-                #                           f"TARGET) Nodes specified in the constructor for the Composition.")
-                # targets_as_sample_parts[sample_port] = val
-                # MODIFIED TEACHER_TARGET END
-
-                # Cache any duplicate sample_port specifications for error checking below
-                if sample_port in targets_from_learn_as_sample_ports:
-                    duplicate_samples_in_learn_target_specs.append((sample_ports_to_learn_specs[sample_port], spec))
-                # Add to mapping from sample_ports (corresponding to specs in **targets** of learn()) to values
-                targets_from_learn_as_sample_ports[sample_port] = val
-                # Add to mapping from sample_ports to specs in **targets** of learn() (for later use in error messages)
-                sample_ports_to_learn_specs[sample_port] = spec
-
-            if duplicate_samples_in_learn_target_specs:
-                # Error for duplicates in **targets** of learn() that specify both sample and corresponding TARGET node
-                duplicate_target_spec_names = [f"('{spec1.full_name}' and '{spec2.full_name}'"
-                                               for spec1, spec2 in duplicate_samples_in_learn_target_specs]
-                raise CompositionError(f"The following specifications in the 'targets' arg of the learn() method for "
-                                       f"'{self.name}' are duplicated (i.e., they specify both a sample port and its "
-                                       f"corresponding target node): {', '.join(duplicate_target_spec_names)}.")
-
-
-            self._validate_targets_spec(inputs, targets,
-                                        targets_from_learn_as_sample_ports,
-                                        sample_ports_to_learn_specs,
-                                        execution_mode, context, base_context)
-
-        # ================================================================================
-
-
-
-
+        self._validate_targets_spec(inputs, targets,
+                                    targets_from_learn_as_sample_ports,
+                                    sample_ports_to_learn_specs,
+                                    execution_mode, context, base_context)
 
 
 
@@ -9908,7 +9781,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return inputs, num_inputs_sets
 
-    def _consolidate_target_specs(self, inputs:dict, targets:dict)->tuple:
+    def _aggregate_target_specs(self, inputs:dict, targets:dict)->tuple:
         """Consolidate all target specifciations in inputs dict, ['targets'] subdict of that, or main 'targets dict
 
         Create table of all aliases for target specification (target_spec_aliases)
@@ -9959,7 +9832,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for target_spec, value in inputs['targets'].items():
                 target_node = _get_target_for_spec(target_spec)
                 # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-                target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'input_target_subdict'))
+                target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'inputs[target]'))
             inputs.pop('targets')
 
         # Process targets dict
@@ -9971,11 +9844,153 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return (target_spec_aliases, target_specs_inventory)
 
+    def _handle_redundant_target_specs(self, target_spec_aliases, target_specs_inventory):
+        """Handle redundant target specifications and ones with conflicting values
+        Identify redundant specs for TARGET Nodes in inputs, inputs['targets'] and targets dicts of learn()
+        For redundant specs: conflicting values -> error; else warning
+        Consolidate redundant specs
+        Return: targets dict with entries in canonical form: {TARGET Node: value}
+        """
+        # Identify redundant specs for TARGET Nodes
+        TARGET_Nodes = [target.target_mech for target in target_spec_aliases]
+        all_target_specs = [spec.target for spec in target_specs_inventory]
+        target_spec_counts = counts(all_target_specs)
+        targets_with_redundant_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
+
+        # Identify redundant specs with mismatching values
+        targets_with_mismatching_specs = []
+        # Search over all targets that have redundant specs
+        for target in [t for t in target_spec_counts if t is not None and target_spec_counts[t] > 1]:
+            target_vals = [spec.value for spec in target_specs_inventory if spec.target is target]
+            if len(counts(np.array(target_vals).squeeze().tolist())) > 1:
+                targets_with_mismatching_specs.append(target)
+
+        # Raise error for redundant specs with different values
+        all_targets_str = []
+        for target in targets_with_mismatching_specs:
+            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in target_specs_inventory if t.target is target])
+            all_targets_str.append(f"'{target.name}': [{specs_str}]")
+        full_str = '; '.join(all_targets_str)
+        if full_str:
+            plural = len(all_targets_str)
+            s = 's' if plural else ''
+            one_of = '' if plural else 'one of '
+            sample_nodes = 'SAMPLE' if constructor_has_target_specs else 'OUTPUT'
+            raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are multiple "
+                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
+                                   f"{sample_nodes} Node{s}: {full_str}.")
+
+        # - SYNONYMS IN inputs VS targets OR WITHIN EITHER:
+        #    WARNING: LEGAL BUT NOT NECESSARY AND MAY BE CONFUSING (use
+        # - IGNORE BAD SPECS AS THEY WILL BE DEALT WITH IN _validate_target_specs()
+
+        # Warning for redundant specifications:
+        all_targets_str = []
+        sources = set()
+        for target in targets_with_redundant_specs:
+            sources.update(set(t.source for t in target_specs_inventory if target is t.target))
+            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in target_specs_inventory if t.target is target])
+            all_targets_str.append(f"'{target.name}': [{specs_str}]")
+        full_str = '; '.join(all_targets_str)
+        if full_str:
+            # BREADCRUMB: INTERGRATE THIS WITH influenctions ABOVE AND REFEREBCE THAT IN MESSAGES
+            plural = len(all_targets_str)
+            s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
+            several_one = 'several' if plural else 'one'
+            sample_nodes = 'SAMPLE' if constructor_has_target_specs else 'OUTPUT'
+            # BREADCRUMB: THIS NEEDS TO BE CHANGED TO INCLUDED SINGLE SOURCE.
+            if len(source) == 1:
+                source_str = repr(source)
+            else:
+                sources = sorted(sources)
+                source_str = 'and '.join(sources) if len(sources)==2 else f"{source[0]}, {source[1]} and {source[2]}"
+            source_str += f" argument{s} of {source_str}'
+
+            # BREADCRUMB: REVISE TO DISTINGISH BETWEEN MULTIPLE IN targets VS inputs and/or inputs[targtes]
+            warnings.warn(f"There are multiple specifications for the target{s} for {several_one} of the "
+                          f"{sample_nodes} Node{s} in the {sources}learn() method of '{self.name}', that {are_is} "
+                          f"listed below.  while "
+                          f"this is OK, it might be easier and clearer to use the {sample_nodes} Nodes to which they "
+                          f"correspond as the keys of the dict, obviating the need to determine the TARGET Nodes. "
+                          f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method "
+                          f"(they can be identified using the Compositon's 'get_target_nodes()' method) "
+                          f"along with other INPUT nodes, obviating the need to specify the 'targets' arg.")
+
+            # BREADCCRUMB:
+            #     - ADD _canonicalize/_targets_specs(), that reduces to {sample_port: value} format
+            #           - use targets_specs_inventory to do so, and create sample_ports_to_specs
+            #           - replace None in key with actual spec (bad spec)  | for use in detection of missing and bad
+            #           - no entry for TARGET with no spec                 | keys in _validate_target_specs()
+            #      - return targets dict in canonical form and sample_ports_to_specs -> _validate_target_specs
+            #      - _validate_target_specs can use canoncial target_specs to:
+            #           - identify missing specs (missing sample_port entry for TARGET
+            #           - ientify bad speces: targets key = spec rather than TARGET
+
+
+        # # =================================================================================
+        #
+        # targets_from_learn_as_sample_ports = {} # {sample OutputPort: input value}
+        # sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
+        #
+        # # 2) Parse targets into standard form:
+        #     # TEACHER_TARGET BREADCRUMB:
+        #     #  4) Standardize targets dict format:  {sample_port: value}
+        #     #  5) Pass to _validate_target_specs() for full validation
+        #
+        #     spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+        #
+        #     # standardize targets dict
+        #     # - convert keys in **targets** to sample OutputPorts
+        #     # - create mapping from sample OutputPorts to values
+        #     # - create mapping from sample OutputPorts to specs in **targets** of learn() (for use in error messages)
+        #
+        #     for spec, val in targets.items():
+        #
+        #         # Convert keys from **targets** in learn() to sample_port specifications
+        #         # MODIFIED TEACHER_TARGET OLD:
+        #         if NodeRole.TARGET in self.get_roles_by_node(spec_as_mech(spec)):
+        #             sample_port = next((k for k, v in self.sample_port_to_target_port_map.items()
+        #                                 if v.owner == spec), None)
+        #         else:
+        #             sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
+        #             # # TEACHER_TARGET BREADCRUMB: IS THE FOLLOWING CAUGHT LATER?
+        #             # sample_port = None if sample_port not in self.sample_port_to_target_port_map
+        #         if not sample_port:
+        #             # X TEST DONE
+        #             raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
+        #                                    f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
+        #                                    f"TARGET) Nodes specified in the constructor for the Composition.")
+        #         # MODIFIED TEACHER_TARGET NEW: BREADCRUMB: REINSTATE ONCE NodeRole.SAMPLE IS IMPLEMENTED
+        #         # if NodeRole.SAMPLE in node_roles_for_spec:
+        #         #     sample_port = spec if isinstance(spec, OutputPort) else spec.output_port
+        #         # else:
+        #         #     sample_port = next((v for k, v in self.sample_port_to_target_port_map.items()
+        #         #                         if v.owner == spec), None)
+        #         # if not sample_port or NodeRole.TARGET not in node_roles_for_spec:
+        #         #    raise CompositionError(f"Invalid target specification '{spec}' in 'targets' argument of learn() "
+        #         #                           f"method for '{self.name}': it is not one of the SAMPLE (or corresponding "
+        #         #                           f"TARGET) Nodes specified in the constructor for the Composition.")
+        #         # targets_as_sample_parts[sample_port] = val
+        #         # MODIFIED TEACHER_TARGET END
+        #
+        #         # Add to mapping from sample_ports (corresponding to specs in **targets** of learn()) to values
+        #         targets_from_learn_as_sample_ports[sample_port] = val
+        #         # Add to mapping from sample_ports to specs in **targets** of learn() (for later use in error messages)
+        #         sample_ports_to_learn_specs[sample_port] = spec
+        #
+        #
+        #     # ============================================================================
+
+
+
+        return targets
+        
 
     def _validate_targets_spec(self, inputs,
-                               target_specs_from_learn_method:list,
-                               targets_from_learn_as_sample_ports,
-                               sample_ports_to_learn_specs,
+                               target_specs_from_learn_method:list,  # | BREACRUMB: THESE NO LONGER NEEDED?
+                               targets_from_learn_as_sample_ports,   # |            ADD target_specs_inventory
+                               sample_ports_to_learn_specs,          # <- used to report original spec in error message
                                execution_mode, context, base_context):
         """Validate entries of **targets** arg in constructor (and learn() method of AutodiffComposition)
         BREADCRUMB: ADD DOCSTRING HERE OUTLINING VALIDATION PROCEDURE / LOGIC
@@ -10037,7 +10052,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  f"the 'targets' argument of the constructor for '{self.name}' should equal the number of "
                  f"LEARNING_OBJECTIVE Mechanisms ({len(self.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE))}).")
 
-            # BREADCRUMB: MAKE SHRE THIS IS NOT ALREADY DONE EARLIER (E.G. IN _valiate_targets or _parse_target_specs
             # Check that all specified Nodes are in the Composition
             not_in_comp = [spec for item in targets_from_constructor_as_ports for spec in item
                            if spec != TARGET and spec.owner not in self._get_all_nodes()]
@@ -10046,6 +10060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 not_in_comp = sorted([f"'{spec.full_name}'" for spec in not_in_comp])
                 i = get_inflections(len(not_in_comp) > 1)
                 # X TEST DONE
+                # BREADCRUMB: REPLACE "'targets' argument" WITH SOURCE FROM target_specs_inventory
                 raise CompositionError(f"The following specification{i['s']} in the 'targets' argument of the "
                                        f"constructor for '{self.name}' {i['are_is']} not in the Composition or any "
                                        f"nested within it: {', '.join(not_in_comp)}.")
