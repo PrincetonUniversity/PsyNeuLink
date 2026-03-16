@@ -2710,6 +2710,9 @@ class AutodiffComposition(Composition):
     def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
         """Override to add target specifications in constructor to targets dict"""
         # BREADCRUMB: MOVE SOME OF THIS TO _instantiate_loss_components()?
+        #              MAKE SURE THAT ALL SPECS ARE IN COMP AND THAT TARGETS ARE EITHER NODES OR NUMBERS
+        #                      (IF NOT DONE EARLIER)
+
         def _replace_loss_mech_with_sample_port(spec_dict):
             """Convert target specification in the form of a LossMechanism to {sample_port: value}
             """
@@ -2727,7 +2730,7 @@ class AutodiffComposition(Composition):
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
         spec_as_port = lambda spec : spec if isinstance(spec, OutputPort) else spec.output_port
 
-        constructor_args = self.targets
+        # BREADCRUMB: SEARCH FOR AND ISSUE WARNING FOR TARGET SPECS IN CONSTRUCTOR AND LEARN
 
         # Insure all keys of learn_method_args are OutputPorts (construtor_args have already been converted)
         learn_method_args = {spec_as_port(k):v for k, v in targets.items()} if targets else None
