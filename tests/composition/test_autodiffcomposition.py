@@ -546,7 +546,7 @@ class TestAutodiffTargetSpecs:
         - pathway that has target spec for middle but not subequent projections
         - pathway that has TARGET spec for middle but not subequent projections
         - pathway that has no spec (should be error in _instantiate_loss, not _validate_target_specs)
-                   [TEACHER_TARGET BREADCRUMB: CHANGE ERROR in _validate_targets_specs to assert]
+                   [TEACHER_TARGET BREADCRUMB: CHANGE ERROR in _validate_targets_specss to assert]
         - bad spec: type -> _validate_targets
             - bad spec: not in Comp -> _validate_target_specs
 

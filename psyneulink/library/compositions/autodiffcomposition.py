@@ -1666,7 +1666,10 @@ class AutodiffComposition(Composition):
             return True
         # sample is not in learnable pathway, so construct relevant error/warning message
         sample_mech = sample_port.owner
-        if target_mech:
+        if sample_mech not in self._get_all_nodes():
+            error_msg = (f"A target value is specified for '{sample_mech.name}' in the 'targets' argument of the "
+                         f"constructor for '{self.name}', but it is not a Mechanism in that Composition.")
+        elif target_mech:
             # Target was specified in *targets* arg of constructor
             if isinstance(target_mech, LossMechanism):
                 target_msg = f"A LossMechanism ('{loss_mech.name}')"
@@ -1679,10 +1682,6 @@ class AutodiffComposition(Composition):
                          f"'{self.name}', since there are no learnable Projections in any of the pathways that "
                          f"project to that Node.")
         else:
-            # TEACHER_TARGET BREADCRUMB: REMOVE THIS, SINCE UNLEARNABLE PATHWAYS ARE IGNORED,
-            #                            AND IF THERE ARE NO LEARNABLE ONES, A WARNING IS ISSUED
-            # assert False
-            # TARGET Nodes being constructed for all OUTPUT Nodes, so all must be in learnable pathways
             if sample_mech in self.node_roles_mgr.get_nested_nodes_by_roles_at_any_level(self, NodeRole.SINGLETON):
                 # Singletons are caught here because they are identified as OUTPUT Nodes,
                 #   but are not specified in targets dict of learn() method.
@@ -1828,7 +1827,14 @@ class AutodiffComposition(Composition):
             # X TEST DONE
             raise AutodiffCompositionError(f"The following Projection{s} {is_are} learnable but {is_are} in {a_not_a}"
                                            f"pathway{s} that {do_does} not end in a LossMechanism, and therefore "
-                                           f"cannot be learned: {', '.join(bad_projs_names)}.")
+                                           f"cannot be learned: {', '.join(bad_projs_names)}. Reminder: when *any* "
+                                           f"targets are specified in the 'targets' argument of the constructor for "
+                                           f"an AutodiffComposition, then ones must be specified for *all* learnable "
+                                           f"pathways in that Composition; if none are specified, the OUTPUT Nodes of "
+                                           f"all learnable pathways in that Composition are treated as SAMPLEs, and "
+                                           f"TARGET Nodes are automatically constructed for each, for which inputs "
+                                           f"must then be provided in the 'targets' argument of the learn() method "
+                                           f"when it is called.")
 
     def _instantiate_constructor_targets_args(self, pathways, context, base_context):
         """Instantiate targets specified by user in **targets** argument of AutodiffComposition constructor
@@ -1840,8 +1846,9 @@ class AutodiffComposition(Composition):
           where:
               sample = OutputPort or ProcessingMechanism,
               target = OutputPort, ProcessingMechanism, or TARGET keyword
-        - Instantiate TARGET Nodes for any targets specified as TARGET
+        - Instantiate TARGET Nodes for any targets specified as TARGET, and assign NodeRole.TARGET
         - Update self.sample_port_to_target_port_map with (sample OutputPort, targetOutputPort) tuples
+        - Identify all samples and assign NodeRole.SAMPLE to them
         Return list of loss_mech_specs ((sample OutputPort, targetOutputPort) tuples) and constructed TARGET Nodes
         """
         loss_mech_specs = []
@@ -1880,9 +1887,6 @@ class AutodiffComposition(Composition):
                 if isinstance(target_spec, OutputPort):
                     # target is internal Node
                     self._check_if_target_is_in_sample_pathway(sample_port, target_spec, pathways, context)
-                    # # MODIFIED TEACHER_TARGET OLD:
-                    # self.sample_port_to_target_port_map.update({sample_port: target_spec})
-                    # MODIFIED TEACHER_TARGET END
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so construct TARGET Node
                     if sample_port in self.sample_port_to_target_port_map:
@@ -1897,9 +1901,6 @@ class AutodiffComposition(Composition):
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
                     target_spec = target_mech.output_port
-                    # # MODIFIED TEACHER_TARGET OLD:
-                    # self.sample_port_to_target_port_map.update({sample_port: target_port})
-                    # MODIFIED TEACHER_TARGET END
                     self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     constructed_target_mechs.append(target_mech)
                 else:
@@ -1910,12 +1911,9 @@ class AutodiffComposition(Composition):
                                f"({loss_mech_spec} for '{self.name}'.")
 
             target_mechs.append(target_mech)
-            # # MODIFIED TEACHER_TARGET OLD:
-            # loss_mech_specs.append((loss_mech_spec[0], target_spec))
-            # MODIFIED TEACHER_TARGET NEW:
             self.sample_port_to_target_port_map.update({sample_port: target_spec})
+            self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
             loss_mech_specs.append((sample_port, target_spec))
-            # MODIFIED TEACHER_TARGET END
 
         return loss_mech_specs, target_mechs
 
@@ -1978,6 +1976,7 @@ class AutodiffComposition(Composition):
                     target_mech._initialize_from_context(context, base_context, override=False)
                     constructed_target_mechs.append(target_mech)
                 target_mechs.append(target_mech)
+                self.require_node_roles(output_port_for_learning.owner, NodeRole.SAMPLE, context)
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
         assert len(output_ports_for_learning) == len(target_mechs), \
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
@@ -2682,11 +2681,39 @@ class AutodiffComposition(Composition):
 
     def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
+        # BREADCRUMB: MOVE THIS TO _instantiate_loss_components()??
         - constructor: validate entries since Composition does not support **targets** arg in constructor
-        - learn(): entries reauired to match ones assigned TARGET as value in **targets** dict of constructor
-        - flatten inputs dict
+        # BREADCRUMB: ----------------------------------------------
+        Integrate target specifications from constructor (in self.targets) with those in targets argument of learn():
+            handled in override of _aggregate_target_specs()
+        Deal with nested Compositions
+            handled in return from override of this method
         """
+        stim_input, num_input_trials = super()._parse_targets_spec(inputs,
+                                                                   targets,
+                                                                   execution_mode, context, base_context)
 
+        # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
+        if not callable(inputs):
+            input_ports_for_INPUT_Nodes = self._get_input_receivers()
+            nested_inputs = {}
+            stim_input_copy = stim_input.copy()
+            for node in stim_input_copy:
+                # If node is a nested Composition
+                if isinstance(node, Composition):
+                    # If owner of input_port is a Node in the nested Composition, replace entry for nested Composition
+                    #   in stim_input with entries for the input_ports of its INPUT Nodes
+                    for elem, input_port in enumerate([p for p in input_ports_for_INPUT_Nodes if p.owner in node.nodes]):
+                        nested_inputs[input_port] = [entry[elem] for entry in stim_input_copy[node]]
+                    stim_input.pop(node)
+                    stim_input.update(nested_inputs)
+
+        return stim_input, num_input_trials
+
+    def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
+        """Override to add target specifications in constructor to targets dict"""
+
+        # BREADCRUMB: MOVE SOME OF THIS TO _instantiate_loss_components()?
         # **targets** arg is specified both in the constructor (self.targets) and learn(targets)
         constructor_args = self.targets
         # Insure all keys of learn_method_args are OutputPorts (construtor_args have already been converted)
@@ -2712,11 +2739,11 @@ class AutodiffComposition(Composition):
                     its_their = 'their' if plural else 'its'
                     a = '' if plural else 'a '
                     s = 's' if plural else ''
-                    x = '' if plural else 's'
+                    not_s = '' if plural else 's'
                     raise AutodiffCompositionError(
                         f"The following Node{s}, specified in the 'targets' argument of the constructor for "
-                        f"'{self.name}' as {a}sample{s} that receive{x} {its_their} target value{s} from another node, "
-                        f"should not be included in the dict specified in the 'targets' argument of the learn() "
+                        f"'{self.name}' as {a}sample{s} that receive{not_s} {its_their} target value{s} from another "
+                        f"node, should not be included in the dict specified in the 'targets' argument of the learn() "
                         f"method: {', '.join(unnecesary_specs_as_specified_in_targets)}.")
 
             # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
@@ -2742,33 +2769,15 @@ class AutodiffComposition(Composition):
                     (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
                      f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
             if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
-                # TEACHER_TARGET BREADCRUMB:  MAKE THIS AN ERROR
+                # TEACHER_TARGET BREADCRUMB:  MOVE THIS TO _validate_target_specs() (OR OVERRIDE THEREOF?)
                 problem_node_names = [f"'{n.owner.name}'" for n in INPUT_targets_unspecified_in_learn]
-                warnings.warn(f"The following node(s), specified in the 'targets' argument of the constructor for "
-                              f"'{self.name}' as samples that that receive external values for their targets, must "
-                              f"be included in the 'targets' argument of the learn() method that specify their "
-                              f"target values during learning: {', '.join(problem_node_names)}.")
+                warnings.warn(f"The following node(s) are specified in the 'targets' argument of the constructor for "
+                              f"'{self.name}' as samples that receive external values for their targets; therefore, "
+                              f"they must be included in the 'targets' argument of the learn() method as keys in a dict"
+                              f" that specify their target values during learning: {', '.join(problem_node_names)}.")
                 self._warned_about_unspecified_target_in_learn = True
 
-        stim_input, num_input_trials = super()._parse_targets_spec(inputs, targets,
-                                                                   execution_mode, context, base_context)
-
-        # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
-        if not callable(inputs):
-            input_ports_for_INPUT_Nodes = self._get_input_receivers()
-            nested_inputs = {}
-            stim_input_copy = stim_input.copy()
-            for node in stim_input_copy:
-                # If node is a nested Composition
-                if isinstance(node, Composition):
-                    # If owner of input_port is a Node in the nested Composition, replace entry for nested Composition
-                    #   in stim_input with entries for the input_ports of its INPUT Nodes
-                    for elem, input_port in enumerate([p for p in input_ports_for_INPUT_Nodes if p.owner in node.nodes]):
-                        nested_inputs[input_port] = [entry[elem] for entry in stim_input_copy[node]]
-                    stim_input.pop(node)
-                    stim_input.update(nested_inputs)
-
-        return stim_input, num_input_trials
+        super._aggregate_target_specs(inputs, targets_dicts)
 
     def _check_nested_target_mechs(self):
         pass

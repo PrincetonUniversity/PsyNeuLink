@@ -156,16 +156,26 @@ class NodeRole(enum.Enum):
         This role can, but generally should not be modified programmatically.
     COMMENT
 
+    SAMPLE
+        A `Node <Composition_Nodes>` that provides the sample value used to compute the error for a `learning pathway
+        <Composition_Learning_Pathway>` (see `TARGET_MECHANISM <Composition_Learning_Components>`). Note that the
+        specific value used as the sample may be from any one of a SAMPLE Node's `Ports <Port>`; use the Composition's
+        `get_sample_ports()` method to identify the specific one(s) that are used. This role cannot be modified
+        programmatically.
+
     TARGET
-        A `Node <Composition_Nodes>` that receives the target for a `learning pathway <Composition_Learning_Pathway>`
-        specifying the desired output of the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` for that pathway
-        (see `TARGET_MECHANISM <Composition_Learning_Components>`). This role can, but generally should not
-        be modified programmatically.
+        COMMENT: BREADCRUMB - MODIFY THIS IF TARGET ASSIGNED TO ALL TARGETS (INCLUDING INTERNAL ONES IN AutodiffComp)
+        A `Node <Composition_Nodes>` that receives the external value used as the target value used to compute the
+        error for a `learning pathway <Composition_Learning_Pathway>` (see `TARGET_MECHANISM
+        <Composition_Learning_Components>`). At present, this role is assigned only to Nodes that receive an external
+        targer value (specified in the `targets` argument of a Composition's learn() method, and the value of that
+        Node's `primary OutputPort <OutputPort_Primary>` is used as the target value. This role cannot be modified
+        programmatically.
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can,
-        but generally should not be modified programmatically.
+        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can
+        not be modified programmatically.
 
     PROBE
         An `INTERNAL` `Node <Composition_Nodes>` that is permitted to have Projections from it to the Composition's
@@ -193,8 +203,7 @@ class NodeRole(enum.Enum):
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
         Nodes in a flattened cycle will be either all TERMINAL or all
-        not TERMINAL.
-        This role cannot be modified programmatically.
+        not TERMINAL. This role cannot be modified programmatically.
 
     """
     ORIGIN = enum.auto()
@@ -209,6 +218,7 @@ class NodeRole(enum.Enum):
     CONTROLLER = enum.auto()
     CONTROLLER_OBJECTIVE = enum.auto()
     LEARNING = enum.auto()
+    SAMPLE = enum.auto()
     TARGET = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
     PROBE = enum.auto()
@@ -216,12 +226,17 @@ class NodeRole(enum.Enum):
     TERMINAL = enum.auto()
 
 
-unmodifiable_node_roles = {NodeRole.ORIGIN,
-                           NodeRole.INTERNAL,
-                           NodeRole.SINGLETON,
-                           NodeRole.TERMINAL,
-                           NodeRole.CYCLE}
-
+unmodifiable_node_roles = {
+    NodeRole.ORIGIN,
+    NodeRole.INTERNAL,
+    NodeRole.SINGLETON,
+    NodeRole.TERMINAL,
+    NodeRole.CYCLE,
+    NodeRole.CONTROLLER,
+    NodeRole.SAMPLE,
+    NodeRole.TARGET,
+    NodeRole.LEARNING_OBJECTIVE
+}
 
 class NodeRolesManager(object):
     """Manage association of nodes with roles
@@ -734,7 +749,7 @@ class NodeRolesManager(object):
         if role not in NodeRole:
             raise NodeRoleError('Invalid NodeRole: {0}'.format(role))
 
-        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        # Disallow assignment of NodeRoles by user that are not programmatically modifiable:
         # FIX 4/25/20 [JDC] - CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
             if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE} and not node.control_mechanism:
