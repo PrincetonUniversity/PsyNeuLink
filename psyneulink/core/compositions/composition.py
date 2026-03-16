@@ -9771,19 +9771,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # Process target_specs
         # self._convert_loss_mech_spec_to_sample_port(inputs, targets)
         # target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets)
-        # MODIFIED TEACHER_TARGET NEW:
-        # BREADCRUMB: REMOVE ONCE OVERRIDES IN AutodiffComposition HAVE BEEN IMPLEMENTED
-        self._constructor_has_target_specs = bool(hasattr(self, TARGETS) and self.__getattribute__(TARGETS))
-        targets = targets or {}  # **targets**
+        # # MODIFIED TEACHER_TARGET NEW:
+        # # BREADCRUMB: REMOVE ONCE OVERRIDES IN AutodiffComposition HAVE BEEN IMPLEMENTED
+        # self._constructor_has_target_specs = bool(hasattr(self, TARGETS) and self.__getattribute__(TARGETS))
+        # targets = targets or {}  # **targets**
 
         # Process target_specs
         # Remove TARGETS subdict from inputs if present
         input_targets_dict = inputs.pop(TARGETS, {})
         targets_dicts = {'inputs[TARGETS]':input_targets_dict,
                          TARGETS: targets}
-        # BREADCRUMB: MOVE THIS (AND THE METHOD) TO AUTODIFF:
-        self._convert_loss_mech_spec_to_sample_port(inputs, targets)
-        # -----------------------------------------------
         target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets_dicts)
         # MODIFIED TEACHER_TARGET END
 
@@ -9822,22 +9819,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs, num_inputs_sets = self._parse_input_dict(inputs, context)
 
         return inputs, num_inputs_sets
-
-    # BREADCRUMB: MOVE THIS TO AUTODIFF
-    def _convert_loss_mech_spec_to_sample_port(selfself, inputs:dict, targets:dict):
-        """Convert target specification in the form of a LossMechanism to {sample_port: value}
-        Check inputs, inputs[TARGETS] and targets for LossMechanism as spec (keys)
-        """
-        def _replace_loss_mech_with_sample_port(spec_dict):
-            """Replace LossMechanism key with sample_port"""
-            for target_spec, value in spec_dict.copy().items():
-                if isinstance(target_spec, LossMechanism):
-                    spec_dict[spec_dict.pop(target_spec).sample] = value
-        _replace_loss_mech_with_sample_port(inputs)
-        if TARGETS in inputs:
-            _replace_loss_mech_with_sample_port(inputs[TARGETS])
-        if targets:
-            _replace_loss_mech_with_sample_port(targets)
 
     # # MODIFIED TEACHER_TARGET OLD:
     # def _aggregate_target_specs(self, inputs:dict, targets:dict)->tuple:
@@ -9905,6 +9886,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #     return (target_spec_aliases, target_specs_inventory)
 
     # MODIFIED TEACHER_TARGET NEW:
+    # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
     # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
     #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
     def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None)->(list, list):
@@ -9943,11 +9925,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_spec_aliases = (sorted([target_spec_alias(sample_port.owner, sample_port, target_port.owner, target_port)
                                        for sample_port, target_port in sample_target_port_map]))
 
-        # BREADCRUMB: THIS ONLY WORKS FOR NO constructor SPECS, WHEN # TARGETS MUST = # of SPECS
-        #             HANDLED BELOW?  OR MOVE TO END OF OVERRIDE in Autodiff??
-        if not self._constructor_has_target_specs:
-            assert len(target_spec_aliases) == len(self.get_target_nodes()), \
-                f"PROGRAM ERROR: number sample_target_pairs not equal to nmber of TARGET Nodes in Composition"
+        # # BREADCRUMB: THIS ONLY WORKS FOR NO constructor SPECS, WHEN # TARGETS MUST = # of SPECS
+        # #             HANDLED BELOW?  OR MOVE TO END OF OVERRIDE in Autodiff??
+        # if not self._constructor_has_target_specs:
+        #     assert len(target_spec_aliases) == len(self.get_target_nodes()), \
+        #         f"PROGRAM ERROR: number sample_target_pairs not equal to nmber of TARGET Nodes in Composition"
 
         # Then, get all target specs into a single "table"
         target_spec_info = collections.namedtuple("TargetSpecInfo", "target, spec, value, source")
@@ -10016,7 +9998,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Warning for redundant specifications:
         # -----------------------------------------------
-        # Determine whether all specs are for SAMPLE (Node or OutputPort):
+
         # BREADCRUMB: PROMOTE THIS TO UTILITY?
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
 

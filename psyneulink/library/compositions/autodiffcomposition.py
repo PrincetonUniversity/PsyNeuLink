@@ -2681,9 +2681,6 @@ class AutodiffComposition(Composition):
 
     def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
-        # BREADCRUMB: MOVE THIS TO _instantiate_loss_components()??
-        - constructor: validate entries since Composition does not support **targets** arg in constructor
-        # BREADCRUMB: ----------------------------------------------
         Integrate target specifications from constructor (in self.targets) with those in targets argument of learn():
             handled in override of _aggregate_target_specs()
         Deal with nested Compositions
@@ -2712,72 +2709,90 @@ class AutodiffComposition(Composition):
 
     def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
         """Override to add target specifications in constructor to targets dict"""
-
         # BREADCRUMB: MOVE SOME OF THIS TO _instantiate_loss_components()?
-        # **targets** arg is specified both in the constructor (self.targets) and learn(targets)
-        constructor_args = self.targets
-        # Insure all keys of learn_method_args are OutputPorts (construtor_args have already been converted)
-        learn_method_args = {(k if isinstance(k, OutputPort) else k.output_port):v
-                             for k, v in targets.items()} if targets else None
 
-        if constructor_args and learn_method_args:
-            # Check whether any samples with nodes specified as targets in the constructor
-            #    also appear in the targets dict of learn(): this should not happen,
-            #    as they get their target value from the node specified in the constructor
-            uncessary_sample_specs_in_learn = []
-            for learn_sample in learn_method_args:
-                for constructor_sample, constructor_target in [spec for spec in constructor_args]:
-                    if learn_sample is constructor_sample and constructor_target is not TARGET:
-                        # uncessary_sample_specs_in_learn.append(f"'{learn_sample.full_name}'")
-                        uncessary_sample_specs_in_learn.append(learn_sample)
-                if uncessary_sample_specs_in_learn:
-                    unnecesary_specs_as_specified_in_targets = \
-                        sorted([spec.full_name if spec in targets else spec.owner.name
-                                for spec in uncessary_sample_specs_in_learn])
-                    plural = len(unnecesary_specs_as_specified_in_targets) > 1
-                    is_are = 'are' if plural else 'is'
-                    its_their = 'their' if plural else 'its'
-                    a = '' if plural else 'a '
-                    s = 's' if plural else ''
-                    not_s = '' if plural else 's'
-                    raise AutodiffCompositionError(
-                        f"The following Node{s}, specified in the 'targets' argument of the constructor for "
-                        f"'{self.name}' as {a}sample{s} that receive{not_s} {its_their} target value{s} from another "
-                        f"node, should not be included in the dict specified in the 'targets' argument of the learn() "
-                        f"method: {', '.join(unnecesary_specs_as_specified_in_targets)}.")
+        # TEACHER_TARGET BREADCRUMB: MOVE THE FOLLOWING TO _handle_redundant_target_specs()
+        # # MODIFIED TEACHER_TARGET OLD:
+        #
+        # # BREADCRUMB: PROMOTE THESE TO UTILITY?
+        # spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+        # spec_as_port = lambda spec : spec if isinstance(spec, OutputPort) else spec.output_port
+        #
+        # constructor_args = self.targets
+        #
+        # # Insure all keys of learn_method_args are OutputPorts (construtor_args have already been converted)
+        # learn_method_args = {spec_as_port(k):v for k, v in targets.items()} if targets else None
+        #
+        # if constructor_args and target_specs_from_learn:
+        #     # Check whether any samples with nodes specified as targets in the constructor
+        #     #    also appear in the targets dict of learn(): this should not happen,
+        #     #    as they get their target value from the node specified in the constructor
+        #     uncessary_sample_specs_in_learn = []
+        #     for learn_sample in learn_method_args:
+        #         for constructor_sample, constructor_target in [spec for spec in constructor_args]:
+        #             if learn_sample is constructor_sample and constructor_target is not TARGET:
+        #                 # uncessary_sample_specs_in_learn.append(f"'{learn_sample.full_name}'")
+        #                 uncessary_sample_specs_in_learn.append(learn_sample)
+        #         if uncessary_sample_specs_in_learn:
+        #             unnecesary_specs_as_specified_in_targets = \
+        #                 sorted([spec.full_name if spec in targets else spec.owner.name
+        #                         for spec in uncessary_sample_specs_in_learn])
+        #             plural = len(unnecesary_specs_as_specified_in_targets) > 1
+        #             is_are = 'are' if plural else 'is'
+        #             its_their = 'their' if plural else 'its'
+        #             a = '' if plural else 'a '
+        #             s = 's' if plural else ''
+        #             not_s = '' if plural else 's'
+        #             raise AutodiffCompositionError(
+        #                 f"The following Node{s}, specified in the 'targets' argument of the constructor for "
+        #                 f"'{self.name}' as {a}sample{s} that receive{not_s} {its_their} target value{s} from another "
+        #                 f"node, should not be included in the dict specified in the 'targets' argument of the learn() "
+        #                 f"method: {', '.join(unnecesary_specs_as_specified_in_targets)}.")
+        #
+        #     # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
+        #     # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
+        #     #  TARGET Node for that sample
+        #     INPUT_targets_unspecified_in_learn = []
+        #     for constructor_sample in [sample for sample, target in constructor_args if target == TARGET]:
+        #         # Start by assuming that entry in **targets** arg of learn() uses SAMPLE node as key
+        #         learn_sample_spec = constructor_sample
+        #         # Check if SAMPLE Node is specified as a key in the **targets** arg of learn()
+        #         if constructor_sample not in learn_method_args:
+        #             # If it is not, check whether its corresponding TARGET Node is used as the key:
+        #             if self.sample_port_to_target_port_map[constructor_sample] in learn_method_args:
+        #                 learn_sample_spec = self.sample_port_to_target_port_map[constructor_sample]
+        #             else:
+        #                 # Add constructor_sample to list of missing specs for warning below
+        #                 INPUT_targets_unspecified_in_learn.append(constructor_sample)
+        #                 continue
+        #         value = learn_method_args[learn_sample_spec]
+        #         assert (is_numeric(value)
+        #                 # Only consider innermost dimension for shape, as that is the one for the OutputPort
+        #                 and np.array(value).shape[-1] == constructor_sample.defaults.variable.shape[-1]),\
+        #             (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
+        #              f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
+        #     if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
+        #         # TEACHER_TARGET BREADCRUMB:  MOVE THIS TO _validate_target_specs() (OR OVERRIDE THEREOF?)
+        #         problem_node_names = [f"'{n.owner.name}'" for n in INPUT_targets_unspecified_in_learn]
+        #         warnings.warn(f"The following node(s) are specified in the 'targets' argument of the constructor for "
+        #                       f"'{self.name}' as samples that receive external values for their targets; therefore, "
+        #                       f"they must be included in the 'targets' argument of the learn() method as keys in a dict"
+        #                       f" that specify their target values during learning: {', '.join(problem_node_names)}.")
+        #         self._warned_about_unspecified_target_in_learn = True
 
-            # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
-            # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
-            #  TARGET Node for that sample
-            INPUT_targets_unspecified_in_learn = []
-            for constructor_sample in [sample for sample, target in constructor_args if target == TARGET]:
-                # Start by assuming that entry in **targets** arg of learn() uses SAMPLE node as key
-                learn_sample_spec = constructor_sample
-                # Check if SAMPLE Node is specified as a key in the **targets** arg of learn()
-                if constructor_sample not in learn_method_args:
-                    # If it is not, check whether its corresponding TARGET Node is used as the key:
-                    if self.sample_port_to_target_port_map[constructor_sample] in learn_method_args:
-                        learn_sample_spec = self.sample_port_to_target_port_map[constructor_sample]
-                    else:
-                        # Add constructor_sample to list of missing specs for warning below
-                        INPUT_targets_unspecified_in_learn.append(constructor_sample)
-                        continue
-                value = learn_method_args[learn_sample_spec]
-                assert (is_numeric(value)
-                        # Only consider innermost dimension for shape, as that is the one for the OutputPort
-                        and np.array(value).shape[-1] == constructor_sample.defaults.variable.shape[-1]),\
-                    (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
-                     f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
-            if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
-                # TEACHER_TARGET BREADCRUMB:  MOVE THIS TO _validate_target_specs() (OR OVERRIDE THEREOF?)
-                problem_node_names = [f"'{n.owner.name}'" for n in INPUT_targets_unspecified_in_learn]
-                warnings.warn(f"The following node(s) are specified in the 'targets' argument of the constructor for "
-                              f"'{self.name}' as samples that receive external values for their targets; therefore, "
-                              f"they must be included in the 'targets' argument of the learn() method as keys in a dict"
-                              f" that specify their target values during learning: {', '.join(problem_node_names)}.")
-                self._warned_about_unspecified_target_in_learn = True
+        # MODIFIED TEACHER_TARGET NEW:
+        def _replace_loss_mech_with_sample_port(spec_dict):
+            """Convert target specification in the form of a LossMechanism to {sample_port: value}
+            """
+            for target_spec, value in spec_dict.copy().items():
+                if isinstance(target_spec, LossMechanism):
+                    spec_dict[spec_dict.pop(target_spec).sample] = value
 
-        super._aggregate_target_specs(inputs, targets_dicts)
+        constructor_target_specs = dict(self.targets.copy())
+        _replace_loss_mech_with_sample_port(constructor_target_specs)
+        targets_dicts.update({'autodiff_constructor': constructor_target_specs})
+        return super()._aggregate_target_specs(inputs, targets_dicts)
+        # MODIFIED TEACHER_TARGET END
 
     def _check_nested_target_mechs(self):
         pass
