@@ -3279,7 +3279,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions',
-    'NodeRole', 'LearningScale', 'SampleTargetPairs'
+    'NodeRole', 'LearningScale', 'SampleTargetPair'
     ]
 
 logger = logging.getLogger(__name__)
@@ -3287,8 +3287,8 @@ logger = logging.getLogger(__name__)
 CompositionRegistry = {}
 
 
-SampleTargetPairs = collections.namedtuple("SampleTargetPairs",
-                                           "sample_mech sample_port target_mech target_port")
+SampleTargetPair = collections.namedtuple("SampleTargetPair",
+                                          "sample_mech sample_port target_mech target_port")
 
 
 class CompositionError(ComponentError):
@@ -7776,8 +7776,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in sample_projs:
                 assert proj.receiver.owner == comparator and proj.receiver.name == 'SAMPLE'
                 sample_port = proj.sender
-                self._sample_target_pairs.append((sample_port.owner, sample_port,
-                                                  target_port.owner, target.output_port))
+                self._sample_target_pairs.append(SampleTargetPair(sample_port.owner, sample_port,
+                                                                  target_port.owner, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context)
 
             learning_related_components = {OUTPUT_MECHANISM: output_source,
@@ -8577,8 +8577,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for proj in sample_projs:
             assert proj.receiver.owner == objective_mechanism and proj.receiver.name == 'SAMPLE'
             sample_port = proj.sender
-            self._sample_target_pairs.append((sample_port.owner, sample_port,
-                                              target_port.owner, target.output_port))
+            self._sample_target_pairs.append(SampleTargetPair(sample_port.owner, sample_port,
+                                                              target_port.owner, target.output_port))
             self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context)
 
         return target_mechanism, objective_mechanism, learning_mechanism
@@ -13836,7 +13836,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def sample_port_to_target_port_map(self):
-        return {pair.sample_port: pair.target_port for pair in self.sample_target_pairs}
+        return {pair.sample_port: pair.target_port for pair in self._sample_target_pairs}
 
     # MODIFIED TEACHER_TARGET OLD:
     # @property

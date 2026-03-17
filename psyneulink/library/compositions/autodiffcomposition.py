@@ -835,7 +835,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale)
+from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale, SampleTargetPair)
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
@@ -1917,9 +1917,11 @@ class AutodiffComposition(Composition):
             # self.sample_port_to_target_port_map.update({sample_port: target_spec})
             # MODIFIED TEACHTER_TARGET NEW:
             # BREADCRUMB: MAKE SURE target_spec BELOW is TARGET PORT
-            self._sample_target_pairs.append((sample_port.owner, sample_port,
-                                              target_mech, (target_spec if isinstance(target_spec, OutputPort)
-                                                            else target_mech.output_port))
+            self._sample_target_pairs.append(SampleTargetPair(sample_port.owner,
+                                                              sample_port,
+                                                              target_mech,
+                                                              (target_spec if isinstance(target_spec, OutputPort)
+                                                               else target_mech.output_port)))
             # MODIFIED TEACHTER_TARGET END
 
             self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
@@ -1994,9 +1996,8 @@ class AutodiffComposition(Composition):
         # self.sample_port_to_target_port_map.update({k:v for k,v in zip(output_ports_for_learning,
         #                                                          [t.output_port for t in target_mechs])})
         # MODIFIED TEACHTER_TARGET NEW:
-        # BREADCRUMB: STIL WORKING HERE:
-        # BREADCRUMB: MAKE SURE target_spec BELOW is TARGET PORT
-        self._sample_target_pairs.append(???)
+        self._sample_target_pairs.append([(s.owner, s, t, t.output_port)
+                                          for s, t in zip(output_ports_for_learning, target_mechs)])
         # MODIFIED TEACHTER_TARGET END
 
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
@@ -2554,7 +2555,11 @@ class AutodiffComposition(Composition):
                 output = output.squeeze(1)
 
             output = output.detach().cpu().numpy().copy().tolist()
-            if self.sample_port_to_target_port_map.values():
+            # # MODIFIED TEACHER_TARGET OLD:
+            # if self.sample_port_to_target_port_map.values():
+            # MODIFIED TEACHER_TARGET NEW:
+            if self.target_port_to_sample_port_map:
+            # MODIFIED TEACHER_TARGET END
                 trained_output_values += [output]
             all_output_values += [output]
 
@@ -2687,7 +2692,7 @@ class AutodiffComposition(Composition):
             return get_target_value(target)
 
         # Get OutputPorts for TARGET Nodes
-        for target_port in [t for t in self.sample_port_to_target_port_map.values()
+        for target_port in [t for t in self.target_port_to_sample_port_map
                             if t.owner in self.get_nodes_by_role(NodeRole.TARGET)]:
             target_values[target_port.owner] = get_target_value(target_port.owner)
         return target_values
@@ -2714,9 +2719,13 @@ class AutodiffComposition(Composition):
             # if port in self.sample_port_to_target_port_map:
             #     # Use TARGET Node (target_port owner) for key
             #     target_values_for_target_nodes[self.sample_port_to_target_port_map[port].owner] = value
-            # MODIFIED TEACHER_TARGET NEW:
+            # # MODIFIED TEACHER_TARGET NEW:
+            # # port to be specified for sample or target; what matters is
+            # sample, target = next((item for item in self.sample_port_to_target_port_map.items()
+            #                        if port in item), (None,None))
+            # MODIFIED TEACHER_TARGET NEWER:
             # port to be specified for sample or target; what matters is
-            sample, target = next((item for item in self.sample_port_to_target_port_map.items()
+            sample, target = next(((item.sample_port, item.target_port) for item in self.sample_target_pairs
                                    if port in item), (None,None))
             if sample:
                 target_values_for_target_nodes[self.sample_port_to_target_port_map[sample].owner] = value
