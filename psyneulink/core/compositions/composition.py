@@ -3278,7 +3278,8 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions', 'NodeRole', 'LearningScale',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions',
+    'NodeRole', 'LearningScale', 'SampleTargetPairs'
     ]
 
 logger = logging.getLogger(__name__)
@@ -3286,8 +3287,13 @@ logger = logging.getLogger(__name__)
 CompositionRegistry = {}
 
 
+SampleTargetPairs = collections.namedtuple("SampleTargetPairs",
+                                           "sample_mech sample_port target_mech target_port")
+
+
 class CompositionError(ComponentError):
     pass
+
 
 
 class RunError(Exception):
@@ -3934,7 +3940,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parsed_inputs = False
 
         # Learning-related attributes
-        self.sample_port_to_target_port_map = {} # {sample OutputPort : TARGET Node OutputPort}
+        self._sample_target_pairs = [] # List of SampleTargetPair tuples
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
 
@@ -7770,7 +7776,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in sample_projs:
                 assert proj.receiver.owner == comparator and proj.receiver.name == 'SAMPLE'
                 sample_port = proj.sender
-                self.sample_port_to_target_port_map.update({sample_port: target.output_port})
+                self._sample_target_pairs.append((sample_port.owner, sample_port,
+                                                  target_port.owner, target.output_port))
                 self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context)
 
             learning_related_components = {OUTPUT_MECHANISM: output_source,
@@ -8570,7 +8577,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for proj in sample_projs:
             assert proj.receiver.owner == objective_mechanism and proj.receiver.name == 'SAMPLE'
             sample_port = proj.sender
-            self.sample_port_to_target_port_map.update({sample_port: target_mechanism.output_port})
+            self._sample_target_pairs.append((sample_port.owner, sample_port,
+                                              target_port.owner, target.output_port))
             self.require_node_roles(sample_port.owner, NodeRole.SAMPLE, context)
 
         return target_mechanism, objective_mechanism, learning_mechanism
@@ -9044,7 +9052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Learning_Pathway>` in the Composition, in which keys are Nodes and values are OutputPorts that
         provide the sample value used to compute the error for learning.
         """
-        sample_nodes = {k.owner: k for k in self.sample_port_to_target_port_map.keys()}
+        sample_nodes = {entry.sample for entry in self._sample_target_pairs}
         if not sample_nodes:
             # No TARGET Nodes were found
             if not self.learning_components:
@@ -9770,7 +9778,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #
         # # Process target_specs
         # self._convert_loss_mech_spec_to_sample_port(inputs, targets)
-        # target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets)
+        # sample_target_pairs, target_specs_inventory = self._aggregate_target_specs(inputs, targets)
         # # MODIFIED TEACHER_TARGET NEW:
         # # BREADCRUMB: REMOVE ONCE OVERRIDES IN AutodiffComposition HAVE BEEN IMPLEMENTED
         # self._constructor_has_target_specs = bool(hasattr(self, TARGETS) and self.__getattribute__(TARGETS))
@@ -9781,16 +9789,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_targets_dict = inputs.pop(TARGETS, {})
         targets_dicts = {'inputs[TARGETS]':input_targets_dict,
                          TARGETS: targets}
-        target_spec_aliases, target_specs_inventory = self._aggregate_target_specs(inputs, targets_dicts)
+        sample_target_pairs, target_specs_inventory = self._aggregate_target_specs(inputs, targets_dicts)
         # MODIFIED TEACHER_TARGET END
 
-        self._handle_redundant_target_specs(target_spec_aliases, target_specs_inventory)
+        self._handle_redundant_target_specs(sample_target_pairs, target_specs_inventory)
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets,
-                                                                               target_spec_aliases,
+                                                                               sample_target_pairs,
                                                                                target_specs_inventory)
         # self._validate_targets_specs(inputs, targets,
         #                              sample_ports_to_learn_specs,
-        #                              target_spec_aliases,
+        #                              sample_target_pairs,
         #                              execution_mode, context, base_context)
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9820,79 +9828,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return inputs, num_inputs_sets
 
-    # # MODIFIED TEACHER_TARGET OLD:
-    # def _aggregate_target_specs(self, inputs:dict, targets:dict)->tuple:
-    #     """Consolidate all target specifciations in inputs dict, ['targets'] subdict of that, or main 'targets dict
-    #
-    #     Create table of all aliases for target specification (target_spec_aliases)
-    #         (sample mech, sample OutputPort, TARGET Node or its OutputPort)
-    #     Use that table to identify the TARGET Node to which a target_spec refers
-    #     Create table of all target specifications (target_specs_inventory),
-    #        each entry of which has the TARGET Node as "header", the specification used, and its source
-    #     Purge inputs dict of any target specs
-    #
-    #     Returns
-    #      aliases and inventory tables (lists)
-    #     """
-    #
-    #     # First, create "table" of all target spec "aliases" for a given sample-target pair:
-    #     #                                                (sample mech, sample port, target node, target port)
-    #     target_spec_alias = collections.namedtuple("TargetSpecAlias",
-    #                                                  "sample_mech sample_port target_mech target_port")
-    #     # Get sample_target_port_map as a list of tuples
-    #     sample_target_port_map = self.sample_port_to_target_port_map.items()
-    #     target_spec_aliases = (sorted([target_spec_alias(sample_port.owner, sample_port, target_port.owner, target_port)
-    #                                    for sample_port, target_port in sample_target_port_map]))
-    #     assert len(target_spec_aliases) == len(self.get_target_nodes()), \
-    #         f"PROGRAM ERROR: number sample_target_pairs not equal to nmber of TARGET Nodes in Composition"
-    #     # function that returns TARGET Node for target_spec if it is an alias for it in target_spec_aliases
-    #     _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in target_spec_aliases
-    #                                               if target_spec in alias), None)
-    #
-    #     # Then, get all target specs into a single "table"
-    #     target_spec_info = collections.namedtuple("TargetSpecInfo",
-    #                                                "target, spec, value, source")
-    #     target_specs_inventory = [] # TargetSpecInfo for all target specs in inputs, inputs[TARGETS] and targets
-    #
-    #     # Process inputs dict:
-    #     # - identify target_specs using target_spec_aliases
-    #     # - add to target_specs_inventory
-    #     # - remove from inputs dict
-    #     inputs_copy = inputs.copy()
-    #     for input_item, value in inputs_copy.items():
-    #         target_node = _get_target_for_spec(input_item)
-    #         # If target_node is None, then it is not a target spec, so can ignore
-    #         if target_node:
-    #             target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'inputs'))
-    #             inputs.pop(input_item)
-    #
-    #     # Process ['targets'] subdict if there is one in inputs dict
-    #     # - add all entries to target_specs_inventory (incluing ones not found in target_spec_aliases)
-    #     # - remove ['targets'] dict from inputs dict
-    #     if 'targets' in inputs_copy:
-    #         for target_spec, value in inputs[TARGETS].items():
-    #             target_node = _get_target_for_spec(target_spec)
-    #             # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-    #             target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'inputs[targets]'))
-    #         inputs.pop('targets')
-    #
-    #     # Process targets dict
-    #     # - add all entries to target_specs_inventory (incluing ones not found in target_spec_aliases)
-    #     for target_item, value in targets.copy().items():
-    #         target_node = _get_target_for_spec(target_item)
-    #         # Again, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-    #         target_specs_inventory.append(target_spec_info(target_node, target_item, value, 'targets'))
-    #
-    #     return (target_spec_aliases, target_specs_inventory)
 
-    # MODIFIED TEACHER_TARGET NEW:
     # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
     # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
     #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
     def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None)->(list, list):
         """Consolidate all target specifciations in inputs dict and any others passed in to targets_dicts
 
-        Create table of all aliases for target specification (target_spec_aliases)
+        Create table of all aliases for target specification (sample_target_pairs)
             (sample mech, sample OutputPort, TARGET Node or its OutputPort)
         Use that table to identify the TARGET Node to which a target_spec refers
         Create table of all target specifications (target_specs_inventory),
@@ -9916,34 +9859,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         list of aliases for target specs and list of target specs from all sources in the form of a table
         """
 
-        # First, create "table" of all target spec "aliases" for a given sample-target pair:
-        #                                                (sample mech, sample port, target node, target port)
-        target_spec_alias = collections.namedtuple("TargetSpecAlias",
-                                                     "sample_mech sample_port target_mech target_port")
-        # Get sample_target_port_map as a list of tuples
-        sample_target_port_map = self.sample_port_to_target_port_map.items()
-        target_spec_aliases = (sorted([target_spec_alias(sample_port.owner, sample_port, target_port.owner, target_port)
-                                       for sample_port, target_port in sample_target_port_map]))
+        # # MODIFIED TEACHER_TARGET OLD:
+        # # BREADCRUMB: MOVED TO INIT
+        # # First, create "table" of all target spec "aliases" for a given sample-target pair:
+        # #                                                (sample mech, sample port, target node, target port)
+        # target_spec_alias = collections.namedtuple("TargetSpecAlias",
+        #                                              "sample_mech sample_port target_mech target_port")
+        # # BREADCRUMB: NOW CONSTRUCTED "ON THE FLY" AS sample_target_pairs AND sample_port_to_target_port_map PROPERTY
+        # # Get sample_target_port_map as a list of tuples
+        # sample_target_port_map = self.sample_port_to_target_port_map.items()
+        # sample_target_pairs = (
+        #     sorted([sample_target_alias(sample_port.owner, sample_port, target_port.owner, target_port)
+        #             for sample_port, target_port in sample_target_port_map]))
+        # MODIFIED TEACHER_TARGET END
 
+        # # MODIFIED TEACHER_TARGET OLD:
+        # # # BREADCRUMB: THIS ONLY WORKS FOR NO constructor SPECS, WHEN # TARGETS MUST = # of SPECS
+        # # #             HANDLED BELOW?  OR MOVE TO END OF OVERRIDE in Autodiff??
+        # # if not self._constructor_has_target_specs:
+        # #     assert len(sample_target_pairs) == len(self.get_target_nodes()), \
+        # #         f"PROGRAM ERROR: number sample_target_pairs not equal to nmber of TARGET Nodes in Composition"
+        #
+        # # Then, get all target specs into a single "table"
+        # target_spec_info = collections.namedtuple("TargetSpecInfo", "target, spec, value, source")
+        # target_specs_inventory = [] # TargetSpecInfo for all target specs in inputs, inputs[TARGETS] and targets
+        #
+        # inputs_copy = inputs.copy()
+        # targets_dicts = targets_dicts or {}
+        #
+        # # function that returns TARGET Node for target_spec if it is an alias for it in sample_target_pairs
+        # _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in sample_target_pairs
+        #                                           if target_spec in alias), None)
+        #
+        # # Process inputs dict:
+        # # - identify target_specs using sample_target_pairs
+        # # - add to target_specs_inventory
+        # # - remove from inputs dict
+        # inputs_copy = inputs.copy()
+        # for input_item, value in inputs_copy.items():
+        #     target_node = _get_target_for_spec(input_item)
+        #     # If target_node is None, then it is not a target spec, so can ignore
+        #     if target_node:
+        #         target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'inputs'))
+        #         inputs.pop(input_item)
+        #
+        # # Process dicts in targets_dicts:
+        # for name, targets_dict in targets_dicts.items():
+        #     for target_spec, value in targets_dict.items():
+        #         target_node = _get_target_for_spec(target_spec)
+        #         # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
+        #         target_specs_inventory.append(target_spec_info(target_node, target_spec, value, name))
+        #
+        # return (sample_target_pairs, target_specs_inventory)
+
+        # MODIFIED TEACHER_TARGET NEW:
         # # BREADCRUMB: THIS ONLY WORKS FOR NO constructor SPECS, WHEN # TARGETS MUST = # of SPECS
         # #             HANDLED BELOW?  OR MOVE TO END OF OVERRIDE in Autodiff??
         # if not self._constructor_has_target_specs:
-        #     assert len(target_spec_aliases) == len(self.get_target_nodes()), \
+        #     assert len(sample_target_pairs) == len(self.get_target_nodes()), \
         #         f"PROGRAM ERROR: number sample_target_pairs not equal to nmber of TARGET Nodes in Composition"
 
+        # BREADCRUMB: CONSOLIDATE THIS WITH alias INTO ONE TABLE
         # Then, get all target specs into a single "table"
-        target_spec_info = collections.namedtuple("TargetSpecInfo", "target, spec, value, source")
-        target_specs_inventory = [] # TargetSpecInfo for all target specs in inputs, inputs[TARGETS] and targets
+        sample_target_spec_info = (
+            collections.namedtuple(
+                "SampleTargetInfo",
+                "sample_port, target_port, target_spec, target_value, source"))
+        aggregated_sample_target_specs = [] # SampleTargetInfo for all specs in inputs, inputs[TARGETS] and targets
+                                            #   as well as any others added by subclasses
+                                            #   (such as from targets argument of AutodiffComposition constructor)
 
         inputs_copy = inputs.copy()
         targets_dicts = targets_dicts or {}
 
-        # function that returns TARGET Node for target_spec if it is an alias for it in target_spec_aliases
-        _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in target_spec_aliases
+        # function that returns TARGET Node for target_spec if it can be found in sample_target_pairs
+        _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in sample_target_pairs
                                                   if target_spec in alias), None)
 
         # Process inputs dict:
-        # - identify target_specs using target_spec_aliases
+        # - identify target_specs using sample_target_pairs
         # - add to target_specs_inventory
         # - remove from inputs dict
         inputs_copy = inputs.copy()
@@ -9951,7 +9945,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_node = _get_target_for_spec(input_item)
             # If target_node is None, then it is not a target spec, so can ignore
             if target_node:
-                target_specs_inventory.append(target_spec_info(target_node, input_item, value, 'inputs'))
+                # BREADCRUMB: NEED TO ADD target_port, sample and sample_port info here
+                #              INSERT RELEVANT "ROW" FROM sample_target_alises
+                target_specs_inventory.append(sample_target_spec_info(target_node, input_item, value, 'inputs'))
                 inputs.pop(input_item)
 
         # Process dicts in targets_dicts:
@@ -9959,19 +9955,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for target_spec, value in targets_dict.items():
                 target_node = _get_target_for_spec(target_spec)
                 # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-                target_specs_inventory.append(target_spec_info(target_node, target_spec, value, name))
+                target_specs_inventory.append(sample_target_spec_info(target_node, target_spec, value, name))
 
-        return (target_spec_aliases, target_specs_inventory)
-    # MODIFIED TEACHER_TARGET END
+        return (sample_target_pairs, target_specs_inventory)
+        # MODIFIED TEACHER_TARGET END
 
-    def _handle_redundant_target_specs(self, target_spec_aliases:list, target_specs_inventory:list):
-        """Handle redundant target specifications and ones with conflicting values
-        Identify target_specs in target_specs_inventory that refer to the same SAMPLE-TARGET pairt
-        Call error_for_target_spec_conflicts() (to allow override by subclasses)
-        Issue warning for non-conflicting redundant target_specs
-        Note: ignore bad specs (i.e. ones for which target is None in target_specs_inventory:
+    def _handle_redundant_target_specs(self, sample_target_pairs:list, target_specs_inventory:list):
+        """Identify target_specs and warn about target_specs that refer to the same SAMPLE-TARGET pair
+        Use target_specs_inventory to identify redundant specs.
+        Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
+        Issue warning for non-conflicting redundant target_specs, but leave them;
+                  they will be removed in _canonicalize_target_specs()
+        Ignore bad individual specs (i.e. ones for which target is None in target_specs_inventory:
                   they will be handled in _validate_target_specs()
-              leave redundant specs: they will be removed in _canonicalize_target_specs()
         """
 
         # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
@@ -10086,7 +10082,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"{sample_nodes} Node{s}: {full_str}.")
 
     def _canonicalize_target_specs(self, targets:dict,
-                                   target_spec_aliases:list,
+                                   sample_target_pairs:list,
                                    target_specs_inventory:list)->(dict, dict):
         """Consolidate target specs into dictionary with entries in a standard form: {sample OutputPort: value}
 
@@ -10123,8 +10119,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
         target_nodes = self.get_target_nodes()
         for TARGET_node in target_nodes:
-            # Get all aliases for the TARGET (from target_spec_aliases)
-            target_aliases = next((t for t in target_spec_aliases if TARGET_node in t), None)
+            # Get all aliases for the TARGET (from sample_target_pairs)
+            target_aliases = next((t for t in sample_target_pairs if TARGET_node in t), None)
             # Get the sample_port alias, to use as the key in canonical_target_specs
             sample_port = target_aliases.sample_port
             # Get the first specification found in targets for the TARGET
@@ -10143,7 +10139,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add entries in targets with keys that are not for any specification ("alias") of a TARGET Node
         #    to canonicalized_target_specs for error detection and message raised in in _valdate_target_specs()
         for spec, val in targets.items():
-            if not any(spec in alias_set for alias_set in target_spec_aliases):
+            if not any(spec in alias_set for alias_set in sample_target_pairs):
                 canonicalized_target_specs.update({spec: val})
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
@@ -10370,7 +10366,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # TEACHER_TARGET BREADCRUMB: SHOULD POPULATE sample_port_to_target_port_map FOR Composition
                 #                            AND THEN REVERT TO "NEW" ABOVE:
                 #                            OR, BETTER STILL, USE NodeRole.SAMPLE ONCE IMPEMENTED
-                if self.sample_port_to_target_port_map:
+                if self._sample_target_pairs:
                     sample_node = next(s.owner for s, t in self.sample_port_to_target_port_map.items()
                                        if t.owner is target)
                 else:
@@ -13835,11 +13831,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.graph_processing.prune_feedback_edges()[0]
 
     @property
-    def target_port_to_sample_port_map(self):
-        assert (len(set(self.sample_port_to_target_port_map.keys())) ==
-                len(set(self.sample_port_to_target_port_map.values()))), \
-            "PROGRAM ERROR: sample_port_to_target_port_map must be one-to-one to invert"
-        return {v: k for k,v in self.sample_port_to_target_port_map.items()}
+    def sample_target_pairs(self):
+        return sorted(self._sample_target_pairs)
+
+    @property
+    def sample_port_to_target_port_map(self):
+        return {pair.sample_port: pair.target_port for pair in self.sample_target_pairs}
+
+    # MODIFIED TEACHER_TARGET OLD:
+    # @property
+    # def target_port_to_sample_port_map(self):
+    #     assert (len(set(self.sample_port_to_target_port_map.keys())) ==
+    #             len(set(self.sample_port_to_target_port_map.values()))), \
+    #         "PROGRAM ERROR: sample_port_to_target_port_map must be one-to-one to invert"
+    #     return {v: k for k,v in self.sample_port_to_target_port_map.items()}
+    # MODIFIED TEACHER_TARGET NEW:
+        return {pair.target_port: pair.sample_port for pair in self.sample_target_pairs}
+    # MODIFIED TEACHER_TARGET END
 
     # Ports, Projections and Parameters --------------------------------------------------------------------------------
     # region

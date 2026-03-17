@@ -1143,7 +1143,7 @@ class GRUComposition(AutodiffComposition):
 
         for output_port in target_mech.output_ports:
             output_port.parameters.require_projection_in_composition.set(False, override=True)
-        self.sample_port_to_target_port_map = {self.gru_mech.output_port: target_mech.output_port}
+        self.sample_target_pairs = [(self.gru_mech, self.gru_mech.output_port, target_mech, target_mech.output_port)]
         return [target_mech]
 
     def _get_pytorch_backprop_pathway(self, input_node, context)->list:
