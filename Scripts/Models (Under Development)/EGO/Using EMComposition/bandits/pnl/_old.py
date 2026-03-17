@@ -56,37 +56,76 @@ STATE_NAME = 'STATE'
 TIME_NAME = 'TIME'
 REWARD_NAME = 'REWARD'
 CONTEXT_NAME = 'CONTEXT'
-TASK_NAME = 'TASK'
+TASK_NAME = 'TASK CONTROL'
 
 
 def construct_model(
-        capacity=defaults.N_EXPERIENCE_SEQS,
-        context_retrieval_in_sim=defaults.CONTEXT_RETRIEVE_IN_SIM,
-        time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
+        # EM Parameters
+        capacity: int = 100,
+        memory_fill: float = .01,
+        em_softmax_temperature: float = .1,
+        em_softmax_threshold: float = .01,
+
+        state_size: int = 9,
+        time_size: int = 25,
+        reward_size: int = 1,
+        task_size: int = 1,
+
+        # Context Parameters
+        state_integration_rate: float = .5,
+
+        # Weights
+        time_retrieval_weight: float = .5
 ):
+    """
+
+    :param capacity: The number of slots in episodic memory (usually number of stimuli presented)
+    :param memory_fill: The values with which the episodic memory is initialized
+    :param em_softmax_temperature: The softmax temperature when retrieving memories from em
+    :param em_softmax_threshold: A threshold for the similarity of retrieved memories (if the dot product
+        between a memory and the query is below this value this memory is discarded)
+    :param state_size: States are encoded one-hot. This is usually the number of different states.
+    :param time_size: The length of the time vector.
+    :param reward_size: The length of the reward vector (1 if reward is encoded as a scalar)
+    :param task_size: The length of the task vector. This governs the control signals in the model (for
+        example, observation vs prediction mode)
+    :param state_integration_rate: State integration rate. The integration rate of the state vector into the context.
+        1 means the context is a perfect copy of the state (em will store context as previous state and state)
+        0 means the context is not updated at all
+    :param time_retrieval_weight: Weight of time retrieval. This governs how much time biases the retrieval of
+        memories
+
+    """
+    assert em_softmax_temperature > 0, 'Softmax temperature must be above 0'
+    em_softmax_gain = 1 / em_softmax_temperature
+
     # Input Layers
     state_input = pnl.ProcessingMechanism(
         name=STATE_NAME,
-        input_shapes=defaults.STATE_SIZE)
+        input_shapes=state_size)
+    # TODO: make this a drift on a sphere integrator (no input)
     time_input = pnl.ProcessingMechanism(
         name=TIME_NAME,
-        input_shapes=defaults.TIME_SIZE)
+        input_shapes=time_size)
     reward_input = pnl.ProcessingMechanism(
         name=REWARD_NAME,
-        input_shapes=defaults.REWARD_SIZE)
+        input_shapes=reward_size)
 
-    # Task: Observation or Prediction
+    # Task control input (controls task and phase of the model)
+    # For example:
+    #   - In observation mode: integrate context, store to memory
+    #   - In prediction mode: Switch to predicted context, don't store memories ...
     task_input = pnl.ProcessingMechanism(
         name=TASK_NAME,
-        input_shapes=defaults.TASK_SIZE
+        input_shapes=task_size
     )
 
-    # Context layer (working memory)
+    # Context layer (simple integrator as working memory)
     context = pnl.TransferMechanism(
         name=CONTEXT_NAME,
-        input_shapes=defaults.CONTEXT_SIZE,
+        input_shapes=state_size,
         integrator_mode=True,
-        integration_rate=defaults.STATE_INTEGRATION_RATE  # How much of the input to integrate
+        integration_rate=state_integration_rate  # How much of the input to integrate
     )
 
     # Cache the names (if we construct multiple models, the constants above will be enumerated)
@@ -94,22 +133,21 @@ def construct_model(
     _time_name = time_input.name
     _reward_name = reward_input.name
     _task_name = task_input.name
-
     _context_name = context.name
 
     # EM composition
     #   Note: We set retrieval weights to 1. since they will be modulated in the control signal (all but
     #       reward)
     em = pnl.EMComposition(name=EM_NAME,
-                           memory_template=[[0] * defaults.STATE_SIZE,  # state
-                                            [0] * defaults.TIME_SIZE,  # time
-                                            [0] * defaults.CONTEXT_SIZE,  # context
-                                            [0] * defaults.REWARD_SIZE],  # reward
-                           memory_fill=defaults.MEMORY_INIT,
+                           memory_template=[[0] * state_size,  # state
+                                            [0] * time_size,  # time
+                                            [0] * state_size,  # context
+                                            [0] * reward_size],  # reward
+                           memory_fill=memory_fill,
                            memory_capacity=capacity,
-                           memory_decay_rate=0,
-                           softmax_gain=1.0 / defaults.TEMPERATURE,
-                           softmax_threshold=defaults.SOFTMAX_THRESHOLD,
+                           memory_decay_rate=0.,
+                           softmax_gain=em_softmax_gain,
+                           softmax_threshold=em_softmax_threshold,
                            normalize_memories=False,
                            normalize_field_weights=False,
                            concatenate_queries=False,
@@ -120,15 +158,17 @@ def construct_model(
                                    pnl.TARGET_FIELD: False
                                },
                                _time_name: {
-                                   pnl.FIELD_WEIGHT: time_retrieval_weight,
+                                   pnl.FIELD_WEIGHT: 1.,
                                    pnl.LEARN_FIELD_WEIGHT: False,
-                                   pnl.TARGET_FIELD: False},
+                                   pnl.TARGET_FIELD: False
+                               },
                                _context_name: {
                                    pnl.FIELD_WEIGHT: 1.,
                                    pnl.LEARN_FIELD_WEIGHT: False,
-                                   pnl.TARGET_FIELD: False},
+                                   pnl.TARGET_FIELD: False
+                               },
                                _reward_name: {
-                                   pnl.FIELD_WEIGHT: None,
+                                   pnl.FIELD_WEIGHT: None, # <- never use reward to retrieve memory
                                    pnl.LEARN_FIELD_WEIGHT: False,
                                    pnl.TARGET_FIELD: False},
                            })
@@ -180,7 +220,7 @@ def construct_model(
     #   - (1) retrieving reward from state_retrieved
     #   - (2) retrieving state_retrieved from context_projected
     # More specifically, here is the update schema for the context
-    # (0) Very first step: $context_projected = (1-sr)*context + sr*state$ (initializing)
+    # (0) Very first step: $context_projected = (1-sir)*context + sir*state$ (initializing)
     # (1) $context_projected = (1-sr)*context_projected + sr*state_retrieved$ (projecting)
     # (2) Between step: $context_projected = context_projected$
     #       (freeze since we haven't retrieved state yet)
@@ -232,7 +272,6 @@ def construct_model(
     ego_comp.add_projection(
         pnl.MappingProjection(attend_state_retrieved_cp, context_projected)
     )
-
 
     # -- Retrieval -- #
     # The queries that are used for retrieving from episodic memory, are
@@ -305,6 +344,7 @@ def construct_model(
         ## -- Projected Context Integration -- ##
         # From Context: (integration rate is used for "recursion")
         (pnl.SLOPE, attend_context_cp), (pnl.INTEGRATION_RATE, context_projected),
+
         # From State:
         (pnl.SLOPE, attend_state_cp), (pnl.SLOPE, attend_state_retrieved_cp),
 
@@ -419,7 +459,6 @@ def construct_model(
         """
         if _state_features[0] == 0:
             _control_signals = _control_signal_observation
-        # state_features[0] == 1 -> init mode
         if _state_features[0] == 1:
             _control_signals = _control_signal_estimation_init
         if _state_features[0] == 2:
