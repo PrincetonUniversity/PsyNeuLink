@@ -3290,6 +3290,9 @@ CompositionRegistry = {}
 SampleTargetPair = collections.namedtuple("SampleTargetPair",
                                           "sample_mech sample_port target_mech target_port")
 
+SampleTargetSpec = (collections.namedtuple("SampleTargetSpec",
+                                           "sample_port, target_port, target_spec, target_value, source"))
+
 
 class CompositionError(ComponentError):
     pass
@@ -3940,7 +3943,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parsed_inputs = False
 
         # Learning-related attributes
-        self._sample_target_pairs = [] # List of SampleTargetPair tuples
+        self._sample_target_pairs = [] # SampleTargetPair tuples for SAMPLE and TARGET Nodes used for learning
+        self._sample_target_specs = [] # SampleTargetSpec tuples for all specifications for SAMPLE and TARGET Nodes
+                                       #   made in the the inputs and/or **targets** arguments of learn()
+                                       #   and possibly the **targets** argument of sbuclass constructors
         composition_learning_rate = self._parse_and_validate_learning_rate_arg(learning_rate)
         self._runtime_learning_rate = None
 
@@ -9921,19 +9927,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # BREADCRUMB: CONSOLIDATE THIS WITH alias INTO ONE TABLE
         # Then, get all target specs into a single "table"
-        sample_target_spec_info = (
-            collections.namedtuple(
-                "SampleTargetInfo",
-                "sample_port, target_port, target_spec, target_value, source"))
-        aggregated_sample_target_specs = [] # SampleTargetInfo for all specs in inputs, inputs[TARGETS] and targets
-                                            #   as well as any others added by subclasses
-                                            #   (such as from targets argument of AutodiffComposition constructor)
-
         inputs_copy = inputs.copy()
         targets_dicts = targets_dicts or {}
 
         # function that returns TARGET Node for target_spec if it can be found in sample_target_pairs
-        _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in sample_target_pairs
+        _get_target_for_spec = lambda target_spec: next((alias.target_mech for alias in self._sample_target_pairs
                                                   if target_spec in alias), None)
 
         # Process inputs dict:
@@ -9947,7 +9945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if target_node:
                 # BREADCRUMB: NEED TO ADD target_port, sample and sample_port info here
                 #              INSERT RELEVANT "ROW" FROM sample_target_alises
-                target_specs_inventory.append(sample_target_spec_info(target_node, input_item, value, 'inputs'))
+                self._sample_target_specs.append(sample_target_spec_info(target_node, input_item, value, 'inputs'))
                 inputs.pop(input_item)
 
         # Process dicts in targets_dicts:
