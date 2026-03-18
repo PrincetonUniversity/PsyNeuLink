@@ -9845,14 +9845,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         targets_dicts = targets_dicts or {}
 
-        def _extract_sample_target_specs(dict, name:str, allow_None_for_target:bool)->dict:
+        def _extract_sample_target_specs(specs_dict, name:str, allow_None_for_target:bool)->dict:
             """Return dict of sample-target specifications found in specified **targets** dict
             Get sample-target specifications from dicts used to specify samples and targets:
               - in learn(), these are either in the **targets** arg, or in a subdict of the **inputs** arg
               - can also be in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
             """
             identified_sample_target_specs = {}
-            for input_item, value in dict.items():
+            for input_item, value in specs_dict.items():
                 sample_target_pair = next((pair for pair in self._sample_target_pairs
                                            if input_item in pair), None)
                 if not sample_target_pair:
