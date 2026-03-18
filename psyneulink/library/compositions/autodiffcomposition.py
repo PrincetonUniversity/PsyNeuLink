@@ -1796,9 +1796,14 @@ class AutodiffComposition(Composition):
 
         # TEACHER_TARGET: BREADCRUMB MAKE THIS A METHOD
         # Error if there are any learnable Projections in pathways that do not end with a LossMechanism
+
+
         self._check_for_orphaned_learnable_projections(pathways)
+        self._aggregate_target_specs('autodiff_targets', dict(self.targets))
+        self._handle_redundant_target_specs()
 
     def _check_for_orphaned_learnable_projections(self, pathways):
+
         orphaned_learnable_projections = []
         for pathway in pathways:
             backwards_pathway = pathway[::-1]
