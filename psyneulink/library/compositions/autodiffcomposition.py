@@ -835,7 +835,8 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.compositions.composition import (Composition, CompositionError, LearningScale, SampleTargetPair)
+from psyneulink.core.compositions.composition import (
+    Composition, CompositionError, LearningScale, SampleTargetPair, SampleTargetSpec)
 from psyneulink.core.compositions.noderoles import NodeRole
 from psyneulink.core.compositions.report import (ReportOutput, ReportParams, ReportProgress, ReportSimulations,
                                                  ReportDevices, EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT)
@@ -1659,12 +1660,16 @@ class AutodiffComposition(Composition):
 
     def _check_if_sample_is_in_learnable_pathway(self,
                                                  sample_port:OutputPort,
-                                                 target_mech:ProcessingMechanism_Base=None,
+                                                 # # MODIFIED TEACHER_TARGET OLD:
+                                                 # target_mech:ProcessingMechanism_Base=None,
+                                                 # MODIFIED TEACHER_TARGET NEW:
+                                                 target_spec=None,
+                                                 # MODIFIED TEACHER_TARGET END
                                                  loss_mech:LossMechanism=None,
                                                  constructed_target_mechs:list=None,
                                                  action:Optional[Union[Literal[ERROR, WARNING]]]=None)->bool:
         """Take specified action if sample_port's owner has no afferent pathways with any learnable Projections.
-        - target_mech argument is used to determine error_message;
+        - target_spec argument is used to determine error_message;
         - if no action is specified, return True or False
         """
         if self._mech_is_receiver_in_learnable_pathway(sample_port):
@@ -1674,15 +1679,15 @@ class AutodiffComposition(Composition):
         if sample_mech not in self._get_all_nodes():
             # The erroneous SAMPLE specification will be caught and an error raised in _validate_loss_mech_specs()
             return False
-        elif target_mech:
+        elif target_spec:
             # target was specified in *targets* arg of constructor
-            if isinstance(target_mech, LossMechanism):
+            if isinstance(target_spec, LossMechanism):
                 target_msg = f"A LossMechanism ('{loss_mech.name}')"
-            elif (target_mech == TARGET or
-                  (constructed_target_mechs and target_mech in constructed_target_mechs)):
+            elif (target_spec == TARGET or
+                  (constructed_target_mechs and target_spec in constructed_target_mechs)):
                 target_msg = "An external TARGET input"
             else:
-                target_msg = f"A TARGET node ('{target_mech.name}')"
+                target_msg = f"A TARGET node ('{target_spec.full_name}')"
             error_msg = (f"{target_msg} can't be assigned to '{sample_mech.name}' in the 'targets' argument of "
                          f"'{self.name}', since there are no learnable Projections in any of the pathways that "
                          f"project to that Node.")
@@ -1873,30 +1878,37 @@ class AutodiffComposition(Composition):
                 # If sample specified for LossMechanism is not in a pathway with at least one learnable Projection
                 #   then raise error, as executing its LossFunction in pytorch will cause a crash
                 self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
-                                                              target_mech=target_mech,
+                                                              target_spec=target_mech,
                                                               loss_mech=loss_mech_spec,
                                                               constructed_target_mechs=constructed_target_mechs,
                                                               action=ERROR)
                 # MODIFIED TEACHER_TARGET NEW:
                 sample_spec = target_spec = loss_mech_spec
                 # MODIFIED TEACHER_TARGET END
+
             elif isinstance(loss_mech_spec, tuple):
                 sample_spec, target_spec = loss_mech_spec
-                if isinstance(sample_spec, OutputPort):
-                    sample_mech = sample_port.owner XXX
-                target_mech = target_spec.owner if isinstance(target_spec, OutputPort) else target_spec
+                _parse_spec = lambda spec : ((spec, spec.owner) if isinstance(spec, OutputPort)
+                                             else spec.output_port, spec)
+                sample_port, sample_mech = _parse_spec(sample_spec)
+                target_port, target_mech = _parse_spec(target_spec) if target_spec is not TARGET else (None, None)
+
                 # If specified sample Mechanism is not in a pathway with at least one learnable Projection
                 #   then raise error, as constructing a LossMechanism with a LossFunction that tries to compute
                 #   loss in pytorch will cause a crash
                 _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=sample_port,
-                                                                           target_mech=target_mech,
+                                                                           # # MODIFIED TEACHER_TARGET OLD:
+                                                                           # target_mech=target_mech,
+                                                                           # MODIFIED TEACHER_TARGET NEW:
+                                                                           target_spec=target_spec,
+                                                                           # MODIFIED TEACHER_TARGET END
                                                                            loss_mech=None,
                                                                            constructed_target_mechs=None,
                                                                            action=ERROR)
                 # Determine whether target is internal node or TARGET keyword
-                if isinstance(target_spec, OutputPort):
+                if isinstance(target_spec, (OutputPort, ProcessingMechanism_Base)):
                     # target is internal Node
-                    self._check_if_target_is_in_sample_pathway(sample_port, target_spec, pathways, context)
+                    self._check_if_target_is_in_sample_pathway(sample_port, target_port, pathways, context)
                 elif target_spec == TARGET:
                     # target is TARGET keyword, so construct TARGET Node
                     if sample_port in self.sample_port_to_target_port_map:
@@ -1910,7 +1922,7 @@ class AutodiffComposition(Composition):
                                                                                   dtype=object),
                                                       name= 'TARGET for ' + sample_name)
                     target_mech._initialize_from_context(context, base_context, override=False)
-                    target_spec = target_mech.output_port
+                    target_port = target_mech.output_port
                     self.add_node(target_mech, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
                     constructed_target_mechs.append(target_mech)
                 else:
@@ -1920,22 +1932,25 @@ class AutodiffComposition(Composition):
                 assert False, (f"PROGRAM_ERROR: unrecognized specification for self.targets "
                                f"({loss_mech_spec} for '{self.name}'.")
 
-            target_mechs.append(target_mech)
             # # MODIFIED TEACHTER_TARGET OLD:
+            # target_mechs.append(target_mech)
             # self.sample_port_to_target_port_map.update({sample_port: target_spec})
             # MODIFIED TEACHTER_TARGET NEW:
-            # BREADCRUMB: MAKE SURE target_spec BELOW is TARGET PORT
             self._sample_target_pairs.append(SampleTargetPair(sample_port.owner,
                                                               sample_port,
                                                               target_mech,
-                                                              (target_spec if isinstance(target_spec, OutputPort)
-                                                               else target_mech.output_port)))
+                                                              target_port))
+            self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
+                                                              target_port, target_spec, None,
+                                                              CONSTRUCTOR_TARGETS))
             # MODIFIED TEACHTER_TARGET END
 
             self.require_node_roles(sample_mech, NodeRole.SAMPLE, context)
-            loss_mech_specs.append((sample_port, target_spec))
+        # MODIFIED TEACHER_TARGET OLD:
+        #     loss_mech_specs.append((sample_port, target_spec))
 
         # return loss_mech_specs, target_mechs
+        # MODIFIED TEACHER_TARGET END
 
     def _instantiate_default_targets(self, pathways:list, context, base_context)->tuple[list,list]:
         """Construct default TARGET Nodes (since none were specified in **targets** arg of constructor
@@ -1958,7 +1973,7 @@ class AutodiffComposition(Composition):
         target_mechs = self.get_nodes_by_role(NodeRole.TARGET)
         for output_port_for_learning in output_ports_for_learning.copy():
             _learnable = self._check_if_sample_is_in_learnable_pathway(sample_port=output_port_for_learning,
-                                                                       target_mech=None,
+                                                                       target_spec=None,
                                                                        loss_mech=None,
                                                                        constructed_target_mechs=constructed_target_mechs,
                                                                        action=ERROR)

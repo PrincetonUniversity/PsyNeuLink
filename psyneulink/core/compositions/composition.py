@@ -3287,12 +3287,15 @@ logger = logging.getLogger(__name__)
 CompositionRegistry = {}
 
 
-SampleTargetPair = collections.namedtuple("SampleTargetPair",
-                                          "sample_mech sample_port target_mech target_port")
-
+# Specifications for SAMPLE and TARGET in **targets** dict
+#    (used to keep track of original specifications for warnings or errors)
 SampleTargetSpec = (collections.namedtuple(
     "SampleTargetSpec",
     "sample_port sample_spec target_port target_spec target_value source"))
+
+# Instantiated Components for SAMPLE and TARGET Nodes
+SampleTargetPair = collections.namedtuple("SampleTargetPair",
+                                          "sample_mech sample_port target_mech target_port")
 
 
 class CompositionError(ComponentError):
