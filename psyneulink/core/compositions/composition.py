@@ -9886,6 +9886,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Remove targets from inputs dict
                 for spec in sample_target_specs:
                     inputs.pop(spec)
+        assert True
 
     def _handle_redundant_target_specs(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
@@ -9945,12 +9946,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         they_it = 'they' if plural else 'it'
         several_one = 'several' if plural else 'one'
 
-        # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
-        # If SAMPLEs are specified in constructor (in its **targets**) arg, refer to those as targets,
-        #   else refer to OUTPUT Nodes (which are used as the SAMPLEs by default when none are specified explicitly)
-        # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
-
-        sample_nodes = 'OUTPUT'
+        sample_nodes_str = 'OUTPUT'
         if len(sources) == 1:
             source_str = f"{', '.join(sources)}"
         else:
@@ -9962,7 +9958,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
         only_sample_specs = all(spec_as_mech(target_spec.spec) not in self.get_target_nodes()
                                 for target_spec in self._sample_target_specs)
-        use_sample_nodes = (f"use the {sample_nodes} Node{s} to which {they_it} correspond{s_not} "
+        use_sample_nodes = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
                             f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
                             if not only_sample_specs else '')
 
@@ -9977,7 +9973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # X TEST DONE
         warnings.warn(
-            f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes} "
+            f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
             f"While this is technically OK, it might be easier and clearer to {use_sample_nodes}{both}{placement}. "
             f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
