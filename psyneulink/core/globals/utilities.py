@@ -1147,6 +1147,7 @@ def get_alias_property_setter(name, attr=None):
 
 def counts(item_list:list)->list:
     """Return number of times each unique unhashable item (e.g., array) occurs in list of items
+    Note: can only handle one level of unhashable items (e.g., list within a list will raise an error)
     Returns:
         Dictionary where keys are the unique items (e.g., array values) and values are their counts.
     """

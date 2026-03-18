@@ -867,7 +867,7 @@ from psyneulink.core.globals.keywords import (
     WARNING
 )
 from psyneulink.core.globals.utilities import (is_identity_matrix, is_matrix_keyword, is_numeric, is_numeric_scalar,
-                                               convert_to_list, convert_to_np_array, deprecation_warning)
+                                               convert_to_list, convert_to_np_array, deprecation_warning, counts)
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.scheduling.time import TimeScale
@@ -2798,13 +2798,13 @@ class AutodiffComposition(Composition):
         # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
         # BREADCRUMB: REFACTOR WHEN NodeRole.SAMPLES IS IMPLEMENTED
         all_sample_specs = [spec.sample_spec for spec in self._sample_target_specs]
-        target_spec_counts = counts(all_target_specs)
-        targets_with_redundant_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
+        sample_spec_counts = counts(all_sample_specs)
+        targets_with_redundant_specs = sorted([t for t in sample_spec_counts if t and sample_spec_counts[t] > 1])
 
         # Identify redundant specs with mismatching values
         targets_with_mismatching_specs = {}
         # Search over all targets that have redundant specs
-        for target_spec in [t for t in target_spec_counts if t is not None and target_spec_counts[t] > 1]:
+        for target_spec in [t for t in sample_spec_counts if t is not None and sample_spec_counts[t] > 1]:
             # Create list of all values for the target
             # Note: convert values to str to make hashable inside list (counts can only handle one level of unhashales)
             target_vals = {spec.source: str(spec.target_value) for spec in self._sample_target_specs

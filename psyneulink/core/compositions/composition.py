@@ -9851,38 +9851,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs_copy = inputs.copy()
         targets_dicts = targets_dicts or {}
 
-        # function that returns TARGET Node for target_spec if it can be found in sample_target_pairs
-        _get_sample_target_pair_for_spec = lambda spec: next((pair for pair in self._sample_target_pairs
-                                                              if spec in alias), None)
-
-        def _extract_target_specs(dict, name:str, allow_None_for_target:bool)->dict:
-            identified_targets = {}
+        def _extract_sample_target_specs(dict, name:str, allow_None_for_target:bool)->dict:
+            """Return dict of sample-target specifications found in specified **targets** dict
+            Get sample-target specifications from dicts used to specify targets
+               in learn() (in the **targets** arg, or in a subdict of the **inputs** arg
+               or in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
+            """
+            identified_sample_target_specs = {}
             for input_item, value in dict.items():
-                sample_target_pair = _get_sample_target_pair_for_spec(input_item)
-
-                XXXX
-                target_port = get_target_port_for_spec(input_item)
-                sample_port = (self.target_port_to_sample_port_map[target_port]
-                               if target_port in self.target_port_to_sample_port_map else None)
+                sample_target_pair = next((pair for pair in self._sample_target_pairs
+                                           if input_item in pair), None)
+                if not sample_target_pair:
+                    continue
+                # # MODIFIED TEACHER_TARGET OLD:
+                # sample_port = (self.target_port_to_sample_port_map[target_port]
+                #                if target_port in self.target_port_to_sample_port_map else None)
+                # MODIFIED TEACHER_TARGET NEW:
+                sample_port = sample_target_pair.sample_port
+                sample_spec = input_item if input_item in sample_target_pair else None
+                # MODIFIED TEACHER_TARGET END
+                target_port = sample_target_pair.target_port
+                target_spec = input_item if input_item in sample_target_pair else None
+                # Don't incude spec if None is not allowed for target spec
+                #  IMPLEMENTATION NOTE:  this is used to exclude non-sample-target specs in **inputs** dict
+                #                        while allowing bad specs in **targets** dicts to be included,
+                #                        and caught as errors in _validate_target_specs()
                 if target_port or allow_None_for_target:
-                    self._sample_target_specs.append(SampleTargetSpec(sample_port, None,
-                                                                      target_port, input_item,
+                    self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
+                                                                      target_port, target_spec,
                                                                       value, name))
-                identified_targets.update({input_item:value})
-            return identified_targets
+                identified_sample_target_specs.update({input_item:value})
+            return identified_sample_target_specs
 
         # Process inputs dict:
         inputs_copy = inputs.copy()
         # If target_node is None, then it is not a target spec, so can ignore
-        target_specs = _extract_target_specs(inputs_copy, 'inputs', allow_None_for_target=False)
+        sample_target_specs = _extract_sample_target_specs(inputs_copy, 'inputs', allow_None_for_target=False)
         # Remove targets from inputs dict
-        for target_spec in target_specs:
-            inputs.pop(target_spec)
+        for spec in sample_target_specs:
+            inputs.pop(spec)
 
         # Process dicts in targets_dicts:
         for name, targets_dict in targets_dicts.items():
             # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-            _extract_target_specs(targets_dict, name, allow_None_for_target=True)
+            _extract_sample_target_specs(targets_dict, name, allow_None_for_target=True)
 
     def _handle_redundant_target_specs(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
