@@ -3,7 +3,7 @@ Convenience functions to run the python version of the model
 """
 import random
 from src import gen_trials
-from src.ego_model import gen_memories, estimate_reward_from_starting_state
+from scripts.src.ego_model import gen_memories, estimate_reward_from_starting_state
 from src import defaults
 
 import numpy as np

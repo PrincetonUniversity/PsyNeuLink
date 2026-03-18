@@ -1,4 +1,4 @@
-from src.phase_config import PhaseConfig
+from scripts.src.phase_config import PhaseConfig
 
 # ===== DEFAULT CONFIGURATION ==== #
 

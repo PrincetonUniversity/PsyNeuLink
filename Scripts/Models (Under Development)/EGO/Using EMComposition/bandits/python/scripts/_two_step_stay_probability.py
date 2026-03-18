@@ -23,7 +23,7 @@ from scripts.utils import project_root
 # Config
 # ============================================================
 
-RUN_TYPE = "model"  # "model", "random", "human"
+RUN_TYPE = "human" #"model"  # "model", "random", "human"
 
 MODEL_BASED_NESS_LIST = [0.0]
 CHOICE_BIAS_LIST = [PARAMS.choice_bias]
@@ -183,7 +183,6 @@ def all_conditions() -> List[Cond]:
                 ir=rf(ir),
                 tw=rf(tw),
             )
-        )
     return out
 
 

@@ -8,9 +8,9 @@ from functools import partial
 import numpy as np
 import psyneulink as pnl
 
-from src.phase_config import PhaseConfig
+from scripts.src.phase_config import PhaseConfig
 from src import defaults
-from src.utils import one_hot_encode
+from scripts.src.utils import one_hot_encode
 
 
 # ---------------------------------------------------------
