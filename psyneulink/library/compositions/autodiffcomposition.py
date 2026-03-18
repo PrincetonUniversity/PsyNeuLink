@@ -1992,13 +1992,8 @@ class AutodiffComposition(Composition):
         loss_mech_specs = list(zip(output_ports_for_learning, [target.output_port for target in target_mechs]))
         assert len(output_ports_for_learning) == len(target_mechs), \
             f"PROGRAM_ERROR: Number of output_ports_for_learning is not same as number of target_mechs constructed."
-        # # MODIFIED TEACHTER_TARGET OLD:
-        # self.sample_port_to_target_port_map.update({k:v for k,v in zip(output_ports_for_learning,
-        #                                                          [t.output_port for t in target_mechs])})
-        # MODIFIED TEACHTER_TARGET NEW:
-        self._sample_target_pairs.append([(s.owner, s, t, t.output_port)
+        self._sample_target_pairs.extend([SampleTargetPair(s.owner, s, t, t.output_port)
                                           for s, t in zip(output_ports_for_learning, target_mechs)])
-        # MODIFIED TEACHTER_TARGET END
 
         self.add_nodes(target_mechs, required_roles=[NodeRole.TARGET, NodeRole.INPUT], context=context)
         return loss_mech_specs, target_mechs
@@ -2774,113 +2769,132 @@ class AutodiffComposition(Composition):
                 if isinstance(target_spec, LossMechanism):
                     spec_dict[spec_dict.pop(target_spec).sample] = value
 
-        constructor_target_specs = dict(self.targets.copy())
+        constructor_target_specs = dict(self.targets.copy()) if self.targets else {}
         _replace_loss_mech_with_sample_port(constructor_target_specs)
         targets_dicts.update({'autodiff_constructor': constructor_target_specs})
         return super()._aggregate_target_specs(inputs, targets_dicts)
 
-    # def _handle_redundant_target_specs(self, target_spec_aliases:list, target_specs_inventory:list):
-    #     """Override to handle redundant specs from constructor, which can also includ redundant SAMPLE specs
-    #     Note: not done in super(), since SAMPLES can't be specified for Composition (always OUTPUT Nodes)
-    #
-    #     Errors handled here:
-    #     - TARGET value CONFLICTS for same SAMPLE (using different aliases)
-    #         - Node and numeric value
-    #         - Node and "TARGET"
-    #
-    #     ==============
-    #     - IN autodiff OVERRIDE OF _validate_target_specs():
-    #         - SAMPLE or TARGET specs:
-    #             - Node NOT in the Composition
-    #             - Node NOT in the Composition
-    #
-    #         - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
-    #           there should be another entry for that SAMPLE
-    #           that has value == numeric and source = {inputs, inputs[TARGETS or targets}
-    #         - the total number should = the number of SAMPLE Nodes in the Composition:
-    #           if too many: bad specs
-    #           if too few, error (see below)
-    #     ==============
-    #
-    #
-    #     -------------
-    #     OLD DOCSTRING:
-    #     Identify target_specs and warn about target_specs that refer to the same SAMPLE-TARGET pair
-    #     Use target_specs_inventory to identify redundant specs.
-    #     Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
-    #     Issue warning for non-conflicting redundant target_specs, but leave them;
-    #               they will be removed in _canonicalize_target_specs()
-    #     Ignore bad individual specs (i.e. ones for which target is None in target_specs_inventory:
-    #               they will be handled in _validate_target_specs()
-    #     """
-    #     # BREADCRUMB: PROMOTE THESE TO UTILITY?
-    #     spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-    #     spec_as_port = lambda spec : spec if isinstance(spec, OutputPort) else spec.output_port
-    #
-    #     # BREADCRUMB: SEARCH FOR AND ISSUE WARNING FOR TARGET SPECS IN CONSTRUCTOR AND LEARN
-    #
-    #     # Insure all keys of learn_method_args are OutputPorts (construtor_args have already been converted)
-    #     learn_method_args = {spec_as_port(k):v for k, v in targets.items()} if targets else None
-    #
-    #     if constructor_args and target_specs_from_learn:
-    #         # Check whether any samples with nodes specified as targets in the constructor
-    #         #    also appear in the targets dict of learn(): this should not happen,
-    #         #    as they get their target value from the node specified in the constructor
-    #         uncessary_sample_specs_in_learn = []
-    #         for learn_sample in learn_method_args:
-    #             for constructor_sample, constructor_target in [spec for spec in constructor_args]:
-    #                 if learn_sample is constructor_sample and constructor_target is not TARGET:
-    #                     # uncessary_sample_specs_in_learn.append(f"'{learn_sample.full_name}'")
-    #                     uncessary_sample_specs_in_learn.append(learn_sample)
-    #             if uncessary_sample_specs_in_learn:
-    #                 unnecesary_specs_as_specified_in_targets = \
-    #                     sorted([spec.full_name if spec in targets else spec.owner.name
-    #                             for spec in uncessary_sample_specs_in_learn])
-    #                 plural = len(unnecesary_specs_as_specified_in_targets) > 1
-    #                 is_are = 'are' if plural else 'is'
-    #                 its_their = 'their' if plural else 'its'
-    #                 a = '' if plural else 'a '
-    #                 s = 's' if plural else ''
-    #                 not_s = '' if plural else 's'
-    #                 raise AutodiffCompositionError(
-    #                     f"The following Node{s}, specified in the 'targets' argument of the constructor for "
-    #                     f"'{self.name}' as {a}sample{s} that receive{not_s} {its_their} target value{s} from another "
-    #                     f"node, should not be included in the dict specified in the 'targets' argument of the learn() "
-    #                     f"method: {', '.join(unnecesary_specs_as_specified_in_targets)}.")
-    #
-    #         # Check that every entry in constructor with TARGET as the value (i.e., specifying and external target)
-    #         # has an entry in the targets arg of learn() with a key that is either the sample Node or the corresponding
-    #         #  TARGET Node for that sample
-    #         INPUT_targets_unspecified_in_learn = []
-    #         for constructor_sample in [sample for sample, target in constructor_args if target == TARGET]:
-    #             # Start by assuming that entry in **targets** arg of learn() uses SAMPLE node as key
-    #             learn_sample_spec = constructor_sample
-    #             # Check if SAMPLE Node is specified as a key in the **targets** arg of learn()
-    #             if constructor_sample not in learn_method_args:
-    #                 # If it is not, check whether its corresponding TARGET Node is used as the key:
-    #                 if self.sample_port_to_target_port_map[constructor_sample] in learn_method_args:
-    #                     learn_sample_spec = self.sample_port_to_target_port_map[constructor_sample]
-    #                 else:
-    #                     # Add constructor_sample to list of missing specs for warning below
-    #                     INPUT_targets_unspecified_in_learn.append(constructor_sample)
-    #                     continue
-    #             value = learn_method_args[learn_sample_spec]
-    #             assert (is_numeric(value)
-    #                     # Only consider innermost dimension for shape, as that is the one for the OutputPort
-    #                     and np.array(value).shape[-1] == constructor_sample.defaults.variable.shape[-1]),\
-    #                 (f"PROGRAM ERROR: Non-numeric argument and/or bad shape for specification of value for "
-    #                  f"'{constructor_sample.name}' in targets arg of learn() method for '{self.name}'.")
-    #         # BREADCRUMB: ??SHOULDN'T THIS BE AN ERROR:
-    #         if INPUT_targets_unspecified_in_learn and not self._warned_about_unspecified_target_in_learn:
-    #             # TEACHER_TARGET BREADCRUMB:  MOVE THIS TO _validate_target_specs() (OR OVERRIDE THEREOF?)
-    #             problem_node_names = [f"'{n.owner.name}'" for n in INPUT_targets_unspecified_in_learn]
-    #             warnings.warn(f"The following node(s) are specified in the 'targets' argument of the constructor for "
-    #                           f"'{self.name}' as samples that receive external values for their targets; therefore, "
-    #                           f"they must be included in the 'targets' argument of the learn() method as keys in a dict"
-    #                           f" that specify their target values during learning: {', '.join(problem_node_names)}.")
-    #             self._warned_about_unspecified_target_in_learn = True
-    #
-    #     return super()._handle_redundant_target_specs(target_spec_aliases, target_specs_inventory)
+    def _handle_redundant_target_specs(self):
+        """Override to handle redundant specs in self.targets of constructor
+        Note: not done in super(), since SAMPLES can't be specified for Composition (always assigned as OUTPUT Nodes)
+
+        ==============
+        - IN autodiff OVERRIDE OF _validate_target_specs():
+            - SAMPLE or TARGET specs:
+                - Node NOT in the Composition
+                - Node NOT in the Composition
+
+            - for every SAMPLE that has a value = TARGET and source = "autodiff_constructor"
+              there should be another entry for that SAMPLE
+              that has value == numeric and source = {inputs, inputs[TARGETS or targets}
+            - the total number should = the number of SAMPLE Nodes in the Composition:
+              if too many: bad specs
+              if too few, error (see below)
+        ==============
+        """
+
+        # =========================================================================================
+        # FROM COMPOSITION:
+        # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
+        # BREADCRUMB: REFACTOR WHEN NodeRole.SAMPLES IS IMPLEMENTED
+        all_sample_specs = [spec.sample_spec for spec in self._sample_target_specs]
+        target_spec_counts = counts(all_target_specs)
+        targets_with_redundant_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
+
+        # Identify redundant specs with mismatching values
+        targets_with_mismatching_specs = {}
+        # Search over all targets that have redundant specs
+        for target_spec in [t for t in target_spec_counts if t is not None and target_spec_counts[t] > 1]:
+            # Create list of all values for the target
+            # Note: convert values to str to make hashable inside list (counts can only handle one level of unhashales)
+            target_vals = {spec.source: str(spec.target_value) for spec in self._sample_target_specs
+                           if spec.target_spec is target_spec}
+            if len(counts(np.array(target_vals.values()).squeeze().tolist())) > 1:
+                # Create histogram of target values and filter for any that have more than one entry
+                targets_with_mismatching_specs.update({target_spec: target_vals})
+
+        self._handle_conflicting_target_specs(targets_with_mismatching_specs)
+
+
+        # Warning for redundant specifications:
+        # -----------------------------------------------
+
+        # BREADCRUMB: PROMOTE THIS TO UTILITY?
+        spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+
+        # Prepare strings for warning message
+        all_targets_str = []
+        sources = set()
+        for target in targets_with_redundant_specs:
+            sources.update(set(t.source for t in self._sample_target_specs if target is t.target))
+            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in self._sample_target_specs if t.target is target])
+            all_targets_str.append(f"'{target.name}': [{specs_str}]")
+        full_str = '; '.join(all_targets_str)
+
+        if not full_str:
+            # No redundant taret_specs
+            return
+
+        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+        plural = len(all_targets_str)
+        s = 's' if plural else ''
+        s_not = '' if plural else 's'
+        are_is = 'are' if plural else 'is'
+        they_it = 'they' if plural else 'it'
+        several_one = 'several' if plural else 'one'
+
+        # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
+        # If SAMPLEs are specified in constructor (in its **targets**) arg, refer to those as targets,
+        #   else refer to OUTPUT Nodes (which are used as the SAMPLEs by default when none are specified explicitly)
+        # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
+
+        sample_nodes = 'OUTPUT'
+        if len(sources) == 1:
+            source_str = f"{', '.join(sources)}"
+        else:
+            sources = sorted(sources)
+            source_str = ('and '.join([f"'{sources}'"]) if len(sources)==2
+                          else f"'{sources[0]}', '{sources[1]}' and '{sources[2]}'")
+        source_str = f"{source_str} argument{s}"
+
+        # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
+        only_sample_specs = all(spec_as_mech(target_spec.spec) not in self.get_target_nodes()
+                                for target_spec in self._sample_target_specs)
+        use_sample_nodes = (f"use the {sample_nodes} Node{s} to which {they_it} correspond{s_not} "
+                            f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
+                            if not only_sample_specs else '')
+
+        # If not all target_specs are in the targets dict, suggest that they be placed there
+        # Source(s) of target_specs: inputs, inputs[TARGETS] and/or targets
+        # Determine whether all specs are in targets dict:
+        all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
+        placement = (f"place them all in the 'targets' argument of the learn method()"
+                     if not all_in_targets else '')
+
+        both = ' and ' if not only_sample_specs and not all_in_targets else ''
+
+        # X TEST DONE
+        warnings.warn(
+            f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes} "
+            f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
+            f"While this is technically OK, it might be easier and clearer to {use_sample_nodes}{both}{placement}. "
+            f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
+            f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
+            f"obviating the need to specify the 'targets' arg.")
+
+
+        super()._handle_redundant_target_specs()
+
+    def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
+        """Override to handle conflict target specs from constructor
+        Note: not done in super(), since SAMPLES can't be specified for Composition (always assigned as OUTPUT Nodes)
+
+        Errors handled here:
+        - TARGET value CONFLICTS for same SAMPLE (using different aliases)
+            - Node and numeric value
+            - Node and "TARGET"
+        """
+        return super()._handle_conflicting_target_specs(targets_with_mismatching_specs)
 
     def _check_nested_target_mechs(self):
         pass
