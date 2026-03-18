@@ -1799,8 +1799,8 @@ class AutodiffComposition(Composition):
 
 
         self._check_for_orphaned_learnable_projections(pathways)
-        self._aggregate_target_specs('autodiff_targets', dict(self.targets))
-        self._handle_redundant_target_specs()
+        # self._aggregate_target_specs({'autodiff_targets': dict(self.targets)})
+        # self._handle_redundant_target_specs()
 
     def _check_for_orphaned_learnable_projections(self, pathways):
 
@@ -2761,7 +2761,7 @@ class AutodiffComposition(Composition):
 
         return stim_input, num_input_trials
 
-    def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
+    def _aggregate_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
         """Override to add target specifications in constructor to targets dict"""
         # BREADCRUMB: MOVE SOME OF THIS TO _instantiate_loss_components()?
         #              MAKE SURE THAT ALL SPECS ARE IN COMP AND THAT TARGETS ARE EITHER NODES OR NUMBERS
@@ -2777,7 +2777,7 @@ class AutodiffComposition(Composition):
         constructor_target_specs = dict(self.targets.copy()) if self.targets else {}
         _replace_loss_mech_with_sample_port(constructor_target_specs)
         targets_dicts.update({'autodiff_constructor': constructor_target_specs})
-        return super()._aggregate_target_specs(inputs, targets_dicts)
+        return super()._aggregate_target_specs(targets_dicts)
 
     def _handle_redundant_target_specs(self):
         """Override to handle redundant specs in self.targets of constructor

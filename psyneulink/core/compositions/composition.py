@@ -9783,9 +9783,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Process target_specs
         # Remove TARGETS subdict from inputs if present
         input_targets_dict = inputs.pop(TARGETS, {})
-        targets_dicts = {'inputs[TARGETS]':input_targets_dict,
+        targets_dicts = {INPUTS: inputs,
+                         'inputs[TARGETS]':input_targets_dict,
                          TARGETS: targets}
-        self._aggregate_target_specs(inputs, targets_dicts)
+        self._aggregate_target_specs(targets_dicts)
 
         self._handle_redundant_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets)
@@ -9821,41 +9822,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
     # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
     #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
-    def _aggregate_target_specs(self, inputs:dict, targets_dicts:Optional[dict[str:dict]]=None):
-        """Consolidate all target specifciations in inputs dict and any others passed in to targets_dicts
+    def _aggregate_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None):
+        """Consolidate all sample and target specifciations in learn() and possibly a sublcass constructor
+        In learn() specifications can be in **inputs** or **targets** args, or TARGETS subdict of **inputs**
+        For subclass, can be in **targets** arg of constructor
 
-        Create table of all aliases for target specification (sample_target_pairs)
-            (sample mech, sample OutputPort, TARGET Node or its OutputPort)
-        Use that table to identify the TARGET Node to which a target_spec refers
-        Create table of all target specifications (target_specs_inventory),
-           each entry of which has the TARGET Node as "header", the specification used, and its source
+        Create list of all Components for each sample-target pair (self._sample_target_pairs)
+            (SAMPLE Node, sample OutputPort, TARGET Node, TARGET OutputPort)
+        Create table of all sample-target specifications (self._sample_target_specifications
+            that includes the form in which the Components were specified by the user, and the TARGET value
         Purge inputs dict of any target specs
 
-        Note: Composition can pass inputs[TARGETS] and targets from learn() method in to targets_dicts;
+        Note: Composition passes inputs, inputs[TARGETS] and/or targets from learn() method;
               subclasses may pass others (e.g., AutodiffComposition passes self.targets from its constructor)
 
         Arguments
         ---------
-        inputs: dict
-            list of INPUT Nodes and values to be assigned to them
-
         targets_dicts: dict
-            dict of dicts, in which keys are the name of the dict used in warning or error messages,
-            an values are dicts of target specifictions (SAMPLE or TARGET Node and value or source of value)
-
-        Returns
-        -------
-        list of aliases for target specs and list of target specs from all sources in the form of a table
+            dict of dicts, in which the key for each entry is the name of the dict
+            and the value is a dict of sample-target specifictions
         """
 
-        inputs_copy = inputs.copy()
         targets_dicts = targets_dicts or {}
 
         def _extract_sample_target_specs(dict, name:str, allow_None_for_target:bool)->dict:
             """Return dict of sample-target specifications found in specified **targets** dict
-            Get sample-target specifications from dicts used to specify targets
-               in learn() (in the **targets** arg, or in a subdict of the **inputs** arg
-               or in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
+            Get sample-target specifications from dicts used to specify samples and targets:
+              - in learn(), these are either in the **targets** arg, or in a subdict of the **inputs** arg
+              - can also be in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
             """
             identified_sample_target_specs = {}
             for input_item, value in dict.items():
@@ -9863,13 +9857,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            if input_item in pair), None)
                 if not sample_target_pair:
                     continue
-                # # MODIFIED TEACHER_TARGET OLD:
-                # sample_port = (self.target_port_to_sample_port_map[target_port]
-                #                if target_port in self.target_port_to_sample_port_map else None)
-                # MODIFIED TEACHER_TARGET NEW:
                 sample_port = sample_target_pair.sample_port
                 sample_spec = input_item if input_item in sample_target_pair else None
-                # MODIFIED TEACHER_TARGET END
                 target_port = sample_target_pair.target_port
                 target_spec = input_item if input_item in sample_target_pair else None
                 # Don't incude spec if None is not allowed for target spec
@@ -9883,18 +9872,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 identified_sample_target_specs.update({input_item:value})
             return identified_sample_target_specs
 
-        # Process inputs dict:
-        inputs_copy = inputs.copy()
-        # If target_node is None, then it is not a target spec, so can ignore
-        sample_target_specs = _extract_sample_target_specs(inputs_copy, 'inputs', allow_None_for_target=False)
-        # Remove targets from inputs dict
-        for spec in sample_target_specs:
-            inputs.pop(spec)
-
-        # Process dicts in targets_dicts:
         for name, targets_dict in targets_dicts.items():
-            # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
-            _extract_sample_target_specs(targets_dict, name, allow_None_for_target=True)
+            if name == INPUTS:
+                targets_dict = targets_dict.copy()
+                # For inputs dict, if target_node is None then it is not a target spec, so ignore
+                allow_None_for_target=False
+            else:
+                # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
+                allow_None_for_target=True
+            sample_target_specs = _extract_sample_target_specs(targets_dict, name,
+                                                               allow_None_for_target=allow_None_for_target)
+            if name == INPUTS:
+                # Remove targets from inputs dict
+                for spec in sample_target_specs:
+                    inputs.pop(spec)
 
     def _handle_redundant_target_specs(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
