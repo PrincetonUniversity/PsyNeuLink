@@ -2901,8 +2901,7 @@ class AutodiffComposition(Composition):
             f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.")
 
-        # super()._handle_redundant_target_specs()
-        # BREADCRUMB:  CALL self._canonicalize_target_specs(targets)
+        # BREADCRUMB:  ??CALL self._canonicalize_target_specs(targets)
 
     def _handle_conflicting_sample_specs(self, samples_with_mismatching_specs:list):
         """Override to handle conflict sample specs in **targets** argument of constructor
@@ -2941,6 +2940,23 @@ class AutodiffComposition(Composition):
                                    f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
                                    f"{sample_nodes} Node{node_s}: {full_str}.")
 
+    def _handle_redundant_learn_target_specs(self):
+        """Override to deal with specification of TARGET in constructor and value in learn() method"""
+        # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
+        TARGET_nodes = self.get_target_nodes()
+        for spec in self._sample_target_specs.copy():
+            if spec.target_spec is TARGET:
+                TARGET_spec = next((i for i in self._sample_target_specs
+                                  if i.sample_port is spec.sample_port and i.target_port.owner in TARGET_nodes), None)
+                if TARGET_spec:
+                    self._sample_target_specs.remove(TARGET_spec)
+                else:
+                    # X TEST DONE
+                    raise AutodiffCompositionError(
+                        f"The learn() method of '{self.name}' can't be executed because no target value is specified "
+                        f"for '{spec.sample_spec.full_name}'.")
+
+        super()._handle_redundant_learn_target_specs()
 
     def _check_nested_target_mechs(self):
         pass
