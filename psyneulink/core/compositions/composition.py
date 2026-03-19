@@ -9057,12 +9057,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert False, f"PROGRAM ERROR: {self.name} has no TARGET nodes even though they were specified."
         return target_nodes
 
-    def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->list:
+    def get_sample_nodes(self, execution_mode=pnlvm.ExecutionMode.Python, context=None, base_context=None)->dict:
         """Return a list of all SAMPLE Nodes <Composition_Learning_Components>`\\s for `learning Pathways
         <Composition_Learning_Pathway>` in the Composition, in which keys are Nodes and values are OutputPorts that
         provide the sample value used to compute the error for learning.
         """
-        sample_nodes = {entry.sample for entry in self._sample_target_pairs}
+        sample_nodes = {entry.sample_mech: entry.sample_port for entry in self._sample_target_pairs}
         if not sample_nodes:
             # No TARGET Nodes were found
             if not self.learning_components:
@@ -9806,7 +9806,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._aggregate_sample_target_specs(targets_dicts)
 
-        self._handle_redundant_target_specs()
+        self._handle_redundant_learn_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets)
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -9912,7 +9912,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for spec in sample_target_specs:
                     targets_dict.pop(spec)
 
-    def _handle_redundant_target_specs(self):
+    def _handle_redundant_learn_target_specs(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
         Use self._sample_target_specs to identify redundant specs.
         Call _handle_conflicting_target_specs() to raise errors for conflicting specs (to allow override by subclasses).
@@ -10050,7 +10050,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - if there is a sample_port specification for it already in targets, use that;
           - otherwise, find the first entry in self._sample_target_specs that corresponds to it, and use that value
               (Note: this is OK, because any redundant specs were determined to use the same value
-              in _handle_redundant_target_specs()
+              in _handle_redundant_learn_target_specs()
           - if a spec for the TARGET is not found in self._sample_target_specs, give it the value 'MISSING'
               that will be used to generate an error in _validate_constructor_targets_specs()
           - pass along any bad specs (e.g., that are not for TARGET Nodes)
