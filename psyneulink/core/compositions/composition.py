@@ -3246,7 +3246,7 @@ from psyneulink.core.globals.keywords import \
      PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP,
      RECEIVER, RETAIN_IN_PNL_OPTIONS,
      SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SUM, SYNCH_WITH_PNL_OPTIONS,
-     TARGETS, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH,
+     TARGET, TARGETS, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH,
      OPTIMIZATION_STEP, TRIAL, MINIBATCH, EPOCH, RUN,
      )
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -9783,13 +9783,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if callable(inputs):
             return inputs, sys.maxsize
 
-        # Process target_specs
-        # Remove TARGETS subdict from inputs if present
-        input_targets_dict = inputs.pop(TARGETS, {})
-        targets_dicts = {INPUTS: inputs,
+        # # MODIFIED TEACHER_TARGET OLD:
+        # # Process target_specs
+        # # Remove TARGETS subdict from inputs if present
+        # input_targets_dict = inputs.pop(TARGETS, {})
+        # targets_dicts = {INPUTS: inputs,
+        #                  'inputs[TARGETS]':input_targets_dict,
+        #                  TARGETS: targets}
+        # MODIFIED TEACHER_TARGET NEW:
+        # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications)
+        target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET))
+        output_nodes = set(self.get_nodes_by_role(NodeRole.OUTPUT))
+        inputs_dict_target_specs = {k: inputs.pop(k) for k in inputs.copy() if k in (target_nodes, output_nodes)}
+        # Remove TARGETS subdict from input_targets_dict (where, if it was specified, it should now be)
+
+        input_targets_dict = inputs_dict_target_specs.pop(TARGETS, {})
+
+        targets_dicts = {INPUTS: inputs_dict_target_specs,
                          'inputs[TARGETS]':input_targets_dict,
                          TARGETS: targets}
-        self._aggregate_target_specs(targets_dicts)
+        # MODIFIED TEACHER_TARGET END
+
+        self._aggregate_sample_target_specs(targets_dicts)
 
         self._handle_redundant_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets)
@@ -9825,7 +9840,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # BREADCRUMB: REFACTOR INVENTORY AROUND SAMPLES INSTEAD OF TARGETS?
     # BREADCRUMB: NEED TO OVERIDE THIS IN Autodiff TO PASS IN DICT OF SPECIFICATIONS FROM CONSTRUCTOR (self.targets)
     #             OR USE self._constructor_has_target_specs HERE TO INCLUDE THAT (OR MAYBE IN _parse_specs?)
-    def _aggregate_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None):
+    def _aggregate_sample_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None):
         """Consolidate all sample and target specifciations in learn() and possibly a sublcass constructor
         In learn() specifications can be in **inputs** or **targets** args, or TARGETS subdict of **inputs**
         For subclass, can be in **targets** arg of constructor
@@ -9856,6 +9871,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             """
             identified_sample_target_specs = {}
             for input_item, value in specs_dict.items():
+                # BREADCRUMB: NEED TO DISTINGUISH INPUT Nodes FROM TARGET Nodes IN inputs DICT HERE
+                #             ??continue IF input_item is not a SAMPLE or TARGET Node??
+                #             SKIP IF NOT TARGET NODE?
                 sample_target_pair = next((pair for pair in self._sample_target_pairs
                                            if input_item in pair), None)
                 if not sample_target_pair:
@@ -9876,6 +9894,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return identified_sample_target_specs
 
         for name, targets_dict in targets_dicts.items():
+            # MODIFIED TEACHER_TARGET NEW:
+            if not targets_dict:
+                continue
+            # MODIFIED TEACHER_TARGET END
             if name == INPUTS:
                 targets_dict = targets_dict.copy()
                 # For inputs dict, if target_node is None then it is not a target spec, so ignore
@@ -9888,8 +9910,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if name == INPUTS:
                 # Remove targets from inputs dict
                 for spec in sample_target_specs:
-                    inputs.pop(spec)
-        assert True
+                    targets_dict.pop(spec)
 
     def _handle_redundant_target_specs(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
@@ -9907,12 +9928,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_spec_counts = counts(all_target_specs)
         targets_with_redundant_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
 
+        if not targets_with_redundant_specs:
+            return
+
         # Identify redundant specs with mismatching values
         targets_with_mismatching_specs = {}
         # Search over all targets that have redundant specs
         for target_spec in [t for t in target_spec_counts if t is not None and target_spec_counts[t] > 1]:
             # Create list of all values for the target
             # Note: convert values to str to make hashable inside list (counts can only handle one level of unhashales)
+            # BREADCRUMB: THE FOLLOWING ONLY WORKS FOR REDUNDANT SPECS ACROSS DIFFERENT SOURCES,
+            #             SINCE REDUNDANT ENTRIES IN THE SAME SOURCE WILL OVERWRITE PREVIOUS ONES IN THE DICT BELOW
             target_vals = {spec.source: str(spec.target_value) for spec in self._sample_target_specs
                            if spec.target_spec is target_spec}
             if len(counts(np.array(target_vals.values()).squeeze().tolist())) > 1:
@@ -9929,26 +9955,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
 
         # Prepare strings for warning message
-        all_targets_str = []
+        num_targets = 0
         sources = set()
         for target in targets_with_redundant_specs:
             sources.update(set(t.source for t in self._sample_target_specs if target is t.target))
-            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in self._sample_target_specs if t.target is target])
-            all_targets_str.append(f"'{target.name}': [{specs_str}]")
-        full_str = '; '.join(all_targets_str)
-
-        if not full_str:
-            # No redundant taret_specs
-            return
+            # specs_str = ', '.join([f"'{t.spec.full_name}'" for t in self._sample_target_specs if t.target is target])
+            # all_targets_str.append(f"'{target.name}': [{specs_str}]")
+            num_targets += any(spec for spec in self._sample_target_specs if spec.target is target)
 
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
-        plural = len(all_targets_str)
+        plural = num_targets
         s = 's' if plural else ''
         s_not = '' if plural else 's'
         are_is = 'are' if plural else 'is'
         they_it = 'they' if plural else 'it'
         several_one = 'several' if plural else 'one'
-
         sample_nodes_str = 'OUTPUT'
         if len(sources) == 1:
             source_str = f"{', '.join(sources)}"
@@ -9971,7 +9992,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
         placement = (f"place them all in the 'targets' argument of the learn method()"
                      if not all_in_targets else '')
-
         both = ' and ' if not only_sample_specs and not all_in_targets else ''
 
         # X TEST DONE
@@ -10042,35 +10062,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         canonicalized_target_specs = {}
         sample_ports_to_learn_specs = {}        # {sample OutputPort: original learn() spec}
 
-        # For each TARGET Node in the Composition, look for a specification for it in targets
-        #  - if found, assign as entry in canonicalized_target_specs,
-        #    using corresponding sample_port as key and the value specified in targets
-        #  - if NOT found, assign 'MISSING' as the value (for error to be reported in _validate_target_specs())
-        # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
-        target_nodes = self.get_target_nodes()
-        for TARGET_node in target_nodes:
-            # Get all aliases for the TARGET (from self._sample_target_pairs)
-            target_aliases = next((t for t in self._sample_target_pairs if TARGET_node in t), None)
-            # Get the sample_port alias, to use as the key in canonical_target_specs
-            sample_port = target_aliases.sample_port
-            # Get the first specification found in targets for the TARGET
-            target_spec = next((t for t in targets if t in target_aliases), None)
-            if target_spec:
-                # Add {TARGET sample_port: value specified in targets} entry to canonicalized_target_specs
-                canonicalized_target_specs[sample_port] = targets[target_spec]
-                # Add {TARGET sample_port: key used in targets} entry to sample_ports_to_learn_specs
-                sample_ports_to_learn_specs[sample_port] = target_spec
-            else:
-                canonicalized_target_specs[sample_port] = 'MISSING'
-                sample_ports_to_learn_specs[sample_port] = 'MISSING'
-        assert len(canonicalized_target_specs) == len(target_nodes) == len(sample_ports_to_learn_specs), \
-            (f"PROGRAM ERROR: Problem canonicalizing targets")
+        if targets:
+            # For each TARGET Node in the Composition, look for a specification for it in targets
+            #  - if found, assign as entry in canonicalized_target_specs,
+            #    using corresponding sample_port as key and the value specified in targets
+            #  - if NOT found, assign 'MISSING' as the value (for error to be reported in _validate_target_specs())
+            # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
+            target_nodes = self.get_target_nodes()
+            for TARGET_node in target_nodes:
+                # Get all aliases for the TARGET (from self._sample_target_pairs)
+                target_aliases = next((t for t in self._sample_target_pairs if TARGET_node in t), None)
+                # Get the sample_port alias, to use as the key in canonical_target_specs
+                sample_port = target_aliases.sample_port
+                # Get the first specification found in targets for the TARGET
+                target_spec = next((t for t in targets if t in target_aliases), None)
+                if target_spec:
+                    # Add {TARGET sample_port: value specified in targets} entry to canonicalized_target_specs
+                    canonicalized_target_specs[sample_port] = targets[target_spec]
+                    # Add {TARGET sample_port: key used in targets} entry to sample_ports_to_learn_specs
+                    sample_ports_to_learn_specs[sample_port] = target_spec
+                else:
+                    canonicalized_target_specs[sample_port] = 'MISSING'
+                    sample_ports_to_learn_specs[sample_port] = 'MISSING'
+            assert len(canonicalized_target_specs) == len(target_nodes) == len(sample_ports_to_learn_specs), \
+                (f"PROGRAM ERROR: Problem canonicalizing targets")
 
-        # Add entries in targets with keys that are not for any specification ("alias") of a TARGET Node
-        #    to canonicalized_target_specs for error detection and message raised in in _valdate_target_specs()
-        for spec, val in targets.items():
-            if not any(spec in alias_set for alias_set in self._sample_target_pairs):
-                canonicalized_target_specs.update({spec: val})
+            # Add entries in targets with keys that are not for any specification ("alias") of a TARGET Node
+            #    to canonicalized_target_specs for error detection and message raised in in _valdate_target_specs()
+            for spec, val in targets.items():
+                if not any(spec in alias_set for alias_set in self._sample_target_pairs):
+                    canonicalized_target_specs.update({spec: val})
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 

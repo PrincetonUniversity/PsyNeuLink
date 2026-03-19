@@ -1682,7 +1682,7 @@ class AutodiffComposition(Composition):
         elif target_spec:
             # target was specified in *targets* arg of constructor
             if isinstance(target_spec, LossMechanism):
-                target_msg = f"A LossMechanism ('{loss_mech.name}')"
+                target_msg = f"A LossMechanism ('{target_spec.name}')"
             elif (target_spec == TARGET or
                   (constructed_target_mechs and target_spec in constructed_target_mechs)):
                 target_msg = "An external TARGET input"
@@ -1805,8 +1805,8 @@ class AutodiffComposition(Composition):
 
         # Error if there are any learnable Projections in pathways that do not end with a LossMechanism
         self._check_for_orphaned_learnable_projections(pathways)
-        self._aggregate_target_specs({CONSTRUCTOR_TARGETS: self.targets})
-        self._handle_redundant_target_specs()
+        self._register_target_specs({CONSTRUCTOR_TARGETS: self.targets})
+        self._validate_target_specs()
 
     def _check_for_orphaned_learnable_projections(self, pathways):
 
@@ -1889,7 +1889,7 @@ class AutodiffComposition(Composition):
             elif isinstance(loss_mech_spec, tuple):
                 sample_spec, target_spec = loss_mech_spec
                 _parse_spec = lambda spec : ((spec, spec.owner) if isinstance(spec, OutputPort)
-                                             else spec.output_port, spec)
+                                             else (spec.output_port, spec))
                 sample_port, sample_mech = _parse_spec(sample_spec)
                 target_port, target_mech = _parse_spec(target_spec) if target_spec is not TARGET else (None, None)
 
@@ -2069,11 +2069,12 @@ class AutodiffComposition(Composition):
             plural = len(bad_targets) > 1
             a = 'a ' if not plural else ''
             s = 's' if plural else ''
+            are_is = 'are' if plural else 'is'
             bad_targets_msg = f"{a}target{s} ({bad_targets_str})" if bad_targets_str else ""
             plural = bad_samples and bad_targets
             both = ' and ' if plural else ''
             error_msg = (f"The specification for the 'targets' argument of the constructor for '{self.name}' "
-                         f"contains {bad_samples_msg}{both}{bad_targets_msg} that are not in the Composition.")
+                         f"contains {bad_samples_msg}{both}{bad_targets_msg} that {are_is} not in the Composition.")
 
 
     def _instantiate_loss_mechanisms(self, loss_mech_specs:list, context, base_context)->list:
@@ -2754,7 +2755,7 @@ class AutodiffComposition(Composition):
     def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
         Integrate target specifications from constructor (in self.targets) with those in targets argument of learn():
-            handled in override of _aggregate_target_specs()
+            handled in override of _aggregate_sample_target_specs()
         Deal with nested Compositions
             handled in return from override of this method
         """
@@ -2779,29 +2780,26 @@ class AutodiffComposition(Composition):
 
         return stim_input, num_input_trials
 
-    def _aggregate_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
-        """Override to add target specifications in constructor to targets dict"""
-        # BREADCRUMB: MAKE SURE THAT ALL SPECS ARE IN COMP AND THAT TARGETS ARE EITHER NODES OR NUMBERS
-        #                      (IF NOT DONE EARLIER) -- DO THIS OR SET IT UP FOR LATER METHODS
+    def _register_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
+        """Register sample-target specifications from **targets** of constructor
+        Add sample and target specifications to self._sample_pairs and self._sample_target_specs
+        """
 
-        if self._sample_target_specs:
-            # If _sample_target_specs has already been created (from constructor)
-            #   avoid adding duplicates (when called from learn())
-            return
-
-        constructor_target_specs = dict(self.targets.copy()) if self.targets else {}
-
-        # Convert target specification in the form of a LossMechanism to {sample_port: value}
-        for target_spec, value in constructor_target_specs.copy().items():
-            if isinstance(target_spec, LossMechanism):
-                constructor_target_specs[spec_dict.pop(target_spec).sample] = value
+        # Move self.targets into constructor_target_specs as dict(sample_spec: target_spec)
+        constructor_target_specs = {}
+        for entry in self.targets:
+            if isinstance(entry, tuple):
+                constructor_target_specs[entry[0]] = entry[1]
+            elif isinstance(entry, LossMechanism):
+                constructor_target_specs[entry] = None
 
         targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
-        return super()._aggregate_target_specs(targets_dicts)
+        super()._aggregate_sample_target_specs(targets_dicts)
 
-    def _handle_redundant_target_specs(self):
-        """Override to handle redundant specs in self.targets of constructor
-        Note: not done in super(), since SAMPLES can't be specified for Composition (always assigned as OUTPUT Nodes)
+    def _validate_target_specs(self):
+        """Handle redundant sample specs in **targets** argument of constructor
+        Note: not done in Composition, since that does not support specification of SAMPLES 
+              (they are assigned automatically as the OUTPUT Nodes of the Composition)
 
         ==============
         - IN autodiff OVERRIDE OF _validate_target_specs():
@@ -2818,28 +2816,29 @@ class AutodiffComposition(Composition):
         ==============
         """
 
-        # =========================================================================================
-        # FROM COMPOSITION:
-        # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
-        # BREADCRUMB: REFACTOR WHEN NodeRole.SAMPLES IS IMPLEMENTED
-        all_sample_specs = [spec.sample_spec for spec in self._sample_target_specs]
-        sample_spec_counts = counts(all_sample_specs)
-        targets_with_redundant_specs = sorted([t for t in sample_spec_counts if t and sample_spec_counts[t] > 1])
+        # BREADCRUMB: STILL NEED TO FINISH GOING THROUGH VALIDATION, INCLUDING FILTERING FOR non_composition NODES
+
+        # Identify redundant specs for SAMPLE-TARGET pairs
+        all_sample_specs_as_ports = [spec.sample_port for spec in self._sample_target_specs]
+        sample_port_counts = counts(all_sample_specs_as_ports)
+        sample_ports_with_redundant_specs = sorted([t for t in sample_port_counts if t and sample_port_counts[t] > 1])
+
+        if not sample_ports_with_redundant_specs:
+            return
 
         # Identify redundant specs with mismatching values
-        targets_with_mismatching_specs = {}
-        # Search over all targets that have redundant specs
-        for target_spec in [t for t in sample_spec_counts if t is not None and sample_spec_counts[t] > 1]:
-            # Create list of all values for the target
-            # Note: convert values to str to make hashable inside list (counts can only handle one level of unhashales)
-            target_vals = {spec.source: str(spec.target_value) for spec in self._sample_target_specs
-                           if spec.target_spec is target_spec}
-            if len(counts(np.array(target_vals.values()).squeeze().tolist())) > 1:
-                # Create histogram of target values and filter for any that have more than one entry
-                targets_with_mismatching_specs.update({target_spec: target_vals})
+        sample_ports_with_mismatching_specs = {}
+        # Search over all samples that have redundant specs
+        for sample_port in [s for s in sample_port_counts if sample_port_counts[s] > 1]:
+            # Create list of all target_specs for the sample_port
+            # Note: convert values to str to make inside list hashable (counts can only handle one level of unhashables)
+            target_specs = {spec.target_spec: spec.target_port for spec in self._sample_target_specs
+                           if spec.sample_port is sample_port}
+            # Create histogram of target values and filter for any that have more than one entry
+            if len(counts(target_specs.values())) > 1:
+                sample_ports_with_mismatching_specs.update({sample_port: target_specs})
 
-        self._handle_conflicting_target_specs(targets_with_mismatching_specs)
-
+        self._handle_conflicting_sample_specs(sample_ports_with_mismatching_specs)
 
         # Warning for redundant specifications:
         # -----------------------------------------------
@@ -2848,20 +2847,14 @@ class AutodiffComposition(Composition):
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
 
         # Prepare strings for warning message
-        all_targets_str = []
+        num_samples = 0
         sources = set()
-        for target in targets_with_redundant_specs:
-            sources.update(set(t.source for t in self._sample_target_specs if target is t.target))
-            specs_str = ', '.join([f"'{t.spec.full_name}'" for t in self._sample_target_specs if t.target is target])
-            all_targets_str.append(f"'{target.name}': [{specs_str}]")
-        full_str = '; '.join(all_targets_str)
-
-        if not full_str:
-            # No redundant taret_specs
-            return
+        for sample_port in sample_ports_with_redundant_specs:
+            sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
+            num_samples += any(entry for entry in self._sample_target_specs if entry.sample_port is sample_port)
 
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
-        plural = len(all_targets_str)
+        plural = num_samples
         s = 's' if plural else ''
         s_not = '' if plural else 's'
         are_is = 'are' if plural else 'is'
@@ -2883,7 +2876,7 @@ class AutodiffComposition(Composition):
         source_str = f"{source_str} argument{s}"
 
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
-        only_sample_specs = all(spec_as_mech(target_spec.spec) not in self.get_target_nodes()
+        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self.get_target_nodes()
                                 for target_spec in self._sample_target_specs)
         use_sample_nodes_str = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
                             f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
@@ -2907,19 +2900,46 @@ class AutodiffComposition(Composition):
             f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.")
 
+        # super()._handle_redundant_target_specs()
+        # BREADCRUMB:  CALL self._canonicalize_target_specs(targets)
 
-        super()._handle_redundant_target_specs()
-
-    def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
-        """Override to handle conflict target specs from constructor
-        Note: not done in super(), since SAMPLES can't be specified for Composition (always assigned as OUTPUT Nodes)
+    def _handle_conflicting_sample_specs(self, samples_with_mismatching_specs:list):
+        """Override to handle conflict sample specs in **targets** argument of constructor
 
         Errors handled here:
         - TARGET value CONFLICTS for same SAMPLE (using different aliases)
             - Node and numeric value
             - Node and "TARGET"
         """
-        return super()._handle_conflicting_target_specs(targets_with_mismatching_specs)
+        # BREADCRUMB: FROM Composition --- NEED TO ADAPT TO DEAL WITH CONFLICTS BEETWEEN VALUES FROM LEARN (NUMBERS)
+        #              AND VALUES FROM CONSTRUCTOR (NODES OR "TARGET")
+
+        # Error for redundant specs with different values
+        # -----------------------------------------------
+        # prepare strings for warning message
+        all_targets_str = []
+        for target, values in samples_with_mismatching_specs.items():
+            sources_str = ', '.join([f"{t.target_value} in '{t.source}'" for t in self._sample_target_specs
+                                   if t.target_spec is target])
+            all_targets_str.append(f"'{target.name}': [{sources_str}]")
+        full_str = '; '.join(all_targets_str)
+
+        if full_str:
+            # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+            many_conflicts = len(all_targets_str) > 1
+            many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
+            s = 's' if many_conflicts else ''
+            multiple = ' multiple' if many_conflicts else ""
+            one_of = 'one of ' if (many_outputs and not many_conflicts) else ''
+            node_s = 's' if many_outputs else ''
+            # BREADCRUMB: HANDLE OUTPUT IN OVERRIDE IN AutodiffComposition
+            # sample_nodes = 'SAMPLE' if self._constructor_has_target_specs else 'OUTPUT'
+            sample_nodes = 'OUTPUT'
+            # X TEST DONE
+            raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there are{multiple} "
+                                   f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
+                                   f"{sample_nodes} Node{node_s}: {full_str}.")
+
 
     def _check_nested_target_mechs(self):
         pass
