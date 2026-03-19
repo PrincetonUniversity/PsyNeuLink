@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0+untagged.45.g276d1ca documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0+untagged.46.g22fc120 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.45.g276d1ca
+                  0+untagged.46.g22fc120
                 </div>
               
             
@@ -575,11 +575,11 @@ each element.  This is shown below using the <a class="reference internal" href=
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
 <span class="gp">... </span>                                     <span class="n">noise</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">NormalDist</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[2.1576537 , 1.60782117, 0.75840058]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[2.20656132, 2.71995896, 0.57600537]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[1.03826716, 0.56148871, 0.8394907 ]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="go">array([[ 1.59335049,  0.61367634, -0.40574659]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="go">array([[ 0.80580672, -1.88025475,  0.25268581]])</span>
 </pre></div>
 </div>
 <p>Notice that each element was assigned a different random value for its noise, and that these also varied across
@@ -589,9 +589,9 @@ when used in a list, functions must be instances, as shown below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_shapes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
 <span class="gp">... </span>                                     <span class="n">noise</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">NormalDist</span><span class="p">(),</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UniformDist</span><span class="p">(),</span> <span class="mf">3.0</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[-0.22503678,  1.36995517,  4.        ]])</span>
+<span class="go">array([[2.55612201, 1.6257203 , 4.        ]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[2.08371805, 1.60392004, 4.        ]])</span>
+<span class="go">array([[2.54362708, 1.06552886, 4.        ]])</span>
 </pre></div>
 </div>
 <p>Notice that since noise is a <a class="reference internal" href="ParameterPort.html#parameterport-modulable-parameters"><span class="std std-ref">modulable Parameter</span></a>, assigning it a value
@@ -600,11 +600,11 @@ for additional information).</p>
 <p>Finally, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clipping</span></code></a> can also be used to cap the result to within specified range:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="p">(</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+<span class="go">array([[0.5       , 1.01316799, 1.2       ]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[1.2, 1.2, 1.2]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[1.2       , 1.06552886, 1.2       ]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
-<span class="go">array([[0.5       , 1.01316799, 1.2       ]])</span>
+<span class="go">array([[0.5, 1.2, 1.2]])</span>
 </pre></div>
 </div>
 <p>Note that the range specified in <strong>clip</strong> applies to all elements of the result if it is an array.</p>
@@ -1364,7 +1364,7 @@ Function associated with this Component</p>
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js?v=5d32c60e"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-         <script src="_static/documentation_options.js?v=dcbb8ae0"></script>
+         <script src="_static/documentation_options.js?v=b16a38f2"></script>
          <script src="_static/doctools.js?v=9bcbadda"></script>
          <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
          <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
