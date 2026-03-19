@@ -9783,26 +9783,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if callable(inputs):
             return inputs, sys.maxsize
 
-        # # MODIFIED TEACHER_TARGET OLD:
-        # # Process target_specs
-        # # Remove TARGETS subdict from inputs if present
-        # input_targets_dict = inputs.pop(TARGETS, {})
-        # targets_dicts = {INPUTS: inputs,
-        #                  'inputs[TARGETS]':input_targets_dict,
-        #                  TARGETS: targets}
-        # MODIFIED TEACHER_TARGET NEW:
+        # BREADCRUMB: PROMOTE THIS TO UTILITY?
+        spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
+
+        # Remove TARGETS subdict from inputs if present
+        input_targets_dict = inputs.pop(TARGETS, {})
+
         # Get all TARGET Nodes and OUTPUT Nodes from input dicts (they are allowed as target specifications)
         target_nodes = set(self.get_nodes_by_role(NodeRole.TARGET))
         output_nodes = set(self.get_nodes_by_role(NodeRole.OUTPUT))
-        inputs_dict_target_specs = {k: inputs.pop(k) for k in inputs.copy() if k in (target_nodes, output_nodes)}
-        # Remove TARGETS subdict from input_targets_dict (where, if it was specified, it should now be)
-
-        input_targets_dict = inputs_dict_target_specs.pop(TARGETS, {})
+        inputs_dict_target_specs = {spec_as_mech(k): inputs.pop(k) for k in inputs.copy()
+                                    if k in target_nodes or k in output_nodes}
 
         targets_dicts = {INPUTS: inputs_dict_target_specs,
                          'inputs[TARGETS]':input_targets_dict,
                          TARGETS: targets}
-        # MODIFIED TEACHER_TARGET END
 
         self._aggregate_sample_target_specs(targets_dicts)
 
@@ -10095,6 +10090,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
+    # BREADCRUMB: HOW MUCH OF THIS IS STILL NEEDED?
     def _validate_targets_specs(self, inputs,
                                 # target_specs_from_learn_method:list,  # | BREACRUMB: THESE NO LONGER NEEDED?
                                 targets_from_learn_as_sample_ports,   # |            ADD self._sample_target_specs

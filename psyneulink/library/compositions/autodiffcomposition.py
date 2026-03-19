@@ -1793,7 +1793,7 @@ class AutodiffComposition(Composition):
         loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
         target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
         self._validate_loss_mech_specs(loss_mech_specs, context)
-        self._register_target_specs({CONSTRUCTOR_TARGETS: self.targets})
+        self._register_target_specs()
         self._validate_constructor_targets_specs()
         # BREADCRUMB ------------------------
 
@@ -2760,8 +2760,8 @@ class AutodiffComposition(Composition):
             handled in return from override of this method
         """
         stim_input, num_input_trials = super()._parse_learn_targets_specs(inputs,
-                                                                   targets,
-                                                                   execution_mode, context, base_context)
+                                                                          targets,
+                                                                          execution_mode, context, base_context)
 
         # Replace input to nested Composition with inputs to its INPUT Nodes (to accommodate flattened version)
         if not callable(inputs):
@@ -2780,19 +2780,19 @@ class AutodiffComposition(Composition):
 
         return stim_input, num_input_trials
 
-    def _register_target_specs(self, targets_dicts:Optional[dict[str:dict]]=None) ->(list, list):
+    def _register_target_specs(self):
         """Register sample-target specifications from **targets** of constructor
         Add sample and target specifications to self._sample_pairs and self._sample_target_specs
         """
-
-        # Move self.targets into constructor_target_specs as dict(sample_spec: target_spec)
-        constructor_target_specs = {}
-        for entry in self.targets:
-            if isinstance(entry, tuple):
-                constructor_target_specs[entry[0]] = entry[1]
-            elif isinstance(entry, LossMechanism):
-                constructor_target_specs[entry] = None
-                self.loss_mechs_map[entry] = (entry.sample, entry.target)
+        if self.targets:
+            # Move self.targets into constructor_target_specs as dict(sample_spec: target_spec)
+            constructor_target_specs = {}
+            for entry in self.targets:
+                if isinstance(entry, tuple):
+                    constructor_target_specs[entry[0]] = entry[1]
+                elif isinstance(entry, LossMechanism):
+                    constructor_target_specs[entry] = None
+                    self.loss_mechs_map[entry] = (entry.sample, entry.target)
 
         # targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
         # super()._aggregate_sample_target_specs(targets_dicts)
