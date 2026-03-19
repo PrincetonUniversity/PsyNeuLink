@@ -58,6 +58,14 @@ REWARD_NAME = 'REWARD'
 CONTEXT_NAME = 'CONTEXT'
 TASK_NAME = 'TASK CONTROL'
 
+# Constants to access em:
+#   QUERY -> keys to retrieve memory
+#   VALUE -> values to store
+#   RETRIEVED -> retrieved values
+QUERY = ' [QUERY]'
+VALUE = ' [VALUE]'
+RETRIEVED = ' [RETRIEVED]'
+
 
 def construct_model(
         # EM Parameters
@@ -136,13 +144,13 @@ def construct_model(
     _context_name = context.name
 
     # EM composition
-    #   Note: We set retrieval weights to 1. since they will be modulated in the control signal (all but
-    #       reward)
     em = pnl.EMComposition(name=EM_NAME,
-                           memory_template=[[0] * state_size,  # state
-                                            [0] * time_size,  # time
-                                            [0] * state_size,  # context
-                                            [0] * reward_size],  # reward
+                           memory_template=[
+                               [0] * state_size,  # state
+                               [0] * time_size,  # time
+                               [0] * state_size,  # context
+                               [0] * reward_size  # reward
+                           ],
                            memory_fill=memory_fill,
                            memory_capacity=capacity,
                            memory_decay_rate=0.,
@@ -153,22 +161,22 @@ def construct_model(
                            concatenate_queries=False,
                            fields={
                                _state_name: {
-                                   pnl.FIELD_WEIGHT: 1.,
+                                   pnl.FIELD_WEIGHT: None,
                                    pnl.LEARN_FIELD_WEIGHT: False,
                                    pnl.TARGET_FIELD: False
                                },
                                _time_name: {
-                                   pnl.FIELD_WEIGHT: 1.,
+                                   pnl.FIELD_WEIGHT: time_retrieval_weight,  # <- fixed time retrieval weight
                                    pnl.LEARN_FIELD_WEIGHT: False,
                                    pnl.TARGET_FIELD: False
                                },
                                _context_name: {
-                                   pnl.FIELD_WEIGHT: 1.,
+                                   pnl.FIELD_WEIGHT: 1-time_retrieval_weight,  # <- fixed context retrieval weight
                                    pnl.LEARN_FIELD_WEIGHT: False,
                                    pnl.TARGET_FIELD: False
                                },
                                _reward_name: {
-                                   pnl.FIELD_WEIGHT: None, # <- never use reward to retrieve memory
+                                   pnl.FIELD_WEIGHT: None,  # <- never use reward to retrieve from memory
                                    pnl.LEARN_FIELD_WEIGHT: False,
                                    pnl.TARGET_FIELD: False},
                            })
@@ -179,14 +187,6 @@ def construct_model(
     ego_comp.add_nodes(
         [state_input, time_input, context, reward_input, em]
     )
-
-    # Constants to access em:
-    #   QUERY -> keys to retrieve memory
-    #   VALUE -> values to store (without query)
-    #   RETRIEVED -> retrieved values (we don't need this for now)
-    QUERY = ' [QUERY]'
-    VALUE = ' [VALUE]'
-    RETRIEVED = ' [RETRIEVED]'
 
     # EM encoding --------------------------------------------------------------------------------
 
@@ -211,7 +211,7 @@ def construct_model(
     # is happening above with state or retrieved state
     context_projected = pnl.TransferMechanism(
         name=_context_name + ' PROJECTED',
-        input_shapes=defaults.CONTEXT_SIZE,
+        input_shapes=state_size,
         integrator_mode=True,
         integration_rate=1.
     )
@@ -234,7 +234,7 @@ def construct_model(
     # Attend context to update context_projected
     attend_context_cp = pnl.ProcessingMechanism(
         name='ATTEND ' + _context_name + ' CP',
-        input_shapes=defaults.CONTEXT_SIZE,
+        input_shapes=state_size,
     )
     ego_comp.add_node(attend_context_cp)
     ego_comp.add_projection(
@@ -276,37 +276,11 @@ def construct_model(
     # -- Retrieval -- #
     # The queries that are used for retrieving from episodic memory, are
     # different for observation and prediction mode:
-    # # (1) In observation mode: use "real" context + state
-    # # (2) In prediction mode: use predicted context + retrieved weight
+    # # (1) In observation mode: use "real" context
+    # # (2) In prediction mode: use predicted context
     #
     # The following attention layers are used to control the queries for em
     # We add the suffix _r to indicate this attention is for retrieval
-
-    # Attend state (in observation mode)
-    attend_state_r = pnl.ProcessingMechanism(
-        name='ATTEND ' + _state_name + ' R',
-        input_shapes=defaults.STATE_SIZE,
-    )
-    ego_comp.add_node(attend_state_r)
-    ego_comp.add_projection(
-        pnl.MappingProjection(state_input, attend_state_r)
-    )
-    ego_comp.add_projection(
-        pnl.MappingProjection(attend_state_r, em.nodes[_state_name + QUERY])
-    )
-
-    # Attend retrieved state (in the estimation mode)
-    attend_state_retrieved_r = pnl.ProcessingMechanism(
-        name='ATTEND ' + _state_name + RETRIEVED + ' R',
-        input_shapes=defaults.STATE_SIZE,
-    )
-    ego_comp.add_node(attend_state_retrieved_r)
-    ego_comp.add_projection(
-        pnl.MappingProjection(em.nodes[_state_name + RETRIEVED], attend_state_retrieved_r)
-    )
-    ego_comp.add_projection(
-        pnl.MappingProjection(attend_state_retrieved_r, em.nodes[_state_name + QUERY])
-    )
 
     # Attend context (in observation mode)
     attend_context_r = pnl.ProcessingMechanism(
@@ -351,21 +325,67 @@ def construct_model(
         ## -- Retrieval -- ##
         # For Context:
         (pnl.SLOPE, attend_context_r), (pnl.SLOPE, attend_context_projected_r),
-        # For State:
-        (pnl.SLOPE, attend_state_r), (pnl.SLOPE, attend_state_retrieved_r),
-
-        ## -- Retrieval Weights -- #
-        # Alternating between retrieving reward from state and state from context
-        (pnl.SLOPE, em.nodes[_state_name + ' [WEIGHT]']), (pnl.SLOPE, em.nodes[_context_name + ' [WEIGHT]']),
 
         ## -- Storage -- ##
         (pnl.STORAGE_PROB, em.storage_node),
-        ## -- Context -- ## (This is used to 'freeze' the context during estimation
+        ## -- Context -- ## (This is used to 'freeze' the context and time during estimation
         (pnl.INTEGRATION_RATE, context),
+        (pnl.NOISE, time_input)
     ]
+
+    def get_control_signal(
+            ### PROJECTED CONTEXT
+            ## Inputs for the `projected context`
+            attend_context_for_context_projected,
+            integration_rate_for_context_projected,
+            attend_state_for_context_projected,
+            attend_state_retrieved_for_context_projected,
+            ### RETRIEVAL
+            ## Inputs for em to retrieve memories
+            attend_context_for_retrieval,
+            attend_context_projected_for_retrieval,
+            ### Storage
+            storage_probability,
+            ### Integration
+            context_integration_rate,
+            time_noise,
+
+
+    ):
+        """
+        :param attend_context_for_context_projected: this is mainly for initialization of the `projected context`
+        :param integration_rate_for_context_projected: how the `projected context` is updated
+        :param attend_state_for_context_projected: this is mainly for initialization of the `projected context`
+        :param attend_state_retrieved_for_context_projected: in ''estimation mode`` the projected context is
+            updated by `retrieved state` (not actual state)
+        :param attend_context_for_retrieval: in ''observation mode``, the "real" `context` is used for retrieval
+            (we don't "use" the retrieved memory, but by retrieving, we also store)
+        :param attend_context_projected_for_retrieval: in ''estimation mode``, the `projected context` is used for
+            retrieval
+        """
+        return [
+            attend_context_for_context_projected,
+            integration_rate_for_context_projected,
+            attend_state_for_context_projected,
+            attend_state_retrieved_for_context_projected,
+            attend_context_for_retrieval,
+            attend_context_projected_for_retrieval
+            storage_probability,
+            context_integration_rate,
+            time_noise
+        ]
 
     # how to decide control function
     # Observation mode:
+    _control_signal_observation = get_control_signal(
+        attend_context_for_context_projected=0,  # the projected context (cp) is not updated
+        integration_rate_for_context_projected=0,  # ir == 0 -> "storage" of internal, value (cp not updated)
+        attend_state_for_context_projected=0,  # cp is not updated
+        attend_state_retrieved_for_context_projected=0,  # cp is not updated
+        attend_context_for_retrieval=1., # the "real" context is used to retrieve (and store!)
+        attend_context_projected_for_retrieval=0. # the projected context is not used to retrieve
+
+    )
     _control_signal_observation = [
         # Projected Context integration from context (no integration)
         0, 0,  # context, context_projected (integration rate), context_retrieved
@@ -391,7 +411,7 @@ def construct_model(
     context_rate = (1 - defaults.STATE_INTEGRATION_RATE)
     _control_signal_estimation_init = [
         # Projected Context integration from context
-        context_rate, 1.,  # context, context_projected (integration rate), retrieved
+        context_rate, 1.,  # context, context_projected (integration rate)
         # Projected Context integration from state
         defaults.STATE_INTEGRATION_RATE, 0,  # state, retrieved state
         # Retrieval weights
@@ -410,10 +430,11 @@ def construct_model(
     # (1) it's integration rate between sr and 1 (1 indicating full replacement via retrieved context)
     # (2) The weight of retrieved context between 0 and 1-sr
     # (3) The weight of state between 1 and sr
-    context_projected_rate = (
-            defaults.STATE_INTEGRATION_RATE + (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim)
-    context_retrieved_rate = (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
-    state_rate = 1 - (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
+    # context_projected_rate = (
+    #         defaults.STATE_INTEGRATION_RATE + (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim)
+    # context_retrieved_rate = (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
+    # state_rate = 1 - (1 - defaults.STATE_INTEGRATION_RATE) * context_retrieval_in_sim
+    context_projected_rate = context_retrieved_rate = state_rate = 1.
 
     _control_signal_estimation_1 = [
         # Projected Context integration from context

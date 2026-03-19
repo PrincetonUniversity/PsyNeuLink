@@ -1,4 +1,5 @@
 import itertools
+from tqdm import tqdm
 
 import pandas as pd
 from pathlib import Path
@@ -24,11 +25,12 @@ def run_model_choices_with_store(*, out_root: Path, **kwargs) -> None:
 
 def main() -> None:
     out_root = project_root()
+
     seed = get_seed_from_array_task_id()
 
     combinations = itertools.product(STATE_INTEGRATION_RATES, TIME_RETRIEVAL_WEIGHTS)
 
-    for sir, trw in combinations:
+    for sir, trw in tqdm(combinations):
         args = PARAMS.copy()
         args.update(
             state_integration_rate=sir,

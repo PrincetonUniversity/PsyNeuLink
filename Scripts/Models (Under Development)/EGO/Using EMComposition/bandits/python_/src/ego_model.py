@@ -170,7 +170,7 @@ def sample_memory(memories,
 def sample_memory_sequential(memories,
                              starting_query,
                              n_simulations=1,  # number of simulation trajectories
-                             n_steps=3,  # number of steps per simulation trajectory
+                             n_steps=4,  # number of steps per simulation trajectory
                              time_retrieval_weight=defaults.TIME_RETRIEVAL_WEIGHT,
                              state_integration_rate=defaults.STATE_INTEGRATION_RATE,
                              model_based_ness=defaults.MODEL_BASED_NESS,
@@ -203,35 +203,8 @@ def sample_memory_sequential(memories,
         time_sim = starting_time
 
         for step_idx in range(n_steps):
-            _n = -3
-            # # retrieve from memory
-            # memories = (state_memories[_n:], context_memories[_n:], time_memories[_n:], reward_memories[_n:])  # tuple of memories
+            # retrieve from memory
             memories = (state_memories, context_memories, time_memories, reward_memories)  # tuple of memories
-
-            context_retrieval_weight_sim = 0.
-            if retrieval_strategy == 'multiplicative':
-                state_retrieval_weight_sim = 1. / time_retrieval_weight if time_retrieval_weight > 0 else 1.
-            else:
-                state_retrieval_weight_sim = 1 - time_retrieval_weight
-
-            queries = (state_sim, context_sim, time_sim, 0)
-
-            # retrieve reward based on current state (state_retrieval_weight_sim == 0)
-
-            retrieved_state, retrieved_context, _, retrieved_reward, _ = \
-                sample_memory(memories,
-                              queries,
-                              state_retrieval_weight_sim,
-                              context_retrieval_weight_sim,
-                              time_retrieval_weight,
-                              metric=metric,
-                              mode=mode,
-                              temperature=ego_temperature,
-                              softmax_threshold=ego_threshold)
-
-            # project the next context based on context and state
-
-            context_sim = context_sim * (1 - model_based_ness) + model_based_ness * retrieved_context
 
             context_sim = project_next_context(
                 context_sim,
@@ -248,11 +221,11 @@ def sample_memory_sequential(memories,
             if context_retrieval_weight_sim < 0:
                 context_retrieval_weight_sim = 0
 
-            queries = (retrieved_state, context_sim, time_sim, 0)
+            queries = (state_sim, context_sim, time_sim, 0)
 
             # retrieve state based on projected context (state_retrieval_weight_sim == 0)
 
-            retrieved_state, retrieved_context, retrieved_time, _, retrieved_memory_idx = \
+            retrieved_state, retrieved_context, retrieved_time, retrieved_reward, retrieved_memory_idx = \
                 sample_memory(memories,
                               queries,
                               state_retrieval_weight_sim,
@@ -292,8 +265,9 @@ def estimate_reward_from_starting_state(memories,
                                         ego_threshold=defaults.SOFTMAX_THRESHOLD,
                                         ego_temperature=defaults.TEMPERATURE):
     # TODO: is this correct?
-    starting_context = memories[1][-1] * (1 - state_integration_rate) + memories[0][
-        -1] * state_integration_rate  # average of last context and state as starting context
+    # starting_context = stamemories[1][-1] * (1 - state_integration_rate) + memories[0][
+    #     -1] * state_integration_rate  # average of last context and state as starting context
+    starting_context = memories[1][-1]
     starting_time = time
     starting_query = (starting_state, starting_context, starting_time, None)
     sampled_trajectories = sample_memory_sequential(
@@ -312,8 +286,7 @@ def estimate_reward_from_starting_state(memories,
         ego_threshold=ego_threshold,
         ego_temperature=ego_temperature,
     )
-    estimated_reward = sampled_trajectories[3][-1][
-        -1]  # .sum(axis=-1).mean()  # Sum over steps in each sim and avg over sims
+    estimated_reward = sampled_trajectories[3].sum(axis=-1).mean()  # .sum(axis=-1).mean()  # Sum over steps in each sim and avg over sims
     if return_trajectories:
         return estimated_reward, sampled_trajectories
     else:

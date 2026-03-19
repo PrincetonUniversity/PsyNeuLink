@@ -2,7 +2,7 @@ from scripts.src.phase_config import PhaseConfig
 
 # ===== DEFAULT CONFIGURATION ==== #
 
-STATE_SIZE = 7  # length of state vector (number of unique states)
+STATE_SIZE = 8  # length of state vector (number of unique states)
 CONTEXT_SIZE = STATE_SIZE  # length of the context vector (usually the same as state vector)
 
 REWARD_SIZE = 1
