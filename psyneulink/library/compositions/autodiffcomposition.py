@@ -1789,10 +1789,13 @@ class AutodiffComposition(Composition):
             # No target specifications in constructor, so instantiate default TARGET Node assignments,
             self._instantiate_default_targets(pathways, context, base_context)
 
+        # TEACHER_TARGET BREADCRUMB: NEED TO GET THE ORDER OF THESE RIGHT:
         loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
         target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
-
         self._validate_loss_mech_specs(loss_mech_specs, context)
+        self._register_target_specs({CONSTRUCTOR_TARGETS: self.targets})
+        self._validate_constructor_targets_specs()
+        # BREADCRUMB ------------------------
 
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
@@ -1801,12 +1804,9 @@ class AutodiffComposition(Composition):
             self.exclude_node_roles(mech, NodeRole.OUTPUT, context=context)
             for output_port in mech.output_ports:
                 output_port.parameters.require_projection_in_composition.set(False, override=True)
-        # MODIFIED TEACHER_TARGET END
 
         # Error if there are any learnable Projections in pathways that do not end with a LossMechanism
         self._check_for_orphaned_learnable_projections(pathways)
-        self._register_target_specs({CONSTRUCTOR_TARGETS: self.targets})
-        self._validate_target_specs()
 
     def _check_for_orphaned_learnable_projections(self, pathways):
 
@@ -2752,14 +2752,14 @@ class AutodiffComposition(Composition):
 
         return target_values_for_target_nodes
 
-    def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
+    def _parse_learn_targets_specs(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
         Integrate target specifications from constructor (in self.targets) with those in targets argument of learn():
             handled in override of _aggregate_sample_target_specs()
         Deal with nested Compositions
             handled in return from override of this method
         """
-        stim_input, num_input_trials = super()._parse_targets_spec(inputs,
+        stim_input, num_input_trials = super()._parse_learn_targets_specs(inputs,
                                                                    targets,
                                                                    execution_mode, context, base_context)
 
@@ -2792,17 +2792,18 @@ class AutodiffComposition(Composition):
                 constructor_target_specs[entry[0]] = entry[1]
             elif isinstance(entry, LossMechanism):
                 constructor_target_specs[entry] = None
+                self.loss_mechs_map[entry] = (entry.sample, entry.target)
 
-        targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
-        super()._aggregate_sample_target_specs(targets_dicts)
+        # targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
+        # super()._aggregate_sample_target_specs(targets_dicts)
 
-    def _validate_target_specs(self):
+    def _validate_constructor_targets_specs(self):
         """Handle redundant sample specs in **targets** argument of constructor
         Note: not done in Composition, since that does not support specification of SAMPLES 
               (they are assigned automatically as the OUTPUT Nodes of the Composition)
 
         ==============
-        - IN autodiff OVERRIDE OF _validate_target_specs():
+        - ERRORS:
             - SAMPLE or TARGET specs:
                 - Node NOT in the Composition
                 - Node NOT in the Composition
@@ -2853,7 +2854,7 @@ class AutodiffComposition(Composition):
             sources.update(set(entry.source for entry in self._sample_target_specs if sample_port is entry.sample_port))
             num_samples += any(entry for entry in self._sample_target_specs if entry.sample_port is sample_port)
 
-        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
         plural = num_samples
         s = 's' if plural else ''
         s_not = '' if plural else 's'
@@ -2925,7 +2926,7 @@ class AutodiffComposition(Composition):
         full_str = '; '.join(all_targets_str)
 
         if full_str:
-            # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+            # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
             many_conflicts = len(all_targets_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
             s = 's' if many_conflicts else ''

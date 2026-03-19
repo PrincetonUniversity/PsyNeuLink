@@ -9757,7 +9757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_values_for_target_nodes
 
-    def _parse_targets_spec(self, inputs, targets, execution_mode, context, base_context):
+    def _parse_learn_targets_specs(self, inputs, targets, execution_mode, context, base_context):
         """
         Converts learning inputs and targets to a standardized form
 
@@ -9885,7 +9885,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Don't incude spec if None is not allowed for target spec
                 #  IMPLEMENTATION NOTE:  this is used to exclude non-sample-target specs in **inputs** dict
                 #                        while allowing bad specs in **targets** dicts to be included,
-                #                        and caught as errors in _validate_target_specs()
+                #                        and caught as errors in _validate_constructor_targets_specs()
                 if target_port or allow_None_for_target:
                     self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
                                                                       target_port, target_spec,
@@ -9903,7 +9903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # For inputs dict, if target_node is None then it is not a target spec, so ignore
                 allow_None_for_target=False
             else:
-                # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_target_specs)
+                # Here, allow None, since that needs to be picked up as a bad target_spec (in _validate_constructor_targets_specs)
                 allow_None_for_target=True
             sample_target_specs = _extract_sample_target_specs(targets_dict, name,
                                                                allow_None_for_target=allow_None_for_target)
@@ -9919,7 +9919,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Issue warning for non-conflicting redundant target_specs, but leave them;
                   they will be removed in _canonicalize_target_specs()
         Ignore bad individual specs (i.e. ones for which target is None in self._sample_target_specs:
-                  they will be handled in _validate_target_specs()
+                  they will be handled in _validate_constructor_targets_specs()
         """
 
         # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
@@ -9963,7 +9963,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # all_targets_str.append(f"'{target.name}': [{specs_str}]")
             num_targets += any(spec for spec in self._sample_target_specs if spec.target is target)
 
-        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
         plural = num_targets
         s = 's' if plural else ''
         s_not = '' if plural else 's'
@@ -10018,7 +10018,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         full_str = '; '.join(all_targets_str)
 
         if full_str:
-            # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+            # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
             many_conflicts = len(all_targets_str) > 1
             many_outputs = len(self.get_nodes_by_role(NodeRole.OUTPUT))
             s = 's' if many_conflicts else ''
@@ -10039,9 +10039,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Construct canonicalized_target_specs:  {<sample_port for TARGET>: <input specification>}, in which:
            redundant specs are removed, so that there is only one specification for each TARGET Node;
            key (<sample_port for TARGET>) == <bad spec>  for ones that are not a legal alias for a TARGET Node
-              (error will be raised in _validate_target_specs()
+              (error will be raised in _validate_constructor_targets_specs()
            value (<input specification>) == 'MISSING' if there is no specification for the TARGET in targets
-              (error will be raised in _validate_target_specs()
+              (error will be raised in _validate_constructor_targets_specs()
 
         Construct sample_ports_to_learn_specs: {<sample_port for TARGET>: <key used for it in targets>}
            used for identifying errant specs in error message(s) raised in _validate_targets_specs()
@@ -10052,9 +10052,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               (Note: this is OK, because any redundant specs were determined to use the same value
               in _handle_redundant_target_specs()
           - if a spec for the TARGET is not found in self._sample_target_specs, give it the value 'MISSING'
-              that will be used to generate an error in _validate_target_specs()
+              that will be used to generate an error in _validate_constructor_targets_specs()
           - pass along any bad specs (e.g., that are not for TARGET Nodes)
-              that will be used to generate an error in _validate_target_specs()
+              that will be used to generate an error in _validate_constructor_targets_specs()
 
         Return sample_ports_to_learn_specs and sample_ports_to_learn_specs dicts
         """
@@ -10066,7 +10066,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # For each TARGET Node in the Composition, look for a specification for it in targets
             #  - if found, assign as entry in canonicalized_target_specs,
             #    using corresponding sample_port as key and the value specified in targets
-            #  - if NOT found, assign 'MISSING' as the value (for error to be reported in _validate_target_specs())
+            #  - if NOT found, assign 'MISSING' as the value (for error to be reported in _validate_constructor_targets_specs())
             # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
             target_nodes = self.get_target_nodes()
             for TARGET_node in target_nodes:
@@ -11747,7 +11747,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # If this is an instance of generator CompositionRunner._batch_inputs, then there is no
                         # need to call _parse_trial_inputs, as the inputs are already in the correct format
-                        # from the call to _parse_targets_spec
+                        # from the call to _parse_learn_targets_specs
                         if isgenerator(inputs) and ('CompositionRunner._batch_inputs' in str(inputs) or
                                                     'CompositionRunner._batch_function_inputs' in str(inputs)):
                             execution_stimuli, optimization_num = next(inputs)
