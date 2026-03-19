@@ -9950,22 +9950,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
 
         # Prepare strings for warning message
+        all_targets_str = []
         num_targets = 0
         sources = set()
         for target in targets_with_redundant_specs:
-            sources.update(set(t.source for t in self._sample_target_specs if target is t.target))
-            # specs_str = ', '.join([f"'{t.spec.full_name}'" for t in self._sample_target_specs if t.target is target])
-            # all_targets_str.append(f"'{target.name}': [{specs_str}]")
-            num_targets += any(spec for spec in self._sample_target_specs if spec.target is target)
+            sources.update(set(t.source for t in self._sample_target_specs if target is t.target_spec))
+            specs_str = ', '.join([f"'{t.target_spec.full_name}'"
+                                   for t in self._sample_target_specs if t.target_spec is target])
+            all_targets_str.append(f"'{target.name}': [{specs_str}]")
+            num_targets += any(spec for spec in self._sample_target_specs if spec.target_spec is target)
+        full_str = '; '.join(all_targets_str)
 
+        if not full_str:
+            # No redundant taret_specs
+            return
+
+        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
+        plural = len(all_targets_str)
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
-        plural = num_targets
+        # plural = num_targets
         s = 's' if plural else ''
         s_not = '' if plural else 's'
         are_is = 'are' if plural else 'is'
         they_it = 'they' if plural else 'it'
         several_one = 'several' if plural else 'one'
-        sample_nodes_str = 'OUTPUT'
+        sample_nodes_str = 'sample (OUTPUT)'
         if len(sources) == 1:
             source_str = f"{', '.join(sources)}"
         else:
@@ -9975,7 +9984,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         source_str = f"{source_str} argument{s}"
 
         # If not all target_specs are SAMPLE Nodes (mech or OutputPort), suggest that those be used
-        only_sample_specs = all(spec_as_mech(target_spec.spec) not in self.get_target_nodes()
+        only_sample_specs = all(spec_as_mech(target_spec.target_spec) not in self.get_target_nodes()
                                 for target_spec in self._sample_target_specs)
         use_sample_nodes = (f"use the {sample_nodes_str} Node{s} to which {they_it} correspond{s_not} "
                             f"as the key{s} of the dict, obviating the need to determine the TARGET Nodes"
@@ -9987,15 +9996,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_in_targets = all(target_spec.source == 'targets' for target_spec in self._sample_target_specs)
         placement = (f"place them all in the 'targets' argument of the learn method()"
                      if not all_in_targets else '')
-        both = ' and ' if not only_sample_specs and not all_in_targets else ''
+        both = ', and ' if not only_sample_specs and not all_in_targets else ''
 
         # X TEST DONE
         warnings.warn(
             f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
             f"While this is technically OK, it might be easier and clearer to {use_sample_nodes}{both}{placement}. "
-            f"Alternatively, TARGET Nodes can be specified in the 'inputs' arg of learn() method (which can be "
-            f"identified using the Composition's 'get_target_nodes()' method) along with other INPUT nodes, "
+            f"Alternatively, TARGET Nodes (which can be identified using the Composition's 'get_target_nodes()' "
+            f"method) can be specified in the 'inputs' arg of learn() method, along with other INPUT nodes, "
             f"obviating the need to specify the 'targets' arg.")
 
     def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
