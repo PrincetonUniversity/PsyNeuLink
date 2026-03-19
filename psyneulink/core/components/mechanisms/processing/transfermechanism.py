@@ -457,11 +457,11 @@ each element.  This is shown below using the `NormalDist` function::
     >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=pnl.NormalDist)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.1576537 , 1.60782117, 0.75840058]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.20656132, 2.71995896, 0.57600537]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[1.03826716, 0.56148871, 0.8394907 ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[ 1.59335049,  0.61367634, -0.40574659]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[ 0.80580672, -1.88025475,  0.25268581]])
 
 Notice that each element was assigned a different random value for its noise, and that these also varied across
 executions.  Notice that since only a single function was specified, it could be the name of a class.  Functions
@@ -471,9 +471,9 @@ when used in a list, functions must be instances, as shown below::
     >>> my_linear_tm = pnl.TransferMechanism(input_shapes=3,
     ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[-0.22503678,  1.36995517,  4.        ]])
+    array([[2.55612201, 1.6257203 , 4.        ]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.08371805, 1.60392004, 4.        ]])
+    array([[2.54362708, 1.06552886, 4.        ]])
 
 Notice that since noise is a `modulable Parameter <ParameterPort_Modulable_Parameters>`, assigning it a value
 after the TransferMechanism has been constructed must be done to its base value (see `ModulatorySignal_Modulation`
@@ -483,11 +483,11 @@ Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result 
 
     >>> my_linear_tm.clip = (.5, 1.2)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.5       , 1.01316799, 1.2       ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[1.2, 1.2, 1.2]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[1.2       , 1.06552886, 1.2       ]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[0.5       , 1.01316799, 1.2       ]])
+    array([[0.5, 1.2, 1.2]])
 
 Note that the range specified in **clip** applies to all elements of the result if it is an array.
 
@@ -1772,9 +1772,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
-        if self.is_initializing:
-            return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
-
         integrator_mode = self.parameters.integrator_mode._get(context)
         noise = self._get_current_parameter_value(self.parameters.noise, context)
 

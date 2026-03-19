@@ -176,7 +176,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     (ADDITIVE, EM_STORAGE_MECHANISM, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNALS, MULTIPLICATIVE,
      MULTIPLICATIVE_PARAM, MODULATION, NAME, OVERRIDE, OWNER_VALUE, PROJECTIONS, REFERENCE_VALUE, VARIABLE)
-from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified, FunctionParameter, copy_parameter_value
+from psyneulink.core.globals.parameters import Parameter, ParameterNoValueError, check_user_specified, \
+    FunctionParameter, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, all_within_range
@@ -194,7 +195,8 @@ MEMORY_MATRIX = 'memory_matrix'
 FIELDS = 'fields'
 FIELD_TYPES = 'field_types'
 
-def _memory_matrix_getter(owning_component=None, context=None)->list:
+
+def _memory_matrix_getter(owning_component=None, context=None) -> list:
     """Return list of memories in which rows (outer dimension) are memories for each field.
     These are derived from `matrix <MappingProjection.matrix>` parameter of the `afferent
     <Mechanism_Base.afferents>` MappingProjections to each of the `retrieved_nodes <EMComposition.retrieved_nodes>`.
@@ -501,7 +503,7 @@ class EMStorageMechanism(LearningMechanism):
                     :type: ``float``
 
         """
-        input_ports = Parameter([], # FIX: SHOULD BE ABLE TO UE THIS WITH 'fields' AS CONSTRUCTOR ARGUMENT
+        input_ports = Parameter([],  # FIX: SHOULD BE ABLE TO UE THIS WITH 'fields' AS CONSTRUCTOR ARGUMENT
                                 stateful=False,
                                 loggable=False,
                                 read_only=True,
@@ -512,7 +514,7 @@ class EMStorageMechanism(LearningMechanism):
         fields = Parameter(
             [], stateful=False, loggable=False, read_only=True, structural=True
         )
-        field_types = Parameter([],stateful=False,
+        field_types = Parameter([], stateful=False,
                                 loggable=False,
                                 read_only=True,
                                 structural=True,
@@ -561,14 +563,14 @@ class EMStorageMechanism(LearningMechanism):
         if not len(field_types) or len(field_types) != len(self.input_ports):
             return f"must be specified with a number of items equal to " \
                    f"the number of fields specified {len(self.input_ports)}"
-        if not all(item in {1,0} for item in field_types):
+        if not all(item in {1, 0} for item in field_types):
             return f"must be a list of 1s (for keys) and 0s (for values)."
 
     def _validate_field_weights(self, field_weights):
         if not field_weights or len(field_weights) != len(self.input_ports):
             return f"must be specified with a number of items equal to " \
                    f"the number of fields specified {len(self.input_ports)}"
-        if not all(isinstance(item, (int, float)) and (0 <= item  <= 1) for item in field_weights):
+        if not all(isinstance(item, (int, float)) and (0 <= item <= 1) for item in field_weights):
             return f"must be a list floats from 0 to 1."
 
     def _validate_storage_prob(self, storage_prob):
@@ -580,7 +582,6 @@ class EMStorageMechanism(LearningMechanism):
         decay_rate = float(decay_rate)
         if not all_within_range(decay_rate, 0, 1):
             return f"must be a float in the interval [0,1]."
-
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -659,7 +660,7 @@ class EMStorageMechanism(LearningMechanism):
                 raise EMStorageMechanismError(f"The 'field_types' arg for {self.name} ({field_types}) must have "
                                               f"the same number of items as its 'fields' arg ({len(fields)}).")
 
-        num_keys = len([i for i in field_types if i==1])
+        num_keys = len([i for i in field_types if i == 1])
         concatenate_queries = 'concatenation_node' in request_set and request_set['concatenation_node'] is not None
 
         # Ensure the number of learning_signals is equal to the number of fields + number of keys
@@ -680,9 +681,9 @@ class EMStorageMechanism(LearningMechanism):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
             if concatenate_queries:
                 memory_matrix_field_shape = np.array([np.concatenate(row, dtype=object).flatten()
-                                                      for row in memory_matrix[:,0:num_keys]]).T.shape
+                                                      for row in memory_matrix[:, 0:num_keys]]).T.shape
             else:
-                memory_matrix_field_shape = np.array(memory_matrix[:,key_indices[i]].tolist()).T.shape
+                memory_matrix_field_shape = np.array(memory_matrix[:, key_indices[i]].tolist()).T.shape
             assert learning_signal_shape == memory_matrix_field_shape, \
                 f"The shape ({learning_signal_shape}) of the matrix for the Projection {learning_signal.name} " \
                 f"used to specify learning signal {i} of {self.name} does not match the shape " \
@@ -690,7 +691,7 @@ class EMStorageMechanism(LearningMechanism):
         # Ensure shape of learning_signals matches shapes of matrices for retrieval nodes (i.e., all input fields)
         for i, learning_signal in enumerate(learning_signals[num_match_fields:]):
             learning_signal_shape = learning_signal.parameters.matrix._get(context).shape
-            memory_matrix_field_shape = np.array(memory_matrix[:,i].tolist()).shape
+            memory_matrix_field_shape = np.array(memory_matrix[:, i].tolist()).shape
             assert learning_signal_shape == memory_matrix_field_shape, \
                 f"The shape ({learning_signal.shape}) of the matrix for the Projection {learning_signal.name} " \
                 f"used to specify learning signal {i} of {self.name} does not match the shape " \
@@ -715,7 +716,6 @@ class EMStorageMechanism(LearningMechanism):
         self.parameters.learning_signals._set(learning_signal_dicts, context)
 
         learning_signals = super()._instantiate_output_ports(context=context)
-
 
     def _parse_function_variable(self, variable, context=None):
         # Function expects a single field (one item of Mechanism's variable) at a time
@@ -754,11 +754,11 @@ class EMStorageMechanism(LearningMechanism):
 
         # FIX: SET LEARNING MODE HERE FOR SHOW_GRAPH
 
-        decay_rate = self.parameters.decay_rate._get(context)      # modulable, so use getter
+        decay_rate = self.parameters.decay_rate._get(context)  # modulable, so use getter
         storage_prob = self.parameters.storage_prob._get(context)  # modulable, so use getter
         field_weights = self.parameters.field_weights._get(context)  # modulable, so use getter
         concatenation_node = self.concatenation_node
-        num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i==1])
+        num_match_fields = 1 if concatenation_node else len([i for i in self.field_types if i == 1])
 
         memory = self.parameters.memory_matrix._get(context)
         if memory is None or self.is_initializing:
@@ -777,7 +777,7 @@ class EMStorageMechanism(LearningMechanism):
                                               f"must include '{MEMORY_MATRIX}' in params arg.")
 
         # Get least used slot (i.e., weakest memory = row of matrix with lowest weights) computed across all fields
-        field_norms = np.empty((len(memory),len(memory[0])))
+        field_norms = np.empty((len(memory), len(memory[0])))
         for row in range(len(memory)):
             for col in range(len(memory[0])):
                 field_norms[row][col] = np.linalg.norm(memory[row][col])
@@ -791,26 +791,33 @@ class EMStorageMechanism(LearningMechanism):
         idx_of_weakest_memory = np.argmin(row_norms)
 
         value = []
-        for i, field_projection in enumerate([learning_signal.efferents[0].receiver.owner
-                                            for learning_signal in self.learning_signals]):
+        key_indices = [i for i, field_type in enumerate(self.field_types) if field_type == 1]
+
+        field_projections = [
+            learning_signal.efferents[0].receiver.owner
+            for learning_signal in self.learning_signals
+        ]
+
+        for i, field_projection in enumerate(field_projections):
+
             if i < num_match_fields:
-                # For match matrices,
-                #   get entry to store from variable of Projection matrix (memory_field)
-                #   to match_node in which memory will be stored (this is to accomodate concatenation_node)
+                # Match matrices correspond to key fields, in key_indices order
                 axis = 0
                 entry_to_store = field_projection.parameters.variable._get(context)
+
                 if concatenation_node is None:
-                    assert np.all(entry_to_store == variable[i]),\
-                        f"PROGRAM ERROR: misalignment between inputs and fields for storing them"
+                    field_index = key_indices[i]
+                    assert np.all(entry_to_store == variable[field_index]), \
+                        "PROGRAM ERROR: misalignment between inputs and fields for storing them"
+
             else:
-                # For retrieval matrices,
-                #    get entry to store from variable (which has inputs to all fields)
+                # Retrieval matrices correspond to all fields, in original field order
                 axis = 1
-                entry_to_store = variable[i - num_match_fields]
-            # Get matrix containing memories for the field from the Projection
+                field_index = i - num_match_fields
+                entry_to_store = variable[field_index]
+
             field_memory_matrix = field_projection.parameters.matrix._get(context)
 
-            # pass in field_projection matrix to EMStorage function
             res = super(LearningMechanism, self)._execute(
                 variable=entry_to_store,
                 memory_matrix=copy_parameter_value(field_memory_matrix),
@@ -822,6 +829,6 @@ class EMStorageMechanism(LearningMechanism):
                 runtime_params=runtime_params
             )
             value.append(res)
-            # assign modified field_memory_matrix back
             field_projection.parameters.matrix._set(res, context)
+
         return convert_all_elements_to_np_array(value)

@@ -1,4 +1,5 @@
 import contextlib
+from typing import Dict, Optional
 import numpy as np
 import pytest
 import re
@@ -6,7 +7,7 @@ import re
 import psyneulink as pnl
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
-from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator, FitzHughNagumoIntegrator, SimpleIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
 from psyneulink.core.components.functions.nonstateful.transformfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -153,7 +154,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[-0.6931771, 1.00018003, 2.5496904, -0.71562799]])
+        np.testing.assert_allclose(val, [[-1.39225086, 0.66053518, 1.10887925, -0.91598930]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -169,7 +170,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [[-1.56404341, -3.01320403, -1.22503678, 1.3093712]]
+        expected = [[-2.55352727, 1.15765370, 1.55612201, -0.60836214]]
         np.testing.assert_allclose(val, expected)
 
     @pytest.mark.mechanism
@@ -227,7 +228,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[-0.6931771 ,  1.00018003,  2.5496904 , -0.71562799]])
+        np.testing.assert_allclose(val, [[-1.39225086,  0.66053518,  1.10887925, -0.91598930]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -260,7 +261,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
+        np.testing.assert_allclose(val, [[0.96330110, 0.28835742, 2.40513020, 4.06200184]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -292,7 +293,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[0.78379859, 0.30331273, 0.47659695, 0.58338204]])
+        np.testing.assert_allclose(val, [[0.61836900, 0.25050634, 0.90974626, 0.98278548]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -307,7 +308,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
+        np.testing.assert_allclose(val, [[0.96330110, 0.28835742, 2.40513020, 4.06200184]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -322,7 +323,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        np.testing.assert_allclose(val, [[0.39640095, 0.45094588, 2.88271841, 0.41203028]])
+        np.testing.assert_allclose(val, [[1.35503180, 0.96989910, 0.60138801, 0.38437082]])
 
 
 class TestTransferMechanismFunctions:
@@ -1155,7 +1156,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        np.testing.assert_allclose(val, [[1.6136458, 7.00036006], [12.09938081, 7.56874402]])
+        np.testing.assert_allclose(val, [[0.21549828, 6.32107035], [9.21775851, 7.16802140]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1483,6 +1484,64 @@ class TestIntegratorMode:
         T = TransferMechanism()
         T.integrator_mode = True
         T.execute(1)
+
+    _different_integrator_function_shape_parameters = [
+        # NOTE: there is a discrepancy in shape when FHNI is instantiated
+        # before vs during TransferMechanism assignment, shown here, but
+        # this isn't directly relevant to this test, which is just meant to
+        # check that the non-default shape is carried through
+        # TransferMechanism.function
+        (None, FitzHughNagumoIntegrator, None, (3, 1, 1)),
+        (None, FitzHughNagumoIntegrator, {}, (3, 1)),
+        (np.zeros(2), SimpleIntegrator, {'default_variable': np.ones(2)}, (1, 2)),
+        (np.zeros(2), None, None, (1, 2)),
+    ]
+
+    def _different_integrator_function_shape_mechanism(
+        self, tmech_variable, integrator_function, ifunc_construct_args: Optional[Dict]
+    ):
+        # if instantiated outside of test, same instance is reused across tests
+        if ifunc_construct_args is not None:
+            integrator_function = integrator_function(**ifunc_construct_args)
+
+        t = TransferMechanism(
+            default_variable=tmech_variable, integrator_function=integrator_function, integrator_mode=True
+        )
+        return t
+
+    @pytest.mark.parametrize(
+        'tmech_variable, integrator_function, ifunc_construct_args, expected_value_shape',
+        _different_integrator_function_shape_parameters,
+    )
+    def test_different_integrator_function_shape(
+        self, tmech_variable, integrator_function, ifunc_construct_args, expected_value_shape
+    ):
+        t = self._different_integrator_function_shape_mechanism(
+            tmech_variable, integrator_function, ifunc_construct_args
+        )
+        assert t.function.defaults.variable.shape == expected_value_shape
+        assert t.function.defaults.value.shape == expected_value_shape
+        assert t.defaults.value.shape == expected_value_shape
+
+    @pytest.mark.parametrize(
+        'tmech_variable, integrator_function, ifunc_construct_args',
+        [item[:-1] for item in _different_integrator_function_shape_parameters],
+    )
+    def test_different_integrator_function_shape_compilation(
+        self, tmech_variable, integrator_function, ifunc_construct_args, comp_mode
+    ):
+        if integrator_function is FitzHughNagumoIntegrator and not ifunc_construct_args:
+            pytest.xfail(
+                'FitzHughNagumoIntegrator gets different variable/value shapes depending on whether'
+                + 'it is constructed before assignment to TransferMechanism. Bug is tangential to this test',
+            )
+
+        t = self._different_integrator_function_shape_mechanism(
+            tmech_variable, integrator_function, ifunc_construct_args
+        )
+        comp = pnl.Composition([t])
+        # test for crash on LLVM shape mismatch only
+        comp.run(execution_mode=comp_mode)
 
 
 @pytest.mark.composition
