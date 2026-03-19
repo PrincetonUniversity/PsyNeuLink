@@ -9889,10 +9889,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return identified_sample_target_specs
 
         for name, targets_dict in targets_dicts.items():
-            # MODIFIED TEACHER_TARGET NEW:
             if not targets_dict:
                 continue
-            # MODIFIED TEACHER_TARGET END
             if name == INPUTS:
                 targets_dict = targets_dict.copy()
                 # For inputs dict, if target_node is None then it is not a target spec, so ignore
@@ -9919,7 +9917,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
         # BREADCRUMB: REFACTOR WHEN NodeRole.SAMPLES IS IMPLEMENTED
-        all_target_specs = [spec.target_spec for spec in self._sample_target_specs]
+        # all_target_specs = [spec.target_spec for spec in self._sample_target_specs]
+        all_target_specs = [spec.target_port.full_name for spec in self._sample_target_specs]
         target_spec_counts = counts(all_target_specs)
         targets_with_redundant_specs = sorted([t for t in target_spec_counts if t and target_spec_counts[t] > 1])
 
@@ -9935,7 +9934,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # BREADCRUMB: THE FOLLOWING ONLY WORKS FOR REDUNDANT SPECS ACROSS DIFFERENT SOURCES,
             #             SINCE REDUNDANT ENTRIES IN THE SAME SOURCE WILL OVERWRITE PREVIOUS ONES IN THE DICT BELOW
             target_vals = {spec.source: str(spec.target_value) for spec in self._sample_target_specs
-                           if spec.target_spec is target_spec}
+                           if spec.target_port.full_name == target_spec}
             if len(counts(np.array(target_vals.values()).squeeze().tolist())) > 1:
                 # Create histogram of target values and filter for any that have more than one entry
                 targets_with_mismatching_specs.update({target_spec: target_vals})
@@ -9951,14 +9950,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Prepare strings for warning message
         all_targets_str = []
-        num_targets = 0
         sources = set()
         for target in targets_with_redundant_specs:
             sources.update(set(t.source for t in self._sample_target_specs if target is t.target_spec))
             specs_str = ', '.join([f"'{t.target_spec.full_name}'"
                                    for t in self._sample_target_specs if t.target_spec is target])
             all_targets_str.append(f"'{target.name}': [{specs_str}]")
-            num_targets += any(spec for spec in self._sample_target_specs if spec.target_spec is target)
         full_str = '; '.join(all_targets_str)
 
         if not full_str:
@@ -9967,8 +9964,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_target_specs
         plural = len(all_targets_str)
-        # BREADCRUMB: INTERGRATE THIS WITH inflections IN _validate_constructor_targets_specs
-        # plural = num_targets
         s = 's' if plural else ''
         s_not = '' if plural else 's'
         are_is = 'are' if plural else 'is'
@@ -9999,6 +9994,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         both = ', and ' if not only_sample_specs and not all_in_targets else ''
 
         # X TEST DONE
+        # BREADCRUMB: ADD full_str, integrate sources with redundant specs
         warnings.warn(
             f"There are multiple specifications of the target value{s} for {several_one} of the {sample_nodes_str} "
             f"Node{s} (listed below) in the {source_str} of the learn() method of '{self.name}'. "
@@ -10013,12 +10009,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Error for redundant specs with different values
         # -----------------------------------------------
+        # BREADCRUMB:  NOT FORMING STRING PROPERLY:  MISSING SOURCES;  COMPARE WITH REDUNDANT SPECS STRING A
         # prepare strings for warning message
         all_targets_str = []
         for target, values in targets_with_mismatching_specs.items():
             sources_str = ', '.join([f"{t.target_value} in '{t.source}'" for t in self._sample_target_specs
-                                   if t.target_spec is target])
-            all_targets_str.append(f"'{target.name}': [{sources_str}]")
+                                   if t.target_port.full_name == target])
+            all_targets_str.append(f"'{target}': [{sources_str}]")
         full_str = '; '.join(all_targets_str)
 
         if full_str:
@@ -10292,12 +10289,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._warned_about_targets_mechs_in_inputs_and_targets = True
 
             # Warn for specification of TARGET Nodes rather than samples
-            # # MODIFIED TEACHER_TARGET OLD:
-            # TARGET_Nodes_in_specs = [target for target in targets_from_learn_as_sample_mechs if target in TARGET_Nodes_in_comp]
-            # MODIFIED TEACHER_TARGET NEW:
             TARGET_Nodes_in_specs = [(target.owner if isinstance(target, OutputPort) else target)
                                      for target in target_specs_from_learn_method if target in TARGET_Nodes_in_comp]
-            # MODIFIED TEACHER_TARGET END
             if TARGET_Nodes_in_specs and not self._warned_about_target_nodes_in_target_specs:
                 target_node_names = sorted([node.name for node in TARGET_Nodes_in_specs])
                 # X TEST DONE

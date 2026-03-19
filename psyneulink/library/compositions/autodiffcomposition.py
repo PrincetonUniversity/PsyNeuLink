@@ -1155,21 +1155,13 @@ class AutodiffComposition(Composition):
             if spec and not isinstance(spec, (Loss, torch.nn.modules.loss._Loss)):
                 return f"must be a member of the Loss enum or a PyTorch loss function."
 
-        # MODIFIED TEACHER_TARGET OLD:
         def _parse_targets(self, specs)->list:
             """Parse targets argument to standardize into list of LossMechanisms or (sample, target) tuples
             Convert Mechanism specs for sample and/or target in a tuple to the corresponding primary port.
             """
             if isinstance(specs, (LossMechanism, tuple, set, dict, list)):
                 specs = convert_to_list(specs)
-        #         for i, spec_tuple in enumerate(specs.copy()):
-        #             if isinstance(spec_tuple, tuple):
-        #                 sample, target = spec_tuple
-        #                 sample = sample.output_port if isinstance(sample, Mechanism) else sample
-        #                 target = target.output_port if isinstance(target, Mechanism) else target
-        #                 specs[i] = (sample, target)
             return specs
-        # MODIFIED TEACHER_TARGET END
 
         def _validate_targets(self, spec):
             if spec is None:
