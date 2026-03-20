@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/scratch/gpfs/JDC/younes/projects/PsyNeuLink/Scripts/Models (Under Development)/EGO/Using EMComposition/bandits/python_/scripts/two_step.py", line 7, in <module>
+    from src.run_probabilistic import run_model_choices
+  File "/scratch/gpfs/JDC/younes/projects/PsyNeuLink/Scripts/Models (Under Development)/EGO/Using EMComposition/bandits/python_/src/run_probabilistic.py", line 6, in <module>
+    from src import gen_trials
+  File "/scratch/gpfs/JDC/younes/projects/PsyNeuLink/Scripts/Models (Under Development)/EGO/Using EMComposition/bandits/python_/src/gen_trials.py", line 9, in <module>
+    import psyneulink as pnl
+ModuleNotFoundError: No module named 'psyneulink'

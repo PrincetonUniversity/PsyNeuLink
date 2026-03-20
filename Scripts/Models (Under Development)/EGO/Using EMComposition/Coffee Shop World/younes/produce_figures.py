@@ -6,14 +6,14 @@ import random
 
 from environment import get_state_sequence
 from pytorch_ego.run import run_participant
-from psyneulink_ego.ego_model import construct_model, run_model
+from psyneulink_ego.ego_model_simple_spherical import construct_model, run_model
 
 import torch
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-RUN_TYPE = 'PyTorch'  # 'PyTorch' or 'PNL'
+RUN_TYPE = 'PNL'  # 'PyTorch' or 'PNL'
 
 CONFIG = dict(
     tolerance=1e-10,
@@ -30,7 +30,7 @@ CONFIG = dict(
     softmax_threshold=.001,
     loss_spec_name='BinaryCrossEntropy',
     num_optimization_steps=5,
-    nr_participants=20,
+    nr_participants=1,
 )
 
 
