@@ -189,7 +189,7 @@ def test_pec_controller_defaults_to_llvm_execution_mode():
         model=model,
         parameters={("slope", output_node): [1.0, 2.0]},
         outcome_variables=output_node,
-        objective_function=lambda x: np.sum(x),
+        objective_function=np.sum,
         optimization_function=PECOptimizationFunction(method="differential_evolution"),
     )
 
