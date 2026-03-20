@@ -9803,6 +9803,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._handle_redundant_learn_target_specs()
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(targets)
+        self._validate_learn_targets_specs(targets, execution_mode, context, base_context)
 
         # Move 'inputs' subdict if there is one into main inputs dict
         if 'inputs' in inputs:
@@ -10102,28 +10103,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
     # BREADCRUMB: HOW MUCH OF THIS IS STILL NEEDED?
-    def _validate_targets_specs(self, inputs,
-                                # target_specs_from_learn_method:list,  # | BREACRUMB: THESE NO LONGER NEEDED?
-                                targets_from_learn_as_sample_ports,   # |            ADD self._sample_target_specs
-                                sample_ports_to_learn_specs,          # <- used to report original spec in error message
-                                target_specs_aliases,
-                                execution_mode, context, base_context):
-        """Validate entries of **targets** arg in constructor (and learn() method of AutodiffComposition)
-        # Error for
+    def _validate_learn_targets_specs(self, targets:dict,
+                                      execution_mode, context, base_context):
+        """Validate entries of **targets** argument in learn() method, and any specifications inherited from sublass(es)
 
-        # Note: redundant specs should have been warned about and removed in _evaluate_redundant_target_specs
-        BREADCRUMB: ADD DOCSTRING HERE OUTLINING VALIDATION PROCEDURE / LOGIC
+        Raise errors for erroneous SAMPLE or missing TARGET specifications
+        Specs are indexed by sample_ports (consistent with furhter handling during learn())
+
+        Notes:
+        - there can't be any missing SAMPLE specifications since those are either:
+            - generated automatically (as all OUTPUT Nodes) for Composition
+            - the responsibility of a subclass to detect if they allow **target** specifications in their constructor
+              (e.g., by AutodiffCompostion._check_for_orphaned_learnable_projections()
+        - redundant specs are identified in _evaluate_redundant_learn_target_specs()
+          - conflicting specs raise an error _handle_conflicting_target_specs()
+          - non conflicting redundant specs elicit a warning in _handle_redundant_learn_target_specs()
+            and are eliminated in _canonicalize_target_specs()
+
         """
 
-        valid_sample_ports = [t.sample_port for t in target_specs_aliases]
-
-        # Purge targets_from_learn_as_sample_ports
-        missing_target_specs = {k: targets_from_learn_as_sample_ports.items.pop(k)
-                                for (k, v) in targets_from_learn_as_sample_ports.copy().items()
-                                if v == 'MISSING'}
-        # Purge targets_from_learn_as_sample_ports
-        errant_target_specs = {k: targets_from_learn_as_sample_ports.pop(k)
-                               for (k, v) in targets_from_learn_as_sample_ports.copy().items()
+        valid_sample_ports = [s.sample_port for s in self._sample_target_pairs]
+        missing_target_specs = {k: targets.items.pop(k) for (k, v) in targets.copy().items() if v == 'MISSING'}
+        errant_target_specs = {k: targets.pop(k) for (k, v) in targets.copy().items()
                                if k not in valid_sample_ports}
         # Ensure that all remaining specs in target_specs_from_learn_method are for TARGET Nodes in Composition
         assert all(k in valid_sample_ports for k in targets_from_learn_as_sample_ports),\
