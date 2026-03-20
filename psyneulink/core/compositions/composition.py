@@ -9915,6 +9915,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   they will be handled in _validate_constructor_targets_specs()
         """
 
+        # BREADCRUMB: REDO ALL OF THIS USING SAMPLES
+
         # Identify redundant specs for SAMPLE-TARGET pairs (indexed by TARGET Nodes)
         # BREADCRUMB: REFACTOR WHEN NodeRole.SAMPLES IS IMPLEMENTED
         # all_target_specs = [spec.target_spec for spec in self._sample_target_specs]
@@ -9952,10 +9954,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         all_targets_str = []
         sources = set()
         for target in targets_with_redundant_specs:
-            sources.update(set(t.source for t in self._sample_target_specs if target is t.target_spec))
-            specs_str = ', '.join([f"'{t.target_spec.full_name}'"
-                                   for t in self._sample_target_specs if t.target_spec is target])
-            all_targets_str.append(f"'{target.name}': [{specs_str}]")
+            sources.update(set(t.source for t in self._sample_target_specs if target == t.target_port.full_name))
+            specs_str = ', '.join([f"'{t.sample_spec.full_name} in '{t.source}'"
+                                   for t in self._sample_target_specs if t.target_port.full_name == target])
+            sample = next((entry.sample_mech.full_name for entry in self._sample_target_pairs
+                          if entry.target_port.full_name == target), None)
+            assert sample, "PROGRAM ERROR: unable to find name of sample associated with target in _sample_target_pairs"
+            all_targets_str.append(f"'{sample}': [{specs_str}]")
         full_str = '; '.join(all_targets_str)
 
         if not full_str:
