@@ -652,8 +652,7 @@ def test_pec_lca(func_mode):
 
     pec.controller.parameters.comp_execution_mode.set(func_mode)
     pec.controller.function.parameters.save_values.set(True)
-
-    ret = pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
+    pec.run(inputs={input_mech: np.tile([1,0], (100,1))})
 
 
 @pytest.mark.composition
