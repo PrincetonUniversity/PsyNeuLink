@@ -8,9 +8,9 @@ from functools import partial
 import numpy as np
 import psyneulink as pnl
 
-from scripts.src.phase_config import PhaseConfig
+from src.phase_config import PhaseConfig
 from src import defaults
-from scripts.src.utils import one_hot_encode
+from src.utils import one_hot_encode
 
 
 # ---------------------------------------------------------
@@ -148,7 +148,7 @@ def get_time_sequence_event(
         dimension=defaults.TIME_SIZE,
     )
 
-    ts = np.array([time_fct(time_drift_rate) for _ in range(num_trials)])
+    ts = np.array([time_fct(time_drift_rate) for _ in range(int(num_trials))])
     timestamps = []
     for t in ts:
         timestamps.extend([t]*num_states_per_trial)

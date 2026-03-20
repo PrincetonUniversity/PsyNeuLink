@@ -782,7 +782,7 @@ def run_model_choices(
         for i in range(5, 9):
             rew_probs[i] = drift(rew_probs[i], sigma, lo, hi)
 
-    for trial in range(1, n_base_trials):
+    for trial in range(1, int(n_base_trials)):
         # -----------------------------
         # 1. First-stage choice (rocket)
         # -----------------------------
