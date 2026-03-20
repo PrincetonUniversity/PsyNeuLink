@@ -10006,7 +10006,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             f"While this is technically OK, it might be easier and clearer to {use_sample_nodes}{both}{placement}. "
             f"Alternatively, TARGET Nodes (which can be identified using the Composition's 'get_target_nodes()' "
             f"method) can be specified in the 'inputs' arg of learn() method, along with other INPUT nodes, "
-            f"obviating the need to specify the 'targets' arg.")
+            f"obviating the need to specify the 'targets' arg. Redundant specifications for: {full_str}.")
 
     def _handle_conflicting_target_specs(self, targets_with_mismatching_specs:list):
         # BREADCRUMB:  OVERIDDE BY AUTODIFF, TO DEAL WITH CONFLICTS BEETWEEN VALUES FROM LEARN (NUMBERS)
