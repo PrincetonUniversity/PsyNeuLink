@@ -2747,7 +2747,7 @@ class AutodiffComposition(Composition):
     def _parse_learn_targets_specs(self, inputs, targets, execution_mode, context, base_context):
         """Override to handle **targets** arguments in construtor and learn() that are specific to AutodiffComposition
         Integrate target specifications from constructor (in self.targets) with those in targets argument of learn():
-            handled in override of _aggregate_sample_target_specs()
+            handled in override of _aggregate_and_filter_sample_target_specs()
         Deal with nested Compositions
             handled in return from override of this method
         """
@@ -2787,7 +2787,7 @@ class AutodiffComposition(Composition):
                     self.loss_mechs_map[entry] = (entry.sample, entry.target)
 
         # targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
-        # super()._aggregate_sample_target_specs(targets_dicts)
+        # super()._aggregate_and_filter_sample_target_specs(targets_dicts)
 
     def _validate_constructor_targets_specs(self):
         """Handle redundant sample specs in **targets** argument of constructor
@@ -3153,7 +3153,7 @@ class AutodiffComposition(Composition):
                                    f"conflicting specifications for the value{s} of the target{s} for {one_of}its "
                                    f"{sample_nodes} Node{node_s}: {full_str}.")
 
-    def _handle_redundant_learn_target_specs(self):
+    def _handle_redundant_sample_target_specs_in_learn(self):
         """Override to deal with specification of TARGET in constructor and value in learn() method"""
         # Remove all sample_target_specs for which target_spec==TARGET and there is a matching spec with a TARGET Node
         TARGET_nodes = self.get_target_nodes()
@@ -3169,7 +3169,7 @@ class AutodiffComposition(Composition):
                         f"The learn() method of '{self.name}' can't be executed because no target value is specified "
                         f"for '{spec.sample_spec.full_name}'.")
 
-        super()._handle_redundant_learn_target_specs()
+        super()._handle_redundant_sample_target_specs_in_learn()
 
     def _check_nested_target_mechs(self):
         pass
