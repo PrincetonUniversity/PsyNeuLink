@@ -5,6 +5,7 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.stateful.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.globals.parameters import ParameterError
+from psyneulink.library.compositions.autodiffcomposition import torch_available
 
 np.random.seed(0)
 SIZE = 10
@@ -539,3 +540,60 @@ def test_target_mode_length_mismatch_error():
     wrong = np.zeros(10)
     with pytest.raises(Exception):
         f(variable=wrong)
+
+
+@pytest.mark.pytorch
+@pytest.mark.skipif(not torch_available, reason="PyTorch is not available")
+@pytest.mark.parametrize(
+    "input_space, variable",
+    [
+        pytest.param("tangent", np.array([0.1, -0.2]), id="tangent"),
+        pytest.param("target", np.array([0.0, 1.0, 0.0]), id="target"),
+    ],
+)
+def test_drift_on_sphere_generated_pytorch_matches_python(input_space, variable):
+    import torch
+
+    kwargs = dict(
+        dimension=3,
+        initializer=np.array([1.0, 0.0, 0.0]),
+        rate=0.25,
+        noise=0.0,
+        time_step_size=0.1,
+        seed=11,
+    )
+    
+    kwargs["input_space"] = input_space
+
+    # Set random seed BEFORE creating functions to ensure both use same drift_dir
+    np.random.seed(11)
+    
+    # Create shared context for both functions
+    context = pnl.Context(execution_id=None)
+    
+    # Create function instances (these will initialize drift_dir using np.random)
+    python_f = Functions.DriftOnASphereIntegrator(**kwargs)
+    torch_f = Functions.DriftOnASphereIntegrator(**kwargs)
+    
+    # Now get the PyTorch version
+    pnl_torch_f = torch_f._gen_pytorch_fct("cpu", context=context)
+
+    prev_torch = torch.tensor(kwargs["initializer"], dtype=torch.double)
+    variable_torch = torch.tensor(variable, dtype=torch.double)
+
+    for _ in range(4):
+        python_out = python_f(variable=variable, context=context)
+        prev_torch = pnl_torch_f(prev_torch, variable_torch)
+
+        np.testing.assert_allclose(
+            prev_torch.detach().cpu().numpy(),
+            python_out,
+            rtol=1e-7,
+            atol=1e-9,
+        )
+        np.testing.assert_allclose(
+            np.linalg.norm(prev_torch.detach().cpu().numpy()),
+            1.0,
+            rtol=1e-7,
+            atol=1e-9,
+        )

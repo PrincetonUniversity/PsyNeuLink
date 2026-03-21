@@ -29,6 +29,10 @@ Functions that integrate current value of input with previous value.
 import contextlib
 import numpy as np
 import warnings
+try:
+    import torch
+except ImportError:
+    torch = None
 
 from beartype import beartype
 
@@ -2899,6 +2903,63 @@ class DriftOnASphereIntegrator(IntegratorFunction):
 
         return theta * u
 
+    @staticmethod
+    def _torch_normalize(x, eps=1e-14):
+        norm = torch.linalg.norm(x, dim=-1, keepdim=True)
+        return x / torch.clamp(norm, min=eps)
+
+    @staticmethod
+    def _torch_expmap_sphere(x, y, eps=1e-14):
+        r = torch.linalg.norm(y, dim=-1, keepdim=True)
+        u = y / torch.clamp(r, min=eps)
+        x_new = torch.cos(r) * x + torch.sin(r) * u
+        x_new = DriftOnASphereIntegrator._torch_normalize(x_new, eps)
+        return torch.where(r > eps, x_new, x)
+
+    @staticmethod
+    def _torch_parallel_transport_exact(x, y, v, eps=1e-14):
+        r = torch.linalg.norm(y, dim=-1, keepdim=True)
+        u = y / torch.clamp(r, min=eps)
+        a = torch.sum(v * u, dim=-1, keepdim=True)
+        transported = (v - a * u) + a * (torch.cos(r) * u - torch.sin(r) * x)
+        return torch.where(r > eps, transported, v)
+
+    @staticmethod
+    def _torch_tangent_basis(x, eps=1e-14):
+        x = DriftOnASphereIntegrator._torch_normalize(x, eps)
+        d = x.shape[-1]
+        e0 = torch.zeros(d, device=x.device, dtype=x.dtype)
+        e0[0] = 1.0
+        v = x - e0
+        v_norm = torch.linalg.norm(v, dim=-1, keepdim=True)
+        safe_v = v / torch.clamp(v_norm, min=eps)
+
+        eye = torch.eye(d, device=x.device, dtype=x.dtype)
+        expanded_eye = eye.expand(*x.shape[:-1], d, d)
+        householder = expanded_eye - 2 * safe_v.unsqueeze(-1) * safe_v.unsqueeze(-2)
+        basis = householder[..., :, 1:]
+        default_basis = eye[:, 1:].expand(*x.shape[:-1], d, d - 1)
+        return torch.where(v_norm.unsqueeze(-1) <= eps, default_basis, basis)
+
+    @staticmethod
+    def _torch_logmap_sphere(x, t, eps=1e-14):
+        x = DriftOnASphereIntegrator._torch_normalize(x, eps)
+        t_norm = torch.linalg.norm(t, dim=-1, keepdim=True)
+        t_unit = t / torch.clamp(t_norm, min=eps)
+
+        dot = torch.clamp(torch.sum(x * t_unit, dim=-1, keepdim=True), -1.0, 1.0)
+        theta = torch.acos(dot)
+
+        u = t_unit - dot * x
+        u_norm = torch.linalg.norm(u, dim=-1, keepdim=True)
+        safe_u = u / torch.clamp(u_norm, min=eps)
+        basis_0 = DriftOnASphereIntegrator._torch_tangent_basis(x, eps)[..., :, 0]
+        direction = torch.where(u_norm.expand_as(safe_u) <= eps, basis_0, safe_u)
+
+        tangent = theta * direction
+        tangent = torch.where(theta.expand_as(tangent) <= eps, torch.zeros_like(tangent), tangent)
+        return torch.where(t_norm.expand_as(tangent) <= eps, torch.zeros_like(tangent), tangent)
+
 
     # --- Parameter definitions ---
 
@@ -3269,6 +3330,122 @@ class DriftOnASphereIntegrator(IntegratorFunction):
         self.parameters.previous_time._set(np.array(new_t, dtype=float), context)
 
         return x_new
+
+    def _gen_pytorch_fct(self, device, context=None):
+        if torch is None:
+            raise FunctionError(f"PyTorch is required to generate a PyTorch function for {self.name}.")
+
+        rate = self._get_pytorch_fct_param_value('rate', device, context)
+        noise = self._get_pytorch_fct_param_value('noise', device, context)
+        time_step_size = self._get_pytorch_fct_param_value('time_step_size', device, context)
+        input_space = self.parameters.input_space._get(context)
+
+        drift_dir = self.parameters.drift_dir._get(context)
+        if drift_dir is None:
+            init = np.asarray(self.parameters.initializer._get(context), dtype=float)
+            init = init / np.linalg.norm(init)
+            drift_dir = self._proj_tangent(init, np.roll(init, 1))
+            if np.linalg.norm(drift_dir) < 1e-14:
+                drift_dir = self._proj_tangent(init, np.eye(init.size)[1])
+            drift_dir = drift_dir / np.linalg.norm(drift_dir)
+
+        drift_dir = torch.tensor(drift_dir, device=device)
+        previous_time = self.parameters.previous_time._get(context)
+        if previous_time is None:
+            previous_time = 0.0
+        previous_time = torch.tensor(previous_time, device=device, dtype=torch.double)
+
+        seed = self._get_current_parameter_value('seed', context=context)
+        generator = torch.Generator(device=device)
+        generator.manual_seed(int(seed))
+
+        def _coerce_tensor(value, reference):
+            if torch.is_tensor(value):
+                return value.to(device=reference.device, dtype=reference.dtype)
+            return torch.tensor(value, device=reference.device, dtype=reference.dtype)
+
+        def _coerce_scalar_or_tensor(value, reference):
+            if torch.is_tensor(value):
+                return value.to(device=reference.device, dtype=reference.dtype)
+            return value
+
+        def _torch_randn(shape, reference):
+            return torch.randn(shape, generator=generator, device=reference.device, dtype=reference.dtype)
+
+        def pytorch_drift_on_sphere(prev_val, variable):
+            nonlocal drift_dir, previous_time
+
+            x = prev_val if torch.is_tensor(prev_val) else torch.tensor(prev_val, device=device)
+            drift_dir = drift_dir.to(device=x.device, dtype=x.dtype)
+
+            rate_value = _coerce_scalar_or_tensor(rate, x)
+            dt = _coerce_tensor(time_step_size, x)
+
+            if variable is None:
+                drift_tan = torch.zeros_like(x)
+            else:
+                var = variable if torch.is_tensor(variable) else torch.tensor(variable, device=x.device, dtype=x.dtype)
+                var = var.to(device=x.device, dtype=x.dtype)
+                d = x.shape[-1]
+
+                if var.ndim == 0 or (var.ndim > 0 and var.shape[-1] == 1):
+                    scalar = var if var.ndim == 0 else var.squeeze(-1)
+                    if torch.is_tensor(scalar) and scalar.ndim > 0:
+                        scalar = scalar.unsqueeze(-1)
+                    drift_tan = rate_value * drift_dir * scalar
+                else:
+                    input_width = var.shape[-1]
+                    if input_space == "tangent":
+                        if input_width != d - 1:
+                            raise FunctionError(f"In tangent mode, 'variable' must have length {d - 1}. Got {input_width}.")
+                        basis = self._torch_tangent_basis(x)
+                        drift_tan = rate_value * torch.matmul(basis, var.unsqueeze(-1)).squeeze(-1)
+                    elif input_space == "target":
+                        if input_width != d:
+                            raise FunctionError(f"In target mode, 'variable' must have length {d}. Got {input_width}.")
+                        drift_tan = rate_value * self._torch_logmap_sphere(x, var)
+                    else:
+                        if input_width == d - 1:
+                            basis = self._torch_tangent_basis(x)
+                            drift_tan = rate_value * torch.matmul(basis, var.unsqueeze(-1)).squeeze(-1)
+                        elif input_width == d:
+                            if not DriftOnASphereIntegrator._warned_auto_target_once:
+                                warnings.warn(
+                                    "DriftOnASphereIntegrator: interpreting variable (length d) as a TARGET point on the sphere. "
+                                    "Set input_space='target' to silence this message.",
+                                    RuntimeWarning,
+                                )
+                                DriftOnASphereIntegrator._warned_auto_target_once = True
+                            drift_tan = rate_value * self._torch_logmap_sphere(x, var)
+                        else:
+                            raise FunctionError(
+                                f"'variable' length must be 1, {d - 1} (tangent), or {d} (target). Got {input_width}."
+                            )
+
+            if noise is None:
+                noise_tan = torch.zeros_like(x)
+            elif torch.is_tensor(noise) and noise.ndim == 1:
+                noise_value = noise.to(device=x.device, dtype=x.dtype)
+                eps = _torch_randn(noise_value.shape, x)
+                basis = self._torch_tangent_basis(x)
+                z = torch.matmul(basis, (noise_value * eps).unsqueeze(-1)).squeeze(-1)
+                noise_tan = torch.sqrt(dt) * z
+            else:
+                noise_value = _coerce_scalar_or_tensor(noise, x)
+                basis = self._torch_tangent_basis(x)
+                shape_tuple = tuple(x.shape[:-1]) + (int(basis.shape[-1]),)
+                eps = _torch_randn(shape_tuple, x)
+                z = torch.matmul(basis, eps.unsqueeze(-1)).squeeze(-1)
+                noise_tan = torch.sqrt(dt) * (noise_value * z)
+
+            y = dt * (drift_tan + noise_tan)
+            x_new = self._torch_expmap_sphere(x, y)
+            drift_dir = self._torch_normalize(self._torch_parallel_transport_exact(x, y, drift_dir))
+            previous_time = previous_time + dt
+            
+            return x_new
+
+        return pytorch_drift_on_sphere
 
     def reset(self, *args, context=None, **kwargs):
         """

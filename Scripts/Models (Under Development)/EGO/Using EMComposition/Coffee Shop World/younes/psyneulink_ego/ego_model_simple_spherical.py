@@ -28,17 +28,14 @@ def construct_model(
     # ----------------------------------------------------------------------------------------------------------------
 
     state_input_layer = ProcessingMechanism(name=state_input_name, input_shapes=state_size)
-    previous_state_layer = ProcessingMechanism(name=previous_state_name, input_shapes=state_size)
     context_layer = TransferMechanism(name=context_name,
                                       input_shapes=state_size,
                                       integrator_mode=True,
                                       integrator_function=DriftOnASphereIntegrator(
                                           dimension=state_size,
                                           rate=integration_rate,
-                                          noise=[0.01]*(state_size-1),
-                                          input_space='target',
-
-                                          
+                                          noise=[.2]*(state_size-1),
+                                          input_space='target',                                          
                                       )
                                      )
 
@@ -108,21 +105,15 @@ def construct_model(
         device=CPU)
 
     EGO_comp.scheduler.add_condition(em, BeforeNodes(context_layer))
-    EGO_comp.scheduler.add_condition(prediction_layer, BeforeNodes(previous_state_layer, context_layer))
+    EGO_comp.scheduler.add_condition(prediction_layer, BeforeNodes(context_layer))
 
     return EGO_comp, state_input_layer
 
 
 def run_model(model, input_layer, states, num_optimization_steps, **kwargs):
-    model.learn(
+    model.run(
         inputs={input_layer: states},
         execution_mode=ExecutionMode.PyTorch,
-        optimizations_per_minibatch=num_optimization_steps,
-        minibatch_size=1,
-        synch_projection_matrices_with_torch=RUN,
-        synch_node_values_with_torch=RUN,
-        synch_results_with_torch=RUN,
-
     )
 
-    return model.results[::num_optimization_steps][:, 2]
+    return model.results[:, 1]

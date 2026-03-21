@@ -20,16 +20,16 @@ CONFIG = dict(
     nr_trials=10,
     seed=0,
     state_size=11,
-    integration_rate=.7,
+    integration_rate=.8,
     state_retrieval_weight=None,
     previous_state_retrieval_weight=1.,
     context_retrieval_weight=1.,
     learning_rate=2.,
     memory_fill=.01,
-    softmax_temperature=.2,
+    softmax_temperature=.05,
     softmax_threshold=.001,
     loss_spec_name='BinaryCrossEntropy',
-    num_optimization_steps=5,
+    num_optimization_steps=1,
     nr_participants=1,
 )
 
@@ -51,6 +51,7 @@ def calc_prob(em_preds, test_ys):
     em_probability = (em_preds_new * test_ys_new).sum(-1).mean(-1)
     trial_probs = (em_preds * test_ys)
     return em_probability, trial_probs
+
 
 
 def get_df(results, states, seed, paradigm, **kwargs):
