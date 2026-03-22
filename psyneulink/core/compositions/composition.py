@@ -9891,12 +9891,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               - can also be in the **targets** arg of a sublcass constructor (e.g., AutodiffComposition)
             Use self._sample_target_pairs to identify sample_target_specs and construct self._sample_target_specs
 
+            Note: supports names (str) of Nodes but not of Ports
+
             """
             nodes_in_comp = self._get_all_nodes(content_addressable=True)
             sample_target_specs = {}
             non_sample_target_specs = []
             for input_item, value in specs_dict.items():
-                # BREADCRUMB: HANDLE NAMES (STR) OF NODES
                 # BREADCRUMB: NEED TO DISTINGUISH INPUT Nodes FROM TARGET Nodes IN inputs DICT HERE
                 #             ??continue IF input_item is not a SAMPLE or TARGET Node??
                 #             SKIP IF NOT TARGET NODE?
@@ -9904,6 +9905,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Convert name (str) to Node
                     input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
                 except TypeError:
+                    # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not any of its Ports
                     non_sample_target_specs.append(SampleTargetSpec(None, None,
                                                                     None, input_item,
                                                                     value, name))
@@ -10263,7 +10265,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 bad_specs_str.append(spec_str)
             full_str = '; '.join(bad_specs_str)
 
-            # X TEST DONE
+            # X TEST DONE:
+            #  OUTPUT Node that is not a SAMPLE
+            #  INPUT Node other than a TARGET
+            #  INTERNAL Node (which can't be a SAMPLE or TARGET in a Composition
+            #  not in Composition
+            #  not a recognizable target or sample specification
             raise CompositionError(f"The learn() method of '{self.name}' can't be executed because there {are_is} "
                                    f"the following illegal specification{s} its {source_str}: {full_str}.")
 
