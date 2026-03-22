@@ -9808,7 +9808,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # BREADCRUMB: PASS legal_target_specs TO _handle_redundant_sample_target_specs_in_learn()
         #             AND RETURN THAT, WHICH SHOULD THEN BE PASSED TO _canonicalize_target_specs
         self._handle_redundant_sample_target_specs_in_learn()
-        # BREADCRUMB: WHAT TO PASS TO _canonicalize_target_specs BELOW?
         targets, sample_ports_to_learn_specs = self._canonicalize_target_specs(legal_target_specs)
 
         # Move 'inputs' subdict if there is one into main inputs dict
@@ -10133,7 +10132,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # For each TARGET Node in the Composition, look for a specification for it in specs
             #  - if found, assign as entry in canonicalized_target_specs,
             #    using corresponding sample_port as key and the value specified in specs
-            #  - if NOT found, assign 'MISSING' as the value (for error to be reported in _validate_constructor_targets_specs())
+            #  - if NOT found, assign 'MISSING' as the value
             # BREADCRUMB: REVISE ONCE NodeRole.SAMPLE IS IMPLEMENTED
             target_nodes = self.get_target_nodes()
             for TARGET_node in target_nodes:
@@ -10159,6 +10158,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for spec, val in targets.items():
                 if not any(spec in alias_set for alias_set in self._sample_target_pairs):
                     canonicalized_target_specs.update({spec: val})
+
+        missing_target_specs = [k for k,v in canonicalized_target_specs.items() if v == 'MISSING']
+        if missing_target_specs:
+            plural = len(missing_target_specs) > 1
+            s = 's' if plural else ''
+            a = 'a ' if not plural else ''
+            # GIVE JUST MECH NAME IF IT HAS ONLHY ONE OUTPUTPORT
+            missing_spec_names = [f"'{spec.full_name}'" if len(spec.owner.output_ports) > 1
+                                  else f"'{spec.owner.name}'" for spec in missing_target_specs]
+            missing_specs_str = ', '.join(missing_spec_names)
+            raise CompositionError(f"The learn() method of '{self.name} can't be executed because "
+                                   f"it's 'targets' argument is missing {a}specification{s} for the following "
+                                   f"sample{s}:  {missing_specs_str}.")
 
         return canonicalized_target_specs, sample_ports_to_learn_specs
 
