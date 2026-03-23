@@ -1781,13 +1781,10 @@ class AutodiffComposition(Composition):
             # No target specifications in constructor, so instantiate default TARGET Node assignments,
             self._instantiate_default_targets(pathways, context, base_context)
 
-        # TEACHER_TARGET BREADCRUMB: NEED TO GET THE ORDER OF THESE RIGHT:
         loss_mech_specs = [(spec.sample_port, spec.target_port) for spec in self._sample_target_pairs]
         target_mechs = [spec.target_mech for spec in self._sample_target_pairs]
         self._validate_loss_mech_specs(loss_mech_specs, context)
-        self._register_target_specs()
-        self._validate_constructor_targets_specs()
-        # BREADCRUMB ------------------------
+        self.__parse_constructor_targets_specs()
 
         loss_mechs = self._instantiate_loss_mechanisms(loss_mech_specs, context, base_context)
 
@@ -2772,26 +2769,42 @@ class AutodiffComposition(Composition):
 
         return stim_input, num_input_trials
 
-    def _register_target_specs(self):
-        """Register sample-target specifications from **targets** of constructor
-        Add sample and target specifications to self._sample_pairs and self._sample_target_specs
+    # # BREADCRUMB: ??PASS loss_mechs FROM _instantiate_loss_mechs TO AVOID NEED FOR SEARCH OVER self.targets??
+    def __parse_constructor_targets_specs(self):
+        """Parse sample-target specifications from **targets** of constructor in self._constructor_target_specs
+        Standardize format of entries as {sample.output_port: target.output_port or 'TARGET')
+        Register samples and targets from LossMechanism specs in loss_mechs_map
+        Note: specs have been validated in _validate_targets() for autodiffcomposition.parameters.targets
         """
+        self._constructor_target_specs = {}
+        spec_as_ouputport = lambda spec : (spec if isinstance(spec, OutputPort)
+                                           else (spec.output_port if isinstance(spec, ProcessingMechanism)
+                                                 else spec))
         if self.targets:
             # Move self.targets into constructor_target_specs as dict(sample_spec: target_spec)
-            constructor_target_specs = {}
             for entry in self.targets:
                 if isinstance(entry, tuple):
-                    constructor_target_specs[entry[0]] = entry[1]
+                    self._constructor_target_specs[spec_as_ouputport(entry[0])] = spec_as_ouputport(entry[1])
                 elif isinstance(entry, LossMechanism):
-                    constructor_target_specs[entry] = None
+                    self._constructor_target_specs[entry] = None
                     self.loss_mechs_map[entry] = (entry.sample, entry.target)
 
-        # targets_dicts.update({CONSTRUCTOR_TARGETS: constructor_target_specs})
-        # super()._aggregate_and_filter_sample_target_specs(targets_dicts)
+    def _validate_sample_target_specs_from_learn(self, specs_dict, name:str, allow_None_for_target:bool)->dict:
+        """Compare learn_specs with constructor specs for SAMPLEs and TARGETs
+        Issue error for:
+        - missing entries in learn() or ones with a non-numeric value
+            for SAMPLEs specified with the keyword 'TARGET' in the constructor
+        - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
+        """
+        illegal_specs = super()._validate_sample_target_specs_from_learn(specs_dict, name, allow_None_for_target)
+        learn_specs = self._sample_target_specs                     # specs from **targets** arg of learn() method
+        constructor_specs = self._constructor_target_specs.items()  # specs from **targets** are of constructor
 
-    # BREADCRUMB: FROM Composition -
-    #     CALL super() FIRST, TO PARSE ALL learn DICTS, AND GET ALL SPECS IN self._sample_target_specs
-    #     THEN SEARCH BOTH illegal_specs RETURNED AS WELL AS self._sample_target_specs
+        # Iterate over constructor specs to find relevant ones in either illegal_specs or self._sample_target_specs 
+        for sample, target in constructor_specs:
+            if sample in illegal_specs:
+                pass
+        # THEN SEARCH BOTH illegal_specs RETURNED AS WELL AS self._sample_target_specs
     #       TO **COMPARE** CONSTRUCTOR **targets** WITH THOSE AND CORRECT / FILTER OUT ANY LEGAL ONES
     #            (VALIDATION OF constructor ARGS SHOULD HAPPEN IN _valiate_constructor_sample_target_specs()
     #           - BE SURE THAT ALL "TARGET" SPECS IN CONSTRUCTOR ARE MATCHED WITH NUMBER SPECS FROM learn():
@@ -2805,63 +2818,8 @@ class AutodiffComposition(Composition):
     #                   EXTERNAL INPUTS BY USING THE 'TARGET' KEYWORD TO SPECIFY THEIR TARGET VALUE IN THE
     #                   'targets' ARGUMENT OF THE constructor
     #     SHOULD RETURN specs_dict
-    def _validate_sample_target_specs_from_learn(specs_dict, name:str, allow_None_for_target:bool)->dict:
-        """Compare learn_specs with constructor specs for SAMPLEs and TARGETs
-        Issue error for:
-        - missing entries in learn() or ones with a non-numeric value
-            for SAMPLEs specified with the keyword 'TARGET' in the constructor
-        - *any* specifications for sample-target pairs specified with an internal TARGET Node in the constructor
-        """
-        # BREADCRUMB: PROMOTE THIS TO UTILITY, OR LEAST (CLASS?) METHOD ON COMPOSITOIN?
-        spec_as_mech = lambda spec : spec.owner if isinstance(spec, OutputPort) else spec
-        nodes_in_comp = self._get_all_nodes(content_addressable=True)
-        constructor_specs = self.targets.copy()
 
-        # BREADCRUMB ==========================================================
-        for input_item, value in specs_dict.items():
-            try:
-                # Determine whether specified Node is in Composition
-                # IMPLEMENTATION NOTE:  this supports the name (str) of a Node, but not the name of a Port
-                input_item = nodes_in_comp[input_item] if isinstance(input_item, str) else input_item
-            except TypeError:
-                illegal_specs.append(SampleTargetSpec(None, None,
-                                                                    None, input_item,
-                                                                    value, name))
-                continue
-
-            sample_target_pair = next((pair for pair in self._sample_target_pairs
-                                       if input_item in pair), None)
-            if sample_target_pair:
-                # Node is SAMPLE or TARGET
-                assert any(role in self.get_roles_by_node(spec_as_mech(input_item), scope=ALL)
-                           for role in {NodeRole.SAMPLE, NodeRole.TARGET}), \
-                    f"PROGRAM ERROR: Node specified ({spec}) expected to be a SAMPLE or TARGET"
-                sample_port = sample_target_pair.sample_port
-                sample_spec = input_item if input_item in sample_target_pair else None
-                target_port = sample_target_pair.target_port
-                target_spec = input_item if input_item in sample_target_pair else None
-                # BREADCRUMB: THIS ONLY APPLIES TO Composition;  SHOULE BE ALLOWED FOR AutodiffComposition:
-                if not is_numeric(value):
-                    illegal_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                                        target_port, target_spec,
-                                                                        value, name))
-                    continue
-                # Don't incude spec if None is not allowed for target spec
-                # BREADCRUMB: IS THIS STILL NEEDED:
-                #  IMPLEMENTATION NOTE:  this is used to exclude illegal sample-target specs in **inputs** dict
-                #                        while allowing bad specs in **targets** dicts to be included,
-                #                        and caught as errors in _handle_illegal_sample_target_specs_from_learn()
-                if target_port or allow_None_for_target:
-                    self._sample_target_specs.append(SampleTargetSpec(sample_port, sample_spec,
-                                                                      target_port, target_spec,
-                                                                      value, name))
-                legal_specs.update({input_item:value})
-            else:
-                illegal_specs.append(SampleTargetSpec(None, None,
-                                                                    None, input_item,
-                                                                    value, name))
-
-        return legal_specs, illegal_specs
+        return illegal_specs
 
     def _validate_constructor_targets_specs(self):
         """Handle redundant sample specs in **targets** argument of constructor

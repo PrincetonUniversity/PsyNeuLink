@@ -9902,7 +9902,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     targets_dict.pop(spec)
         return illegal_specs
 
-    def _validate_sample_target_specs_from_learn(specs_dict, name:str, allow_None_for_target:bool)->dict:
+    def _validate_sample_target_specs_from_learn(self, specs_dict, name:str, allow_None_for_target:bool)->dict:
         """Return dicts of legal and illegal sample-target specifications found in specified **targets** dict
         Get sample-target specifications from dicts used to specify samples and targets:
           - in learn(), these are either in the **targets** arg, or in a subdict of the **inputs** arg
