@@ -9958,7 +9958,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                     None, input_item,
                                                                     value, name))
 
-        return legal_specs, illegal_specs
+        return illegal_specs
 
     def _handle_redundant_sample_target_specs_in_learn(self):
         """Warn about target_specs refering to the same SAMPLE-TARGET pair (if they don't have conflicting values)
